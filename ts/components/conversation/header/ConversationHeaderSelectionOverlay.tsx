@@ -1,6 +1,7 @@
 import { useRef } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import useKey from 'react-use/lib/useKey';
+import { getAppDispatch } from '../../../state/dispatch';
 
 import { deleteMessagesForX } from '../../../interactions/conversations/unsendingInteractions';
 import { resetSelectedMessageIds } from '../../../state/ducks/conversations';
@@ -24,7 +25,7 @@ export const SelectionOverlay = () => {
   const selectedMessageIds = useSelector(getSelectedMessageIds);
   const selectedConversationKey = useSelectedConversationKey();
   const isPublic = useSelectedIsPublic();
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const ref = useRef(null);
 
   function onCloseOverlay() {

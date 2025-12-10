@@ -1,5 +1,6 @@
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { useCallback } from 'react';
+import { getAppDispatch } from '../dispatch';
 import type { StateType } from '../reducer';
 import {
   proBackendDataActions,
@@ -57,7 +58,7 @@ export const useProBackendCurrentUserStatus = () => {
 };
 
 export const useSetProBackendIsLoading = () => {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   return useCallback(
     (props: RequestActionArgs) => dispatch(proBackendDataActions.setIsLoading(props)),
     [dispatch]
@@ -65,7 +66,7 @@ export const useSetProBackendIsLoading = () => {
 };
 
 export const useSetProBackendIsError = () => {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   return useCallback(
     (props: RequestActionArgs) => dispatch(proBackendDataActions.setIsError(props)),
     [dispatch]

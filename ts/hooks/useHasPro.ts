@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from 'react';
-import { useDispatch } from 'react-redux';
 import { ProOriginatingPlatform } from 'libsession_util_nodejs';
 import useUpdate from 'react-use/lib/useUpdate';
+import { getAppDispatch } from '../state/dispatch';
 import {
   MockProAccessExpiryOptions,
   setDataFeatureFlag,
@@ -221,7 +221,7 @@ function useMockRecoverAccess() {
 }
 
 export function useProAccessDetails(): RequestHook<ProAccessDetails> {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   const setProBackendIsLoading = useSetProBackendIsLoading();
   const setProBackendIsError = useSetProBackendIsError();

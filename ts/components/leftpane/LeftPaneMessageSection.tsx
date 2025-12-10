@@ -1,8 +1,10 @@
 import { isEmpty } from 'lodash';
-import { useSelector, useDispatch } from 'react-redux';
-
+import { useSelector } from 'react-redux';
 import { AutoSizer, List, ListRowProps } from 'react-virtualized';
 import styled from 'styled-components';
+import type { JSX } from 'react';
+import { getAppDispatch } from '../../state/dispatch';
+
 import { SearchResults } from '../search/SearchResults';
 import { LeftPaneSectionHeader } from './LeftPaneSectionHeader';
 import { MessageRequestsBanner } from './MessageRequestsBanner';
@@ -21,8 +23,6 @@ import { OverlayMessage } from './overlay/OverlayMessage';
 import { OverlayMessageRequest } from './overlay/OverlayMessageRequest';
 import { OverlayChooseAction } from './overlay/choose-action/OverlayChooseAction';
 import { sectionActions } from '../../state/ducks/section';
-
-import type { JSX } from "react";
 
 const StyledLeftPaneContent = styled.div`
   display: flex;
@@ -121,7 +121,7 @@ const ConversationList = () => {
 
 export const LeftPaneMessageSection = () => {
   const leftOverlayMode = useLeftOverlayMode();
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   return (
     <StyledLeftPaneContent>

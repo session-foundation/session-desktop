@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 
 import styled from 'styled-components';
+import { getAppDispatch } from '../../../state/dispatch';
 import { parseOpenGroupV2 } from '../../../session/apis/open_group_api/opengroupV2/JoinOpenGroupV2';
 import {
   fileDetailsToURL,
@@ -28,7 +29,7 @@ export type JoinableRoomProps = WithRoomId & {
 };
 
 const SessionJoinableRoomAvatar = (props: JoinableRoomProps) => {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   useEffect(() => {
     let isCancelled = false;

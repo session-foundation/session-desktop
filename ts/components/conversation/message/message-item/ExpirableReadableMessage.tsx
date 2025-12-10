@@ -1,8 +1,8 @@
 import { useCallback } from 'react';
-import { useDispatch } from 'react-redux';
 import useInterval from 'react-use/lib/useInterval';
 import useMount from 'react-use/lib/useMount';
 import styled from 'styled-components';
+import { getAppDispatch } from '../../../../state/dispatch';
 import { useIsDetailMessageView } from '../../../../contexts/isDetailViewContext';
 import { useMessageExpirationPropsById } from '../../../../hooks/useParamSelector';
 import { MessageModelType } from '../../../../models/messageType';
@@ -23,7 +23,7 @@ function useIsExpired(
 ) {
   const { convoId, messageId, expirationDurationMs, expirationTimestamp, isExpired } = props;
 
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   const checkExpired = useCallback(async () => {
     const now = Date.now();

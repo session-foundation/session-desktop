@@ -1,4 +1,5 @@
 import { Submenu } from 'react-contexify';
+import type { JSX } from 'react';
 import { useConvoIdFromContext } from '../../contexts/ConvoIdContext';
 import {
   useIsGroupV2,
@@ -37,8 +38,6 @@ import { Localizer } from '../basic/Localizer';
 import { useChangeNickname } from '../menuAndSettingsHooks/useChangeNickname';
 import { useShowNoteToSelfCb } from '../menuAndSettingsHooks/useShowNoteToSelf';
 import { useShowUserDetailsCbFromConversation } from '../menuAndSettingsHooks/useShowUserDetailsCb';
-
-import type { JSX } from "react";
 
 /** Menu items standardized */
 

@@ -1,8 +1,7 @@
-import { useDispatch } from 'react-redux';
-
 import type { PubkeyType } from 'libsession_util_nodejs';
 import { useCallback } from 'react';
 import styled from 'styled-components';
+import { getAppDispatch } from '../../../state/dispatch';
 
 import {
   use05GroupMembers,
@@ -108,7 +107,7 @@ const RecreateGroupContainer = styled.div`
 `;
 
 function useShowRecreateModal() {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   return useCallback(
     (name: string, members: Array<PubkeyType>) => {

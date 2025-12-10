@@ -1,6 +1,7 @@
 import { ipcRenderer } from 'electron';
 import { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
+import { getAppDispatch } from '../state/dispatch';
 import { getIsAppFocused } from '../state/selectors/section';
 import { sectionActions } from '../state/ducks/section';
 
@@ -9,7 +10,7 @@ import { sectionActions } from '../state/ducks/section';
  * It sets up a listener for events from main_node.ts and update the global redux state with the focused state.
  */
 export function useAppIsFocused() {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const isFocusedFromStore = useSelector(getIsAppFocused);
 
   const ipcCallback = (_event: unknown, isFocused: unknown) => {

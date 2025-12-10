@@ -1,5 +1,5 @@
 import { isEmpty } from 'lodash';
-import { useDispatch } from 'react-redux';
+import { getAppDispatch } from '../../state/dispatch';
 import { SettingsKey } from '../../data/settings-key';
 import { updateHideRecoveryPasswordModal, userSettingsModal } from '../../state/ducks/modalDialog';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
@@ -20,7 +20,7 @@ export type HideRecoveryPasswordDialogProps = {
 export function HideRecoveryPasswordDialog(props: HideRecoveryPasswordDialogProps) {
   const { state } = props;
 
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   const onClose = () => {
     dispatch(updateHideRecoveryPasswordModal(null));

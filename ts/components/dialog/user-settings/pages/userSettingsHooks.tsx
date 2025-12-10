@@ -1,4 +1,4 @@
-import { useDispatch } from 'react-redux';
+import { getAppDispatch } from '../../../../state/dispatch';
 import { tr } from '../../../../localization/localeTools';
 import {
   userSettingsModal,
@@ -56,7 +56,7 @@ export function useUserSettingsTitle(page: UserSettingsModalState | undefined) {
 }
 
 export function useUserSettingsCloseAction(props: UserSettingsModalState) {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   if (!props?.userSettingsPage) {
     return null;
   }
@@ -94,7 +94,7 @@ export function useUserSettingsCloseAction(props: UserSettingsModalState) {
 }
 
 export function useUserSettingsBackAction(modalState: UserSettingsModalState) {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   if (modalState?.overrideBackAction) {
     return modalState.overrideBackAction;

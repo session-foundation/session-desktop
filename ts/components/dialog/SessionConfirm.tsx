@@ -1,6 +1,6 @@
-import { useDispatch } from 'react-redux';
 import { useEffect, useState } from 'react';
 import useKey from 'react-use/lib/useKey';
+import { getAppDispatch } from '../../state/dispatch';
 import { useLastMessage } from '../../hooks/useParamSelector';
 import { updateConversationInteractionState } from '../../interactions/conversationInteractions';
 import { ConversationInteractionStatus } from '../../interactions/types';
@@ -63,7 +63,7 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
     conversationId,
   } = props;
 
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const lastMessage = useLastMessage(conversationId);
 
   const [isLoading, setIsLoading] = useState(false);

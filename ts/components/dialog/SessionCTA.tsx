@@ -1,8 +1,8 @@
 import { isNil } from 'lodash';
 import { Dispatch, useMemo, type ReactNode } from 'react';
-import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
 import type { CSSProperties } from 'styled-components';
+import { getAppDispatch } from '../../state/dispatch';
 import {
   type SessionCTAState,
   updateSessionCTA,
@@ -231,7 +231,7 @@ function Buttons({
   afterActionButtonCallback?: () => void;
   actionButtonNextModalAfterCloseCallback?: () => void;
 }) {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   const actionButton = useMemo(() => {
     if (!isVariantWithActionButton(variant)) {
@@ -339,7 +339,7 @@ function Buttons({
 }
 
 export function SessionCTA(props: SessionCTAState) {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const hasPro = useCurrentUserHasPro();
 
   function onClose() {
@@ -393,7 +393,7 @@ export const showSessionCTA = (variant: CTAVariant, dispatch: Dispatch<any>) => 
 };
 
 export const useShowSessionCTACb = (variant: CTAVariant) => {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   // TODO: remove once pro is released
   const isProAvailable = useIsProAvailable();
@@ -406,7 +406,7 @@ export const useShowSessionCTACb = (variant: CTAVariant) => {
 };
 
 export const useShowSessionCTACbWithVariant = () => {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   // TODO: remove once pro is released
   const isProAvailable = useIsProAvailable();

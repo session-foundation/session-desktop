@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { getAppDispatch } from '../../state/dispatch';
 
 import { useFocusMount } from '../../hooks/useFocusMount';
 import { useConversationUsernameWithFallback } from '../../hooks/useParamSelector';
@@ -70,7 +70,7 @@ export const BanOrUnBanUserDialog = (props: {
 }) => {
   const { conversationId, banType, pubkey } = props;
   const isBan = banType === 'ban';
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const convo = ConvoHub.use().get(conversationId);
   const inputRef = useRef(null);
 

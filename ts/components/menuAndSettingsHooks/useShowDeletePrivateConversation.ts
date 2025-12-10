@@ -1,4 +1,4 @@
-import { useDispatch } from 'react-redux';
+import { getAppDispatch } from '../../state/dispatch';
 import {
   useIsPrivate,
   useIsIncomingRequest,
@@ -20,7 +20,7 @@ function useShowDeletePrivateConversation({ conversationId }: { conversationId: 
 
 export function useShowDeletePrivateConversationCb({ conversationId }: { conversationId: string }) {
   const showDeletePrivateConversation = useShowDeletePrivateConversation({ conversationId });
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const name = useConversationUsernameWithFallback(true, conversationId);
 
   if (!showDeletePrivateConversation) {

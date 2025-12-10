@@ -1,7 +1,7 @@
-import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
 import { PubkeyType } from 'libsession_util_nodejs';
 import { isNil } from 'lodash';
+import { getAppDispatch } from '../../state/dispatch';
 
 import {
   useSelectedConversationDisappearingMode,
@@ -46,7 +46,7 @@ function useFollowSettingsButtonClick({ messageId }: WithMessageId) {
   const disabled = useMessageExpirationUpdateDisabled(messageId);
   const timespanText = useMessageExpirationUpdateTimespanText(messageId);
 
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const onExit = () => dispatch(updateConfirmModal(null));
 
   const doIt = () => {

@@ -1,7 +1,8 @@
 import { MouseEvent, useEffect, useState } from 'react';
 import { contextMenu, Menu } from 'react-contexify';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import styled from 'styled-components';
+import { getAppDispatch } from '../../state/dispatch';
 
 import { CallManager, ToastUtils } from '../../session/utils';
 import { InputItem } from '../../session/utils/calling/CallManager';
@@ -242,7 +243,7 @@ const StyledCallActionButton = styled.div<{ isFullScreen: boolean }>`
 `;
 
 const ShowInFullScreenButton = ({ isFullScreen }: { isFullScreen: boolean }) => {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   const showInFullScreen = () => {
     if (isFullScreen) {

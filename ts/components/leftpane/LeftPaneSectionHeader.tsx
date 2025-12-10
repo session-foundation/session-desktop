@@ -1,5 +1,6 @@
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import styled from 'styled-components';
+import { getAppDispatch } from '../../state/dispatch';
 import { LeftOverlayMode, sectionActions } from '../../state/ducks/section';
 import { disableRecoveryPhrasePrompt } from '../../state/ducks/userConfig';
 import { useLeftOverlayMode } from '../../state/selectors/section';
@@ -110,7 +111,7 @@ export const LeftPaneBanner = () => {
   const isSignInWithRecoveryPhrase = isSignWithRecoveryPhrase();
   const hideRecoveryPassword = useHideRecoveryPasswordEnabled();
 
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   const showRecoveryPhraseModal = () => {
     dispatch(disableRecoveryPhrasePrompt());
@@ -161,7 +162,7 @@ export const LeftPaneSectionHeader = () => {
   const showRecoveryPhrasePrompt = useSelector(getShowRecoveryPhrasePrompt);
   const leftOverlayMode = useLeftOverlayMode();
 
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const goBack = () => {
     if (!leftOverlayMode) {
       return;

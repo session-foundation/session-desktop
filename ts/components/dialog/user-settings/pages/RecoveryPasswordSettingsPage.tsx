@@ -1,6 +1,6 @@
-import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
 import { useState } from 'react';
+import { getAppDispatch } from '../../../../state/dispatch';
 
 import {
   updateHideRecoveryPasswordModal,
@@ -72,7 +72,7 @@ export function RecoveryPasswordSettingsPage(modalState: UserSettingsModalState)
 
   const { dataURL, iconSize, iconColor, backgroundColor, loading } = useIconToImageURL(qrLogoProps);
 
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   const { hasPassword, passwordValid } = usePasswordModal({
     onClose: () => {

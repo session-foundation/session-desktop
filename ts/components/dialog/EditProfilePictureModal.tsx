@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
-import { useDispatch } from 'react-redux';
 import type { AnyAction, Dispatch } from 'redux';
 import styled from 'styled-components';
+import { getAppDispatch } from '../../state/dispatch';
 import { ToastUtils, UserUtils } from '../../session/utils';
 import {
   userSettingsModal,
@@ -134,7 +134,7 @@ const triggerRemovalProfileAvatar = async (conversationId: string) => {
 };
 
 export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureModalProps) => {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   const isMe = useIsMe(conversationId);
   const isCommunity = useIsPublic(conversationId);

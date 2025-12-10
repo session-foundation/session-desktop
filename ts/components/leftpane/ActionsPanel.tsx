@@ -1,13 +1,14 @@
 import { ipcRenderer } from 'electron';
 import { useState } from 'react';
 
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import useInterval from 'react-use/lib/useInterval';
 import useTimeoutFn from 'react-use/lib/useTimeoutFn';
 
 import useMount from 'react-use/lib/useMount';
 import useThrottleFn from 'react-use/lib/useThrottleFn';
 import styled from 'styled-components';
+import { getAppDispatch } from '../../state/dispatch';
 
 import {
   getOurPrimaryConversation,
@@ -119,7 +120,7 @@ function useDebugThemeSwitch() {
 }
 
 function DebugMenuModalButton() {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const debugMenuModalState = useDebugMenuModal();
 
   useDebugKey({
@@ -148,7 +149,7 @@ function DebugMenuModalButton() {
  * The panel with buttons to switch between the message/contact/settings/theme views
  */
 export const ActionsPanel = () => {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const [startCleanUpMedia, setStartCleanUpMedia] = useState(false);
   const ourPrimaryConversation = useSelector(getOurPrimaryConversation);
   const showDebugMenu = useDebugMode();

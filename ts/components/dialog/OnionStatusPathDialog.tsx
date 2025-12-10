@@ -1,7 +1,6 @@
 import { ipcRenderer } from 'electron';
 import { useState, SessionDataTestId, type JSX } from 'react';
 
-import { useDispatch } from 'react-redux';
 import useHover from 'react-use/lib/useHover';
 import styled from 'styled-components';
 import useInterval from 'react-use/lib/useInterval';
@@ -9,6 +8,7 @@ import useInterval from 'react-use/lib/useInterval';
 import { isEmpty, isTypedArray } from 'lodash';
 import { CityResponse, Reader } from 'maxmind';
 import useMount from 'react-use/lib/useMount';
+import { getAppDispatch } from '../../state/dispatch';
 import { onionPathModal, updateOpenUrlModal } from '../../state/ducks/modalDialog';
 import {
   useFirstOnionPath,
@@ -249,7 +249,7 @@ function OnionPathDot({
 }
 
 export const OnionPathModal = () => {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   return (
     <SessionWrapperModal
       modalId="onionPathModal"

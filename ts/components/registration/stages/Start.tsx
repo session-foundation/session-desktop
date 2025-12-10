@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useDispatch } from 'react-redux';
 import useMount from 'react-use/lib/useMount';
 import styled from 'styled-components';
+import { getAppDispatch } from '../../../state/dispatch';
 import { sleepFor } from '../../../session/utils/Promise';
 import {
   AccountCreation,
@@ -31,7 +31,7 @@ const StyledStart = styled.div<{ ready: boolean }>`
 export const Start = () => {
   const [ready, setReady] = useState(false);
 
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   useMount(() => {
     dispatch(resetOnboardingState());

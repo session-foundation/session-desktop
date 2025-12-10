@@ -5,7 +5,7 @@ import autoBind from 'auto-bind';
 import { blobToArrayBuffer } from 'blob-util';
 import { Component, RefObject, createRef } from 'react';
 import styled from 'styled-components';
-import { useDispatch } from 'react-redux';
+import { getAppDispatch } from '../../state/dispatch';
 import {
   CompositionBox,
   SendMessageType,
@@ -647,7 +647,7 @@ const renderImagePreview = async (contentType: string, file: File, fileName: str
 };
 
 function OutdatedLegacyGroupBanner() {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   const weAreAdmin = useSelectedWeAreAdmin();
   const selectedConversationKey = useSelectedConversationKey();

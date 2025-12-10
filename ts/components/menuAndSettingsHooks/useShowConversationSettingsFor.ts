@@ -1,4 +1,4 @@
-import { useDispatch } from 'react-redux';
+import { getAppDispatch } from '../../state/dispatch';
 import {
   useIsPrivate,
   useIsPrivateAndFriend,
@@ -10,7 +10,7 @@ import {
 } from '../../state/ducks/modalDialog';
 
 export function useShowConversationSettingsFor(conversationId?: string) {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const isPrivate = useIsPrivate(conversationId);
   const isPrivateAndFriend = useIsPrivateAndFriend(conversationId);
   const isLegacyGroup = useIsLegacyGroup(conversationId);

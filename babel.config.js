@@ -5,12 +5,13 @@ const path = require('path');
 const { SourceMapConsumer } = require('source-map');
 
 const debug = process.env.SESSION_RC_DEBUG;
+const fileFilter = process.env.SESSION_RC_FILE_FILTER;
 
 // Project root directory (where babel.config.js lives)
 const PROJECT_ROOT = __dirname;
 
 // ANSI color codes
-const c = (code) => process.env.NO_COLOR ? '' : `\x1b[${code}m`;
+const c = code => (process.env.NO_COLOR ? '' : `\x1b[${code}m`);
 const colors = {
   reset: c(0),
   bright: c(1),
@@ -122,11 +123,7 @@ async function processErrorInternal(filename, event) {
       errorLoc.start.line,
       errorLoc.start.column
     );
-    const errEndOrig = await getOriginalLocation(
-      filename,
-      errorLoc.end.line,
-      errorLoc.end.column
-    );
+    const errEndOrig = await getOriginalLocation(filename, errorLoc.end.line, errorLoc.end.column);
 
     if (errStartOrig) {
       errStartLine = errStartOrig.line;
@@ -215,7 +212,7 @@ async function processErrorInternal(filename, event) {
 }
 
 async function processError(filename, event) {
-  const errorData = await processErrorInternal(filename, event)
+  const errorData = await processErrorInternal(filename, event);
   if (!errorsByFile.has(filename)) {
     errorsByFile.set(filename, []);
   }
@@ -237,12 +234,24 @@ function printAllErrors() {
   errorsByFile.forEach((errors, filename) => {
     const relativeFilename = path.relative(PROJECT_ROOT, filename);
     totalErrors += errors.length;
-    errorsByFileArray.push({ errors, filename: relativeFilename })
+    errorsByFileArray.push({ errors, filename: relativeFilename });
   });
 
-  errorsByFileArray.sort((a, b) => b.errors.length - a.errors.length)
+  errorsByFileArray.sort((a, b) => b.errors.length - a.errors.length);
+
+  if (fileFilter) {
+    console.log(
+      `${colors.red} File filter specified, filtering output for: ${fileFilter} ${colors.reset}`
+    );
+  }
+
+  let hiddenFiles = 0;
 
   errorsByFileArray.forEach(({ errors, filename }) => {
+    if (fileFilter && !filename.includes(fileFilter)) {
+      hiddenFiles++;
+      return;
+    }
     console.log(
       `\n${colors.cyan}${colors.bright}📁 ${filename}${colors.reset} ${colors.dim}(${errors.length} error${errors.length > 1 ? 's' : ''})${colors.reset}`
     );
@@ -251,9 +260,9 @@ function printAllErrors() {
       if (errors.length > 1) {
         console.log(`\n  ${colors.magenta}Error ${index + 1}:${colors.reset}`);
       }
-      error.lines.forEach((line) => console.log(line));
+      error.lines.forEach(line => console.log(line));
     });
-  })
+  });
 
   const logTotals = () => {
     console.log(`\n${colors.red}${colors.bright}${'═'.repeat(70)}${colors.reset}`);
@@ -261,12 +270,24 @@ function printAllErrors() {
       `${colors.red}${colors.bright}  Total: ${totalErrors} error${totalErrors > 1 ? 's' : ''} in ${errorsByFile.size} file${errorsByFile.size > 1 ? 's' : ''}${colors.reset}`
     );
     console.log(`${colors.red}${colors.bright}${'═'.repeat(70)}${colors.reset}\n`);
-  }
+  };
 
-  console.log(`${colors.red} ${errorsByFile.size} files could not be compiled with the react compiler: ${colors.reset}`)
-  errorsByFileArray.forEach(({ filename, errors }) => console.log(`  - (${errors.length}) ${colors.red}${colors.bright}${filename}${colors.reset}`))
-  logTotals()
-  console.log(`${colors.red} Babel compilation complete with react compiler errors. Note: react compiler errors mean the file was not compiled with the react compiler, so is left in the same state it was in before compilation. ${colors.reset}\n`)
+  console.log(
+    `${colors.red} ${errorsByFile.size} files could not be compiled with the react compiler: ${colors.reset}`
+  );
+  errorsByFileArray.forEach(({ filename, errors }) =>
+    console.log(`  - (${errors.length}) ${colors.red}${colors.bright}${filename}${colors.reset}`)
+  );
+  logTotals();
+  console.log(
+    `${colors.red} Babel compilation complete with react compiler errors. Note: react compiler errors mean the file was not compiled with the react compiler, so is left in the same state it was in before compilation. ${colors.reset}\n`
+  );
+
+  if (hiddenFiles > 0) {
+    console.log(
+      `${colors.red} ${hiddenFiles} files were hidden from the compiler output because of the filter: ${fileFilter} ${colors.reset}`
+    );
+  }
 }
 
 async function handleErrorExit() {

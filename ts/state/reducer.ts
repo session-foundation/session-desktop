@@ -79,5 +79,4 @@ const reducers = {
 //   our restricted actions
 export const rootReducer = combineReducers(reducers);
 
-export type RootState = ReturnType<typeof rootReducer>
-
+export type RootState = ReturnType<typeof rootReducer>;

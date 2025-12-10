@@ -1,9 +1,9 @@
 import LinkifyIt from 'linkify-it';
 
-import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
 
 import type { ReactNode, JSX } from 'react';
+import { getAppDispatch } from '../../../../state/dispatch';
 import { RenderTextCallbackType } from '../../../../types/Util';
 import { getEmojiSizeClass, SizeClassType } from '../../../../util/emoji';
 import { LinkPreviews } from '../../../../util/linkPreviews';
@@ -86,7 +86,7 @@ const Linkify = (props: LinkifyProps): JSX.Element => {
   const { text, isGroup, renderNonLink, isPublic } = props;
   const results: Array<any> = [];
   let count = 1;
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const matchData = linkify.match(text) || [];
   let last = 0;
 

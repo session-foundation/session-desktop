@@ -1,9 +1,9 @@
 import { isBoolean } from 'lodash';
 import { Dispatch, useCallback, useEffect, useMemo, useState } from 'react';
 import { clipboard } from 'electron';
-import { useDispatch } from 'react-redux';
 import useAsync from 'react-use/lib/useAsync';
 import { ProConfig, ProProof } from 'libsession_util_nodejs';
+import { getAppDispatch } from '../../../state/dispatch';
 import {
   getDataFeatureFlag,
   getFeatureFlag,
@@ -884,7 +884,7 @@ export const ProDebugSection = ({
   forceUpdate,
   setPage,
 }: DebugMenuPageProps & { forceUpdate: () => void }) => {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const mockExpiry = useDataFeatureFlag('mockProAccessExpiry');
   const proAvailable = useFeatureFlag('proAvailable');
 

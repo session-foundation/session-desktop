@@ -1,7 +1,8 @@
 import { SessionDataTestId, MouseEvent, useCallback } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { clsx } from 'clsx';
 import styled from 'styled-components';
+import { getAppDispatch } from '../../../../state/dispatch';
 import { useIsDetailMessageView } from '../../../../contexts/isDetailViewContext';
 import { replyToMessage } from '../../../../interactions/conversationInteractions';
 import { MessageRenderingProps } from '../../../../models/messageType';
@@ -60,7 +61,7 @@ export const MessageContentWithStatuses = (props: Props) => {
   const contentProps = useSelector((state: StateType) =>
     getMessageContentWithStatusesSelectorProps(state, props.messageId)
   );
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const hideAvatar = useHideAvatarInMsgList(props.messageId);
 
   const multiSelectMode = useIsMessageSelectionMode();

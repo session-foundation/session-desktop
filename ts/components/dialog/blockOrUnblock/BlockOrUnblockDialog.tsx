@@ -1,8 +1,7 @@
-import { useDispatch } from 'react-redux';
-
 import { isEmpty } from 'lodash';
 import { useCallback } from 'react';
 import useAsyncFn from 'react-use/lib/useAsyncFn';
+import { getAppDispatch } from '../../../state/dispatch';
 import { useConversationsNicknameRealNameOrShortenPubkey } from '../../../hooks/useParamSelector';
 import { updateBlockOrUnblockModal } from '../../../state/ducks/modalDialog';
 import { BlockedNumberController } from '../../../util';
@@ -55,7 +54,7 @@ function useBlockUnblockI18nDescriptionArgs({
 }
 
 export const BlockOrUnblockDialog = ({ pubkeys, action, onConfirmed }: NonNullable<ModalState>) => {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   const localizedAction = action === 'block' ? tr('block') : tr('blockUnblock');
 

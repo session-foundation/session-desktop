@@ -1,7 +1,8 @@
 import { clone } from 'lodash';
 import { useCallback } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import styled from 'styled-components';
+import { getAppDispatch } from '../../../../state/dispatch';
 import { Data } from '../../../../data/data';
 import { MessageModelType, MessageRenderingProps } from '../../../../models/messageType';
 import { PropsForAttachment, toggleSelectedMessageId } from '../../../../state/ducks/conversations';
@@ -59,7 +60,7 @@ export const MessageAttachment = (props: Props) => {
   const { messageId, imageBroken, handleImageError, highlight = false } = props;
   const isDetailView = useIsDetailMessageView();
 
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const attachmentProps = useSelector((state: StateType) =>
     getMessageAttachmentProps(state, messageId)
   );

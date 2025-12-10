@@ -1,8 +1,7 @@
+import type { JSX } from 'react';
 import { SizeClassType } from '../../util/emoji';
 
 import { RenderTextCallbackType } from '../../types/Util';
-
-import type { JSX } from "react";
 
 type Props = {
   text: string;

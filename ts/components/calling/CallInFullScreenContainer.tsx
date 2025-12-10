@@ -1,8 +1,9 @@
 import { useEffect, useRef } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 
 import useKey from 'react-use/lib/useKey';
 import styled from 'styled-components';
+import { getAppDispatch } from '../../state/dispatch';
 import { useVideoCallEventsListener } from '../../hooks/useVideoEventListener';
 import { setFullScreenCall } from '../../state/ducks/call';
 import {
@@ -36,7 +37,7 @@ const StyledLocalVideoElement = styled.video<{ isVideoMuted: boolean }>`
 `;
 
 export const CallInFullScreenContainer = () => {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const ongoingCallWithFocused = useSelector(getHasOngoingCallWithFocusedConvo);
   const hasOngoingCallFullScreen = useSelector(getCallIsInFullScreen);
 

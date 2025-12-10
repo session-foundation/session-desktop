@@ -4,8 +4,8 @@ import styled from 'styled-components';
 
 import { motion } from 'framer-motion';
 import { isEmpty } from 'lodash';
-import { useDispatch } from 'react-redux';
 import { toASCII } from 'punycode';
+import { getAppDispatch } from '../../../state/dispatch';
 
 import { ConvoHub } from '../../../session/conversations';
 
@@ -63,7 +63,7 @@ export const StyledLeftPaneOverlay = styled(Flex)`
 `;
 
 export const OverlayMessage = () => {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   function closeOverlay() {
     dispatch(sectionActions.resetLeftOverlayMode());

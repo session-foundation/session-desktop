@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import type { JSX } from 'react';
 import { RenderTextCallbackType } from '../../types/Util';
 import { SizeClassType } from '../../util/emoji';
 import { AddNewLines } from '../conversation/AddNewLines';
@@ -7,8 +8,6 @@ import {
   MessageBody,
   renderTextDefault,
 } from '../conversation/message/message-content/MessageBody';
-
-import type { JSX } from "react";
 
 const renderNewLines: RenderTextCallbackType = ({ text, key, isGroup, isPublic }) => (
   <AddNewLines

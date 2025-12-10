@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 import { type ReactNode } from 'react';
-import { useDispatch } from 'react-redux';
+import { getAppDispatch } from '../../../../../state/dispatch';
 import { tr } from '../../../../../localization/localeTools';
 import { Localizer } from '../../../../basic/Localizer';
 import { ModalBasicHeader } from '../../../../SessionWrapperModal';
@@ -221,7 +221,7 @@ function ProInfoBlockLayout({
 }
 
 function ProInfoBlockUpgrade() {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const { data } = useProAccessDetails();
   return (
     <ProInfoBlockLayout
@@ -287,7 +287,7 @@ function ProInfoBlockUpdate() {
 }
 
 function ProInfoBlockRenew() {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const { data } = useProAccessDetails();
   return (
     <ProInfoBlockLayout
@@ -494,7 +494,7 @@ function ProInfoBlock({ variant }: VariantPageProps) {
 }
 
 function ProPageButtonUpdate() {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const { data } = useProAccessDetails();
   return (
     <SessionButton
@@ -511,7 +511,7 @@ function ProPageButtonUpdate() {
 }
 
 function ProPageButtonCancel() {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const { data } = useProAccessDetails();
   return (
     <SessionButton
@@ -528,7 +528,7 @@ function ProPageButtonCancel() {
 }
 
 function ProPageButtonRefund() {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const { data } = useProAccessDetails();
   return (
     <SessionButton

@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 // tslint:disable-next-line: no-submodule-imports
 import useKey from 'react-use/lib/useKey';
 import { clipboard } from 'electron';
+import { getAppDispatch } from '../../../../../state/dispatch';
 import { PropsForAttachment, closeRightPanel } from '../../../../../state/ducks/conversations';
 import { getMessageInfoId } from '../../../../../state/selectors/conversations';
 import { Flex } from '../../../../basic/Flex';
@@ -218,7 +219,7 @@ function CopyMessageBodyButton({ messageId }: WithMessageIdOpt) {
 }
 
 function ReplyToMessageButton({ messageId }: WithMessageIdOpt) {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   if (!messageId) {
     return null;
   }
@@ -241,7 +242,7 @@ function ReplyToMessageButton({ messageId }: WithMessageIdOpt) {
 }
 
 export const OverlayMessageInfo = () => {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   const rightOverlayMode = useRightOverlayMode();
   const messageId = useSelector(getMessageInfoId);

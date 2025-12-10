@@ -9,7 +9,7 @@ import {
 } from 'react';
 import useMount from 'react-use/lib/useMount';
 import styled from 'styled-components';
-import { useDispatch } from 'react-redux';
+import { getAppDispatch } from '../../../../../state/dispatch';
 import { ModalBasicHeader } from '../../../../SessionWrapperModal';
 import { useUserSettingsBackAction, useUserSettingsCloseAction } from '../userSettingsHooks';
 import {
@@ -186,7 +186,7 @@ export function ProHeroImage({
 }
 
 function useBackendErrorDialogButtons() {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const { refetch } = useProAccessDetails();
 
   const buttons = useMemo(() => {
@@ -216,7 +216,7 @@ function useBackendErrorDialogButtons() {
 
 function ProNonProContinueButton({ state }: SectionProps) {
   const { returnToThisModalAction, centerAlign, afterCloseAction } = state;
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const neverHadPro = useCurrentNeverHadPro();
   const { isLoading, isError } = useProAccessDetails();
 
@@ -428,7 +428,7 @@ function ProStats() {
 }
 
 function ProSettings({ state }: SectionProps) {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const userHasPro = useCurrentUserHasPro();
   const userHasExpiredPro = useCurrentUserHasExpiredPro();
   const userNeverHadPro = useCurrentNeverHadPro();
@@ -689,7 +689,7 @@ function getProFeatures(userHasPro: boolean): Array<
 }
 
 function ProFeatures({ state }: SectionProps) {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const userHasPro = useCurrentUserHasPro();
   const expiredPro = useCurrentUserHasExpiredPro();
   const proFeatures = useMemo(() => getProFeatures(userHasPro), [userHasPro]);
@@ -747,7 +747,7 @@ function ProFeatures({ state }: SectionProps) {
 }
 
 function ManageProCurrentAccess({ state }: SectionProps) {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const { data } = useProAccessDetails();
   const userHasPro = useCurrentUserHasPro();
   if (!userHasPro) {
@@ -799,7 +799,7 @@ function ManageProCurrentAccess({ state }: SectionProps) {
 }
 
 function ManageProAccess({ state }: SectionProps) {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const isDarkTheme = useIsDarkTheme();
   const userHasExpiredPro = useCurrentUserHasExpiredPro();
 
@@ -907,7 +907,7 @@ function ManageProRecoverAccess(_props: SectionProps) {
 }
 
 function ProHelp() {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   return (
     <SectionFlexContainer>
       <PanelLabelWithDescription title={{ token: 'sessionHelp' }} />
@@ -937,7 +937,7 @@ function ProHelp() {
 }
 
 function PageHero({ state }: SectionProps) {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const isPro = useCurrentUserHasPro();
   const proExpired = useCurrentUserHasExpiredPro();
   const { isLoading, isError } = useProAccessDetails();
@@ -1031,7 +1031,7 @@ export function ProSettingsPage(modalState: {
   centerAlign?: boolean;
   afterCloseAction?: () => void;
 }) {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const backAction = useUserSettingsBackAction(modalState);
   const closeAction = useUserSettingsCloseAction(modalState);
 

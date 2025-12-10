@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import { useState } from 'react';
-import { useDispatch } from 'react-redux';
 import useMount from 'react-use/lib/useMount';
 import { isEmpty } from 'lodash';
+import { getAppDispatch } from '../../state/dispatch';
 
 import {
   useAvatarPath,
@@ -122,7 +122,7 @@ function useDescriptionErrorString({
 }
 
 export function UpdateConversationDetailsDialog(props: WithConvoId) {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const { conversationId } = props;
   const isClosedGroup = useIsClosedGroup(conversationId);
   const isPublic = useIsPublic(conversationId);

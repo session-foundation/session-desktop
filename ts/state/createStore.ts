@@ -31,4 +31,3 @@ export const createStore = (initialState: any) =>
   });
 
 export type AppDispatch = ReturnType<typeof createStore>['dispatch'];
-

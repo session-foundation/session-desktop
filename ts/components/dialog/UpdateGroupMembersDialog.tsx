@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
-import { useDispatch } from 'react-redux';
-
 import { PubkeyType } from 'libsession_util_nodejs';
+import { getAppDispatch } from '../../state/dispatch';
+
 import { ToastUtils } from '../../session/utils';
 
 import { updateGroupMembersModal } from '../../state/ducks/modalDialog';
@@ -126,7 +126,7 @@ export const UpdateGroupMembersDialog = (props: Props) => {
 
   const { addTo, removeFrom, uniqueValues: membersToRemove } = useSet<string>([]);
 
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   if (isPrivate || isPublic) {
     throw new Error('UpdateGroupMembersDialog invalid convoProps');

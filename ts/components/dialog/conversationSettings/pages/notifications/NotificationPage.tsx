@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { getAppDispatch } from '../../../../../state/dispatch';
 import { useIsLegacyGroup, useNotificationSetting } from '../../../../../hooks/useParamSelector';
 import { useSelectedConversationKey } from '../../../../../state/selectors/selectedConversation';
 import { Flex } from '../../../../basic/Flex';
@@ -65,7 +65,7 @@ export function NotificationForConversationModal(props: Required<ConversationSet
   const title = useTitleFromPage(props?.settingsModalPage);
   const backAction = useBackActionForPage(props);
 
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const selectedConversationKey = useSelectedConversationKey();
   const notification = useNotificationSetting(selectedConversationKey);
   const isLegacyGroup = useIsLegacyGroup(selectedConversationKey);

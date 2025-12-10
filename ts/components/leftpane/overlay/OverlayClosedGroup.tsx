@@ -1,12 +1,13 @@
 import { useState } from 'react';
 
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import useKey from 'react-use/lib/useKey';
 import styled from 'styled-components';
 
 import { concat, isEmpty } from 'lodash';
 import useBoolean from 'react-use/lib/useBoolean';
 import type { PubkeyType } from 'libsession_util_nodejs';
+import { getAppDispatch } from '../../../state/dispatch';
 import { MemberListItem } from '../../MemberListItem';
 import { SessionButton, SessionButtonColor } from '../../basic/SessionButton';
 
@@ -42,7 +43,7 @@ const StyledGroupMemberListContainer = styled.div`
 `;
 
 export const OverlayClosedGroupV2 = () => {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const us = useOurPkStr();
   const { contactsToInvite, searchTerm } = useContactsToInviteTo('create-group');
   const isCreatingGroup = useIsCreatingGroupFromUIPending();

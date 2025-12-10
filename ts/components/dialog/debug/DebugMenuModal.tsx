@@ -1,7 +1,7 @@
 import styled from 'styled-components';
-import { useDispatch } from 'react-redux';
 import useUpdate from 'react-use/lib/useUpdate';
 import { type Dispatch, useState, ReactNode } from 'react';
+import { getAppDispatch } from '../../../state/dispatch';
 import { Flex } from '../../basic/Flex';
 import { updateDebugMenuModal } from '../../../state/ducks/modalDialog';
 import {
@@ -161,7 +161,7 @@ function getPage(page: DEBUG_MENU_PAGE, setPage: Dispatch<DEBUG_MENU_PAGE>) {
 }
 
 export function DebugMenuModal() {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   const [page, setPage] = useState<DEBUG_MENU_PAGE>(DEBUG_MENU_PAGE.MAIN);
 

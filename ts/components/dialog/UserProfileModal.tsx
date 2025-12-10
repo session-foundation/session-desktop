@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useDispatch } from 'react-redux';
 import useKey from 'react-use/lib/useKey';
 import styled from 'styled-components';
+import { getAppDispatch } from '../../state/dispatch';
 
 import { ConvoHub } from '../../session/conversations';
 import { openConversationWithMessages } from '../../state/ducks/conversations';
@@ -55,7 +55,7 @@ export const UserProfileModal = ({
   conversationId,
   realSessionId,
 }: NonNullable<UserProfileModalState>) => {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const [enlargedImage, setEnlargedImage] = useState(false);
 
   const isBlinded = PubKey.isBlinded(conversationId);

@@ -1,7 +1,7 @@
 import { type RefObject, useRef, useState } from 'react';
-import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
 import useMount from 'react-use/lib/useMount';
+import { getAppDispatch } from '../../../../state/dispatch';
 import { useHotkey } from '../../../../hooks/useHotkey';
 import { useOurConversationUsername, useOurAvatarPath } from '../../../../hooks/useParamSelector';
 import { UserUtils, ToastUtils } from '../../../../session/utils';
@@ -98,7 +98,7 @@ function LucideIconForSettings(props: Omit<LucideIconProps, 'iconSize' | 'style'
 }
 
 function SessionProSection() {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   const isProAvailable = useIsProAvailable();
   const userHasPro = useCurrentUserHasPro();
@@ -134,7 +134,7 @@ function SessionProSection() {
 }
 
 function MiscSection() {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   return (
     <PanelButtonGroup>
       <PanelIconButton
@@ -177,7 +177,7 @@ function MiscSection() {
 }
 
 function SettingsSection() {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   return (
     <PanelButtonGroup>
@@ -238,7 +238,7 @@ function SettingsSection() {
 }
 
 function AdminSection() {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const recoveryPasswordHidden = useHideRecoveryPasswordEnabled();
 
   return (
@@ -302,7 +302,7 @@ const StyledSpanSessionInfo = styled.span<{ opacity?: number }>`
 const SessionInfo = () => {
   const [clickCount, setClickCount] = useState(0);
 
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   return (
     <StyledVersionInfo>
@@ -348,7 +348,7 @@ const SessionInfo = () => {
 };
 
 export const DefaultSettingPage = (modalState: UserSettingsModalState) => {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const closeAction = useUserSettingsCloseAction(modalState);
   const { refetch, t } = useProAccessDetails();
 

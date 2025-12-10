@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import { useState } from 'react';
-import { useDispatch } from 'react-redux';
 import useKey from 'react-use/lib/useKey';
+import { getAppDispatch } from '../../../state/dispatch';
 
 import { SessionJoinableRooms } from './SessionJoinableDefaultRooms';
 
@@ -44,7 +44,7 @@ async function joinOpenGroup(
 }
 
 export const OverlayCommunity = () => {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   const [groupUrl, setGroupUrl] = useState('');
   const [groupUrlError, setGroupUrlError] = useState<string | undefined>(undefined);

@@ -147,7 +147,7 @@ export function selectLibMembersCount(state: StateType, convo?: GroupPubkeyType)
   return selectLibMembersPubkeys(state, convo);
 }
 
-function selectLibGroupName(state: StateType, convo?: string): string | undefined {
+export function selectLibGroupName(state: StateType, convo?: string): string | undefined {
   if (!convo) {
     return undefined;
   }

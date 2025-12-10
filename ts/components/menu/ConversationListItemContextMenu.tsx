@@ -1,5 +1,6 @@
 import { Menu } from 'react-contexify';
 
+import type { JSX } from 'react';
 import { useConvoIdFromContext } from '../../contexts/ConvoIdContext';
 import { useIsLegacyGroup, useIsPinned } from '../../hooks/useParamSelector';
 import { useIsSearchingForType } from '../../state/selectors/search';
@@ -35,8 +36,6 @@ import {
 } from './items/LeaveAndDeleteGroup/DeleteGroupMenuItem';
 import { tr } from '../../localization/localeTools';
 import { useTogglePinConversationHandler } from '../menuAndSettingsHooks/UseTogglePinConversationHandler';
-
-import type { JSX } from "react";
 
 export type PropsContextConversationItem = {
   triggerId: string;

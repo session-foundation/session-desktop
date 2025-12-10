@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
-import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
+import { getAppDispatch } from '../../../../../state/dispatch';
 import { closeRightPanel } from '../../../../../state/ducks/conversations';
 import { Flex } from '../../../../basic/Flex';
 import { sectionActions } from '../../../../../state/ducks/section';
@@ -32,7 +32,7 @@ type HeaderProps = (
 
 export const Header = (props: HeaderProps) => {
   const { children, hideCloseButton, closeButtonOnClick, paddingTop } = props;
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   return (
     <Flex

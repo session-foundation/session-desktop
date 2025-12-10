@@ -6,7 +6,7 @@ import { StateType } from '../reducer';
 
 const getUserGroupState = (state: StateType): UserGroupState => state.userGroups;
 
-const getGroupById = (state: StateType, convoId?: string) => {
+export const getGroupById = (state: StateType, convoId?: string) => {
   return convoId && PubKey.is03Pubkey(convoId)
     ? getUserGroupState(state).userGroups[convoId]
     : undefined;

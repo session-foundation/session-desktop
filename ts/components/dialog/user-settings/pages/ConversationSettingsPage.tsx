@@ -1,5 +1,6 @@
 import useUpdate from 'react-use/lib/useUpdate';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
+import { getAppDispatch } from '../../../../state/dispatch';
 
 import {
   userSettingsModal,
@@ -40,7 +41,7 @@ export function ConversationSettingsPage(modalState: UserSettingsModalState) {
   const backAction = useUserSettingsBackAction(modalState);
   const closeAction = useUserSettingsCloseAction(modalState);
   const title = useUserSettingsTitle(modalState);
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   const isOpengroupPruningEnabled = Boolean(
     window.getSettingValue(SettingsKey.settingsOpengroupPruning)

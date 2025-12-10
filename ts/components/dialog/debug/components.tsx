@@ -1,7 +1,6 @@
 import { base64_variants, from_hex, to_base64 } from 'libsodium-wrappers-sumo';
 import useAsync from 'react-use/lib/useAsync';
 import { ipcRenderer, shell } from 'electron';
-import { useDispatch } from 'react-redux';
 import { useCallback, useState } from 'react';
 import useAsyncFn from 'react-use/lib/useAsyncFn';
 import useInterval from 'react-use/lib/useInterval';
@@ -10,6 +9,7 @@ import styled from 'styled-components';
 
 import type { ProProof, PubkeyType } from 'libsession_util_nodejs';
 import { chunk, toNumber } from 'lodash';
+import { getAppDispatch } from '../../../state/dispatch';
 import { Flex } from '../../basic/Flex';
 import { SpacerXS } from '../../basic/Text';
 import { tr } from '../../../localization/localeTools';
@@ -330,7 +330,7 @@ export const Playgrounds = ({ setPage }: DebugMenuPageProps) => {
 };
 
 export const DebugActions = () => {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const proAvailable = useIsProAvailable();
 
   return (
@@ -483,7 +483,7 @@ export const DebugUrlInteractionsSection = () => {
 };
 
 export const ExperimentalActions = ({ forceUpdate }: { forceUpdate: () => void }) => {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   // const refreshedAt = useReleasedFeaturesRefreshedAt();
   // const sesh101NotificationAt = useSesh101NotificationAt();
 

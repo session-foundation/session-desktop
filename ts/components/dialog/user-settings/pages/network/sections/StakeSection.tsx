@@ -1,6 +1,6 @@
 import styled from 'styled-components';
-import { useDispatch } from 'react-redux';
 import type { SessionDataTestId } from 'react';
+import { getAppDispatch } from '../../../../../../state/dispatch';
 import { SessionNetworkParagraph, SectionHeading, SessionNetworkButton } from '../components';
 import { LOCALE_DEFAULTS } from '../../../../../../localization/constants';
 import { Localizer } from '../../../../../basic/Localizer';
@@ -74,7 +74,7 @@ export function StakeSection() {
   const usdMarketCap = useUSDMarketCap();
   const dataIsStale = useDataIsStale();
 
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const isFakeRefreshing = useInfoFakeRefreshing();
 
   const stakingRewardPoolValue =

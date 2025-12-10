@@ -1,4 +1,4 @@
-import { useDispatch } from 'react-redux';
+import { getAppDispatch } from '../../state/dispatch';
 import { useIsProAvailable } from '../../hooks/useIsProAvailable';
 import { ProMessageFeature } from '../../models/proMessageFeature';
 import { SessionCTAState, updateSessionCTA } from '../../state/ducks/modalDialog';
@@ -121,7 +121,7 @@ function proFeatureToVariant(proFeature: ProMessageFeature): CTAVariant {
 export function useProBadgeOnClickCb(
   opts: ProBadgeContext
 ): ShowTagWithCb | ShowTagNoCb | DoNotShowTag {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const handleShowProInfoModal = useShowSessionCTACbWithVariant();
   const isProAvailable = useIsProAvailable();
 

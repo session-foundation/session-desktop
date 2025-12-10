@@ -1,4 +1,4 @@
-import { useDispatch } from 'react-redux';
+import { getAppDispatch } from '../../state/dispatch';
 import { useIsHidden, useIsMe } from '../../hooks/useParamSelector';
 import { ConvoHub } from '../../session/conversations';
 import { updateConfirmModal } from '../../state/ducks/modalDialog';
@@ -12,10 +12,9 @@ function useShowNoteToSelf({ conversationId }: { conversationId: string }) {
   return isMe && isHidden;
 }
 
-
 export function useShowNoteToSelfCb({ conversationId }: { conversationId: string }) {
   const showNTS = useShowNoteToSelf({ conversationId });
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   const onClickClose = () => {
     dispatch(updateConfirmModal(null));

@@ -6,4 +6,3 @@ export function getAppDispatch() {
   const dispatch = useDispatch<AppDispatch>();
   return dispatch;
 }
-

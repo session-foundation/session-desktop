@@ -1,5 +1,5 @@
-import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
+import { getAppDispatch } from '../../state/dispatch';
 import { useLeftOverlayMode } from '../../state/selectors/section';
 import { sectionActions } from '../../state/ducks/section';
 import { searchActions } from '../../state/ducks/search';
@@ -39,7 +39,7 @@ const StyledMenuButton = styled.button`
  */
 export const MenuButton = () => {
   const leftOverlayMode = useLeftOverlayMode();
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   const isToggled = Boolean(leftOverlayMode);
 

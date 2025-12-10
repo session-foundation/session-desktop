@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
+import { getAppDispatch } from '../../../state/dispatch';
 import { useDisappearingMessageSettingText } from '../../../hooks/useParamSelector';
 import { useIsRightPanelShowing } from '../../../hooks/useUI';
 import { closeRightPanel } from '../../../state/ducks/conversations';
@@ -164,7 +164,7 @@ const StyledName = styled.span`
 `;
 
 export const ConversationHeaderTitle = ({ showSubtitle }: { showSubtitle: boolean }) => {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const convoId = useSelectedConversationKey();
   const convoName = useSelectedNicknameOrProfileNameOrShortenedPubkey();
   const isRightPanelOn = useIsRightPanelShowing();

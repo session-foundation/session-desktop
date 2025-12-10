@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import styled from 'styled-components';
+import { getAppDispatch } from '../../../../../state/dispatch';
 import { setDisappearingMessagesByConvoId } from '../../../../../interactions/conversationInteractions';
 import { TimerOptions } from '../../../../../session/disappearing_messages/timerOptions';
 import { DisappearingMessageConversationModeType } from '../../../../../session/disappearing_messages/types';
@@ -83,7 +84,7 @@ function useSingleMode(disappearingModeOptions: Record<string, boolean> | undefi
 }
 
 export const DisappearingMessagesForConversationModal = (props: ConversationSettingsModalState) => {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const onClose = useCloseActionFromPage(props);
   const title = useTitleFromPage(props?.settingsModalPage);
   const selectedConversationKey = useSelectedConversationKey();

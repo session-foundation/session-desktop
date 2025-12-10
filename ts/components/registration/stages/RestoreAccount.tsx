@@ -1,7 +1,7 @@
 import { Dispatch } from '@reduxjs/toolkit';
 import { isEmpty } from 'lodash';
-import { useDispatch } from 'react-redux';
 import { useState } from 'react';
+import { getAppDispatch } from '../../../state/dispatch';
 import { ONBOARDING_TIMES } from '../../../session/constants';
 import { InvalidWordsError, NotEnoughWordsError } from '../../../session/crypto/mnemonic';
 import { ProfileManager } from '../../../session/profile_manager/ProfileManager';
@@ -130,7 +130,7 @@ const showHideButtonDataTestIds = {
 } as const;
 
 const RecoveryPhraseInput = ({ onEnterPressed }: { onEnterPressed: () => Promise<void> }) => {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const recoveryPassword = useRecoveryPassword();
   const recoveryPasswordError = useRecoveryPasswordError();
 
@@ -161,7 +161,7 @@ export const RestoreAccount = () => {
   const displayNameError = useDisplayNameError();
   const progress = useProgress();
 
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   const [cannotContinue, setCannotContinue] = useState(true);
 

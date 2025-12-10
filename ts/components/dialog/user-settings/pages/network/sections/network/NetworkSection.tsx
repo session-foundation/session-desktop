@@ -1,8 +1,8 @@
 /* eslint-disable no-unneeded-ternary */
 import styled from 'styled-components';
-import { useDispatch } from 'react-redux';
 import type { CSSProperties } from 'styled-components';
 import { useMemo } from 'react';
+import { getAppDispatch } from '../../../../../../../state/dispatch';
 import { tr } from '../../../../../../../localization/localeTools';
 import { Flex } from '../../../../../../basic/Flex';
 import { SpacerMD, SpacerXS } from '../../../../../../basic/Text';
@@ -247,7 +247,7 @@ const SecuredByBlock = () => {
 
 export function NetworkSection() {
   const htmlDirection = useHTMLDirection();
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   const { swarmNodeCount, dataIsStale } = useSecuringNodesCount();
 

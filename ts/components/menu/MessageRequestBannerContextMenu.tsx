@@ -1,5 +1,6 @@
 import { Menu } from 'react-contexify';
-import { useDispatch } from 'react-redux';
+import type { JSX } from 'react';
+import { getAppDispatch } from '../../state/dispatch';
 
 import { SessionContextMenuContainer } from '../SessionContextMenuContainer';
 
@@ -8,14 +9,12 @@ import { ItemWithDataTestId } from './items/MenuItemWithDataTestId';
 import { getMenuAnimation } from './MenuAnimation';
 import { tr } from '../../localization/localeTools';
 
-import type { JSX } from "react";
-
 export type PropsContextConversationItem = {
   triggerId: string;
 };
 
 const HideBannerMenuItem = (): JSX.Element => {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   return (
     <ItemWithDataTestId
       onClick={() => {
