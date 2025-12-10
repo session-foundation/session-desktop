@@ -18,7 +18,7 @@ Session uses the Session encryption protocol and the Oxen blockchain’s decentr
 
 <!-- NOTE Make sure to verify the supported platforms have not changed before making a release. Mac minimumSystemVersion in package.json and the Windows version in build/installer.nsh may need to be updated too -->
 
-Session requires Windows 10 or later, macOS Sonoma (14, for arm), macOS Sequoia (15 for intel), or a Linux distribution with glibc 2.35 or later like Debian 12 or Ubuntu 22.04.
+Session requires Windows 10 or later, macOS Ventura (13) or later, or a Linux distribution with glibc 2.35 or later like Debian 12 or Ubuntu 22.04.
 
 <h1 id="verify-signatures">Verify Signatures</h1>
 
