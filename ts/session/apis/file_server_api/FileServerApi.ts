@@ -20,6 +20,7 @@ import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesRedux
 
 const RELEASE_VERSION_ENDPOINT = '/session_version';
 const FILE_ENDPOINT = '/file';
+const ALPHANUMERIC_ID_LEN = 44;
 
 function getShortTTLHeadersIfNeeded(): Record<string, string> {
   if (getFeatureFlag('fsTTL30s')) {
@@ -200,10 +201,17 @@ export const getLatestReleaseFromFileServer = async (
 
 /**
  * Extend a file expiry from the file server.
- * This only works with files that have an alphanumeric id.
+ * This only works with files that have an alphanumeric id (of length 44).
  *
  */
 export const extendFileExpiry = async (fileId: string, fsTarget: FILE_SERVER_TARGET_TYPE) => {
+  if (fileId.length !== ALPHANUMERIC_ID_LEN) {
+    window.log.debug(
+      `Cannot renew expiry of non deterministic fileId with length: "${fileId.length}"`
+    );
+
+    return null;
+  }
   if (getFeatureFlag('debugServerRequests')) {
     window.log.info(`about to renew expiry of file: "${fileId}"`);
   }

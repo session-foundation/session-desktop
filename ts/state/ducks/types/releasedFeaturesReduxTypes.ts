@@ -9,6 +9,7 @@ import { DURATION } from '../../../session/constants';
 type SessionBaseBooleanFeatureFlags = {
   replaceLocalizedStringsWithKeys: boolean;
   disableOnionRequests: boolean;
+  disableImageProcessor: boolean;
   useDeterministicEncryption: boolean;
   useTestNet: boolean;
   useTestProBackend: boolean;
@@ -38,6 +39,8 @@ export type SessionDebugBooleanFeatureFlags = {
   debugOnionPaths: boolean;
   debugSnodePool: boolean;
   debugOnionRequests: boolean;
+  debugInsecureNodeFetch: boolean;
+  debugOnlineState: boolean;
 };
 
 export type SessionBooleanFeatureFlags = SessionBaseBooleanFeatureFlags &

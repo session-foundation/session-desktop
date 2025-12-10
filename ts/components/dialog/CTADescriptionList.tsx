@@ -23,13 +23,15 @@ const StyledListItem = styled.li`
 
 export function CTADescriptionListItem({
   children,
+  index,
   customIconSrc,
 }: {
   children: ReactNode;
+  index: number;
   customIconSrc?: string;
 }) {
   return (
-    <StyledListItem>
+    <StyledListItem data-testid={`cta-list-item-${index + 1}`}>
       {customIconSrc ? (
         <FileIcon iconSize={'var(--font-size-xl)'} src={customIconSrc} />
       ) : (

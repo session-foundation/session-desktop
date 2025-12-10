@@ -16,6 +16,7 @@ import {
   SessionProfileResetAvatarGroupCommunity,
   SessionProfileSetAvatarDownloadedAny,
 } from '../../../../models/profile';
+import { FetchDestination } from '../../../utils/InsecureNodeFetch';
 
 function fileDetailsToEndpoint({ fileId, roomId }: { fileId: number | string; roomId: string }) {
   return `/room/${roomId}/file/${fileId}`;
@@ -97,7 +98,9 @@ export async function fetchBinaryFromSogsWithOnionV4(sendOptions: {
     },
     throwError,
     abortSignal,
-    30 * DURATION.SECONDS // longer time for binary fetch
+    30 * DURATION.SECONDS, // longer time for binary fetch
+    FetchDestination.SOGS,
+    'fetchBinaryFromSogsWithOnionV4'
   );
 
   if (!res?.bodyBinary) {

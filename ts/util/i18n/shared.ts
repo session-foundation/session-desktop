@@ -5,6 +5,7 @@ import { isUnitTest } from '../../shared/env_vars';
 
 let mappedBrowserLocaleDisplayed = false;
 let crowdinLocale: CrowdinLocale | undefined;
+let browserLocale: string | undefined;
 
 /**
  * Logs an i18n message to the console.
@@ -58,11 +59,11 @@ export function getCrowdinLocale(): CrowdinLocale {
 /**
  * Returns the closest supported locale by the browser.
  */
-export function getBrowserLocale() {
-  const browserLocale = keepFullLocalePart(process.env.LANGUAGE || getCrowdinLocale() || 'en');
+function getInitialBrowserLocale() {
+  const parsedLocale = keepFullLocalePart(process.env.LANGUAGE || getCrowdinLocale() || 'en');
 
   // supportedLocalesOf will throw if the locales has a '_' instead of a '-' in it.
-  const userLocaleDashed = browserLocale.replaceAll('_', '-');
+  const userLocaleDashed = parsedLocale.replaceAll('_', '-');
 
   try {
     let matchingLocales: Array<string> = [];
@@ -96,6 +97,13 @@ export function getBrowserLocale() {
     }
     return 'en';
   }
+}
+
+export function getBrowserLocale() {
+  if (!browserLocale) {
+    browserLocale = getInitialBrowserLocale();
+  }
+  return browserLocale;
 }
 
 export function setInitialLocale(crowdinLocaleArg: CrowdinLocale) {

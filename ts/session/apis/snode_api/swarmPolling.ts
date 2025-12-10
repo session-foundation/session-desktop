@@ -13,12 +13,10 @@ import { v4 } from 'uuid';
 import { Data } from '../../../data/data';
 import * as Receiver from '../../../receiver/receiver';
 import { PubKey } from '../../types';
-import { ERROR_CODE_NO_CONNECT } from './SNodeAPI';
 
 import { ConversationModel } from '../../../models/conversation';
 import { LibsessionMessageHandler } from '../../../receiver/libsession/handleLibSessionMessage';
 import { SwarmDecodedEnvelope } from '../../../receiver/types';
-import { updateIsOnline } from '../../../state/ducks/onions';
 import { assertUnreachable } from '../../../types/sqlSharedTypes';
 import {
   UserGenericWrapperActions,
@@ -50,10 +48,10 @@ import {
 } from './types';
 import { ConversationTypeEnum } from '../../../models/types';
 import { Snode } from '../../../data/types';
-import { ReduxOnionSelectors } from '../../../state/selectors/onions';
 import ProBackendAPI from '../pro_backend_api/ProBackendAPI';
 import { NetworkTime } from '../../../util/NetworkTime';
 import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
+import { setIsOnlineIfDifferent } from '../../utils/InsecureNodeFetch';
 
 const minMsgCountShouldRetry = 95;
 /**
@@ -300,9 +298,7 @@ export class SwarmPolling {
     if (!window.isOnline) {
       window?.log?.error('SwarmPolling: pollForAllKeys: offline');
       // Very important to set up a new polling call so we do retry at some point
-      if (ReduxOnionSelectors.isOnlineOutsideRedux()) {
-        window.inboxStore?.dispatch(updateIsOnline(false));
-      }
+      setIsOnlineIfDifferent(false);
       timeouts.push(setTimeout(this.pollForAllKeys.bind(this), SWARM_POLLING_TIMEOUT.ACTIVE));
       return;
     }
@@ -790,19 +786,8 @@ export class SwarmPolling {
         })
       );
 
-      if (!ReduxOnionSelectors.isOnlineOutsideRedux()) {
-        window.inboxStore?.dispatch(updateIsOnline(true));
-      }
-
       return results;
     } catch (e) {
-      if (e.message === ERROR_CODE_NO_CONNECT || !navigator.onLine) {
-        if (ReduxOnionSelectors.isOnlineOutsideRedux()) {
-          window.inboxStore?.dispatch(updateIsOnline(false));
-        }
-      } else if (!ReduxOnionSelectors.isOnlineOutsideRedux()) {
-        window.inboxStore?.dispatch(updateIsOnline(true));
-      }
       window?.log?.warn('SwarmPolling: pollNodeForKey failed with:', e.message);
       return null;
     }

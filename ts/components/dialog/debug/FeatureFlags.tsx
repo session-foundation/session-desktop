@@ -485,6 +485,10 @@ const handledBooleanFeatureFlags = proBooleanFlags
     'debugServerRequests',
     'debugNonSnodeRequests',
     'debugOnionRequests',
+    'debugOnionPaths',
+    'debugSnodePool',
+    'debugOnlineState',
+    'debugInsecureNodeFetch',
   ]);
 
 export const FeatureFlags = ({ forceUpdate }: { forceUpdate: () => void }) => {

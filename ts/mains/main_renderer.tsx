@@ -6,7 +6,7 @@ import { ipcRenderer } from 'electron';
 // eslint-disable-next-line import/no-named-default
 
 import { isMacOS } from '../OS';
-import { SessionInboxView } from '../components/SessionInboxView';
+import { doAppStartUp, SessionInboxView } from '../components/SessionInboxView';
 import { SessionRegistrationView } from '../components/registration/SessionRegistrationView';
 import { Data } from '../data/data';
 import { OpenGroupData } from '../data/opengroups';
@@ -263,19 +263,16 @@ async function start() {
     }
   }
 
-  function openInbox() {
+  async function openInbox() {
     switchBodyToRtlIfNeeded();
     const hideMenuBar = Storage.get('hide-menu-bar', true) as boolean;
     window.setAutoHideMenuBar(hideMenuBar);
     window.setMenuBarVisibility(!hideMenuBar);
-    // eslint-disable-next-line more/no-then
-    void ConvoHub.use()
-      .loadPromise()
-      ?.then(() => {
-        const container = document.getElementById('root');
-        const root = createRoot(container!);
-        root.render(<SessionInboxView />);
-      });
+    await ConvoHub.use().loadPromise();
+    const container = document.getElementById('root');
+    const root = createRoot(container!);
+    await doAppStartUp();
+    root.render(<SessionInboxView />);
   }
 
   function showRegistrationView() {
@@ -289,7 +286,7 @@ async function start() {
 
   if (Registration.isDone() && !isSignInByLinking()) {
     await connect();
-    openInbox();
+    await openInbox();
   } else {
     const primaryColor = window.Events.getPrimaryColorSetting();
     await switchPrimaryColorTo(primaryColor);
@@ -375,7 +372,7 @@ async function start() {
         messageId: null,
       });
     } else {
-      openInbox();
+      await openInbox();
     }
   };
   await window.setSettingValue('launch-count', launchCount);
@@ -388,7 +385,7 @@ async function start() {
   }
 
   WhisperEvents.on('openInbox', () => {
-    openInbox();
+    void openInbox();
   });
 }
 
