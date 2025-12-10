@@ -51,10 +51,10 @@ import {
 } from '../../../../../hooks/useHasPro';
 import { SessionButton, SessionButtonColor } from '../../../../basic/SessionButton';
 import { proButtonProps } from '../../../SessionCTA';
-import { useIsProGroupsAvailable } from '../../../../../hooks/useIsProAvailable';
+import { getIsProGroupsAvailableMemo } from '../../../../../hooks/useIsProAvailable';
 import { SpacerMD } from '../../../../basic/Text';
 import LIBSESSION_CONSTANTS from '../../../../../session/utils/libsession/libsession_constants';
-import { useDataFeatureFlag } from '../../../../../state/ducks/types/releasedFeaturesReduxTypes';
+import { getDataFeatureFlagMemo } from '../../../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { AnimatedSpinnerIcon } from '../../../../loading/spinner/AnimatedSpinnerIcon';
 import { UserConfigWrapperActions } from '../../../../../webworker/workers/browser/libsession_worker_interface';
 import {
@@ -294,10 +294,10 @@ const proBoxShadow = '0 4px 4px 0 rgba(0, 0, 0, 0.25)';
 const proBoxShadowSmall = '0 4px 4px 0 rgba(0, 0, 0, 0.15)';
 
 function ProStats() {
-  const mockProLongerMessagesSent = useDataFeatureFlag('mockProLongerMessagesSent');
-  const mockProPinnedConversations = useDataFeatureFlag('mockProPinnedConversations');
-  const mockProBadgesSent = useDataFeatureFlag('mockProBadgesSent');
-  const mockProGroupsUpgraded = useDataFeatureFlag('mockProGroupsUpgraded');
+  const mockProLongerMessagesSent = getDataFeatureFlagMemo('mockProLongerMessagesSent');
+  const mockProPinnedConversations = getDataFeatureFlagMemo('mockProPinnedConversations');
+  const mockProBadgesSent = getDataFeatureFlagMemo('mockProBadgesSent');
+  const mockProGroupsUpgraded = getDataFeatureFlagMemo('mockProGroupsUpgraded');
 
   const proLongerMessagesSent =
     mockProLongerMessagesSent ?? (Storage.get(SettingsKey.proLongerMessagesSent) || 0);
@@ -318,7 +318,7 @@ function ProStats() {
     []
   );
 
-  const proGroupsAvailable = useIsProGroupsAvailable();
+  const proGroupsAvailable = getIsProGroupsAvailableMemo();
 
   const userHasPro = useCurrentUserHasPro();
   if (!userHasPro) {

@@ -26,7 +26,7 @@ import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/S
 import { SpacerMD, SpacerSM } from '../basic/Text';
 import { SessionSpinner } from '../loading';
 import { tr } from '../../localization/localeTools';
-import { SimpleSessionInput, SimpleSessionTextarea } from '../inputs/SessionInput';
+import { SimpleSessionInput } from '../inputs/SessionInput';
 import {
   ModalBasicHeader,
   ModalActionsContainer,
@@ -45,6 +45,7 @@ import { UploadFirstImageButton } from '../buttons/avatar/UploadFirstImageButton
 import { sanitizeDisplayNameOrToast } from '../registration/utils';
 import { ProfileManager } from '../../session/profile_manager/ProfileManager';
 import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
+import { SimpleSessionTextarea } from '../inputs/SimpleSessionTextarea';
 
 /**
  * We want the description to be at most 200 visible characters, in addition

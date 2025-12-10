@@ -1,5 +1,5 @@
 import { useSelector } from 'react-redux';
-import { useIsProAvailable } from '../../hooks/useIsProAvailable';
+import { getIsProAvailableMemo } from '../../hooks/useIsProAvailable';
 import { ConvoHub } from '../../session/conversations';
 import {
   useIsKickedFromGroup,
@@ -36,17 +36,36 @@ function useShowPinUnpin(conversationId: string) {
   return !isMessageRequest && (!isPrivate || (isPrivate && isPrivateAndFriend));
 }
 
+// NOTE: [react-compiler] this has to live here for the hook to be identified as static
+function usePinnedConversationCount() {
+  return useSelector(getPinnedConversationsCount);
+}
+
+// NOTE: [react-compiler] this has to live here for the hook to be identified as static
+function useHasProInternal() {
+  return useCurrentUserHasPro();
+}
+
+// NOTE: [react-compiler] this has to live here for the hook to be identified as static
+function useIsPinnedInternal(id: string) {
+  return useIsPinned(id);
+}
+
+// NOTE: [react-compiler] this has to live here for the hook to be identified as static
+function useCTACallbackInternal() {
+  return useShowSessionCTACbWithVariant();
+}
+
 export function useTogglePinConversationHandler(id: string) {
   const conversation = ConvoHub.use().get(id);
-  const isPinned = useIsPinned(id);
-
-  const pinnedConversationsCount = useSelector(getPinnedConversationsCount);
-  const isProAvailable = useIsProAvailable();
-  const hasPro = useCurrentUserHasPro();
-
-  const handleShowProDialog = useShowSessionCTACbWithVariant();
+  const isPinned = useIsPinnedInternal(id);
+  const pinnedConversationsCount = usePinnedConversationCount();
+  const hasPro = useHasProInternal();
+  const handleShowProDialog = useCTACallbackInternal();
 
   const showPinUnpin = useShowPinUnpin(id);
+
+  const isProAvailable = getIsProAvailableMemo();
 
   if (!showPinUnpin) {
     return null;

@@ -15,7 +15,7 @@ import { PubKey } from '../../session/types';
 import { useIsMe } from '../../hooks/useParamSelector';
 import { UserUtils } from '../../session/utils';
 import { tr } from '../../localization/localeTools';
-import { useDataFeatureFlag } from '../ducks/types/releasedFeaturesReduxTypes';
+import { getDataFeatureFlagMemo } from '../ducks/types/releasedFeaturesReduxTypes';
 
 function useMessagePropsByMessageId(messageId: string | undefined) {
   const props = useSelector((state: StateType) => getMessagePropsByMessageId(state, messageId));
@@ -192,7 +192,7 @@ export function useMessageSelected(messageId?: string) {
 
 export function useMessageSentWithProFeatures(messageId?: string) {
   const msgProps = useMessagePropsByMessageId(messageId);
-  const mockedFeatureFlags = useDataFeatureFlag('mockMessageProFeatures');
+  const mockedFeatureFlags = getDataFeatureFlagMemo('mockMessageProFeatures');
   const proFeatures = mockedFeatureFlags ?? msgProps?.propsForMessage.proFeaturesUsed;
 
   return useMemo(() => {

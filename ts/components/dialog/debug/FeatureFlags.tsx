@@ -9,10 +9,10 @@ import {
   getFeatureFlag,
   MockProAccessExpiryOptions,
   SessionDataFeatureFlags,
-  useDataFeatureFlag,
+  getDataFeatureFlagMemo,
   type SessionDataFeatureFlagKeys,
   type SessionBooleanFeatureFlagKeys,
-  useFeatureFlag,
+  getFeatureFlagMemo,
 } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { Flex } from '../../basic/Flex';
 import { SessionToggle } from '../../basic/SessionToggle';
@@ -261,7 +261,7 @@ export const FlagIntegerInput = ({
   visibleWithBooleanFlag,
   label,
 }: FlagIntegerInputProps) => {
-  const currentValue = useDataFeatureFlag(flag);
+  const currentValue = getDataFeatureFlagMemo(flag);
   const key = `feature-flag-integer-input-${flag}`;
   const [value, setValue] = useState<number>(() => {
     const initValue = window.sessionDataFeatureFlags[flag];
@@ -624,8 +624,8 @@ export function FeatureFlagDumper({ forceUpdate }: { forceUpdate: () => void }) 
 }
 
 function MessageProFeatures({ forceUpdate }: { forceUpdate: () => void }) {
-  const proIsAvailable = useFeatureFlag('proAvailable');
-  const value = useDataFeatureFlag('mockMessageProFeatures') ?? [];
+  const proIsAvailable = getFeatureFlagMemo('proAvailable');
+  const value = getDataFeatureFlagMemo('mockMessageProFeatures') ?? [];
 
   if (!proIsAvailable) {
     return null;
@@ -885,8 +885,8 @@ export const ProDebugSection = ({
   setPage,
 }: DebugMenuPageProps & { forceUpdate: () => void }) => {
   const dispatch = getAppDispatch();
-  const mockExpiry = useDataFeatureFlag('mockProAccessExpiry');
-  const proAvailable = useFeatureFlag('proAvailable');
+  const mockExpiry = getDataFeatureFlagMemo('mockProAccessExpiry');
+  const proAvailable = getFeatureFlagMemo('proAvailable');
 
   const resetPro = useCallback(async () => {
     await UserConfigWrapperActions.removeProConfig();

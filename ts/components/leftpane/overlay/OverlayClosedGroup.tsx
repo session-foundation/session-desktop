@@ -29,7 +29,7 @@ import { PubKey } from '../../../session/types';
 import { searchActions } from '../../../state/ducks/search';
 import { useContactsToInviteTo } from '../../../hooks/useContactsToInviteToGroup';
 import { NoContacts, NoResultsForSearch } from '../../search/NoResults';
-import { SimpleSessionTextarea } from '../../inputs/SessionInput';
+import { SimpleSessionTextarea } from '../../inputs/SimpleSessionTextarea';
 import { tr, tStripped } from '../../../localization/localeTools';
 import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 

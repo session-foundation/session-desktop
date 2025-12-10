@@ -1,5 +1,5 @@
 import { getAppDispatch } from '../../state/dispatch';
-import { useIsProAvailable } from '../../hooks/useIsProAvailable';
+import { getIsProAvailableMemo } from '../../hooks/useIsProAvailable';
 import { ProMessageFeature } from '../../models/proMessageFeature';
 import { SessionCTAState, updateSessionCTA } from '../../state/ducks/modalDialog';
 import { assertUnreachable } from '../../types/sqlSharedTypes';
@@ -123,7 +123,7 @@ export function useProBadgeOnClickCb(
 ): ShowTagWithCb | ShowTagNoCb | DoNotShowTag {
   const dispatch = getAppDispatch();
   const handleShowProInfoModal = useShowSessionCTACbWithVariant();
-  const isProAvailable = useIsProAvailable();
+  const isProAvailable = getIsProAvailableMemo();
 
   if (!isProAvailable) {
     // if pro is globally disabled, we never show the badge.

@@ -31,7 +31,7 @@ import { ModalPencilIcon } from '../../shared/ModalPencilButton';
 import { ProfileHeader, ProfileName } from '../components';
 import type { ProfileDialogModes } from '../ProfileDialogModes';
 import { tr } from '../../../../localization/localeTools';
-import { useIsProAvailable } from '../../../../hooks/useIsProAvailable';
+import { getIsProAvailableMemo } from '../../../../hooks/useIsProAvailable';
 import { setDebugMode } from '../../../../state/ducks/debug';
 import { useHideRecoveryPasswordEnabled } from '../../../../state/selectors/settings';
 import { OnionStatusLight } from '../../OnionStatusPathDialog';
@@ -100,7 +100,7 @@ function LucideIconForSettings(props: Omit<LucideIconProps, 'iconSize' | 'style'
 function SessionProSection() {
   const dispatch = getAppDispatch();
 
-  const isProAvailable = useIsProAvailable();
+  const isProAvailable = getIsProAvailableMemo();
   const userHasPro = useCurrentUserHasPro();
   const currentUserHasExpiredPro = useCurrentUserHasExpiredPro();
 

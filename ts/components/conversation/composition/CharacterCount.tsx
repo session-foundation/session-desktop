@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 import { Constants } from '../../../session';
-import { useFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
+import { getFeatureFlagMemo } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { SessionTooltip } from '../../SessionTooltip';
 import { StyledCTA } from '../../basic/StyledCTA';
 import { formatNumber } from '../../../util/i18n/formatting/generics';
@@ -52,7 +52,7 @@ function ProCta() {
 }
 
 export function CharacterCount({ count }: CharacterCountProps) {
-  const alwaysShowFlag = useFeatureFlag('alwaysShowRemainingChars');
+  const alwaysShowFlag = getFeatureFlagMemo('alwaysShowRemainingChars');
 
   const currentUserHasPro = useCurrentUserHasPro();
 

@@ -22,7 +22,7 @@ import { Spacer2XL } from '../../basic/Text';
 import { StyledLeftPaneOverlay } from './OverlayMessage';
 import LIBSESSION_CONSTANTS from '../../../session/utils/libsession/libsession_constants';
 import { sectionActions } from '../../../state/ducks/section';
-import { SimpleSessionTextarea } from '../../inputs/SessionInput';
+import { SimpleSessionTextarea } from '../../inputs/SimpleSessionTextarea';
 import { tr } from '../../../localization/localeTools';
 
 async function joinOpenGroup(

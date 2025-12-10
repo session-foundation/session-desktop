@@ -30,7 +30,7 @@ import {
 import { SessionButton, SessionButtonType } from '../basic/SessionButton';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
 import { ModalFlexContainer } from './shared/ModalFlexContainer';
-import { useDataFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
+import { getDataFeatureFlagMemo } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 
 type StatusLightType = {
   glowing?: boolean;
@@ -73,7 +73,7 @@ const StyledGrowingIcon = styled.div`
 
 function useOnionPathWithUsAndNetwork() {
   const onionPath = useFirstOnionPath();
-  const localDevnet = useDataFeatureFlag('useLocalDevNet');
+  const localDevnet = getDataFeatureFlagMemo('useLocalDevNet');
 
   if (onionPath.length === 0) {
     return [];

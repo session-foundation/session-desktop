@@ -24,7 +24,7 @@ import {
 import { SpacerSM, SpacerXL } from '../basic/Text';
 import type { MergedLocalizerTokens } from '../../localization/localeTools';
 import { SessionButtonShiny } from '../basic/SessionButtonShiny';
-import { useIsProAvailable } from '../../hooks/useIsProAvailable';
+import { getIsProAvailableMemo } from '../../hooks/useIsProAvailable';
 import { useCurrentUserHasPro } from '../../hooks/useHasPro';
 import { assertUnreachable } from '../../types/sqlSharedTypes';
 import { Storage } from '../../util/storage';
@@ -396,7 +396,7 @@ export const useShowSessionCTACb = (variant: CTAVariant) => {
   const dispatch = getAppDispatch();
 
   // TODO: remove once pro is released
-  const isProAvailable = useIsProAvailable();
+  const isProAvailable = getIsProAvailableMemo();
   const isProCTA = useIsProCTAVariant(variant);
   if (isProCTA && !isProAvailable) {
     return () => null;
@@ -409,7 +409,7 @@ export const useShowSessionCTACbWithVariant = () => {
   const dispatch = getAppDispatch();
 
   // TODO: remove once pro is released
-  const isProAvailable = useIsProAvailable();
+  const isProAvailable = getIsProAvailableMemo();
 
   return (variant: CTAVariant) => {
     if (isProCTAVariant(variant) && !isProAvailable) {

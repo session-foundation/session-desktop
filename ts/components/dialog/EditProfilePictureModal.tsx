@@ -29,7 +29,7 @@ import {
   ModalBasicHeader,
   SessionWrapperModal,
 } from '../SessionWrapperModal';
-import { useIsProAvailable } from '../../hooks/useIsProAvailable';
+import { getIsProAvailableMemo } from '../../hooks/useIsProAvailable';
 import { SpacerLG, SpacerSM } from '../basic/Text';
 import { AvatarSize } from '../avatar/Avatar';
 import { ProIconButton } from '../buttons/ProButton';
@@ -139,7 +139,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
   const isMe = useIsMe(conversationId);
   const isCommunity = useIsPublic(conversationId);
   const userHasPro = useUserHasPro(conversationId);
-  const isProAvailable = useIsProAvailable();
+  const isProAvailable = getIsProAvailableMemo();
 
   const avatarPath = useAvatarPath(conversationId) || '';
 

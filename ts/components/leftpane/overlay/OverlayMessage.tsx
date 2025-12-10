@@ -23,7 +23,7 @@ import { SpacerLG, SpacerMD } from '../../basic/Text';
 import { HelpDeskButton } from '../../buttons';
 import { ConversationTypeEnum } from '../../../models/types';
 import { Localizer } from '../../basic/Localizer';
-import { SimpleSessionTextarea } from '../../inputs/SessionInput';
+import { SimpleSessionTextarea } from '../../inputs/SimpleSessionTextarea';
 import { tr } from '../../../localization/localeTools';
 
 const StyledDescriptionContainer = styled(motion.div)`

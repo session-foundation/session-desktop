@@ -48,10 +48,10 @@ import { useZoomShortcuts } from '../../hooks/useZoomingShortcut';
 import { OnionStatusLight } from '../dialog/OnionStatusPathDialog';
 import { AvatarReupload } from '../../session/utils/job_runners/jobs/AvatarReuploadJob';
 import { useDebugMenuModal } from '../../state/selectors/modal';
-import { useFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
+import { getFeatureFlagMemo } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 import { useDebugKey } from '../../hooks/useDebugKey';
 import { UpdateProRevocationList } from '../../session/utils/job_runners/jobs/UpdateProRevocationListJob';
-import { useIsProAvailable } from '../../hooks/useIsProAvailable';
+import { getIsProAvailableMemo } from '../../hooks/useIsProAvailable';
 
 const StyledContainerAvatar = styled.div`
   padding: var(--margins-lg);
@@ -99,7 +99,7 @@ function useUpdateBadgeCount() {
  * Note: a job will only be added if it wasn't fetched recently, so there is no harm in running this every minute.
  */
 function usePeriodicFetchRevocationList() {
-  const proAvailable = useIsProAvailable();
+  const proAvailable = getIsProAvailableMemo();
   useInterval(
     () => {
       if (!proAvailable) {
@@ -155,7 +155,7 @@ export const ActionsPanel = () => {
   const showDebugMenu = useDebugMode();
   const ourNumber = useSelector(getOurNumber);
   const isDarkTheme = useIsDarkTheme();
-  const fsTTL30sEnabled = useFeatureFlag('fsTTL30s');
+  const fsTTL30sEnabled = getFeatureFlagMemo('fsTTL30s');
   useDebugThemeSwitch();
 
   // wait for cleanUpMediasInterval and then start cleaning up medias
