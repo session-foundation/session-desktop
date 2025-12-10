@@ -56,6 +56,9 @@ import { DURATION } from '../session/constants';
 import { getSwarmPollingInstance } from '../session/apis/snode_api';
 import { getOpenGroupManager } from '../session/apis/open_group_api/opengroupV2/OpenGroupManagerV2';
 import { loadDefaultRooms } from '../session/apis/open_group_api/opengroupV2/ApiUtil';
+import { sleepFor } from '../session/utils/Promise';
+import { getDataFeatureFlag } from '../state/ducks/types/releasedFeaturesReduxTypes';
+import { isTestIntegration } from '../shared/env_vars';
 
 function makeLookup<T>(items: Array<T>, key: string): { [key: string]: T } {
   // Yep, we can't index into item without knowing what it is. True. But we want to.
@@ -175,14 +178,25 @@ export const doAppStartUp = async () => {
   );
 
   // eslint-disable-next-line more/no-then
-  void SnodePool.getFreshSwarmFor(UserUtils.getOurPubKeyStrFromCache()).then(() => {
+  void SnodePool.getFreshSwarmFor(UserUtils.getOurPubKeyStrFromCache()).then(async () => {
     // trigger any other actions that need to be done after the swarm is ready
     window.inboxStore?.dispatch(networkDataActions.fetchInfoFromSeshServer() as any);
     window.inboxStore?.dispatch(
       proBackendDataActions.refreshGetProDetailsFromProBackend({}) as any
     );
     if (window.inboxStore) {
-      void handleTriggeredProCTAs(window.inboxStore.dispatch);
+      if (getDataFeatureFlag('useLocalDevNet') && isTestIntegration()) {
+        /**
+         * When running on the local dev net (during the regression tests), the network is too fast
+         * and we show the DonateCTA before we got the time to grab the recovery phrase.
+         * This sleepFor is there to give some time so we can grab the recovery phrase.
+         * The regression test this is about is `Donate CTA, DB age >= 7 days`
+         */
+        await sleepFor(1000);
+      }
+      if (window.inboxStore?.dispatch) {
+        void handleTriggeredProCTAs(window.inboxStore.dispatch);
+      }
     }
   }); // refresh our swarm on start to speed up the first message fetching event
 
