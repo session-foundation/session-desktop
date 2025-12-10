@@ -21,7 +21,7 @@ const colors = {
 const sourceMapCache = new Map();
 
 // Number of lines to show before/after error
-const CONTEXT_LINES = 3;
+const CONTEXT_LINES = 2;
 
 async function getOriginalLocation(jsFile, line, column) {
   try {
@@ -66,122 +66,144 @@ function getSourceContent(jsFile) {
 
 module.exports = {
   presets: [
-    ['@babel/preset-env', {
-      modules: 'commonjs',
-      targets: {
-        electron: '34',  // or whatever version you're using
+    [
+      '@babel/preset-env',
+      {
+        modules: 'commonjs',
+        targets: {
+          electron: '34',
+        },
       },
-    }],
+    ],
   ],
   plugins: [
-    [require.resolve('babel-plugin-react-compiler'), {
-      target: '19',
-      logger: {
-        logEvent(filename, event) {
-          if (filename.includes('useAppDispatch')) {
-            console.log('Processing useAppDispatch:', event.kind);
-          }
-
-          if (event.kind === 'CompileError') {
-            const debug = process.env.SESSION_RC_DEBUG;
-            if (!debug) {
-              return;
-            }
-
-            const errorLoc = event.detail?.options?.loc;
-            const fnLoc = event.fnLoc;
-            const reason = event.detail?.options?.reason || 'Unknown error';
-            const category = event.detail?.options?.category || 'Unknown';
-
-            (async () => {
-              console.log(`\n${colors.red}${colors.bright}[CompileError]${colors.reset} ${colors.cyan}${filename}${colors.reset}`);
-              console.log(`  ${colors.yellow}Category:${colors.reset} ${category}`);
-              console.log(`  ${colors.yellow}Reason:${colors.reset} ${reason}`);
-
-              if (!fnLoc || !errorLoc) {
+    [
+      require.resolve('babel-plugin-react-compiler'),
+      {
+        target: '19',
+        logger: {
+          logEvent(filename, event) {
+            if (event.kind === 'CompileError') {
+              const debug = process.env.SESSION_RC_DEBUG;
+              if (!debug) {
                 return;
               }
 
-              // Try to get original TS source from source map
-              const sourceData = getSourceContent(filename);
-              let source; let sourceName;
+              const errorLoc = event.detail?.options?.loc;
+              const fnLoc = event.fnLoc;
+              const reason = event.detail?.options?.reason || 'Unknown error';
+              const category = event.detail?.options?.category || 'Unknown';
 
-              if (sourceData) {
-                source = sourceData.content;
-                sourceName = sourceData.sourceName;
-              } else {
-                source = fs.readFileSync(filename, 'utf-8');
-                sourceName = filename;
-              }
+              (async () => {
+                const outBuffer = [];
+                outBuffer.push(
+                  `\n${colors.red}${colors.bright}[CompileError]${colors.reset} ${colors.cyan}${filename}${colors.reset}`
+                );
+                outBuffer.push(`  ${colors.yellow}Category:${colors.reset} ${category}`);
+                outBuffer.push(`  ${colors.yellow}Reason:${colors.reset} ${reason}`);
 
-              const lines = source.split('\n');
-
-              // Map JS locations to TS locations
-              let errStartLine = errorLoc.start.line;
-              let errEndLine = errorLoc.end.line;
-              let errColStart = errorLoc.start.column;
-              let errColEnd = errorLoc.end.column;
-
-              if (sourceData) {
-                const errStartOrig = await getOriginalLocation(filename, errorLoc.start.line, errorLoc.start.column);
-                const errEndOrig = await getOriginalLocation(filename, errorLoc.end.line, errorLoc.end.column);
-
-                if (errStartOrig) {
-                  errStartLine = errStartOrig.line;
-                  errColStart = errStartOrig.column;
+                if (!fnLoc || !errorLoc) {
+                  return;
                 }
-                if (errEndOrig) {
-                  errEndLine = errEndOrig.line;
-                  errColEnd = errEndOrig.column;
-                }
-              }
 
-              // Show context around the error
-              const contextStart = Math.max(0, errStartLine - CONTEXT_LINES - 1);
-              const contextEnd = Math.min(lines.length, errEndLine + CONTEXT_LINES);
+                // Try to get original TS source from source map
+                const sourceData = getSourceContent(filename);
+                let source;
+                let sourceName;
 
-              console.log(`  ${colors.yellow}Source:${colors.reset} ${colors.dim}${sourceName}${colors.reset}`);
-              console.log(`  ${colors.yellow}Error at:${colors.reset} line ${errStartLine}, columns ${errColStart}-${errColEnd}`);
-              console.log(`  ${colors.dim}${'─'.repeat(60)}${colors.reset}`);
-
-              for (let i = contextStart; i < contextEnd; i++) {
-                const lineNum = i + 1;
-                const lineNumStr = lineNum.toString().padStart(4, ' ');
-                const line = lines[i] || '';
-
-                const isErrorLine = lineNum >= errStartLine && lineNum <= errEndLine;
-
-                if (isErrorLine) {
-                  const gutter = `${colors.bgRed}${colors.white} ${lineNumStr} ${colors.reset}`;
-
-                  if (errColStart !== null && errColEnd !== null && lineNum === errStartLine) {
-                    const before = line.substring(0, errColStart);
-                    const highlight = line.substring(errColStart, errColEnd);
-                    const after = line.substring(errColEnd);
-                    console.log(`  ${gutter} ${before}${colors.bgYellow}${colors.bright}${highlight}${colors.reset}${after}`);
-
-                    const underline = ' '.repeat(errColStart) + '^'.repeat(Math.max(1, errColEnd - errColStart));
-                    console.log(`  ${colors.dim}      ${colors.reset} ${colors.red}${underline}${colors.reset}`);
-                  } else {
-                    console.log(`  ${gutter} ${colors.red}${line}${colors.reset}`);
-                  }
+                if (sourceData) {
+                  source = sourceData.content;
+                  sourceName = sourceData.sourceName;
                 } else {
-                  const gutter = `${colors.dim} ${lineNumStr} ${colors.reset}`;
-                  console.log(`  ${gutter} ${line}`);
+                  source = fs.readFileSync(filename, 'utf-8');
+                  sourceName = filename;
                 }
-              }
 
-              console.log(`  ${colors.dim}${'─'.repeat(60)}${colors.reset}`);
-            })();
-          }
+                const lines = source.split('\n');
+
+                // Map JS locations to TS locations
+                let errStartLine = errorLoc.start.line;
+                let errEndLine = errorLoc.end.line;
+                let errColStart = errorLoc.start.column;
+                let errColEnd = errorLoc.end.column;
+
+                if (sourceData) {
+                  const errStartOrig = await getOriginalLocation(
+                    filename,
+                    errorLoc.start.line,
+                    errorLoc.start.column
+                  );
+                  const errEndOrig = await getOriginalLocation(
+                    filename,
+                    errorLoc.end.line,
+                    errorLoc.end.column
+                  );
+
+                  if (errStartOrig) {
+                    errStartLine = errStartOrig.line;
+                    errColStart = errStartOrig.column;
+                  }
+                  if (errEndOrig) {
+                    errEndLine = errEndOrig.line;
+                    errColEnd = errEndOrig.column;
+                  }
+                }
+
+                // Show context around the error
+                const contextStart = Math.max(0, errStartLine - CONTEXT_LINES - 1);
+                const contextEnd = Math.min(lines.length, errEndLine + CONTEXT_LINES);
+
+                outBuffer.push(
+                  `  ${colors.yellow}Source:${colors.reset} ${colors.dim}${sourceName}${colors.reset}`
+                );
+                outBuffer.push(
+                  `  ${colors.yellow}Error at:${colors.reset} line ${errStartLine}, columns ${errColStart}-${errColEnd}`
+                );
+                outBuffer.push(`  ${colors.dim}${'─'.repeat(60)}${colors.reset}`);
+
+                for (let i = contextStart; i < contextEnd; i++) {
+                  const lineNum = i + 1;
+                  const lineNumStr = lineNum.toString().padStart(4, ' ');
+                  const line = lines[i] || '';
+
+                  const isErrorLine = lineNum >= errStartLine && lineNum <= errEndLine;
+
+                  if (isErrorLine) {
+                    const gutter = `${colors.bgRed}${colors.white} ${lineNumStr} ${colors.reset}`;
+
+                    if (errColStart !== null && errColEnd !== null && lineNum === errStartLine) {
+                      const before = line.substring(0, errColStart);
+                      const highlight = line.substring(errColStart, errColEnd);
+                      const after = line.substring(errColEnd);
+                      outBuffer.push(
+                        `  ${gutter} ${before}${colors.bgYellow}${colors.bright}${highlight}${colors.reset}${after}`
+                      );
+
+                      const underline =
+                        ' '.repeat(errColStart) + '^'.repeat(Math.max(1, errColEnd - errColStart));
+                      outBuffer.push(
+                        `  ${colors.dim}      ${colors.reset} ${colors.red}${underline}${colors.reset}`
+                      );
+                    } else {
+                      outBuffer.push(`  ${gutter} ${colors.red}${line}${colors.reset}`);
+                    }
+                  } else {
+                    const gutter = `${colors.dim} ${lineNumStr} ${colors.reset}`;
+                    outBuffer.push(`  ${gutter} ${line}`);
+                  }
+                }
+
+                outBuffer.push(`  ${colors.dim}${'─'.repeat(60)}${colors.reset}`);
+
+                for (const line of outBuffer) {
+                  console.log(line);
+                }
+              })();
+            }
+          },
         },
       },
-    }],
+    ],
   ],
-  only: [
-    '**/ts/components/**',
-    '**/ts/components/*',
-    '**/ts/state/**',
-    '**/ts/state/*',
-  ],
+  only: ['**/ts/**'],
 };
