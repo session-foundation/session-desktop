@@ -19,6 +19,7 @@ import type {
   WithRoomName,
   WithSessionIds,
 } from './sogsWith';
+import { FetchDestination } from '../../../utils/InsecureNodeFetch';
 
 type BatchFetchRequestOptions = {
   method: 'POST' | 'PUT' | 'GET' | 'DELETE';
@@ -439,7 +440,9 @@ const sendSogsBatchRequestOnionV4 = async (
     },
     false,
     abortSignal,
-    timeoutMs
+    timeoutMs,
+    FetchDestination.SOGS,
+    'sendSogsBatchRequestOnionV4'
   );
 
   if (abortSignal.aborted) {
