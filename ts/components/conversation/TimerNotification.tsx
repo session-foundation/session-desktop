@@ -119,9 +119,19 @@ function useOurExpirationMatches({ messageId }: WithMessageId) {
   return false;
 }
 
+// NOTE: [react-compiler] this has to live here for the hook to be identified as static
+function useSelectedIsPrivateFriendInternal() {
+  return useSelectedIsPrivateFriend();
+}
+
+// NOTE: [react-compiler] this has to live here for the hook to be identified as static
+function useMessageAuthorIsUsInternal(messageId: string) {
+  return useMessageAuthorIsUs(messageId);
+}
+
 const FollowSettingsButton = ({ messageId }: WithMessageId) => {
-  const isPrivateAndFriend = useSelectedIsPrivateFriend();
-  const authorIsUs = useMessageAuthorIsUs(messageId);
+  const isPrivateAndFriend = useSelectedIsPrivateFriendInternal();
+  const authorIsUs = useMessageAuthorIsUsInternal(messageId);
 
   const click = useFollowSettingsButtonClick({
     messageId,

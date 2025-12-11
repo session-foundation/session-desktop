@@ -1,5 +1,4 @@
 import { isEmpty } from 'lodash';
-import { useCallback } from 'react';
 import useAsyncFn from 'react-use/lib/useAsyncFn';
 import { getAppDispatch } from '../../../state/dispatch';
 import { useConversationsNicknameRealNameOrShortenPubkey } from '../../../hooks/useParamSelector';
@@ -60,9 +59,9 @@ export const BlockOrUnblockDialog = ({ pubkeys, action, onConfirmed }: NonNullab
 
   const args = useBlockUnblockI18nDescriptionArgs({ action, pubkeys });
 
-  const closeModal = useCallback(() => {
+  const closeModal = () => {
     dispatch(updateBlockOrUnblockModal(null));
-  }, [dispatch]);
+  };
 
   const [, onConfirm] = useAsyncFn(async () => {
     if (action === 'block') {

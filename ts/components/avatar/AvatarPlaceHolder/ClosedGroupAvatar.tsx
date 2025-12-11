@@ -59,6 +59,11 @@ const StyledAvatarClosedContainer = styled.div<{ containerSize: number }>`
   }
 `;
 
+// NOTE: [react-compiler] this has to live here for the hook to be identified as static
+function useAvatarBgColorInternal(pubkey: string) {
+  return useAvatarBgColor(pubkey);
+}
+
 export const ClosedGroupAvatar = ({
   convoId,
   size: containerSize,
@@ -78,7 +83,7 @@ export const ClosedGroupAvatar = ({
     throw new Error(`Invalid avatar size ${containerSize}`);
   }
 
-  const { bgColor } = useAvatarBgColor(secondMemberID || convoId);
+  const { bgColor } = useAvatarBgColorInternal(secondMemberID || convoId);
 
   if (firstMemberId && secondMemberID) {
     return (

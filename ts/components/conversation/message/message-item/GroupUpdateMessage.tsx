@@ -63,8 +63,13 @@ function useChangeItem(change?: PropsForGroupUpdateType): TrArgs | null {
   }
 }
 
+// NOTE: [react-compiler] this has to live here for the hook to be identified as static
+function useMessageGroupUpdateChangeInternal(messageId: string) {
+  return useMessageGroupUpdateChange(messageId);
+}
+
 export const GroupUpdateMessage = ({ messageId }: WithMessageId) => {
-  const groupChange = useMessageGroupUpdateChange(messageId);
+  const groupChange = useMessageGroupUpdateChangeInternal(messageId);
 
   const changeProps = useChangeItem(groupChange);
 

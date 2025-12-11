@@ -5,8 +5,8 @@ const path = require('path');
 const { SourceMapConsumer } = require('source-map');
 const { globSync } = require('glob');
 
-const debug = process.env.SESSION_RC_DEBUG;
 const fileFilter = process.env.SESSION_RC_FILE_FILTER;
+const allowErrors = process.env.SESSION_RC_ALLOW_ERRORS;
 
 // Project root directory (where babel.config.js lives)
 const PROJECT_ROOT = __dirname;
@@ -55,6 +55,22 @@ function getTotalSize() {
 }
 
 const initialStats = getTotalSize();
+const startTime = Date.now();
+
+// Progress tracking
+let filesProcessed = 0;
+const totalFiles = initialStats.count;
+
+function updateProgress() {
+  filesProcessed++;
+  process.stdout.write(
+    `\r${colors.dim}Compiling... ${filesProcessed}/${totalFiles}${colors.reset}`
+  );
+}
+
+function clearProgress() {
+  process.stdout.write('\r\x1b[K');
+}
 
 function formatBytes(bytes) {
   if (bytes < 1024) return `${bytes} B`;
@@ -63,6 +79,8 @@ function formatBytes(bytes) {
 }
 
 function printSizeSummary() {
+  clearProgress();
+
   const finalStats = getTotalSize();
   const inputSize = initialStats.total;
   const outputSize = finalStats.total;
@@ -72,9 +90,10 @@ function printSizeSummary() {
   const diff = outputSize - inputSize;
   const percent = ((diff / inputSize) * 100).toFixed(1);
   const sign = diff >= 0 ? '+' : '';
+  const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
 
   console.log(
-    `\n${colors.green}Bundled ${formatBytes(inputSize)} → ${formatBytes(outputSize)} (${sign}${percent}%) [${finalStats.count} files]${colors.reset}`
+    `${colors.green}Compiled ${formatBytes(inputSize)} → ${formatBytes(outputSize)} (${sign}${percent}%) [${finalStats.count} files in ${elapsed}s]${colors.reset}`
   );
 }
 
@@ -346,7 +365,13 @@ async function handleErrorExit() {
   printSizeSummary();
   printAllErrors();
   if (errorsByFile.size > 0) {
-    process.exit(1);
+    if (allowErrors) {
+      console.log(
+        `${colors.red} SESSION_RC_ALLOW_ERRORS was enabled, the compiler will report no errors and the build will continue! ${colors.reset}`
+      );
+    } else {
+      process.exit(1);
+    }
   }
 }
 
@@ -409,20 +434,20 @@ module.exports = {
     ],
   ],
   plugins: [
+    // Progress tracking plugin
+    function progressPlugin() {
+      return {
+        post() {
+          updateProgress();
+        },
+      };
+    },
     [
       require.resolve('babel-plugin-react-compiler'),
       {
         target: reactTargetMajor,
         logger: {
           logEvent(filename, event) {
-            if (event.kind === 'CompileSuccess') {
-              console.log('Compiled:', resolveFilename(filename));
-            }
-
-            if (!debug) {
-              return;
-            }
-
             if (event.kind === 'CompileError') {
               registerCleanup();
               pendingPromises.push(processError(filename, event));

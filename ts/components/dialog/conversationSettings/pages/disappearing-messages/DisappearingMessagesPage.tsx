@@ -131,8 +131,10 @@ export const DisappearingMessagesForConversationModal = (props: ConversationSett
             timeSelected
           );
           closeOrBackInPage();
-        } finally {
           setLoading(false);
+        } catch (e) {
+          setLoading(false);
+          throw e;
         }
       }
       return;
@@ -141,11 +143,12 @@ export const DisappearingMessagesForConversationModal = (props: ConversationSett
     try {
       await setDisappearingMessagesByConvoId(selectedConversationKey, modeSelected, timeSelected);
       closeOrBackInPage();
-    } finally {
       setLoading(false);
+    } catch (e) {
+      setLoading(false);
+      throw e;
     }
   };
-
   useEffect(() => {
     // NOTE loads a time value from the conversation model or the default
     setTimeSelected(

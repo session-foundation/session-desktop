@@ -169,10 +169,15 @@ function IconForExpiringMessageId({
   );
 }
 
+// NOTE: [react-compiler] this has to live here for the hook to be identified as static
+function useSelectedIsGroupOrCommunityInternal() {
+  return useSelectedIsGroupOrCommunity();
+}
+
 const MessageStatusSent = ({ dataTestId, messageId }: Omit<Props, 'isDetailView'>) => {
   const isExpiring = useIsExpiring(messageId);
   const isMostRecentOutgoingMessage = useIsMostRecentOutgoingMessage(messageId);
-  const isGroup = useSelectedIsGroupOrCommunity();
+  const isGroup = useSelectedIsGroupOrCommunityInternal();
 
   // we hide the "sent" message status for a non-expiring messages unless it's the most recent outgoing message
   if (!isExpiring && !isMostRecentOutgoingMessage) {
@@ -198,7 +203,7 @@ const MessageStatusRead = ({
   isIncoming,
 }: Omit<Props, 'isDetailView'> & { isIncoming: boolean }) => {
   const isExpiring = useIsExpiring(messageId);
-  const isGroup = useSelectedIsGroupOrCommunity();
+  const isGroup = useSelectedIsGroupOrCommunityInternal();
 
   const isMostRecentOutgoingMessage = useIsMostRecentOutgoingMessage(messageId);
 

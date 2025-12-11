@@ -99,9 +99,19 @@ function ExpireTimerControlMessage({
   );
 }
 
+// NOTE: [react-compiler] this has to live here for the hook to be identified as static
+function useMessageExpirationPropsByIdInternal(messageId: string) {
+  return useMessageExpirationPropsById(messageId);
+}
+
+// NOTE: [react-compiler] this has to live here for the hook to be identified as static
+function useIsDetailMessageViewInternal() {
+  return useIsDetailMessageView();
+}
+
 export const ExpirableReadableMessage = (props: ExpirableReadableMessageProps) => {
-  const selected = useMessageExpirationPropsById(props.messageId);
-  const isDetailView = useIsDetailMessageView();
+  const selected = useMessageExpirationPropsByIdInternal(props.messageId);
+  const isDetailView = useIsDetailMessageViewInternal();
 
   const { isControlMessage, onClick, onDoubleClickCapture, role, dataTestId } = props;
 

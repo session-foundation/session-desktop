@@ -25,6 +25,7 @@ sass.config.js
 *.worker.config.js
 
 babel.config.js
+minify.js
 
 # Not too sure why we can't have eslint on those files atm
 ts/webworker/workers/node/util/util.worker.ts
