@@ -123,7 +123,7 @@
     "styled-components": "6.1.19",
     "uuid": "11.1.0",
     "webrtc-adapter": "^4.2.2",
-    "zod": "^3.24.2"
+    "zod": "4.1.13"
   },
   "devDependencies": {
     "@babel/cli": "7.28.3",
@@ -331,11 +331,11 @@
       "node_modules/@iconify/icons-mdi/repeat*",
       "node_modules/@iconify/icons-mdi/repeat-off*",
       "!node_modules/lamejs/testdata/*",
-"!node_modules/@reduxjs/**/*",
-"node_modules/@reduxjs/**/*.js",
-"node_modules/@reduxjs/**/*.cjs",
-"node_modules/@reduxjs/**/*.mjs",
-"node_modules/@reduxjs/toolkit/package.json",
+      "!node_modules/@reduxjs/**/*",
+      "node_modules/@reduxjs/**/*.js",
+      "node_modules/@reduxjs/**/*.cjs",
+      "node_modules/@reduxjs/**/*.mjs",
+      "node_modules/@reduxjs/toolkit/package.json",
       "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme,test,__tests__,tests,powered-test,example,examples,*.d.ts}",
       "!**/node_modules/.bin",
       "!**/node_modules/*/build/**",

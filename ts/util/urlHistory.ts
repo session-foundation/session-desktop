@@ -27,7 +27,7 @@ export enum URLInteraction {
 const UrlInteractionSchema = z.object({
   url: z.string(),
   lastUpdated: z.number(),
-  interactions: z.array(z.nativeEnum(URLInteraction)),
+  interactions: z.array(z.enum(URLInteraction)),
 });
 
 const UrlInteractionsSchema = z.array(UrlInteractionSchema);

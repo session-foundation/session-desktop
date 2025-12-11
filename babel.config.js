@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const { SourceMapConsumer } = require('source-map');
+const { globSync } = require('glob');
 
 const debug = process.env.SESSION_RC_DEBUG;
 const fileFilter = process.env.SESSION_RC_FILE_FILTER;
@@ -38,6 +39,44 @@ const CONTEXT_LINES = 2;
 const errorsByFile = new Map();
 const filenameMap = new Map();
 const pendingPromises = [];
+
+// File size tracking - measure all js files at startup
+function getTotalSize() {
+  const files = globSync('ts/**/*.js', { cwd: PROJECT_ROOT });
+  let total = 0;
+  for (const file of files) {
+    try {
+      total += fs.statSync(path.join(PROJECT_ROOT, file)).size;
+    } catch {
+      // Skip files that don't exist
+    }
+  }
+  return { total, count: files.length };
+}
+
+const initialStats = getTotalSize();
+
+function formatBytes(bytes) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+function printSizeSummary() {
+  const finalStats = getTotalSize();
+  const inputSize = initialStats.total;
+  const outputSize = finalStats.total;
+
+  if (inputSize === 0) return;
+
+  const diff = outputSize - inputSize;
+  const percent = ((diff / inputSize) * 100).toFixed(1);
+  const sign = diff >= 0 ? '+' : '';
+
+  console.log(
+    `\n${colors.green}Bundled ${formatBytes(inputSize)} → ${formatBytes(outputSize)} (${sign}${percent}%) [${finalStats.count} files]${colors.reset}`
+  );
+}
 
 function resolveFilename(filename) {
   const resultName = filenameMap.get(filename);
@@ -304,6 +343,7 @@ function printAllErrors() {
 
 async function handleErrorExit() {
   await Promise.all(pendingPromises);
+  printSizeSummary();
   printAllErrors();
   if (errorsByFile.size > 0) {
     process.exit(1);
@@ -321,6 +361,9 @@ function registerCleanup() {
     void handleErrorExit();
   });
 }
+
+// Always register cleanup to print size summary
+registerCleanup();
 
 const packageJson = require('./package.json');
 
@@ -355,6 +398,13 @@ module.exports = {
         targets: {
           electron,
         },
+        bugfixes: true, // Use smaller transforms
+        exclude: [
+          // Exclude transforms Electron doesn't need
+          'transform-typeof-symbol',
+          'transform-regenerator',
+          'transform-async-to-generator',
+        ],
       },
     ],
   ],

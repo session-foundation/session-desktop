@@ -37,9 +37,9 @@ export const GetProRevocationsResponseSchema = SessionBackendBaseResponseSchema.
 export type GetProRevocationsResponseType = z.infer<typeof GetProRevocationsResponseSchema>;
 
 const ProDetailsItemSchema = z.object({
-  status: z.nativeEnum(ProItemStatus),
-  plan: z.nativeEnum(ProAccessVariant),
-  payment_provider: z.nativeEnum(ProPaymentProvider),
+  status: z.enum(ProItemStatus),
+  plan: z.enum(ProAccessVariant),
+  payment_provider: z.enum(ProPaymentProvider),
   auto_renewing: z.boolean(),
   unredeemed_unix_ts_ms: z.number(),
   refund_requested_unix_ts_ms: z.number(),
@@ -56,7 +56,7 @@ const ProDetailsItemSchema = z.object({
 });
 
 export const ProDetailsResultSchema = z.object({
-  status: z.nativeEnum(ProStatus),
+  status: z.enum(ProStatus),
   auto_renewing: z.boolean(),
   expiry_unix_ts_ms: z.number(),
   grace_period_duration_ms: z.number(),
