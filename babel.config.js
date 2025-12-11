@@ -36,7 +36,19 @@ const CONTEXT_LINES = 2;
 
 // Collect all errors grouped by file
 const errorsByFile = new Map();
+const filenameMap = new Map();
 const pendingPromises = [];
+
+function resolveFilename(filename) {
+  const resultName = filenameMap.get(filename);
+  if (resultName) {
+    return resultName;
+  }
+
+  const relativeFilename = path.relative(PROJECT_ROOT, filename);
+  filenameMap.set(filename, relativeFilename);
+  return relativeFilename;
+}
 
 async function getOriginalLocation(jsFile, line, column) {
   try {
@@ -232,7 +244,7 @@ function printAllErrors() {
 
   const errorsByFileArray = [];
   errorsByFile.forEach((errors, filename) => {
-    const relativeFilename = path.relative(PROJECT_ROOT, filename);
+    const relativeFilename = resolveFilename(filename);
     totalErrors += errors.length;
     errorsByFileArray.push({ errors, filename: relativeFilename });
   });
@@ -310,14 +322,38 @@ function registerCleanup() {
   });
 }
 
+const packageJson = require('./package.json');
+
+const electron = packageJson.devDependencies.electron;
+if (!electron) {
+  throw new Error('Unable to find electron version in package.json devDependencies');
+}
+console.log(`Babel is targeting Electron ${electron}`);
+
+const react = packageJson.dependencies.react;
+if (!react) {
+  throw new Error('Unable to find react version in package.json dependencies');
+}
+
+const reactTargetMajor = react.split('.')[0];
+if (!reactTargetMajor || Number.isNaN(Number.parseInt(reactTargetMajor))) {
+  throw new Error(`Unable to parse react version from package.json dependencies: "${react}"`);
+}
+
+console.log(`React compiler is targeting React ${reactTargetMajor}`);
+
+/** @type {import('@types/babel__core').TransformOptions} */
 module.exports = {
+  targets: {
+    electron,
+  },
   presets: [
     [
       '@babel/preset-env',
       {
         modules: 'commonjs',
         targets: {
-          electron: '34',
+          electron,
         },
       },
     ],
@@ -326,9 +362,13 @@ module.exports = {
     [
       require.resolve('babel-plugin-react-compiler'),
       {
-        target: '19',
+        target: reactTargetMajor,
         logger: {
           logEvent(filename, event) {
+            if (event.kind === 'CompileSuccess') {
+              console.log('Compiled:', resolveFilename(filename));
+            }
+
             if (!debug) {
               return;
             }
