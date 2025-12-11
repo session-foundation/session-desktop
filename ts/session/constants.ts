@@ -134,3 +134,7 @@ export const PASSWORD_LENGTH = {
    */
   MAX_PASSWORD_LEN: 256,
 };
+
+export enum APP_URL {
+  DONATE = 'https://getsession.org/donate',
+}

@@ -35,3 +35,5 @@ export type WithTargetNode = { targetNode: Snode };
 export type WithGuardNode = { guardNode: Snode };
 
 export type WithSymmetricKey = { symmetricKey: ArrayBuffer };
+
+export type WithReason = { reason: string };

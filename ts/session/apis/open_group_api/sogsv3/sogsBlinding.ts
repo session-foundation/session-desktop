@@ -5,7 +5,6 @@ import { encode, fromUInt8ArrayToBase64, stringToUint8Array, toHex } from '../..
 import { concatUInt8Array, getSodiumRenderer, LibSodiumWrappers } from '../../../crypto';
 
 import { ByteKeyPair } from '../../../utils/User';
-import { StringUtils } from '../../../utils';
 import { KeyPrefixType, PubKey } from '../../../types';
 import { OpenGroupRequestHeaders } from '../opengroupV2/OpenGroupPollingUtils';
 import {
@@ -189,74 +188,6 @@ const getBlindingValues = (
   };
 };
 
-/**
- * Used for encrypting a blinded message (request) to a SOGS user.
- * @param body body of the message being encrypted
- * @param serverPK the server public key being sent to. Cannot be b64 encoded. Use fromHex and be sure to exclude the blinded 00/15/05 prefixes
- */
-const encryptBlindedMessage = async (options: {
-  rawData: Uint8Array;
-  senderSigningKey: ByteKeyPair;
-  /** Pubkey that corresponds to the recipients blinded PubKey */
-  serverPubKey: Uint8Array;
-  recipientSigningKey?: ByteKeyPair;
-  recipientBlindedPublicKey?: Uint8Array;
-}): Promise<Uint8Array | null> => {
-  const {
-    rawData,
-    senderSigningKey,
-    serverPubKey,
-    recipientSigningKey,
-    recipientBlindedPublicKey,
-  } = options;
-  const sodium = await getSodiumRenderer();
-
-  const aBlindingValues = SogsBlinding.getBlindingValues(serverPubKey, senderSigningKey, sodium);
-
-  let kB;
-  if (!recipientBlindedPublicKey && recipientSigningKey) {
-    const bBlindingValues = SogsBlinding.getBlindingValues(
-      serverPubKey,
-      recipientSigningKey,
-      sodium
-    );
-    kB = bBlindingValues.publicKey;
-  }
-  if (recipientBlindedPublicKey) {
-    kB = recipientBlindedPublicKey;
-  }
-
-  if (!kB) {
-    window?.log?.error('No recipient-side data provided for encryption');
-    return null;
-  }
-
-  const { a, publicKey: kA } = aBlindingValues;
-
-  const encryptKey = sodium.crypto_generichash(
-    32,
-    concatUInt8Array(sodium.crypto_scalarmult_ed25519_noclamp(a, kB), kA, kB)
-  );
-
-  // inner data: msg || A (i.e. the sender's ed25519 master pubkey, *not* the kA blinded pubkey)
-  const plaintext = concatUInt8Array(rawData, senderSigningKey.pubKeyBytes);
-
-  const nonce = sodium.randombytes_buf(sodium.crypto_aead_xchacha20poly1305_ietf_NPUBBYTES);
-
-  const ciphertext = sodium.crypto_aead_xchacha20poly1305_ietf_encrypt(
-    plaintext,
-    null,
-    null,
-    nonce,
-    encryptKey
-  );
-
-  // add our "version" info which will be checked by the recipient side
-  const prefixData = new Uint8Array(StringUtils.encode('\x00', 'utf8'));
-  const data = concatUInt8Array(prefixData, ciphertext, nonce);
-  return data;
-};
-
 async function decryptWithSessionBlindingProtocol(
   data: Uint8Array,
   isOutgoing: boolean,
@@ -347,6 +278,5 @@ export const SogsBlinding = {
   sha512Multipart,
   getBlindedPubKey,
   getBlindingValues,
-  encryptBlindedMessage,
   decryptWithSessionBlindingProtocol,
 };

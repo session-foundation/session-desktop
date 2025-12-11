@@ -9,7 +9,7 @@ import { Storage } from './storage';
 import { LOCALE_DEFAULTS } from '../localization/constants';
 import {
   isSessionFeatureFlag,
-  type SessionFeatureFlagKeys,
+  type SessionBooleanFeatureFlagKeys,
 } from '../state/ducks/types/releasedFeaturesReduxTypes';
 import { tr } from '../localization/localeTools';
 
@@ -99,7 +99,10 @@ function addPreviewNotification(notif: SessionNotification) {
 /**
  * Only use this for release notifications
  */
-function addReleaseNotification(feature: SessionFeatureFlagKeys, notif: SessionNotification) {
+function addReleaseNotification(
+  feature: SessionBooleanFeatureFlagKeys,
+  notif: SessionNotification
+) {
   if (!isSessionFeatureFlag(feature)) {
     window.log.warn(`[releasedFeature] Notification failed. Invalid feature flag "${feature}"`);
     return;

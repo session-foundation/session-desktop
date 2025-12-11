@@ -97,7 +97,7 @@ async function requestSnodesForPubkeyRetryable(pubKey: string): Promise<Array<Sn
   // the idea is that the requestSnodesForPubkeyWithTargetNode will remove a failing targetNode
   return pRetry(
     async () => {
-      const targetNode = await SnodePool.getRandomSnode();
+      const targetNode = await SnodePool.getRandomSnode({ snodesToExclude: [] });
 
       return requestSnodesForPubkeyWithTargetNode(pubKey, targetNode);
     },

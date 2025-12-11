@@ -61,10 +61,11 @@ import { useShowBlockUnblock } from '../../menuAndSettingsHooks/useShowBlockUnbl
 import { showLocalizedPopupDialog } from '../../dialog/LocalizedPopupDialog';
 import { formatNumber } from '../../../util/i18n/formatting/generics';
 import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
-import { SessionProInfoVariant, showSessionProInfoDialog } from '../../dialog/SessionProInfoModal';
+import { showSessionCTA } from '../../dialog/SessionCTA';
 import { tStripped } from '../../../localization/localeTools';
 import type { ProcessedLinkPreviewThumbnailType } from '../../../webworker/workers/node/image_processor/image_processor';
 import { selectWeAreProUser } from '../../../hooks/useParamSelector';
+import { CTAVariant } from '../../dialog/cta/types';
 
 export interface ReplyingToMessageProps {
   convoId: string;
@@ -122,6 +123,10 @@ interface State {
   characterCount?: number;
 }
 
+function getSendableTextLength(v: string): number {
+  return v.trim().replace(/^\n+|\n+$/g, '').length;
+}
+
 const getDefaultState = (newConvoId?: string) => {
   const draft = getDraftForConversation(newConvoId);
   return {
@@ -133,7 +138,7 @@ const getDefaultState = (newConvoId?: string) => {
     ignoredLink: undefined,
     stagedLinkPreview: undefined,
     showCaptionEditor: undefined,
-    characterCount: undefined,
+    characterCount: getSendableTextLength(draft),
   };
 };
 
@@ -710,7 +715,7 @@ class CompositionBoxInner extends Component<Props, State> {
    * This is a significantly cheaper version of calling @see {@link getSendableText} and getting the length
    */
   private isTextSendable(): boolean {
-    return this.state.draft.trim().replace(/^\n+|\n+$/g, '').length > 0;
+    return getSendableTextLength(this.state.draft) > 0;
   }
 
   private async onSendMessage() {
@@ -746,7 +751,7 @@ class CompositionBoxInner extends Component<Props, State> {
       const dispatch = window.inboxStore?.dispatch;
       if (dispatch) {
         if (isProAvailable && !hasPro) {
-          showSessionProInfoDialog(SessionProInfoVariant.MESSAGE_CHARACTER_LIMIT, dispatch);
+          showSessionCTA(CTAVariant.PRO_MESSAGE_CHARACTER_LIMIT, dispatch);
         } else {
           showLocalizedPopupDialog(
             {

@@ -348,6 +348,8 @@
   "emojiReactsHoverYouNameTwoDesktop": "Դուք և {name}-ը արձագանքել եք {emoji_name}-ով",
   "emojiReactsNotification": "Արձագանքել է ձեր հաղորդագրությանը {emoji}",
   "enable": "Միացնել",
+  "entityRangeproof": "Rangeproof PTY LTD",
+  "entityStf": "The Session Technology Foundation",
   "errorConnection": "Խնդրում ենք ստուգել ձեր ինտերնետ կապը և փորձել նորից:",
   "errorCopyAndQuit": "Պատճենել սխալը և դուրս գալ",
   "errorDatabase": "Տվյալների բազայի սխալ",

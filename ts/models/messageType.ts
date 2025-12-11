@@ -145,13 +145,18 @@ type NotSharedMessageAttributes = {
   sync: boolean;
 
   /**
-   * This is a bitmask of the features that are enabled for this message.
-   * We save those as a bitmask to make sure we can save feature when processing a message,
-   * even if we do not understand them yet.
-   * That way, if an incoming message is using `featX`, but our libsession version
-   * does not understand it yet, we will still be able to understand it when we upgrade.
+   * This is a bitset stringified bigint of the features that are enabled for this message.
+   * We save those as a bitset to make sure we display once we upgrade a set of features we didn't know before.
+   * This is a string, because bigints cannot be sent over ipc.
    */
-  proFeatures?: number;
+  proMessageBitset?: string;
+
+  /**
+   * This is a bitset stringified bigint of the features that were used on the profile of the user when re received that message.
+   * We save those as a bitset to make sure we display once we upgrade a set of features we didn't know before.
+   * This is a string, because bigints cannot be sent over ipc.
+   */
+  proProfileBitset?: string;
 };
 
 export type MessageAttributes = SharedMessageAttributes & NotSharedMessageAttributes;

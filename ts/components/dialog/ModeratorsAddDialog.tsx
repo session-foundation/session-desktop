@@ -9,7 +9,7 @@ import { ConvoHub } from '../../session/conversations';
 import { updateAddModeratorsModal } from '../../state/ducks/modalDialog';
 import { SessionButton, SessionButtonType } from '../basic/SessionButton';
 import { SessionSpinner } from '../loading';
-import { tr } from '../../localization/localeTools';
+import { PLURAL_COUNT_OTHER, tr } from '../../localization/localeTools';
 import { MAX_SUBREQUESTS_COUNT } from '../../session/apis/snode_api/SnodeRequestTypes';
 import {
   ModalBasicHeader,
@@ -20,6 +20,7 @@ import { ModalSimpleSessionInput } from '../inputs/SessionInput';
 import { ClearInputButton } from '../inputs/ClearInputButton';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
 import { ModalFlexContainer } from './shared/ModalFlexContainer';
+import { Localizer } from '../basic/Localizer';
 
 type Props = {
   conversationId: string;
@@ -87,7 +88,9 @@ export const AddModeratorsDialog = (props: Props) => {
   return (
     <SessionWrapperModal
       modalId="addModeratorsModal"
-      headerChildren={<ModalBasicHeader title={tr('addAdmins')} />}
+      headerChildren={
+        <ModalBasicHeader title={<Localizer token="addAdmin" count={PLURAL_COUNT_OTHER} />} />
+      }
       onClose={onClose}
       buttonChildren={
         <ModalActionsContainer buttonType={SessionButtonType.Simple}>

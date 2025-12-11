@@ -1,7 +1,6 @@
 import https from 'https';
 import { clone } from 'lodash';
 // eslint-disable-next-line import/no-named-default
-import { default as insecureNodeFetch } from 'node-fetch';
 import pRetry from 'p-retry';
 
 import { Snode } from '../../../data/types';
@@ -11,6 +10,8 @@ import { APPLICATION_JSON } from '../../../types/MIME';
 import { ERROR_421_HANDLED_RETRY_REQUEST, Onions, snodeHttpsAgent, SnodeResponse } from './onions';
 import { WithAbortSignal, WithTimeoutMs } from './requestWith';
 import { WithAllow401s } from '../../types/with';
+import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
+import { FetchDestination, insecureNodeFetch } from '../../utils/InsecureNodeFetch';
 
 export interface LokiFetchOptions {
   method: 'GET' | 'POST';
@@ -51,10 +52,7 @@ async function doRequestNoRetries({
   try {
     // Absence of targetNode indicates that we want a direct connection
     // (e.g. to connect to a seed node for the first time)
-    const useOnionRequests =
-      window.sessionFeatureFlags?.useOnionRequests === undefined
-        ? true
-        : window.sessionFeatureFlags?.useOnionRequests;
+    const useOnionRequests = !getFeatureFlag('disableOnionRequests');
     if (useOnionRequests && targetNode) {
       const fetchResult = await Onions.lokiOnionFetchNoRetries({
         targetNode,
@@ -84,10 +82,15 @@ async function doRequestNoRetries({
 
     window?.log?.warn(`insecureNodeFetch => doRequest of ${url}`);
 
-    const response = await insecureNodeFetch(url, {
-      ...fetchOptions,
-      body: fetchOptions.body || undefined,
-      agent: fetchOptions.agent || undefined,
+    const response = await insecureNodeFetch({
+      url,
+      fetchOptions: {
+        ...fetchOptions,
+        body: fetchOptions.body || undefined,
+        agent: fetchOptions.agent || undefined,
+      },
+      destination: FetchDestination.SERVICE_NODE,
+      caller: 'doRequestNoRetries',
     });
     if (!response.ok) {
       throw new HTTPError('Loki_rpc error', response);

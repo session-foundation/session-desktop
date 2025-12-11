@@ -34,14 +34,23 @@ type WithExtraRightButton = {
 };
 type WithShowExitIcon = { showExitIcon?: boolean };
 
-const StyledModalHeader = styled(Flex)<{ bigHeader?: boolean; scrolled: boolean }>`
-  position: relative;
+const StyledModalHeader = styled(Flex)<{
+  bigHeader?: boolean;
+  scrolled: boolean;
+  floatingHeader?: boolean;
+}>`
+  position: ${props => (props.floatingHeader ? 'absolute' : 'relative')};
   font-family: var(--font-default);
   font-size: ${props => (props.bigHeader ? 'var(--font-size-h4)' : 'var(--font-size-xl)')};
   font-weight: 500;
   text-align: center;
   line-height: 18px;
-
+  background-color: ${props =>
+    props.floatingHeader && !props.scrolled
+      ? 'var(--transparent-color)'
+      : 'var(--modal-background-content-color)'};
+  width: ${props => (props.floatingHeader ? '-webkit-fill-available' : 'auto')};
+  transition-duration: var(--default-duration);
   z-index: 3;
 
   &::after {
@@ -51,15 +60,12 @@ const StyledModalHeader = styled(Flex)<{ bigHeader?: boolean; scrolled: boolean 
     bottom: -16px; // bottom and height have to match for the border to be correctly placed
     height: 16px; // bottom and height have to match for the border to be correctly placed
     width: 100%;
-    ${props =>
-      props.scrolled
-        ? 'background: linear-gradient(to bottom, var(--modal-shadow-color), transparent)'
-        : ''};
-    pointer-events: none;
-  }
+    transition-duration: var(--default-duration);
+    background: linear-gradient(to bottom, var(--modal-shadow-color), transparent);
 
-  border-bottom: ${props =>
-    props.scrolled ? '1px solid var(--border-color)' : '1px solid var(--transparent-color)'};
+    pointer-events: none;
+    opacity: ${props => (!props.scrolled ? '0' : '1')};
+  }
 `;
 
 export enum WrapperModalWidth {
@@ -78,7 +84,7 @@ const StyledModal = styled.div<{
   position: absolute;
   top: ${props => (props.$topAnchor === 'center' ? 'auto' : props.$topAnchor)};
   max-height: ${props =>
-    `calc(100vh - ${props.$topAnchor === 'center' ? '' : `2 * ${props.$topAnchor}`})`}; // 2* to have the modal centered vertically, if it overflows
+    `calc(100vh - ${props.$topAnchor === 'center' ? '10vh' : `2 * ${props.$topAnchor}`})`}; // 2* to have the modal centered vertically, if it overflows
   animation: fadein var(--default-duration);
   z-index: 150;
   max-width: ${props =>
@@ -217,7 +223,9 @@ export function ModalBottomButtonWithBorder({
 export type ModalTopAnchor = '5vh' | 'center';
 
 type SessionWrapperModalType = {
-  headerChildren: ReactNode;
+  headerChildren?: ReactNode;
+  // Moves the header to be inside the modals body but outside the content Flex, including it in the scrollable content and preserving body padding.
+  moveHeaderIntoScrollableBody?: boolean;
   children: ReactNode;
   /**
    * *Should* be some SessionButtons enclosed in a ModalActionsContainer
@@ -306,28 +314,28 @@ export const ModalBasicHeader = ({
   bigHeader,
   modalHeaderDataTestId,
   extraRightButton,
+  floatingHeader,
 }: WithShowExitIcon &
   WithExtraRightButton &
   WithExtraLeftButton & {
     title?: ReactNode;
     bigHeader?: boolean;
+    floatingHeader?: boolean;
     modalHeaderDataTestId?: SessionDataTestId;
   }) => {
-  const htmlDirection = useHTMLDirection();
-
   const onClose = useOnModalClose();
   const scrolled = useIsModalScrolled();
 
   return (
     <StyledModalHeader
       data-testid={modalHeaderDataTestId}
-      dir={htmlDirection}
       $container={true}
       $flexDirection={'row'}
       $justifyContent={'space-between'}
       $alignItems={'center'}
-      padding={'var(--margins-lg) var(--margins-sm)  var(--margins-sm) var(--margins-lg)'}
+      padding={'var(--margins-lg) var(--margins-lg) var(--margins-sm) var(--margins-lg)'}
       bigHeader={bigHeader}
+      floatingHeader={floatingHeader}
       scrolled={scrolled}
     >
       <Flex
@@ -402,11 +410,13 @@ export const SessionWrapperModal = (props: SessionWrapperModalType & { onClose?:
     topAnchor,
     $flexGap,
     modalId,
+    moveHeaderIntoScrollableBody,
   } = props;
 
   const [scrolled, setScrolled] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
 
+  const htmlDirection = useHTMLDirection();
   const isTopModal = useIsTopModal(modalId);
 
   useKey((event: KeyboardEvent) => {
@@ -427,6 +437,11 @@ export const SessionWrapperModal = (props: SessionWrapperModalType & { onClose?:
     setScrolled(!!scrollTop);
   };
 
+  const separateHeader =
+    props.headerChildren && !moveHeaderIntoScrollableBody ? props.headerChildren : null;
+  const bodyHeader =
+    props.headerChildren && moveHeaderIntoScrollableBody ? props.headerChildren : null;
+
   return (
     <SessionFocusTrap allowOutsideClick={allowOutsideClick} initialFocus={() => modalRef.current}>
       <IsModalScrolledContext.Provider value={scrolled}>
@@ -437,6 +452,7 @@ export const SessionWrapperModal = (props: SessionWrapperModalType & { onClose?:
             onMouseDown={handleClick}
             role="dialog"
             data-testid={modalDataTestId}
+            dir={htmlDirection}
           >
             <StyledModal
               $contentMaxWidth={$contentMaxWidth}
@@ -447,12 +463,13 @@ export const SessionWrapperModal = (props: SessionWrapperModalType & { onClose?:
               ref={modalRef}
               data-modal-id={modalId}
             >
-              {props.headerChildren ? props.headerChildren : null}
+              {separateHeader}
               <StyledModalBody
                 onScroll={handleScroll}
                 shouldOverflow={shouldOverflow}
                 removeScrollbarGutter={removeScrollbarGutter}
               >
+                {bodyHeader}
                 <Flex
                   $container={true}
                   $alignItems="center"

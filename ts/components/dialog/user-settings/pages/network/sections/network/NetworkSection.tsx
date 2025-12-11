@@ -26,7 +26,6 @@ import {
   formatDateWithLocale,
 } from '../../../../../../../util/i18n/formatting/generics';
 import { abbreviateNumber } from '../../../../../../../util/numbers';
-import { SessionSpinner } from '../../../../../../loading';
 import { useHTMLDirection } from '../../../../../../../util/i18n/rtlSupport';
 import {
   usePriceTimestamp,
@@ -43,6 +42,7 @@ import {
 import { SessionLucideIconButton } from '../../../../../../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../../../../../../icon/lucide';
 import { SessionTooltip } from '../../../../../../SessionTooltip';
+import { AnimatedSpinnerIcon } from '../../../../../../loading/spinner/AnimatedSpinnerIcon';
 
 const StyledStatsNumber = styled.strong`
   font-size: var(--font-size-h3-new);
@@ -85,7 +85,7 @@ const NodesStats = ({ style }: { style?: CSSProperties }) => {
           swarmNodeCount ? (
             swarmNodeCount
           ) : (
-            <SessionSpinner loading={true} width="64px" height={'64px'} />
+            <AnimatedSpinnerIcon size="huge" />
           )}
         </StyledStatsNumber>
       </Flex>
@@ -106,7 +106,7 @@ const NodesStats = ({ style }: { style?: CSSProperties }) => {
           {!dataIsStale && securingNodesCount && !isFakeRefreshing ? (
             `${abbreviateNumber(securingNodesCount, 0).toUpperCase()}`
           ) : (
-            <SessionSpinner loading={true} width="64px" height={'64px'} />
+            <AnimatedSpinnerIcon size="huge" />
           )}
         </StyledStatsNumber>
       </Flex>
@@ -156,8 +156,10 @@ const CurrentPriceBlock = () => {
       $alignItems="flex-start"
       paddingInline={'12px 0'}
       paddingBlock={'var(--margins-md)'}
-      backgroundColor={isDarkTheme ? undefined : 'var(--background-secondary-color)'}
-      borderColor={isDarkTheme ? undefined : 'var(--transparent-color)'}
+      backgroundColor={
+        isDarkTheme ? 'var(--background-primary-color)' : 'var(--background-secondary-color)'
+      }
+      borderColor={'var(--transparent-color)'}
     >
       <Flex $container={true} $flexDirection="column" $alignItems="flex-start">
         <BlockText>
@@ -227,8 +229,10 @@ const SecuredByBlock = () => {
       width={'100%'}
       paddingInline={'12px 0'}
       paddingBlock={'var(--margins-md)'}
-      backgroundColor={isDarkTheme ? undefined : 'var(--background-secondary-color)'}
-      borderColor={isDarkTheme ? undefined : 'var(--transparent-color)'}
+      backgroundColor={
+        isDarkTheme ? 'var(--background-primary-color)' : 'var(--background-secondary-color)'
+      }
+      borderColor={'var(--transparent-color)'}
     >
       <BlockText>{tr('sessionNetworkSecuredBy')}</BlockText>
       <SpacerXS />

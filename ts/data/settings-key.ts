@@ -15,6 +15,12 @@ const hasLinkPreviewPopupBeenDisplayed = 'hasLinkPreviewPopupBeenDisplayed';
 const hasFollowSystemThemeEnabled = 'hasFollowSystemThemeEnabled';
 const hideRecoveryPassword = 'hideRecoveryPassword';
 
+// Pro stats counters
+const proLongerMessagesSent = 'proLongerMessagesSent';
+const proPinnedConversations = 'proPinnedConversations';
+const proBadgesSent = 'proBadgesSent';
+const proGroupsUpgraded = 'proGroupsUpgraded';
+
 // user config tracking timestamps (to discard incoming messages which would make a change we reverted in the last config message we merged)
 const latestUserProfileEnvelopeTimestamp = 'latestUserProfileEnvelopeTimestamp';
 const latestUserGroupEnvelopeTimestamp = 'latestUserGroupEnvelopeTimestamp';
@@ -29,6 +35,8 @@ const showOnboardingAccountJustCreated = 'showOnboardingAccountJustCreated';
  */
 const lastMessageGroupsRegenerated = 'lastMessageGroupsRegenerated';
 
+const localAttachmentEncryptionKey = 'local_attachment_encrypted_key';
+
 export const SettingsKey = {
   settingsReadReceipt,
   settingsTypingIndicator,
@@ -38,6 +46,7 @@ export const SettingsKey = {
   settingsSpellCheck,
   settingsLinkPreview,
   settingsStartInTray,
+  pendingMessages: 'pendingMessages',
   settingsOpengroupPruning,
   hasBlindedMsgRequestsEnabled,
   settingsNotification,
@@ -51,6 +60,30 @@ export const SettingsKey = {
   hideRecoveryPassword,
   showOnboardingAccountJustCreated,
   lastMessageGroupsRegenerated,
+  proLongerMessagesSent,
+  proPinnedConversations,
+  proBadgesSent,
+  proGroupsUpgraded,
+  identityKey: 'identityKey',
+  blocked: 'blocked',
+  numberId: 'number_id',
+  localAttachmentEncryptionKey,
+  spellCheckEnabled: 'spell-check',
+  urlInteractions: 'urlInteractions',
+  proMasterKeyHex: 'proMasterKeyHex',
+  proRotatingPrivateKeyHex: 'proRotatingPrivateKeyHex',
+  /**
+   * The ticket of the last fetched revocations list, number | undefined
+   */
+  proRevocationListTicket: 'proRevocationListTicket',
+  /**
+   * The items of the last fetched revocations list, Array of items validating ProRevocationItemSchema (or undefined)
+   */
+  proRevocationListItems: 'proRevocationListItems',
+  proDetails: 'proDetails',
+  // NOTE: for these CTAs undefined means it has never been shown in this cycle of pro access, true means it needs to be shown and false means it has been shown and dont show it again.
+  proExpiringSoonCTA: 'proExpiringSoonCTA',
+  proExpiredCTA: 'proExpiredCTA',
 } as const;
 
 export const KNOWN_BLINDED_KEYS_ITEM = 'KNOWN_BLINDED_KEYS_ITEM';

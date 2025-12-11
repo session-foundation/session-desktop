@@ -15,6 +15,7 @@ import { uploadFileToFsWithOnionV4 } from '../apis/file_server_api/FileServerApi
 import { MultiEncryptWrapperActions } from '../../webworker/workers/browser/libsession_worker_interface';
 import { UserUtils } from '.';
 import { extractLastPathSegment } from '../url';
+import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 
 type UploadParams = {
   attachment: Attachment;
@@ -67,7 +68,7 @@ async function uploadToFileServer(params: UploadParams): Promise<AttachmentPoint
 
   let attachmentData: ArrayBuffer;
 
-  const deterministicEncryption = window.sessionFeatureFlags?.useDeterministicEncryption;
+  const deterministicEncryption = getFeatureFlag('useDeterministicEncryption');
 
   if (deterministicEncryption) {
     // this throws if the encryption fails

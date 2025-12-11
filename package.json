@@ -2,7 +2,7 @@
   "name": "session-desktop",
   "productName": "Session",
   "description": "Private messaging from your desktop",
-  "version": "1.17.2-0.1",
+  "version": "1.17.4",
   "license": "GPL-3.0",
   "author": {
     "name": "Session Foundation",
@@ -76,7 +76,7 @@
     "fs-extra": "11.3.0",
     "glob": "10.4.5",
     "image-type": "^4.1.0",
-    "libsession_util_nodejs": "https://github.com/session-foundation/libsession-util-nodejs/releases/download/v0.5.9/libsession_util_nodejs-v0.5.9.tar.gz",
+    "libsession_util_nodejs": "https://github.com/session-foundation/libsession-util-nodejs/releases/download/v0.6.5/libsession_util_nodejs-v0.6.5.tar.gz",
     "libsodium-wrappers-sumo": "^0.7.15",
     "linkify-it": "^5.0.0",
     "lodash": "^4.17.21",
@@ -110,10 +110,9 @@
     "rimraf": "6.0.1",
     "sanitize.css": "^12.0.1",
     "semver": "^7.7.1",
-    "sharp": "^0.34.4",
+    "sharp": "https://github.com/session-foundation/sharp/releases/download/v0.34.5/sharp-0.34.5.tgz",
     "styled-components": "^6.1.15",
     "uuid": "11.1.0",
-    "viem": "^2.26.0",
     "webrtc-adapter": "^4.2.2",
     "zod": "^3.24.2"
   },
@@ -249,7 +248,11 @@
       "category": "Network;InstantMessaging;Chat",
       "asarUnpack": "node_modules/spellchecker/vendor/hunspell_dictionaries",
       "target": "appImage",
-      "icon": "build/icon-linux.icns"
+      "icon": "build/icon-linux.icns",
+      "files": [
+        "!node_modules/@img/sharp-libvips*/lib/*.a*",
+        "!node_modules/@img/sharp-libvips*/lib/*.so*"
+      ]
     },
     "asarUnpack": [
       "node_modules/@signalapp/better-sqlite3/build/Release/better_sqlite3.node",

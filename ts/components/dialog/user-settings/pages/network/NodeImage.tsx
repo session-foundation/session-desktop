@@ -1,8 +1,6 @@
 import { type SVGProps, type JSX } from 'react';
 import styled from 'styled-components';
 import { Block } from './components';
-import { SessionSpinner } from '../../../../loading';
-import { StyledSessionSpinner } from '../../../../loading/spinner/StyledSessionSpinner';
 import { NodeGraph1 } from './nodes/NodeGraph1';
 import { NodeGraph10 } from './nodes/NodeGraph10';
 import { NodeGraph2 } from './nodes/NodeGraph2';
@@ -14,18 +12,22 @@ import { NodeGraph7 } from './nodes/NodeGraph7';
 import { NodeGraph8 } from './nodes/NodeGraph8';
 import { NodeGraph9 } from './nodes/NodeGraph9';
 import { useSecuringNodesCount } from './sections/network/hooks/useSecuringNodesCount';
+import {
+  AnimatedSpinnerIcon,
+  AnimatedSpinnerIconWrapper,
+} from '../../../../loading/spinner/AnimatedSpinnerIcon';
 
 const StyledNodeImage = styled(Block)`
   display: flex;
   justify-content: center;
   align-items: center;
 
-  ${StyledSessionSpinner} {
+  ${AnimatedSpinnerIconWrapper} {
     margin: auto;
   }
 
   svg,
-  ${StyledSessionSpinner} {
+  ${AnimatedSpinnerIconWrapper} {
     position: absolute;
     inset: 0;
   }
@@ -81,11 +83,7 @@ export const NodeImage = ({ width, height, loading }: Props) => {
       style={{ position: 'relative', overflow: 'hidden' }}
       data-testid="swarm-image"
     >
-      {ready ? (
-        <NodeComp {...sharedNodeProps} />
-      ) : (
-        <SessionSpinner loading={true} width="96px" height={'96px'} />
-      )}
+      {ready ? <NodeComp {...sharedNodeProps} /> : <AnimatedSpinnerIcon size="huge2" />}
     </StyledNodeImage>
   );
 };

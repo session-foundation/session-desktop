@@ -354,6 +354,8 @@
   "emojiReactsHoverYouNameTwoDesktop": "თქვენ და {name} უპასუხეს {emoji_name}",
   "emojiReactsNotification": "თქვენი შეტყობინება მოვიდა {emoji} რეაქცია",
   "enable": "გააქტიურება",
+  "entityRangeproof": "Rangeproof PTY LTD",
+  "entityStf": "The Session Technology Foundation",
   "errorConnection": "გთხოვთ შეამოწმოთ თქვენი ინტერნეტის კავშირი და სცადეთ კიდევ ერთხელ.",
   "errorCopyAndQuit": "შეცდომის დაკოპირება და გათიშვა",
   "errorDatabase": "მონაცემთა ბაზის შეცდომა",

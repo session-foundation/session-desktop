@@ -48,7 +48,7 @@ import { UpdateGroupPermissionsDialog } from './UpdateGroupPermissionsDialog';
 import { DebugMenuModal } from './debug/DebugMenuModal';
 import { ConversationSettingsDialog } from './conversationSettings/conversationSettingsDialog';
 import { SessionConfirm } from './SessionConfirm';
-import { SessionProInfoModal } from './SessionProInfoModal';
+import { SessionCTA } from './SessionCTA';
 import { LocalizedPopupDialog } from './LocalizedPopupDialog';
 import { UserSettingsDialog } from './user-settings/UserSettingsDialog';
 
@@ -84,10 +84,12 @@ export const ModalContainer = () => {
   return (
     <>
       {/* Screens */}
-      {userSettingsModalState && <UserSettingsDialog {...userSettingsModalState} />}
+      {/* UserProfileModal and ConversationSettingsDialog need to be behind the settings dialog because they can open the settings dialog */}
+      {userProfileModalState && <UserProfileModal {...userProfileModalState} />}
       {conversationSettingsModalState && (
         <ConversationSettingsDialog {...conversationSettingsModalState} />
       )}
+      {userSettingsModalState && <UserSettingsDialog {...userSettingsModalState} />}
       {onionPathModalState && <OnionPathModal {...onionPathModalState} />}
       {reactListModalState && <ReactListModal {...reactListModalState} />}
       {debugMenuModalState && <DebugMenuModal {...debugMenuModalState} />}
@@ -109,7 +111,6 @@ export const ModalContainer = () => {
       {updateConversationDetailsModalState && (
         <UpdateConversationDetailsDialog {...updateConversationDetailsModalState} />
       )}
-      {userProfileModalState && <UserProfileModal {...userProfileModalState} />}
       {changeNicknameModal && <SessionNicknameDialog {...changeNicknameModal} />}
       {enterPasswordModalState && <EnterPasswordModal {...enterPasswordModalState} />}
       {deleteAccountModalState && <DeleteAccountModal {...deleteAccountModalState} />}
@@ -123,7 +124,7 @@ export const ModalContainer = () => {
       {localizedPopupDialogState && <LocalizedPopupDialog {...localizedPopupDialogState} />}
       {lightBoxOptions && <LightboxGallery {...lightBoxOptions} />}
       {openUrlModalState && <OpenUrlModal {...openUrlModalState} />}
-      {sessionProInfoState && <SessionProInfoModal {...sessionProInfoState} />}
+      {sessionProInfoState && <SessionCTA {...sessionProInfoState} />}
       {/* Should be on top of all other modals */}
       {confirmModalState && <SessionConfirm {...confirmModalState} />}
     </>

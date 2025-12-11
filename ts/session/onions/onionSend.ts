@@ -26,6 +26,8 @@ import { SnodePool } from '../apis/snode_api/snodePool';
 import { SERVER_HOSTS } from '../apis';
 import type { FileFromFileServerDetails } from '../apis/file_server_api/types';
 import { FS, type FILE_SERVER_TARGET_TYPE } from '../apis/file_server_api/FileServerTarget';
+import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
+import { FetchDestination } from '../utils/InsecureNodeFetch';
 
 export type OnionFetchOptions = {
   method: string;
@@ -86,7 +88,7 @@ export type OnionV4SnodeResponse = {
 };
 
 export type OnionV4JSONSnodeResponse = {
-  body: Record<string, any> | null;
+  body: Record<string, unknown>;
   status_code: number;
 };
 
@@ -94,6 +96,17 @@ export type OnionV4BinarySnodeResponse = {
   bodyBinary: Uint8Array | null;
   status_code: number;
 };
+
+export function isOnionV4JSONSnodeResponse(
+  response: unknown
+): response is OnionV4JSONSnodeResponse {
+  return (
+    typeof response === 'object' &&
+    response !== null &&
+    'body' in response &&
+    typeof response.body === 'object'
+  );
+}
 
 /**
  * Build & send an onion v4 request to a non snode, and handle retries.
@@ -106,7 +119,9 @@ const sendViaOnionV4ToNonSnodeWithRetries = async (
   fetchOptions: OnionFetchOptions,
   throwErrors: boolean,
   abortSignal: MergedAbortSignal,
-  timeoutMs: number
+  timeoutMs: number,
+  destination: FetchDestination,
+  caller: string
 ): Promise<OnionV4SnodeResponse | null> => {
   if (!fetchOptions.useV4) {
     throw new Error('sendViaOnionV4ToNonSnodeWithRetries is only to be used for onion v4 calls');
@@ -118,7 +133,7 @@ const sendViaOnionV4ToNonSnodeWithRetries = async (
 
   const payloadObj = buildSendViaOnionPayload(url, fetchOptions);
 
-  if (window.sessionFeatureFlags?.debugNonSnodeRequests) {
+  if (getFeatureFlag('debugNonSnodeRequests')) {
     window.log.info(
       '[debugNonSnodeRequests] sendViaOnionV4ToNonSnodeWithRetries: buildSendViaOnionPayload returned ',
       JSON.stringify(payloadObj)
@@ -143,7 +158,7 @@ const sendViaOnionV4ToNonSnodeWithRetries = async (
     result = await pRetry(
       async () => {
         const pathNodes = await OnionSending.getOnionPathForSending();
-        if (window.sessionFeatureFlags?.debugNonSnodeRequests) {
+        if (getFeatureFlag('debugNonSnodeRequests')) {
           window.log.info(
             '[debugNonSnodeRequests] sendViaOnionV4ToNonSnodeWithRetries: getOnionPathForSending returned',
             JSON.stringify(pathNodes)
@@ -168,9 +183,11 @@ const sendViaOnionV4ToNonSnodeWithRetries = async (
           throwErrors,
           allow401s: false,
           timeoutMs,
+          destination,
+          caller,
         });
 
-        if (window.sessionFeatureFlags?.debugNonSnodeRequests) {
+        if (getFeatureFlag('debugNonSnodeRequests')) {
           window.log.info(
             '[debugNonSnodeRequests] sendViaOnionV4ToNonSnodeWithRetries: sendOnionRequestHandlingSnodeEjectNoRetries returned: ',
             JSON.stringify(onionV4Response)
@@ -196,7 +213,7 @@ const sendViaOnionV4ToNonSnodeWithRetries = async (
         // We decode it here, because if the result status code is not valid, we want to trigger a retry (by throwing an error)
         const decodedV4 = OnionV4.decodeV4Response(onionV4Response);
 
-        if (window.sessionFeatureFlags?.debugNonSnodeRequests) {
+        if (getFeatureFlag('debugNonSnodeRequests')) {
           window.log.info(
             `[debugNonSnodeRequests] sendViaOnionV4ToNonSnodeWithRetries: payload: ${JSON.stringify(payloadObj)}\ndecoded response:`,
             JSON.stringify(decodedV4)
@@ -212,7 +229,7 @@ const sendViaOnionV4ToNonSnodeWithRetries = async (
             const plainText = (decodedV4?.body as any).plainText;
 
             if (plainText === invalidAuthRequiresBlinding) {
-              if (window.sessionFeatureFlags?.debugNonSnodeRequests) {
+              if (getFeatureFlag('debugNonSnodeRequests')) {
                 window.log.info(
                   `[debugNonSnodeRequests] sendViaOnionV4ToNonSnodeWithRetries: payload: ${JSON.stringify(payloadObj)}\n${foundStatusCode} error with message:\nplainText: ${plainText}`
                 );
@@ -369,7 +386,9 @@ async function sendJsonViaOnionV4ToSogs(
     },
     throwErrors,
     abortSignal,
-    timeoutMs
+    timeoutMs,
+    FetchDestination.SOGS,
+    'sendJsonViaOnionV4ToSogs'
   );
 
   return res as OnionV4JSONSnodeResponse | null;
@@ -429,7 +448,9 @@ async function sendBinaryViaOnionV4ToSogs(
     },
     false,
     abortSignal,
-    timeoutMs
+    timeoutMs,
+    FetchDestination.SOGS,
+    'sendBinaryViaOnionV4ToSogs'
   );
 
   return res as OnionV4JSONSnodeResponse;
@@ -472,7 +493,9 @@ async function sendBinaryViaOnionV4ToFileServer({
     },
     false,
     abortSignal,
-    timeoutMs
+    timeoutMs,
+    FetchDestination.SESSION_SERVER,
+    'sendBinaryViaOnionV4ToFileServer'
   );
 
   return res as OnionV4JSONSnodeResponse;
@@ -492,7 +515,7 @@ async function getBinaryViaOnionV4FromFileServer({
     fileToGet: FileFromFileServerDetails;
     throwError: boolean;
   }): Promise<OnionV4BinarySnodeResponse | null> {
-  if (window.sessionFeatureFlags?.debugServerRequests) {
+  if (getFeatureFlag('debugServerRequests')) {
     window.log.info(`getBinaryViaOnionV4FromFileServer fsv2: "${fileToGet.fullUrl} `);
   }
 
@@ -517,10 +540,12 @@ async function getBinaryViaOnionV4FromFileServer({
     },
     throwError,
     abortSignal,
-    timeoutMs
+    timeoutMs,
+    FetchDestination.SESSION_SERVER,
+    'getBinaryViaOnionV4FromFileServer'
   );
 
-  if (window.sessionFeatureFlags?.debugServerRequests) {
+  if (getFeatureFlag('debugServerRequests')) {
     window.log.debug(
       `getBinaryViaOnionV4FromFileServer fsv2: "${fileToGet.fullUrl}; got:`,
       JSON.stringify(res)
@@ -565,56 +590,9 @@ async function sendJsonViaOnionV4ToFileServer({
     },
     false,
     abortSignal,
-    timeoutMs
-  );
-
-  return res as OnionV4JSONSnodeResponse;
-}
-
-/**
- * Send some generic json to the sent server.
- * This function should probably not used directly as we only need it for the NetworkApi.makeRequest() function
- */
-async function sendJsonViaOnionV4ToSeshServer({
-  serverUrl,
-  endpoint,
-  method,
-  headers,
-  stringifiedBody,
-  pubkey,
-  abortSignal,
-  timeoutMs,
-}: WithAbortSignal &
-  WithTimeoutMs & {
-    serverUrl: string;
-    endpoint: string;
-    method: string;
-    headers: Record<string, string | number>;
-    stringifiedBody: string | null;
-    pubkey: string;
-  }): Promise<OnionV4JSONSnodeResponse | null> {
-  if (!endpoint.startsWith('/')) {
-    throw new Error('endpoint needs a leading /');
-  }
-
-  if (serverUrl.endsWith('/')) {
-    throw new Error('url should not end with /');
-  }
-
-  const builtUrl = new URL(`${serverUrl}${endpoint}`);
-
-  const res = await OnionSending.sendViaOnionV4ToNonSnodeWithRetries(
-    pubkey,
-    builtUrl,
-    {
-      method,
-      headers,
-      body: stringifiedBody,
-      useV4: true,
-    },
-    false,
-    abortSignal,
-    timeoutMs
+    timeoutMs,
+    FetchDestination.SESSION_SERVER,
+    'sendJsonViaOnionV4ToFileServer'
   );
 
   return res as OnionV4JSONSnodeResponse;
@@ -636,7 +614,6 @@ export const OnionSending = {
   sendBinaryViaOnionV4ToFileServer,
   sendBinaryViaOnionV4ToSogs,
   getBinaryViaOnionV4FromFileServer,
-  sendJsonViaOnionV4ToSeshServer,
   sendJsonViaOnionV4ToFileServer,
   getMinTimeoutForSogs,
 };

@@ -45,7 +45,7 @@ export const SessionIDNotEditable = ({
   const pointerStyle = onClick ? { cursor: 'pointer' } : {};
 
   const style = tooltipNode
-    ? { ...providedStyle, ...pointerStyle, marginLeft: 'var(--margins-lg)' }
+    ? { ...providedStyle, ...pointerStyle, marginStart: 'var(--margins-lg)' }
     : { ...providedStyle, ...pointerStyle };
 
   if (displayType === 'blinded') {

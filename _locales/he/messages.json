@@ -348,6 +348,8 @@
   "emojiReactsHoverYouNameTwoDesktop": "אתה ו-{name} הגבתם עם {emoji_name}",
   "emojiReactsNotification": "הגיב להודעתך {emoji}",
   "enable": "אפשר",
+  "entityRangeproof": "Rangeproof PTY LTD",
+  "entityStf": "The Session Technology Foundation",
   "errorConnection": "בדוק את חיבור האינטרנט שלך ונסה שוב.",
   "errorCopyAndQuit": "העתק שגיאה וצא",
   "errorDatabase": "שגיאת מסד נתונים",

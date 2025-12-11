@@ -349,6 +349,8 @@
   "emojiReactsHoverYouNameTwoDesktop": "Siz va {name} {emoji_name} bilan reaksiyaga kirdilar",
   "emojiReactsNotification": "Sizning xabaringizga {emoji} yordamida reaksiyalar bildirildi",
   "enable": "Yoqish",
+  "entityRangeproof": "Rangeproof PTY LTD",
+  "entityStf": "The Session Technology Foundation",
   "errorConnection": "Internet ulanishingizni tekshiring va qaytadan urinib ko‘ring.",
   "errorCopyAndQuit": "Xatoni nusxalang va chiqing",
   "errorDatabase": "Ma'lumotlar bazasi xatosi",

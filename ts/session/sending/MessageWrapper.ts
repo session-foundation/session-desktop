@@ -1,14 +1,9 @@
-import { SignalService } from '../../protobuf';
-import { ConvoHub } from '../conversations';
-import { MessageEncrypter } from '../crypto/MessageEncrypter';
+import {
+  MetaGroupWrapperActions,
+  MultiEncryptWrapperActions,
+} from '../../webworker/workers/browser/libsession_worker_interface';
 import { PubKey } from '../types';
-
-function encryptionBasedOnConversation(destination: PubKey) {
-  if (PubKey.is03Pubkey(destination.key) || ConvoHub.use().get(destination.key)?.isClosedGroup()) {
-    return SignalService.Envelope.Type.CLOSED_GROUP_MESSAGE;
-  }
-  return SignalService.Envelope.Type.SESSION_MESSAGE;
-}
+import { UserUtils } from '../utils';
 
 type SharedEncryptAndWrap = {
   ttl: number;
@@ -29,7 +24,7 @@ export type EncryptAndWrapMessageResults = {
   namespace: number;
 } & SharedEncryptAndWrap;
 
-async function encryptForGroupV2(
+async function encryptForGroup(
   params: EncryptAndWrapMessage
 ): Promise<EncryptAndWrapMessageResults> {
   // Group v2 encryption works a bit differently: we encrypt the envelope itself through libsession.
@@ -44,68 +39,33 @@ async function encryptForGroupV2(
     networkTimestamp,
   } = params;
 
-  const envelope = MessageWrapper.wrapContentIntoEnvelope(
-    SignalService.Envelope.Type.CLOSED_GROUP_MESSAGE,
-    destination,
-    networkTimestamp,
-    plainTextBuffer
-  );
+  if (!PubKey.is03Pubkey(destination)) {
+    throw new Error('encryptForGroup rawMessage was given invalid pubkey');
+  }
 
-  const recipient = PubKey.cast(destination);
+  const groupEncKeyHex = await MetaGroupWrapperActions.keyGetEncryptionKeyHex(destination);
+  const proRotatingPrivateKey = await UserUtils.getProRotatingPrivateKeyHex();
 
-  const { cipherText } = await MessageEncrypter.encrypt(
-    recipient,
-    SignalService.Envelope.encode(envelope).finish(),
-    encryptionBasedOnConversation(recipient)
-  );
+  const cipherText = await MultiEncryptWrapperActions.encryptForGroup([
+    {
+      plaintext: plainTextBuffer,
+      sentTimestampMs: networkTimestamp,
+      groupEd25519Pubkey: destination,
+      groupEncKey: groupEncKeyHex,
+      senderEd25519Seed: await UserUtils.getUserEd25519Seed(),
+      proRotatingEd25519PrivKey: proRotatingPrivateKey,
+    },
+  ]);
 
   return {
     networkTimestamp,
-    encryptedAndWrappedData: cipherText,
+    encryptedAndWrappedData: cipherText.encryptedData[0],
     namespace,
     ttl,
     identifier,
     isSyncMessage: syncMessage,
     plainTextBuffer,
   };
-}
-
-function wrapContentIntoEnvelope(
-  type: SignalService.Envelope.Type,
-  sskSource: string | undefined,
-  timestamp: number,
-  content: Uint8Array
-): SignalService.Envelope {
-  let source: string | undefined;
-
-  if (type === SignalService.Envelope.Type.CLOSED_GROUP_MESSAGE) {
-    source = sskSource;
-  }
-
-  return SignalService.Envelope.create({
-    type,
-    source,
-    timestamp,
-    content,
-  });
-}
-/**
- * This is an outdated practice and we should probably just send the envelope data directly.
- * Something to think about in the future.
- */
-function wrapEnvelopeInWebSocketMessage(envelope: SignalService.Envelope): Uint8Array {
-  const request = SignalService.WebSocketRequestMessage.create({
-    id: 0,
-    body: SignalService.Envelope.encode(envelope).finish(),
-    verb: 'PUT',
-    path: '/api/v1/message',
-  });
-
-  const websocket = SignalService.WebSocketMessage.create({
-    type: SignalService.WebSocketMessage.Type.REQUEST,
-    request,
-  });
-  return SignalService.WebSocketMessage.encode(websocket).finish();
 }
 
 async function encryptMessageAndWrap(
@@ -122,29 +82,25 @@ async function encryptMessageAndWrap(
   } = params;
 
   if (PubKey.is03Pubkey(destination)) {
-    return encryptForGroupV2(params);
+    return encryptForGroup(params);
   }
+  if (!PubKey.is05Pubkey(destination)) {
+    throw new Error('encryptMessageAndWrap: now, this could only be a 05 pubkey');
+  }
+  const proRotatingPrivateKey = await UserUtils.getProRotatingPrivateKeyHex();
 
-  // can only be legacy group or 1o1 chats here
-
-  const recipient = PubKey.cast(destination);
-
-  const { envelopeType, cipherText } = await MessageEncrypter.encrypt(
-    recipient,
-    plainTextBuffer,
-    encryptionBasedOnConversation(recipient)
-  );
-
-  const envelope = MessageWrapper.wrapContentIntoEnvelope(
-    envelopeType,
-    recipient.key,
-    networkTimestamp,
-    cipherText
-  );
-  const data = wrapEnvelopeInWebSocketMessage(envelope);
+  const encryptedAndWrappedData = await MultiEncryptWrapperActions.encryptFor1o1([
+    {
+      plaintext: plainTextBuffer,
+      sentTimestampMs: networkTimestamp,
+      recipientPubkey: destination,
+      senderEd25519Seed: await UserUtils.getUserEd25519Seed(),
+      proRotatingEd25519PrivKey: proRotatingPrivateKey,
+    },
+  ]);
 
   return {
-    encryptedAndWrappedData: data,
+    encryptedAndWrappedData: encryptedAndWrappedData.encryptedData[0],
     networkTimestamp,
     namespace,
     ttl,
@@ -161,6 +117,5 @@ async function encryptMessagesAndWrap(
 }
 
 export const MessageWrapper = {
-  wrapContentIntoEnvelope,
   encryptMessagesAndWrap,
 };

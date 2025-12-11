@@ -6,6 +6,8 @@ import {
   type UserSettingsPage,
 } from '../../../../state/ducks/modalDialog';
 import { assertUnreachable } from '../../../../types/sqlSharedTypes';
+import { handleTriggeredProCTAs } from '../../SessionCTA';
+import { getFeatureFlag } from '../../../../state/ducks/types/releasedFeaturesReduxTypes';
 
 export function useUserSettingsTitle(page: UserSettingsModalState | undefined) {
   if (!page) {
@@ -41,6 +43,9 @@ export function useUserSettingsTitle(page: UserSettingsModalState | undefined) {
         : page.passwordAction === 'change'
           ? tr('passwordChange')
           : tr('passwordSet');
+    case 'pro':
+    case 'proNonOriginating':
+      return '';
     case 'default':
     case undefined:
       return tr('sessionSettings');
@@ -72,7 +77,15 @@ export function useUserSettingsCloseAction(props: UserSettingsModalState) {
     case 'blocked-contacts':
     case 'password':
     case 'network':
-      return () => dispatch(userSettingsModal(null));
+    case 'pro':
+    case 'proNonOriginating':
+      return () => {
+        dispatch(userSettingsModal(null));
+        if (getFeatureFlag('proAvailable')) {
+          void handleTriggeredProCTAs(dispatch);
+        }
+        props.afterCloseAction?.();
+      };
 
     default:
       assertUnreachable(userSettingsPage, 'useCloseActionFromPage: invalid userSettingsPage');
@@ -82,6 +95,11 @@ export function useUserSettingsCloseAction(props: UserSettingsModalState) {
 
 export function useUserSettingsBackAction(modalState: UserSettingsModalState) {
   const dispatch = useDispatch();
+
+  if (modalState?.overrideBackAction) {
+    return modalState.overrideBackAction;
+  }
+
   if (!modalState?.userSettingsPage || modalState?.userSettingsPage === 'default') {
     // no back button if we are on the default page
     return undefined;
@@ -109,7 +127,11 @@ export function useUserSettingsBackAction(modalState: UserSettingsModalState) {
     case 'privacy':
     case 'preferences':
     case 'network':
+    case 'pro':
       settingsPageToDisplayOnBack = 'default';
+      break;
+    case 'proNonOriginating':
+      settingsPageToDisplayOnBack = 'pro';
       break;
     default:
       assertUnreachable(userSettingsPage, 'useBackActionFromPage: invalid userSettingsPage');

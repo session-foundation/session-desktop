@@ -19,8 +19,10 @@ export enum SessionButtonShape {
 export enum SessionButtonColor {
   TextPrimary = 'text-primary',
   Tertiary = 'background-tertiary',
+  Primary = 'primary',
   PrimaryDark = 'renderer-span-primary', // use primary in dark modes only since it has poor contrast in light mode
   Danger = 'danger',
+  Disabled = 'button-simple-disabled',
   None = 'transparent',
 }
 
@@ -109,16 +111,13 @@ const StyledOutlineButton = styled(StyledBaseButton)`
 const StyledSolidButton = styled(StyledBaseButton)<{ isDarkTheme: boolean }>`
   outline: none;
   background-color: ${props =>
-    props.color ? `var(--${props.color}-color)` : `var(--button-solid-background-color)`};
+    props.color ? `var(--${props.color}-color)` : `var(--primary-color)`};
   color: ${props =>
-    props.color &&
-    ((props.color !== SessionButtonColor.PrimaryDark && !props.isDarkTheme) ||
-      (props.isDarkTheme && props.color === SessionButtonColor.Tertiary))
+    props.color === SessionButtonColor.Tertiary
       ? 'var(--text-primary-color)'
-      : `var(--button-solid-text-color)`};
+      : `var(--black-color)`};
   border: 1px solid
-    ${props =>
-      props.color ? `var(--${props.color}-color)` : `var(--button-solid-background-color)`};
+    ${props => (props.color ? `var(--${props.color}-color)` : `var(--primary-color)`)};
 
   &.disabled {
     background-color: var(--transparent-color);
@@ -129,14 +128,11 @@ const StyledSolidButton = styled(StyledBaseButton)<{ isDarkTheme: boolean }>`
     &:hover {
       background-color: var(--transparent-color);
       color: ${props =>
-        props.isDarkTheme && props.color && props.color !== SessionButtonColor.Tertiary
-          ? `var(--${props.color}-color)`
-          : `var(--button-solid-text-hover-color)`};
-      border: 1px solid
-        ${props =>
-          props.isDarkTheme && props.color
+        props.isDarkTheme
+          ? props.color && props.color !== SessionButtonColor.Tertiary
             ? `var(--${props.color}-color)`
-            : `var(--button-solid-text-hover-color)`};
+            : 'var(--primary-color)'
+          : `var(--button-solid-text-hover-color)`};
     }
   }
 `;

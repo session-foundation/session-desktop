@@ -42,6 +42,7 @@ import { useShowConversationSettingsFor } from '../../menuAndSettingsHooks/useSh
 import { useShowNoteToSelfCb } from '../../menuAndSettingsHooks/useShowNoteToSelf';
 import { useChangeCommunityPermissionsCb } from '../../menuAndSettingsHooks/useChangeCommunityPermissions';
 import { useTogglePinConversationHandler } from '../../menuAndSettingsHooks/UseTogglePinConversationHandler';
+import { PLURAL_COUNT_OTHER } from '../../../localization/localeTools';
 
 type WithAsAdmin = { asAdmin: boolean };
 
@@ -308,7 +309,7 @@ export function AddAdminCommunityButton({ conversationId }: WithConvoId) {
           iconColor="var(--text-primary-color"
         />
       }
-      text={{ token: 'addAdmins' }}
+      text={{ token: 'addAdmin', count: PLURAL_COUNT_OTHER }}
       onClick={cb}
       dataTestId="add-admins-menu-option"
     />

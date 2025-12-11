@@ -9,8 +9,9 @@ import type { TrArgs } from '../../../localization/localeTools';
 import { useIsDarkTheme } from '../../../state/theme/selectors/theme';
 
 // NOTE Used for descendant components
-export const StyledContent = styled.div<{ disabled: boolean }>`
+export const StyledContent = styled.div<{ disabled?: boolean; rowReverse?: boolean }>`
   display: flex;
+  flex-direction: ${props => (props.rowReverse ? 'row-reverse' : 'row')};
   justify-content: space-between;
   align-items: center;
   width: 100%;
@@ -18,6 +19,8 @@ export const StyledContent = styled.div<{ disabled: boolean }>`
 `;
 
 const StyledPanelLabel = styled.p`
+  display: flex;
+  gap: var(--margins-xs);
   color: var(--text-secondary-color);
   margin: 0;
   align-self: flex-start;
@@ -38,9 +41,11 @@ const StyledPanelLabelWithDescription = styled.div`
 
 export function PanelLabelWithDescription({
   title,
+  extraInlineNode,
   description,
 }: {
   title: TrArgs;
+  extraInlineNode?: ReactNode;
   description?: TrArgs;
 }) {
   return (
@@ -48,6 +53,7 @@ export function PanelLabelWithDescription({
       {/* less space between the label and the description */}
       <StyledPanelLabel>
         <Localizer {...title} />
+        {extraInlineNode}
       </StyledPanelLabel>
       {description ? (
         <StyledPanelDescription>
@@ -58,12 +64,17 @@ export function PanelLabelWithDescription({
   );
 }
 
-const StyledRoundedPanelButtonGroup = styled.div`
+const StyledRoundedPanelButtonGroup = styled.div<{ isSidePanel?: boolean; isDarkTheme?: boolean }>`
   display: flex;
   flex-direction: column;
   justify-content: center;
   overflow: hidden;
-  background: var(--background-tertiary-color);
+  background: ${props =>
+    props.isSidePanel
+      ? 'var(--background-tertiary-color)'
+      : props.isDarkTheme
+        ? 'var(--background-primary-color)'
+        : 'var(--background-secondary-color)'};
   border-radius: 16px;
   // Note: we need no padding here so we can change the bg color on hover
   padding: 0;
@@ -81,14 +92,20 @@ const PanelButtonContainer = styled.div`
 type PanelButtonGroupProps = {
   children: ReactNode;
   style?: CSSProperties;
+  isSidePanel?: boolean;
 };
 
 export const PanelButtonGroup = (
   props: PanelButtonGroupProps & { containerStyle?: CSSProperties }
 ) => {
-  const { children, style, containerStyle } = props;
+  const { children, style, containerStyle, isSidePanel } = props;
+  const isDarkTheme = useIsDarkTheme();
   return (
-    <StyledRoundedPanelButtonGroup style={style}>
+    <StyledRoundedPanelButtonGroup
+      style={style}
+      isSidePanel={isSidePanel}
+      isDarkTheme={isDarkTheme}
+    >
       <PanelButtonContainer style={containerStyle}>{children}</PanelButtonContainer>
     </StyledRoundedPanelButtonGroup>
   );
@@ -98,8 +115,10 @@ export const StyledPanelButton = styled.button<{
   disabled: boolean;
   color?: string;
   isDarkTheme: boolean;
+  defaultCursorWhenDisabled?: boolean;
 }>`
-  cursor: ${props => (props.disabled ? 'not-allowed' : 'pointer')};
+  cursor: ${props =>
+    props.disabled ? (props.defaultCursorWhenDisabled ? 'default' : 'not-allowed') : 'pointer'};
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -181,6 +200,7 @@ type PanelButtonTextBaseProps = {
 export type PanelButtonSubtextProps = {
   subText: TrArgs;
   subTextDataTestId: SessionDataTestId;
+  subTextColorOverride?: string;
 };
 
 const PanelButtonTextInternal = (props: PropsWithChildren) => {
@@ -226,7 +246,10 @@ export const PanelButtonTextWithSubText = (
     <PanelButtonTextInternal>
       <TextOnly color={props.color} {...props} />
       <SpacerXS />
-      <StyledSubtitle color={props.color} data-testid={props.subTextDataTestId}>
+      <StyledSubtitle
+        color={props.subTextColorOverride || props.color}
+        data-testid={props.subTextDataTestId}
+      >
         <Localizer {...props.subText} />
         {props.extraSubTextNode}
       </StyledSubtitle>

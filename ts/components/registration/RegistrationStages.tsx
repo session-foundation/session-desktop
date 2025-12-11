@@ -22,6 +22,7 @@ import { CreateAccount, RestoreAccount, Start } from './stages';
 import { showLinkVisitWarningDialog } from '../dialog/OpenUrlModal';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
+import { SnodePool } from '../../session/apis/snode_api/snodePool';
 
 export async function resetRegistration() {
   await Data.removeAll();
@@ -29,6 +30,8 @@ export async function resetRegistration() {
   await Storage.fetch();
   ConvoHub.use().reset();
   await ConvoHub.use().load();
+  // prefetch snodes list from the network
+  void SnodePool.getSnodePoolFromDBOrFetchFromSeed();
 }
 
 const StyledRegistrationContainer = styled(Flex)`

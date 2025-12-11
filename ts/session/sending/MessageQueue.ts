@@ -5,7 +5,7 @@ import { OutgoingRawMessage, PubKey } from '../types';
 import { JobQueue, MessageUtils, UserUtils } from '../utils';
 import { PendingMessageCache } from './PendingMessageCache';
 
-import { ContentMessage } from '../messages/outgoing';
+import { type ContentMessageNoProfile } from '../messages/outgoing';
 import { ClosedGroupV2VisibleMessage } from '../messages/outgoing/visibleMessage/ClosedGroupVisibleMessage';
 import { SyncMessageType } from '../utils/sync/syncUtils';
 import { MessageSentHandler } from './MessageSentHandler';
@@ -25,6 +25,7 @@ import { GroupUpdateInviteMessage } from '../messages/outgoing/controlMessage/gr
 import { GroupUpdatePromoteMessage } from '../messages/outgoing/controlMessage/group_v2/to_user/GroupUpdatePromoteMessage';
 import { OpenGroupVisibleMessage } from '../messages/outgoing/visibleMessage/OpenGroupVisibleMessage';
 import { OpenGroupRequestCommonType } from '../../data/types';
+import type { GroupUpdateInviteResponseMessage } from '../messages/outgoing/controlMessage/group_v2/to_group/GroupUpdateInviteResponseMessage';
 
 export class MessageQueueCl {
   private readonly jobQueues: Map<string, JobQueue> = new Map();
@@ -37,15 +38,14 @@ export class MessageQueueCl {
 
   public async sendToPubKey(
     destinationPubKey: PubKey,
-    message: ContentMessage,
+    message: ContentMessageNoProfile,
     namespace: SnodeNamespaces,
-    sentCb?: (message: OutgoingRawMessage) => Promise<void>,
-    isGroup = false
+    sentCb?: (message: OutgoingRawMessage) => Promise<void>
   ): Promise<void> {
     if ((message as any).syncTarget) {
       throw new Error('SyncMessage needs to be sent with sendSyncMessage');
     }
-    await this.process(destinationPubKey, message, namespace, sentCb, isGroup);
+    await this.process(destinationPubKey, message, namespace, sentCb);
   }
 
   /**
@@ -159,6 +159,7 @@ export class MessageQueueCl {
       | GroupUpdateMemberChangeMessage
       | GroupUpdateInfoChangeMessage
       | GroupUpdateDeleteMemberContentMessage
+      | GroupUpdateInviteResponseMessage
       | GroupUpdateMemberLeftMessage;
     sentCb?: (message: OutgoingRawMessage) => Promise<void>;
   }): Promise<void> {
@@ -166,13 +167,7 @@ export class MessageQueueCl {
       throw new Error('Invalid group message passed in sendToGroupV2.');
     }
 
-    return this.sendToPubKey(
-      PubKey.cast(message.destination),
-      message,
-      message.namespace,
-      sentCb,
-      true
-    );
+    return this.sendToPubKey(PubKey.cast(message.destination), message, message.namespace, sentCb);
   }
 
   public async sendToGroupV2NonDurably({
@@ -251,7 +246,7 @@ export class MessageQueueCl {
     isSyncMessage,
   }: {
     pubkey: PubKey;
-    message: ContentMessage;
+    message: ContentMessageNoProfile;
     namespace: SnodeNamespaces;
     isSyncMessage: boolean;
   }): Promise<number | null> {
@@ -340,10 +335,9 @@ export class MessageQueueCl {
    */
   private async process(
     destinationPk: PubKey,
-    message: ContentMessage,
+    message: ContentMessageNoProfile,
     namespace: SnodeNamespaces,
-    sentCb?: (message: OutgoingRawMessage) => Promise<void>,
-    isGroup = false
+    sentCb?: (message: OutgoingRawMessage) => Promise<void>
   ): Promise<void> {
     // Don't send to ourselves
     let isSyncMessage = false;
@@ -358,7 +352,7 @@ export class MessageQueueCl {
       }
     }
 
-    await this.pendingMessageCache.add(destinationPk, message, namespace, sentCb, isGroup);
+    await this.pendingMessageCache.add(destinationPk, message, namespace, sentCb);
     void this.processPending(destinationPk, isSyncMessage);
   }
 

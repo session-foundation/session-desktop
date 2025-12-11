@@ -6,8 +6,6 @@ import { expect } from 'chai';
 import { enableLogRedirect } from '../../../test-utils/utils';
 
 describe('Updater', () => {
-  it.skip('isUpdateAvailable', () => {});
-
   it('package.json target is correct', () => {
     const content = readFileSync(
       path.join(__dirname, '..', '..', '..', '..', '..', 'package.json')
