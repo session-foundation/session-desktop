@@ -27,6 +27,9 @@ export const defaultBooleanFeatureFlags = {
   useDeterministicEncryption: !isEmpty(process.env.SESSION_ATTACH_DETERMINISTIC_ENCRYPTION),
   disableOnionRequests: false,
   disableImageProcessor: !isEmpty(process.env.SESSION_DISABLE_IMAGE_PROCESSOR),
+  disableLocalAttachmentEncryption: !isEmpty(
+    process.env.SESSION_DISABLE_LOCAL_ATTACHMENT_ENCRYPTION
+  ),
   useTestNet: isTestNet() || isTestIntegration(),
   debugInputCommands: !isEmpty(process.env.SESSION_DEBUG),
   alwaysShowRemainingChars: false,

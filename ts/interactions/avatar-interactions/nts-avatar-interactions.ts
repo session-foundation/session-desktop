@@ -5,14 +5,12 @@ import { processNewAttachment } from '../../types/MessageAttachment';
 import { encryptProfile } from '../../util/crypto/profileEncrypter';
 import type { ConversationModel } from '../../models/conversation';
 import { processAvatarData } from '../../util/avatar/processAvatarData';
-import {
-  MultiEncryptWrapperActions,
-  UserConfigWrapperActions,
-} from '../../webworker/workers/browser/libsession_worker_interface';
+import { MultiEncryptWrapperActions } from '../../webworker/workers/browser/libsession_worker_interface';
 import { UserUtils } from '../../session/utils';
 import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 import { SessionProfileSetAvatarDownloadedAny } from '../../models/profile';
 import { fromHexToArray } from '../../session/utils/String';
+import { UserConfigWrapperActions } from '../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 
 export async function uploadAndSetOurAvatarShared({
   decryptedAvatarData,

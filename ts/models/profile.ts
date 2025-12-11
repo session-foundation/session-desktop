@@ -16,7 +16,7 @@ import { ed25519Str } from '../session/utils/String';
 import { Timestamp } from '../types/timestamp/timestamp';
 import { privateSet, privateSetKey } from './modelFriends';
 import type { SignalService } from '../protobuf';
-import { UserConfigWrapperActions } from '../webworker/workers/browser/libsession_worker_interface';
+import { UserConfigWrapperActions } from '../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 import type { SwarmDecodedEnvelope } from '../receiver/types';
 
 type SessionProfileArgs = {
@@ -90,7 +90,15 @@ abstract class SessionProfileChanges {
     }
   }
 
-  protected shouldApplyChange(newProfileUpdatedAtSeconds: number | null) {
+  protected shouldApplyChange(
+    newProfileUpdatedAtSeconds: number | null,
+    context:
+      | 'applyNameChange'
+      | 'applyUpdateAtChanges'
+      | 'applyResetAvatarChanges'
+      | 'applyProDetailsChange'
+      | 'applySetAvatarBeforeDownloadChanges'
+  ) {
     if (isNil(newProfileUpdatedAtSeconds)) {
       // `null` is not an option to construct the subclasses of this class.
       // So we use `null` to mean `profileUpdatedAtSeconds` does not apply to the subclass calling this.
@@ -107,14 +115,14 @@ abstract class SessionProfileChanges {
     // the timestamp is not set (defaults to 0).
     if (newProfileUpdatedAtSeconds === 0 && currentProfileUpdatedAtSeconds === 0) {
       window.log.debug(
-        `shouldApplyChange for ${ed25519Str(this.convo.id)} incomingSeconds:0 currentSeconds:0. Allowing overwrite`
+        `shouldApplyChange [${context}] for ${ed25519Str(this.convo.id)} incomingSeconds:0 currentSeconds:0. Allowing overwrite`
       );
       return true;
     }
 
     const ts = new Timestamp({ value: newProfileUpdatedAtSeconds });
     window.log.debug(
-      `shouldApplyChange for ${ed25519Str(this.convo.id)} incomingSeconds:${ts.seconds()} currentSeconds:${currentProfileUpdatedAtSeconds} -> ${currentProfileUpdatedAtSeconds < ts.seconds()}`
+      `shouldApplyChange [${context}] for ${ed25519Str(this.convo.id)} incomingSeconds:${ts.seconds()} currentSeconds:${currentProfileUpdatedAtSeconds} -> ${currentProfileUpdatedAtSeconds < ts.seconds()}`
     );
 
     return currentProfileUpdatedAtSeconds < ts.seconds();
@@ -122,7 +130,7 @@ abstract class SessionProfileChanges {
 
   protected applyNameChange(newProfileUpdatedAtSeconds: number | null) {
     let nameChanged = false;
-    if (!this.shouldApplyChange(newProfileUpdatedAtSeconds)) {
+    if (!this.shouldApplyChange(newProfileUpdatedAtSeconds, 'applyNameChange')) {
       return { nameChanged };
     }
     const existingSessionName = this.convo.getRealSessionUsername();
@@ -139,7 +147,7 @@ abstract class SessionProfileChanges {
 
   protected applyUpdateAtChanges(newProfileUpdatedAtSeconds: number | null) {
     let updatedAtChanged = false;
-    if (!this.shouldApplyChange(newProfileUpdatedAtSeconds)) {
+    if (!this.shouldApplyChange(newProfileUpdatedAtSeconds, 'applyUpdateAtChanges')) {
       return { updatedAtChanged };
     }
 
@@ -153,7 +161,7 @@ abstract class SessionProfileChanges {
 
   protected applyResetAvatarChanges(newProfileUpdatedAtSeconds: number | null) {
     let avatarChanged = false;
-    if (!this.shouldApplyChange(newProfileUpdatedAtSeconds)) {
+    if (!this.shouldApplyChange(newProfileUpdatedAtSeconds, 'applyResetAvatarChanges')) {
       return { avatarChanged };
     }
     if (
@@ -180,7 +188,7 @@ abstract class SessionProfileChanges {
     newProfileUpdatedAtSeconds: number | null
   ) {
     let proDetailsChanged = false;
-    if (!this.shouldApplyChange(newProfileUpdatedAtSeconds)) {
+    if (!this.shouldApplyChange(newProfileUpdatedAtSeconds, 'applyProDetailsChange')) {
       return { proDetailsChanged };
     }
 
@@ -220,7 +228,9 @@ abstract class SessionProfileChanges {
     args: WithAvatarPointerProfileKey,
     newProfileUpdatedAtSeconds: number | null
   ): Pick<SetSessionProfileReturn, 'avatarNeedsDownload' | 'avatarChanged'> {
-    if (!this.shouldApplyChange(newProfileUpdatedAtSeconds)) {
+    if (
+      !this.shouldApplyChange(newProfileUpdatedAtSeconds, 'applySetAvatarBeforeDownloadChanges')
+    ) {
       return { avatarNeedsDownload: false, avatarChanged: false };
     }
     const newProfileKeyHex = isString(args.profileKey) ? args.profileKey : to_hex(args.profileKey);
@@ -535,14 +545,14 @@ function buildProProfileDetailsFromEnvelope({
   const isValidOrExpired = decodedEnvelope.isProProofValidOrExpired();
 
   return isValidOrExpired
-    ? emptyProDetails
-    : {
+    ? {
         proDetails: {
           bitsetProFeatures: decodedEnvelope.validPro.proProfileBitset,
           proExpiryTsMs: decodedEnvelope.validPro.proProof.expiryMs,
           proGenIndexHashB64: decodedEnvelope.validPro.proProof.genIndexHashB64,
         },
-      };
+      }
+    : emptyProDetails;
 }
 
 /**
@@ -568,6 +578,7 @@ export function buildPrivateProfileChangeFromMsgRequestResponse({
     }).seconds(),
     ...buildProProfileDetailsFromEnvelope({ decodedEnvelope }),
   };
+
   if (messageRequestResponse.profileKey && messageRequestResponse.profile.profilePicture) {
     return new SessionProfileSetAvatarBeforeDownloadPrivate({
       profileKey: messageRequestResponse.profileKey,

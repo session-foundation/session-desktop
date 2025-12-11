@@ -1,4 +1,3 @@
-import { useSelector } from 'react-redux';
 import { useIsProAvailable } from '../../hooks/useIsProAvailable';
 import { ConvoHub } from '../../session/conversations';
 import {
@@ -10,10 +9,10 @@ import {
 } from '../../hooks/useParamSelector';
 import { useShowSessionCTACbWithVariant } from '../dialog/SessionCTA';
 import { Constants } from '../../session';
-import { getPinnedConversationsCount } from '../../state/selectors/conversations';
 import { useIsMessageRequestOverlayShown } from '../../state/selectors/section';
 import { useCurrentUserHasPro } from '../../hooks/useHasPro';
 import { CTAVariant } from '../dialog/cta/types';
+import { usePinnedConversationsCount } from '../../state/selectors/conversations';
 
 function useShowPinUnpin(conversationId: string) {
   const isPrivateAndFriend = useIsPrivateAndFriend(conversationId);
@@ -40,7 +39,7 @@ export function useTogglePinConversationHandler(id: string) {
   const conversation = ConvoHub.use().get(id);
   const isPinned = useIsPinned(id);
 
-  const pinnedConversationsCount = useSelector(getPinnedConversationsCount);
+  const pinnedConversationsCount = usePinnedConversationsCount();
   const isProAvailable = useIsProAvailable();
   const hasPro = useCurrentUserHasPro();
 

@@ -24,8 +24,8 @@ import { PromiseUtils } from '../session/utils';
 import { SnodeAPI } from '../session/apis/snode_api/SNodeAPI';
 import { tr } from '../localization/localeTools';
 import { NetworkTime } from './NetworkTime';
-import { UserConfigWrapperActions } from '../webworker/workers/browser/libsession_worker_interface';
 import { SessionDisplayNameOnlyPrivate } from '../models/profile';
+import { UserConfigWrapperActions } from '../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 
 /**
  * Might throw

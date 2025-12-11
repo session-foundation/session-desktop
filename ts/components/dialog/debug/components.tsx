@@ -35,10 +35,7 @@ import { Errors } from '../../../types/Errors';
 import { PubKey } from '../../../session/types';
 import { ConvoHub } from '../../../session/conversations';
 import { ConversationTypeEnum } from '../../../models/types';
-import {
-  ContactsWrapperActions,
-  UserConfigWrapperActions,
-} from '../../../webworker/workers/browser/libsession_worker_interface';
+import { ContactsWrapperActions } from '../../../webworker/workers/browser/libsession_worker_interface';
 import { usePolling } from '../../../hooks/usePolling';
 import { releasedFeaturesActions } from '../../../state/ducks/releasedFeatures';
 import { networkDataActions } from '../../../state/ducks/networkData';
@@ -61,6 +58,7 @@ import { formatRoundedUpTimeUntilTimestamp } from '../../../util/i18n/formatting
 import { LucideIcon } from '../../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 import { useIsProAvailable } from '../../../hooks/useIsProAvailable';
+import { UserConfigWrapperActions } from '../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 
 type DebugButtonProps = SessionButtonProps & { shiny?: boolean; hide?: boolean };
 

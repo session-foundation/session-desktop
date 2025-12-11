@@ -97,6 +97,8 @@ import type { QuotedAttachmentType } from '../components/conversation/message/me
 import { ProFeatures, ProMessageFeature } from './proMessageFeature';
 import { privateSet, privateSetKey } from './modelFriends';
 import { getFeatureFlag } from '../state/ducks/types/releasedFeaturesReduxTypes';
+import type { OutgoingProMessageDetails } from '../types/message/OutgoingProMessageDetails';
+import { longOrNumberToBigInt } from '../types/Bigint';
 
 // tslint:disable: cyclomatic-complexity
 
@@ -1108,7 +1110,7 @@ export class MessageModel extends Model<MessageAttributes> {
       if (syncMessage) {
         await MessageSender.sendSingleMessage({
           isSyncMessage: true,
-          message: await MessageUtils.toRawMessage(
+          message: MessageUtils.toRawMessage(
             PubKey.cast(UserUtils.getOurPubKeyStrFromCache()),
             syncMessage,
             SnodeNamespaces.Default
@@ -1434,6 +1436,56 @@ export class MessageModel extends Model<MessageAttributes> {
     this.set({ proProfileBitset: proProfileStr });
     this.set({ proMessageBitset: proMessageStr });
     return true;
+  }
+
+  public async applyProFeatures(outgoingProMessageDetails: OutgoingProMessageDetails | null) {
+    const proProfileBitset = this.get('proProfileBitset');
+    const proMessageBitset = this.get('proMessageBitset');
+
+    if (
+      proProfileBitset ||
+      proMessageBitset ||
+      !outgoingProMessageDetails ||
+      (!outgoingProMessageDetails.proMessageBitset && !outgoingProMessageDetails.proProfileBitset)
+    ) {
+      // if
+      //  - We already have some bitset set for this message in the DB,
+      //  - or the proMessageDetails is empty
+      //  - or the proMessageDetails has no bitset set
+      // then,
+      // - we do not need to apply the bitset from the details.
+      // - we also don't need the update the pro stats with this change (as we can assume the change was already counted).
+
+      return;
+    }
+    const proDetails = outgoingProMessageDetails?.toProtobufDetails();
+    // store the bitset that was used to send that message on the sending side too
+    if (proDetails) {
+      this.setProFeaturesUsed({
+        proMessageBitset: longOrNumberToBigInt(proDetails.messageBitset),
+        proProfileBitset: longOrNumberToBigInt(proDetails.profileBitset),
+      });
+      await this.commit();
+      const proFeaturesUsed = this.getProFeaturesUsed();
+      await Promise.all(
+        proFeaturesUsed.map(async proFeature => {
+          switch (proFeature) {
+            case ProMessageFeature.PRO_INCREASED_MESSAGE_LENGTH:
+              await Storage.increment(SettingsKey.proLongerMessagesSent);
+              break;
+            case ProMessageFeature.PRO_BADGE:
+              await Storage.increment(SettingsKey.proBadgesSent);
+              break;
+            case ProMessageFeature.PRO_ANIMATED_DISPLAY_PICTURE:
+              // nothing to do for animated display picture
+              break;
+
+            default:
+              assertUnreachable(proFeature, 'Unknown pro feature');
+          }
+        })
+      );
+    }
   }
 
   private dispatchMessageUpdate() {

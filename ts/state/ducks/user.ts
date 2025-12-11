@@ -6,7 +6,7 @@ import { uploadAndSetOurAvatarShared } from '../../interactions/avatar-interacti
 import { ed25519Str } from '../../session/utils/String';
 import { userSettingsModal, updateEditProfilePictureModal } from './modalDialog';
 import { NetworkTime } from '../../util/NetworkTime';
-import { UserConfigWrapperActions } from '../../webworker/workers/browser/libsession_worker_interface';
+import { UserConfigWrapperActions } from '../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 import { SessionProfileResetAvatarPrivate } from '../../models/profile';
 
 export type UserStateType = {

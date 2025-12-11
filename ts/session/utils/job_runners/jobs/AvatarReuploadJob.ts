@@ -17,7 +17,7 @@ import { IMAGE_JPEG } from '../../../../types/MIME';
 import { urlToBlob } from '../../../../types/attachments/VisualAttachment';
 import { ImageProcessor } from '../../../../webworker/workers/browser/image_processor_interface';
 import { maxAvatarDetails } from '../../../../util/attachment/attachmentSizes';
-import { UserConfigWrapperActions } from '../../../../webworker/workers/browser/libsession_worker_interface';
+import { UserConfigWrapperActions } from '../../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 import { extendFileExpiry } from '../../../apis/file_server_api/FileServerApi';
 import { fileServerUrlToFileId } from '../../../apis/file_server_api/types';
 import { DURATION, DURATION_SECONDS } from '../../../constants';

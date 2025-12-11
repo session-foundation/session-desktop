@@ -161,7 +161,7 @@ class AvatarDownloadJob extends PersistedJob<AvatarDownloadPersistedData> {
           }
 
           window.log.info(
-            `[profileupdate] about to auto scale avatar for convo ${conversation.id}`
+            `[profileupdate] about to auto scale avatar for convo ${ed25519Str(conversation.id)}`
           );
 
           // we autoscale incoming avatars because our app keeps decrypted avatars in memory and some platforms allows large avatars to be uploaded.

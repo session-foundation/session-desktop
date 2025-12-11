@@ -21,3 +21,10 @@ export function longToBigInt(long: Long): bigint {
 export function numberToBigInt(number: number): bigint {
   return BigInt(number);
 }
+
+export function longOrNumberToBigInt(value: number | Long): bigint {
+  if (value instanceof Long) {
+    return longToBigInt(value);
+  }
+  return numberToBigInt(value);
+}

@@ -7,14 +7,12 @@ import { SessionKeyPair } from '../../receiver/keypairs';
 import { getOurPubKeyStrFromStorage } from '../../util/storage';
 import { PubKey } from '../types';
 import { toHex } from './String';
-import {
-  ProWrapperActions,
-  UserConfigWrapperActions,
-} from '../../webworker/workers/browser/libsession_worker_interface';
+import { ProWrapperActions } from '../../webworker/workers/browser/libsession_worker_interface';
 import { OutgoingUserProfile } from '../../types/message';
 import { SettingsKey } from '../../data/settings-key';
 import { OutgoingProMessageDetails } from '../../types/message/OutgoingProMessageDetails';
 import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
+import { UserConfigWrapperActions } from '../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 
 export type HexKeyPair = {
   pubKey: string;

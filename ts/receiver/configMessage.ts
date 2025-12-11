@@ -44,11 +44,10 @@ import { Data } from '../data/data';
 // eslint-disable-next-line import/no-unresolved
 import {
   ContactsWrapperActions,
-  ConvoInfoVolatileWrapperActions,
   UserGenericWrapperActions,
   MetaGroupWrapperActions,
-  UserConfigWrapperActions,
   UserGroupsWrapperActions,
+  ConvoInfoVolatileWrapperActions,
 } from '../webworker/workers/browser/libsession_worker_interface';
 import { CONVERSATION } from '../session/constants';
 import { CONVERSATION_PRIORITIES, ConversationTypeEnum } from '../models/types';
@@ -58,6 +57,7 @@ import {
   buildPrivateProfileChangeFromUserProfileUpdate,
   type SessionProfilePrivateChange,
 } from '../models/profile';
+import { UserConfigWrapperActions } from '../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 
 type IncomingUserResult = {
   needsPush: boolean;
@@ -135,7 +135,25 @@ async function mergeUserConfigsWithIncomingUpdates(
           variant
         );
       }
-      const hashesMerged = await UserGenericWrapperActions.merge(variant, toMerge);
+      let hashesMerged: Array<string>;
+      // Note: we cache the UserConfig fields, so on merge/init we need to call the methods directly, and not through
+      // the GenericWrapperActions
+      switch (variant) {
+        case 'UserConfig':
+          hashesMerged = await UserConfigWrapperActions.merge(toMerge);
+          break;
+        case 'ContactsConfig':
+          hashesMerged = await ContactsWrapperActions.merge(toMerge);
+          break;
+        case 'UserGroupsConfig':
+          hashesMerged = await UserGroupsWrapperActions.merge(toMerge);
+          break;
+        case 'ConvoInfoVolatileConfig':
+          hashesMerged = await ConvoInfoVolatileWrapperActions.merge(toMerge);
+          break;
+        default:
+          assertUnreachable(variant, `mergeConfigsWithInboxUpdates unhandled case "${variant}"`);
+      }
 
       const needsDump = await UserGenericWrapperActions.needsDump(variant);
       const needsPush = await UserGenericWrapperActions.needsPush(variant);

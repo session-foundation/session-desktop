@@ -21,7 +21,6 @@ import { assertUnreachable } from '../../../types/sqlSharedTypes';
 import {
   UserGenericWrapperActions,
   MetaGroupWrapperActions,
-  UserConfigWrapperActions,
   UserGroupsWrapperActions,
   MultiEncryptWrapperActions,
 } from '../../../webworker/workers/browser/libsession_worker_interface';
@@ -52,6 +51,7 @@ import ProBackendAPI from '../pro_backend_api/ProBackendAPI';
 import { NetworkTime } from '../../../util/NetworkTime';
 import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { setIsOnlineIfDifferent } from '../../utils/InsecureNodeFetch';
+import { UserConfigWrapperActions } from '../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 
 const minMsgCountShouldRetry = 95;
 /**

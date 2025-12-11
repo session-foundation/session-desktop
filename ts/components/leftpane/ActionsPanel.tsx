@@ -118,7 +118,6 @@ function useDebugThemeSwitch() {
   });
 }
 
-
 function DebugMenuModalButton() {
   const dispatch = useDispatch();
   const debugMenuModalState = useDebugMenuModal();

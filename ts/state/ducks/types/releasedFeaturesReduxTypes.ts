@@ -10,6 +10,7 @@ type SessionBaseBooleanFeatureFlags = {
   replaceLocalizedStringsWithKeys: boolean;
   disableOnionRequests: boolean;
   disableImageProcessor: boolean;
+  disableLocalAttachmentEncryption: boolean;
   useDeterministicEncryption: boolean;
   useTestNet: boolean;
   useTestProBackend: boolean;

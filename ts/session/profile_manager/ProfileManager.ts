@@ -1,6 +1,6 @@
 import { isNil } from 'lodash';
 import { ConvoHub } from '../conversations';
-import { UserConfigWrapperActions } from '../../webworker/workers/browser/libsession_worker_interface';
+import { UserConfigWrapperActions } from '../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 import { SyncUtils, UserUtils } from '../utils';
 import { trimWhitespace } from '../utils/String';
 import { AvatarDownload } from '../utils/job_runners/jobs/AvatarDownloadJob';

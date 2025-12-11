@@ -1,3 +1,4 @@
+import { base64_variants, from_base64, to_hex } from 'libsodium-wrappers-sumo';
 import { isNumber } from 'lodash/fp';
 import { SettingsKey } from '../../data/settings-key';
 import { Storage } from '../../util/storage';
@@ -6,7 +7,6 @@ import {
   type ProRevocationItemsType,
 } from '../apis/pro_backend_api/schemas';
 import { Timestamp } from '../../types/timestamp/timestamp';
-import { base64_variants, from_base64, to_hex } from 'libsodium-wrappers-sumo';
 
 let cachedProRevocationListTicket = 0;
 let cachedProRevocationListItems: ProRevocationItemsType = [];

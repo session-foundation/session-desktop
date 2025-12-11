@@ -91,8 +91,8 @@ export const handleAcceptConversationRequest = async ({
   if (convo.isPrivate()) {
     // we only need the approval message (and sending a reply) when we are accepting a message request. i.e. someone sent us a message already and we didn't accept it yet.
     if (!previousIsApproved && previousDidApprovedMe) {
-      await convo.addOutgoingApprovalMessage(approvalMessageTimestamp);
-      await convo.sendMessageRequestResponse();
+      const msg = await convo.addOutgoingApprovalMessage(approvalMessageTimestamp);
+      await convo.sendMessageRequestResponse(msg);
     }
 
     return null;

@@ -1,3 +1,4 @@
+import { base64_variants, from_hex, to_base64 } from 'libsodium-wrappers-sumo';
 import type { ProProof, WithMasterPrivKeyHex } from 'libsession_util_nodejs';
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { isUndefined } from 'lodash';
@@ -11,13 +12,12 @@ import { showLinkVisitWarningDialog } from '../../components/dialog/OpenUrlModal
 import { ProStatus } from '../../session/apis/pro_backend_api/types';
 import { SettingsKey } from '../../data/settings-key';
 import { ProDetailsResultType } from '../../session/apis/pro_backend_api/schemas';
-import { UserConfigWrapperActions } from '../../webworker/workers/browser/libsession_worker_interface';
 import { Storage } from '../../util/storage';
 import { NetworkTime } from '../../util/NetworkTime';
 import { assertUnreachable } from '../../types/sqlSharedTypes';
 import { DURATION } from '../../session/constants';
 import { SessionBackendBaseResponseType } from '../../session/apis/session_backend_server';
-import { base64_variants, from_hex, to_base64 } from 'libsodium-wrappers-sumo';
+import { UserConfigWrapperActions } from '../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 
 type RequestState<D = unknown> = {
   isFetching: boolean;

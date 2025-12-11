@@ -17,9 +17,7 @@ const hideRecoveryPassword = 'hideRecoveryPassword';
 
 // Pro stats counters
 const proLongerMessagesSent = 'proLongerMessagesSent';
-const proPinnedConversations = 'proPinnedConversations';
 const proBadgesSent = 'proBadgesSent';
-const proGroupsUpgraded = 'proGroupsUpgraded';
 
 // user config tracking timestamps (to discard incoming messages which would make a change we reverted in the last config message we merged)
 const latestUserProfileEnvelopeTimestamp = 'latestUserProfileEnvelopeTimestamp';
@@ -61,9 +59,7 @@ export const SettingsKey = {
   showOnboardingAccountJustCreated,
   lastMessageGroupsRegenerated,
   proLongerMessagesSent,
-  proPinnedConversations,
   proBadgesSent,
-  proGroupsUpgraded,
   identityKey: 'identityKey',
   blocked: 'blocked',
   numberId: 'number_id',

@@ -23,11 +23,7 @@ describe('Message Utils', () => {
       const device = TestUtils.generateFakePubKey();
       const message = TestUtils.generateVisibleMessage();
 
-      const rawMessage = await MessageUtils.toRawMessage(
-        device,
-        message,
-        SnodeNamespaces.UserContacts
-      );
+      const rawMessage = MessageUtils.toRawMessage(device, message, SnodeNamespaces.UserContacts);
 
       expect(Object.keys(rawMessage)).to.have.length(6);
 
@@ -50,7 +46,7 @@ describe('Message Utils', () => {
       const device = TestUtils.generateFakePubKey();
       const message = TestUtils.generateVisibleMessage();
 
-      const rawMessage = await MessageUtils.toRawMessage(device, message, SnodeNamespaces.Default);
+      const rawMessage = MessageUtils.toRawMessage(device, message, SnodeNamespaces.Default);
 
       const rawBuffer = rawMessage.plainTextBuffer;
       const rawBufferJSON = JSON.stringify(rawBuffer);
@@ -70,7 +66,7 @@ describe('Message Utils', () => {
       const device = TestUtils.generateFakePubKey();
       const message = TestUtils.generateVisibleMessage();
 
-      const rawMessage = await MessageUtils.toRawMessage(device, message, SnodeNamespaces.Default);
+      const rawMessage = MessageUtils.toRawMessage(device, message, SnodeNamespaces.Default);
       const derivedPubKey = PubKey.from(rawMessage.device);
 
       expect(derivedPubKey).to.not.be.eq(undefined, 'should maintain pubkey');

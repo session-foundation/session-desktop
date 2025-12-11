@@ -56,11 +56,12 @@ import { SpacerMD } from '../../../../basic/Text';
 import LIBSESSION_CONSTANTS from '../../../../../session/utils/libsession/libsession_constants';
 import { useDataFeatureFlag } from '../../../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { AnimatedSpinnerIcon } from '../../../../loading/spinner/AnimatedSpinnerIcon';
-import { UserConfigWrapperActions } from '../../../../../webworker/workers/browser/libsession_worker_interface';
+import { UserConfigWrapperActions } from '../../../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 import {
   ProFeatures as ProFeaturesFinder,
   ProMessageFeature,
 } from '../../../../../models/proMessageFeature';
+import { usePinnedConversationsCount } from '../../../../../state/selectors/conversations';
 
 type ProSettingsModalState = {
   fromCTA?: boolean;
@@ -299,13 +300,14 @@ function ProStats() {
   const mockProBadgesSent = useDataFeatureFlag('mockProBadgesSent');
   const mockProGroupsUpgraded = useDataFeatureFlag('mockProGroupsUpgraded');
 
+  const pinnedConversations = usePinnedConversationsCount();
+
   const proLongerMessagesSent =
     mockProLongerMessagesSent ?? (Storage.get(SettingsKey.proLongerMessagesSent) || 0);
-  const proPinnedConversations =
-    mockProPinnedConversations ?? (Storage.get(SettingsKey.proPinnedConversations) || 0);
   const proBadgesSent = mockProBadgesSent ?? (Storage.get(SettingsKey.proBadgesSent) || 0);
-  const proGroupsUpgraded =
-    mockProGroupsUpgraded ?? (Storage.get(SettingsKey.proGroupsUpgraded) || 0);
+  // those 2 are not a counter, but live based on what is in stored libsession/db
+  const proPinnedConversations = mockProPinnedConversations ?? (pinnedConversations || 0);
+  const proGroupsUpgraded = mockProGroupsUpgraded || 0;
 
   const isDarkTheme = useIsDarkTheme();
 

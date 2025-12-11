@@ -37,7 +37,7 @@ import {
   defaultProBooleanFeatureFlags,
   defaultProDataFeatureFlags,
 } from '../../../state/ducks/types/defaultFeatureFlags';
-import { UserConfigWrapperActions } from '../../../webworker/workers/browser/libsession_worker_interface';
+import { UserConfigWrapperActions } from '../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 import { useProAccessDetails } from '../../../hooks/useHasPro';
 import { isDebugMode } from '../../../shared/env_vars';
 

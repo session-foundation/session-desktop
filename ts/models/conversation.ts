@@ -127,7 +127,6 @@ import { getLibGroupKickedOutsideRedux } from '../state/selectors/userGroups';
 import {
   MetaGroupWrapperActions,
   MultiEncryptWrapperActions,
-  UserConfigWrapperActions,
   UserGroupsWrapperActions,
 } from '../webworker/workers/browser/libsession_worker_interface';
 import { markAttributesAsReadIfNeeded } from './messageFactory';
@@ -150,6 +149,10 @@ import type { LastMessageStatusType } from '../state/ducks/types';
 import { OutgoingUserProfile } from '../types/message';
 import { privateSet, privateSetKey } from './modelFriends';
 import { ProFeatures, ProMessageFeature } from './proMessageFeature';
+import {
+  getCachedUserConfig,
+  UserConfigWrapperActions,
+} from '../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 
 type InMemoryConvoInfos = {
   mentionedUs: boolean;
@@ -808,13 +811,14 @@ export class ConversationModel extends Model<ConversationAttributes> {
    * Note: you shouldn't need to use this directly. Instead use `handleAcceptConversationRequest()`
    */
   public async addOutgoingApprovalMessage(timestamp: number) {
-    await this.addSingleOutgoingMessage({
+    const msg = await this.addSingleOutgoingMessage({
       sent_at: timestamp,
       messageRequestResponse: {},
       expireTimer: 0,
     });
 
     this.updateLastMessage();
+    return msg;
   }
 
   /**
@@ -838,18 +842,21 @@ export class ConversationModel extends Model<ConversationAttributes> {
    * Currently, we never send anything for denied message requests.
    * Note: you shouldn't need to use this directly. Instead use `handleAcceptConversationRequest()`
    */
-  public async sendMessageRequestResponse() {
+  public async sendMessageRequestResponse(msg: MessageModel) {
     if (!this.isPrivate()) {
       return;
     }
 
+    const outgoingProMessageDetails = await UserUtils.getOutgoingProMessageDetails({
+      utf16: undefined,
+    });
     const messageRequestResponseParams: MessageRequestResponseParams = {
       createAtNetworkTimestamp: NetworkTime.now(),
       userProfile: await UserUtils.getOurProfile(),
-      outgoingProMessageDetails: await UserUtils.getOutgoingProMessageDetails({
-        utf16: undefined,
-      }),
+      outgoingProMessageDetails,
     };
+
+    await msg.applyProFeatures(outgoingProMessageDetails);
 
     const messageRequestResponse = new MessageRequestResponse(messageRequestResponseParams);
     const pubkeyForSending = new PubKey(this.id);
@@ -875,13 +882,18 @@ export class ConversationModel extends Model<ConversationAttributes> {
         return PubKey.is05Pubkey(m) && ConvoHub.use().get(m)?.hasValidCurrentProProof();
       });
     }
-    const proDetails = this.dbContactProDetails();
-    if (!proDetails || !proDetails.proExpiryTsMs) {
-      return false;
-    }
 
     if (this.isMe()) {
       // The logic for the pro proof for ourselves is coming from libsession.
+      const config = getCachedUserConfig();
+      if (config?.proConfig?.proProof.expiryMs) {
+        return config.proConfig.proProof.expiryMs >= NetworkTime.now();
+      }
+      return false;
+    }
+
+    const proDetails = this.dbContactProDetails();
+    if (!proDetails || !proDetails.proExpiryTsMs) {
       return false;
     }
 
@@ -2095,9 +2107,21 @@ export class ConversationModel extends Model<ConversationAttributes> {
    */
   public getProOrNotAvatarPath() {
     const proAvailable = getFeatureFlag('proAvailable');
-    return !proAvailable || !this.hasValidCurrentProProof()
-      ? this.getAvatarInProfilePath()
-      : this.getFallbackAvatarInProfilePath();
+    const avatarPicked =
+      proAvailable && !this.hasValidCurrentProProof()
+        ? this.getFallbackAvatarInProfilePath()
+        : this.getAvatarInProfilePath();
+    window.log.debug(
+      `getProOrNotAvatarPath for ${ed25519Str(this.id)}: `,
+      JSON.stringify({
+        proAvailable,
+        validCurrentProof: this.hasValidCurrentProProof(),
+        avatarInProfilePath: this.getAvatarInProfilePath(),
+        fallbackAvatarInProfilePath: this.getFallbackAvatarInProfilePath(),
+        avatarPicked,
+      })
+    );
+    return avatarPicked;
   }
 
   /**
@@ -2331,6 +2355,10 @@ export class ConversationModel extends Model<ConversationAttributes> {
       // we are trying to send a message to someone. Make sure this convo is not hidden
       await this.unhideIfNeeded(true);
 
+      const outgoingProMessageDetails = await UserUtils.getOutgoingProMessageDetails({
+        utf16: body,
+      });
+
       // TODO break down those functions  (sendMessage and retrySend into smaller functions and narrow the VisibleMessageParams to preview, etc. with checks of types)
       // an OpenGroupV2 message is just a visible message
       const chatMessageParams: VisibleMessageParams = {
@@ -2343,10 +2371,10 @@ export class ConversationModel extends Model<ConversationAttributes> {
         preview: preview ? [preview] : [],
         quote,
         userProfile: await UserUtils.getOurProfile(),
-        outgoingProMessageDetails: await UserUtils.getOutgoingProMessageDetails({
-          utf16: body,
-        }),
+        outgoingProMessageDetails,
       };
+
+      await message.applyProFeatures(outgoingProMessageDetails);
 
       if (PubKey.isBlinded(this.id)) {
         window.log.info('Sending a blinded message to this user: ', this.id);
