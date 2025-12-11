@@ -1,5 +1,6 @@
 #!/bin/sh
 
+# Validates all sources of the project's node version are the same
 if [ -f .tool-versions ] && [ -f .nvmrc ]; then
   # Extract node version from .tool-versions
   TOOL_VERSION=$(grep "^node" .tool-versions | cut -d' ' -f2)
@@ -13,7 +14,7 @@ if [ -f .tool-versions ] && [ -f .nvmrc ]; then
     echo "   .tool-versions: $TOOL_VERSION"
     echo "   .nvmrc: $NVMRC_VERSION"
     echo "   package.json: $PACKAGE_VERSION"
-    echo "   Please ensure both files have the same version."
+    echo "   Please ensure all files have the same node version."
     exit 1
   fi
 fi
