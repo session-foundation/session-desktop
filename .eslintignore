@@ -24,6 +24,8 @@ password_preload.js
 sass.config.js
 *.worker.config.js
 
+babel.config.js
+
 # Not too sure why we can't have eslint on those files atm
 ts/webworker/workers/node/util/util.worker.ts
 ts/webworker/workers/node/libsession/libsession.worker.ts

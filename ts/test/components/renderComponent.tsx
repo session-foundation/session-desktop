@@ -4,7 +4,7 @@ import { isArray, unset } from 'lodash';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { expect } from 'chai';
 import { type SessionDataTestId } from 'react';
-import { ErrorBoundary } from 'react-error-boundary';
+import { ErrorBoundary } from 'react-error-boundary/dist/react-error-boundary';
 import TestRenderer from 'react-test-renderer';
 import { Provider } from 'react-redux';
 import { SessionTheme } from '../../themes/SessionTheme';
