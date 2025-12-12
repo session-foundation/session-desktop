@@ -1,9 +1,8 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import { expect } from 'chai';
 import Sinon from 'sinon';
-
 import { TestUtils } from '../test-utils';
-import { findAllByElementType, renderComponent } from './renderComponent';
+import { findAllByTagName, renderComponent } from './renderComponent';
 import { SimpleSessionInput } from '../../components/inputs/SessionInput';
 
 describe('SessionInput', () => {
@@ -26,8 +25,11 @@ describe('SessionInput', () => {
         providedError={null as any}
       />
     );
-    const inputElements = findAllByElementType(result, 'input');
+
+    // Using findAllByTagName to find input elements by tag name
+    const inputElements = findAllByTagName<HTMLInputElement>(result, 'input');
     expect(inputElements.length, 'should have an input element').to.equal(1);
+
     result.unmount();
   });
 });

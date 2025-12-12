@@ -458,4 +458,5 @@ module.exports = {
     ],
   ],
   only: ['**/ts/**'],
+  ignore: ['**/ts/test/**'],
 };

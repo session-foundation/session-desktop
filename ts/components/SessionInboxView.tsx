@@ -1,13 +1,11 @@
 import { fromPairs, map } from 'lodash';
 
 import { Provider } from 'react-redux';
-import { persistStore } from 'redux-persist';
 import { PersistGate } from 'redux-persist/integration/react';
 import styled from 'styled-components';
 
 import { AnimatePresence } from 'framer-motion';
 import { LeftPane } from './leftpane/LeftPane';
-// moment does not support es-419 correctly (and cause white screen on app start)
 import { ConvoHub } from '../session/conversations';
 import { UserUtils } from '../session/utils';
 import { createStore } from '../state/createStore';
@@ -228,16 +226,17 @@ export const doAppStartUp = async () => {
 
 export const SessionInboxView = () => {
   if (!window.inboxStore) {
-    return null;
+    throw new Error('window.inboxStore is undefined in SessionInboxView');
   }
 
-  const persistor = persistStore(window.inboxStore);
-  window.persistStore = persistor;
+  if (!window.persistStore) {
+    throw new Error('window.persistStore is undefined in SessionInboxView');
+  }
 
   return (
     <div className="inbox index">
       <Provider store={window.inboxStore}>
-        <PersistGate loading={null} persistor={persistor}>
+        <PersistGate loading={null} persistor={window.persistStore}>
           <SessionTheme>
             <AnimatePresence>
               <Flex $container={true} height="0" $flexShrink={100} $flexGrow={1}>

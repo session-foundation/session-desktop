@@ -5,6 +5,7 @@ import nativeEmojiData from '@emoji-mart/data';
 import { ipcRenderer } from 'electron';
 // eslint-disable-next-line import/no-named-default
 
+import { persistStore } from 'redux-persist';
 import { isMacOS } from '../OS';
 import { doAppStartUp, SessionInboxView } from '../components/SessionInboxView';
 import { SessionRegistrationView } from '../components/registration/SessionRegistrationView';
@@ -269,6 +270,11 @@ async function start() {
     const container = document.getElementById('root');
     const root = createRoot(container!);
     await doAppStartUp();
+    if (!window.inboxStore) {
+      throw new Error('window.inboxStore is not defined in openInbox');
+    }
+    const persistor = persistStore(window.inboxStore);
+    window.persistStore = persistor;
     root.render(<SessionInboxView />);
   }
 

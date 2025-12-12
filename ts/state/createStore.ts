@@ -3,7 +3,7 @@ import storage from 'redux-persist/lib/storage';
 
 import { configureStore } from '@reduxjs/toolkit';
 
-import { persistReducer } from 'redux-persist';
+import { persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from 'redux-persist';
 
 import promiseMiddleware from 'redux-promise-middleware';
 import { rootReducer } from './reducer';
@@ -25,7 +25,9 @@ export const createStore = (initialState: any) =>
     preloadedState: initialState,
     middleware: (getDefaultMiddleware: any) =>
       getDefaultMiddleware({
-        serializableCheck: true,
+        serializableCheck: {
+          ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+        },
         immutableCheck: true,
       }).concat(middlewareList),
   });
