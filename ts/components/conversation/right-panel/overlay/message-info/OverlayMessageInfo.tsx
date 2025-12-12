@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
@@ -53,6 +53,7 @@ import { PanelIconLucideIcon } from '../../../../buttons/panel/PanelIconButton';
 import { sectionActions } from '../../../../../state/ducks/section';
 import { useIsIncomingRequest } from '../../../../../hooks/useParamSelector';
 import { tr } from '../../../../../localization/localeTools';
+import { AppDispatch } from '../../../../../state/createStore';
 
 // NOTE we override the default max-widths when in the detail isDetailView
 const StyledMessageBody = styled.div`
@@ -241,39 +242,76 @@ function ReplyToMessageButton({ messageId }: WithMessageIdOpt) {
   );
 }
 
-export const OverlayMessageInfo = () => {
-  const dispatch = getAppDispatch();
+function closePanel(dispatch: AppDispatch) {
+  dispatch(closeRightPanel());
+  dispatch(sectionActions.resetRightOverlayMode());
+}
 
+function useMessageId() {
+  return useSelector(getMessageInfoId);
+}
+
+// NOTE: [react-compiler] this has to live here for the hook to be identified as static
+function useMessageDetailsInternal(messageId?: string) {
   const rightOverlayMode = useRightOverlayMode();
-  const messageId = useSelector(getMessageInfoId);
-  const messageInfo = useMessageInfo(messageId);
   const isDeletable = useMessageIsDeletable(messageId);
   const direction = useMessageDirection(messageId);
   const timestamp = useMessageTimestamp(messageId);
   const serverTimestamp = useMessageServerTimestamp(messageId);
   const sender = useMessageSender(messageId);
 
-  const isLegacyGroup = useSelectedIsLegacyGroup();
-
   // we close the right panel when switching conversation so the convoId of that message is always the selectedConversationKey
   // is always the currently selected conversation
   const convoId = useSelectedConversationKey();
-
   const isIncomingMessageRequest = useIsIncomingRequest(convoId);
+  const isLegacyGroup = useSelectedIsLegacyGroup();
 
-  const closePanel = useCallback(() => {
-    dispatch(closeRightPanel());
-    dispatch(sectionActions.resetRightOverlayMode());
-  }, [dispatch]);
+  return {
+    rightOverlayMode,
+    isDeletable,
+    direction,
+    timestamp,
+    serverTimestamp,
+    sender,
+    convoId,
+    isIncomingMessageRequest,
+    isLegacyGroup,
+  };
+}
 
-  useKey('Escape', closePanel);
-
-  // close the panel if the messageInfo is associated with a deleted message
+// NOTE: [react-compiler] this has to live here for the hook to be identified as static
+function useClosePanelIfMessageDeleted(sender?: string) {
+  const dispatch = getAppDispatch();
   useEffect(() => {
     if (!sender) {
-      closePanel();
+      closePanel(dispatch);
     }
-  }, [sender, closePanel]);
+  }, [sender, dispatch]);
+}
+
+export const OverlayMessageInfo = () => {
+  const dispatch = getAppDispatch();
+
+  const messageId = useMessageId();
+  const messageInfo = useMessageInfo(messageId);
+
+  const {
+    rightOverlayMode,
+    isDeletable,
+    direction,
+    timestamp,
+    serverTimestamp,
+    sender,
+    convoId,
+    isIncomingMessageRequest,
+    isLegacyGroup,
+  } = useMessageDetailsInternal(messageId);
+
+  const closePanelCb = () => closePanel(dispatch);
+
+  useKey('Escape', closePanelCb);
+
+  useClosePanelIfMessageDeleted(sender);
 
   if (!rightOverlayMode || !messageInfo || !convoId || !messageId || !sender) {
     return null;
@@ -317,7 +355,7 @@ export const OverlayMessageInfo = () => {
       <Flex $container={true} $flexDirection={'column'} $alignItems={'center'}>
         <Header
           hideCloseButton={false}
-          closeButtonOnClick={closePanel}
+          closeButtonOnClick={closePanelCb}
           paddingTop="var(--margins-2xl)"
         >
           <HeaderTitle>{tr('messageInfo')}</HeaderTitle>

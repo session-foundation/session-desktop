@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Dispatch } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 import { getAppDispatch } from '../../../../../state/dispatch';
@@ -83,30 +83,98 @@ function useSingleMode(disappearingModeOptions: Record<string, boolean> | undefi
   return { singleMode };
 }
 
-export const DisappearingMessagesForConversationModal = (props: ConversationSettingsModalState) => {
-  const dispatch = getAppDispatch();
+// NOTE: [react-compiler] this has to live here for the hook to be identified as static
+function useDisappearingMessagesForConversationModalInternal(
+  props: ConversationSettingsModalState
+) {
   const onClose = useCloseActionFromPage(props);
   const title = useTitleFromPage(props?.settingsModalPage);
   const selectedConversationKey = useSelectedConversationKey();
   const disappearingModeOptions = useSelector(getSelectedConversationExpirationModes);
-  const { singleMode } = useSingleMode(disappearingModeOptions);
-  const hasOnlyOneMode = !!(singleMode && singleMode.length > 0);
-
   const isGroup = useSelectedIsGroupOrCommunity();
   const expirationMode = useSelectedConversationDisappearingMode() || 'off';
   const expireTimer = useSelectedExpireTimer();
   const backAction = useBackActionForPage(props);
-
-  const [modeSelected, setModeSelected] = useState<DisappearingMessageConversationModeType>(
-    hasOnlyOneMode ? singleMode : expirationMode
-  );
-
-  const [timeSelected, setTimeSelected] = useState(expireTimer || 0);
   const isStandalone = useConversationSettingsModalIsStandalone();
 
+  const showConvoSettingsCb = useShowConversationSettingsFor(selectedConversationKey);
+
+  return {
+    onClose,
+    title,
+    selectedConversationKey,
+    disappearingModeOptions,
+    isGroup,
+    expirationMode,
+    expireTimer,
+    backAction,
+    isStandalone,
+    showConvoSettingsCb,
+  };
+}
+
+// NOTE: [react-compiler] this has to live here for the hook to be identified as static
+function useDisappearingMessagesForConversationStateInternal(
+  initialExpirationModeSelected: DisappearingMessageConversationModeType,
+  expireTimer?: number
+) {
+  const [modeSelected, setModeSelected] = useState<DisappearingMessageConversationModeType>(
+    initialExpirationModeSelected
+  );
+  const [timeSelected, setTimeSelected] = useState(expireTimer || 0);
   const [loading, setLoading] = useState(false);
 
-  const showConvoSettingsCb = useShowConversationSettingsFor(selectedConversationKey);
+  return {
+    modeSelected,
+    setModeSelected,
+    timeSelected,
+    setTimeSelected,
+    loading,
+    setLoading,
+  };
+}
+
+// NOTE: [react-compiler] this has to live here for the hook to be identified as static
+function useHandleExpirationTimeChange(
+  setTimeSelected: Dispatch<number>,
+  modeSelected: DisappearingMessageConversationModeType,
+  hasOnlyOneMode: boolean,
+  expireTimer?: number
+) {
+  useEffect(() => {
+    // NOTE loads a time value from the conversation model or the default
+    setTimeSelected(
+      expireTimer !== undefined && expireTimer > -1
+        ? expireTimer
+        : loadDefaultTimeValue(modeSelected, hasOnlyOneMode)
+    );
+  }, [expireTimer, hasOnlyOneMode, modeSelected, setTimeSelected]);
+}
+
+export const DisappearingMessagesForConversationModal = (props: ConversationSettingsModalState) => {
+  const dispatch = getAppDispatch();
+
+  const {
+    onClose,
+    title,
+    selectedConversationKey,
+    disappearingModeOptions,
+    isGroup,
+    expirationMode,
+    expireTimer,
+    backAction,
+    isStandalone,
+    showConvoSettingsCb,
+  } = useDisappearingMessagesForConversationModalInternal(props);
+
+  const { singleMode } = useSingleMode(disappearingModeOptions);
+  const hasOnlyOneMode = !!(singleMode && singleMode.length > 0);
+
+  const { modeSelected, setModeSelected, timeSelected, setTimeSelected, loading, setLoading } =
+    useDisappearingMessagesForConversationStateInternal(
+      hasOnlyOneMode ? singleMode : expirationMode,
+      expireTimer
+    );
 
   function closeOrBackInPage() {
     if (isStandalone) {
@@ -149,14 +217,8 @@ export const DisappearingMessagesForConversationModal = (props: ConversationSett
       throw e;
     }
   };
-  useEffect(() => {
-    // NOTE loads a time value from the conversation model or the default
-    setTimeSelected(
-      expireTimer !== undefined && expireTimer > -1
-        ? expireTimer
-        : loadDefaultTimeValue(modeSelected, hasOnlyOneMode)
-    );
-  }, [expireTimer, hasOnlyOneMode, modeSelected]);
+
+  useHandleExpirationTimeChange(setTimeSelected, modeSelected, hasOnlyOneMode, expireTimer);
 
   if (!disappearingModeOptions) {
     return null;

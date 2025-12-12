@@ -60,19 +60,33 @@ function useSortedListOfMembers(convoId: string) {
   return sortedMembers;
 }
 
+// NOTE: [react-compiler] this has to live here for the hook to be identified as static
+function useContactsToInviteToInternal() {
+  return useContactsToInviteTo('manage-group-members');
+}
+
 const useFilteredSortedListOfMembers = (convoId: string) => {
   const sortedMembers = useSortedListOfMembers(convoId);
-  const { contactsToInvite: globalSearchResults, searchTerm } =
-    useContactsToInviteTo('manage-group-members');
 
-  return useMemo(
-    () =>
-      !searchTerm || globalSearchResults === undefined
-        ? sortedMembers
-        : sortedMembers.filter(m => globalSearchResults.includes(m)),
-    [sortedMembers, globalSearchResults, searchTerm]
-  );
+  const { contactsToInvite: globalSearchResults, searchTerm } = useContactsToInviteToInternal();
+
+  return !searchTerm || globalSearchResults === undefined
+    ? sortedMembers
+    : sortedMembers.filter(m => globalSearchResults.includes(m));
 };
+
+// NOTE: [react-compiler] this has to live here for the hook to be identified as static
+function useMembersListDetailsInternal(conversationId: string) {
+  const weAreAdmin = useWeAreAdmin(conversationId);
+  const isV2Group = useSelectedIsGroupV2();
+  const groupAdmins = useGroupAdmins(conversationId);
+
+  return {
+    weAreAdmin,
+    isV2Group,
+    groupAdmins,
+  };
+}
 
 const MemberList = (props: {
   convoId: string;
@@ -81,9 +95,8 @@ const MemberList = (props: {
   onUnselect: (m: string) => void;
 }) => {
   const { onSelect, convoId, onUnselect, selectedMembers } = props;
-  const weAreAdmin = useWeAreAdmin(convoId);
-  const isV2Group = useSelectedIsGroupV2();
-  const groupAdmins = useGroupAdmins(convoId);
+  const { weAreAdmin, isV2Group, groupAdmins } = useMembersListDetailsInternal(convoId);
+
   const sortedMembers = useFilteredSortedListOfMembers(convoId);
 
   return (

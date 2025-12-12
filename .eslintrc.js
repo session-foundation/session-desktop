@@ -29,7 +29,7 @@ module.exports = {
     'plugin:import/typescript',
   ],
 
-  plugins: ['mocha', 'more', '@typescript-eslint', 'react-compiler'],
+  plugins: ['mocha', 'more', '@typescript-eslint'],
   parser: '@typescript-eslint/parser',
   parserOptions: { project: ['tsconfig.json'] },
 
@@ -44,9 +44,6 @@ module.exports = {
         functions: 'never',
       },
     ],
-
-    // React compiler linting
-    'react-compiler/react-compiler': 'warn',
 
     // Enforce curlies always
     curly: ['error', 'all'],

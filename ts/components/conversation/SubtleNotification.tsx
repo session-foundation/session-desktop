@@ -270,14 +270,34 @@ function useGetMessageDetailsForNoMessages(): TrArgs {
   return { token: 'conversationsEmpty', conversation_name: name };
 }
 
-export const NoMessageInConversation = () => {
+// NOTE: [react-compiler] this has to live here for the hook to be identified as static
+function useConversationDetailsInternal() {
   const selectedConversation = useSelectedConversationKey();
   const hasMessages = useSelectedHasMessages();
   const isGroupV2 = useSelectedIsGroupV2();
   const isInvitePending = useLibGroupInvitePending(selectedConversation);
-
   const isPrivate = useSelectedIsPrivate();
   const isIncomingRequest = useIsIncomingRequest(selectedConversation);
+
+  return {
+    selectedConversation,
+    hasMessages,
+    isGroupV2,
+    isInvitePending,
+    isPrivate,
+    isIncomingRequest,
+  };
+}
+
+export const NoMessageInConversation = () => {
+  const {
+    selectedConversation,
+    hasMessages,
+    isGroupV2,
+    isInvitePending,
+    isPrivate,
+    isIncomingRequest,
+  } = useConversationDetailsInternal();
 
   const msgDetails = useGetMessageDetailsForNoMessages();
 

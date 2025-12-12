@@ -38,7 +38,6 @@ import { useIsDarkTheme } from '../../state/theme/selectors/theme';
 import { switchThemeTo } from '../../themes/switchTheme';
 import { getOppositeTheme } from '../../util/theme';
 
-import { useCheckReleasedFeatures } from '../../hooks/useCheckReleasedFeatures';
 import { useDebugMode } from '../../state/selectors/debug';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { themesArray } from '../../themes/constants/colors';
@@ -144,19 +143,21 @@ function DebugMenuModalButton() {
   );
 }
 
-/**
- * ActionsPanel is the far left banner (not the left pane).
- * The panel with buttons to switch between the message/contact/settings/theme views
- */
-export const ActionsPanel = () => {
-  const dispatch = getAppDispatch();
+// NOTE: [react-compiler] this has to live here for the hook to be identified as static
+function useActionsPanelInternal() {
   const [startCleanUpMedia, setStartCleanUpMedia] = useState(false);
   const ourPrimaryConversation = useSelector(getOurPrimaryConversation);
   const showDebugMenu = useDebugMode();
   const ourNumber = useSelector(getOurNumber);
   const isDarkTheme = useIsDarkTheme();
-  const fsTTL30sEnabled = getFeatureFlagMemo('fsTTL30s');
-  useDebugThemeSwitch();
+
+  useFetchLatestReleaseFromFileServer();
+  // setup our own shortcuts so that it changes show in the appearance tab too
+  useZoomShortcuts();
+  useInterval(
+    DecryptedAttachmentsManager.cleanUpOldDecryptedMedias,
+    startCleanUpMedia ? cleanUpMediasInterval : null
+  );
 
   // wait for cleanUpMediasInterval and then start cleaning up medias
   // this would be way easier to just be able to not trigger a call with the setInterval
@@ -166,17 +167,27 @@ export const ActionsPanel = () => {
     return () => clearTimeout(timeout);
   });
 
+  return {
+    ourPrimaryConversation,
+    ourNumber,
+    showDebugMenu,
+    isDarkTheme,
+  };
+}
+
+/**
+ * ActionsPanel is the far left banner (not the left pane).
+ * The panel with buttons to switch between the message/contact/settings/theme views
+ */
+export const ActionsPanel = () => {
+  const dispatch = getAppDispatch();
+  const { ourPrimaryConversation, ourNumber, showDebugMenu, isDarkTheme } =
+    useActionsPanelInternal();
+
+  const fsTTL30sEnabled = getFeatureFlagMemo('fsTTL30s');
+  useDebugThemeSwitch();
   useUpdateBadgeCount();
   usePeriodicFetchRevocationList();
-  // setup our own shortcuts so that it changes show in the appearance tab too
-  useZoomShortcuts();
-
-  useInterval(
-    DecryptedAttachmentsManager.cleanUpOldDecryptedMedias,
-    startCleanUpMedia ? cleanUpMediasInterval : null
-  );
-
-  useFetchLatestReleaseFromFileServer();
 
   useInterval(() => {
     if (!ourPrimaryConversation) {
@@ -212,8 +223,6 @@ export const ActionsPanel = () => {
     },
     fsTTL30sEnabled ? DURATION.SECONDS * 1 : DURATION.DAYS * 1
   );
-
-  useCheckReleasedFeatures();
 
   if (!ourPrimaryConversation) {
     window?.log?.warn('ActionsPanel: ourPrimaryConversation is not set');
