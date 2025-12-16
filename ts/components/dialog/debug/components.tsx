@@ -1,4 +1,3 @@
-import { base64_variants, from_hex, to_base64 } from 'libsodium-wrappers-sumo';
 import useAsync from 'react-use/lib/useAsync';
 import { ipcRenderer, shell } from 'electron';
 import { useDispatch } from 'react-redux';
@@ -391,13 +390,10 @@ export const DebugActions = () => {
           if (response?.status_code === 200) {
             const proProof: ProProof = {
               expiryMs: response.result.expiry_unix_ts_ms,
-              genIndexHashB64: to_base64(
-                from_hex(response.result.gen_index_hash),
-                base64_variants.ORIGINAL
-              ),
-              rotatingPubkeyHex: response.result.rotating_pkey,
+              genIndexHashB64: response.result.gen_index_hash_b64,
+              rotatingPubkeyHex: response.result.rotating_pkey_hex,
               version: response.result.version,
-              signatureHex: response.result.sig,
+              signatureHex: response.result.sig_hex,
             };
             await UserConfigWrapperActions.setProConfig({ proProof, rotatingPrivKeyHex });
           }

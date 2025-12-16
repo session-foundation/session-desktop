@@ -14,6 +14,9 @@ import { getFeatureFlag } from '../../../../state/ducks/types/releasedFeaturesRe
 import { formatRoundedUpDuration } from '../../../../util/i18n/formatting/generics';
 import { isDevProd } from '../../../../shared/env_vars';
 import { ProRevocationCache } from '../../../revocation_list/pro_revocation_list';
+import { stringify } from '../../../../types/sqlSharedTypes';
+import { proBackendDataActions } from '../../../../state/ducks/proBackendData';
+import { getCachedUserConfig } from '../../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 
 let lastRunAtMs = 0;
 
@@ -80,16 +83,33 @@ class UpdateProRevocationListJob extends PersistedJob<UpdateProRevocationListPer
       const newItems = response.result.items;
 
       window.log.debug(
-        `UpdateProRevocationListJob: new revocations from ticket #${ticketFromDb}: to #${newTicket}. items: ${response.result.items}`
+        `UpdateProRevocationListJob: new revocations from ticket #${ticketFromDb}: to #${newTicket}. items: ${stringify(response.result.items)}`
       );
 
       // Note: we only want to update the lastRunAt once we have successfully fetched the new revocations
       lastRunAtMs = Date.now();
       await ProRevocationCache.setTicket(newTicket);
       await ProRevocationCache.setListItems(newItems);
+
       window.log.info(
         `UpdateProRevocationListJob: new revocations from ticket #${ticketFromDb}: to #${newTicket}. itemsCount: ${response.result.items.length}`
       );
+
+      const proConfig = getCachedUserConfig().proConfig;
+      if (
+        proConfig &&
+        proConfig.proProof.genIndexHashB64 &&
+        newItems.some(m => m.gen_index_hash_b64 === proConfig.proProof.genIndexHashB64)
+      ) {
+        // if we've been revoked, refresh our pro proof.
+        // this will fetch the new one if one is provided or just remove it from our config.
+        window.log.info(
+          `UpdateProRevocationListJob: our current genIndexHash is revoked. Refreshing our pro proof.`
+        );
+        window.inboxStore?.dispatch(
+          proBackendDataActions.refreshGetProDetailsFromProBackend({}) as any
+        );
+      }
 
       return RunJobResult.Success;
     } catch (e) {

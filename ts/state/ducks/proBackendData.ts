@@ -1,4 +1,3 @@
-import { base64_variants, from_hex, to_base64 } from 'libsodium-wrappers-sumo';
 import type { ProProof, WithMasterPrivKeyHex } from 'libsession_util_nodejs';
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { isUndefined } from 'lodash';
@@ -21,6 +20,7 @@ import {
   getCachedUserConfig,
   UserConfigWrapperActions,
 } from '../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
+import { ConvoHub } from '../../session/conversations';
 
 type RequestState<D = unknown> = {
   isFetching: boolean;
@@ -186,13 +186,10 @@ async function handleNewProProof(rotatingPrivKeyHex: string): Promise<ProProof |
   if (response?.status_code === 200) {
     const proProof = {
       expiryMs: response.result.expiry_unix_ts_ms,
-      genIndexHashB64: to_base64(
-        from_hex(response.result.gen_index_hash),
-        base64_variants.ORIGINAL
-      ),
-      rotatingPubkeyHex: response.result.rotating_pkey,
+      genIndexHashB64: response.result.gen_index_hash_b64,
+      rotatingPubkeyHex: response.result.rotating_pkey_hex,
       version: response.result.version,
-      signatureHex: response.result.sig,
+      signatureHex: response.result.sig_hex,
     } satisfies ProProof;
     await UserConfigWrapperActions.setProConfig({ proProof, rotatingPrivKeyHex });
     return proProof;
@@ -376,6 +373,8 @@ const fetchGetProDetailsFromProBackend = createAsyncThunk(
         if (state.data) {
           await putProDetailsInStorage(state.data);
         }
+        // trigger a UI refresh so our state and Pro rights are up to date without a restart (animated image should stop animating)
+        ConvoHub.use().get(UserUtils.getOurPubKeyStrFromCache())?.triggerUIRefresh();
         return state;
       },
       contextHandler: async state => {

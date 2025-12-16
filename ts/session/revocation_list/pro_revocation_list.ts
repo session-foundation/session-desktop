@@ -1,4 +1,3 @@
-import { base64_variants, from_base64, to_hex } from 'libsodium-wrappers-sumo';
 import { isNumber } from 'lodash/fp';
 import { SettingsKey } from '../../data/settings-key';
 import { Storage } from '../../util/storage';
@@ -64,8 +63,7 @@ function clear() {
 }
 
 function isB64HashRevokedAtMs(genIndexHashBase64: string, ms: number) {
-  const asHex = to_hex(from_base64(genIndexHashBase64, base64_variants.ORIGINAL));
-  const found = cachedProRevocationListItems.find(m => m.gen_index_hash === asHex);
+  const found = cachedProRevocationListItems.find(m => m.gen_index_hash_b64 === genIndexHashBase64);
   if (!found) {
     return false;
   }

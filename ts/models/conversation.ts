@@ -153,6 +153,7 @@ import {
   getCachedUserConfig,
   UserConfigWrapperActions,
 } from '../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
+import { ProRevocationCache } from '../session/revocation_list/pro_revocation_list';
 
 type InMemoryConvoInfos = {
   mentionedUs: boolean;
@@ -885,18 +886,26 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
     if (this.isMe()) {
       // The logic for the pro proof for ourselves is coming from libsession.
-      const config = getCachedUserConfig();
-      if (config?.proConfig?.proProof.expiryMs) {
-        return config.proConfig.proProof.expiryMs >= NetworkTime.now();
+      const proProof = getCachedUserConfig().proConfig?.proProof;
+      if (!proProof) {
+        return false;
       }
-      return false;
+      if (ProRevocationCache.isB64HashRevokedAtMs(proProof.genIndexHashB64, NetworkTime.now())) {
+        // that genIndexHash appears to have been revoked. Consider that we do not have pro anymore
+        return false;
+      }
+      return proProof.expiryMs >= NetworkTime.now();
     }
 
     const proDetails = this.dbContactProDetails();
-    if (!proDetails || !proDetails.proExpiryTsMs) {
+    if (!proDetails || !proDetails.proExpiryTsMs || !proDetails.proGenIndexHashB64) {
       return false;
     }
 
+    // make sure that genIndexHash was not revoked first
+    if (ProRevocationCache.isB64HashRevokedAtMs(proDetails.proGenIndexHashB64, NetworkTime.now())) {
+      return true;
+    }
     // We verify a pro proof before saving it, so if the pro proof is not expired yet it is valid.
     return proDetails.proExpiryTsMs >= NetworkTime.now();
   }
@@ -2121,6 +2130,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     //     avatarPicked,
     //   })
     // );
+
     return avatarPicked;
   }
 
