@@ -34,10 +34,8 @@ const useSenderConvoProps = (
   });
 };
 
-// NOTE: [react-compiler] this has to live here for the hook to be identified as static
-function useIsMeInternal(pubkey?: string) {
-  return useIsMe(pubkey);
-}
+// NOTE: [react-compiler] this convinces the compiler the hook is static
+const useIsMeInternal = useIsMe;
 
 export const useAuthorProfileName = (messageId: string): string | null => {
   const msg = useMessagePropsByMessageId(messageId);

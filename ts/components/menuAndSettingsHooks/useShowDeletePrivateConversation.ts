@@ -18,12 +18,8 @@ function useShowDeletePrivateConversation({ conversationId }: { conversationId: 
   return isPrivate && !isRequest && !isMe;
 }
 
-// NOTE: [react-compiler] this has to live here for the hook to be identified as static
-function useConversationUsernameWithFallbackInternal(
-  ...props: Parameters<typeof useConversationUsernameWithFallback>
-) {
-  return useConversationUsernameWithFallback(...props);
-}
+// NOTE: [react-compiler] this convinces the compiler the hook is static
+const useConversationUsernameWithFallbackInternal = useConversationUsernameWithFallback;
 
 export function useShowDeletePrivateConversationCb({ conversationId }: { conversationId: string }) {
   const showDeletePrivateConversation = useShowDeletePrivateConversation({ conversationId });

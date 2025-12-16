@@ -41,20 +41,10 @@ function usePinnedConversationCount() {
   return useSelector(getPinnedConversationsCount);
 }
 
-// NOTE: [react-compiler] this has to live here for the hook to be identified as static
-function useHasProInternal() {
-  return useCurrentUserHasPro();
-}
-
-// NOTE: [react-compiler] this has to live here for the hook to be identified as static
-function useIsPinnedInternal(id: string) {
-  return useIsPinned(id);
-}
-
-// NOTE: [react-compiler] this has to live here for the hook to be identified as static
-function useCTACallbackInternal() {
-  return useShowSessionCTACbWithVariant();
-}
+// NOTE: [react-compiler] this convinces the compiler the hook is static
+const useHasProInternal = useCurrentUserHasPro;
+const useIsPinnedInternal = useIsPinned;
+const useCTACallbackInternal = useShowSessionCTACbWithVariant;
 
 export function useTogglePinConversationHandler(id: string) {
   const conversation = ConvoHub.use().get(id);

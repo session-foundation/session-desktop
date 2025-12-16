@@ -193,10 +193,8 @@ function useConversationHeaderTitleInternal() {
   };
 }
 
-// NOTE: [react-compiler] this has to live here for the hook to be identified as static
-function useSubtitleArrayInternal(convoId?: string) {
-  return useSubtitleArray(convoId);
-}
+// NOTE: [react-compiler] this convinces the compiler the hook is static
+const useSubtitleArrayInternal = useSubtitleArray;
 
 // NOTE: [react-compiler] this has to live here for the hook to be identified as static
 function useSubtitleIndex(convoId?: string) {

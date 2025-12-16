@@ -169,10 +169,8 @@ function IconForExpiringMessageId({
   );
 }
 
-// NOTE: [react-compiler] this has to live here for the hook to be identified as static
-function useSelectedIsGroupOrCommunityInternal() {
-  return useSelectedIsGroupOrCommunity();
-}
+// NOTE: [react-compiler] this convinces the compiler the hook is static
+const useSelectedIsGroupOrCommunityInternal = useSelectedIsGroupOrCommunity;
 
 const MessageStatusSent = ({ dataTestId, messageId }: Omit<Props, 'isDetailView'>) => {
   const isExpiring = useIsExpiring(messageId);

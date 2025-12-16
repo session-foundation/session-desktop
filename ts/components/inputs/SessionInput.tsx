@@ -229,10 +229,8 @@ type SimpleSessionInputProps = Pick<
     buttonEnd?: ReactNode;
   };
 
-// NOTE: [react-compiler] this has to live here for the hook to be identified as static
-function useUpdateInputValueInternal(...props: Parameters<typeof useUpdateInputValue>) {
-  return useUpdateInputValue(...props);
-}
+// NOTE: [react-compiler] this convinces the compiler the hook is static
+const useUpdateInputValueInternal = useUpdateInputValue;
 
 /**
  * A simpler version of the SessionInput component.
