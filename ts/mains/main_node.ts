@@ -8,7 +8,6 @@ import {
   app,
   BrowserWindow,
   crashReporter,
-  dialog,
   protocol as electronProtocol,
   ipcMain as ipc,
   ipcMain,
@@ -209,7 +208,6 @@ import { initializeMainProcessLogger } from '../util/logger/main_process_logging
 import * as log from '../util/logger/log';
 import { DURATION } from '../session/constants';
 import { tr } from '../localization/localeTools';
-import { isSharpSupported } from '../node/sharp_support/sharpSupport';
 
 import { logCrash } from '../node/crash/log_crash';
 
@@ -233,11 +231,6 @@ function prepareURL(pathSegments: Array<string>, moreKeys?: { theme: any }) {
     },
   };
   return url.format(urlObject);
-}
-
-async function showUnsupportedCpuDialog() {
-  dialog.showErrorBox(tr('unsupportedCpu'), tr('yourCpuIsUnsupportedSSE42'));
-  app.quit();
 }
 
 function handleUrl(event: any, target: string) {
@@ -787,11 +780,6 @@ app.on('ready', async () => {
     const loadedLocale = loadLocalizedDictionary({ appLocale });
     console.log(`appLocale is ${appLocale}`);
     console.log(`crowdin locale is ${loadedLocale.crowdinLocale}`);
-  }
-
-  if (!isSharpSupported()) {
-    await showUnsupportedCpuDialog();
-    return;
   }
 
   const key = getDefaultSQLKey();
