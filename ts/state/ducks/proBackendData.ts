@@ -17,7 +17,10 @@ import { NetworkTime } from '../../util/NetworkTime';
 import { assertUnreachable } from '../../types/sqlSharedTypes';
 import { DURATION } from '../../session/constants';
 import { SessionBackendBaseResponseType } from '../../session/apis/session_backend_server';
-import { UserConfigWrapperActions } from '../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
+import {
+  getCachedUserConfig,
+  UserConfigWrapperActions,
+} from '../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 
 type RequestState<D = unknown> = {
   isFetching: boolean;
@@ -267,7 +270,7 @@ async function handleProProof(accessExpiryTsMs: number, autoRenewing: boolean, s
     return;
   }
 
-  const proConfig = await UserConfigWrapperActions.getProConfig();
+  const proConfig = getCachedUserConfig().proConfig;
 
   // TODO: if the user config access expiry timestamp is different, set it and sync the user config
 

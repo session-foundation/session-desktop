@@ -12,7 +12,10 @@ import { OutgoingUserProfile } from '../../types/message';
 import { SettingsKey } from '../../data/settings-key';
 import { OutgoingProMessageDetails } from '../../types/message/OutgoingProMessageDetails';
 import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
-import { UserConfigWrapperActions } from '../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
+import {
+  getCachedUserConfig,
+  UserConfigWrapperActions,
+} from '../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 
 export type HexKeyPair = {
   pubKey: string;
@@ -192,7 +195,7 @@ export async function getProMasterKeyHex() {
  * Return the pro rotating private key (hex) from user config, or generate it before returning it.
  */
 export async function getProRotatingPrivateKeyHex() {
-  const proConfig = await UserConfigWrapperActions.getProConfig();
+  const proConfig = getCachedUserConfig().proConfig;
   if (proConfig?.rotatingPrivKeyHex) {
     return proConfig.rotatingPrivKeyHex;
   }

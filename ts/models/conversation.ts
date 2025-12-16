@@ -2111,16 +2111,16 @@ export class ConversationModel extends Model<ConversationAttributes> {
       proAvailable && !this.hasValidCurrentProProof()
         ? this.getFallbackAvatarInProfilePath()
         : this.getAvatarInProfilePath();
-    window.log.debug(
-      `getProOrNotAvatarPath for ${ed25519Str(this.id)}: `,
-      JSON.stringify({
-        proAvailable,
-        validCurrentProof: this.hasValidCurrentProProof(),
-        avatarInProfilePath: this.getAvatarInProfilePath(),
-        fallbackAvatarInProfilePath: this.getFallbackAvatarInProfilePath(),
-        avatarPicked,
-      })
-    );
+    // window.log.debug(
+    //   `getProOrNotAvatarPath for ${ed25519Str(this.id)}: `,
+    //   JSON.stringify({
+    //     proAvailable,
+    //     validCurrentProof: this.hasValidCurrentProProof(),
+    //     avatarInProfilePath: this.getAvatarInProfilePath(),
+    //     fallbackAvatarInProfilePath: this.getFallbackAvatarInProfilePath(),
+    //     avatarPicked,
+    //   })
+    // );
     return avatarPicked;
   }
 

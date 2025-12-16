@@ -16,7 +16,7 @@ import { ed25519Str } from '../session/utils/String';
 import { Timestamp } from '../types/timestamp/timestamp';
 import { privateSet, privateSetKey } from './modelFriends';
 import type { SignalService } from '../protobuf';
-import { UserConfigWrapperActions } from '../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
+import { getCachedUserConfig } from '../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 import type { SwarmDecodedEnvelope } from '../receiver/types';
 
 type SessionProfileArgs = {
@@ -48,6 +48,8 @@ type ProDetailsContact = {
 };
 
 type WithProDetailsContact = { proDetails: ProDetailsContact };
+
+const debugProfileApplyChange = false;
 
 abstract class SessionProfileChanges {
   protected readonly convo: ConversationModel;
@@ -114,17 +116,20 @@ abstract class SessionProfileChanges {
     // For the transition period, we need to allow an incoming profile to be applied when
     // the timestamp is not set (defaults to 0).
     if (newProfileUpdatedAtSeconds === 0 && currentProfileUpdatedAtSeconds === 0) {
-      window.log.debug(
-        `shouldApplyChange [${context}] for ${ed25519Str(this.convo.id)} incomingSeconds:0 currentSeconds:0. Allowing overwrite`
-      );
+      if (debugProfileApplyChange) {
+        window.log.debug(
+          `shouldApplyChange [${context}] for ${ed25519Str(this.convo.id)} incomingSeconds:0 currentSeconds:0. Allowing overwrite`
+        );
+      }
       return true;
     }
 
     const ts = new Timestamp({ value: newProfileUpdatedAtSeconds });
-    window.log.debug(
-      `shouldApplyChange [${context}] for ${ed25519Str(this.convo.id)} incomingSeconds:${ts.seconds()} currentSeconds:${currentProfileUpdatedAtSeconds} -> ${currentProfileUpdatedAtSeconds < ts.seconds()}`
-    );
-
+    if (debugProfileApplyChange) {
+      window.log.debug(
+        `shouldApplyChange [${context}] for ${ed25519Str(this.convo.id)} incomingSeconds:${ts.seconds()} currentSeconds:${currentProfileUpdatedAtSeconds} -> ${currentProfileUpdatedAtSeconds < ts.seconds()}`
+      );
+    }
     return currentProfileUpdatedAtSeconds < ts.seconds();
   }
 
@@ -678,9 +683,11 @@ export function buildPrivateProfileChangeFromSwarmDataMessage({
 }
 
 export async function buildPrivateProfileChangeFromUserProfileUpdate(ourConvo: ConversationModel) {
-  const profilePic = await UserConfigWrapperActions.getProfilePic();
-  const displayName = await UserConfigWrapperActions.getName();
-  const profileUpdatedAtSeconds = await UserConfigWrapperActions.getProfileUpdatedSeconds();
+  const {
+    profilePic,
+    name: displayName,
+    profileUpdatedSeconds: profileUpdatedAtSeconds,
+  } = getCachedUserConfig();
 
   const shared = {
     convo: ourConvo,

@@ -293,7 +293,9 @@ export function stringify(obj: unknown) {
         ? `Uint8Array(${value.length}): ${toHex(value)}`
         : value?.type === 'Buffer' && value?.data
           ? `Buffer: ${toHex(value.data)}`
-          : value;
+          : typeof value === 'bigint'
+            ? { $bigint: value.toString() }
+            : value;
     },
     2
   );

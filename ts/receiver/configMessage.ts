@@ -57,7 +57,10 @@ import {
   buildPrivateProfileChangeFromUserProfileUpdate,
   type SessionProfilePrivateChange,
 } from '../models/profile';
-import { UserConfigWrapperActions } from '../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
+import {
+  getCachedUserConfig,
+  UserConfigWrapperActions,
+} from '../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 
 type IncomingUserResult = {
   needsPush: boolean;
@@ -238,10 +241,10 @@ async function updateLibsessionLatestProcessedUserTimestamp(
 async function handleUserProfileUpdate(result: IncomingUserResult): Promise<void> {
   const ourConvo = ConvoHub.use().get(UserUtils.getOurPubKeyStrFromCache());
   const profile = await buildPrivateProfileChangeFromUserProfileUpdate(ourConvo);
-  const priority = await UserConfigWrapperActions.getPriority();
+  const priority = getCachedUserConfig().priority;
 
   const currentBlindedMsgRequest = Storage.get(SettingsKey.hasBlindedMsgRequestsEnabled);
-  const newBlindedMsgRequest = await UserConfigWrapperActions.getEnableBlindedMsgRequest();
+  const newBlindedMsgRequest = getCachedUserConfig().enableBlindedMsgRequest;
   if (!isNil(newBlindedMsgRequest) && newBlindedMsgRequest !== currentBlindedMsgRequest) {
     await window.setSettingValue(SettingsKey.hasBlindedMsgRequestsEnabled, newBlindedMsgRequest); // this does the dispatch to redux
   }
@@ -255,15 +258,13 @@ async function handleUserProfileUpdate(result: IncomingUserResult): Promise<void
 
     const expireTimer = ourConvo.getExpireTimer();
 
-    const wrapperNoteToSelfExpirySeconds = await UserConfigWrapperActions.getNoteToSelfExpiry();
+    const { noteToSelfExpirySeconds } = getCachedUserConfig();
 
-    if (wrapperNoteToSelfExpirySeconds !== expireTimer) {
+    if (noteToSelfExpirySeconds !== expireTimer) {
       const success = await ourConvo.updateExpireTimer({
         providedDisappearingMode:
-          wrapperNoteToSelfExpirySeconds && wrapperNoteToSelfExpirySeconds > 0
-            ? 'deleteAfterSend'
-            : 'off',
-        providedExpireTimer: wrapperNoteToSelfExpirySeconds,
+          noteToSelfExpirySeconds && noteToSelfExpirySeconds > 0 ? 'deleteAfterSend' : 'off',
+        providedExpireTimer: noteToSelfExpirySeconds,
         providedSource: ourConvo.id,
         sentAt: result.latestEnvelopeTimestamp,
         fromSync: true,

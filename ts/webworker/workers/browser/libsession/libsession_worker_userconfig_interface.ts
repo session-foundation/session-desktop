@@ -12,7 +12,7 @@ type CachedUserConfig = {
   enableBlindedMsgRequest: AwaitedReturn<
     UserConfigWrapperActionsCalls['getEnableBlindedMsgRequest']
   >;
-  noteToSelfExpiry: AwaitedReturn<UserConfigWrapperActionsCalls['getNoteToSelfExpiry']>;
+  noteToSelfExpirySeconds: AwaitedReturn<UserConfigWrapperActionsCalls['getNoteToSelfExpiry']>;
   proConfig: AwaitedReturn<UserConfigWrapperActionsCalls['getProConfig']>;
   proProfileBitset: AwaitedReturn<UserConfigWrapperActionsCalls['getProProfileBitset']>;
   proAccessExpiry: AwaitedReturn<UserConfigWrapperActionsCalls['getProAccessExpiry']>;
@@ -32,7 +32,7 @@ async function fullRefreshCachedUserConfig() {
   const profilePic = await UserConfigWrapperActions.getProfilePic();
   const profileUpdatedSeconds = await UserConfigWrapperActions.getProfileUpdatedSeconds();
   const enableBlindedMsgRequest = await UserConfigWrapperActions.getEnableBlindedMsgRequest();
-  const noteToSelfExpiry = await UserConfigWrapperActions.getNoteToSelfExpiry();
+  const noteToSelfExpirySeconds = await UserConfigWrapperActions.getNoteToSelfExpiry();
   const proConfig = await UserConfigWrapperActions.getProConfig();
   const proProfileBitset = await UserConfigWrapperActions.getProProfileBitset();
   const proAccessExpiry = await UserConfigWrapperActions.getProAccessExpiry();
@@ -40,7 +40,7 @@ async function fullRefreshCachedUserConfig() {
   if (!cachedUserConfig) {
     cachedUserConfig = {
       enableBlindedMsgRequest,
-      noteToSelfExpiry,
+      noteToSelfExpirySeconds,
       proAccessExpiry,
       proConfig,
       proProfileBitset,
@@ -56,7 +56,7 @@ async function fullRefreshCachedUserConfig() {
   applyUserConfigIfChanged('profilePic', profilePic);
   applyUserConfigIfChanged('profileUpdatedSeconds', profileUpdatedSeconds);
   applyUserConfigIfChanged('enableBlindedMsgRequest', enableBlindedMsgRequest);
-  applyUserConfigIfChanged('noteToSelfExpiry', noteToSelfExpiry);
+  applyUserConfigIfChanged('noteToSelfExpirySeconds', noteToSelfExpirySeconds);
   applyUserConfigIfChanged('proConfig', proConfig);
   applyUserConfigIfChanged('proProfileBitset', proProfileBitset);
   applyUserConfigIfChanged('proAccessExpiry', proAccessExpiry);

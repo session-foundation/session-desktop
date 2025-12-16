@@ -1,13 +1,6 @@
 import { isNumber } from 'lodash';
-import {
-  MouseEventHandler,
-  SessionDataTestId,
-  useCallback,
-  useMemo,
-  useState,
-  type ReactNode,
-} from 'react';
-import useMount from 'react-use/lib/useMount';
+import { MouseEventHandler, SessionDataTestId, useCallback, useMemo, type ReactNode } from 'react';
+import useUpdate from 'react-use/lib/useUpdate';
 import styled from 'styled-components';
 import { useDispatch } from 'react-redux';
 import { ModalBasicHeader } from '../../../../SessionWrapperModal';
@@ -56,7 +49,10 @@ import { SpacerMD } from '../../../../basic/Text';
 import LIBSESSION_CONSTANTS from '../../../../../session/utils/libsession/libsession_constants';
 import { useDataFeatureFlag } from '../../../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { AnimatedSpinnerIcon } from '../../../../loading/spinner/AnimatedSpinnerIcon';
-import { UserConfigWrapperActions } from '../../../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
+import {
+  getCachedUserConfig,
+  UserConfigWrapperActions,
+} from '../../../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 import {
   ProFeatures as ProFeaturesFinder,
   ProMessageFeature,
@@ -437,24 +433,17 @@ function ProSettings({ state }: SectionProps) {
   const { data, isLoading, isError } = useProAccessDetails();
   const backendErrorButtons = useBackendErrorDialogButtons();
 
-  const [proBadgeEnabled, setProBadgeEnabled] = useState(false);
+  const forceRefresh = useUpdate();
+
+  const { proProfileBitset } = getCachedUserConfig();
+
+  const proBadgeEnabled = ProFeaturesFinder.hasProFeature(
+    proProfileBitset,
+    ProMessageFeature.PRO_BADGE,
+    'proProfile'
+  );
 
   const { returnToThisModalAction, centerAlign } = state;
-
-  const refreshProBadge = useCallback(async () => {
-    const proProfileBitset = await UserConfigWrapperActions.getProProfileBitset();
-
-    const refreshed = ProFeaturesFinder.hasProFeature(
-      proProfileBitset,
-      ProMessageFeature.PRO_BADGE,
-      'proProfile'
-    );
-    setProBadgeEnabled(refreshed);
-  }, []);
-
-  useMount(() => {
-    void refreshProBadge();
-  });
 
   const handleUpdateAccessClick = useCallback(() => {
     dispatch(
@@ -514,9 +503,8 @@ function ProSettings({ state }: SectionProps) {
           text={{ token: 'proBadge' }}
           subText={{ token: 'proBadgeVisible' }}
           onClick={async () => {
-            const newProBadgeEnabled = !proBadgeEnabled;
-            await UserConfigWrapperActions.setProBadge(newProBadgeEnabled);
-            void refreshProBadge();
+            await UserConfigWrapperActions.setProBadge(!proBadgeEnabled);
+            forceRefresh();
           }}
           active={proBadgeEnabled}
         />

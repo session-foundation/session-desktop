@@ -206,6 +206,7 @@ async function pendingChangesForUs(): Promise<UserDestinationChanges> {
     const variant = userVariants[index];
 
     const needsPush = await UserGenericWrapperActions.needsPush(variant);
+
     if (!needsPush) {
       continue;
     }

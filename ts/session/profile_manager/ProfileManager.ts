@@ -1,6 +1,9 @@
 import { isNil } from 'lodash';
 import { ConvoHub } from '../conversations';
-import { UserConfigWrapperActions } from '../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
+import {
+  getCachedUserConfig,
+  UserConfigWrapperActions,
+} from '../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 import { SyncUtils, UserUtils } from '../utils';
 import { trimWhitespace } from '../utils/String';
 import { AvatarDownload } from '../utils/job_runners/jobs/AvatarDownloadJob';
@@ -66,7 +69,7 @@ async function updateOurProfileDisplayNameOnboarding(newName: string) {
     await UserConfigWrapperActions.init(privKey, null);
     // this throws if the name is too long
     await UserConfigWrapperActions.setName(newName);
-    const appliedName = await UserConfigWrapperActions.getName();
+    const appliedName = getCachedUserConfig().name;
 
     if (isNil(appliedName)) {
       throw new RetrieveDisplayNameError();
@@ -84,7 +87,7 @@ async function updateOurProfileDisplayName(newName: string) {
 
   // we don't want to throw if somehow our display name in the DB is too long here, so we use the truncated version.
   await UserConfigWrapperActions.setNameTruncated(trimWhitespace(newName));
-  const truncatedName = await UserConfigWrapperActions.getName();
+  const truncatedName = getCachedUserConfig().name;
   if (isNil(truncatedName)) {
     throw new RetrieveDisplayNameError();
   }

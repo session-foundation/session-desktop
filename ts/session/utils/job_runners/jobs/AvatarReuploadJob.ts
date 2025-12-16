@@ -17,7 +17,10 @@ import { IMAGE_JPEG } from '../../../../types/MIME';
 import { urlToBlob } from '../../../../types/attachments/VisualAttachment';
 import { ImageProcessor } from '../../../../webworker/workers/browser/image_processor_interface';
 import { maxAvatarDetails } from '../../../../util/attachment/attachmentSizes';
-import { UserConfigWrapperActions } from '../../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
+import {
+  getCachedUserConfig,
+  UserConfigWrapperActions,
+} from '../../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 import { extendFileExpiry } from '../../../apis/file_server_api/FileServerApi';
 import { fileServerUrlToFileId } from '../../../apis/file_server_api/types';
 import { DURATION, DURATION_SECONDS } from '../../../constants';
@@ -142,7 +145,7 @@ class AvatarReuploadJob extends PersistedJob<AvatarReuploadPersistedData> {
 
       return RunJobResult.PermanentFailure;
     }
-    const ourProfileLastUpdatedSeconds = await UserConfigWrapperActions.getProfileUpdatedSeconds();
+    const ourProfileLastUpdatedSeconds = getCachedUserConfig().profileUpdatedSeconds;
     const currentMainPath = conversation.getAvatarInProfilePath();
     const avatarPointer = conversation.getAvatarPointer();
     const profileKey = conversation.getProfileKeyHex();
@@ -187,8 +190,6 @@ class AvatarReuploadJob extends PersistedJob<AvatarReuploadPersistedData> {
           window.log.debug(
             `[avatarReupload] expiry renew for ${ed25519Str(conversation.id)} of file:${fileId} on fs: ${target} was successful`
           );
-
-          await UserConfigWrapperActions.getProfilePic();
 
           await UserConfigWrapperActions.setReuploadProfilePic({
             key: from_hex(profileKey),
