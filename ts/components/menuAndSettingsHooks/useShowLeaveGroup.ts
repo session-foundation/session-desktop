@@ -37,7 +37,7 @@ export function useShowLeaveGroupCb(conversationId?: string) {
   };
 }
 
-// NOTE: [react-compiler] if we memoise this ourselves the compiler gets angry, but it will memoise it for us
+// NOTE: [react-compiler] this convinces the compiler the hook is static
 function useShowDeleteGroupInternal(conversationId?: string) {
   const isClosedGroup = useIsClosedGroup(conversationId);
   const isMessageRequestShown = useIsMessageRequestOverlayShown();
