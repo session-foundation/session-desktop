@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import z from '../../../util/zod';
 import { ProItemStatus, ProAccessVariant, ProPaymentProvider, ProStatus } from './types';
 import { SessionBackendBaseResponseSchema } from '../session_backend_server';
 

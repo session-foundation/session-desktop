@@ -122,7 +122,7 @@ module.exports = {
         ignoreRegExpLiterals: true,
       },
     ],
-    'no-restricted-imports': [
+    '@typescript-eslint/no-restricted-imports': [
       'error',
       {
         paths: [
@@ -131,6 +131,12 @@ module.exports = {
             name: 'react-use',
             message:
               "Don't import from 'react-use' directly. Please use a default import for each hook from 'react-use/lib' instead.",
+          },
+          {
+            name: 'zod',
+            allowTypeImports: true,
+            message:
+              "Don't import from 'zod' directly. Please use a default import from 'ts/utils/zod' instead.",
           },
         ],
       },

@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import z from './zod';
 import { SettingsKey } from '../data/settings-key';
 import { Storage } from './storage';
 import { tr } from '../localization/localeTools';
