@@ -25,7 +25,6 @@ import { LinkPreviews } from '../util/linkPreviews';
 import { GroupV2Receiver } from './groupv2/handleGroupV2Message';
 import { Constants } from '../session';
 import { longOrNumberToNumber } from '../types/long/longOrNumberToNumber';
-import { ProRevocationCache } from '../session/revocation_list/pro_revocation_list';
 
 function isMessageModel(
   msg: MessageModel | MessageModelPropsWithoutConvoProps
@@ -479,24 +478,17 @@ async function processProDetailsForMsg({
   // - if there are no pro proof, or
   // - the pro proof is not valid (validOrExpired) at the time the message was sent, or
   // - the pro proof is expired at the time the message was sent, or
-  // - the pro proof is revoked at the time the message was sent
+  // - the pro proof is revoked at the time
   // do not save the pro features associated with that message
   if (
     !decodedEnvelope.validPro ||
     !decodedEnvelope.isProProofValidOrExpired() ||
     decodedEnvelope.isProProofExpiredAtMs(decodedEnvelope.sentAtMs) ||
-    decodedEnvelope.isProProofRevokedAtMs(decodedEnvelope.sentAtMs)
+    decodedEnvelope.isProProofRevoked()
   ) {
     return;
   }
-  const alreadyRevoked = ProRevocationCache.isB64HashRevokedAtMs(
-    decodedEnvelope.validPro.proProof.genIndexHashB64,
-    decodedEnvelope.sentAtMs
-  );
 
-  if (alreadyRevoked) {
-    return;
-  }
   // otherwise, we have a valid pro proof, save the bitset of pro features used in the message
   if (decodedEnvelope.validPro.proMessageBitset || decodedEnvelope.validPro.proProfileBitset) {
     // Note: msgModel.commit() is always called when receiving a message.

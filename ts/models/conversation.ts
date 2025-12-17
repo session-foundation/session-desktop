@@ -890,11 +890,12 @@ export class ConversationModel extends Model<ConversationAttributes> {
       if (!proProof) {
         return false;
       }
-      if (ProRevocationCache.isB64HashRevokedAtMs(proProof.genIndexHashB64, NetworkTime.now())) {
-        // that genIndexHash appears to have been revoked. Consider that we do not have pro anymore
+      if (ProRevocationCache.isB64HashRevoked(proProof.genIndexHashB64)) {
+        // `false` because the proof is not valid (revoked)
         return false;
       }
-      return proProof.expiryMs >= NetworkTime.now();
+      // if now() is before the proof's expiry, it is not expired yet
+      return NetworkTime.nowTs().isBeforeMs({ ms: proProof.expiryMs });
     }
 
     const proDetails = this.dbContactProDetails();
@@ -903,11 +904,13 @@ export class ConversationModel extends Model<ConversationAttributes> {
     }
 
     // make sure that genIndexHash was not revoked first
-    if (ProRevocationCache.isB64HashRevokedAtMs(proDetails.proGenIndexHashB64, NetworkTime.now())) {
-      return true;
+    if (ProRevocationCache.isB64HashRevoked(proDetails.proGenIndexHashB64)) {
+      // `false` because the proof is not valid (revoked)
+      return false;
     }
     // We verify a pro proof before saving it, so if the pro proof is not expired yet it is valid.
-    return proDetails.proExpiryTsMs >= NetworkTime.now();
+    // if now() is before the proof's expiry, it is not expired yet
+    return NetworkTime.nowTs().isBeforeMs({ ms: proDetails.proExpiryTsMs });
   }
 
   private showProBadgeFor(): boolean {
@@ -2120,6 +2123,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
       proAvailable && !this.hasValidCurrentProProof()
         ? this.getFallbackAvatarInProfilePath()
         : this.getAvatarInProfilePath();
+
     // window.log.debug(
     //   `getProOrNotAvatarPath for ${ed25519Str(this.id)}: `,
     //   JSON.stringify({

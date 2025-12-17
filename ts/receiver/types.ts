@@ -112,16 +112,15 @@ export abstract class BaseDecodedEnvelope {
   }
 
   /**
-   * Returns true if there is a pro proof that is marked as revoked at the given timestamp.
+   * Returns true if there is a pro proof that is marked as revoked.
    * Note: this does not check for pro proof validity/expiry. Use `isProProofValidAtMs` for that.
    */
-  public isProProofRevokedAtMs(timestampMs: number) {
+  public isProProofRevoked() {
     if (!this.validPro) {
       return false;
     }
-    const alreadyRevoked = ProRevocationCache.isB64HashRevokedAtMs(
-      this.validPro.proProof.genIndexHashB64,
-      timestampMs
+    const alreadyRevoked = ProRevocationCache.isB64HashRevoked(
+      this.validPro.proProof.genIndexHashB64
     );
 
     return alreadyRevoked;

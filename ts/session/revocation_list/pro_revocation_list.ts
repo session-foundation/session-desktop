@@ -5,7 +5,6 @@ import {
   ProRevocationItemsSchema,
   type ProRevocationItemsType,
 } from '../apis/pro_backend_api/schemas';
-import { Timestamp } from '../../types/timestamp/timestamp';
 
 let cachedProRevocationListTicket = 0;
 let cachedProRevocationListItems: ProRevocationItemsType = [];
@@ -62,14 +61,11 @@ function clear() {
   cachedProRevocationListItems = [];
 }
 
-function isB64HashRevokedAtMs(genIndexHashBase64: string, ms: number) {
+function isB64HashRevoked(genIndexHashBase64: string) {
   const found = cachedProRevocationListItems.find(m => m.gen_index_hash_b64 === genIndexHashBase64);
-  if (!found) {
-    return false;
-  }
-  const revokedAtMs = found.expiry_unix_ts_ms;
-  const ts = new Timestamp({ value: ms, expectedUnit: 'ms' });
-  return ts.isAfterMs({ ms: revokedAtMs });
+  // Note: the revocation list is the list of revoked genIndexHashBase64 that are currently revoked.
+  // We do not care about the expiry_unix_ts_ms here as all we care about is the presence of the genIndexHashBase64 in the list.
+  return found;
 }
 
 export const ProRevocationCache = {
@@ -78,5 +74,5 @@ export const ProRevocationCache = {
   getListItems,
   setListItems,
   clear,
-  isB64HashRevokedAtMs,
+  isB64HashRevoked,
 };

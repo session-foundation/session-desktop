@@ -1,3 +1,5 @@
+import { Timestamp } from '../types/timestamp/timestamp';
+
 let latestTimestampOffset = Number.MAX_SAFE_INTEGER;
 
 /**
@@ -31,9 +33,17 @@ function nowSeconds() {
   return Math.floor(NetworkTime.now() / 1000);
 }
 
+/**
+ * Returns the current timestamp as a Timestamp object.
+ */
+function nowTs() {
+  return new Timestamp({ value: NetworkTime.now(), expectedUnit: 'ms' });
+}
+
 export const NetworkTime = {
   getLatestTimestampOffset,
   now,
+  nowTs,
   nowSeconds,
   setLatestTimestampOffset,
 };

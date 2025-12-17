@@ -73,7 +73,7 @@ class UpdateProRevocationListJob extends PersistedJob<UpdateProRevocationListPer
 
       if (response.result.ticket <= ticketFromDb) {
         window.log.debug(
-          `UpdateProRevocationListJob: no new revocations from our existing ticket ${ticketFromDb}`
+          `UpdateProRevocationListJob: no new revocations from our existing ticket #${ticketFromDb}`
         );
         lastRunAtMs = Date.now();
 

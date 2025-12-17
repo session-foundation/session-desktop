@@ -846,7 +846,7 @@ function ProConfigManager({ forceUpdate }: { forceUpdate: () => void }) {
   const getProConfig = useCallback(async () => {
     const config = await UserConfigWrapperActions.getProConfig();
     if (!config) {
-      window?.log?.error('pro config not found');
+      window?.log?.debug('pro config not found');
       return null;
     }
     return config;
