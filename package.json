@@ -38,7 +38,7 @@
     "build-minify": "node minify.js",
     "build:workers": "yarn worker:utils && yarn worker:libsession && yarn worker:image_processor",
     "build-post": "yarn build:workers",
-    "build": "yarn build-pre && yarn build-ts && yarn build-compile && yarn build-minify && yarn build-post",
+    "build": "yarn build-pre && yarn build-ts && SESSION_RC_ALLOW_ERRORS=1 yarn build-compile && yarn build-minify && yarn build-post",
     "build:dev": "yarn build-pre && yarn build-ts-source-maps && cross-env SESSION_RC_ALLOW_ERRORS=1 yarn build-compile && yarn build-post",
     "protobuf": "pbjs --target static-module --wrap commonjs --out ts/protobuf/compiled.js protos/*.proto && pbts --out ts/protobuf/compiled.d.ts ts/protobuf/compiled.js --force-long",
     "sass": "rimraf --glob 'stylesheets/dist/' && webpack  --config=./sass.config.js",
