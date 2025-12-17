@@ -19,14 +19,14 @@ import {
   lookupQuote,
   pushQuotedMessageDetails,
 } from '../state/ducks/conversations';
-import { showMessageRequestBannerOutsideRedux } from '../state/ducks/userConfig';
 import { selectMemberInviteSentOutsideRedux } from '../state/selectors/groups';
-import { getHideMessageRequestBannerOutsideRedux } from '../state/selectors/userConfig';
 import { LinkPreviews } from '../util/linkPreviews';
 import { GroupV2Receiver } from './groupv2/handleGroupV2Message';
 import { Constants } from '../session';
 import { Timestamp } from '../types/timestamp/timestamp';
 import { longOrNumberToNumber } from '../types/long/longOrNumberToNumber';
+import { getHideMessageRequestBannerOutsideRedux } from '../state/selectors/settings';
+import { showMessageRequestBannerOutsideRedux } from '../state/ducks/settings';
 
 function isMessageModel(
   msg: MessageModel | MessageModelPropsWithoutConvoProps
@@ -179,7 +179,7 @@ async function toggleMsgRequestBannerIfNeeded(
     isFirstRequestMessage &&
     getHideMessageRequestBannerOutsideRedux()
   ) {
-    showMessageRequestBannerOutsideRedux();
+    await showMessageRequestBannerOutsideRedux();
   }
 
   // For edge case when messaging a client that's unable to explicitly send request approvals

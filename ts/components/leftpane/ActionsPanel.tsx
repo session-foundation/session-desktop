@@ -51,6 +51,7 @@ import { getFeatureFlagMemo } from '../../state/ducks/types/releasedFeaturesRedu
 import { useDebugKey } from '../../hooks/useDebugKey';
 import { UpdateProRevocationList } from '../../session/utils/job_runners/jobs/UpdateProRevocationListJob';
 import { getIsProAvailableMemo } from '../../hooks/useIsProAvailable';
+import { SettingsKey } from '../../data/settings-key';
 
 const StyledContainerAvatar = styled.div`
   padding: var(--margins-lg);
@@ -59,7 +60,7 @@ const StyledContainerAvatar = styled.div`
 `;
 
 function handleThemeSwitch() {
-  const currentTheme = window.Events.getThemeSetting();
+  const currentTheme = window.getSettingValue(SettingsKey.settingsTheme);
   let newTheme = getOppositeTheme(currentTheme);
   if (isDebugMode()) {
     // rotate over the 4 themes

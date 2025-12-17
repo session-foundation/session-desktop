@@ -10,6 +10,9 @@ const SettingsBoolsKeyTrackedInRedux = [
   SettingsKey.hasShiftSendEnabled,
   SettingsKey.hideRecoveryPassword,
   SettingsKey.showOnboardingAccountJustCreated,
+  SettingsKey.audioAutoplay,
+  SettingsKey.showRecoveryPhrasePrompt,
+  SettingsKey.hideMessageRequests,
 ] as const;
 
 export type SettingsState = {
@@ -25,6 +28,9 @@ export function getSettingsInitialState() {
       hasShiftSendEnabled: false,
       hideRecoveryPassword: false,
       showOnboardingAccountJustCreated: true,
+      audioAutoplay: false,
+      showRecoveryPhrasePrompt: true,
+      hideMessageRequests: false,
     },
   };
 }
@@ -56,6 +62,9 @@ const settingsSlice = createSlice({
         hasShiftSendEnabled: boolean;
         hideRecoveryPassword: boolean;
         showOnboardingAccountJustCreated: boolean;
+        audioAutoplay: boolean;
+        showRecoveryPhrasePrompt: boolean;
+        hideMessageRequests: boolean;
       }>
     ) {
       const {
@@ -65,6 +74,9 @@ const settingsSlice = createSlice({
         hasShiftSendEnabled,
         hideRecoveryPassword,
         showOnboardingAccountJustCreated,
+        audioAutoplay,
+        showRecoveryPhrasePrompt,
+        hideMessageRequests,
       } = payload;
 
       state.settingsBools['link-preview-setting'] = settingsLinkPreview;
@@ -73,6 +85,9 @@ const settingsSlice = createSlice({
       state.settingsBools.hasShiftSendEnabled = hasShiftSendEnabled;
       state.settingsBools.hideRecoveryPassword = hideRecoveryPassword;
       state.settingsBools.showOnboardingAccountJustCreated = showOnboardingAccountJustCreated;
+      state.settingsBools.audioAutoplay = audioAutoplay;
+      state.settingsBools.showRecoveryPhrasePrompt = showRecoveryPhrasePrompt;
+      state.settingsBools.hideMessageRequests = hideMessageRequests;
 
       return state;
     },
@@ -97,6 +112,10 @@ const settingsSlice = createSlice({
     },
   },
 });
+
+export async function showMessageRequestBannerOutsideRedux() {
+  await window.setSettingValue(SettingsKey.hideMessageRequests, false);
+}
 
 const { actions, reducer } = settingsSlice;
 export const { updateSettingsBoolValue, deleteSettingsBoolValue, updateAllOnStorageReady } =

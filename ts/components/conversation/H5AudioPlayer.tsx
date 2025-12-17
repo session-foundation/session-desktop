@@ -12,11 +12,11 @@ import {
   getNextMessageToPlayId,
   getSortedMessagesOfSelectedConversation,
 } from '../../state/selectors/conversations';
-import { getAudioAutoplay } from '../../state/selectors/userConfig';
 import { SessionButton, SessionButtonType } from '../basic/SessionButton';
 import { useIsMessageSelectionMode } from '../../state/selectors/selectedConversation';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
+import { getAudioAutoplay } from '../../state/selectors/settings';
 
 const StyledSpeedButton = styled.div`
   padding: var(--margins-xs);

@@ -17,11 +17,10 @@ import {
 import { SettingsKey } from '../../../../data/settings-key';
 import { SettingsToggleBasic } from '../components/SettingsToggleBasic';
 import { ToastUtils } from '../../../../session/utils';
-import { toggleAudioAutoplay } from '../../../../state/ducks/userConfig';
 
-import { getAudioAutoplay } from '../../../../state/selectors/userConfig';
 import { SettingsChevronBasic } from '../components/SettingsChevronBasic';
 import { UserSettingsModalContainer } from '../components/UserSettingsModalContainer';
+import { getAudioAutoplay } from '../../../../state/selectors/settings';
 
 async function toggleCommunitiesPruning() {
   try {
@@ -96,7 +95,7 @@ export function ConversationSettingsPage(modalState: UserSettingsModalState) {
           baseDataTestId="audio-message-autoplay"
           active={audioAutoPlay}
           onClick={async () => {
-            dispatch(toggleAudioAutoplay());
+            await window.setSettingValue(SettingsKey.audioAutoplay, !audioAutoPlay);
             forceUpdate();
           }}
           text={{ token: 'conversationsAutoplayAudioMessage' }}
