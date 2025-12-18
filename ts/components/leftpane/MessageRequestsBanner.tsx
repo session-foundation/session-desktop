@@ -118,5 +118,11 @@ export const MessageRequestsBanner = (props: { handleOnClick: () => any }) => {
 };
 
 const Portal = ({ children }: { children: ReactNode }) => {
-  return createPortal(children, document.querySelector('.inbox.index') as Element);
+  const container = document.querySelector('.inbox.index');
+
+  if (!container) {
+    return null;
+  }
+
+  return createPortal(children, container);
 };
