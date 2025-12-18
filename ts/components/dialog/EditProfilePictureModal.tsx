@@ -312,66 +312,62 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
       $flexGap="var(--margins-sm)"
     >
       {isMe && proBadgeCb.cb ? (
-<<<<<<< HEAD
-        <StyledCTADescription $reverseDirection={userHasPro} onClick={proBadgeCb.cb}>
-=======
-        <StyledCTADescription reverseDirection={weHavePro} onClick={proBadgeCb.cb}>
->>>>>>> origin/dev
-            {tr(
-              weHavePro
-                ? 'proAnimatedDisplayPictureModalDescription'
-                : 'proAnimatedDisplayPicturesNonProModalDescription'
-            )}
-            <ProIconButton
-              iconSize={'medium'}
-              dataTestId="pro-badge-edit-profile-picture"
-              disabled={loading}
-              onClick={proBadgeCb.cb}
-            />
-          </StyledCTADescription>
-      ) : null}
-          <div role="button" data-testid={'image-upload-click'}>
-            <SpacerLG />
-            <StyledAvatarContainer>
-              {newAvatarObjectUrl || avatarPath ? (
-                <ProfileAvatar
-                  newAvatarObjectUrl={newAvatarObjectUrl}
-                  avatarPath={avatarPath}
-                  conversationId={conversationId}
-                  onPlusAvatarClick={handleClick}
-                  onAvatarClick={handleClick}
-                  avatarSize={AvatarSize.XL}
-                  dataTestId={'avatar-edit-profile-picture-dialog'}
-                />
-              ) : (
-                <UploadFirstImageButton onClick={handleClick} />
-              )}
-            </StyledAvatarContainer>
-          </div>
-          {ourAvatarUploadFailed && isMe ? (
-            <Flex
-              $container={true}
-              $justifyContent="center"
-              $alignItems="center"
-              $flexGap="var(--margins-xs)"
-              style={{
-                marginTop: 'var(--margins-lg)',
-                color: 'var(--danger-color)',
-              }}
-            >
-              <LucideIcon unicode={LUCIDE_ICONS_UNICODE.TRIANGLE_ALERT} iconSize="small" />
-              <Localizer token="profileErrorUpdate" />
-            </Flex>
-          ) : null}
-          {loading ? (
-            <>
-              <SpacerSM />
-              {isMe && !isProcessing ? <Localizer token="updating" /> : null}
-              <SessionSpinner $loading={loading} $height="30px" />
-            </>
-          ) : (
-            <SpacerLG />
+        <StyledCTADescription $reverseDirection={weHavePro} onClick={proBadgeCb.cb}>
+          {tr(
+            weHavePro
+              ? 'proAnimatedDisplayPictureModalDescription'
+              : 'proAnimatedDisplayPicturesNonProModalDescription'
           )}
-        </SessionWrapperModal>
-      );
+          <ProIconButton
+            iconSize={'medium'}
+            dataTestId="pro-badge-edit-profile-picture"
+            disabled={loading}
+            onClick={proBadgeCb.cb}
+          />
+        </StyledCTADescription>
+      ) : null}
+      <div role="button" data-testid={'image-upload-click'}>
+        <SpacerLG />
+        <StyledAvatarContainer>
+          {newAvatarObjectUrl || avatarPath ? (
+            <ProfileAvatar
+              newAvatarObjectUrl={newAvatarObjectUrl}
+              avatarPath={avatarPath}
+              conversationId={conversationId}
+              onPlusAvatarClick={handleClick}
+              onAvatarClick={handleClick}
+              avatarSize={AvatarSize.XL}
+              dataTestId={'avatar-edit-profile-picture-dialog'}
+            />
+          ) : (
+            <UploadFirstImageButton onClick={handleClick} />
+          )}
+        </StyledAvatarContainer>
+      </div>
+      {ourAvatarUploadFailed && isMe ? (
+        <Flex
+          $container={true}
+          $justifyContent="center"
+          $alignItems="center"
+          $flexGap="var(--margins-xs)"
+          style={{
+            marginTop: 'var(--margins-lg)',
+            color: 'var(--danger-color)',
+          }}
+        >
+          <LucideIcon unicode={LUCIDE_ICONS_UNICODE.TRIANGLE_ALERT} iconSize="small" />
+          <Localizer token="profileErrorUpdate" />
+        </Flex>
+      ) : null}
+      {loading ? (
+        <>
+          <SpacerSM />
+          {isMe && !isProcessing ? <Localizer token="updating" /> : null}
+          <SessionSpinner $loading={loading} $height="30px" />
+        </>
+      ) : (
+        <SpacerLG />
+      )}
+    </SessionWrapperModal>
+  );
 };

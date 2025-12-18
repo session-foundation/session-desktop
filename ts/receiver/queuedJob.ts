@@ -113,7 +113,8 @@ function handleLinkPreviews(messageBody: string, messagePreview: any, message: M
     }));
   if (preview.length < incomingPreview.length) {
     window?.log?.info(
-      `${message.idForLogging()}: Eliminated ${preview.length - incomingPreview.length
+      `${message.idForLogging()}: Eliminated ${
+        preview.length - incomingPreview.length
       } previews with invalid urls'`
     );
   }
@@ -283,9 +284,9 @@ async function handleRegularMessage(
     conversation.setLastMessageInteraction(
       interactionNotification
         ? {
-          type: interactionNotification.interactionType,
-          status: interactionNotification.interactionStatus,
-        }
+            type: interactionNotification.interactionType,
+            status: interactionNotification.interactionStatus,
+          }
         : null
     );
 
@@ -350,7 +351,8 @@ export async function handleMessageJob(
   decodedEnvelope: SwarmDecodedEnvelope
 ) {
   window?.log?.info(
-    `Starting handleMessageJob for message ${messageModel.idForLogging()}, ${messageModel.get('serverTimestamp') || messageModel.get('timestamp')
+    `Starting handleMessageJob for message ${messageModel.idForLogging()}, ${
+      messageModel.get('serverTimestamp') || messageModel.get('timestamp')
     } in conversation ${conversation.idForLogging()}, messageHash: ${decodedEnvelope.messageHash}`
   );
 

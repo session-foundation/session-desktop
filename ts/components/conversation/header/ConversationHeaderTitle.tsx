@@ -173,12 +173,12 @@ function useConversationHeaderTitleInternal() {
   const isBlocked = useSelectedIsBlocked();
   const expirationMode = useSelectedConversationDisappearingMode();
 
-  const userHasPro = useUserHasPro(convoId);
-  const showConvoSettingsCb = useShowConversationSettingsFor(convoId);
+  const showProBadgeForUser = useShowProBadgeFor(convoId);
   const showPro = useProBadgeOnClickCb({
     context: 'conversation-header-title',
-    args: { userHasPro, isMe },
+    args: { userHasPro: showProBadgeForUser, isMe },
   });
+  const showConvoSettingsCb = useShowConversationSettingsFor(convoId);
 
   return {
     convoId,
@@ -213,7 +213,6 @@ function useSubtitleIndex(convoId?: string) {
 export const ConversationHeaderTitle = ({ showSubtitle }: { showSubtitle: boolean }) => {
   const dispatch = getAppDispatch();
 
-<<<<<<< HEAD
   const {
     convoId,
     convoName,
@@ -229,14 +228,6 @@ export const ConversationHeaderTitle = ({ showSubtitle }: { showSubtitle: boolea
   const { subtitleIndex, setSubtitleIndex } = useSubtitleIndex(convoId);
 
   const subtitles = useSubtitleArrayInternal(convoId);
-=======
-  const showProBadgeForUser = useShowProBadgeFor(convoId);
-
-  const showPro = useProBadgeOnClickCb({
-    context: 'conversation-header-title',
-    args: { userHasPro: showProBadgeForUser, isMe },
-  });
->>>>>>> origin/dev
 
   const onHeaderClick = () => {
     if (isLegacyGroup || !convoId) {

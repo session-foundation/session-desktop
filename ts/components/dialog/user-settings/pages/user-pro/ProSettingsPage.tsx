@@ -223,22 +223,22 @@ function ProNonProContinueButton({ state }: SectionProps) {
     dispatch(
       isError
         ? updateLocalizedPopupDialog({
-          title: { token: 'proStatusError' },
-          description: { token: 'proStatusNetworkErrorContinue' },
-          overrideButtons: backendErrorButtons,
-        })
+            title: { token: 'proStatusError' },
+            description: { token: 'proStatusNetworkErrorContinue' },
+            overrideButtons: backendErrorButtons,
+          })
         : isLoading
           ? updateLocalizedPopupDialog({
-            title: { token: 'checkingProStatus' },
-            description: { token: 'checkingProStatusContinue' },
-          })
+              title: { token: 'checkingProStatus' },
+              description: { token: 'checkingProStatusContinue' },
+            })
           : userSettingsModal({
-            userSettingsPage: 'proNonOriginating',
-            nonOriginatingVariant: neverHadPro ? 'upgrade' : 'renew',
-            overrideBackAction: returnToThisModalAction,
-            afterCloseAction,
-            centerAlign,
-          })
+              userSettingsPage: 'proNonOriginating',
+              nonOriginatingVariant: neverHadPro ? 'upgrade' : 'renew',
+              overrideBackAction: returnToThisModalAction,
+              afterCloseAction,
+              centerAlign,
+            })
     );
   }, [
     dispatch,
@@ -346,8 +346,8 @@ function ProStats() {
         style={
           !isDarkTheme
             ? {
-              boxShadow: proBoxShadow,
-            }
+                boxShadow: proBoxShadow,
+              }
             : undefined
         }
       >
@@ -449,21 +449,21 @@ function ProSettings({ state }: SectionProps) {
     dispatch(
       isError
         ? updateLocalizedPopupDialog({
-          title: { token: 'proAccessError' },
-          description: { token: 'proAccessNetworkLoadError' },
-          overrideButtons: backendErrorButtons,
-        })
+            title: { token: 'proAccessError' },
+            description: { token: 'proAccessNetworkLoadError' },
+            overrideButtons: backendErrorButtons,
+          })
         : isLoading
           ? updateLocalizedPopupDialog({
-            title: { token: 'proAccessLoading' },
-            description: { token: 'proAccessLoadingDescription' },
-          })
+              title: { token: 'proAccessLoading' },
+              description: { token: 'proAccessLoadingDescription' },
+            })
           : userSettingsModal({
-            userSettingsPage: 'proNonOriginating',
-            nonOriginatingVariant: 'update',
-            overrideBackAction: returnToThisModalAction,
-            centerAlign,
-          })
+              userSettingsPage: 'proNonOriginating',
+              nonOriginatingVariant: 'update',
+              overrideBackAction: returnToThisModalAction,
+              centerAlign,
+            })
     );
   }, [dispatch, isLoading, isError, backendErrorButtons, centerAlign, returnToThisModalAction]);
 
@@ -620,11 +620,11 @@ function getProFeatures(userHasPro: boolean): Array<
   {
     dataTestId: SessionDataTestId;
     id:
-    | 'proLongerMessages'
-    | 'proUnlimitedPins'
-    | 'proAnimatedDisplayPictures'
-    | 'proBadges'
-    | 'plusLoadsMore';
+      | 'proLongerMessages'
+      | 'proUnlimitedPins'
+      | 'proAnimatedDisplayPictures'
+      | 'proBadges'
+      | 'plusLoadsMore';
     title: TrArgs;
     description: TrArgs;
   } & WithLucideUnicode
@@ -696,11 +696,11 @@ function ProFeatures({ state }: SectionProps) {
               onClick={
                 m.id === 'plusLoadsMore'
                   ? async () => {
-                    showLinkVisitWarningDialog(
-                      LIBSESSION_CONSTANTS.LIBSESSION_PRO_URLS.roadmap,
-                      dispatch
-                    );
-                  }
+                      showLinkVisitWarningDialog(
+                        LIBSESSION_CONSTANTS.LIBSESSION_PRO_URLS.roadmap,
+                        dispatch
+                      );
+                    }
                   : undefined
               }
               iconElement={
@@ -804,21 +804,21 @@ function ManageProAccess({ state }: SectionProps) {
     dispatch(
       isError
         ? updateLocalizedPopupDialog({
-          title: { token: 'proStatusError' },
-          description: { token: 'proStatusRenewError' },
-          overrideButtons: backendErrorButtons,
-        })
+            title: { token: 'proStatusError' },
+            description: { token: 'proStatusRenewError' },
+            overrideButtons: backendErrorButtons,
+          })
         : isLoading
           ? updateLocalizedPopupDialog({
-            title: { token: 'proStatusLoading' },
-            description: { token: 'checkingProStatusRenew' },
-          })
+              title: { token: 'proStatusLoading' },
+              description: { token: 'checkingProStatusRenew' },
+            })
           : userSettingsModal({
-            userSettingsPage: 'proNonOriginating',
-            nonOriginatingVariant: 'renew',
-            overrideBackAction: returnToThisModalAction,
-            centerAlign,
-          })
+              userSettingsPage: 'proNonOriginating',
+              nonOriginatingVariant: 'renew',
+              overrideBackAction: returnToThisModalAction,
+              centerAlign,
+            })
     );
   }, [dispatch, isLoading, isError, backendErrorButtons, centerAlign, returnToThisModalAction]);
 
@@ -835,8 +835,8 @@ function ManageProAccess({ state }: SectionProps) {
         style={
           !isDarkTheme
             ? {
-              boxShadow: proBoxShadow,
-            }
+                boxShadow: proBoxShadow,
+              }
             : undefined
         }
       >
@@ -856,11 +856,11 @@ function ManageProAccess({ state }: SectionProps) {
             rowReverse
             {...(isError || isLoading
               ? {
-                subText: isError
-                  ? { token: 'errorCheckingProStatus' }
-                  : { token: 'checkingProStatusEllipsis' },
-                subTextColorOverride: isError ? 'var(--warning-color)' : undefined,
-              }
+                  subText: isError
+                    ? { token: 'errorCheckingProStatus' }
+                    : { token: 'checkingProStatusEllipsis' },
+                  subTextColorOverride: isError ? 'var(--warning-color)' : undefined,
+                }
               : {})}
           />
         ) : null}
@@ -957,18 +957,18 @@ function PageHero({ state }: SectionProps) {
         updateLocalizedPopupDialog(
           isPro
             ? {
-              title: { token: 'proStatusLoading' },
-              description: { token: 'proStatusLoadingDescription' },
-            }
+                title: { token: 'proStatusLoading' },
+                description: { token: 'proStatusLoadingDescription' },
+              }
             : {
-              title: { token: 'checkingProStatus' },
-              description: {
-                token:
-                  proExpired && !state.fromCTA
-                    ? 'checkingProStatusDescription'
-                    : 'checkingProStatusContinue',
-              },
-            }
+                title: { token: 'checkingProStatus' },
+                description: {
+                  token:
+                    proExpired && !state.fromCTA
+                      ? 'checkingProStatusDescription'
+                      : 'checkingProStatusContinue',
+                },
+              }
         )
       );
     }
