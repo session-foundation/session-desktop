@@ -11,7 +11,6 @@ import { MessageDirection } from '../models/messageType';
 import { ConversationTypeEnum } from '../models/types';
 import { SignalService } from '../protobuf';
 import { DisappearingMessages } from '../session/disappearing_messages';
-import { ProfileManager } from '../session/profile_manager/ProfileManager';
 import { PubKey } from '../session/types';
 import { UserUtils } from '../session/utils';
 import {
@@ -25,8 +24,8 @@ import { getHideMessageRequestBannerOutsideRedux } from '../state/selectors/user
 import { LinkPreviews } from '../util/linkPreviews';
 import { GroupV2Receiver } from './groupv2/handleGroupV2Message';
 import { Constants } from '../session';
-import { Timestamp } from '../types/timestamp/timestamp';
 import { longOrNumberToNumber } from '../types/long/longOrNumberToNumber';
+import { getFeatureFlag } from '../state/ducks/types/releasedFeaturesReduxTypes';
 
 function isMessageModel(
   msg: MessageModel | MessageModelPropsWithoutConvoProps
@@ -237,12 +236,11 @@ async function handleRegularMessage(
 
   handleLinkPreviews(rawDataMessage.body, rawDataMessage.preview, message);
 
-  // TODO: Once pro proof validation is available make this dynamic
-  // const maxChars = isSenderPro
-  //   ? Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_PRO
-  //   : Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_STANDARD;
   // NOTE: The truncation value must be the Pro count so when Pro is released older clients wont truncate pro messages.
-  const maxChars = Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_PRO;
+  const maxChars =
+    !getFeatureFlag('proAvailable') || sendingDeviceConversation.hasValidCurrentProProof()
+      ? Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_PRO
+      : Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_STANDARD;
 
   const body =
     rawDataMessage.body.length > maxChars
@@ -263,7 +261,7 @@ async function handleRegularMessage(
 
   const serverTimestamp = message.get('serverTimestamp');
   if (
-    conversation.isPublic() &&
+    conversation.isOpenGroupV2() &&
     PubKey.isBlinded(sendingDeviceConversation.id) &&
     isNumber(serverTimestamp)
   ) {
@@ -436,7 +434,7 @@ export async function handleMessageJob(
       );
     }
 
-    await processProDetails({ sendingDeviceConversation, messageModel, decodedEnvelope });
+    await processProDetailsForMsg({ sendingDeviceConversation, messageModel, decodedEnvelope });
 
     // save the message model to the db and then save the messageId generated to our in-memory copy
     const id = await messageModel.commit();
@@ -458,20 +456,6 @@ export async function handleMessageJob(
     }
 
     void queueAttachmentDownloads(messageModel, conversation);
-    // Check if we need to update any profile names
-    // the only profile we don't update with what is coming here is ours,
-    // as our profile is shared across our devices with libsession
-    if (messageModel.isIncoming() && regularDataMessage.profile) {
-      await ProfileManager.updateProfileOfContact({
-        pubkey: sendingDeviceConversation.id,
-        displayName: regularDataMessage.profile.displayName,
-        profileUrl: regularDataMessage.profile.profilePicture,
-        profileKey: regularDataMessage.profileKey,
-        profileUpdatedAtSeconds: new Timestamp({
-          value: regularDataMessage.profile.lastProfileUpdateSeconds ?? 0,
-        }).seconds(),
-      });
-    }
 
     await markConvoAsReadIfOutgoingMessage(conversation, messageModel);
     if (messageModel.get('unread')) {
@@ -483,7 +467,7 @@ export async function handleMessageJob(
   }
 }
 
-async function processProDetails({
+async function processProDetailsForMsg({
   decodedEnvelope,
   messageModel,
 }: {
@@ -491,15 +475,23 @@ async function processProDetails({
   messageModel: MessageModel;
   decodedEnvelope: SwarmDecodedEnvelope;
 }) {
-  // if there are no pro proof, or the pro proof is not valid at the time the message was sent, do nothing
-  if (!decodedEnvelope.validPro || !decodedEnvelope.isProProofValidAtMs(decodedEnvelope.sentAtMs)) {
+  // - if there are no pro proof, or
+  // - the pro proof is not valid (validOrExpired) at the time the message was sent, or
+  // - the pro proof is expired at the time the message was sent, or
+  // - the pro proof is revoked at the time
+  // do not save the pro features associated with that message
+  if (
+    !decodedEnvelope.validPro ||
+    !decodedEnvelope.isProProofValidOrExpired() ||
+    decodedEnvelope.isProProofExpiredAtMs(decodedEnvelope.sentAtMs) ||
+    decodedEnvelope.isProProofRevoked()
+  ) {
     return;
   }
+
   // otherwise, we have a valid pro proof, save the bitset of pro features used in the message
   if (decodedEnvelope.validPro.proMessageBitset || decodedEnvelope.validPro.proProfileBitset) {
     // Note: msgModel.commit() is always called when receiving a message.
     messageModel.setProFeaturesUsed(decodedEnvelope.validPro);
   }
-
-  // FIXME process pro changes at the contact level too.
 }

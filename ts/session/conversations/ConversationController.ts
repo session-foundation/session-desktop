@@ -430,7 +430,7 @@ class ConvoController {
 
   public async deleteCommunity(convoId: string) {
     const conversation = await this.deleteConvoInitialChecks(convoId, 'Community', false);
-    if (!conversation || !conversation.isPublic()) {
+    if (!conversation || !conversation.isOpenGroupV2()) {
       return;
     }
 

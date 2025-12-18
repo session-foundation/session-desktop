@@ -9,13 +9,15 @@ import {
   type UpdateProRevocationListPersistedData,
 } from '../PersistedJob';
 import ProBackendAPI from '../../../apis/pro_backend_api/ProBackendAPI';
-import { getItemById } from '../../../../data/data';
-import { SettingsKey } from '../../../../data/settings-key';
 import { DURATION } from '../../../constants';
-import { Storage } from '../../../../util/storage';
 import { getFeatureFlag } from '../../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { formatRoundedUpDuration } from '../../../../util/i18n/formatting/generics';
 import { isDevProd } from '../../../../shared/env_vars';
+import { ProRevocationCache } from '../../../revocation_list/pro_revocation_list';
+import { stringify } from '../../../../types/sqlSharedTypes';
+import { proBackendDataActions } from '../../../../state/ducks/proBackendData';
+import { getCachedUserConfig } from '../../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
+import { ConvoHub } from '../../../conversations';
 
 let lastRunAtMs = 0;
 
@@ -52,12 +54,10 @@ class UpdateProRevocationListJob extends PersistedJob<UpdateProRevocationListPer
     try {
       window.log.debug(`UpdateProRevocationListJob run() started`);
 
-      const ticketFromDb = await getItemById(SettingsKey.proRevocationListTicket);
-
-      const lastFetchTicket = ticketFromDb?.value || 0;
+      const ticketFromDb = ProRevocationCache.getTicket();
 
       const response = await ProBackendAPI.getRevocationList({
-        ticket: lastFetchTicket,
+        ticket: ticketFromDb,
       });
 
       if (getFeatureFlag('debugServerRequests')) {
@@ -72,9 +72,9 @@ class UpdateProRevocationListJob extends PersistedJob<UpdateProRevocationListPer
         return RunJobResult.RetryJobIfPossible;
       }
 
-      if (response.result.ticket <= lastFetchTicket) {
+      if (response.result.ticket <= ticketFromDb) {
         window.log.debug(
-          `UpdateProRevocationListJob: no new revocations from our existing ticket ${lastFetchTicket}`
+          `UpdateProRevocationListJob: no new revocations from our existing ticket #${ticketFromDb}`
         );
         lastRunAtMs = Date.now();
 
@@ -84,16 +84,49 @@ class UpdateProRevocationListJob extends PersistedJob<UpdateProRevocationListPer
       const newItems = response.result.items;
 
       window.log.debug(
-        `UpdateProRevocationListJob: new revocations from ticket #${lastFetchTicket}: to #${newTicket}. items: ${response.result.items}`
+        `UpdateProRevocationListJob: new revocations from ticket #${ticketFromDb}: to #${newTicket}. items: ${stringify(response.result.items)}`
       );
 
       // Note: we only want to update the lastRunAt once we have successfully fetched the new revocations
       lastRunAtMs = Date.now();
-      await Storage.put(SettingsKey.proRevocationListTicket, newTicket);
-      await Storage.put(SettingsKey.proRevocationListItems, JSON.stringify(newItems));
+      await ProRevocationCache.setTicket(newTicket);
+      await ProRevocationCache.setListItems(newItems);
+
       window.log.info(
-        `UpdateProRevocationListJob: new revocations from ticket #${lastFetchTicket}: to #${newTicket}. itemsCount: ${response.result.items.length}`
+        `UpdateProRevocationListJob: new revocations from ticket #${ticketFromDb}: to #${newTicket}. itemsCount: ${response.result.items.length}`
       );
+
+      const proConfig = getCachedUserConfig().proConfig;
+      if (
+        proConfig &&
+        proConfig.proProof.genIndexHashB64 &&
+        newItems.some(m => m.gen_index_hash_b64 === proConfig.proProof.genIndexHashB64)
+      ) {
+        // if we've been revoked, refresh our pro proof.
+        // this will fetch the new one if one is provided or just remove it from our config.
+        window.log.info(
+          `UpdateProRevocationListJob: our current genIndexHash is revoked. Refreshing our pro proof.`
+        );
+        window.inboxStore?.dispatch(
+          proBackendDataActions.refreshGetProDetailsFromProBackend({}) as any
+        );
+      }
+      // find all the conversations that have a revoked genIndexHAsh and trigger a UI refresh on them
+      const convos = ConvoHub.use().getConversations();
+      convos.forEach(m => {
+        if (!m.dbContactProDetails()?.proGenIndexHashB64) {
+          return;
+        }
+        const revoked = newItems.some(
+          item => item.gen_index_hash_b64 === m.dbContactProDetails()?.proGenIndexHashB64
+        );
+        if (revoked) {
+          window.log.debug(
+            `UpdateProRevocationListJob: found a revoked genIndexHash for convo ${m.idForLogging()}. Triggering UI refresh.`
+          );
+          m.triggerUIRefresh();
+        }
+      });
 
       return RunJobResult.Success;
     } catch (e) {
@@ -138,7 +171,17 @@ async function queueNewJobIfNeeded() {
   );
 }
 
+async function runOnStartup() {
+  try {
+    const job = new UpdateProRevocationListJob({ nextAttemptTimestamp: Date.now() });
+    await job.run();
+  } catch (e) {
+    window.log.warn('UpdateProRevocationListJob runOnStartup failed with', e.message);
+  }
+}
+
 export const UpdateProRevocationList = {
   UpdateProRevocationListJob,
   queueNewJobIfNeeded,
+  runOnStartup,
 };

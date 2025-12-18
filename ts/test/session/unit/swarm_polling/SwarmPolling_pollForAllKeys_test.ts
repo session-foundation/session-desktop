@@ -11,7 +11,6 @@ import {
 import { ConversationModel, Convo } from '../../../../models/conversation';
 import { ConversationTypeEnum } from '../../../../models/types';
 import { getSwarmPollingInstance } from '../../../../session/apis/snode_api';
-import { resetHardForkCachedValues } from '../../../../session/apis/snode_api/hfHandling';
 import { SnodeAPIRetrieve } from '../../../../session/apis/snode_api/retrieveRequest';
 import { SnodePool } from '../../../../session/apis/snode_api/snodePool';
 import { SwarmPolling } from '../../../../session/apis/snode_api/swarmPolling';
@@ -94,7 +93,6 @@ describe('SwarmPolling:pollForAllKeys', () => {
     Sinon.restore();
     ConvoHub.use().reset();
     clock.restore();
-    resetHardForkCachedValues();
   });
 
   it('does run for our pubkey even if activeAt is really old ', async () => {
@@ -280,7 +278,6 @@ describe('SwarmPolling:pollForAllKeys', () => {
         Sinon.restore();
         ConvoHub.use().reset();
         clock.restore();
-        resetHardForkCachedValues();
       });
 
       it('does run twice if activeAt is less than 2 days', async () => {

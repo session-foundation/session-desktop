@@ -1,4 +1,3 @@
-import { v4 as uuidv4 } from 'uuid';
 import { GenericReadableMessage } from './GenericReadableMessage';
 
 type Props = {
@@ -6,8 +5,7 @@ type Props = {
 };
 
 export const Message = (props: Props) => {
-  // FIXME this should probably just be something static per message.
-  const ctxMenuID = `ctx-menu-message-${uuidv4()}`;
+  const ctxMenuID = `ctx-menu-message-${props.messageId}`;
 
   return <GenericReadableMessage ctxMenuID={ctxMenuID} messageId={props.messageId} />;
 };

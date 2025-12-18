@@ -58,7 +58,7 @@ describe('PendingMessageCache', () => {
   it('can add to cache', async () => {
     const device = TestUtils.generateFakePubKey();
     const message = TestUtils.generateVisibleMessage();
-    const rawMessage = await MessageUtils.toRawMessage(device, message, SnodeNamespaces.Default);
+    const rawMessage = MessageUtils.toRawMessage(device, message, SnodeNamespaces.Default);
 
     await pendingMessageCacheStub.add(device, message, SnodeNamespaces.Default);
 
@@ -102,7 +102,7 @@ describe('PendingMessageCache', () => {
   it('can remove from cache', async () => {
     const device = TestUtils.generateFakePubKey();
     const message = TestUtils.generateVisibleMessage();
-    const rawMessage = await MessageUtils.toRawMessage(device, message, SnodeNamespaces.Default);
+    const rawMessage = MessageUtils.toRawMessage(device, message, SnodeNamespaces.Default);
 
     await pendingMessageCacheStub.add(device, message, SnodeNamespaces.Default);
 
@@ -121,7 +121,7 @@ describe('PendingMessageCache', () => {
   it('should only remove messages with different identifier and device', async () => {
     const device = TestUtils.generateFakePubKey();
     const message = TestUtils.generateVisibleMessage();
-    const rawMessage = await MessageUtils.toRawMessage(device, message, SnodeNamespaces.Default);
+    const rawMessage = MessageUtils.toRawMessage(device, message, SnodeNamespaces.Default);
 
     await pendingMessageCacheStub.add(device, message, SnodeNamespaces.Default);
     await TestUtils.timeout(5);
@@ -211,7 +211,7 @@ describe('PendingMessageCache', () => {
   it('can find nothing when empty', async () => {
     const device = TestUtils.generateFakePubKey();
     const message = TestUtils.generateVisibleMessage();
-    const rawMessage = await MessageUtils.toRawMessage(device, message, SnodeNamespaces.Default);
+    const rawMessage = MessageUtils.toRawMessage(device, message, SnodeNamespaces.Default);
 
     const foundMessage = pendingMessageCacheStub.find(rawMessage);
     expect(foundMessage, 'a message was found in empty cache').to.be.undefined;
@@ -220,7 +220,7 @@ describe('PendingMessageCache', () => {
   it('can find message in cache', async () => {
     const device = TestUtils.generateFakePubKey();
     const message = TestUtils.generateVisibleMessage();
-    const rawMessage = await MessageUtils.toRawMessage(device, message, SnodeNamespaces.Default);
+    const rawMessage = MessageUtils.toRawMessage(device, message, SnodeNamespaces.Default);
 
     await pendingMessageCacheStub.add(device, message, SnodeNamespaces.Default);
 

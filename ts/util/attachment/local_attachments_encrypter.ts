@@ -3,11 +3,18 @@ import { fromHexToArray } from '../../session/utils/String';
 import { callUtilsWorker } from '../../webworker/workers/browser/util_worker_interface';
 import { Data } from '../../data/data';
 import { SettingsKey } from '../../data/settings-key';
+import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 
-export const encryptAttachmentBufferRenderer = async (bufferIn: ArrayBuffer) => {
+export const encryptAttachmentBufferRenderer = async (
+  bufferIn: ArrayBuffer
+): Promise<{ encryptedBufferWithHeader: Uint8Array } | null> => {
   if (!isArrayBuffer(bufferIn)) {
     throw new TypeError("'bufferIn' must be an array buffer");
   }
+  if (getFeatureFlag('disableLocalAttachmentEncryption')) {
+    return { encryptedBufferWithHeader: new Uint8Array(bufferIn) };
+  }
+
   const key = (await Data.getItemById(SettingsKey.localAttachmentEncryptionKey))?.value as
     | string
     | undefined;
@@ -25,6 +32,10 @@ export const decryptAttachmentBufferRenderer = async (
 ): Promise<Uint8Array> => {
   if (!isArrayBuffer(bufferIn)) {
     throw new TypeError("'bufferIn' must be an array buffer");
+  }
+
+  if (getFeatureFlag('disableLocalAttachmentEncryption')) {
+    return new Uint8Array(bufferIn);
   }
   const key = (await Data.getItemById(SettingsKey.localAttachmentEncryptionKey))?.value as string;
   if (!key) {

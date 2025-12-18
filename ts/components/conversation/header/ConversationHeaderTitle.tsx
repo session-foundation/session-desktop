@@ -22,7 +22,7 @@ import { ConversationHeaderSubtitle, type SubTitleArray } from './ConversationHe
 import { useLocalisedNotificationOf } from '../../menuAndSettingsHooks/useLocalisedNotificationFor';
 import { useShowConversationSettingsFor } from '../../menuAndSettingsHooks/useShowConversationSettingsFor';
 import { tr } from '../../../localization/localeTools';
-import { useUserHasPro } from '../../../hooks/useHasPro';
+import { useShowProBadgeFor } from '../../../hooks/useHasPro';
 import { useProBadgeOnClickCb } from '../../menuAndSettingsHooks/useProBadgeOnClickCb';
 import { ProIconButton } from '../../buttons/ProButton';
 
@@ -185,11 +185,11 @@ export const ConversationHeaderTitle = ({ showSubtitle }: { showSubtitle: boolea
   const subtitles = useSubtitleArray(convoId);
   const isBlocked = useSelectedIsBlocked();
 
-  const userHasPro = useUserHasPro(convoId);
+  const showProBadgeForUser = useShowProBadgeFor(convoId);
 
   const showPro = useProBadgeOnClickCb({
     context: 'conversation-header-title',
-    args: { userHasPro, isMe },
+    args: { userHasPro: showProBadgeForUser, isMe },
   });
 
   const onHeaderClick = () => {

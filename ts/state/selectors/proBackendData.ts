@@ -10,11 +10,11 @@ import { SettingsKey } from '../../data/settings-key';
 import { Storage } from '../../util/storage';
 import { ProDetailsResultSchema } from '../../session/apis/pro_backend_api/schemas';
 
-export const getProBackendData = (state: StateType): ProBackendDataState => {
+const getProBackendData = (state: StateType): ProBackendDataState => {
   return state.proBackendData;
 };
 
-export function getProDetailsFromStorage() {
+function getProDetailsFromStorage() {
   const response = Storage.get(SettingsKey.proDetails);
   if (!response) {
     return null;
@@ -31,7 +31,7 @@ export function getProDetailsFromStorage() {
   return null;
 }
 
-export const getProBackendProDetails = (state: StateType): ProBackendDataState['details'] => {
+const getProBackendProDetails = (state: StateType): ProBackendDataState['details'] => {
   const details = getProBackendData(state).details;
 
   if (!details.data) {

@@ -25,7 +25,7 @@ function isUserGroupToStoreInWrapper(convo: ConversationModel): boolean {
 }
 
 function isCommunityToStoreInWrapper(convo: ConversationModel): boolean {
-  return convo.isGroup() && convo.isPublic() && convo.isActive();
+  return convo.isGroup() && convo.isOpenGroupV2() && convo.isActive();
 }
 
 function isLegacyGroupToStoreInWrapper(convo: ConversationModel): boolean {
@@ -60,7 +60,7 @@ function isGroupToStoreInWrapper(convo: ConversationModel): boolean {
 function isLegacyGroupToRemoveFromDBIfNotInWrapper(convo: ConversationModel): boolean {
   // this filter is based on `isLegacyGroupToStoreInWrapper`
   return (
-    convo.isGroup() && !convo.isPublic() && convo.id.startsWith('05') // new closed groups won't start with 05
+    convo.isGroup() && !convo.isOpenGroupV2() && convo.id.startsWith('05') // new closed groups won't start with 05
   );
 }
 

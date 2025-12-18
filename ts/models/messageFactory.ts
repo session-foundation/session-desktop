@@ -115,8 +115,8 @@ export function markAttributesAsReadIfNeeded(messageAttributes: MessageAttribute
     const sentAt = messageAttributes.serverTimestamp || messageAttributes.sent_at;
     if (
       sentAt &&
-      latestUnreadForThisConvo?.lastRead &&
-      sentAt <= latestUnreadForThisConvo.lastRead
+      latestUnreadForThisConvo?.lastReadTsMs &&
+      sentAt <= latestUnreadForThisConvo.lastReadTsMs
     ) {
       // The message was sent before our last read timestamp for that conversation.
       // eslint-disable-next-line no-param-reassign

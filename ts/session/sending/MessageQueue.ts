@@ -250,7 +250,7 @@ export class MessageQueueCl {
     namespace: SnodeNamespaces;
     isSyncMessage: boolean;
   }): Promise<number | null> {
-    const rawMessage = await MessageUtils.toRawMessage(pubkey, message, namespace);
+    const rawMessage = MessageUtils.toRawMessage(pubkey, message, namespace);
     return this.sendSingleMessageAndHandleResult({ rawMessage, isSyncMessage });
   }
 

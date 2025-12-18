@@ -162,7 +162,6 @@ async function updateExpiryOnNodesNoRetries(
       );
     }
 
-    // TODOLATER make sure that this code still works once disappearing messages is merged
     // do a basic check to know if we have something kind of looking right (status 200 should always be there for a retrieve)
     const firstResult = result[0];
 

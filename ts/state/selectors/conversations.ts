@@ -57,18 +57,19 @@ export const getGroupConversationsCount = createSelector(getConversationLookup, 
   return Object.values(state).filter(convo => !convo.isPrivate && !convo.isPublic).length;
 });
 
-export const getPinnedConversationsCount = createSelector(
-  getConversationLookup,
-  (state): number => {
-    return Object.values(state).filter(
-      convo =>
-        convo &&
-        convo.priority &&
-        isFinite(convo.priority) &&
-        convo.priority > CONVERSATION_PRIORITIES.default
-    ).length;
-  }
-);
+const getPinnedConversationsCount = createSelector(getConversationLookup, (state): number => {
+  return Object.values(state).filter(
+    convo =>
+      convo &&
+      convo.priority &&
+      isFinite(convo.priority) &&
+      convo.priority > CONVERSATION_PRIORITIES.default
+  ).length;
+});
+
+export function usePinnedConversationsCount() {
+  return useSelector(getPinnedConversationsCount);
+}
 
 const getConversationQuotes = (state: StateType): QuoteLookupType | undefined => {
   return state.conversations.quotes;
@@ -99,7 +100,7 @@ export const getSortedMessagesOfSelectedConversation = createSelector(
       return [];
     }
 
-    const isPublic = convo.isPublic() || false;
+    const isPublic = convo.isOpenGroupV2() || false;
     const sortedMessage = sortMessages(messages, isPublic);
 
     return updateFirstMessageOfSeries(sortedMessage);

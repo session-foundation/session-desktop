@@ -34,7 +34,6 @@ import { SpacerLG, SpacerSM } from '../basic/Text';
 import { AvatarSize } from '../avatar/Avatar';
 import { ProIconButton } from '../buttons/ProButton';
 import { useProBadgeOnClickCb } from '../menuAndSettingsHooks/useProBadgeOnClickCb';
-import { useUserHasPro } from '../../hooks/useHasPro';
 import { Localizer } from '../basic/Localizer';
 import { UploadFirstImageButton } from '../buttons/avatar/UploadFirstImageButton';
 import { Flex } from '../basic/Flex';
@@ -45,6 +44,7 @@ import {
   useUpdateConversationDetailsModal,
 } from '../../state/selectors/modal';
 import { CTAVariant } from './cta/types';
+import { useCurrentUserHasPro } from '../../hooks/useHasPro';
 
 const StyledAvatarContainer = styled.div`
   cursor: pointer;
@@ -138,7 +138,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
 
   const isMe = useIsMe(conversationId);
   const isCommunity = useIsPublic(conversationId);
-  const userHasPro = useUserHasPro(conversationId);
+  const weHavePro = useCurrentUserHasPro() && isMe;
   const isProAvailable = useIsProAvailable();
 
   const avatarPath = useAvatarPath(conversationId) || '';
@@ -177,7 +177,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
     context: 'edit-profile-pic',
     args: {
       cta: {
-        variant: userHasPro
+        variant: weHavePro
           ? CTAVariant.PRO_ANIMATED_DISPLAY_PICTURE_ACTIVATED
           : CTAVariant.PRO_ANIMATED_DISPLAY_PICTURE,
         afterActionButtonCallback,
@@ -228,7 +228,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
      * C. Community admin uploading a community profile picture
      * All of those are taken care of as part of the `isProUser` check in the conversation model
      */
-    if (isProAvailable && !userHasPro && isNewAvatarAnimated && !isCommunity) {
+    if (isProAvailable && !weHavePro && isNewAvatarAnimated && !isCommunity) {
       dispatch(
         updateSessionCTA({
           variant: CTAVariant.PRO_ANIMATED_DISPLAY_PICTURE,
@@ -312,9 +312,9 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
       $flexGap="var(--margins-sm)"
     >
       {isMe && proBadgeCb.cb ? (
-        <StyledCTADescription reverseDirection={userHasPro} onClick={proBadgeCb.cb}>
+        <StyledCTADescription reverseDirection={weHavePro} onClick={proBadgeCb.cb}>
           {tr(
-            userHasPro
+            weHavePro
               ? 'proAnimatedDisplayPictureModalDescription'
               : 'proAnimatedDisplayPicturesNonProModalDescription'
           )}

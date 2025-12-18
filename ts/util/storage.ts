@@ -1,4 +1,4 @@
-import { isBoolean } from 'lodash';
+import { isBoolean, isFinite, isNil, isNumber } from 'lodash';
 import { SessionKeyPair } from '../receiver/keypairs';
 import { DEFAULT_RECENT_REACTS } from '../session/constants';
 import { deleteSettingsBoolValue, updateSettingsBoolValue } from '../state/ducks/settings';
@@ -41,6 +41,29 @@ async function put(key: string, value: ValueType) {
   if (isBoolean(value)) {
     window?.inboxStore?.dispatch(updateSettingsBoolValue({ id: key, value }));
   }
+}
+
+/**
+ * Increment the counter stored in the specified key.
+ * If the existing value is null or undefined, it will be set to 1.
+ * If the existing value is set but not a number, nothing will be done.
+ */
+async function increment(
+  key: typeof SettingsKey.proLongerMessagesSent | typeof SettingsKey.proBadgesSent
+) {
+  const value = get(key);
+  if (isNil(value)) {
+    await put(key, 1);
+
+    return;
+  }
+
+  if (isNumber(value) && isFinite(value)) {
+    await put(key, value + 1);
+
+    return;
+  }
+  window.log.debug('increment: value is not a number or null/undefined');
 }
 
 function get(key: string, defaultValue?: ValueType) {
@@ -175,4 +198,4 @@ export function getPasswordHash() {
   return Storage.get('passHash') as string;
 }
 
-export const Storage = { fetch, put, get, getBoolOr, remove, onready, reset };
+export const Storage = { fetch, put, get, getBoolOr, remove, onready, reset, increment };

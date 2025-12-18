@@ -1,14 +1,30 @@
+import { base64_variants, from_hex, to_base64 } from 'libsodium-wrappers-sumo';
 import { z } from 'zod';
 import { ProItemStatus, ProAccessVariant, ProPaymentProvider, ProStatus } from './types';
 import { SessionBackendBaseResponseSchema } from '../session_backend_server';
 
-export const ProProofResultSchema = z.object({
-  version: z.number(),
-  expiry_unix_ts_ms: z.number(),
-  gen_index_hash: z.string(),
-  rotating_pkey: z.string(),
-  sig: z.string(),
-});
+function hexToBase64(hex: string) {
+  return to_base64(from_hex(hex), base64_variants.ORIGINAL);
+}
+
+export const ProProofResultSchema = z
+  .object({
+    version: z.number(),
+    expiry_unix_ts_ms: z.number(),
+    /**
+     * This is hex but transformed to base64 (see below)
+     */
+    gen_index_hash: z.string(),
+    rotating_pkey: z.string(),
+    sig: z.string(),
+  })
+  .transform(data => ({
+    version: data.version,
+    expiry_unix_ts_ms: data.expiry_unix_ts_ms,
+    gen_index_hash_b64: hexToBase64(data.gen_index_hash),
+    rotating_pkey_hex: data.rotating_pkey,
+    sig_hex: data.sig,
+  }));
 
 export type ProProofResultType = z.infer<typeof ProProofResultSchema>;
 
@@ -18,14 +34,26 @@ export const GenerateProProofResponseSchema = SessionBackendBaseResponseSchema.e
 
 export type GenerateProProofResponseType = z.infer<typeof GenerateProProofResponseSchema>;
 
-const ProRevocationItemSchema = z.object({
-  expiry_unix_ts_ms: z.number(),
-  gen_index_hash: z.string(),
-});
+const ProRevocationItemSchema = z
+  .object({
+    expiry_unix_ts_ms: z.number(),
+    /**
+     * This is hex but transformed to base64 (see below)
+     */
+    gen_index_hash: z.string(),
+  })
+  .transform(data => ({
+    expiry_unix_ts_ms: data.expiry_unix_ts_ms,
+    gen_index_hash_b64: hexToBase64(data.gen_index_hash),
+  }));
+
+export const ProRevocationItemsSchema = z.array(ProRevocationItemSchema);
+
+export type ProRevocationItemsType = z.infer<typeof ProRevocationItemsSchema>;
 
 const ProRevocationsResultSchema = z.object({
   ticket: z.number(),
-  items: z.array(ProRevocationItemSchema),
+  items: ProRevocationItemsSchema,
 });
 
 export type ProRevocationsResultType = z.infer<typeof ProRevocationsResultSchema>;

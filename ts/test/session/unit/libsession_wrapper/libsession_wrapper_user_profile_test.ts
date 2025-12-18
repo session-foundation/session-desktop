@@ -107,8 +107,24 @@ describe('libsession_user_profile', () => {
       expect(wrapper.getProProfileBitset()).to.be.deep.eq(0n);
 
       wrapper.setAnimatedAvatar(true);
-
       expect(wrapper.getProProfileBitset()).to.be.deep.eq(2n);
+    });
+  });
+
+  describe('setProAccess', () => {
+    it('can set & get getProAccessExpiry', async () => {
+      const userKeys = await TestUtils.generateUserKeyPairs();
+
+      const wrapper = new UserConfigWrapperNode(userKeys.ed25519KeyPair.privKeyBytes, null);
+      expect(wrapper.getProAccessExpiry()).to.be.deep.eq(null);
+
+      const now = Date.now();
+      wrapper.setProAccessExpiry(now);
+
+      expect(wrapper.getProAccessExpiry()).to.be.deep.eq(now);
+      wrapper.setProAccessExpiry(null);
+
+      expect(wrapper.getProAccessExpiry()).to.be.deep.eq(null);
     });
   });
 });

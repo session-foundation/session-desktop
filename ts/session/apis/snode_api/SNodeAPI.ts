@@ -20,7 +20,7 @@ import { ReduxOnionSelectors } from '../../../state/selectors/onions';
 
 export const ERROR_CODE_NO_CONNECT = 'ENETUNREACH: No network connection.';
 
-// TODOLATER we should merge those two functions together as they are almost exactly the same
+// TODO we should merge those two functions together as they are almost exactly the same
 const forceNetworkDeletion = async (): Promise<Array<string> | null> => {
   const sodium = await getSodiumRenderer();
   const usPk = UserUtils.getOurPubKeyStrFromCache();

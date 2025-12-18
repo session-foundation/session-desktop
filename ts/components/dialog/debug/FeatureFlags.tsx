@@ -37,7 +37,7 @@ import {
   defaultProBooleanFeatureFlags,
   defaultProDataFeatureFlags,
 } from '../../../state/ducks/types/defaultFeatureFlags';
-import { UserConfigWrapperActions } from '../../../webworker/workers/browser/libsession_worker_interface';
+import { UserConfigWrapperActions } from '../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 import { useProAccessDetails } from '../../../hooks/useHasPro';
 import { isDebugMode } from '../../../shared/env_vars';
 
@@ -478,7 +478,6 @@ const handledBooleanFeatureFlags = proBooleanFlags
     'proAvailable',
     'proGroupsAvailable',
     'useTestProBackend',
-    'mockOthersHavePro',
     'debugLogging',
     'debugLibsessionDumps',
     'debugBuiltSnodeRequests',
@@ -847,7 +846,7 @@ function ProConfigManager({ forceUpdate }: { forceUpdate: () => void }) {
   const getProConfig = useCallback(async () => {
     const config = await UserConfigWrapperActions.getProConfig();
     if (!config) {
-      window?.log?.error('pro config not found');
+      window?.log?.debug('pro config not found');
       return null;
     }
     return config;
@@ -994,12 +993,7 @@ export const ProDebugSection = ({
           Reset Pro Mocking
         </DebugButton>
       ) : null}
-      <FlagToggle
-        forceUpdate={forceUpdate}
-        flag="mockOthersHavePro"
-        visibleWithBooleanFlag="proAvailable"
-        label="Mock Others Have Pro"
-      />
+
       <FlagEnumDropdownInput
         label="Current Status"
         flag="mockProCurrentStatus"
