@@ -200,7 +200,7 @@ async function handleNewProProof(rotatingPrivKeyHex: string): Promise<ProProof |
 
 async function handleClearProProof() {
   await UserConfigWrapperActions.removeProConfig();
-  // TODO: remove access expiry timestamp from synced user config
+  await UserConfigWrapperActions.setProAccessExpiry(null);
 }
 
 async function handleExpiryCTAs(
@@ -269,8 +269,6 @@ async function handleProProof(accessExpiryTsMs: number, autoRenewing: boolean, s
 
   const proConfig = getCachedUserConfig().proConfig;
 
-  // TODO: if the user config access expiry timestamp is different, set it and sync the user config
-
   let proofExpiry: number | null = null;
 
   if (!proConfig || !proConfig.proProof) {
@@ -299,6 +297,9 @@ async function handleProProof(accessExpiryTsMs: number, autoRenewing: boolean, s
         proofExpiry = newProof.expiryMs;
       }
     }
+  }
+  if (proofExpiry) {
+    await UserConfigWrapperActions.setProAccessExpiry(proofExpiry);
   }
 
   const accessExpiryRefreshTimestamp = accessExpiryTsMs + 30 * DURATION.SECONDS;
@@ -344,6 +345,7 @@ const fetchGetProDetailsFromProBackend = createAsyncThunk(
           }
           switch (state.data.status) {
             case ProStatus.Active:
+              window.log.debug(`[handleBackendProStatusChange] ProStatus.Active`);
               await handleProProof(
                 state.data.expiry_unix_ts_ms,
                 state.data.auto_renewing,
@@ -352,10 +354,13 @@ const fetchGetProDetailsFromProBackend = createAsyncThunk(
               break;
 
             case ProStatus.NeverBeenPro:
+              window.log.debug(`[handleBackendProStatusChange] ProStatus.NeverBeenPro`);
               await handleClearProProof();
               break;
 
             case ProStatus.Expired:
+              window.log.debug(`[handleBackendProStatusChange] ProStatus.Expired`);
+
               await handleClearProProof();
               break;
 

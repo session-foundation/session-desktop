@@ -103,7 +103,6 @@ export type PrimaryColorStateType =
   | 'orange'
   | 'red';
 
-// TODO: localize the ariaLabels below
 type PrimaryColorType = { id: PrimaryColorStateType; ariaLabel: string; color: string };
 
 export const getPrimaryColors = (): Array<PrimaryColorType> => [

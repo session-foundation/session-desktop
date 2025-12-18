@@ -61,6 +61,7 @@ import {
   getCachedUserConfig,
   UserConfigWrapperActions,
 } from '../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
+import { proBackendDataActions } from '../state/ducks/proBackendData';
 
 type IncomingUserResult = {
   needsPush: boolean;
@@ -142,9 +143,22 @@ async function mergeUserConfigsWithIncomingUpdates(
       // Note: we cache the UserConfig fields, so on merge/init we need to call the methods directly, and not through
       // the GenericWrapperActions
       switch (variant) {
-        case 'UserConfig':
+        case 'UserConfig': {
+          const proAccessExpiryBefore = await UserConfigWrapperActions.getProAccessExpiry();
           hashesMerged = await UserConfigWrapperActions.merge(toMerge);
+          const proAccessExpiryAfter = await UserConfigWrapperActions.getProAccessExpiry();
+
+          if (proAccessExpiryBefore !== proAccessExpiryAfter) {
+            window.log.debug(
+              `[mergeConfigsWithInboxUpdates] proAccessExpiry changed from ${proAccessExpiryBefore} to ${proAccessExpiryAfter}. Refreshing our pro details.`
+            );
+            window.inboxStore?.dispatch(
+              proBackendDataActions.refreshGetProDetailsFromProBackend({}) as any
+            );
+          }
+
           break;
+        }
         case 'ContactsConfig':
           hashesMerged = await ContactsWrapperActions.merge(toMerge);
           break;

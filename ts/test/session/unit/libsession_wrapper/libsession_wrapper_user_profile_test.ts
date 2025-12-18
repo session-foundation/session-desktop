@@ -122,6 +122,9 @@ describe('libsession_user_profile', () => {
       wrapper.setProAccessExpiry(now);
 
       expect(wrapper.getProAccessExpiry()).to.be.deep.eq(now);
+      wrapper.setProAccessExpiry(null);
+
+      expect(wrapper.getProAccessExpiry()).to.be.deep.eq(null);
     });
   });
 });
