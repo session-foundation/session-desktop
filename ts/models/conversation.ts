@@ -867,7 +867,14 @@ export class ConversationModel extends Model<ConversationAttributes> {
       .catch(window?.log?.error);
   }
 
-  private hasValidCurrentProProof(): boolean {
+  /**
+   * Returns true if this user has a valid current pro proof.
+   * Running this on
+   * - an opengroup always returns false
+   * - a closed group always returns false (might change in the future)
+   * - a private chat returns true if the user has a valid, unexpired and unrevoked pro proof
+   */
+  public hasValidCurrentProProof(): boolean {
     if (this.isOpenGroupV2()) {
       // Note: communities are considered pro users (they can have animated avatars)
       // but this function is too generic to return true

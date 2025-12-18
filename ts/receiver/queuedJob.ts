@@ -25,6 +25,7 @@ import { LinkPreviews } from '../util/linkPreviews';
 import { GroupV2Receiver } from './groupv2/handleGroupV2Message';
 import { Constants } from '../session';
 import { longOrNumberToNumber } from '../types/long/longOrNumberToNumber';
+import { getFeatureFlag } from '../state/ducks/types/releasedFeaturesReduxTypes';
 
 function isMessageModel(
   msg: MessageModel | MessageModelPropsWithoutConvoProps
@@ -235,12 +236,11 @@ async function handleRegularMessage(
 
   handleLinkPreviews(rawDataMessage.body, rawDataMessage.preview, message);
 
-  // TODO: Once pro proof validation is available make this dynamic
-  // const maxChars = isSenderPro
-  //   ? Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_PRO
-  //   : Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_STANDARD;
   // NOTE: The truncation value must be the Pro count so when Pro is released older clients wont truncate pro messages.
-  const maxChars = Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_PRO;
+  const maxChars =
+    !getFeatureFlag('proAvailable') || sendingDeviceConversation.hasValidCurrentProProof()
+      ? Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_PRO
+      : Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_STANDARD;
 
   const body =
     rawDataMessage.body.length > maxChars

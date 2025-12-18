@@ -154,7 +154,17 @@ async function queueNewJobIfNeeded() {
   );
 }
 
+async function runOnStartup() {
+  try {
+    const job = new UpdateProRevocationListJob({ nextAttemptTimestamp: Date.now() });
+    await job.run();
+  } catch (e) {
+    window.log.warn('UpdateProRevocationListJob runOnStartup failed with', e.message);
+  }
+}
+
 export const UpdateProRevocationList = {
   UpdateProRevocationListJob,
   queueNewJobIfNeeded,
+  runOnStartup,
 };
