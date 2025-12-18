@@ -406,7 +406,7 @@ const doDeleteSelectedMessages = async ({
   }
 
   const areAllOurs = selectedMessages.every(message => message.getSource() === ourDevicePubkey);
-  if (conversation.isPublic()) {
+  if (conversation.isOpenGroupV2()) {
     await doDeleteSelectedMessagesInSOGS(selectedMessages, conversation, areAllOurs);
     return;
   }
@@ -581,7 +581,7 @@ async function deleteOpenGroupMessages(
   messages: Array<MessageModel>,
   convo: ConversationModel
 ): Promise<Array<string>> {
-  if (!convo.isPublic()) {
+  if (!convo.isOpenGroupV2()) {
     throw new Error('cannot delete public message on a non public groups');
   }
 

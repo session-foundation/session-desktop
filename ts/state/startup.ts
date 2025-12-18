@@ -41,6 +41,7 @@ import { loadDefaultRooms } from '../session/apis/open_group_api/opengroupV2/Api
 import { getDataFeatureFlag } from './ducks/types/releasedFeaturesReduxTypes';
 import { isTestIntegration } from '../shared/env_vars';
 import { sleepFor } from '../session/utils/Promise';
+import { UpdateProRevocationList } from '../session/utils/job_runners/jobs/UpdateProRevocationListJob';
 
 function makeLookup<T>(items: Array<T>, key: string): { [key: string]: T } {
   // Yep, we can't index into item without knowing what it is. True. But we want to.
@@ -118,7 +119,7 @@ async function regenerateLastMessagesGroupsCommunities() {
 
   ConvoHub.use()
     .getConversations()
-    .filter(m => m.isClosedGroupV2() || m.isPublic())
+    .filter(m => m.isClosedGroupV2() || m.isOpenGroupV2())
     .forEach(m => {
       m.updateLastMessage();
     });
@@ -158,6 +159,7 @@ export const doAppStartUp = async () => {
 
   // eslint-disable-next-line more/no-then
   void SnodePool.getFreshSwarmFor(UserUtils.getOurPubKeyStrFromCache()).then(async () => {
+    window.log.debug('appStartup: got our fresh swarm, starting polling');
     // trigger any other actions that need to be done after the swarm is ready
     window.inboxStore?.dispatch(networkDataActions.fetchInfoFromSeshServer() as any);
     window.inboxStore?.dispatch(
@@ -177,6 +179,13 @@ export const doAppStartUp = async () => {
         void handleTriggeredProCTAs(window.inboxStore.dispatch);
       }
     }
+    // we want to (try) to fetch from the revocation server before we process
+    // incoming messages, as some might have a pro proof that has been revoked
+    await UpdateProRevocationList.runOnStartup();
+    void getSwarmPollingInstance().start();
+    // trigger a sync message if needed for our other devices
+    void triggerSyncIfNeeded();
+    void loadDefaultRooms();
   }); // refresh our swarm on start to speed up the first message fetching event
 
   window.inboxStore?.dispatch(groupInfoActions.loadMetaDumpsFromDB() as any); // this loads the dumps from DB and fills the 03-groups slice with the corresponding details
@@ -184,10 +193,6 @@ export const doAppStartUp = async () => {
   // this generates the key to encrypt attachments locally
   await Data.generateAttachmentKeyIfEmpty();
 
-  // trigger a sync message if needed for our other devices
-  void triggerSyncIfNeeded();
-  void getSwarmPollingInstance().start();
-  void loadDefaultRooms();
   void Data.cleanupOrphanedAttachments();
 
   // Note: do not make this a debounce call (as for some reason it doesn't work with promises)

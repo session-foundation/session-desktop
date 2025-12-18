@@ -10,6 +10,7 @@ type SessionBaseBooleanFeatureFlags = {
   replaceLocalizedStringsWithKeys: boolean;
   disableOnionRequests: boolean;
   disableImageProcessor: boolean;
+  disableLocalAttachmentEncryption: boolean;
   useDeterministicEncryption: boolean;
   useTestNet: boolean;
   useTestProBackend: boolean;
@@ -24,7 +25,6 @@ type SessionBaseBooleanFeatureFlags = {
   mockCurrentUserHasProInGracePeriod: boolean;
   mockProRecoverButtonAlwaysSucceed: boolean;
   mockProRecoverButtonAlwaysFail: boolean;
-  mockOthersHavePro: boolean;
   mockProBackendLoading: boolean;
   mockProBackendError: boolean;
   fsTTL30s: boolean;

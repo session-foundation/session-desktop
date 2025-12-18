@@ -1,13 +1,6 @@
 import { isNumber } from 'lodash';
-import {
-  MouseEventHandler,
-  SessionDataTestId,
-  useCallback,
-  useMemo,
-  useState,
-  type ReactNode,
-} from 'react';
-import useMount from 'react-use/lib/useMount';
+import { MouseEventHandler, SessionDataTestId, useCallback, useMemo, type ReactNode } from 'react';
+import useUpdate from 'react-use/lib/useUpdate';
 import styled from 'styled-components';
 import { getAppDispatch } from '../../../../../state/dispatch';
 import { ModalBasicHeader } from '../../../../SessionWrapperModal';
@@ -56,11 +49,15 @@ import { SpacerMD } from '../../../../basic/Text';
 import LIBSESSION_CONSTANTS from '../../../../../session/utils/libsession/libsession_constants';
 import { getDataFeatureFlagMemo } from '../../../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { AnimatedSpinnerIcon } from '../../../../loading/spinner/AnimatedSpinnerIcon';
-import { UserConfigWrapperActions } from '../../../../../webworker/workers/browser/libsession_worker_interface';
+import {
+  getCachedUserConfig,
+  UserConfigWrapperActions,
+} from '../../../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 import {
   ProFeatures as ProFeaturesFinder,
   ProMessageFeature,
 } from '../../../../../models/proMessageFeature';
+import { usePinnedConversationsCount } from '../../../../../state/selectors/conversations';
 
 type ProSettingsModalState = {
   fromCTA?: boolean;
@@ -226,22 +223,22 @@ function ProNonProContinueButton({ state }: SectionProps) {
     dispatch(
       isError
         ? updateLocalizedPopupDialog({
-            title: { token: 'proStatusError' },
-            description: { token: 'proStatusNetworkErrorContinue' },
-            overrideButtons: backendErrorButtons,
-          })
+          title: { token: 'proStatusError' },
+          description: { token: 'proStatusNetworkErrorContinue' },
+          overrideButtons: backendErrorButtons,
+        })
         : isLoading
           ? updateLocalizedPopupDialog({
-              title: { token: 'checkingProStatus' },
-              description: { token: 'checkingProStatusContinue' },
-            })
+            title: { token: 'checkingProStatus' },
+            description: { token: 'checkingProStatusContinue' },
+          })
           : userSettingsModal({
-              userSettingsPage: 'proNonOriginating',
-              nonOriginatingVariant: neverHadPro ? 'upgrade' : 'renew',
-              overrideBackAction: returnToThisModalAction,
-              afterCloseAction,
-              centerAlign,
-            })
+            userSettingsPage: 'proNonOriginating',
+            nonOriginatingVariant: neverHadPro ? 'upgrade' : 'renew',
+            overrideBackAction: returnToThisModalAction,
+            afterCloseAction,
+            centerAlign,
+          })
     );
   }, [
     dispatch,
@@ -299,13 +296,14 @@ function ProStats() {
   const mockProBadgesSent = getDataFeatureFlagMemo('mockProBadgesSent');
   const mockProGroupsUpgraded = getDataFeatureFlagMemo('mockProGroupsUpgraded');
 
+  const pinnedConversations = usePinnedConversationsCount();
+
   const proLongerMessagesSent =
     mockProLongerMessagesSent ?? (Storage.get(SettingsKey.proLongerMessagesSent) || 0);
-  const proPinnedConversations =
-    mockProPinnedConversations ?? (Storage.get(SettingsKey.proPinnedConversations) || 0);
   const proBadgesSent = mockProBadgesSent ?? (Storage.get(SettingsKey.proBadgesSent) || 0);
-  const proGroupsUpgraded =
-    mockProGroupsUpgraded ?? (Storage.get(SettingsKey.proGroupsUpgraded) || 0);
+  // those 2 are not a counter, but live based on what is in stored libsession/db
+  const proPinnedConversations = mockProPinnedConversations ?? (pinnedConversations || 0);
+  const proGroupsUpgraded = mockProGroupsUpgraded || 0;
 
   const isDarkTheme = useIsDarkTheme();
 
@@ -348,8 +346,8 @@ function ProStats() {
         style={
           !isDarkTheme
             ? {
-                boxShadow: proBoxShadow,
-              }
+              boxShadow: proBoxShadow,
+            }
             : undefined
         }
       >
@@ -435,43 +433,37 @@ function ProSettings({ state }: SectionProps) {
   const { data, isLoading, isError } = useProAccessDetails();
   const backendErrorButtons = useBackendErrorDialogButtons();
 
-  const [proBadgeEnabled, setProBadgeEnabled] = useState(false);
+  const forceRefresh = useUpdate();
+
+  const { proProfileBitset } = getCachedUserConfig();
+
+  const proBadgeEnabled = ProFeaturesFinder.hasProFeature(
+    proProfileBitset,
+    ProMessageFeature.PRO_BADGE,
+    'proProfile'
+  );
 
   const { returnToThisModalAction, centerAlign } = state;
-
-  const refreshProBadge = useCallback(async () => {
-    const proProfileBitset = await UserConfigWrapperActions.getProProfileBitset();
-    const refreshed = ProFeaturesFinder.hasProFeature(
-      proProfileBitset,
-      ProMessageFeature.PRO_BADGE,
-      'proProfile'
-    );
-    setProBadgeEnabled(refreshed);
-  }, []);
-
-  useMount(() => {
-    void refreshProBadge();
-  });
 
   const handleUpdateAccessClick = useCallback(() => {
     dispatch(
       isError
         ? updateLocalizedPopupDialog({
-            title: { token: 'proAccessError' },
-            description: { token: 'proAccessNetworkLoadError' },
-            overrideButtons: backendErrorButtons,
-          })
+          title: { token: 'proAccessError' },
+          description: { token: 'proAccessNetworkLoadError' },
+          overrideButtons: backendErrorButtons,
+        })
         : isLoading
           ? updateLocalizedPopupDialog({
-              title: { token: 'proAccessLoading' },
-              description: { token: 'proAccessLoadingDescription' },
-            })
+            title: { token: 'proAccessLoading' },
+            description: { token: 'proAccessLoadingDescription' },
+          })
           : userSettingsModal({
-              userSettingsPage: 'proNonOriginating',
-              nonOriginatingVariant: 'update',
-              overrideBackAction: returnToThisModalAction,
-              centerAlign,
-            })
+            userSettingsPage: 'proNonOriginating',
+            nonOriginatingVariant: 'update',
+            overrideBackAction: returnToThisModalAction,
+            centerAlign,
+          })
     );
   }, [dispatch, isLoading, isError, backendErrorButtons, centerAlign, returnToThisModalAction]);
 
@@ -511,9 +503,8 @@ function ProSettings({ state }: SectionProps) {
           text={{ token: 'proBadge' }}
           subText={{ token: 'proBadgeVisible' }}
           onClick={async () => {
-            const newProBadgeEnabled = !proBadgeEnabled;
-            await UserConfigWrapperActions.setProBadge(newProBadgeEnabled);
-            void refreshProBadge();
+            await UserConfigWrapperActions.setProBadge(!proBadgeEnabled);
+            forceRefresh();
           }}
           active={proBadgeEnabled}
         />
@@ -629,11 +620,11 @@ function getProFeatures(userHasPro: boolean): Array<
   {
     dataTestId: SessionDataTestId;
     id:
-      | 'proLongerMessages'
-      | 'proUnlimitedPins'
-      | 'proAnimatedDisplayPictures'
-      | 'proBadges'
-      | 'plusLoadsMore';
+    | 'proLongerMessages'
+    | 'proUnlimitedPins'
+    | 'proAnimatedDisplayPictures'
+    | 'proBadges'
+    | 'plusLoadsMore';
     title: TrArgs;
     description: TrArgs;
   } & WithLucideUnicode
@@ -705,11 +696,11 @@ function ProFeatures({ state }: SectionProps) {
               onClick={
                 m.id === 'plusLoadsMore'
                   ? async () => {
-                      showLinkVisitWarningDialog(
-                        LIBSESSION_CONSTANTS.LIBSESSION_PRO_URLS.roadmap,
-                        dispatch
-                      );
-                    }
+                    showLinkVisitWarningDialog(
+                      LIBSESSION_CONSTANTS.LIBSESSION_PRO_URLS.roadmap,
+                      dispatch
+                    );
+                  }
                   : undefined
               }
               iconElement={
@@ -813,21 +804,21 @@ function ManageProAccess({ state }: SectionProps) {
     dispatch(
       isError
         ? updateLocalizedPopupDialog({
-            title: { token: 'proStatusError' },
-            description: { token: 'proStatusRenewError' },
-            overrideButtons: backendErrorButtons,
-          })
+          title: { token: 'proStatusError' },
+          description: { token: 'proStatusRenewError' },
+          overrideButtons: backendErrorButtons,
+        })
         : isLoading
           ? updateLocalizedPopupDialog({
-              title: { token: 'proStatusLoading' },
-              description: { token: 'checkingProStatusRenew' },
-            })
+            title: { token: 'proStatusLoading' },
+            description: { token: 'checkingProStatusRenew' },
+          })
           : userSettingsModal({
-              userSettingsPage: 'proNonOriginating',
-              nonOriginatingVariant: 'renew',
-              overrideBackAction: returnToThisModalAction,
-              centerAlign,
-            })
+            userSettingsPage: 'proNonOriginating',
+            nonOriginatingVariant: 'renew',
+            overrideBackAction: returnToThisModalAction,
+            centerAlign,
+          })
     );
   }, [dispatch, isLoading, isError, backendErrorButtons, centerAlign, returnToThisModalAction]);
 
@@ -844,8 +835,8 @@ function ManageProAccess({ state }: SectionProps) {
         style={
           !isDarkTheme
             ? {
-                boxShadow: proBoxShadow,
-              }
+              boxShadow: proBoxShadow,
+            }
             : undefined
         }
       >
@@ -865,11 +856,11 @@ function ManageProAccess({ state }: SectionProps) {
             rowReverse
             {...(isError || isLoading
               ? {
-                  subText: isError
-                    ? { token: 'errorCheckingProStatus' }
-                    : { token: 'checkingProStatusEllipsis' },
-                  subTextColorOverride: isError ? 'var(--warning-color)' : undefined,
-                }
+                subText: isError
+                  ? { token: 'errorCheckingProStatus' }
+                  : { token: 'checkingProStatusEllipsis' },
+                subTextColorOverride: isError ? 'var(--warning-color)' : undefined,
+              }
               : {})}
           />
         ) : null}
@@ -966,18 +957,18 @@ function PageHero({ state }: SectionProps) {
         updateLocalizedPopupDialog(
           isPro
             ? {
-                title: { token: 'proStatusLoading' },
-                description: { token: 'proStatusLoadingDescription' },
-              }
+              title: { token: 'proStatusLoading' },
+              description: { token: 'proStatusLoadingDescription' },
+            }
             : {
-                title: { token: 'checkingProStatus' },
-                description: {
-                  token:
-                    proExpired && !state.fromCTA
-                      ? 'checkingProStatusDescription'
-                      : 'checkingProStatusContinue',
-                },
-              }
+              title: { token: 'checkingProStatus' },
+              description: {
+                token:
+                  proExpired && !state.fromCTA
+                    ? 'checkingProStatusDescription'
+                    : 'checkingProStatusContinue',
+              },
+            }
         )
       );
     }

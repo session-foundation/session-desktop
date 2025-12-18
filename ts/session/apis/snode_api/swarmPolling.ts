@@ -21,7 +21,6 @@ import { assertUnreachable } from '../../../types/sqlSharedTypes';
 import {
   UserGenericWrapperActions,
   MetaGroupWrapperActions,
-  UserConfigWrapperActions,
   UserGroupsWrapperActions,
   MultiEncryptWrapperActions,
 } from '../../../webworker/workers/browser/libsession_worker_interface';
@@ -52,6 +51,10 @@ import ProBackendAPI from '../pro_backend_api/ProBackendAPI';
 import { NetworkTime } from '../../../util/NetworkTime';
 import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { setIsOnlineIfDifferent } from '../../utils/InsecureNodeFetch';
+import {
+  getCachedUserConfig,
+  UserConfigWrapperActions,
+} from '../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 
 const minMsgCountShouldRetry = 95;
 /**
@@ -531,7 +534,6 @@ export class SwarmPolling {
             messageHash: m.hash,
           })),
           {
-            nowMs: NetworkTime.now(),
             proBackendPubkeyHex: ProBackendAPI.getServer().server.edPkHex,
             ed25519GroupPubkeyHex: pubkey,
             groupEncKeys,
@@ -564,7 +566,6 @@ export class SwarmPolling {
         messageHash: m.hash,
       })),
       {
-        nowMs: NetworkTime.now(),
         proBackendPubkeyHex: ProBackendAPI.getServer().server.edPkHex,
         ed25519PrivateKeyHex,
       }
@@ -1040,7 +1041,7 @@ export class SwarmPolling {
       await UserConfigWrapperActions.init(privateKeyEd25519, null);
       await UserConfigWrapperActions.merge(incomingConfigMessages);
 
-      const foundName = await UserConfigWrapperActions.getName();
+      const foundName = getCachedUserConfig().name;
       if (!foundName) {
         throw new Error('UserInfo not found or name is empty');
       }

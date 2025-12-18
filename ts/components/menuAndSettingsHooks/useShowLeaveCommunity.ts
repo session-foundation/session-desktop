@@ -18,7 +18,7 @@ export function useShowLeaveCommunityCb(conversationId?: string) {
   return () => {
     const conversation = ConvoHub.use().get(conversationId);
 
-    if (!conversation.isPublic()) {
+    if (!conversation.isOpenGroupV2()) {
       throw new Error('showLeaveCommunityByConvoId() called with a non public convo.');
     }
 

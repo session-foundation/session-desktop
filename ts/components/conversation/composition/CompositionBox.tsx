@@ -64,8 +64,8 @@ import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesRedux
 import { showSessionCTA } from '../../dialog/SessionCTA';
 import { tStripped } from '../../../localization/localeTools';
 import type { ProcessedLinkPreviewThumbnailType } from '../../../webworker/workers/node/image_processor/image_processor';
-import { selectWeAreProUser } from '../../../hooks/useParamSelector';
 import { CTAVariant } from '../../dialog/cta/types';
+import { selectWeAreProUser } from '../../../hooks/useHasPro';
 
 export interface ReplyingToMessageProps {
   convoId: string;

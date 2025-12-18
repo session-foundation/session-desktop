@@ -39,7 +39,7 @@ type Props = {
 
 async function submitForOpenGroup(convoId: string, pubkeys: Array<string>) {
   const convo = ConvoHub.use().get(convoId);
-  if (!convo || !convo.isPublic()) {
+  if (!convo || !convo.isOpenGroupV2()) {
     throw new Error('submitForOpenGroup group not found');
   }
   try {

@@ -1,4 +1,5 @@
 import { assign, cloneDeep } from 'lodash';
+import { privateSetKey, privateSet } from './modelFriends';
 
 export type ModelAttributes = Record<string, any> & { id: string };
 
@@ -17,14 +18,14 @@ export abstract class Model<T extends ModelAttributes> {
     return this._attributes[key];
   }
 
-  protected setKey<K extends keyof T>(key: K, value: T[K] | undefined) {
+  [privateSetKey]<K extends keyof T>(key: K, value: T[K] | undefined) {
     const toSet: Partial<T> = {};
     toSet[key] = value;
-    this.set(toSet);
+    this[privateSet](toSet);
     return this;
   }
 
-  protected set(attrs: Partial<T>) {
+  [privateSet](attrs: Partial<T>) {
     this._attributes = assign(this._attributes, attrs);
     return this;
   }

@@ -12,7 +12,7 @@ import React, {
 } from 'react';
 import styled from 'styled-components';
 import { isUndefined } from 'lodash';
-import { useDebouncedSpellcheck } from '../../../hooks/useDebuncedSpellcheck';
+import { useDebouncedSpellcheck } from '../../../hooks/useDebouncedSpellcheck';
 import { useDebouncedSelectAllOnTripleClickHandler } from '../../../hooks/useDebouncedSelectAllOnTripleClickHandler';
 import { useHistory } from '../../../hooks/useHistory';
 

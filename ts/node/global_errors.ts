@@ -54,14 +54,22 @@ export const addHandler = (): void => {
   // Note: we could maybe add a handler for when the renderer process died here?
   // (but also ignore the valid death like on restart/quit)
   process.on('uncaughtException', (reason: unknown) => {
-    logCrash('main', { reason: 'uncaughtException', error: reason });
+    try {
+      logCrash('main', { reason: 'uncaughtException', error: reason });
 
-    handleError('Unhandled Error', _getError(reason));
+      handleError('Unhandled Error', _getError(reason));
+    } catch (e) {
+      // ignore (do not log as it just loops the error)
+    }
   });
 
   process.on('unhandledRejection', (reason: unknown) => {
-    logCrash('main', { reason: 'unhandledRejection', error: reason });
+    try {
+      logCrash('main', { reason: 'unhandledRejection', error: reason });
 
-    handleError('Unhandled Promise Rejection', _getError(reason));
+      handleError('Unhandled Promise Rejection', _getError(reason));
+    } catch (e) {
+      // ignore (do not log as it just loops the error)
+    }
   });
 };

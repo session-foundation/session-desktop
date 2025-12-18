@@ -1,4 +1,3 @@
-import { base64_variants, from_hex, to_base64 } from 'libsodium-wrappers-sumo';
 import useAsync from 'react-use/lib/useAsync';
 import { ipcRenderer, shell } from 'electron';
 import { useCallback, useState } from 'react';
@@ -35,10 +34,7 @@ import { Errors } from '../../../types/Errors';
 import { PubKey } from '../../../session/types';
 import { ConvoHub } from '../../../session/conversations';
 import { ConversationTypeEnum } from '../../../models/types';
-import {
-  ContactsWrapperActions,
-  UserConfigWrapperActions,
-} from '../../../webworker/workers/browser/libsession_worker_interface';
+import { ContactsWrapperActions } from '../../../webworker/workers/browser/libsession_worker_interface';
 import { usePolling } from '../../../hooks/usePolling';
 import { releasedFeaturesActions } from '../../../state/ducks/releasedFeatures';
 import { networkDataActions } from '../../../state/ducks/networkData';
@@ -50,6 +46,7 @@ import ProBackendAPI from '../../../session/apis/pro_backend_api/ProBackendAPI';
 import { getProMasterKeyHex } from '../../../session/utils/User';
 import { FlagToggle } from './FeatureFlags';
 import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
+import { SessionDisplayNameOnlyPrivate } from '../../../models/profile';
 import {
   clearAllUrlInteractions,
   getUrlInteractions,
@@ -60,6 +57,7 @@ import { formatRoundedUpTimeUntilTimestamp } from '../../../util/i18n/formatting
 import { LucideIcon } from '../../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 import { getIsProAvailableMemo } from '../../../hooks/useIsProAvailable';
+import { UserConfigWrapperActions } from '../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 
 type DebugButtonProps = SessionButtonProps & { shiny?: boolean; hide?: boolean };
 
@@ -107,11 +105,12 @@ async function generateOneRandomContact() {
   // for it to be inserted in the config
   created.setActiveAt(Date.now());
   await created.setIsApproved(true, false);
-  await created.setSessionProfile({
-    type: 'displayNameChangeOnlyPrivate',
+  const profile = new SessionDisplayNameOnlyPrivate({
+    convo: created,
     displayName: id.slice(2, 8),
     profileUpdatedAtSeconds: NetworkTime.nowSeconds(),
   });
+  await profile.applyChangesIfNeeded();
 
   await created.commit();
   return created;
@@ -391,13 +390,10 @@ export const DebugActions = () => {
           if (response?.status_code === 200) {
             const proProof: ProProof = {
               expiryMs: response.result.expiry_unix_ts_ms,
-              genIndexHashB64: to_base64(
-                from_hex(response.result.gen_index_hash),
-                base64_variants.ORIGINAL
-              ),
-              rotatingPubkeyHex: response.result.rotating_pkey,
+              genIndexHashB64: response.result.gen_index_hash_b64,
+              rotatingPubkeyHex: response.result.rotating_pkey_hex,
               version: response.result.version,
-              signatureHex: response.result.sig,
+              signatureHex: response.result.sig_hex,
             };
             await UserConfigWrapperActions.setProConfig({ proProof, rotatingPrivKeyHex });
           }

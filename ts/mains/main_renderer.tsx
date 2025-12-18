@@ -27,6 +27,7 @@ import { getCrowdinLocale } from '../util/i18n/shared';
 import { rtlLocales } from '../localization/constants';
 import { SessionEventEmitter } from '../shared/event_emitter';
 import { doAppStartUp } from '../state/startup';
+import { getSodiumRenderer } from '../session/crypto';
 
 // Globally disable drag and drop
 document.body.addEventListener(
@@ -129,7 +130,7 @@ Storage.onready(async () => {
       // Stop background processing
       AttachmentDownloads.stop();
       // Stop processing incoming messages
-      // TODOLATER stop polling opengroup v2 and swarm nodes
+      // TODO stop polling opengroup v2 and swarm nodes
 
       // Shut down the data interface cleanly
       await Data.shutdown();
@@ -140,6 +141,8 @@ Storage.onready(async () => {
   const lastVersion = Storage.get('version');
   newVersion = !lastVersion || currentVersion !== lastVersion;
   await Storage.put('version', currentVersion);
+  // make sure to load this
+  await getSodiumRenderer();
 
   if (newVersion) {
     window.log.info(`[updater] New version detected: ${currentVersion}; previous: ${lastVersion}`);
@@ -150,6 +153,7 @@ Storage.onready(async () => {
     if (Registration.isDone()) {
       try {
         await LibSessionUtil.initializeLibSessionUtilWrappers();
+        window.log.warn('LibSessionUtil.initializeLibSessionUtilWrappers init OK');
       } catch (e) {
         window.log.warn('LibSessionUtil.initializeLibSessionUtilWrappers failed with', e.message);
         // I don't think there is anything we can do if this happens

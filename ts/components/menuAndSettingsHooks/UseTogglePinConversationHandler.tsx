@@ -10,10 +10,10 @@ import {
 } from '../../hooks/useParamSelector';
 import { useShowSessionCTACbWithVariant } from '../dialog/SessionCTA';
 import { Constants } from '../../session';
-import { getPinnedConversationsCount } from '../../state/selectors/conversations';
 import { useIsMessageRequestOverlayShown } from '../../state/selectors/section';
 import { useCurrentUserHasPro } from '../../hooks/useHasPro';
 import { CTAVariant } from '../dialog/cta/types';
+import { getPinnedConversationsCount } from '../../state/selectors/conversations';
 
 function useShowPinUnpin(conversationId: string) {
   const isPrivateAndFriend = useIsPrivateAndFriend(conversationId);

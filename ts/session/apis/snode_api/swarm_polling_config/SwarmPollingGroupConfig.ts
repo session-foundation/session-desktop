@@ -21,6 +21,11 @@ import { destroyMessagesAndUpdateRedux } from '../../../disappearing_messages';
 import { ConversationTypeEnum } from '../../../../models/types';
 import { AvatarDownload } from '../../../utils/job_runners/jobs/AvatarDownloadJob';
 import { getFeatureFlag } from '../../../../state/ducks/types/releasedFeaturesReduxTypes';
+import {
+  buildPrivateProfileChangeFromMetaGroupMember,
+  SessionProfileResetAvatarGroupCommunity,
+  SessionProfileSetAvatarBeforeDownloadGroup,
+} from '../../../../models/profile';
 
 /**
  * This is a basic optimization to avoid running the logic when the `deleteBeforeSeconds`
@@ -181,16 +186,12 @@ async function handleMetaMergeResults(groupPk: GroupPubkeyType) {
         ConversationTypeEnum.PRIVATE
       );
     }
-    if (member.name && member.name !== memberConvoInDB.getRealSessionUsername()) {
-      // eslint-disable-next-line no-await-in-loop
-      await ProfileManager.updateProfileOfContact({
-        pubkey: member.pubkeyHex,
-        displayName: member.name,
-        profileUrl: member.profilePicture?.url || null,
-        profileKey: member.profilePicture?.key || null,
-        profileUpdatedAtSeconds: member.profileUpdatedSeconds,
-      });
-    }
+    const profile = buildPrivateProfileChangeFromMetaGroupMember({
+      convo: memberConvoInDB,
+      member,
+    });
+    // eslint-disable-next-line no-await-in-loop
+    await ProfileManager.updateProfileOfContact(profile);
   }
 }
 
@@ -281,28 +282,25 @@ async function scheduleAvatarDownloadJobIfNeeded(groupPk: GroupPubkeyType) {
     if (!profileUrl || !profileKeyHex) {
       // no avatar set for this group: make sure we also remove the one we might have locally.
       if (conversation.getAvatarPointer() || conversation.getProfileKeyHex()) {
-        await conversation.setSessionProfile({
-          type: 'resetAvatarGroup',
+        const profile = new SessionProfileResetAvatarGroupCommunity({
+          convo: conversation,
           displayName: null,
         });
+        await profile.applyChangesIfNeeded();
       }
 
       return;
     }
 
-    // here, an avatar for this group is set. First we need to make sure if that's the same as we already have
-    const prevPointer = conversation.getAvatarPointer();
-    const prevProfileKey = conversation.getProfileKeyHex();
-
-    if (prevPointer !== profileUrl || prevProfileKey !== profileKeyHex) {
-      // set the avatar for this group, it will be downloaded by the job scheduled below
-      await conversation.setSessionProfile({
-        type: 'setAvatarBeforeDownloadGroup',
-        profileKey: profileKeyHex,
-        avatarPointer: profileUrl,
-      });
-      await conversation.commit();
-
+    // set the avatar for this group, it will be downloaded by the job scheduled below
+    const profile = new SessionProfileSetAvatarBeforeDownloadGroup({
+      convo: conversation,
+      avatarPointer: profileUrl,
+      profileKey: profileKeyHex,
+      displayName: null,
+    });
+    const { avatarNeedsDownload } = await profile.applyChangesIfNeeded();
+    if (avatarNeedsDownload) {
       // if the avatar data we had before is not the same of what we received, we need to schedule a new avatar download job.
       // this call will download the new avatar or reset the local filepath if needed
       await AvatarDownload.addAvatarDownloadJob({

@@ -1,4 +1,4 @@
-import { useCurrentUserHasPro, useUserHasPro } from '../../../hooks/useHasPro';
+import { useCurrentUserHasPro, useShowProBadgeFor } from '../../../hooks/useHasPro';
 import {
   useIsPublic,
   useIsClosedGroup,
@@ -29,13 +29,13 @@ function useOnTitleClickCb(conversationId: string, editable: boolean) {
 function ProBadge({ conversationId }: WithConvoId) {
   const weArePro = useCurrentUserHasPro();
 
-  const userHasPro = useUserHasPro(conversationId);
+  const showProBadgeForUser = useShowProBadgeFor(conversationId);
   const isMe = useIsMe(conversationId);
   const isGroupV2 = useIsGroupV2(conversationId);
 
   const onProClickCb = useProBadgeOnClickCb({
     context: 'conversation-title-dialog',
-    args: { userHasPro, currentUserHasPro: weArePro, isMe, isGroupV2 },
+    args: { userHasPro: showProBadgeForUser, currentUserHasPro: weArePro, isMe, isGroupV2 },
   });
 
   if (!onProClickCb.show) {

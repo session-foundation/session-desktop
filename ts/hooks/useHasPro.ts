@@ -4,15 +4,14 @@ import {
   getDataFeatureFlagMemo,
   getFeatureFlagMemo,
 } from '../state/ducks/types/releasedFeaturesReduxTypes';
-import { assertUnreachable } from '../types/sqlSharedTypes';
 import { getIsProAvailableMemo } from './useIsProAvailable';
-import { useIsProUser } from './useParamSelector';
 import LIBSESSION_CONSTANTS from '../session/utils/libsession/libsession_constants';
+import { assertUnreachable } from '../types/sqlSharedTypes';
 import {
   defaultProAccessDetailsSourceData,
+  getProBackendCurrentUserStatus,
   getProBackendProDetails,
   ProcessedProDetails,
-  useProBackendCurrentUserStatus,
 } from '../state/selectors/proBackendData';
 import {
   proBackendDataActions,
@@ -26,9 +25,11 @@ import {
   ProStatus,
 } from '../session/apis/pro_backend_api/types';
 import { sleepFor } from '../session/utils/Promise';
+import { UserUtils } from '../session/utils';
+import type { StateType } from '../state/reducer';
 
-function useCurrentUserProStatus() {
-  const proBackendCurrentUserStatus = useProBackendCurrentUserStatus();
+export function selectOurProStatus(state: StateType) {
+  const proBackendCurrentUserStatus = getProBackendCurrentUserStatus(state);
   const mockCurrentStatus = getDataFeatureFlagMemo('mockProCurrentStatus');
 
   return (
@@ -36,6 +37,14 @@ function useCurrentUserProStatus() {
     proBackendCurrentUserStatus ??
     defaultProAccessDetailsSourceData.currentStatus
   );
+}
+
+export function selectWeAreProUser(state: StateType) {
+  return selectOurProStatus(state) === ProStatus.Active;
+}
+
+function useCurrentUserProStatus() {
+  return useSelector((state: StateType) => selectOurProStatus(state));
 }
 
 /**
@@ -69,12 +78,32 @@ export function useCurrentNeverHadPro() {
   return isProAvailable && status === ProStatus.NeverBeenPro;
 }
 
-// TODO: we have a disconnect in what state we use where for if the current user is pro, this needs to be looked into
-export function useUserHasPro(convoId?: string) {
-  const isProAvailable = getIsProAvailableMemo();
-  const userIsPro = useIsProUser(convoId);
+/**
+ * Returns true if the corresponding user has a valid and pro proof and pro badge feature enabled.
+ * Note: Only used for the other users and not ourselves
+ */
+function useShowProBadgeForOther(convoId?: string) {
+  return useSelector((state: StateType) =>
+    convoId ? (state.conversations.conversationLookup[convoId]?.showProBadgeOthers ?? false) : false
+  );
+}
 
-  return isProAvailable && userIsPro;
+export function useShowProBadgeFor(convoId?: string) {
+  const isProAvailable = getIsProAvailableMemo();
+  // the current user pro badge is always shown if we have a valid pro
+  const currentUserHasPro = useCurrentUserHasPro();
+  // the other user pro badge is shown if they have a valid pro proof and pro badge feature enabled
+  const otherUserHasPro = useShowProBadgeForOther(convoId);
+
+  if (!isProAvailable) {
+    return false;
+  }
+
+  if (UserUtils.isUsFromCache(convoId)) {
+    return currentUserHasPro;
+  }
+
+  return otherUserHasPro;
 }
 
 export function proAccessVariantToString(variant: ProAccessVariant): string {

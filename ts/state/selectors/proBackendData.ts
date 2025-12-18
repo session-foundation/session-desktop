@@ -27,11 +27,11 @@ import {
 } from '../../session/apis/pro_backend_api/types';
 import LIBSESSION_CONSTANTS from '../../session/utils/libsession/libsession_constants';
 
-export const getProBackendData = (state: StateType): ProBackendDataState => {
+const getProBackendData = (state: StateType): ProBackendDataState => {
   return state.proBackendData;
 };
 
-export function getProDetailsFromStorage() {
+function getProDetailsFromStorage() {
   const response = Storage.get(SettingsKey.proDetails);
   if (!response) {
     return null;

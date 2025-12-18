@@ -125,9 +125,12 @@ describe('APIUtils', () => {
 
     describe('has matching rooms', () => {
       let getV2OpenGroupRoomsByServerUrl: Sinon.SinonStub;
-      const convoIdOurIp = getOpenGroupV2ConversationId('116.203.70.33', 'fish');
-      const convoIdOurUrl = getOpenGroupV2ConversationId('open.getsession.org', 'fishUrl');
-      const convoIdNotOur = getOpenGroupV2ConversationId('open.somethingelse.org', 'fishElse');
+      const convoIdOurIp = getOpenGroupV2ConversationId('http://116.203.70.33', 'fish');
+      const convoIdOurUrl = getOpenGroupV2ConversationId('http://open.getsession.org', 'fishUrl');
+      const convoIdNotOur = getOpenGroupV2ConversationId(
+        'http://open.somethingelse.org',
+        'fishElse'
+      );
 
       beforeEach(async () => {
         stubData('getAllConversations').resolves([]);

@@ -103,7 +103,7 @@ export function useShowUserDetailsCbFromConversation(
     ? null
     : () => {
         const convo = ConvoHub.use().get(conversationId);
-        if (!convo || convo.isPublic() || convo.isGroup()) {
+        if (!convo || convo.isOpenGroupV2() || convo.isGroup()) {
           return;
         }
 

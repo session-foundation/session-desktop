@@ -22,7 +22,7 @@ import { ConversationHeaderSubtitle, type SubTitleArray } from './ConversationHe
 import { useLocalisedNotificationOf } from '../../menuAndSettingsHooks/useLocalisedNotificationFor';
 import { useShowConversationSettingsFor } from '../../menuAndSettingsHooks/useShowConversationSettingsFor';
 import { tr } from '../../../localization/localeTools';
-import { useUserHasPro } from '../../../hooks/useHasPro';
+import { useShowProBadgeFor } from '../../../hooks/useHasPro';
 import { useProBadgeOnClickCb } from '../../menuAndSettingsHooks/useProBadgeOnClickCb';
 import { ProIconButton } from '../../buttons/ProButton';
 
@@ -213,6 +213,7 @@ function useSubtitleIndex(convoId?: string) {
 export const ConversationHeaderTitle = ({ showSubtitle }: { showSubtitle: boolean }) => {
   const dispatch = getAppDispatch();
 
+<<<<<<< HEAD
   const {
     convoId,
     convoName,
@@ -228,6 +229,14 @@ export const ConversationHeaderTitle = ({ showSubtitle }: { showSubtitle: boolea
   const { subtitleIndex, setSubtitleIndex } = useSubtitleIndex(convoId);
 
   const subtitles = useSubtitleArrayInternal(convoId);
+=======
+  const showProBadgeForUser = useShowProBadgeFor(convoId);
+
+  const showPro = useProBadgeOnClickCb({
+    context: 'conversation-header-title',
+    args: { userHasPro: showProBadgeForUser, isMe },
+  });
+>>>>>>> origin/dev
 
   const onHeaderClick = () => {
     if (isLegacyGroup || !convoId) {

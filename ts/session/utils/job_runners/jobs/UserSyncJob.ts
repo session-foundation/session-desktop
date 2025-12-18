@@ -31,7 +31,9 @@ import { objectEntries } from '../../../../shared/object_utils';
 import { getFeatureFlag } from '../../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { longOrNumberToNumber } from '../../../../types/long/longOrNumberToNumber';
 
-const defaultMsBetweenRetries = 5 * DURATION.SECONDS; // a long time between retries, to avoid running multiple jobs at the same time, when one was postponed at the same time as one already planned (5s)
+// a long time between retries, to avoid running multiple jobs at the same time,
+// when one was postponed at the same time as one already planned (5s)
+const defaultMsBetweenRetries = 5 * DURATION.SECONDS;
 const defaultMaxAttempts = 2;
 
 /**

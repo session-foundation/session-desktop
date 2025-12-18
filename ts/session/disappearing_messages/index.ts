@@ -408,7 +408,7 @@ function getMessageReadyToDisappear(
   messageFlags: number,
   expireUpdate?: ReadyToDisappearMsgUpdate
 ) {
-  if (conversationModel.isPublic()) {
+  if (conversationModel.isOpenGroupV2()) {
     throw Error(
       `getMessageReadyToDisappear() Disappearing messages aren't supported in communities`
     );

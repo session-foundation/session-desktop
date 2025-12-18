@@ -57,18 +57,19 @@ export const getGroupConversationsCount = createSelector(getConversationLookup, 
   return Object.values(state).filter(convo => !convo.isPrivate && !convo.isPublic).length;
 });
 
-export const getPinnedConversationsCount = createSelector(
-  getConversationLookup,
-  (state): number => {
-    return Object.values(state).filter(
-      convo =>
-        convo &&
-        convo.priority &&
-        isFinite(convo.priority) &&
-        convo.priority > CONVERSATION_PRIORITIES.default
-    ).length;
-  }
-);
+export const getPinnedConversationsCount = createSelector(getConversationLookup, (state): number => {
+  return Object.values(state).filter(
+    convo =>
+      convo &&
+      convo.priority &&
+      isFinite(convo.priority) &&
+      convo.priority > CONVERSATION_PRIORITIES.default
+  ).length;
+});
+
+export function usePinnedConversationsCount() {
+  return useSelector(getPinnedConversationsCount);
+}
 
 const getConversationQuotes = (state: StateType): QuoteLookupType | undefined => {
   return state.conversations.quotes;
@@ -99,7 +100,7 @@ export const getSortedMessagesOfSelectedConversation = createSelector(
       return [];
     }
 
-    const isPublic = convo.isPublic() || false;
+    const isPublic = convo.isOpenGroupV2() || false;
     const sortedMessage = sortMessages(messages, isPublic);
 
     return updateFirstMessageOfSeries(sortedMessage);
@@ -150,7 +151,7 @@ export const getSortedMessagesTypesOfSelectedConversation = createSelector(
         index + 1 >= sortedMessages.length
           ? 0
           : sortedMessages[index + 1].propsForMessage.serverTimestamp ||
-            sortedMessages[index + 1].propsForMessage.timestamp;
+          sortedMessages[index + 1].propsForMessage.timestamp;
 
       const showDateBreak =
         messageTimestamp - previousMessageTimestamp > maxMessagesBetweenTwoDateBreaks * 60 * 1000
@@ -391,7 +392,7 @@ const _getUnreadConversationRequests = (
   return filter(sortedConversationRequests, conversation => {
     return Boolean(
       conversation &&
-        ((conversation.unreadCount && conversation.unreadCount > 0) || conversation.isMarkedUnread)
+      ((conversation.unreadCount && conversation.unreadCount > 0) || conversation.isMarkedUnread)
     );
   });
 };

@@ -394,8 +394,6 @@ export const showSessionCTA = (variant: CTAVariant, dispatch: Dispatch<any>) => 
 
 export const useShowSessionCTACb = (variant: CTAVariant) => {
   const dispatch = getAppDispatch();
-
-  // TODO: remove once pro is released
   const isProAvailable = getIsProAvailableMemo();
   const isProCTA = useIsProCTAVariant(variant);
   if (isProCTA && !isProAvailable) {
@@ -407,8 +405,6 @@ export const useShowSessionCTACb = (variant: CTAVariant) => {
 
 export const useShowSessionCTACbWithVariant = () => {
   const dispatch = getAppDispatch();
-
-  // TODO: remove once pro is released
   const isProAvailable = getIsProAvailableMemo();
 
   return (variant: CTAVariant) => {

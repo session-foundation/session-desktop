@@ -2,7 +2,6 @@ import { expect } from 'chai';
 import { LegacyGroupInfo, UserGroupsGet } from 'libsession_util_nodejs';
 import Sinon from 'sinon';
 import { getSwarmPollingInstance } from '../../../../session/apis/snode_api';
-import { resetHardForkCachedValues } from '../../../../session/apis/snode_api/hfHandling';
 import { SwarmPolling } from '../../../../session/apis/snode_api/swarmPolling';
 import { SWARM_POLLING_TIMEOUT } from '../../../../session/constants';
 import { PubKey } from '../../../../session/types';
@@ -34,7 +33,6 @@ describe('getPollingDetails', () => {
   afterEach(() => {
     Sinon.restore();
     clock.restore();
-    resetHardForkCachedValues();
   });
 
   it('without anything else, we should be part of it', async () => {
