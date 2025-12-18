@@ -17,6 +17,7 @@ import { ProRevocationCache } from '../../../revocation_list/pro_revocation_list
 import { stringify } from '../../../../types/sqlSharedTypes';
 import { proBackendDataActions } from '../../../../state/ducks/proBackendData';
 import { getCachedUserConfig } from '../../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
+import { ConvoHub } from '../../../conversations';
 
 let lastRunAtMs = 0;
 
@@ -110,6 +111,22 @@ class UpdateProRevocationListJob extends PersistedJob<UpdateProRevocationListPer
           proBackendDataActions.refreshGetProDetailsFromProBackend({}) as any
         );
       }
+      // find all the conversations that have a revoked genIndexHAsh and trigger a UI refresh on them
+      const convos = ConvoHub.use().getConversations();
+      convos.forEach(m => {
+        if (!m.dbContactProDetails()?.proGenIndexHashB64) {
+          return;
+        }
+        const revoked = newItems.some(
+          item => item.gen_index_hash_b64 === m.dbContactProDetails()?.proGenIndexHashB64
+        );
+        if (revoked) {
+          window.log.debug(
+            `UpdateProRevocationListJob: found a revoked genIndexHash for convo ${m.idForLogging()}. Triggering UI refresh.`
+          );
+          m.triggerUIRefresh();
+        }
+      });
 
       return RunJobResult.Success;
     } catch (e) {
