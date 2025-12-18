@@ -77,9 +77,9 @@ const StyledAnimationImage = styled.img`
   position: absolute;
 `;
 
-const StyledAnimatedCTAImageContainer = styled.div<{ noColor?: boolean }>`
+const StyledAnimatedCTAImageContainer = styled.div<{ $noColor?: boolean }>`
   position: relative;
-  ${props => (props.noColor ? 'filter: grayscale(100%) brightness(0.8);' : '')}
+  ${props => (props.$noColor ? 'filter: grayscale(100%) brightness(0.8);' : '')}
 `;
 
 function AnimatedCTAImage({
@@ -94,19 +94,19 @@ function AnimatedCTAImage({
   noColor?: boolean;
 }) {
   return (
-    <StyledAnimatedCTAImageContainer noColor={noColor}>
+    <StyledAnimatedCTAImageContainer $noColor={noColor}>
       <StyledCTAImage src={ctaLayerSrc} />
       <StyledAnimationImage src={animatedLayerSrc} style={animationStyle} />
     </StyledAnimatedCTAImageContainer>
   );
 }
 
-export const StyledCTATitle = styled.span<{ reverseDirection?: boolean }>`
+export const StyledCTATitle = styled.span<{ $reverseDirection?: boolean }>`
   font-size: var(--font-size-h4);
   font-weight: bold;
   line-height: normal;
   display: inline-flex;
-  flex-direction: ${props => (props.reverseDirection ? 'row-reverse' : 'row')};
+  flex-direction: ${props => (props.$reverseDirection ? 'row-reverse' : 'row')};
   align-items: center;
   gap: var(--margins-xs);
   padding: 3px;

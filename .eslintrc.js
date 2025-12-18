@@ -141,13 +141,13 @@ module.exports = {
         ],
       },
     ],
-    /**'local-rules/styled-components-transient-props': [
+    'local-rules/styled-components-transient-props': [
       'error',
       {
         additionalValidProps: ['as', 'forwardedAs', 'theme'],
         ignoreComponentPatterns: ['^Motion', '^Animated'],
       },
-    ],*/
+    ],
   },
   overrides: [
     {

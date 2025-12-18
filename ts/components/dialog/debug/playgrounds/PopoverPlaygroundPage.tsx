@@ -9,12 +9,12 @@ import { SessionButton } from '../../../basic/SessionButton';
 import { SpacerXS } from '../../../basic/Text';
 import { SimpleSessionInput } from '../../../inputs/SessionInput';
 
-const StyledPopoverContainer = styled.div<{ marginTop?: number; marginBottom?: number }>`
+const StyledPopoverContainer = styled.div<{ $marginTop?: number; $marginBottom?: number }>`
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   align-self: center;
-  margin-top: ${({ marginTop }) => marginTop ?? 0}px;
-  margin-bottom: ${({ marginBottom }) => marginBottom ?? 0}px;
+  margin-top: ${({ $marginTop: marginTop }) => marginTop ?? 0}px;
+  margin-bottom: ${({ $marginBottom: marginBottom }) => marginBottom ?? 0}px;
 `;
 const StyledTrigger = styled.div`
   font-size: var(--text-size-xs);
@@ -45,7 +45,7 @@ function PopoverGrid(
 
   return (
     <>
-      <StyledPopoverContainer marginTop={40}>
+      <StyledPopoverContainer $marginTop={40}>
         <StyledTrigger ref={r1}>Left</StyledTrigger>
         <SessionPopoverContent
           {...props}
@@ -68,7 +68,7 @@ function PopoverGrid(
           verticalPosition="top"
         />
       </StyledPopoverContainer>
-      <StyledPopoverContainer marginBottom={40}>
+      <StyledPopoverContainer $marginBottom={40}>
         <StyledTrigger ref={r4}>Left</StyledTrigger>
         <SessionPopoverContent
           {...props}
@@ -98,7 +98,7 @@ function PopoverGrid(
 function TooltipGrid(props: Omit<TooltipProps, 'children'>) {
   return (
     <>
-      <StyledPopoverContainer marginTop={40}>
+      <StyledPopoverContainer $marginTop={40}>
         <SessionTooltip {...props} horizontalPosition="left" verticalPosition="top">
           <StyledTrigger>Left</StyledTrigger>
         </SessionTooltip>
@@ -109,7 +109,7 @@ function TooltipGrid(props: Omit<TooltipProps, 'children'>) {
           <StyledTrigger>Right</StyledTrigger>
         </SessionTooltip>
       </StyledPopoverContainer>
-      <StyledPopoverContainer marginBottom={40}>
+      <StyledPopoverContainer $marginBottom={40}>
         <SessionTooltip {...props} horizontalPosition="left" verticalPosition="bottom">
           <StyledTrigger>Left</StyledTrigger>
         </SessionTooltip>

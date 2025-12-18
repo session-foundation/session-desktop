@@ -51,14 +51,14 @@ const StyledAvatarContainer = styled.div`
   position: relative;
 `;
 
-const StyledCTADescription = styled.span<{ reverseDirection: boolean }>`
+const StyledCTADescription = styled.span<{ $reverseDirection: boolean }>`
   text-align: center;
   cursor: pointer;
   font-size: var(--font-size-lg);
   color: var(--text-secondary-color);
   line-height: normal;
   display: inline-flex;
-  flex-direction: ${props => (props.reverseDirection ? 'row-reverse' : 'row')};
+  flex-direction: ${props => (props.$reverseDirection ? 'row-reverse' : 'row')};
   align-items: center;
   gap: var(--margins-xs);
   padding: 3px;
@@ -312,7 +312,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
       $flexGap="var(--margins-sm)"
     >
       {isMe && proBadgeCb.cb ? (
-        <StyledCTADescription reverseDirection={userHasPro} onClick={proBadgeCb.cb}>
+        <StyledCTADescription $reverseDirection={userHasPro} onClick={proBadgeCb.cb}>
           {tr(
             userHasPro
               ? 'proAnimatedDisplayPictureModalDescription'

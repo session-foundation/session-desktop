@@ -27,13 +27,13 @@ const CallInFullScreenVisible = styled.div`
   opacity: 1;
 `;
 
-const StyledLocalVideoElement = styled.video<{ isVideoMuted: boolean }>`
+const StyledLocalVideoElement = styled.video<{ $isVideoMuted: boolean }>`
   height: 20%;
   width: 20%;
   bottom: 0;
   right: 0;
   position: absolute;
-  opacity: ${props => (props.isVideoMuted ? 0 : 1)};
+  opacity: ${props => (props.$isVideoMuted ? 0 : 1)};
 `;
 
 export const CallInFullScreenContainer = () => {
@@ -92,12 +92,12 @@ export const CallInFullScreenContainer = () => {
       <StyledVideoElement
         ref={videoRefRemote}
         autoPlay={true}
-        isVideoMuted={remoteStreamVideoIsMuted}
+        $isVideoMuted={remoteStreamVideoIsMuted}
       />
       <StyledLocalVideoElement
         ref={videoRefLocal}
         autoPlay={true}
-        isVideoMuted={localStreamVideoIsMuted}
+        $isVideoMuted={localStreamVideoIsMuted}
       />
       <CallWindowControls
         currentConnectedAudioInputs={currentConnectedAudioInputs}

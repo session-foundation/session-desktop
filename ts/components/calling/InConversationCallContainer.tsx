@@ -194,7 +194,7 @@ export const InConversationCallContainer = () => {
           <StyledVideoElement
             ref={videoRefRemote}
             autoPlay={true}
-            isVideoMuted={remoteStreamVideoIsMuted}
+            $isVideoMuted={remoteStreamVideoIsMuted}
           />
           {remoteStreamVideoIsMuted && (
             <CenteredAvatarInConversation>
@@ -207,7 +207,7 @@ export const InConversationCallContainer = () => {
             ref={videoRefLocal}
             autoPlay={true}
             muted={true}
-            isVideoMuted={localStreamVideoIsMuted}
+            $isVideoMuted={localStreamVideoIsMuted}
           />
           {localStreamVideoIsMuted && (
             <CenteredAvatarInConversation>

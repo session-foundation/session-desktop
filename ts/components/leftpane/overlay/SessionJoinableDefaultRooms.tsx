@@ -127,8 +127,8 @@ const SessionJoinableRoomRow = (props: JoinableRoomProps) => {
     >
       <PillContainerHoverable
         onClick={onClickWithUrl}
-        margin={'var(--margins-sm)'}
-        padding="var(--margins-xs) var(--margins-sm)"
+        $margin={'var(--margins-sm)'}
+        $padding="var(--margins-xs) var(--margins-sm)"
       >
         <SessionJoinableRoomAvatar {...props} />
         <SessionJoinableRoomName {...props} />

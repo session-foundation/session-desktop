@@ -50,7 +50,7 @@ export function ProCTATitle({ variant }: { variant: ProCTAVariant }) {
   }, [variant]);
 
   return (
-    <StyledCTATitle reverseDirection={isTitleDirectionReversed} data-testid="cta-heading">
+    <StyledCTATitle $reverseDirection={isTitleDirectionReversed} data-testid="cta-heading">
       {titleText}
       <ProIconButton
         iconSize="huge"

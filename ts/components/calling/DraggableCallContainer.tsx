@@ -23,11 +23,11 @@ export const DraggableCallWindow = styled.div`
   border-radius: var(--border-radius);
 `;
 
-export const StyledVideoElement = styled.video<{ isVideoMuted: boolean }>`
+export const StyledVideoElement = styled.video<{ $isVideoMuted: boolean }>`
   padding: 0 1rem;
   height: 100%;
   width: 100%;
-  opacity: ${props => (props.isVideoMuted ? 0 : 1)};
+  opacity: ${props => (props.$isVideoMuted ? 0 : 1)};
 `;
 
 const StyledDraggableVideoElement = styled(StyledVideoElement)`
@@ -127,7 +127,7 @@ export const DraggableCallContainer = () => {
           <StyledDraggableVideoElement
             ref={videoRefRemote}
             autoPlay={true}
-            isVideoMuted={remoteStreamVideoIsMuted}
+            $isVideoMuted={remoteStreamVideoIsMuted}
           />
           {remoteStreamVideoIsMuted && ongoingCallPubkey && (
             <CenteredAvatarInDraggable>

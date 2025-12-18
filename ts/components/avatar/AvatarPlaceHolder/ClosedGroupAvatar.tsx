@@ -47,9 +47,9 @@ function useGroupMembersAvatars(convoId: string | undefined) {
   return sortAndSlice(sortedMembers, us);
 }
 
-const StyledAvatarClosedContainer = styled.div<{ containerSize: number }>`
-  width: ${({ containerSize }) => containerSize}px;
-  height: ${({ containerSize }) => containerSize}px;
+const StyledAvatarClosedContainer = styled.div<{ $containerSize: number }>`
+  width: ${({ $containerSize }) => $containerSize}px;
+  height: ${({ $containerSize }) => $containerSize}px;
   mask-image: url(images/avatar-svg-mask.svg);
 
   ${StyledAvatar}:last-child {
@@ -85,7 +85,7 @@ export const ClosedGroupAvatar = ({
 
   if (firstMemberId && secondMemberID) {
     return (
-      <StyledAvatarClosedContainer containerSize={containerSize}>
+      <StyledAvatarClosedContainer $containerSize={containerSize}>
         <Avatar size={avatarSize} pubkey={firstMemberId} onAvatarClick={onAvatarClick} />
         <Avatar size={avatarSize} pubkey={secondMemberID} onAvatarClick={onAvatarClick} />
       </StyledAvatarClosedContainer>
@@ -95,7 +95,7 @@ export const ClosedGroupAvatar = ({
   const isClickable = !!onAvatarClick;
 
   return (
-    <StyledAvatarClosedContainer containerSize={containerSize}>
+    <StyledAvatarClosedContainer $containerSize={containerSize}>
       <Avatar
         size={avatarSize}
         pubkey={UserUtils.getOurPubKeyStrFromCache()}

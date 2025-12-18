@@ -14,11 +14,10 @@ import { useUpdateInputValue } from './useUpdateInputValue';
 import { SpacerMD } from '../basic/Text';
 
 export const StyledTextAreaContainer = styled(motion.div)<{
-  error: boolean;
-  textSize: SessionInputTextSizes;
-  centerText?: boolean;
-  monospaced?: boolean;
-  padding?: string;
+  $error: boolean;
+  $textSize: SessionInputTextSizes;
+  $monospaced?: boolean;
+  $padding?: string;
 }>`
   display: flex;
   align-items: center;
@@ -26,14 +25,14 @@ export const StyledTextAreaContainer = styled(motion.div)<{
   line-height: 1;
   height: 100%;
   width: 100%;
-  padding: ${props => (props.padding ? props.padding : 'var(--margins-md)')};
+  padding: ${props => (props.$padding ? props.$padding : 'var(--margins-md)')};
 
   background: transparent;
-  color: ${props => (props.error ? 'var(--danger-color)' : 'var(--input-text-color)')};
+  color: ${props => (props.$error ? 'var(--danger-color)' : 'var(--input-text-color)')};
   outline: 0;
 
-  font-family: ${props => (props.monospaced ? 'var(--font-mono)' : 'var(--font-default)')};
-  ${props => `font-size: var(--font-size-${props.textSize});`}
+  font-family: ${props => (props.$monospaced ? 'var(--font-mono)' : 'var(--font-default)')};
+  ${props => `font-size: var(--font-size-${props.$textSize});`}
 
   textarea {
     display: flex;
@@ -49,8 +48,8 @@ export const StyledTextAreaContainer = styled(motion.div)<{
 
     &:placeholder-shown {
       line-height: 1;
-      font-family: ${props => (props.monospaced ? 'var(--font-mono)' : 'var(--font-default)')};
-      ${props => `font-size: var(--font-size-${props.textSize});`}
+      font-family: ${props => (props.$monospaced ? 'var(--font-mono)' : 'var(--font-default)')};
+      ${props => `font-size: var(--font-size-${props.$textSize});`}
     }
 
     &::placeholder {
@@ -130,12 +129,6 @@ export const SimpleSessionTextarea = (
     style: { paddingInlineEnd, lineHeight: 1.5 },
   };
 
-  const containerProps = {
-    error: hasError,
-    textSize,
-    padding,
-  };
-
   useEffect(() => {
     const textarea = ref.current;
     if (textarea) {
@@ -152,11 +145,11 @@ export const SimpleSessionTextarea = (
       $flexDirection="column"
       $justifyContent="center"
       $alignItems="center"
-      error={hasError}
-      textSize={textSize}
+      $error={hasError}
+      $textSize={textSize}
     >
       <BorderWithErrorState hasError={hasError}>
-        <StyledTextAreaContainer {...containerProps}>
+        <StyledTextAreaContainer $error={hasError} $textSize={textSize} $padding={padding}>
           <textarea
             {...inputProps}
             placeholder={disabled ? value : placeholder}

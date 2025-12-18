@@ -20,9 +20,9 @@ import { TermsAndConditions } from '../TermsAndConditions';
 import { tr } from '../../../localization/localeTools';
 
 // NOTE we want to prevent the buttons from flashing when the app starts
-const StyledStart = styled.div<{ ready: boolean }>`
+const StyledStart = styled.div<{ $ready: boolean }>`
   ${props =>
-    !props.ready &&
+    !props.$ready &&
     `.session-button {
     transition: none;
   }`}
@@ -42,7 +42,7 @@ export const Start = () => {
   });
 
   return (
-    <StyledStart ready={ready}>
+    <StyledStart $ready={ready}>
       <SessionButton
         ariaLabel={'Create account button'}
         onClick={() => {

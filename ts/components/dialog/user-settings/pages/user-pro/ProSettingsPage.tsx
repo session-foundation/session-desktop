@@ -85,7 +85,7 @@ const HeroImageBgContainer = styled.div`
   align-items: center;
 `;
 
-const HeroImageBg = styled.div<{ noColors?: boolean }>`
+const HeroImageBg = styled.div<{ $noColors?: boolean }>`
   padding-top: 55px;
   justify-items: center;
 
@@ -100,7 +100,7 @@ const HeroImageBg = styled.div<{ noColors?: boolean }>`
       circle,
       color-mix(
           in srgb,
-          ${props => (props.noColors ? 'var(--disabled-color) 35%' : 'var(--primary-color) 25%')},
+          ${props => (props.$noColors ? 'var(--disabled-color) 35%' : 'var(--primary-color) 25%')},
           transparent
         )
         0%,
@@ -126,11 +126,11 @@ const HeroImageLabelContainer = styled.div`
   }
 `;
 
-export const StyledProStatusText = styled.div<{ isError?: boolean }>`
+export const StyledProStatusText = styled.div<{ $isError?: boolean }>`
   text-align: center;
   line-height: var(--font-size-sm);
   font-size: var(--font-size-sm);
-  ${props => (props.isError ? 'color: var(--warning-color);' : '')}
+  ${props => (props.$isError ? 'color: var(--warning-color);' : '')}
 `;
 
 export const StyledProHeroText = styled.div`
@@ -158,7 +158,7 @@ export function ProHeroImage({
     <SectionFlexContainer onClick={onClick}>
       <SectionFlexContainer style={{ position: 'relative' }}>
         <HeroImageBgContainer>
-          <HeroImageBg noColors={noColors}>
+          <HeroImageBg $noColors={noColors}>
             <SessionIcon
               iconType="brand"
               iconColor={noColors ? 'var(--disabled-color)' : 'var(--primary-color)'}
@@ -177,7 +177,7 @@ export function ProHeroImage({
         </HeroImageBgContainer>
       </SectionFlexContainer>
       {heroStatusText ? (
-        <StyledProStatusText isError={isError}>{heroStatusText}</StyledProStatusText>
+        <StyledProStatusText $isError={isError}>{heroStatusText}</StyledProStatusText>
       ) : null}
       {heroStatusText && heroText ? <SpacerMD /> : null}
       {heroText ? <StyledProHeroText>{heroText}</StyledProHeroText> : null}

@@ -47,10 +47,10 @@ const AvatarItem = (props: { memberPubkey: string; isAdmin: boolean }) => {
 };
 
 const StyledSessionMemberItem = styled.button<{
-  inMentions?: boolean;
+  $inMentions?: boolean;
   selected?: boolean;
-  disableBg?: boolean;
-  withBorder?: boolean;
+  $disableBg?: boolean;
+  $withBorder?: boolean;
 }>`
   cursor: ${props => (props.disabled ? 'not-allowed' : 'pointer')};
   display: flex;
@@ -59,23 +59,23 @@ const StyledSessionMemberItem = styled.button<{
   flex-shrink: 0;
   font-family: var(--font-default);
   padding: 0px var(--margins-sm);
-  height: ${props => (props.inMentions ? '40px' : '50px')};
+  height: ${props => (props.$inMentions ? '40px' : '50px')};
   width: 100%;
   transition: var(--default-duration);
   background-color: ${props =>
-    !props.disableBg && props.selected
+    !props.$disableBg && props.selected
       ? 'var(--conversation-tab-background-selected-color) !important'
       : null};
 
-  ${props => props.inMentions && 'max-width: 300px;'}
+  ${props => props.$inMentions && 'max-width: 300px;'}
   ${props =>
-    props.withBorder &&
+    props.$withBorder &&
     `&:not(button:last-child) {
     border-bottom: 1px solid var(--border-color);
   }`}
 
   ${props =>
-    !props.inMentions
+    !props.$inMentions
       ? css`
           &:hover {
             background-color: var(--conversation-tab-background-hover-color);
@@ -141,8 +141,8 @@ const ResendContainer = ({
   return null;
 };
 
-const StyledGroupStatusText = styled.span<{ isFailure: boolean }>`
-  color: ${props => (props.isFailure ? 'var(--danger-color)' : 'var(--text-secondary-color)')};
+const StyledGroupStatusText = styled.span<{ $isFailure: boolean }>`
+  color: ${props => (props.$isFailure ? 'var(--danger-color)' : 'var(--text-secondary-color)')};
   font-size: var(--font-size-xs);
   margin-top: var(--margins-xs);
   min-width: 100px; // min-width so that the dialog does not resize when the status change to sending
@@ -199,7 +199,7 @@ const GroupStatusText = ({ groupPk, pubkey }: { pubkey: PubkeyType; groupPk: Gro
   return (
     <StyledGroupStatusText
       data-testid={'contact-status'}
-      isFailure={memberStatus === 'INVITE_FAILED' || memberStatus === 'PROMOTION_FAILED'}
+      $isFailure={memberStatus === 'INVITE_FAILED' || memberStatus === 'PROMOTION_FAILED'}
     >
       {statusText}
     </StyledGroupStatusText>
@@ -332,10 +332,10 @@ export const MemberListItem = <T extends string>({
         isSelected ? onUnselect?.(pubkey) : onSelect?.(pubkey);
       }}
       data-testid={dataTestId}
-      inMentions={inMentions}
+      $inMentions={inMentions}
       selected={isSelected}
-      disableBg={disableBg}
-      withBorder={withBorder}
+      $disableBg={disableBg}
+      $withBorder={withBorder}
       disabled={disabled}
     >
       <StyledInfo>

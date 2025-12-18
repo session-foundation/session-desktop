@@ -3,11 +3,9 @@
  * Requires: @emotion/is-prop-valid
  */
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
 const isPropValid = require('@emotion/is-prop-valid').default;
 
-// Pre-compiled regexes
-const PROPS_TYPE_PATTERN = /Props?$|Style|Styled/;
+// Pre-compiled regex
 const STYLED_COMPONENT_PATTERN = /^Styled[A-Z]/;
 
 // Character codes for fast comparison
@@ -31,11 +29,20 @@ function isValidDOMAttributeCached(name) {
 function isValidDOMAttribute(name) {
   const firstChar = name.charCodeAt(0);
 
-  // Check data-* and aria-* prefixes (check length and hyphen position before expensive startsWith)
-  if (firstChar === CHAR_d && name.length > 5 && name.charCodeAt(4) === CHAR_HYPHEN && name.startsWith('data-')) {
+  if (
+    firstChar === CHAR_d &&
+    name.length > 5 &&
+    name.charCodeAt(4) === CHAR_HYPHEN &&
+    name.startsWith('data-')
+  ) {
     return true;
   }
-  if (firstChar === CHAR_a && name.length > 5 && name.charCodeAt(4) === CHAR_HYPHEN && name.startsWith('aria-')) {
+  if (
+    firstChar === CHAR_a &&
+    name.length > 5 &&
+    name.charCodeAt(4) === CHAR_HYPHEN &&
+    name.startsWith('aria-')
+  ) {
     return true;
   }
 
@@ -51,7 +58,6 @@ function isNativeElement(name) {
   return firstChar >= CHAR_a && firstChar <= CHAR_z;
 }
 
-// Check if a node is the 'styled' or 'css' identifier
 function isStyledIdentifier(node) {
   if (node?.type !== 'Identifier') {
     return false;
@@ -60,11 +66,6 @@ function isStyledIdentifier(node) {
   return name === 'styled' || name === 'css';
 }
 
-/**
- * Get the root identifier from a potentially chained expression
- * styled.div.attrs({}) -> styled
- * styled(Comp) -> styled
- */
 function getRootIdentifier(node) {
   if (!node) {
     return null;
@@ -90,8 +91,78 @@ function isStyledTag(tag) {
   return isStyledIdentifier(root);
 }
 
-// Reusable message data factory (avoid object allocation in hot path)
-const createMessageData = (prop) => ({ prop });
+/**
+ * Determines if a styled-components tag targets a DOM element directly.
+ *
+ * Returns:
+ *   - true: styled.div, styled.span, styled('div'), etc. (props go to DOM)
+ *   - false: styled(Component), styled(OtherStyledComponent) (props go to component)
+ */
+function isStyledDOMElement(tag) {
+  if (!tag) {
+    return false;
+  }
+
+  // styled.div`` or styled.div.attrs({})``
+  if (tag.type === 'MemberExpression') {
+    let current = tag;
+
+    while (current?.type === 'MemberExpression') {
+      const obj = current.object;
+
+      if (obj?.type === 'Identifier' && (obj.name === 'styled' || obj.name === 'css')) {
+        const prop = current.property;
+        if (prop?.type === 'Identifier') {
+          return isNativeElement(prop.name);
+        }
+      }
+
+      if (obj?.type === 'MemberExpression') {
+        current = obj;
+        continue;
+      }
+
+      if (obj?.type === 'CallExpression') {
+        return isStyledDOMElement(obj);
+      }
+
+      break;
+    }
+
+    return false;
+  }
+
+  // styled(Component)`` or styled('div')``
+  if (tag.type === 'CallExpression') {
+    const callee = tag.callee;
+
+    if (callee?.type === 'Identifier' && callee.name === 'styled') {
+      const args = tag.arguments;
+      if (args && args.length > 0) {
+        const firstArg = args[0];
+
+        if (firstArg.type === 'Literal' && typeof firstArg.value === 'string') {
+          return isNativeElement(firstArg.value);
+        }
+
+        if (firstArg.type === 'Identifier') {
+          return false;
+        }
+      }
+    }
+
+    if (callee?.type === 'MemberExpression') {
+      if (callee.property?.name === 'attrs') {
+        return isStyledDOMElement(callee.object);
+      }
+      return isStyledDOMElement(callee);
+    }
+  }
+
+  return false;
+}
+
+const createMessageData = prop => ({ prop });
 
 module.exports = {
   meta: {
@@ -107,8 +178,8 @@ module.exports = {
     messages: {
       missingTransientPrefix:
         'Prop "{{prop}}" should use transient prop syntax "${{prop}}" to avoid passing to DOM. See https://styled-components.com/docs/api#transient-props',
-      missingTransientPrefixInterface:
-        'Interface/type prop "{{prop}}" for styled-component should use transient prop syntax "${{prop}}".',
+      missingTransientPrefixInline:
+        'Inline type prop "{{prop}}" should use transient prop syntax "${{prop}}".',
     },
     schema: [
       {
@@ -124,14 +195,6 @@ module.exports = {
             items: { type: 'string' },
             default: [],
           },
-          checkInterfaces: {
-            type: 'boolean',
-            default: true,
-          },
-          checkJSXAttributes: {
-            type: 'boolean',
-            default: true,
-          },
         },
         additionalProperties: false,
       },
@@ -145,14 +208,10 @@ module.exports = {
     const ignorePatterns = options.ignoreComponentPatterns;
     const ignoreComponentPatterns =
       ignorePatterns?.length > 0 ? ignorePatterns.map(p => new RegExp(p)) : null;
-    const checkInterfaces = options.checkInterfaces !== false;
-    const checkJSXAttributes = options.checkJSXAttributes !== false;
 
-    if (!checkInterfaces && !checkJSXAttributes) {
-      return {};
-    }
-
-    const styledComponentNames = new Set();
+    // Track styled components that wrap DOM elements vs other components
+    const styledDOMComponents = new Set();
+    const styledNonDOMComponents = new Set();
 
     function shouldIgnoreComponent(name) {
       if (!ignoreComponentPatterns) {
@@ -176,14 +235,6 @@ module.exports = {
       return isValidDOMAttribute(name);
     }
 
-    function reportInvalidProp(node, propName, isInterface) {
-      context.report({
-        node,
-        messageId: isInterface ? 'missingTransientPrefixInterface' : 'missingTransientPrefix',
-        data: createMessageData(propName),
-      });
-    }
-
     function checkTypeMembers(members) {
       for (let i = 0; i < members.length; i++) {
         const member = members[i];
@@ -191,34 +242,45 @@ module.exports = {
         if (member.type === 'TSPropertySignature' && key?.type === 'Identifier') {
           const propName = key.name;
           if (!isValidProp(propName)) {
-            reportInvalidProp(key, propName, true);
+            context.report({
+              node: key,
+              messageId: 'missingTransientPrefixInline',
+              data: createMessageData(propName),
+            });
           }
         }
       }
     }
 
     function isStyledDeclaration(init) {
-      // styled.div`...` or styled(Comp)`...`
       return init?.type === 'TaggedTemplateExpression' && isStyledTag(init.tag);
     }
 
-    const visitors = {
-      // Collect styled component names
+    return {
+      // Collect styled component names and categorize them
       VariableDeclarator(node) {
         const id = node.id;
         if (id?.type === 'Identifier' && isStyledDeclaration(node.init)) {
-          styledComponentNames.add(id.name);
+          const name = id.name;
+          const tag = node.init.tag;
+
+          if (isStyledDOMElement(tag)) {
+            styledDOMComponents.add(name);
+          } else {
+            styledNonDOMComponents.add(name);
+          }
         }
       },
 
-      // Check inline type parameters in styled-components
+      // Check inline type parameters in styled-components (e.g., styled.div<{ customProp: boolean }>)
       TaggedTemplateExpression(node) {
-        if (!checkInterfaces) {
+        const tag = node.tag;
+        if (!isStyledTag(tag)) {
           return;
         }
 
-        const tag = node.tag;
-        if (!isStyledTag(tag)) {
+        // Only check if this is a styled DOM element
+        if (!isStyledDOMElement(tag)) {
           return;
         }
 
@@ -235,40 +297,9 @@ module.exports = {
           }
         }
       },
-    };
 
-    // Only add interface checker if enabled
-    if (checkInterfaces) {
-      visitors.TSPropertySignature = function(node) {
-        const key = node.key;
-        if (!key || key.type !== 'Identifier') {
-          return;
-        }
-
-        const propName = key.name;
-        if (isValidProp(propName)) {
-          return;
-        }
-
-        // Walk up to find containing interface/type
-        let parent = node.parent;
-        while (parent) {
-          const parentType = parent.type;
-          if (parentType === 'TSInterfaceDeclaration' || parentType === 'TSTypeAliasDeclaration') {
-            const typeName = parent.id?.name;
-            if (typeName && PROPS_TYPE_PATTERN.test(typeName)) {
-              reportInvalidProp(key, propName, true);
-            }
-            return;
-          }
-          parent = parent.parent;
-        }
-      };
-    }
-
-    // Only add JSX checker if enabled
-    if (checkJSXAttributes) {
-      visitors.JSXAttribute = function(node) {
+      // Check JSX attributes passed to styled components
+      JSXAttribute(node) {
         const nodeName = node.name;
         if (!nodeName || nodeName.type !== 'JSXIdentifier') {
           return;
@@ -306,12 +337,23 @@ module.exports = {
           return;
         }
 
-        if (styledComponentNames.has(componentName) || STYLED_COMPONENT_PATTERN.test(componentName)) {
-          reportInvalidProp(nodeName, propName, false);
+        // Skip if this is a styled component that wraps a non-DOM component
+        if (styledNonDOMComponents.has(componentName)) {
+          return;
         }
-      };
-    }
 
-    return visitors;
+        // Check if it's a known styled DOM component or matches naming pattern
+        if (
+          styledDOMComponents.has(componentName) ||
+          STYLED_COMPONENT_PATTERN.test(componentName)
+        ) {
+          context.report({
+            node: nodeName,
+            messageId: 'missingTransientPrefix',
+            data: createMessageData(propName),
+          });
+        }
+      },
+    };
   },
 };

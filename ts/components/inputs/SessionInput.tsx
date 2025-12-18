@@ -23,8 +23,8 @@ import { StyledTextAreaContainer } from './SimpleSessionTextarea';
 export type SessionInputTextSizes = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
 export const StyledSessionInput = styled(Flex)<{
-  error: boolean;
-  textSize: SessionInputTextSizes;
+  $error: boolean;
+  $textSize: SessionInputTextSizes;
 }>`
   position: relative;
   width: 100%;
@@ -49,57 +49,57 @@ export const StyledSessionInput = styled(Flex)<{
   input::placeholder,
   textarea::placeholder {
     transition: opacity var(--default-duration) color var(--default-duration);
-    ${props => props.error && `color: var(--danger-color); opacity: 1;`}
+    ${props => props.$error && `color: var(--danger-color); opacity: 1;`}
   }
 
   ${props =>
-    props.textSize &&
+    props.$textSize &&
     `
   ${StyledInput} {
-    font-size: var(--font-size-${props.textSize});
+    font-size: var(--font-size-${props.$textSize});
   }
 
   ${StyledTextAreaContainer} {
-    font-size: var(--font-size-${props.textSize});
+    font-size: var(--font-size-${props.$textSize});
 
     textarea {
       &:placeholder-shown {
-        font-size: var(--font-size-${props.textSize});
+        font-size: var(--font-size-${props.$textSize});
       }
     }
   }
   `}
 `;
 
-const StyledBorder = styled(AnimatedFlex)<{ shape: 'round' | 'square' | 'none' }>`
+const StyledBorder = styled(AnimatedFlex)<{ $shape: 'round' | 'square' | 'none' }>`
   position: relative;
   border: 1px solid var(--input-border-color);
   border-radius: ${props =>
-    props.shape === 'none' ? '0px' : props.shape === 'square' ? '7px' : '13px'};
+    props.$shape === 'none' ? '0px' : props.$shape === 'square' ? '7px' : '13px'};
 `;
 
 const StyledInput = styled(motion.input)<{
-  error: boolean;
-  textSize: SessionInputTextSizes;
-  centerText?: boolean;
-  monospaced?: boolean;
-  padding?: string;
+  $error: boolean;
+  $textSize: SessionInputTextSizes;
+  $centerText?: boolean;
+  $monospaced?: boolean;
+  $padding?: string;
 }>`
   outline: 0;
   border: none;
   width: 100%;
   background: transparent;
-  color: ${props => (props.error ? 'var(--danger-color)' : 'var(--input-text-color)')};
+  color: ${props => (props.$error ? 'var(--danger-color)' : 'var(--input-text-color)')};
 
-  font-family: ${props => (props.monospaced ? 'var(--font-mono)' : 'var(--font-default)')};
+  font-family: ${props => (props.$monospaced ? 'var(--font-mono)' : 'var(--font-default)')};
   line-height: 1.4;
-  padding: ${props => (props.padding ? props.padding : 'var(--margins-lg)')};
-  ${props => props.centerText && 'text-align: center;'}
-  ${props => `font-size: var(--font-size-${props.textSize});`}
+  padding: ${props => (props.$padding ? props.$padding : 'var(--margins-lg)')};
+  ${props => props.$centerText && 'text-align: center;'}
+  ${props => `font-size: var(--font-size-${props.$textSize});`}
 
   &::placeholder {
     color: var(--input-text-placeholder-color);
-    ${props => props.centerText && 'text-align: center;'}
+    ${props => props.$centerText && 'text-align: center;'}
   }
 `;
 
@@ -110,7 +110,7 @@ export function BorderWithErrorState({
   const inputShape = 'round';
   return (
     <StyledBorder
-      shape={inputShape}
+      $shape={inputShape}
       width="100%"
       $container={true}
       $alignItems="center"
@@ -311,8 +311,8 @@ export const SimpleSessionInput = (props: SimpleSessionInputProps) => {
       $flexDirection="column"
       $justifyContent="center"
       $alignItems="center"
-      error={hasError}
-      textSize={textSize}
+      $error={hasError}
+      $textSize={textSize}
     >
       <BorderWithErrorState hasError={hasError}>
         <StyledInput

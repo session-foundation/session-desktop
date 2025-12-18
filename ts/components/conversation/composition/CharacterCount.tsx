@@ -27,8 +27,8 @@ const StyledCharacterCountContainer = styled.div`
   inset-inline-end: var(--margins-md);
 `;
 
-const StyledRemainingNumber = styled.span<{ pastLimit: boolean }>`
-  color: ${props => (props.pastLimit ? 'var(--danger-color)' : 'var(--text-primary-color)')};
+const StyledRemainingNumber = styled.span<{ $pastLimit: boolean }>`
+  color: ${props => (props.$pastLimit ? 'var(--danger-color)' : 'var(--text-primary-color)')};
 `;
 
 function ProCta() {
@@ -74,7 +74,7 @@ export function CharacterCount({ count }: CharacterCountProps) {
         })}
         dataTestId="tooltip-character-count"
       >
-        <StyledRemainingNumber pastLimit={pastLimit}>
+        <StyledRemainingNumber $pastLimit={pastLimit}>
           {formatNumber(remaining)}
         </StyledRemainingNumber>
       </SessionTooltip>

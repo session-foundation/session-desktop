@@ -35,21 +35,21 @@ type WithExtraRightButton = {
 type WithShowExitIcon = { showExitIcon?: boolean };
 
 const StyledModalHeader = styled(Flex)<{
-  bigHeader?: boolean;
-  scrolled: boolean;
-  floatingHeader?: boolean;
+  $bigHeader?: boolean;
+  $scrolled: boolean;
+  $floatingHeader?: boolean;
 }>`
-  position: ${props => (props.floatingHeader ? 'absolute' : 'relative')};
+  position: ${props => (props.$floatingHeader ? 'absolute' : 'relative')};
   font-family: var(--font-default);
-  font-size: ${props => (props.bigHeader ? 'var(--font-size-h4)' : 'var(--font-size-xl)')};
+  font-size: ${props => (props.$bigHeader ? 'var(--font-size-h4)' : 'var(--font-size-xl)')};
   font-weight: 500;
   text-align: center;
   line-height: 18px;
   background-color: ${props =>
-    props.floatingHeader && !props.scrolled
+    props.$floatingHeader && !props.$scrolled
       ? 'var(--transparent-color)'
       : 'var(--modal-background-content-color)'};
-  width: ${props => (props.floatingHeader ? '-webkit-fill-available' : 'auto')};
+  width: ${props => (props.$floatingHeader ? '-webkit-fill-available' : 'auto')};
   transition-duration: var(--default-duration);
   z-index: 3;
 
@@ -64,7 +64,7 @@ const StyledModalHeader = styled(Flex)<{
     background: linear-gradient(to bottom, var(--modal-shadow-color), transparent);
 
     pointer-events: none;
-    opacity: ${props => (!props.scrolled ? '0' : '1')};
+    opacity: ${props => (!props.$scrolled ? '0' : '1')};
   }
 `;
 
@@ -144,12 +144,12 @@ const StyledModalBody = styled.div<{ $shouldOverflow: boolean; $removeScrollbarG
   }
 `;
 
-const StyledTitle = styled.div<{ bigHeader?: boolean }>`
+const StyledTitle = styled.div<{ $bigHeader?: boolean }>`
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
   padding: ${props =>
-    props.bigHeader ? 'var(--margins-sm)' : 'var(--margins-xs) var(--margins-sm)'};
+    props.$bigHeader ? 'var(--margins-sm)' : 'var(--margins-xs) var(--margins-sm)'};
 `;
 
 export const ModalActionsContainer = ({
@@ -334,9 +334,9 @@ export const ModalBasicHeader = ({
       $justifyContent={'space-between'}
       $alignItems={'center'}
       $padding={'var(--margins-lg) var(--margins-lg) var(--margins-sm) var(--margins-lg)'}
-      bigHeader={bigHeader}
-      floatingHeader={floatingHeader}
-      scrolled={scrolled}
+      $bigHeader={bigHeader}
+      $floatingHeader={floatingHeader}
+      $scrolled={scrolled}
     >
       <Flex
         $container={true}
@@ -354,7 +354,7 @@ export const ModalBasicHeader = ({
         />
       </Flex>
       <StyledTitle
-        bigHeader={bigHeader}
+        $bigHeader={bigHeader}
         tabIndex={!showExitIcon && !extraLeftButton ? 0 : undefined}
         data-testid="modal-heading"
       >

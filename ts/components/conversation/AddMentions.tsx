@@ -15,11 +15,11 @@ interface MentionProps {
   children?: ReactNode;
 }
 
-export const StyledMentionAnother = styled.span<{ inComposableElement?: boolean }>`
+export const StyledMentionAnother = styled.span<{ $inComposableElement?: boolean }>`
   border-radius: var(--border-radius);
-  padding: ${props => (props.inComposableElement ? '0' : '1px')};
-  cursor: ${props => (props.inComposableElement ? 'default' : 'auto')};
-  ${props => (props.inComposableElement ? 'user-select: all;' : '')}
+  padding: ${props => (props.$inComposableElement ? '0' : '1px')};
+  cursor: ${props => (props.$inComposableElement ? 'default' : 'auto')};
+  ${props => (props.$inComposableElement ? 'user-select: all;' : '')}
   unicode-bidi: plaintext;
   font-weight: bold;
 `;
@@ -40,7 +40,7 @@ export const Mention = (props: MentionProps) => {
       <StyledMentionedUs
         data-user-id={props.dataUserId}
         contentEditable={false}
-        inComposableElement={props.inComposableElement}
+        $inComposableElement={props.inComposableElement}
       >
         @{tr('you')}
         {props.children}
@@ -57,7 +57,7 @@ export const Mention = (props: MentionProps) => {
     <StyledMentionAnother
       data-user-id={props.dataUserId}
       contentEditable={false}
-      inComposableElement={props.inComposableElement}
+      $inComposableElement={props.inComposableElement}
     >
       @{resolvedName} {suffix}
       {props.children}

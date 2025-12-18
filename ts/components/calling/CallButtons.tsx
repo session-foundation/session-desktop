@@ -229,15 +229,15 @@ export const AudioOutputButton = ({
   );
 };
 
-const StyledCallActionButton = styled.div<{ isFullScreen: boolean }>`
+const StyledCallActionButton = styled.div<{ $isFullScreen: boolean }>`
   .session-icon-button {
     background-color: var(--call-buttons-action-background-color);
     border-radius: 50%;
     transition-duration: var(--default-duration);
-    ${props => props.isFullScreen && 'opacity: 0.4;'}
+    ${props => props.$isFullScreen && 'opacity: 0.4;'}
     &:hover {
       background-color: var(--call-buttons-action-background-hover-color);
-      ${props => props.isFullScreen && 'opacity: 1;'}
+      ${props => props.$isFullScreen && 'opacity: 1;'}
     }
   }
 `;
@@ -254,7 +254,7 @@ const ShowInFullScreenButton = ({ isFullScreen }: { isFullScreen: boolean }) => 
   };
 
   return (
-    <StyledCallActionButton isFullScreen={isFullScreen}>
+    <StyledCallActionButton $isFullScreen={isFullScreen}>
       <SessionLucideIconButton
         iconSize={'max'}
         unicode={LUCIDE_ICONS_UNICODE.MAXIMIZE}
@@ -277,7 +277,7 @@ export const HangUpButton = ({ isFullScreen }: { isFullScreen: boolean }) => {
   };
 
   return (
-    <StyledCallActionButton isFullScreen={isFullScreen}>
+    <StyledCallActionButton $isFullScreen={isFullScreen}>
       <SessionLucideIconButton
         iconSize="large"
         padding="10px"
@@ -350,7 +350,7 @@ const handleSpeakerToggle = async (
   }
 };
 
-const StyledCallWindowControls = styled.div<{ isFullScreen: boolean; makeVisible: boolean }>`
+const StyledCallWindowControls = styled.div<{ $isFullScreen: boolean; $makeVisible: boolean }>`
   position: absolute;
 
   bottom: 0px;
@@ -367,10 +367,10 @@ const StyledCallWindowControls = styled.div<{ isFullScreen: boolean; makeVisible
 
   display: flex;
   justify-content: center;
-  opacity: ${props => (props.makeVisible ? 1 : 0)};
+  opacity: ${props => (props.$makeVisible ? 1 : 0)};
 
   ${props =>
-    props.isFullScreen &&
+    props.$isFullScreen &&
     `
     opacity: 0.4;
     &:hover {
@@ -418,7 +418,7 @@ export const CallWindowControls = ({
     };
   }, [isFullScreen]);
   return (
-    <StyledCallWindowControls isFullScreen={isFullScreen} makeVisible={makeVisible}>
+    <StyledCallWindowControls $isFullScreen={isFullScreen} $makeVisible={makeVisible}>
       {!remoteStreamVideoIsMuted && <ShowInFullScreenButton isFullScreen={isFullScreen} />}
 
       <VideoInputButton
