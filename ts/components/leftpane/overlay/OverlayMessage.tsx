@@ -158,7 +158,7 @@ export const OverlayMessage = () => {
       $flexDirection={'column'}
       $flexGrow={1}
       $alignItems={'center'}
-      padding={'var(--margins-md)'}
+      $padding={'var(--margins-md)'}
     >
       <SimpleSessionTextarea
         ariaLabel="New conversation input"
@@ -176,7 +176,7 @@ export const OverlayMessage = () => {
         onEnterPressed={handleMessageButtonClick}
       />
       <SpacerMD />
-      <SessionSpinner loading={loading} />
+      <SessionSpinner $loading={loading} />
 
       {!pubkeyOrOnsError && !loading ? (
         <>

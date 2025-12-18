@@ -541,8 +541,8 @@ function ProFeatureItem({
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onClick={onClick}
         data-testid={dataTestId}
-        isDarkTheme={isDarkTheme}
-        defaultCursorWhenDisabled
+        $isDarkTheme={isDarkTheme}
+        $defaultCursorWhenDisabled
       >
         <StyledContent style={{ gap: 'var(--margins-md)' }}>
           {iconElement}

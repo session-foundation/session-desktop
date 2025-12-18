@@ -200,10 +200,10 @@ export const SessionJoinableRooms = (props: {
         $flexWrap="wrap"
         dir={htmlDirection}
         width={'100%'}
-        margin={'0 0 0 calc(var(--margins-md) * -1)'}
+        $margin={'0 0 0 calc(var(--margins-md) * -1)'}
       >
         {joinableRooms.inProgress ? (
-          <SessionSpinner loading={true} />
+          <SessionSpinner $loading={true} />
         ) : (
           <JoinableRooms
             joinableRooms={joinableRooms}

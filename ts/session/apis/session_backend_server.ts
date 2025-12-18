@@ -1,6 +1,6 @@
 import AbortController from 'abort-controller';
 import type { ZodError } from 'zod';
-import z from '../../util/zod';
+import z, { zodSafeParse } from '../../util/zod';
 import { BlindingActions } from '../../webworker/workers/browser/libsession_worker_interface';
 import { isOnionV4JSONSnodeResponse, OnionSending } from '../onions/onionSend';
 import { fromUInt8ArrayToBase64 } from '../utils/String';
@@ -204,7 +204,7 @@ export default class SessionBackendServerApi {
     response: SessionBackendServerApiResponse;
     schema: z.ZodType<T>;
   }): T | null {
-    const result = schema.safeParse(response);
+    const result = zodSafeParse(schema, response);
     if (result.success) {
       return result.data;
     }

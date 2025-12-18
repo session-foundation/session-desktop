@@ -36,7 +36,7 @@ import {
 import { Localizer } from '../basic/Localizer';
 import { tr, type TrArgs } from '../../localization/localeTools';
 
-const Container = styled.div<{ noExtraPadding: boolean }>`
+const Container = styled.div<{ $noExtraPadding: boolean }>`
   display: flex;
   flex-direction: row;
   justify-content: center;
@@ -44,7 +44,7 @@ const Container = styled.div<{ noExtraPadding: boolean }>`
 
   // add padding only if we have a child.
   &:has(*:not(:empty)) {
-    padding: ${props => (props.noExtraPadding ? '' : 'var(--margins-lg)')};
+    padding: ${props => (props.$noExtraPadding ? '' : 'var(--margins-lg)')};
   }
 `;
 
@@ -64,7 +64,7 @@ function TextNotification({
   noExtraPadding: boolean;
 }) {
   return (
-    <Container data-testid={dataTestId} noExtraPadding={noExtraPadding}>
+    <Container data-testid={dataTestId} $noExtraPadding={noExtraPadding}>
       <TextInner>
         <Localizer {...details} />
       </TextInner>
@@ -99,7 +99,7 @@ export const ConversationOutgoingRequestExplanation = () => {
       <Container
         data-testid={'empty-conversation-control-message'}
         style={{ padding: 0 }}
-        noExtraPadding={true}
+        $noExtraPadding={true}
       >
         <TextInner>{tr('messageRequestPendingDescription')}</TextInner>
       </Container>
@@ -214,7 +214,7 @@ const InvitedToGroupControlMessage = () => {
 
 export const InvitedToGroup = () => {
   return (
-    <Container noExtraPadding={false}>
+    <Container $noExtraPadding={false}>
       <InvitedToGroupControlMessage />
     </Container>
   );

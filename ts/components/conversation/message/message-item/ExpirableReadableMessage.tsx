@@ -65,11 +65,11 @@ function useIsExpired(
 }
 
 const StyledReadableMessage = styled(ReadableMessage)<{
-  isIncoming: boolean;
+  $isIncoming: boolean;
 }>`
   display: flex;
-  justify-content: flex-end; // ${props => (props.isIncoming ? 'flex-start' : 'flex-end')};
-  align-items: ${props => (props.isIncoming ? 'flex-start' : 'flex-end')};
+  justify-content: flex-end; // ${props => (props.$isIncoming ? 'flex-start' : 'flex-end')};
+  align-items: ${props => (props.$isIncoming ? 'flex-start' : 'flex-end')};
   width: 100%;
   flex-direction: column;
 `;
@@ -138,7 +138,7 @@ export const ExpirableReadableMessage = (props: ExpirableReadableMessageProps) =
     <StyledReadableMessage
       messageId={messageId}
       isUnread={!!isUnread}
-      isIncoming={isIncoming}
+      $isIncoming={isIncoming}
       onClick={onClick}
       onDoubleClickCapture={onDoubleClickCapture}
       role={role}

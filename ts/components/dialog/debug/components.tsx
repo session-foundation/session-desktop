@@ -178,7 +178,7 @@ const CheckVersionButton = ({ channelToCheck }: { channelToCheck: ReleaseChannel
         );
       }}
     >
-      <SessionSpinner loading={loading || state.loading} color={'var(--text-primary-color)'} />
+      <SessionSpinner $loading={loading || state.loading} $color={'var(--text-primary-color)'} />
       {!loading && !state.loading ? `Check ${channelToCheck} version` : null}
     </DebugButton>
   );
@@ -221,7 +221,7 @@ const CheckForUpdatesButton = () => {
         void handleCheckForUpdates();
       }}
     >
-      <SessionSpinner loading={state.loading} color={'var(--text-primary-color)'} />
+      <SessionSpinner $loading={state.loading} $color={'var(--text-primary-color)'} />
       {!state.loading ? 'Check for updates' : null}
     </DebugButton>
   );

@@ -79,7 +79,7 @@ export const ReactClearAllModal = (props: Props) => {
           localizerProps={{ token: 'emojiReactsClearAll', emoji: reaction }}
         />
 
-        <SessionSpinner loading={clearingInProgress} />
+        <SessionSpinner $loading={clearingInProgress} />
       </ModalFlexContainer>
     </SessionWrapperModal>
   );

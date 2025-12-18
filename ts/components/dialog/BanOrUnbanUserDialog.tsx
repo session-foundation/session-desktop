@@ -182,7 +182,7 @@ export const BanOrUnBanUserDialog = (props: {
           onEnterPressed={() => {}}
           inputDataTestId={isBan ? 'ban-user-input' : 'unban-user-input'}
         />
-        <SessionSpinner loading={inProgress} />
+        <SessionSpinner $loading={inProgress} />
       </ModalFlexContainer>
     </SessionWrapperModal>
   );

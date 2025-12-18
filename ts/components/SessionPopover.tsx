@@ -25,14 +25,14 @@ const StyledCoordinateMarker = styled.div<{
 `;
 
 const StyledPopover = styled.div<{
-  readyToShow: boolean;
+  $readyToShow: boolean;
   x: number;
   y: number;
-  maxWidth?: string;
-  pointerOffset?: number;
-  tooltipStyles?: boolean;
-  borderRadius?: number;
-  verticalPosition?: VerticalPosition;
+  $maxWidth?: string;
+  $pointerOffset?: number;
+  $tooltipStyles?: boolean;
+  $borderRadius?: number;
+  $verticalPosition?: VerticalPosition;
 }>`
   background-color: var(--message-bubbles-received-background-color);
   color: var(--message-bubbles-received-text-color);
@@ -40,7 +40,7 @@ const StyledPopover = styled.div<{
   font-size: var(--font-size-sm);
   overflow-wrap: break-word;
 
-  border-radius: ${props => props.borderRadius}px;
+  border-radius: ${props => props.$borderRadius}px;
   z-index: 5;
 
   position: fixed;
@@ -51,14 +51,14 @@ const StyledPopover = styled.div<{
   justify-content: space-between;
   align-items: center;
   height: max-content;
-  width: ${props => (props.maxWidth ? '100%' : 'max-content')};
-  max-width: ${props => props.maxWidth || undefined};
-  ${props => !props.readyToShow && 'visibility: hidden;'}
+  width: ${props => (props.$maxWidth ? '100%' : 'max-content')};
+  max-width: ${props => props.$maxWidth || undefined};
+  ${props => !props.$readyToShow && 'visibility: hidden;'}
 
-  ${props => props.tooltipStyles && 'padding: var(--margins-xs) var(--margins-md);'}
+  ${props => props.$tooltipStyles && 'padding: var(--margins-xs) var(--margins-md);'}
 
   ${props =>
-    props.tooltipStyles &&
+    props.$tooltipStyles &&
     `&:after {
     content: '';
     width: ${TIP_LENGTH}px;
@@ -68,10 +68,10 @@ const StyledPopover = styled.div<{
     border-radius: 5px;
     transform: scaleY(1.4) rotate(45deg);
     // 5.2px allows the tooltip triangle to wrap around the border radius slightly on its limits
-    clip-path: ${props.verticalPosition === 'bottom' ? 'polygon(0% 0%, 0px 60%, 60% 0px)' : 'polygon(100% 100%, 5.2px 100%, 100% 5.2px)'};
+    clip-path: ${props.$verticalPosition === 'bottom' ? 'polygon(0% 0%, 0px 60%, 60% 0px)' : 'polygon(100% 100%, 5.2px 100%, 100% 5.2px)'};
     position: absolute;
-    ${props.verticalPosition === 'bottom' ? 'top' : 'bottom'}: 0;
-    left: ${props.pointerOffset ?? 0}px;
+    ${props.$verticalPosition === 'bottom' ? 'top' : 'bottom'}: 0;
+    left: ${props.$pointerOffset ?? 0}px;
   }`}
 `;
 
@@ -202,16 +202,16 @@ export const SessionPopoverContent = (props: PopoverProps) => {
     <>
       <StyledPopover
         ref={ref}
-        readyToShow={readyToShow}
+        $readyToShow={readyToShow}
         onClick={onClick}
         x={x}
         y={y}
-        maxWidth={maxWidth}
+        $maxWidth={maxWidth}
         className={className}
-        pointerOffset={pointerOffset}
-        tooltipStyles={isTooltip}
-        borderRadius={CONTENT_BORDER_RADIUS}
-        verticalPosition={verticalPosition}
+        $pointerOffset={pointerOffset}
+        $tooltipStyles={isTooltip}
+        $borderRadius={CONTENT_BORDER_RADIUS}
+        $verticalPosition={verticalPosition}
       >
         {children}
       </StyledPopover>

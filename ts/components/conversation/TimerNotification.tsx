@@ -188,9 +188,9 @@ export const TimerNotification = (props: WithMessageId) => {
         $alignItems="center"
         $justifyContent="center"
         width="90%"
-        maxWidth="700px"
-        margin="5px auto 10px auto" // top margin is smaller that bottom one to make the stopwatch icon of expirable message closer to its content
-        padding="5px 10px"
+        $maxWidth="700px"
+        $margin="5px auto 10px auto" // top margin is smaller that bottom one to make the stopwatch icon of expirable message closer to its content
+        $padding="5px 10px"
         style={{ textAlign: 'center' }}
       >
         {renderOffIcon && (
@@ -203,7 +203,7 @@ export const TimerNotification = (props: WithMessageId) => {
             <SpacerMD />
           </>
         )}
-        <TextWithChildren subtle={true}>
+        <TextWithChildren $subtle={true}>
           <Localizer {...i18nProps} />
         </TextWithChildren>
         <FollowSettingsButton {...props} />

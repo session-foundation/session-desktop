@@ -376,7 +376,7 @@ export function UpdateConversationDetailsDialog(props: WithConvoId) {
           }
         />
       )}
-      <SessionSpinner loading={isNameChangePending} />
+      <SessionSpinner $loading={isNameChangePending} />
       <SpacerSM />
     </SessionWrapperModal>
   );

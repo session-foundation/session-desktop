@@ -129,14 +129,14 @@ const StyledModal = styled.div<{
   }
 `;
 
-const StyledModalBody = styled.div<{ shouldOverflow: boolean; removeScrollbarGutter?: boolean }>`
-  ${props => (!props.removeScrollbarGutter ? 'scrollbar-gutter: stable;' : '')}
+const StyledModalBody = styled.div<{ $shouldOverflow: boolean; $removeScrollbarGutter?: boolean }>`
+  ${props => (!props.$removeScrollbarGutter ? 'scrollbar-gutter: stable;' : '')}
   margin: 0;
   font-family: var(--font-default);
   line-height: var(--font-size-md);
   font-size: var(--font-size-md);
   height: 100%;
-  overflow-y: ${props => (props.shouldOverflow ? 'auto' : 'hidden')};
+  overflow-y: ${props => (props.$shouldOverflow ? 'auto' : 'hidden')};
   overflow-x: hidden;
 
   .message {
@@ -171,7 +171,7 @@ export const ModalActionsContainer = ({
       $container={true}
       width={'100%'}
       $justifyContent="space-evenly"
-      maxWidth={maxWidth || '300px'}
+      $maxWidth={maxWidth || '300px'}
       $alignItems="center"
       $flexGap="var(--margins-md)"
       height="unset"
@@ -333,7 +333,7 @@ export const ModalBasicHeader = ({
       $flexDirection={'row'}
       $justifyContent={'space-between'}
       $alignItems={'center'}
-      padding={'var(--margins-lg) var(--margins-lg) var(--margins-sm) var(--margins-lg)'}
+      $padding={'var(--margins-lg) var(--margins-lg) var(--margins-sm) var(--margins-lg)'}
       bigHeader={bigHeader}
       floatingHeader={floatingHeader}
       scrolled={scrolled}
@@ -342,8 +342,8 @@ export const ModalBasicHeader = ({
         $container={true}
         $flexDirection={'row'}
         $alignItems={'center'}
-        padding={'0'}
-        margin={'0'}
+        $padding={'0'}
+        $margin={'0'}
       >
         {extraLeftButton}
         {/* Note: this is just here to keep the title centered, no matter the buttons we have */}
@@ -364,8 +364,8 @@ export const ModalBasicHeader = ({
         $container={true}
         $flexDirection={'row'}
         $alignItems={'center'}
-        padding={'0'}
-        margin={'0'}
+        $padding={'0'}
+        $margin={'0'}
       >
         {/* Note: this is just here to keep the title centered, no matter the buttons we have */}
         <ExtraSpacerRight
@@ -447,7 +447,7 @@ export const SessionWrapperModal = (props: SessionWrapperModalType & { onClose?:
       <IsModalScrolledContext.Provider value={scrolled}>
         <OnModalCloseContext.Provider value={onClose ?? null}>
           <StyledRootDialog
-            shouldOverflow={shouldOverflow}
+            $shouldOverflow={shouldOverflow}
             className={clsx('modal', classes)}
             onMouseDown={handleClick}
             role="dialog"
@@ -466,15 +466,15 @@ export const SessionWrapperModal = (props: SessionWrapperModalType & { onClose?:
               {separateHeader}
               <StyledModalBody
                 onScroll={handleScroll}
-                shouldOverflow={shouldOverflow}
-                removeScrollbarGutter={removeScrollbarGutter}
+                $shouldOverflow={shouldOverflow}
+                $removeScrollbarGutter={removeScrollbarGutter}
               >
                 {bodyHeader}
                 <Flex
                   $container={true}
                   $alignItems="center"
                   $flexDirection="column"
-                  paddingInline="var(--margins-lg)" // add the padding here so that the rest of the modal isn't affected (including buttonChildren/ModalHeader)
+                  $paddingInline="var(--margins-lg)" // add the padding here so that the rest of the modal isn't affected (including buttonChildren/ModalHeader)
                   $flexGap={$flexGap}
                 >
                   {props.children}

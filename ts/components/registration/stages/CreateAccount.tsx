@@ -141,7 +141,7 @@ export const CreateAccount = () => {
         width="100%"
         $flexDirection="column"
         $alignItems="flex-start"
-        margin={'0 0 0 8px'}
+        $margin={'0 0 0 8px'}
       >
         <OnboardHeading>{tr('displayNamePick')}</OnboardHeading>
         <SpacerSM />

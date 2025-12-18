@@ -161,7 +161,7 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
             }}
           />
         ) : null}
-        <SessionSpinner loading={isLoading} />
+        <SessionSpinner $loading={isLoading} />
       </ModalFlexContainer>
     </SessionWrapperModal>
   );

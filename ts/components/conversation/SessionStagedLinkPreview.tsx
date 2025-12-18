@@ -173,7 +173,7 @@ const StagedLinkPreview = ({
       $justifyContent={isLoading ? 'center' : 'space-between'}
       $alignItems="center"
       width={'100%'}
-      padding={'var(--margins-md)'}
+      $padding={'var(--margins-md)'}
     >
       <Flex
         $container={true}
@@ -181,7 +181,7 @@ const StagedLinkPreview = ({
         $alignItems={'center'}
       >
         {isLoading ? (
-          <SessionSpinner loading={isLoading} data-testid="link-preview-loading" />
+          <SessionSpinner $loading={isLoading} data-testid="link-preview-loading" />
         ) : null}
         {isLoaded && isContentTypeImage ? (
           <StyledImage data-testid="link-preview-image">

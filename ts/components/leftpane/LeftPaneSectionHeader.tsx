@@ -134,7 +134,7 @@ export const LeftPaneBanner = () => {
         width={'100%'}
         $flexDirection="column"
         $alignItems={'flex-start'}
-        padding={'var(--margins-md)'}
+        $padding={'var(--margins-md)'}
       >
         <Flex $container={true} width={'100%'} $alignItems="flex-start">
           <StyledBannerTitle>

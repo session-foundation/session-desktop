@@ -72,7 +72,7 @@ const NodesStats = ({ style }: { style?: CSSProperties }) => {
         $alignItems="center"
         overflowY="hidden"
         height="100%"
-        maxHeight="64px"
+        $maxHeight="64px"
       >
         <SessionNetworkHeading width="60%">
           <Localizer token={'sessionNetworkNodesSwarm'} />
@@ -96,8 +96,8 @@ const NodesStats = ({ style }: { style?: CSSProperties }) => {
         $alignItems="center"
         overflowY="hidden"
         height="100%"
-        maxHeight="64px"
-        margin="0 0 auto 0"
+        $maxHeight="64px"
+        $margin="0 0 auto 0"
       >
         <SessionNetworkHeading width="60%">
           <Localizer token={'sessionNetworkNodesSecuring'} />
@@ -154,8 +154,8 @@ const CurrentPriceBlock = () => {
       $flexDirection="row"
       $justifyContent="space-between"
       $alignItems="flex-start"
-      paddingInline={'12px 0'}
-      paddingBlock={'var(--margins-md)'}
+      $paddingInline={'12px 0'}
+      $paddingBlock={'var(--margins-md)'}
       backgroundColor={
         isDarkTheme ? 'var(--background-primary-color)' : 'var(--background-secondary-color)'
       }
@@ -227,8 +227,8 @@ const SecuredByBlock = () => {
       $alignItems="flex-start"
       $flexGrow={1}
       width={'100%'}
-      paddingInline={'12px 0'}
-      paddingBlock={'var(--margins-md)'}
+      $paddingInline={'12px 0'}
+      $paddingBlock={'var(--margins-md)'}
       backgroundColor={
         isDarkTheme ? 'var(--background-primary-color)' : 'var(--background-secondary-color)'
       }

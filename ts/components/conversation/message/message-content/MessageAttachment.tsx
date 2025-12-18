@@ -47,13 +47,13 @@ type Props = {
 };
 
 const StyledImageGridContainer = styled.div<{
-  messageDirection: MessageModelType;
+  $messageDirection: MessageModelType;
 }>`
   text-align: center;
   position: relative;
   overflow: hidden;
   display: flex;
-  justify-content: ${props => (props.messageDirection === 'incoming' ? 'flex-start' : 'flex-end')};
+  justify-content: ${props => (props.$messageDirection === 'incoming' ? 'flex-start' : 'flex-end')};
 `;
 
 export const MessageAttachment = (props: Props) => {
@@ -132,8 +132,8 @@ export const MessageAttachment = (props: Props) => {
     }
 
     return (
-      <MessageHighlighter highlight={highlight}>
-        <StyledImageGridContainer messageDirection={direction}>
+      <MessageHighlighter $highlight={highlight}>
+        <StyledImageGridContainer $messageDirection={direction}>
           <ImageGrid
             attachments={attachments}
             imageBroken={imageBroken}
@@ -149,7 +149,7 @@ export const MessageAttachment = (props: Props) => {
   if (!firstAttachment.pending && !firstAttachment.error && isAudio(attachments)) {
     return (
       <MessageHighlighter
-        highlight={highlight}
+        $highlight={highlight}
         role="main"
         onClick={(e: any) => {
           if (multiSelectMode) {

@@ -577,7 +577,7 @@ export const CompositionTextArea = (props: Props) => {
         disabled={!typingEnabled}
         autoFocus={true}
         ref={inputRef}
-        scrollbarPadding={140}
+        $scrollbarPadding={140}
         autoCorrect="off"
         aria-haspopup="listbox"
         aria-autocomplete="list"

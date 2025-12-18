@@ -356,7 +356,7 @@ export function EditPasswordSettingsPage(modalState: {
             <Flex
               $container={true}
               $alignItems="flex-start"
-              padding="var(--margins-md)"
+              $padding="var(--margins-md)"
               $flexDirection="column"
               style={{
                 backgroundColor: 'var(--modal-background-content-color)',

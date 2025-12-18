@@ -139,7 +139,7 @@ export const AddModeratorsDialog = (props: Props) => {
           }
         />
 
-        <SessionSpinner loading={addingInProgress} />
+        <SessionSpinner $loading={addingInProgress} />
       </ModalFlexContainer>
     </SessionWrapperModal>
   );

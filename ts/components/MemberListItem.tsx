@@ -130,8 +130,8 @@ const ResendContainer = ({
       <Flex
         $container={true}
         $flexGap="var(--margins-sm)"
-        margin="0 0 0 auto"
-        padding="0 var(--margins-lg)"
+        $margin="0 0 0 auto"
+        $padding="0 var(--margins-lg)"
       >
         <ResendButton groupPk={groupPk} pubkey={pubkey} />
         <PromoteButton groupPk={groupPk} pubkey={pubkey} />
@@ -343,9 +343,9 @@ export const MemberListItem = <T extends string>({
         <Flex
           $container={true}
           $flexDirection="column"
-          margin="0 var(--margins-md)"
+          $margin="0 var(--margins-md)"
           $alignItems="flex-start"
-          minWidth="0"
+          $minWidth="0"
         >
           <ContactName
             contactNameContext={`member-list-item${contactNameSuffix ?? ''}`}

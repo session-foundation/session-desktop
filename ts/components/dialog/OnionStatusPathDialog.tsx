@@ -89,7 +89,6 @@ function useOnionPathWithUsAndNetwork() {
     ...onionPath.map((node, index) => {
       return {
         ...node,
-
         label: localDevnet ? `SeshNet ${index + 1}` : undefined,
       };
     }),
@@ -156,7 +155,7 @@ const OnionPathModalInner = () => {
   });
 
   if (!isOnline || !nodes || nodes.length <= 0 || !reader) {
-    return <SessionSpinner loading={true} />;
+    return <SessionSpinner $loading={true} />;
   }
 
   return <OnionPathModalLoaded />;
@@ -196,7 +195,7 @@ const OnionPathModalLoaded = () => {
                 <OnionCountryDisplay
                   labelText={countryName}
                   snodeIp={snode.ip}
-                  key={`country-${snode.ip}`}
+                  key={snode.ip ? `country-${snode.ip}` : countryName}
                 />
               );
             })}
@@ -254,8 +253,8 @@ function OnionPathDot({
       width="12"
       height="12"
       viewBox="0 0 100 100"
-      clip-rule="nonzero"
-      fill-rule="nonzero"
+      clipRule="nonzero"
+      fillRule="nonzero"
       data-testid={dataTestId}
       style={{
         transition: 'all var(--default-duration) ease-in-out',

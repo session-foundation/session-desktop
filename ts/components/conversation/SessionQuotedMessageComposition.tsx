@@ -25,8 +25,8 @@ const QuotedMessageComposition = styled(Flex)`
   border-top: 1px solid var(--border-color);
 `;
 
-const QuotedMessageCompositionReply = styled(Flex)<{ hasAttachments: boolean }>`
-  ${props => !props.hasAttachments && 'border-left: 3px solid var(--primary-color);'}
+const QuotedMessageCompositionReply = styled(Flex)<{ $hasAttachments: boolean }>`
+  ${props => !props.$hasAttachments && 'border-left: 3px solid var(--primary-color);'}
 `;
 
 const Subtle = styled.div`
@@ -122,13 +122,13 @@ export const SessionQuotedMessageComposition = () => {
       $alignItems="center"
       width={'100%'}
       $flexGrow={1}
-      padding={'var(--margins-md)'}
+      $padding={'var(--margins-md)'}
     >
       <QuotedMessageCompositionReply
         $container={true}
         $justifyContent="flex-start"
         $alignItems={'center'}
-        hasAttachments={hasAttachments}
+        $hasAttachments={hasAttachments}
       >
         {hasAttachments && (
           <StyledImage>

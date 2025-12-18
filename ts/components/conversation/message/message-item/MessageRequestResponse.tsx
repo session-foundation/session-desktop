@@ -31,11 +31,11 @@ export const MessageRequestResponse = ({ messageId }: WithMessageId) => {
         $flexDirection="row"
         $alignItems="center"
         $justifyContent="center"
-        margin={'var(--margins-sm)'}
+        $margin={'var(--margins-sm)'}
         id={`msg-${messageId}`}
       >
         <SpacerSM />
-        <TextWithChildren subtle={true} ellipsisOverflow={false} textAlign="center">
+        <TextWithChildren $subtle={true} $ellipsisOverflow={false} $textAlign="center">
           {isUs ? (
             <Localizer token="messageRequestYouHaveAccepted" name={name} />
           ) : (

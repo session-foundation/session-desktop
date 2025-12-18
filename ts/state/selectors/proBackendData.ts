@@ -1,5 +1,6 @@
 import { useSelector } from 'react-redux';
 import { ProOriginatingPlatform } from 'libsession_util_nodejs';
+import { zodSafeParse } from '../../util/zod';
 import type { StateType } from '../reducer';
 import { type ProBackendDataState } from '../ducks/proBackendData';
 import { SettingsKey } from '../../data/settings-key';
@@ -35,7 +36,7 @@ export function getProDetailsFromStorage() {
   if (!response) {
     return null;
   }
-  const result = ProDetailsResultSchema.safeParse(response);
+  const result = zodSafeParse(ProDetailsResultSchema, response);
   if (result.success) {
     return result.data;
   }

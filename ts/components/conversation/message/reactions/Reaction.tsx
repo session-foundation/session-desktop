@@ -14,11 +14,10 @@ import { SessionTooltip } from '../../../SessionTooltip';
 
 const StyledReaction = styled.button<{
   selected: boolean;
-  inModal: boolean;
-  showCount: boolean;
+  $showCount: boolean;
 }>`
   display: flex;
-  justify-content: ${props => (props.showCount ? 'flex-start' : 'center')};
+  justify-content: ${props => (props.$showCount ? 'flex-start' : 'center')};
   align-items: center;
 
   background-color: var(--message-bubbles-received-background-color);
@@ -29,7 +28,7 @@ const StyledReaction = styled.button<{
   padding: 0 7px;
   margin: 0 4px var(--margins-sm);
   height: 24px;
-  min-width: ${props => (props.showCount ? '48px' : '24px')};
+  min-width: ${props => (props.$showCount ? '48px' : '24px')};
 
   span {
     width: 100%;
@@ -39,10 +38,10 @@ const StyledReaction = styled.button<{
 `;
 
 const StyledReactionContainer = styled.div<{
-  inModal: boolean;
+  $inModal: boolean;
 }>`
   position: relative;
-  ${props => props.inModal && 'white-space: nowrap; margin-right: 8px;'}
+  ${props => props.$inModal && 'white-space: nowrap; margin-right: 8px;'}
 `;
 
 export type ReactionProps = {
@@ -139,11 +138,10 @@ export const Reaction = (props: ReactionProps) => {
   );
 
   const reactionContainer = (
-    <StyledReactionContainer ref={reactionRef} inModal={inModal}>
+    <StyledReactionContainer ref={reactionRef} $inModal={inModal}>
       <StyledReaction
-        showCount={showCount}
+        $showCount={showCount}
         selected={selected()}
-        inModal={inModal}
         onClick={handleReactionClick}
         onMouseEnter={() => handlePopupReaction?.(emoji)}
       >

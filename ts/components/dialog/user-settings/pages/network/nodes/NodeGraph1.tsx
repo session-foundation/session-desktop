@@ -13,9 +13,9 @@ export const NodeGraph1 = (props: Omit<NodeGraphProps, 'pathColor'>) => (
     <g filter="url(#NodeGraph1a)">
       <path
         fill={props.nodeColor}
-        fill-rule="evenodd"
+        fillRule="evenodd"
         d="M66.017 88.919c12.412 5.976 27.319.758 33.295-11.654 5.975-12.413.758-27.319-11.655-33.295s-27.318-.758-33.294 11.654c-5.976 12.413-.758 27.32 11.654 33.295m-1.78 3.698c14.454 6.96 31.814.883 38.773-13.572s.883-31.814-13.572-38.773-31.814-.883-38.774 13.572c-6.959 14.455-.883 31.814 13.572 38.773"
-        clip-rule="evenodd"
+        clipRule="evenodd"
       />
     </g>
     <g filter="url(#NodeGraph1b)">

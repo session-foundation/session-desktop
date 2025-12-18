@@ -97,7 +97,7 @@ const StyledSpinnerContainer = styled.div`
 const ConvoLoadingSpinner = () => {
   return (
     <StyledSpinnerContainer>
-      <SessionSpinner loading={true} />
+      <SessionSpinner $loading={true} />
     </StyledSpinnerContainer>
   );
 };

@@ -101,7 +101,7 @@ export const EmptyMessageView = () => {
           $flexDirection="column"
           $justifyContent="center"
           $alignItems="center"
-          margin="0 auto"
+          $margin="0 auto"
         >
           <img src="images/session/brand.svg" alt="full-brand-logo" />
           <img src="images/session/session-text.svg" alt="full-brand-text" />

@@ -133,7 +133,7 @@ export const UserProfileModal = ({
         $alignItems="center"
         $flexDirection="column"
         $flexGap="var(--margins-md)"
-        paddingBlock="0 var(--margins-lg)"
+        $paddingBlock="0 var(--margins-lg)"
         style={{ position: 'relative' }}
       >
         {mode === 'qr' ? (

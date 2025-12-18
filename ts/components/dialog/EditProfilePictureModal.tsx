@@ -363,7 +363,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
         <>
           <SpacerSM />
           {isMe && !isProcessing ? <Localizer token="updating" /> : null}
-          <SessionSpinner loading={loading} height="30px" />
+          <SessionSpinner $loading={loading} $height="30px" />
         </>
       ) : (
         <SpacerLG />

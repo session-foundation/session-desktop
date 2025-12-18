@@ -6,10 +6,19 @@
  */
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports -- This is the only place we want to import zod directly
 import { z } from 'zod';
+import { isDebugMode } from '../shared/env_vars';
 
 z.config({
   // NOTE: we need to use zod in a jitless configuration otherwise it violates our CSP
   jitless: true,
 });
+
+const safeParseOptions = {
+  reportInput: isDebugMode(),
+} satisfies Parameters<z.ZodType['safeParse']>[1];
+
+export function zodSafeParse<T>(schema: z.ZodType<T>, data: unknown): z.ZodSafeParseResult<T> {
+  return schema.safeParse(data, safeParseOptions);
+}
 
 export default z;

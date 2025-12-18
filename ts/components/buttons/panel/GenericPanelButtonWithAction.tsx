@@ -30,7 +30,7 @@ export const GenericPanelButtonWithAction = (props: GenericPanelButtonProps) => 
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onClick={onClick}
         data-testid={rowDataTestId}
-        isDarkTheme={isDarkTheme}
+        $isDarkTheme={isDarkTheme}
       >
         <StyledContent disabled={disabled}>
           {textElement}

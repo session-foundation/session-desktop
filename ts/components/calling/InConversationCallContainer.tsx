@@ -114,9 +114,9 @@ const DurationLabel = () => {
   return <StyledCenteredLabel>{dateString}</StyledCenteredLabel>;
 };
 
-const StyledSpinner = styled.div<{ fullWidth: boolean }>`
+const StyledSpinner = styled.div<{ $fullWidth: boolean }>`
   height: 100%;
-  width: ${props => (props.fullWidth ? '100%' : '50%')};
+  width: ${props => (props.$fullWidth ? '100%' : '50%')};
   display: flex;
   justify-content: center;
   align-items: center;
@@ -126,8 +126,8 @@ const StyledSpinner = styled.div<{ fullWidth: boolean }>`
 
 export const VideoLoadingSpinner = (props: { fullWidth: boolean }) => {
   return (
-    <StyledSpinner fullWidth={props.fullWidth}>
-      <SessionSpinner loading={true} />
+    <StyledSpinner $fullWidth={props.fullWidth}>
+      <SessionSpinner $loading={true} />
     </StyledSpinner>
   );
 };

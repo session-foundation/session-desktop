@@ -129,7 +129,7 @@ export const OverlayClosedGroupV2 = () => {
         width={'100%'}
         $flexDirection="column"
         $alignItems="center"
-        padding={'var(--margins-md)'}
+        $padding={'var(--margins-md)'}
       >
         <SimpleSessionTextarea
           // not monospaced. This is a plain text input for a group name
@@ -168,7 +168,7 @@ export const OverlayClosedGroupV2 = () => {
           </>
         )}
 
-        <SessionSpinner loading={isCreatingGroup} />
+        <SessionSpinner $loading={isCreatingGroup} />
         <SpacerLG />
       </Flex>
 
@@ -201,7 +201,7 @@ export const OverlayClosedGroupV2 = () => {
       </StyledGroupMemberListContainer>
 
       <SpacerLG style={{ flexShrink: 0 }} />
-      <Flex $container={true} width={'100%'} $flexDirection="column" padding={'var(--margins-md)'}>
+      <Flex $container={true} width={'100%'} $flexDirection="column" $padding={'var(--margins-md)'}>
         <SessionButton
           text={tr('create')}
           disabled={disableCreateButton}

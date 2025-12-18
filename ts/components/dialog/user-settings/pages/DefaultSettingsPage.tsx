@@ -397,7 +397,7 @@ export const DefaultSettingPage = (modalState: UserSettingsModalState) => {
         $container={true}
         $flexDirection="column"
         $alignItems="center"
-        paddingBlock="var(--margins-md)"
+        $paddingBlock="var(--margins-md)"
         $flexGap="var(--margins-md)"
         width="100%"
       >

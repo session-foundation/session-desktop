@@ -284,7 +284,7 @@ export const RestoreAccount = () => {
         $flexDirection="column"
         $justifyContent="flex-start"
         $alignItems="flex-start"
-        margin={
+        $margin={
           step === AccountRestoration.RecoveryPassword || step === AccountRestoration.DisplayName
             ? '0 0 0 8px'
             : '0px'

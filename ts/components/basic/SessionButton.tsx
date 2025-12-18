@@ -108,7 +108,7 @@ const StyledOutlineButton = styled(StyledBaseButton)`
   }
 `;
 
-const StyledSolidButton = styled(StyledBaseButton)<{ isDarkTheme: boolean }>`
+const StyledSolidButton = styled(StyledBaseButton)<{ $isDarkTheme: boolean }>`
   outline: none;
   background-color: ${props =>
     props.color ? `var(--${props.color}-color)` : `var(--primary-color)`};
@@ -128,7 +128,7 @@ const StyledSolidButton = styled(StyledBaseButton)<{ isDarkTheme: boolean }>`
     &:hover {
       background-color: var(--transparent-color);
       color: ${props =>
-        props.isDarkTheme
+        props.$isDarkTheme
           ? props.color && props.color !== SessionButtonColor.Tertiary
             ? `var(--${props.color}-color)`
             : 'var(--primary-color)'
@@ -206,7 +206,7 @@ export const SessionButton = (props: SessionButtonProps) => {
         className
       )}
       role="button"
-      isDarkTheme={isDarkTheme}
+      $isDarkTheme={isDarkTheme}
       onClick={onClickFn}
       ref={reference}
       data-testid={dataTestId}

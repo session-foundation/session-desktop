@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 
-export const StyledRootDialog = styled.div<{ shouldOverflow: boolean }>`
+export const StyledRootDialog = styled.div<{ $shouldOverflow: boolean }>`
   display: flex;
   align-items: center;
   justify-content: center;
@@ -13,7 +13,7 @@ export const StyledRootDialog = styled.div<{ shouldOverflow: boolean }>`
   background-color: var(--modal-background-color);
   padding: 5vh var(--margins-lg);
   z-index: 100;
-  overflow-y: ${props => (props.shouldOverflow ? 'auto' : 'hidden')};
+  overflow-y: ${props => (props.$shouldOverflow ? 'auto' : 'hidden')};
 
   & ~ .index.inbox {
     transition: filter var(--duration-modal-to-inbox);

@@ -215,7 +215,7 @@ export function DebugMenuModal() {
         $container={true}
         $flexDirection="column"
         $alignItems="flex-start"
-        padding="var(--margins-sm) 0 var(--margins-xl)"
+        $padding="var(--margins-sm) 0 var(--margins-xl)"
       >
         {getPage(page, setPage)}
       </StyledContent>

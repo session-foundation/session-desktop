@@ -137,7 +137,7 @@ export const RemoveModeratorsDialog = (props: Props) => {
         </p>
       )}
 
-      <SessionSpinner loading={removingInProgress} />
+      <SessionSpinner $loading={removingInProgress} />
     </SessionWrapperModal>
   );
 };

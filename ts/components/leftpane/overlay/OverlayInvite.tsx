@@ -75,7 +75,7 @@ export const OverlayInvite = () => {
       $flexDirection={'column'}
       $flexGrow={1}
       $alignItems={'center'}
-      padding={'var(--margins-md)'}
+      $padding={'var(--margins-md)'}
     >
       {!idCopied ? (
         <>

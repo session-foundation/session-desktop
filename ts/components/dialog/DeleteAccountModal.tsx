@@ -172,7 +172,7 @@ export const DeleteAccountModal = () => {
             setDeleteMode={setDeleteMode}
           />
         )}
-        <SessionSpinner loading={isLoading} />
+        <SessionSpinner $loading={isLoading} />
       </ModalFlexContainer>
     </SessionWrapperModal>
   );

@@ -263,7 +263,7 @@ export const UpdateGroupMembersDialog = (props: Props) => {
       </StyledContactListInModal>
 
       <SpacerLG />
-      <SessionSpinner loading={isProcessingUIChange} />
+      <SessionSpinner $loading={isProcessingUIChange} />
       <SpacerLG />
     </SessionWrapperModal>
   );

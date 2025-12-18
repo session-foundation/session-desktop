@@ -246,7 +246,7 @@ export const DisappearingMessagesForConversationModal = (props: ConversationSett
       buttonChildren={
         <ModalActionsContainer buttonType={SessionButtonType.Outline}>
           {loading ? (
-            <SessionSpinner loading={true} />
+            <SessionSpinner $loading={true} />
           ) : (
             <SessionButton
               buttonColor={SessionButtonColor.PrimaryDark}

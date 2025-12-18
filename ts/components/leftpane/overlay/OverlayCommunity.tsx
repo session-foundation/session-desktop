@@ -96,7 +96,7 @@ export const OverlayCommunity = () => {
       $flexDirection={'column'}
       $flexGrow={1}
       $alignItems={'center'}
-      padding={'var(--margins-md)'}
+      $padding={'var(--margins-md)'}
     >
       <SimpleSessionTextarea
         // not monospaced. This is a plain text input for a community url
@@ -124,7 +124,7 @@ export const OverlayCommunity = () => {
         buttonColor={SessionButtonColor.PrimaryDark}
       />
       {!loading ? <Spacer2XL /> : null}
-      <SessionSpinner loading={loading} />
+      <SessionSpinner $loading={loading} />
       <SessionJoinableRooms onJoinClick={onTryJoinRoom} alreadyJoining={loading} />
     </StyledLeftPaneOverlay>
   );
