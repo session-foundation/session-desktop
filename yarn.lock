@@ -1133,10 +1133,22 @@
   dependencies:
     "@emotion/memoize" "^0.8.1"
 
+"@emotion/is-prop-valid@^1.4.0":
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/@emotion/is-prop-valid/-/is-prop-valid-1.4.0.tgz#e9ad47adff0b5c94c72db3669ce46de33edf28c0"
+  integrity sha512-QgD4fyscGcbbKwJmqNvUMSE02OsHUa+lAWKdEUIJKgqe5IwRSKd7+KhibEWdaKwgjLj0DRSHA9biAIqGBk05lw==
+  dependencies:
+    "@emotion/memoize" "^0.9.0"
+
 "@emotion/memoize@^0.8.1":
   version "0.8.1"
   resolved "https://registry.yarnpkg.com/@emotion/memoize/-/memoize-0.8.1.tgz#c1ddb040429c6d21d38cc945fe75c818cfb68e17"
   integrity sha512-W2P2c/VRW1/1tLox0mVUalvnWXxavmv/Oum2aPsRcoDJuob75FC3Y8FbpfLwUegRcxINtGUMPq0tFCvYNTBXNA==
+
+"@emotion/memoize@^0.9.0":
+  version "0.9.0"
+  resolved "https://registry.yarnpkg.com/@emotion/memoize/-/memoize-0.9.0.tgz#745969d649977776b43fc7648c556aaa462b4102"
+  integrity sha512-30FAj7/EoJ5mwVPOWhAyCX+FPfMDrVecJAM+Iw9NRoSl4BBAQeqj4cApHHUXOVvIPgLVDsCFoz/hGD+5QQD1GQ==
 
 "@emotion/unitless@0.8.1":
   version "0.8.1"
@@ -1230,12 +1242,10 @@
 
 "@img/sharp-libvips-darwin-arm64@https://github.com/session-foundation/sharp-libvips/releases/download/v1.2.4/sharp-libvips-darwin-arm64-1.2.4.tar.gz":
   version "1.2.4"
-  uid "5f57f173e37d6f1ee2b917c964a78f739def891a"
   resolved "https://github.com/session-foundation/sharp-libvips/releases/download/v1.2.4/sharp-libvips-darwin-arm64-1.2.4.tar.gz#5f57f173e37d6f1ee2b917c964a78f739def891a"
 
 "@img/sharp-libvips-darwin-x64@https://github.com/session-foundation/sharp-libvips/releases/download/v1.2.4/sharp-libvips-darwin-x64-1.2.4.tar.gz":
   version "1.2.4"
-  uid "953bc3a7df608cca2feb06e74a525e734a63e1f4"
   resolved "https://github.com/session-foundation/sharp-libvips/releases/download/v1.2.4/sharp-libvips-darwin-x64-1.2.4.tar.gz#953bc3a7df608cca2feb06e74a525e734a63e1f4"
 
 "@img/sharp-libvips-linux-arm64@https://github.com/session-foundation/sharp-libvips/releases/download/v1.2.4/sharp-libvips-linux-arm64-1.2.4.tar.gz":
@@ -4365,6 +4375,11 @@ eslint-plugin-import@2.32.0:
     semver "^6.3.1"
     string.prototype.trimend "^1.0.9"
     tsconfig-paths "^3.15.0"
+
+eslint-plugin-local-rules@^3.0.2:
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/eslint-plugin-local-rules/-/eslint-plugin-local-rules-3.0.2.tgz#84c02ea1d604ecb00970779ad27f00738ff361ae"
+  integrity sha512-IWME7GIYHXogTkFsToLdBCQVJ0U4kbSuVyDT+nKoR4UgtnVrrVeNWuAZkdEu1nxkvi9nsPccGehEEF6dgA28IQ==
 
 eslint-plugin-mocha@^10.5.0:
   version "10.5.0"
@@ -7612,7 +7627,7 @@ resedit@^1.7.0:
   dependencies:
     pe-library "^0.4.1"
 
-reselect@^5.1.0:
+reselect@5.1.1, reselect@^5.1.0:
   version "5.1.1"
   resolved "https://registry.yarnpkg.com/reselect/-/reselect-5.1.1.tgz#c766b1eb5d558291e5e550298adb0becc24bb72e"
   integrity sha512-K/BG6eIky/SBpzfHZv/dd+9JBFiS4SWV7FIujVyJRux6e45+73RaUHXLmIR1f7WOMaQ0U1km6qwklRQxpJJY0w==

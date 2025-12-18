@@ -29,7 +29,7 @@ module.exports = {
     'plugin:import/typescript',
   ],
 
-  plugins: ['mocha', 'more', '@typescript-eslint'],
+  plugins: ['mocha', 'more', '@typescript-eslint', 'local-rules'],
   parser: '@typescript-eslint/parser',
   parserOptions: { project: ['tsconfig.json'] },
 
@@ -141,6 +141,13 @@ module.exports = {
         ],
       },
     ],
+    /**'local-rules/styled-components-transient-props': [
+      'error',
+      {
+        additionalValidProps: ['as', 'forwardedAs', 'theme'],
+        ignoreComponentPatterns: ['^Motion', '^Animated'],
+      },
+    ],*/
   },
   overrides: [
     {
