@@ -22,7 +22,7 @@ import { StyledTextAreaContainer } from './SimpleSessionTextarea';
 
 export type SessionInputTextSizes = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
-export const StyledSessionInput = styled(Flex) <{
+export const StyledSessionInput = styled(Flex)<{
   $error: boolean;
   $textSize: SessionInputTextSizes;
 }>`
@@ -71,14 +71,14 @@ export const StyledSessionInput = styled(Flex) <{
   `}
 `;
 
-const StyledBorder = styled(AnimatedFlex) <{ $shape: 'round' | 'square' | 'none' }>`
+const StyledBorder = styled(AnimatedFlex)<{ $shape: 'round' | 'square' | 'none' }>`
   position: relative;
   border: 1px solid var(--input-border-color);
   border-radius: ${props =>
     props.$shape === 'none' ? '0px' : props.$shape === 'square' ? '7px' : '13px'};
 `;
 
-const StyledInput = styled(motion.input) <{
+const StyledInput = styled(motion.input)<{
   $error: boolean;
   $textSize: SessionInputTextSizes;
   $centerText?: boolean;
