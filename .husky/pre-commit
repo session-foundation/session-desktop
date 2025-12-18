@@ -1,0 +1,20 @@
+#!/bin/sh
+
+# Validates all sources of the project's node version are the same
+if [ -f .tool-versions ] && [ -f .nvmrc ]; then
+  # Extract node version from .tool-versions
+  TOOL_VERSION=$(grep "^node" .tool-versions | cut -d' ' -f2)
+  # Extract version from .nvmrc
+  NVMRC_VERSION=$(tr -d '\n\r' <.nvmrc)
+  # Extract version from package.json > engines.node
+  PACKAGE_VERSION=$(grep -A 1 '"engines"' package.json | grep '"node"' | cut -d'"' -f4)
+
+  if [ "$TOOL_VERSION" != "$NVMRC_VERSION" ] || [ "$TOOL_VERSION" != "$PACKAGE_VERSION" ]; then
+    echo "❌ Node version mismatch!"
+    echo "   .tool-versions: $TOOL_VERSION"
+    echo "   .nvmrc: $NVMRC_VERSION"
+    echo "   package.json: $PACKAGE_VERSION"
+    echo "   Please ensure all files have the same node version."
+    exit 1
+  fi
+fi

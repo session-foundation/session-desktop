@@ -305,6 +305,11 @@ export const LoggingDebugSection = ({ forceUpdate }: { forceUpdate: () => void }
       <FlagToggle forceUpdate={forceUpdate} flag="debugServerRequests" />
       <FlagToggle forceUpdate={forceUpdate} flag="debugNonSnodeRequests" />
       <FlagToggle forceUpdate={forceUpdate} flag="debugOnionRequests" />
+      <FlagToggle forceUpdate={forceUpdate} flag="debugOnionPaths" />
+      <FlagToggle forceUpdate={forceUpdate} flag="debugSnodePool" />
+      <FlagToggle forceUpdate={forceUpdate} flag="debugOnlineState" />
+      <FlagToggle forceUpdate={forceUpdate} flag="debugInsecureNodeFetch" />
+      <i>"Debug Insecure Node Fetch" will log every single request/response!</i>
     </DebugMenuSection>
   );
 };

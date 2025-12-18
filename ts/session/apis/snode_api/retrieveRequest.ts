@@ -1,7 +1,6 @@
 import { GroupPubkeyType } from 'libsession_util_nodejs';
 import { isArray } from 'lodash';
 import { Snode } from '../../../data/types';
-import { updateIsOnline } from '../../../state/ducks/onions';
 import { GetNetworkTime } from './getNetworkTime';
 import { SnodeNamespace, SnodeNamespaces, SnodeNamespacesGroup } from './namespaces';
 
@@ -17,10 +16,8 @@ import {
 } from './SnodeRequestTypes';
 import { BatchRequests } from './batchRequest';
 import { RetrieveMessagesResultsBatched, RetrieveMessagesResultsContent } from './types';
-import { ERROR_CODE_NO_CONNECT } from './SNodeAPI';
 import { ed25519Str } from '../../utils/String';
 import { NetworkTime } from '../../../util/NetworkTime';
-import { ReduxOnionSelectors } from '../../../state/selectors/onions';
 
 type RetrieveParams = {
   pubkey: string;
@@ -257,14 +254,6 @@ async function retrieveNextMessagesNoRetries(
     return toRet;
   } catch (e) {
     window?.log?.warn('exception while parsing json of nextMessage:', e);
-    if (e.message === ERROR_CODE_NO_CONNECT || !navigator.onLine) {
-      if (ReduxOnionSelectors.isOnlineOutsideRedux()) {
-        window.inboxStore?.dispatch(updateIsOnline(false));
-      }
-    } else if (!ReduxOnionSelectors.isOnlineOutsideRedux()) {
-      window.inboxStore?.dispatch(updateIsOnline(true));
-    }
-
     throw new Error(
       `_retrieveNextMessages - exception while parsing json of nextMessage ${targetNode.ip}:${targetNode.port}: ${e?.message}`
     );

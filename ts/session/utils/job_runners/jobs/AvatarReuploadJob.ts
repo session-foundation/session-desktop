@@ -201,9 +201,6 @@ class AvatarReuploadJob extends PersistedJob<AvatarReuploadPersistedData> {
           `[avatarReupload] expiry renew for ${ed25519Str(conversation.id)} of file:${fileId} on fs: ${target} failed`
         );
 
-        // AUDRIC: expiry renew for (...efb27b5b) of file:Ff1CvAQIo1BXCeoV3DwTjYEzSoBPZW56FeExk8qij79h on fs: POTATO failed
-        // keep failing even whe it shouldnt
-
         if (shouldSkipReupload({ ourProfileLastUpdatedSeconds })) {
           window.log.debug(
             `[avatarReupload] ${ed25519Str(conversation.id)} last reupload was recent enough, so we don't want to reupload it`

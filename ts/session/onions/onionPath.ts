@@ -14,8 +14,6 @@ import {
   zip,
 } from 'lodash';
 import pRetry from 'p-retry';
-// eslint-disable-next-line import/no-named-default
-import { default as insecureNodeFetch } from 'node-fetch';
 
 import { OnionPaths } from '.';
 import { Data } from '../../data/data';
@@ -39,6 +37,7 @@ import {
 } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 import { logDebugWithCat } from '../../util/logger/debugLog';
 import { stringify } from '../../types/sqlSharedTypes';
+import { FetchDestination, insecureNodeFetch } from '../utils/InsecureNodeFetch';
 
 export function getOnionPathMinTimeout() {
   return DURATION.SECONDS;
@@ -373,7 +372,12 @@ export async function testGuardNode(snode: Snode) {
     // curl -k -X POST -H 'Content-Type: application/json' -d '"+fetchOptions.body.replace(/"/g, "\\'")+"'", url
     window?.log?.info(`${logPrefix} insecureNodeFetch => plaintext for testGuardNode: ${url}`);
 
-    response = await insecureNodeFetch(url, fetchOptions);
+    response = await insecureNodeFetch({
+      url,
+      fetchOptions,
+      destination: FetchDestination.SERVICE_NODE,
+      caller: 'testGuardNode',
+    });
   } catch (e) {
     if (e.type === 'request-timeout') {
       window?.log?.warn(

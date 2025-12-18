@@ -40,6 +40,8 @@ export type SessionDebugBooleanFeatureFlags = {
   debugOnionPaths: boolean;
   debugSnodePool: boolean;
   debugOnionRequests: boolean;
+  debugInsecureNodeFetch: boolean;
+  debugOnlineState: boolean;
 };
 
 export type SessionBooleanFeatureFlags = SessionBaseBooleanFeatureFlags &

@@ -67,14 +67,21 @@ function FeatureList({ variant }: { variant: CTAVariant }) {
     if (!isProFeatureListCTA(variant)) {
       return [];
     }
-    const features = getBaseFeatureList(variant).map(token => (
-      <CTADescriptionListItem>{tr(token)}</CTADescriptionListItem>
+
+    const features = getBaseFeatureList(variant).map((token, i) => (
+      <CTADescriptionListItem key={token} index={i}>
+        {tr(token)}
+      </CTADescriptionListItem>
     ));
 
     // Expiry related CTAs dont show the "more" feature item
     if (variant !== CTAVariant.PRO_EXPIRED && variant !== CTAVariant.PRO_EXPIRING_SOON) {
       features.push(
-        <CTADescriptionListItem customIconSrc={'images/sparkle-animated.svg'}>
+        <CTADescriptionListItem
+          key={'proFeatureListLoadsMore'}
+          index={features.length}
+          customIconSrc={'images/sparkle-animated.svg'}
+        >
           {tr('proFeatureListLoadsMore')}
         </CTADescriptionListItem>
       );
@@ -185,7 +192,7 @@ export function ProCTADescription({ variant }: { variant: ProCTAVariant }) {
   const userHasExpiredPro = useCurrentUserHasExpiredPro();
   return (
     <>
-      <StyledScrollDescriptionContainer>
+      <StyledScrollDescriptionContainer data-testid="cta-body">
         {getDescription(variant, userHasExpiredPro)}
       </StyledScrollDescriptionContainer>
       <FeatureList variant={variant} />

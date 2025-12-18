@@ -1,9 +1,10 @@
 import AbortController, { AbortSignal } from 'abort-controller';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import styled from 'styled-components';
-import insecureNodeFetch from 'node-fetch';
 
 import { isUndefined } from 'lodash';
+import type { RequestInit, Response } from 'node-fetch';
+import { StagedLinkPreviewData } from './composition/CompositionBox';
 
 import useUpdate from 'react-use/lib/useUpdate';
 import useUnmount from 'react-use/lib/useUnmount';
@@ -25,6 +26,16 @@ import { DURATION } from '../../session/constants';
 import { isDevProd } from '../../shared/env_vars';
 import { useHasLinkPreviewEnabled } from '../../state/selectors/settings';
 import { StagedLinkPreviewData } from './composition/CompositionBox';
+import { FetchDestination, insecureNodeFetch } from '../../session/utils/InsecureNodeFetch';
+
+function insecureDirectNodeFetch(href: string, init: RequestInit): Promise<Response> {
+  return insecureNodeFetch({
+    url: href,
+    fetchOptions: init,
+    destination: FetchDestination.PUBLIC,
+    caller: 'insecureDirectNodeFetch (linkPreviews)',
+  });
+}
 
 export const LINK_PREVIEW_TIMEOUT = 20 * DURATION.SECONDS;
 
@@ -37,7 +48,7 @@ export const getPreview = async (url: string, abortSignal: AbortSignal) => {
   window?.log?.info('insecureNodeFetch => plaintext for getPreview()');
 
   const linkPreviewMetadata = await LinkPreviewUtil.fetchLinkPreviewMetadata(
-    insecureNodeFetch,
+    insecureDirectNodeFetch,
     url,
     abortSignal
   );
@@ -50,7 +61,11 @@ export const getPreview = async (url: string, abortSignal: AbortSignal) => {
     try {
       window?.log?.info('insecureNodeFetch => plaintext for getPreview()');
 
-      const fullSizeImage = await fetchLinkPreviewImage(insecureNodeFetch, imageHref, abortSignal);
+      const fullSizeImage = await fetchLinkPreviewImage(
+        insecureDirectNodeFetch,
+        imageHref,
+        abortSignal
+      );
       if (!fullSizeImage) {
         throw new Error('Failed to fetch link preview image');
       }
