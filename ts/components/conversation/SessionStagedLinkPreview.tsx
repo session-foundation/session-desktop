@@ -1,15 +1,11 @@
 import AbortController, { AbortSignal } from 'abort-controller';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import styled from 'styled-components';
-
 import { isUndefined } from 'lodash';
 import type { RequestInit, Response } from 'node-fetch';
-import { StagedLinkPreviewData } from './composition/CompositionBox';
-
 import useUpdate from 'react-use/lib/useUpdate';
 import useUnmount from 'react-use/lib/useUnmount';
 import { Image } from './Image';
-
 import { isImage } from '../../types/MIME';
 import { Flex } from '../basic/Flex';
 import { SessionSpinner } from '../loading';
