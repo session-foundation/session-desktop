@@ -25,7 +25,7 @@ export function selectWeAreProUser(state: StateType) {
 }
 
 function useCurrentUserProStatus() {
-  return useSelector((state: StateType) => selectOurProStatus(state));
+  return useSelector(selectOurProStatus);
 }
 
 /**
