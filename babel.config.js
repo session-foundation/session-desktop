@@ -8,6 +8,17 @@ const { globSync } = require('glob');
 const fileFilter = process.env.SESSION_RC_FILE_FILTER;
 const allowErrors = process.env.SESSION_RC_ALLOW_ERRORS;
 
+// File patterns for babel
+const babelInclude = 'ts/**/*.js';
+const babelIgnore = ['ts/test/**'];
+
+// This can be turned into an array if we need more than 1 file ignored by the react compiler
+const fileIgnoredByReactCompiler =
+  // NOTE: [react-compiler] we are telling the compiler to not attempt to compile this
+  // file in the babel config as it is highly complex and has a lot of very fine tuned
+  // callbacks, its probably not worth trying to refactor at this stage
+  'ts/components/conversation/composition/CompositionTextArea.js';
+
 // Project root directory (where babel.config.js lives)
 const PROJECT_ROOT = __dirname;
 
@@ -37,12 +48,16 @@ const CONTEXT_LINES = 2;
 
 // Collect all errors grouped by file
 const errorsByFile = new Map();
+const skippedFiles = new Set();
 const filenameMap = new Map();
 const pendingPromises = [];
 
 // File size tracking - measure all js files at startup
 function getTotalSize() {
-  const files = globSync('ts/**/*.js', { cwd: PROJECT_ROOT });
+  const files = globSync('ts/**/*.js', {
+    cwd: PROJECT_ROOT,
+    ignore: babelIgnore,
+  });
   let total = 0;
   for (const file of files) {
     try {
@@ -290,10 +305,6 @@ async function processError(filename, event) {
 }
 
 function printAllErrors() {
-  if (errorsByFile.size === 0) {
-    return;
-  }
-
   console.log(`\n${colors.red}${colors.bright}${'═'.repeat(70)}${colors.reset}`);
   console.log(`${colors.red}${colors.bright}  REACT COMPILER ERRORS SUMMARY${colors.reset}`);
   console.log(`${colors.red}${colors.bright}${'═'.repeat(70)}${colors.reset}`);
@@ -360,14 +371,36 @@ function printAllErrors() {
   }
 }
 
-async function handleErrorExit() {
+function printSkippedFiles() {
+  const multiple = skippedFiles.size > 1;
+  console.log(
+    `${colors.yellow}${skippedFiles.size} file${multiple ? 's were' : ' was'} skipped by the react compiler based on the config: ${colors.reset}`
+  );
+  skippedFiles.forEach(filename => {
+    const resolvedFileName = resolveFilename(filename);
+    console.log(`${colors.yellow} - ${resolvedFileName} ${colors.reset}`);
+  });
+}
+
+async function handleExit() {
   await Promise.all(pendingPromises);
   printSizeSummary();
-  printAllErrors();
+  if (errorsByFile.size > 0) {
+    printAllErrors();
+  } else {
+    console.log(
+      `${colors.green}${totalFiles - skippedFiles.size} files were successfully parsed by the React Compiler ${colors.reset}`
+    );
+  }
+
+  if (skippedFiles.size) {
+    printSkippedFiles();
+  }
+
   if (errorsByFile.size > 0) {
     if (allowErrors) {
       console.log(
-        `${colors.red} SESSION_RC_ALLOW_ERRORS was enabled, the compiler will report no errors and the build will continue! ${colors.reset}`
+        `${colors.red}SESSION_RC_ALLOW_ERRORS was enabled, the compiler will report no errors and the build will continue! ${colors.reset}`
       );
     } else {
       process.exit(1);
@@ -383,7 +416,7 @@ function registerCleanup() {
   cleanupRegistered = true;
 
   process.on('beforeExit', () => {
-    void handleErrorExit();
+    void handleExit();
   });
 }
 
@@ -446,6 +479,15 @@ module.exports = {
       require.resolve('babel-plugin-react-compiler'),
       {
         target: reactTargetMajor,
+        sources: filename => {
+          // Skip specific file(s) from React Compiler
+          if (filename.includes(fileIgnoredByReactCompiler)) {
+            skippedFiles.add(filename);
+            registerCleanup();
+            return false;
+          }
+          return true;
+        },
         logger: {
           logEvent(filename, event) {
             if (event.kind === 'CompileError') {
@@ -457,6 +499,6 @@ module.exports = {
       },
     ],
   ],
-  only: ['**/ts/**'],
-  ignore: ['**/ts/test/**'],
+  only: [babelInclude],
+  ignore: babelIgnore,
 };
