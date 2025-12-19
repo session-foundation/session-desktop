@@ -47,18 +47,23 @@ function getSelectedMemberIds(state: StateType) {
   return state.groups.creationMembersSelected || [];
 }
 
+function getGroupName(state: StateType) {
+  return state.groups.creationGroupName || '';
+}
+
 function useSelectedMemberIds() {
   return useSelector(getSelectedMemberIds);
 }
 
 function useGroupName() {
-  const [groupName, setGroupName] = useState<string>('');
-  return { groupName, setGroupName };
+  return useSelector(getGroupName);
 }
 
+// NOTE: [react-compiler] this convinces the compiler the hook is static
 const useOurPkStrInternal = useOurPkStr;
 const useIsCreatingGroupFromUIPendingInternal = useIsCreatingGroupFromUIPending;
 
+// NOTE: [react-compiler] this convinces the compiler the hook is static
 function useContactsToInviteToInternal() {
   return useContactsToInviteTo('create-group');
 }
@@ -73,7 +78,7 @@ export const OverlayClosedGroupV2 = () => {
   const us = useOurPkStrInternal();
   const { contactsToInvite, searchTerm } = useContactsToInviteToInternal();
   const isCreatingGroup = useIsCreatingGroupFromUIPendingInternal();
-  const { groupName, setGroupName } = useGroupName();
+  const groupName = useGroupName();
   const [inviteAsAdmin, setInviteAsAdmin] = useBoolean(false);
   const { groupNameError, setGroupNameError } = useGroupNameError();
 
@@ -93,7 +98,6 @@ export const OverlayClosedGroupV2 = () => {
   }
 
   function onValueChanged(value: string) {
-    setGroupName(value);
     dispatch(groupInfoActions.updateGroupCreationName({ name: value }));
   }
 
