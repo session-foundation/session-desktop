@@ -36,15 +36,15 @@ import { setDebugMode } from '../../../../state/ducks/debug';
 import { useHideRecoveryPasswordEnabled } from '../../../../state/selectors/settings';
 import { OnionStatusLight } from '../../OnionStatusPathDialog';
 import { UserSettingsModalContainer } from '../components/UserSettingsModalContainer';
-import {
-  useCurrentUserHasExpiredPro,
-  useCurrentUserHasPro,
-  useProAccessDetails,
-} from '../../../../hooks/useHasPro';
+import { useCurrentUserHasExpiredPro, useCurrentUserHasPro } from '../../../../hooks/useHasPro';
 import { NetworkTime } from '../../../../util/NetworkTime';
 import { APP_URL, DURATION_SECONDS } from '../../../../session/constants';
 import { getFeatureFlag } from '../../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { useUserSettingsCloseAction } from './userSettingsHooks';
+import {
+  useProBackendProDetails,
+  useProBackendRefetch,
+} from '../../../../state/selectors/proBackendData';
 
 const handleKeyQRMode = (mode: ProfileDialogModes, setMode: (mode: ProfileDialogModes) => void) => {
   switch (mode) {
@@ -350,7 +350,8 @@ const SessionInfo = () => {
 export const DefaultSettingPage = (modalState: UserSettingsModalState) => {
   const dispatch = getAppDispatch();
   const closeAction = useUserSettingsCloseAction(modalState);
-  const { refetch, t } = useProAccessDetails();
+  const { t } = useProBackendProDetails();
+  const refetch = useProBackendRefetch();
 
   const profileName = useOurConversationUsername() || '';
   const [enlargedImage, setEnlargedImage] = useState(false);

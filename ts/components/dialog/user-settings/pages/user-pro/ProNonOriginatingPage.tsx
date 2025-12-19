@@ -19,16 +19,17 @@ import { showLinkVisitWarningDialog } from '../../../OpenUrlModal';
 import { proButtonProps } from '../../../SessionCTA';
 import { Flex } from '../../../../basic/Flex';
 import type { ProNonOriginatingPageVariant } from '../../../../../types/ReduxTypes';
-import { useCurrentNeverHadPro, useProAccessDetails } from '../../../../../hooks/useHasPro';
+import { useCurrentNeverHadPro } from '../../../../../hooks/useHasPro';
 import LIBSESSION_CONSTANTS from '../../../../../session/utils/libsession/libsession_constants';
 import { ProPaymentProvider } from '../../../../../session/apis/pro_backend_api/types';
+import { useProBackendProDetails } from '../../../../../state/selectors/proBackendData';
 
 type VariantPageProps = {
   variant: ProNonOriginatingPageVariant;
 };
 
 function ProStatusTextUpdate() {
-  const { data } = useProAccessDetails();
+  const { data } = useProBackendProDetails();
   return data.autoRenew ? (
     <Localizer
       token="proAccessActivatedAutoShort"
@@ -133,7 +134,7 @@ const ProInfoBlockText = styled.div`
 `;
 
 function ProInfoBlockDevice({ textElement }: { textElement: ReactNode }) {
-  const { data } = useProAccessDetails();
+  const { data } = useProBackendProDetails();
   return (
     <ProInfoBlockItem
       iconElement={<ProInfoBlockIconElement unicode={LUCIDE_ICONS_UNICODE.SMARTPHONE} />}
@@ -148,7 +149,7 @@ function ProInfoBlockDevice({ textElement }: { textElement: ReactNode }) {
 }
 
 function ProInfoBlockDeviceLinked() {
-  const { data } = useProAccessDetails();
+  const { data } = useProBackendProDetails();
   const hasNeverHadPro = useCurrentNeverHadPro();
   return (
     <ProInfoBlockItem
@@ -168,7 +169,7 @@ function ProInfoBlockDeviceLinked() {
 }
 
 function ProInfoBlockWebsite({ textElement }: { textElement: ReactNode }) {
-  const { data } = useProAccessDetails();
+  const { data } = useProBackendProDetails();
   return (
     <ProInfoBlockItem
       iconElement={<ProInfoBlockIconElement unicode={LUCIDE_ICONS_UNICODE.GLOBE} />}
@@ -222,7 +223,7 @@ function ProInfoBlockLayout({
 
 function ProInfoBlockUpgrade() {
   const dispatch = getAppDispatch();
-  const { data } = useProAccessDetails();
+  const { data } = useProBackendProDetails();
   return (
     <ProInfoBlockLayout
       titleElement={tr('proUpgradingTo')}
@@ -246,7 +247,7 @@ function ProInfoBlockUpgrade() {
 }
 
 function ProInfoBlockUpdate() {
-  const { data } = useProAccessDetails();
+  const { data } = useProBackendProDetails();
   return (
     <ProInfoBlockLayout
       titleElement={tr('updateAccess')}
@@ -288,7 +289,7 @@ function ProInfoBlockUpdate() {
 
 function ProInfoBlockRenew() {
   const dispatch = getAppDispatch();
-  const { data } = useProAccessDetails();
+  const { data } = useProBackendProDetails();
   return (
     <ProInfoBlockLayout
       titleElement={tr('renewingPro')}
@@ -327,7 +328,7 @@ function ProInfoBlockRenew() {
 }
 
 function ProInfoBlockCancel() {
-  const { data } = useProAccessDetails();
+  const { data } = useProBackendProDetails();
   return (
     <ProInfoBlockLayout
       titleElement={tr('proCancellation')}
@@ -395,7 +396,7 @@ function ProInfoBlockRefundSessionSupport() {
 }
 
 function ProInfoBlockRefundGooglePlay() {
-  const { data } = useProAccessDetails();
+  const { data } = useProBackendProDetails();
   return (
     <PanelButtonGroup
       containerStyle={{
@@ -417,7 +418,7 @@ function ProInfoBlockRefundGooglePlay() {
 }
 
 function ProInfoBlockRefundIOS() {
-  const { data } = useProAccessDetails();
+  const { data } = useProBackendProDetails();
   return (
     <ProInfoBlockLayout
       titleElement={tr('proRefunding')}
@@ -458,7 +459,7 @@ function ProInfoBlockRefundIOS() {
 }
 
 function ProInfoBlockRefund() {
-  const { data } = useProAccessDetails();
+  const { data } = useProBackendProDetails();
 
   if (!data.isPlatformRefundAvailable) {
     return <ProInfoBlockRefundSessionSupport />;
@@ -495,7 +496,7 @@ function ProInfoBlock({ variant }: VariantPageProps) {
 
 function ProPageButtonUpdate() {
   const dispatch = getAppDispatch();
-  const { data } = useProAccessDetails();
+  const { data } = useProBackendProDetails();
   return (
     <SessionButton
       {...proButtonProps}
@@ -512,7 +513,7 @@ function ProPageButtonUpdate() {
 
 function ProPageButtonCancel() {
   const dispatch = getAppDispatch();
-  const { data } = useProAccessDetails();
+  const { data } = useProBackendProDetails();
   return (
     <SessionButton
       {...proButtonProps}
@@ -529,7 +530,7 @@ function ProPageButtonCancel() {
 
 function ProPageButtonRefund() {
   const dispatch = getAppDispatch();
-  const { data } = useProAccessDetails();
+  const { data } = useProBackendProDetails();
   return (
     <SessionButton
       {...proButtonProps}

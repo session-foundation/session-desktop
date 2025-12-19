@@ -1,3 +1,7 @@
+// NOTE: [react-compiler] we are telling the compiler to not attempt to compile this
+// file in the babel config as it is highly complex and has a lot of very fine tuned
+// callbacks, its probably not worth trying to refactor at this stage
+
 import {
   type KeyboardEventHandler,
   type KeyboardEvent,
@@ -432,7 +436,7 @@ function useHandleKeyUp({
   }, [draft, lastBumpTypingMessageLength, selectedConversationKey, setLastBumpTypingMessageLength]);
 }
 
-export const CompositionTextArea = (props: Props) => {
+export function CompositionTextArea(props: Props) {
   const { draft, initialDraft, setDraft, inputRef, typingEnabled, onKeyDown } = props;
 
   const [lastBumpTypingMessageLength, setLastBumpTypingMessageLength] = useState(0);
@@ -599,4 +603,4 @@ export const CompositionTextArea = (props: Props) => {
       ) : null}
     </>
   );
-};
+}

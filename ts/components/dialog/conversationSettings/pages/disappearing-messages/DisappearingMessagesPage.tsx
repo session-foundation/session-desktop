@@ -151,6 +151,24 @@ function useHandleExpirationTimeChange(
   }, [expireTimer, hasOnlyOneMode, modeSelected, setTimeSelected]);
 }
 
+/**
+ * NOTE: [react-compiler] Helper function to handle the async operation with try/catch.
+ * This is extracted outside the component to work around the React Compiler limitation:
+ * "Support value blocks (conditional, logical, optional chaining, etc) within a try/catch statement"
+ */
+async function setDisappearingMessagesWithErrorHandling(
+  convoKey: string,
+  mode: DisappearingMessageConversationModeType,
+  time: number
+): Promise<{ success: true } | { success: false; error: unknown }> {
+  try {
+    await setDisappearingMessagesByConvoId(convoKey, mode, time);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error };
+  }
+}
+
 export const DisappearingMessagesForConversationModal = (props: ConversationSettingsModalState) => {
   const dispatch = getAppDispatch();
 
@@ -190,31 +208,37 @@ export const DisappearingMessagesForConversationModal = (props: ConversationSett
     if (!selectedConversationKey) {
       return;
     }
+
     if (hasOnlyOneMode) {
       if (singleMode) {
-        try {
-          await setDisappearingMessagesByConvoId(
-            selectedConversationKey,
-            timeSelected === 0 ? 'off' : singleMode,
-            timeSelected
-          );
+        const modeToSet = timeSelected === 0 ? 'off' : singleMode;
+        setLoading(true);
+        const result = await setDisappearingMessagesWithErrorHandling(
+          selectedConversationKey,
+          modeToSet,
+          timeSelected
+        );
+        setLoading(false);
+        if (result.success) {
           closeOrBackInPage();
-          setLoading(false);
-        } catch (e) {
-          setLoading(false);
-          throw e;
+        } else {
+          throw result.error;
         }
       }
       return;
     }
+
     setLoading(true);
-    try {
-      await setDisappearingMessagesByConvoId(selectedConversationKey, modeSelected, timeSelected);
+    const result = await setDisappearingMessagesWithErrorHandling(
+      selectedConversationKey,
+      modeSelected,
+      timeSelected
+    );
+    setLoading(false);
+    if (result.success) {
       closeOrBackInPage();
-      setLoading(false);
-    } catch (e) {
-      setLoading(false);
-      throw e;
+    } else {
+      throw result.error;
     }
   };
 

@@ -2,30 +2,36 @@ import { useSelector } from 'react-redux';
 import { ProOriginatingPlatform } from 'libsession_util_nodejs';
 import { zodSafeParse } from '../../util/zod';
 import type { StateType } from '../reducer';
-import { type ProBackendDataState } from '../ducks/proBackendData';
+import {
+  proBackendDataActions,
+  RequestActionArgs,
+  WithCallerContext,
+  type ProBackendDataState,
+} from '../ducks/proBackendData';
 import { SettingsKey } from '../../data/settings-key';
 import { Storage } from '../../util/storage';
 import { ProDetailsResultSchema } from '../../session/apis/pro_backend_api/schemas';
 import {
   getDataFeatureFlag,
   getFeatureFlag,
+  getFeatureFlagMemo,
   MockProAccessExpiryOptions,
 } from '../ducks/types/releasedFeaturesReduxTypes';
-import {
-  getProProviderConstantsWithFallbacks,
-  proAccessVariantToString,
-} from '../../hooks/useHasPro';
 import { NetworkTime } from '../../util/NetworkTime';
 import {
   formatDateWithLocale,
   formatRoundedUpTimeUntilTimestamp,
 } from '../../util/i18n/formatting/generics';
 import {
+  getProOriginatingPlatformFromProPaymentProvider,
   ProAccessVariant,
   ProPaymentProvider,
   ProStatus,
 } from '../../session/apis/pro_backend_api/types';
 import LIBSESSION_CONSTANTS from '../../session/utils/libsession/libsession_constants';
+import { getAppDispatch } from '../dispatch';
+import { sleepFor } from '../../session/utils/Promise';
+import { assertUnreachable } from '../../types/sqlSharedTypes';
 
 const getProBackendData = (state: StateType): ProBackendDataState => {
   return state.proBackendData;
@@ -46,6 +52,36 @@ function getProDetailsFromStorage() {
     result.error
   );
   return null;
+}
+
+export function proAccessVariantToString(variant: ProAccessVariant): string {
+  switch (variant) {
+    case ProAccessVariant.OneMonth:
+      return '1 Month';
+    case ProAccessVariant.ThreeMonth:
+      return '3 Months';
+    case ProAccessVariant.TwelveMonth:
+      return '12 Months';
+    case ProAccessVariant.Nil:
+      return 'N/A';
+    default:
+      return assertUnreachable(variant, `Unknown pro access variant: ${variant}`);
+  }
+}
+
+export function getProProviderConstantsWithFallbacks(provider: ProPaymentProvider) {
+  const libsessionPaymentProvider = getProOriginatingPlatformFromProPaymentProvider(provider);
+  const constants = LIBSESSION_CONSTANTS.LIBSESSION_PRO_PROVIDERS[libsessionPaymentProvider];
+
+  if (!constants.store) {
+    constants.store = LIBSESSION_CONSTANTS.LIBSESSION_PRO_PROVIDERS.Google.store;
+  }
+
+  if (!constants.store_other) {
+    constants.store_other = LIBSESSION_CONSTANTS.LIBSESSION_PRO_PROVIDERS.Google.store_other;
+  }
+
+  return constants;
 }
 
 function getMockedProAccessExpiry(variant: MockProAccessExpiryOptions): number | null {
@@ -224,6 +260,64 @@ export const getProBackendCurrentUserStatus = (state: StateType) => {
   return getProBackendProDetails(state).data?.currentStatus;
 };
 
+export const useProBackendProDetails = () => {
+  return useSelector(getProBackendProDetails);
+};
+
 export const useProBackendCurrentUserStatus = () => {
   return useSelector(getProBackendCurrentUserStatus);
 };
+
+export function useProBackendRefetch() {
+  const dispatch = getAppDispatch();
+
+  const details = useProBackendProDetails();
+
+  const mockSuccess = getFeatureFlagMemo('mockProRecoverButtonAlwaysSucceed');
+  const mockFail = getFeatureFlagMemo('mockProRecoverButtonAlwaysFail');
+
+  const mockRefetchSuccess = async () => {
+    const setProBackendIsLoading = (props: RequestActionArgs) =>
+      dispatch(proBackendDataActions.setIsLoading(props));
+    const setProBackendIsError = (props: RequestActionArgs) =>
+      dispatch(proBackendDataActions.setIsError(props));
+
+    if (details.isLoading) {
+      return;
+    }
+    setProBackendIsLoading({ key: 'details', result: true });
+    setProBackendIsError({ key: 'details', result: false });
+    await sleepFor(5000);
+    setProBackendIsLoading({ key: 'details', result: false });
+  };
+
+  const mockRefetchFail = async () => {
+    const setProBackendIsLoading = (props: RequestActionArgs) =>
+      dispatch(proBackendDataActions.setIsLoading(props));
+    const setProBackendIsError = (props: RequestActionArgs) =>
+      dispatch(proBackendDataActions.setIsError(props));
+    if (details.isLoading) {
+      return;
+    }
+    setProBackendIsLoading({ key: 'details', result: true });
+    setProBackendIsError({ key: 'details', result: false });
+    await sleepFor(5000);
+    setProBackendIsError({ key: 'details', result: true });
+    setProBackendIsLoading({ key: 'details', result: false });
+  };
+
+  const refetch = (args: WithCallerContext = {}) => {
+    if (details.isError || mockFail) {
+      void mockRefetchFail();
+      return;
+    }
+
+    if (mockSuccess) {
+      void mockRefetchSuccess();
+      return;
+    }
+    dispatch(proBackendDataActions.refreshGetProDetailsFromProBackend(args) as any);
+  };
+
+  return refetch;
+}

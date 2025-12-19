@@ -1,5 +1,5 @@
 import { ReactNode, useMemo } from 'react';
-import { useCurrentUserHasExpiredPro, useProAccessDetails } from '../../hooks/useHasPro';
+import { useCurrentUserHasExpiredPro } from '../../hooks/useHasPro';
 import { Localizer } from '../basic/Localizer';
 import { CTADescriptionListItem, StyledCTADescriptionList } from './CTADescriptionList';
 import { StyledScrollDescriptionContainer } from './SessionCTA';
@@ -9,6 +9,7 @@ import { formatNumber } from '../../util/i18n/formatting/generics';
 import { assertUnreachable } from '../../types/sqlSharedTypes';
 import { ProIconButton } from '../buttons/ProButton';
 import { CTAVariant, type ProCTAVariant } from './cta/types';
+import { useProBackendProDetails } from '../../state/selectors/proBackendData';
 
 const variantsWithoutFeatureList = [
   CTAVariant.PRO_GROUP_NON_ADMIN,
@@ -95,7 +96,7 @@ function FeatureList({ variant }: { variant: CTAVariant }) {
 }
 
 function ProExpiringSoonDescription() {
-  const { data } = useProAccessDetails();
+  const { data } = useProBackendProDetails();
   return <Localizer token="proExpiringSoonDescription" time={data.expiryTimeRelativeString} />;
 }
 
