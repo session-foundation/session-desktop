@@ -301,7 +301,7 @@ function ProStats() {
   const proLongerMessagesSent =
     mockProLongerMessagesSent ?? (Storage.get(SettingsKey.proLongerMessagesSent) || 0);
   const proBadgesSent = mockProBadgesSent ?? (Storage.get(SettingsKey.proBadgesSent) || 0);
-  // those 2 are not a counter, but live based on what is in stored libsession/db
+  // those 2 are not a counter, but live based on what is stored libsession/db
   const proPinnedConversations = mockProPinnedConversations ?? (pinnedConversations || 0);
   const proGroupsUpgraded = mockProGroupsUpgraded || 0;
 

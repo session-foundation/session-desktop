@@ -79,7 +79,7 @@ export abstract class BaseDecodedEnvelope {
 
     // we only want to set this if the pro proof has been confirmed valid
     // Note: this does not validate the expiry of the proof (or revoked), it only validates that the signature is valid.
-    // Use this isProProXXX methods for that
+    // Use this isProProof... methods for that
     this.validPro = args.decodedPro?.proStatus === 'ValidOrExpired' ? args.decodedPro : null;
   }
 

@@ -478,7 +478,7 @@ async function processProDetailsForMsg({
   // - if there are no pro proof, or
   // - the pro proof is not valid (validOrExpired) at the time the message was sent, or
   // - the pro proof is expired at the time the message was sent, or
-  // - the pro proof is revoked at the time
+  // - the pro proof is revoked at the time the message was sent
   // do not save the pro features associated with that message
   if (
     !decodedEnvelope.validPro ||
