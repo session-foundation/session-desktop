@@ -17,7 +17,7 @@ const fileIgnoredByReactCompiler =
   // NOTE: [react-compiler] we are telling the compiler to not attempt to compile this
   // file in the babel config as it is highly complex and has a lot of very fine tuned
   // callbacks, its probably not worth trying to refactor at this stage
-  'ts/components/conversation/composition/CompositionTextArea.js';
+  path.normalize('ts/components/conversation/composition/CompositionTextArea.js');
 
 // Project root directory (where babel.config.js lives)
 const PROJECT_ROOT = __dirname;
