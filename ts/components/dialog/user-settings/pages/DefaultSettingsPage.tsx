@@ -190,6 +190,14 @@ function SettingsSection() {
         dataTestId="privacy-settings-menu-item"
       />
       <PanelIconButton
+        iconElement={<LucideIconForSettings unicode={LUCIDE_ICONS_UNICODE.GLOBE} />}
+        text={{ token: 'sessionProxy' }}
+        onClick={() => {
+          dispatch(userSettingsModal({ userSettingsPage: 'proxy' }));
+        }}
+        dataTestId="proxy-settings-menu-item"
+      />
+      <PanelIconButton
         iconElement={<LucideIconForSettings unicode={LUCIDE_ICONS_UNICODE.VOLUME_2} />}
         text={{ token: 'sessionNotifications' }}
         onClick={() => {

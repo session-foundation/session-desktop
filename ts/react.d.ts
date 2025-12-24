@@ -96,7 +96,8 @@ declare module 'react' {
     | 'auto-update'
     | 'auto-dark-mode'
     | 'hide-menu-bar'
-    | 'pro-badge-visible';
+    | 'pro-badge-visible'
+    | 'proxy-enabled';
 
   type SettingsRadio =
     | `set-notifications-${'message' | 'name' | 'count'}`
@@ -121,6 +122,7 @@ declare module 'react' {
     | 'message-requests'
     | 'recovery-password'
     | 'privacy'
+    | 'proxy'
     | 'notifications'
     | 'conversations'
     | 'appearance'

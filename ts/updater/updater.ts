@@ -14,6 +14,7 @@ import { showCannotUpdateDialog, showDownloadUpdateDialog, showUpdateDialog } fr
 import { getLatestRelease } from '../node/latest_desktop_release';
 import { Errors } from '../types/Errors';
 import type { LoggerType } from '../util/logger/Logging';
+import { isProxyEnabled } from '../session/utils/InsecureNodeFetch';
 
 let isUpdating = false;
 let downloadIgnored = false;
@@ -76,6 +77,16 @@ export async function checkForUpdates(
   if (stopped || isUpdating || (downloadIgnored && !force)) {
     logger.info(
       `[updater] checkForUpdates is returning early stopped ${stopped} isUpdating ${isUpdating} downloadIgnored ${downloadIgnored}`
+    );
+    return false;
+  }
+
+  // SECURITY: Disable auto-updater when SOCKS proxy is enabled
+  // electron-updater uses native HTTP clients that bypass our proxy configuration
+  // To prevent traffic leaks, we disable auto-updates when proxy is active
+  if (isProxyEnabled()) {
+    logger.info(
+      '[updater] SOCKS proxy is enabled, skipping auto-update check to prevent traffic leaks. Please update manually.'
     );
     return false;
   }

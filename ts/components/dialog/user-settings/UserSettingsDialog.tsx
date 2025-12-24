@@ -10,6 +10,7 @@ import { SessionNetworkPage } from './pages/network/SessionNetworkPage';
 import { NotificationsSettingsPage } from './pages/NotificationsSettingsPage';
 import { PreferencesSettingsPage } from './pages/PreferencesSettingsPage';
 import { PrivacySettingsPage } from './pages/PrivacySettingsPage';
+import { ProxySettingsPage } from './pages/ProxySettingsPage';
 import { RecoveryPasswordSettingsPage } from './pages/RecoveryPasswordSettingsPage';
 import { ProNonOriginatingPage } from './pages/user-pro/ProNonOriginatingPage';
 import { ProSettingsPage } from './pages/user-pro/ProSettingsPage';
@@ -42,6 +43,8 @@ export const UserSettingsDialog = (modalState: UserSettingsModalState) => {
       return <RecoveryPasswordSettingsPage {...modalState} />;
     case 'password':
       return <EditPasswordSettingsPage {...modalState} />;
+    case 'proxy':
+      return <ProxySettingsPage {...modalState} />;
     case 'network':
       return <SessionNetworkPage {...modalState} />;
     case 'pro':
