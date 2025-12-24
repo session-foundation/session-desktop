@@ -1,0 +1,199 @@
+import { useState, useEffect } from 'react';
+import useUpdate from 'react-use/lib/useUpdate';
+import styled from 'styled-components';
+import { ipcRenderer } from 'electron';
+
+import { tr } from '../../../../localization/localeTools';
+import { type UserSettingsModalState } from '../../../../state/ducks/modalDialog';
+import { PanelButtonGroup } from '../../../buttons/panel/PanelButton';
+import { ModalBasicHeader } from '../../../SessionWrapperModal';
+import { ModalBackButton } from '../../shared/ModalBackButton';
+import {
+  useUserSettingsBackAction,
+  useUserSettingsCloseAction,
+  useUserSettingsTitle,
+} from './userSettingsHooks';
+import { SettingsToggleBasic } from '../components/SettingsToggleBasic';
+import { SettingsKey } from '../../../../data/settings-key';
+import { ToastUtils } from '../../../../session/utils';
+import { UserSettingsModalContainer } from '../components/UserSettingsModalContainer';
+import { ModalSimpleSessionInput } from '../../../inputs/SessionInput';
+import { Flex } from '../../../basic/Flex';
+import { SessionButton, SessionButtonColor } from '../../../basic/SessionButton';
+
+const ProxyInputsContainer = styled(Flex)`
+  width: 100%;
+  gap: var(--margins-md);
+  padding: var(--margins-md) 0;
+`;
+
+type ProxySettings = {
+  enabled: boolean;
+  host: string;
+  port: string;
+  username: string;
+  password: string;
+};
+
+async function loadProxySettings(): Promise<ProxySettings> {
+  const enabled = Boolean(window.getSettingValue(SettingsKey.proxyEnabled));
+  const host = (window.getSettingValue(SettingsKey.proxyHost) as string) || '';
+  const port = String(window.getSettingValue(SettingsKey.proxyPort) || '');
+  const username = (window.getSettingValue(SettingsKey.proxyUsername) as string) || '';
+  const password = (window.getSettingValue(SettingsKey.proxyPassword) as string) || '';
+
+  return { enabled, host, port, username, password };
+}
+
+function validateProxySettings(settings: ProxySettings): { valid: boolean; error?: string } {
+  if (!settings.enabled) {
+    return { valid: true };
+  }
+
+  if (!settings.host || settings.host.trim() === '') {
+    return { valid: false, error: tr('proxyValidationErrorHost') };
+  }
+
+  const portNum = parseInt(settings.port, 10);
+  if (Number.isNaN(portNum) || portNum < 1 || portNum > 65535) {
+    return { valid: false, error: tr('proxyValidationErrorPort') };
+  }
+
+  return { valid: true };
+}
+
+async function saveProxySettings(settings: ProxySettings): Promise<void> {
+  const validation = validateProxySettings(settings);
+  if (!validation.valid) {
+    ToastUtils.pushToastError('proxyValidationError', validation.error || '');
+    return;
+  }
+
+  await window.setSettingValue(SettingsKey.proxyEnabled, settings.enabled);
+  await window.setSettingValue(SettingsKey.proxyHost, settings.host);
+  await window.setSettingValue(SettingsKey.proxyPort, parseInt(settings.port, 10) || 0);
+  await window.setSettingValue(SettingsKey.proxyUsername, settings.username);
+  await window.setSettingValue(SettingsKey.proxyPassword, settings.password);
+
+  // Notify main process to apply proxy settings
+  ipcRenderer.send('apply-proxy-settings');
+
+  ToastUtils.pushToastSuccess('proxySaved', tr('proxySavedDescription'));
+}
+
+export function ProxySettingsPage(modalState: UserSettingsModalState) {
+  const backAction = useUserSettingsBackAction(modalState);
+  const closeAction = useUserSettingsCloseAction(modalState);
+  const title = useUserSettingsTitle(modalState);
+  const forceUpdate = useUpdate();
+
+  const [settings, setSettings] = useState<ProxySettings>({
+    enabled: false,
+    host: '',
+    port: '1080',
+    username: '',
+    password: '',
+  });
+
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    void (async () => {
+      const loadedSettings = await loadProxySettings();
+      setSettings(loadedSettings);
+      setIsLoading(false);
+    })();
+  }, []);
+
+  const handleToggleEnabled = async () => {
+    const newSettings = { ...settings, enabled: !settings.enabled };
+    setSettings(newSettings);
+  };
+
+  const handleSave = async () => {
+    await saveProxySettings(settings);
+    forceUpdate();
+  };
+
+  if (isLoading) {
+    return null;
+  }
+
+  return (
+    <UserSettingsModalContainer
+      headerChildren={
+        <ModalBasicHeader
+          title={title}
+          bigHeader={true}
+          showExitIcon={true}
+          extraLeftButton={backAction ? <ModalBackButton onClick={backAction} /> : undefined}
+        />
+      }
+      onClose={closeAction || undefined}
+    >
+      <PanelButtonGroup>
+        <SettingsToggleBasic
+          baseDataTestId="proxy-enabled"
+          text={{ token: 'proxyEnabled' }}
+          subText={{ token: 'proxyDescription' }}
+          onClick={handleToggleEnabled}
+          active={settings.enabled}
+        />
+      </PanelButtonGroup>
+
+      {settings.enabled && (
+        <ProxyInputsContainer $container={true} $flexDirection="column">
+          <ModalSimpleSessionInput
+            ariaLabel={tr('proxyHost')}
+            placeholder={tr('proxyHostPlaceholder')}
+            value={settings.host}
+            onValueChanged={(value: string) => setSettings({ ...settings, host: value })}
+            onEnterPressed={() => {}}
+            providedError={undefined}
+            errorDataTestId="error-message"
+          />
+          <ModalSimpleSessionInput
+            ariaLabel={tr('proxyPort')}
+            placeholder={tr('proxyPortPlaceholder')}
+            value={settings.port}
+            onValueChanged={(value: string) => setSettings({ ...settings, port: value })}
+            onEnterPressed={() => {}}
+            providedError={undefined}
+            errorDataTestId="error-message"
+          />
+          <ModalSimpleSessionInput
+            ariaLabel={tr('proxyAuthUsername')}
+            placeholder={tr('proxyAuthUsername')}
+            value={settings.username}
+            onValueChanged={(value: string) => setSettings({ ...settings, username: value })}
+            onEnterPressed={() => {}}
+            providedError={undefined}
+            errorDataTestId="error-message"
+          />
+          <ModalSimpleSessionInput
+            ariaLabel={tr('proxyAuthPassword')}
+            placeholder={tr('proxyAuthPassword')}
+            value={settings.password}
+            onValueChanged={(value: string) => setSettings({ ...settings, password: value })}
+            onEnterPressed={() => {}}
+            providedError={undefined}
+            errorDataTestId="error-message"
+            type="password"
+          />
+          <Flex
+            $container={true}
+            $justifyContent="flex-end"
+            padding="var(--margins-md) 0 0 0"
+            width="100%"
+          >
+            <SessionButton
+              text={tr('save')}
+              buttonColor={SessionButtonColor.Primary}
+              onClick={handleSave}
+            />
+          </Flex>
+        </ProxyInputsContainer>
+      )}
+    </UserSettingsModalContainer>
+  );
+}

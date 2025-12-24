@@ -91,6 +91,8 @@ yarn build # transpile and assemble files
 yarn build-release
 ```
 
+> Release packaging will rebuild `libsession_util_nodejs` if its native binary is missing, so ensure your toolchain (cmake, compiler, etc.) is available before running `yarn build-release`.
+
 The binaries will be placed inside the `release/` folder.
 
 <details>

@@ -37,7 +37,7 @@ import {
 } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 import { logDebugWithCat } from '../../util/logger/debugLog';
 import { stringify } from '../../types/sqlSharedTypes';
-import { FetchDestination, insecureNodeFetch } from '../utils/InsecureNodeFetch';
+import { FetchDestination, insecureNodeFetch, isProxyEnabled } from '../utils/InsecureNodeFetch';
 
 export function getOnionPathMinTimeout() {
   return DURATION.SECONDS;
@@ -353,6 +353,10 @@ export async function testGuardNode(snode: Snode) {
     params,
   };
 
+  // CRITICAL: Use longer timeout when proxy is enabled
+  // SOCKS handshake + proxy routing requires more time than direct connection
+  const requestTimeout = isProxyEnabled() ? 30000 : 10000;
+
   const fetchOptions = {
     method: 'POST',
     body: JSON.stringify(body),
@@ -361,7 +365,7 @@ export async function testGuardNode(snode: Snode) {
       'User-Agent': 'WhatsApp',
       'Accept-Language': 'en-us',
     },
-    timeout: 10000, // 10s, we want a smaller timeout for testing
+    timeout: requestTimeout,
     agent: snodeHttpsAgent,
   };
 

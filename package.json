@@ -36,8 +36,10 @@
     "format": "prettier --list-different --write \"*.{css,js,json,scss,ts,tsx}\" \"./**/*.{css,js,json,scss,ts,tsx}\"",
     "start-prod-test": "cross-env NODE_ENV=production NODE_APP_INSTANCE=$MULTI electron .",
     "test": "cross-env IS_UNIT_TEST=1 mocha",
+    "prebuild-release-base": "node ./build/ensureLibsessionNative.js",
     "build-release-base": "cross-env NODE_ENV=production electron-builder --config.extraMetadata.environment=production",
     "build-release": "yarn build-release-base --publish=never --config.directories.output=release",
+    "build-release-install": "yarn build && yarn build-release && sudo dpkg -i release/session-desktop-linux-amd64-${npm_package_version}.deb",
     "build-release-publish": "yarn build-release-base --publish=always",
     "ready": "yarn dedup --fail && yarn build && yarn lint && yarn test",
     "postinstall": "yarn patch-package && yarn electron-builder install-app-deps",
@@ -108,6 +110,9 @@
     "redux-persist": "^6.0.0",
     "redux-promise-middleware": "^6.2.0",
     "rimraf": "6.0.1",
+    "smart-buffer": "^4.2.0",
+    "socks": "^2.8.3",
+    "socks-proxy-agent": "^8.0.4",
     "sanitize.css": "^12.0.1",
     "semver": "^7.7.1",
     "sharp": "https://github.com/session-foundation/sharp/releases/download/v0.34.5/sharp-0.34.5.tgz",
@@ -347,5 +352,6 @@
       "ts/webworker/workers/node/libsession/*.node",
       "!dev-app-update.yml"
     ]
-  }
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }

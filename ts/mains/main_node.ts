@@ -16,6 +16,7 @@ import {
   nativeTheme,
   powerSaveBlocker,
   screen,
+  session,
   shell,
   systemPreferences,
 } from 'electron';
@@ -857,6 +858,9 @@ async function showMainWindow(sqlKey: string, passwordAttempt = false) {
     tray = createTrayIcon(getMainWindow);
   }
 
+  // Apply proxy settings on startup
+  await applyProxySettings();
+
   setupMenu();
 }
 
@@ -1224,6 +1228,66 @@ async function askForMediaAccess() {
 
 ipc.on('media-access', async () => {
   await askForMediaAccess();
+});
+
+// Proxy settings
+let proxyUsername: string | null = null;
+let proxyPassword: string | null = null;
+
+async function applyProxySettings() {
+  try {
+    const enabled = sqlNode.getItemById('proxy-enabled')?.value || false;
+
+    if (!enabled) {
+      // Clear proxy if disabled
+      await session.defaultSession.setProxy({ proxyRules: '' });
+      console.log('Proxy disabled');
+      return;
+    }
+
+    const host = (sqlNode.getItemById('proxy-host')?.value || '') as string;
+    const port = sqlNode.getItemById('proxy-port')?.value || 0;
+    const username = (sqlNode.getItemById('proxy-username')?.value || '') as string;
+    const password = (sqlNode.getItemById('proxy-password')?.value || '') as string;
+
+    if (!host || !port) {
+      console.warn('Proxy enabled but host or port is missing');
+      return;
+    }
+
+    // Store credentials for login handler
+    proxyUsername = username || null;
+    proxyPassword = password || null;
+
+    const proxyRules = `socks5://${host}:${port}`;
+    await session.defaultSession.setProxy({
+      proxyRules,
+      proxyBypassRules: '<local>',
+    });
+
+    console.log(`Proxy configured: ${proxyRules}`);
+  } catch (e) {
+    console.error('Failed to apply proxy settings:', e);
+  }
+}
+
+// Handle proxy authentication
+app.on('login', (_event, _webContents, _authenticationResponseDetails, authInfo, callback) => {
+  if (authInfo.isProxy && proxyUsername && proxyPassword) {
+    callback(proxyUsername, proxyPassword);
+  } else {
+    callback('', ''); // Cancel the auth request
+  }
+});
+
+ipc.on('apply-proxy-settings', async event => {
+  try {
+    await applyProxySettings();
+    event.sender.send('apply-proxy-settings-response', null);
+  } catch (e) {
+    console.error('apply-proxy-settings error:', e);
+    event.sender.send('apply-proxy-settings-response', e);
+  }
 });
 
 ipc.handle('get-storage-profile', async (): Promise<string> => {

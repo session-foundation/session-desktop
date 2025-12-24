@@ -31,6 +31,7 @@ export type UserSettingsPage =
   | 'clear-data'
   | 'password'
   | 'preferences'
+  | 'proxy'
   | 'network'
   | 'pro'
   | 'proNonOriginating';
