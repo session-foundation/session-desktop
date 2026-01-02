@@ -88,6 +88,7 @@ import { OpenGroupV2Room } from '../data/types';
 import { tr } from '../localization/localeTools';
 import { getFileCreationTimestampMs } from './fs_utility';
 import { isDebugMode } from '../shared/env_vars';
+import { DBVacuumManager } from './dbVacuumManager';
 
 // eslint:disable: function-name non-literal-fs-path
 
@@ -152,17 +153,27 @@ function setSQLPassword(password: string) {
   assertGlobalInstance().pragma(`rekey = ${value}`);
 }
 
-function vacuumDatabase(db: BetterSqlite3.Database) {
+function switchToIncrementalVacuum(db: BetterSqlite3.Database) {
   if (!db) {
     throw new Error('vacuum: db is not initialized');
   }
+  const incrementalVacuumEnabled = getItemById(SettingsKey.incrementalVacuumEnabled, db);
+  if (incrementalVacuumEnabled?.value) {
+    console.info('Incremental vacuum already enabled. No need to vacuum on start anymore.');
+
+    return;
+  }
+  db.pragma(`auto_vacuum=INCREMENTAL;`);
   const start = Date.now();
-  console.info('Vacuuming DB. This might take a while.');
+  console.info('Vacuuming DB (last before incremental vacuum). This might take a while.');
+  // Note: after enabling auto_vacuum incremental, we still need to do a full vacuum.
   db.exec('VACUUM;');
   console.info(`Vacuuming DB Finished in ${Date.now() - start}ms.`);
+  createOrUpdateItem({ id: SettingsKey.incrementalVacuumEnabled, value: true }, db);
 }
 
 let databaseFilePath: string | undefined;
+let dbVacuumManager: DBVacuumManager | undefined;
 
 function _initializePaths(configDir: string) {
   const dbDir = path.join(configDir, 'sql');
@@ -242,9 +253,15 @@ async function initializeSql({
 
     console.info('total message count after cleaning: ', getMessageCount());
     console.info('total conversation count after cleaning: ', getConversationCount());
-    // Clear any already deleted db entries on each app start.
-    vacuumDatabase(db);
+    switchToIncrementalVacuum(db);
+    dbVacuumManager = new DBVacuumManager(db);
   } catch (error) {
+    try {
+      dbVacuumManager?.cleanup();
+      dbVacuumManager = undefined;
+    } catch (e) {
+      // nothing to do
+    }
     console.error('error', error);
     if (passwordAttempt) {
       throw error;
@@ -2574,7 +2591,12 @@ export function close() {
   } catch (e) {
     // console.info('setGracefulLastShutdown failed', e.message);
   }
-
+  try {
+    dbVacuumManager?.cleanup();
+    dbVacuumManager = undefined;
+  } catch (e) {
+    // nothing to do
+  }
   closeDbInstance();
 }
 

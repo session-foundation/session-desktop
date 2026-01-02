@@ -35,6 +35,7 @@ export function closeDbInstance() {
   if (!globalInstance) {
     return;
   }
+
   const dbRef = globalInstance;
   globalInstance = null;
   // SQlite documentation suggests that we run `PRAGMA optimize` right before
