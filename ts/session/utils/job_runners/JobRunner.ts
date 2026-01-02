@@ -21,6 +21,8 @@ import {
 import { JobRunnerType } from './jobs/JobRunnerType';
 import { DURATION } from '../../constants';
 
+const log = typeof window !== 'undefined' && window.log ? window.log : console;
+
 function jobToLogId<T extends TypeOfPersistedData>(jobRunner: JobRunnerType, job: PersistedJob<T>) {
   return `id: "${job.persistedData.identifier}" (type: "${jobRunner}")`;
 }
@@ -86,7 +88,7 @@ export class PersistedJobRunner<T extends TypeOfPersistedData> {
     if (workerCount <= 0 || workerCount > MAX_WORKER_COUNT) {
       throw new Error(`workerCount must be between 1 and ${MAX_WORKER_COUNT}`);
     }
-    window?.log?.warn(`new runner of type ${jobRunnerType} built`);
+    log?.warn?.(`new runner of type ${jobRunnerType} built`);
   }
 
   public async loadJobsFromDb() {
@@ -106,7 +108,7 @@ export class PersistedJobRunner<T extends TypeOfPersistedData> {
           jobsArray = parsed;
         }
       } catch (e) {
-        window.log.warn(`Failed to parse jobs of type ${this.jobRunnerType} from DB`);
+        log.warn(`Failed to parse jobs of type ${this.jobRunnerType} from DB`);
         jobsArray = [];
       }
     }
@@ -127,7 +129,7 @@ export class PersistedJobRunner<T extends TypeOfPersistedData> {
         j => j.persistedData.identifier === job.persistedData.identifier
       )
     ) {
-      window.log.debug(
+      log.debug(
         `job runner (${this.jobRunnerType}) has already a job with id:"${job.persistedData.identifier}" planned so not adding another one`
       );
       return 'identifier_exists';
@@ -139,13 +141,13 @@ export class PersistedJobRunner<T extends TypeOfPersistedData> {
 
     const addJobChecks = job.addJobCheck(serializedNonRunningJobs);
     if (addJobChecks === 'skipAddSameJobPresent') {
-      // window.log.warn(`addjobCheck returned "${addJobChecks}" so not adding it`);
+      // log.warn(`addjobCheck returned "${addJobChecks}" so not adding it`);
       return 'type_exists';
     }
 
     // make sure there is no job with that same identifier already .
 
-    window.log.debug(`job runner adding type:"${job.persistedData.jobType}"`);
+    log.debug(`job runner adding type:"${job.persistedData.jobType}"`);
     await this.addJobUnchecked(job);
     return 'job_added';
   }
@@ -272,7 +274,7 @@ export class PersistedJobRunner<T extends TypeOfPersistedData> {
       const jobIndex = this.jobsScheduled.findIndex(f => f.persistedData.identifier === identifier);
 
       if (jobIndex >= 0 && jobIndex <= this.jobsScheduled.length) {
-        window.log.debug(
+        log.debug(
           `removing job ${jobToLogId(
             this.jobRunnerType,
             this.jobsScheduled[jobIndex]
@@ -281,7 +283,7 @@ export class PersistedJobRunner<T extends TypeOfPersistedData> {
 
         this.jobsScheduled.splice(jobIndex, 1);
       } else {
-        window.log.debug(
+        log.debug(
           `failed to remove job ${identifier} with index ${jobIndex} from ${this.jobRunnerType}`
         );
       }
@@ -326,19 +328,19 @@ export class PersistedJobRunner<T extends TypeOfPersistedData> {
       // here the job did not throw and didn't return false. Consider it OK then and remove it from the list of jobs to run.
       this.deleteJobsByIdentifier([nextJob.persistedData.identifier]);
     } catch (e) {
-      window.log.info(`${jobToLogId(this.jobRunnerType, nextJob)} failed with "${e.message}"`);
+      log.info(`${jobToLogId(this.jobRunnerType, nextJob)} failed with "${e.message}"`);
       if (
         jobResult === RunJobResult.PermanentFailure ||
         nextJob.persistedData.currentRetry >= nextJob.persistedData.maxAttempts - 1
       ) {
         if (jobResult === RunJobResult.PermanentFailure) {
-          window.log.info(
+          log.info(
             `${jobToLogId(this.jobRunnerType, nextJob)}:${
               nextJob.persistedData.currentRetry
             } permament failure for job`
           );
         } else {
-          window.log.info(
+          log.info(
             `Too many failures for ${jobToLogId(this.jobRunnerType, nextJob)}: ${
               nextJob.persistedData.currentRetry
             } out of ${nextJob.persistedData.maxAttempts}`
@@ -347,7 +349,7 @@ export class PersistedJobRunner<T extends TypeOfPersistedData> {
         // we cannot restart this job anymore. Remove the entry completely
         this.deleteJobsByIdentifier([nextJob.persistedData.identifier]);
       } else {
-        window.log.info(
+        log.info(
           `Rescheduling ${jobToLogId(this.jobRunnerType, nextJob)} in ${
             nextJob.persistedData.delayBetweenRetries
           }...`
