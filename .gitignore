@@ -56,3 +56,14 @@ ts/webworker/workers/node/**/*.node
 ts/localization/locales.ts
 
 .yarn/
+
+# Build and cache artifacts
+.corepack/
+.yarn-cache/
+.home/
+*.patch
+APPLY_PATCH.sh
+PATCH_README.txt
+build/ensureLibsessionNative.js
+libsession.worker.compiled.js
+/index.js
