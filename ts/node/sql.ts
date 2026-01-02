@@ -87,13 +87,49 @@ import {
 import { OpenGroupV2Room } from '../data/types';
 import { tr } from '../localization/localeTools';
 import { getFileCreationTimestampMs } from './fs_utility';
+import { isDebugMode } from '../shared/env_vars';
 
 // eslint:disable: function-name non-literal-fs-path
 
 const MAX_PUBKEYS_MEMBERS = 300;
 
+function lastShutdownWasGraceful(db: BetterSqlite3.Database) {
+  const parsed = getItemById(SettingsKey.lastShutdownWasGraceful, db);
+  if (!parsed) {
+    return false;
+  }
+  if (isDebugMode()) {
+    console.info(`lastShutdownWasGraceful: ${parsed?.value}`);
+  }
+  if (parsed?.value) {
+    return true;
+  }
+  return false;
+}
+
+function setGracefulLastShutdown(db: BetterSqlite3.Database, graceful: boolean) {
+  if (isDebugMode()) {
+    console.info(`setGracefulLastShutdown with ${graceful}`);
+  }
+  createOrUpdateItem({ id: SettingsKey.lastShutdownWasGraceful, value: graceful }, db);
+}
+
+/**
+ * On start, we check if the last shutdown was graceful.
+ * If it was, we don't run the quick check pragma.
+ * If it wasn't graceful (i.e. a crash happened and the flag couldn't be reset), we run the quick check pragma.
+ */
 function getSQLIntegrityCheck(db: BetterSqlite3.Database) {
+  if (lastShutdownWasGraceful(db)) {
+    console.info(`last shutdown was graceful, not running quick_check`);
+
+    return undefined;
+  }
+  const start = Date.now();
+  console.info(`last shutdown was not graceful, running quick_check...`);
+
   const checkResult = db.pragma('quick_check', { simple: true });
+  console.info(`quick_check done in ${Date.now() - start}ms`);
   if (checkResult !== 'ok') {
     return checkResult;
   }
@@ -192,6 +228,9 @@ async function initializeSql({
 
     // At this point we can allow general access to the database
     initDbInstanceWith(db);
+    // Now that we've did our checks, mark the DB last shutdown as being not graceful.
+    // When we do exit the app gracefully, this flag will be reset to true.
+    setGracefulLastShutdown(db, false);
 
     console.info('total message count before cleaning: ', getMessageCount());
     console.info('total conversation count before cleaning: ', getConversationCount());
@@ -2530,6 +2569,12 @@ function cleanUpOldOpengroupsOnStart() {
 export type SqlNodeType = typeof sqlNode;
 
 export function close() {
+  try {
+    setGracefulLastShutdown(assertGlobalInstance(), true);
+  } catch (e) {
+    // console.info('setGracefulLastShutdown failed', e.message);
+  }
+
   closeDbInstance();
 }
 
