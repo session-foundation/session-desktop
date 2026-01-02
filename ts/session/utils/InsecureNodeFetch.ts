@@ -256,7 +256,8 @@ function getProxyAgent(
 
   // Create new agent with SOCKS5 configuration
   window?.log?.info(`getProxyAgent: Creating new SOCKS5 agent for ${settings.host}:${settings.port}`);
-  if (hasTlsOptions(tlsOptions)) {
+  const useTlsOptions = hasTlsOptions(tlsOptions);
+  if (useTlsOptions) {
     window?.log?.debug(
       `getProxyAgent: Applying TLS options to SOCKS agent: ${Object.keys(tlsOptions).join(', ')}`
     );
