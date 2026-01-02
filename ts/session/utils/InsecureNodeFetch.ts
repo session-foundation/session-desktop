@@ -204,6 +204,30 @@ function hasTlsOptions(tlsOptions: Partial<Record<TlsOptionKey, unknown>>): bool
   return Object.keys(tlsOptions).length > 0;
 }
 
+function buildTlsOptionsCacheKey(
+  tlsOptions: Partial<Record<TlsOptionKey, unknown>>
+): string | undefined {
+  if (!hasTlsOptions(tlsOptions)) {
+    return 'no-tls';
+  }
+
+  if (typeof tlsOptions.checkServerIdentity === 'function') {
+    return undefined;
+  }
+
+  const parts = Object.entries(tlsOptions)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([key, value]) => {
+      if (Array.isArray(value)) {
+        return `${key}:${value.map(item => String(item)).join(',')}`;
+      }
+
+      return `${key}:${String(value)}`;
+    });
+
+  return parts.length ? parts.join('|') : 'no-tls';
+}
+
 function getProxyAgent(
   tlsOptions: Partial<Record<TlsOptionKey, unknown>> = {}
 ): SocksProxyAgent | undefined {
@@ -219,22 +243,20 @@ function getProxyAgent(
       : '';
   const proxyUrl = `socks5h://${auth}${settings.host}:${settings.port}`;
 
-  // Create cache key that includes TLS options
-  const useTlsOptions = hasTlsOptions(tlsOptions);
-  const tlsOptionsKey = useTlsOptions
-    ? JSON.stringify(Object.keys(tlsOptions).sort())
-    : 'no-tls';
-  const cacheKey = `${proxyUrl}:${tlsOptionsKey}`;
+  const tlsOptionsKey = buildTlsOptionsCacheKey(tlsOptions);
+  const cacheKey = tlsOptionsKey ? `${proxyUrl}:${tlsOptionsKey}` : undefined;
 
-  // Check cache to reuse existing agents (performance optimization)
-  const cachedAgent = cachedAgents.get(cacheKey);
-  if (cachedAgent) {
-    return cachedAgent;
+  if (cacheKey) {
+    // Check cache to reuse existing agents (performance optimization)
+    const cachedAgent = cachedAgents.get(cacheKey);
+    if (cachedAgent) {
+      return cachedAgent;
+    }
   }
 
   // Create new agent with SOCKS5 configuration
   window?.log?.info(`getProxyAgent: Creating new SOCKS5 agent for ${settings.host}:${settings.port}`);
-  if (useTlsOptions) {
+  if (hasTlsOptions(tlsOptions)) {
     window?.log?.debug(
       `getProxyAgent: Applying TLS options to SOCKS agent: ${Object.keys(tlsOptions).join(', ')}`
     );
@@ -247,8 +269,10 @@ function getProxyAgent(
     useTlsOptions ? tlsOptions : undefined
   );
 
-  // Cache the agent
-  cachedAgents.set(cacheKey, agent);
+  if (cacheKey) {
+    // Cache the agent
+    cachedAgents.set(cacheKey, agent);
+  }
 
   return agent;
 }
