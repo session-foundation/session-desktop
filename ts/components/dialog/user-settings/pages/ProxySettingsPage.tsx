@@ -180,20 +180,21 @@ export function ProxySettingsPage(modalState: UserSettingsModalState) {
             errorDataTestId="error-message"
             type="password"
           />
-          <Flex
-            $container={true}
-            $justifyContent="flex-end"
-            padding="var(--margins-md) 0 0 0"
-            width="100%"
-          >
-            <SessionButton
-              text={tr('save')}
-              buttonColor={SessionButtonColor.Primary}
-              onClick={handleSave}
-            />
-          </Flex>
         </ProxyInputsContainer>
       )}
+
+      <Flex
+        $container={true}
+        $justifyContent="flex-end"
+        padding="var(--margins-md) 0 0 0"
+        width="100%"
+      >
+        <SessionButton
+          text={tr('save')}
+          buttonColor={SessionButtonColor.Primary}
+          onClick={handleSave}
+        />
+      </Flex>
     </UserSettingsModalContainer>
   );
 }
