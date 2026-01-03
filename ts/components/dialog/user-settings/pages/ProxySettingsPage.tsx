@@ -29,6 +29,7 @@ const ProxyInputsContainer = styled(Flex)`
 
 type ProxySettings = {
   enabled: boolean;
+  bootstrapOnly: boolean;
   host: string;
   port: string;
   username: string;
@@ -37,12 +38,13 @@ type ProxySettings = {
 
 async function loadProxySettings(): Promise<ProxySettings> {
   const enabled = Boolean(window.getSettingValue(SettingsKey.proxyEnabled));
+  const bootstrapOnly = Boolean(window.getSettingValue(SettingsKey.proxyBootstrapOnly));
   const host = (window.getSettingValue(SettingsKey.proxyHost) as string) || '';
   const port = String(window.getSettingValue(SettingsKey.proxyPort) || '');
   const username = (window.getSettingValue(SettingsKey.proxyUsername) as string) || '';
   const password = (window.getSettingValue(SettingsKey.proxyPassword) as string) || '';
 
-  return { enabled, host, port, username, password };
+  return { enabled, bootstrapOnly, host, port, username, password };
 }
 
 function validateProxySettings(settings: ProxySettings): { valid: boolean; error?: string } {
@@ -70,6 +72,7 @@ async function saveProxySettings(settings: ProxySettings): Promise<void> {
   }
 
   await window.setSettingValue(SettingsKey.proxyEnabled, settings.enabled);
+  await window.setSettingValue(SettingsKey.proxyBootstrapOnly, settings.bootstrapOnly);
   await window.setSettingValue(SettingsKey.proxyHost, settings.host);
   await window.setSettingValue(SettingsKey.proxyPort, parseInt(settings.port, 10) || 0);
   await window.setSettingValue(SettingsKey.proxyUsername, settings.username);
@@ -89,6 +92,7 @@ export function ProxySettingsPage(modalState: UserSettingsModalState) {
 
   const [settings, setSettings] = useState<ProxySettings>({
     enabled: false,
+    bootstrapOnly: false,
     host: '',
     port: '1080',
     username: '',
@@ -107,6 +111,11 @@ export function ProxySettingsPage(modalState: UserSettingsModalState) {
 
   const handleToggleEnabled = async () => {
     const newSettings = { ...settings, enabled: !settings.enabled };
+    setSettings(newSettings);
+  };
+
+  const handleToggleBootstrapOnly = async () => {
+    const newSettings = { ...settings, bootstrapOnly: !settings.bootstrapOnly };
     setSettings(newSettings);
   };
 
@@ -139,6 +148,15 @@ export function ProxySettingsPage(modalState: UserSettingsModalState) {
           onClick={handleToggleEnabled}
           active={settings.enabled}
         />
+        {settings.enabled && (
+          <SettingsToggleBasic
+            baseDataTestId="proxy-bootstrap-only"
+            text={{ token: 'proxyBootstrapOnly' }}
+            subText={{ token: 'proxyBootstrapOnlyDescription' }}
+            onClick={handleToggleBootstrapOnly}
+            active={settings.bootstrapOnly}
+          />
+        )}
       </PanelButtonGroup>
 
       {settings.enabled && (

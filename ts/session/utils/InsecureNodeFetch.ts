@@ -95,6 +95,7 @@ type NodeFetchParams = {
 
 type ProxySettings = {
   enabled: boolean;
+  bootstrapOnly: boolean;
   host: string;
   port: number;
   username?: string;
@@ -177,6 +178,7 @@ function getProxySettings(): ProxySettings | undefined {
     return undefined;
   }
 
+  const bootstrapOnly = Boolean(window.getSettingValue(SettingsKey.proxyBootstrapOnly));
   const host = (window.getSettingValue(SettingsKey.proxyHost) as string) || '';
   const portValue = window.getSettingValue(SettingsKey.proxyPort);
   const port = typeof portValue === 'number' ? portValue : parseInt(String(portValue || ''), 10);
@@ -189,6 +191,7 @@ function getProxySettings(): ProxySettings | undefined {
 
   return {
     enabled,
+    bootstrapOnly,
     host,
     port,
     username: username || undefined,
@@ -228,12 +231,35 @@ function buildTlsOptionsCacheKey(
   return parts.length ? parts.join('|') : 'no-tls';
 }
 
+function shouldUseProxyForDestination(
+  settings: ProxySettings,
+  destination: FetchDestination
+): boolean {
+  if (!settings.bootstrapOnly) {
+    // If bootstrapOnly is disabled, use proxy for all traffic
+    return true;
+  }
+
+  // When bootstrapOnly is enabled, only use proxy for bootstrap-related destinations
+  // SEED_NODE: Used for initial node discovery (bootstrap phase)
+  return destination === FetchDestination.SEED_NODE;
+}
+
 function getProxyAgent(
-  tlsOptions: Partial<Record<TlsOptionKey, unknown>> = {}
+  tlsOptions: Partial<Record<TlsOptionKey, unknown>> = {},
+  destination?: FetchDestination
 ): SocksProxyAgent | undefined {
   const settings = getProxySettings();
   if (!settings) {
     window?.log?.debug('getProxyAgent: No proxy settings configured');
+    return undefined;
+  }
+
+  // Check if we should use proxy for this destination
+  if (destination !== undefined && !shouldUseProxyForDestination(settings, destination)) {
+    window?.log?.debug(
+      `getProxyAgent: Skipping proxy for destination ${FetchDestination[destination]} (bootstrapOnly mode)`
+    );
     return undefined;
   }
 
@@ -283,7 +309,7 @@ export async function insecureNodeFetch(params: NodeFetchParams) {
     // Extract TLS options from the original agent (if present) to preserve security settings
     // This ensures certificate pinning and other TLS configurations work through the proxy
     const tlsOptions = getTlsOptionsFromAgent(params.fetchOptions?.agent);
-    const proxyAgent = getProxyAgent(tlsOptions);
+    const proxyAgent = getProxyAgent(tlsOptions, params.destination);
 
     // CRITICAL: Proxy agent must override any other agent (like sslAgent) to route through SOCKS
     const fetchOptions = {
@@ -292,7 +318,9 @@ export async function insecureNodeFetch(params: NodeFetchParams) {
     } as RequestInit;
 
     if (proxyAgent) {
-      window?.log?.info(`insecureNodeFetch: Using proxy for request to ${params.url}`);
+      window?.log?.info(
+        `insecureNodeFetch: Using proxy for request to ${params.url} (destination: ${FetchDestination[params.destination]})`
+      );
     }
 
     debugLogRequestIfEnabled(params);

@@ -1051,6 +1051,8 @@
   "profile": "Profile",
   "proxyAuthPassword": "Password (optional)",
   "proxyAuthUsername": "Username (optional)",
+  "proxyBootstrapOnly": "Bootstrap Only",
+  "proxyBootstrapOnlyDescription": "Use proxy only for handshake (initial connection phase). All other traffic will be sent directly.",
   "proxyDescription": "Configure a SOCKS5 proxy to route all application traffic, including onion requests, through a proxy server. This can help bypass network restrictions and Deep Packet Inspection (DPI).",
   "proxyEnabled": "Enable Proxy",
   "proxyHost": "Proxy Server",
