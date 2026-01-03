@@ -97,7 +97,8 @@ declare module 'react' {
     | 'auto-dark-mode'
     | 'hide-menu-bar'
     | 'pro-badge-visible'
-    | 'proxy-enabled';
+    | 'proxy-enabled'
+    | 'proxy-bootstrap-only';
 
   type SettingsRadio =
     | `set-notifications-${'message' | 'name' | 'count'}`
