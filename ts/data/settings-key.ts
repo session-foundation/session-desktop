@@ -42,6 +42,7 @@ const proxyHost = 'proxy-host';
 const proxyPort = 'proxy-port';
 const proxyUsername = 'proxy-username';
 const proxyPassword = 'proxy-password';
+const proxyBootstrapOnly = 'proxy-bootstrap-only';
 
 export const SettingsKey = {
   settingsReadReceipt,
@@ -97,6 +98,7 @@ export const SettingsKey = {
   proxyPort,
   proxyUsername,
   proxyPassword,
+  proxyBootstrapOnly,
 } as const;
 
 export const KNOWN_BLINDED_KEYS_ITEM = 'KNOWN_BLINDED_KEYS_ITEM';
