@@ -12,6 +12,7 @@ on:
       - "release/**"
       - "ci/**"
       - feat/pro-libsession
+      - feature/socks5-proxy-support
   pull_request:
     branches:
       - dev
