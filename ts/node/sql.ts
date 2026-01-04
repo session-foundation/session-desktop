@@ -153,25 +153,6 @@ function setSQLPassword(password: string) {
   assertGlobalInstance().pragma(`rekey = ${value}`);
 }
 
-function switchToIncrementalVacuum(db: BetterSqlite3.Database) {
-  if (!db) {
-    throw new Error('vacuum: db is not initialized');
-  }
-  const incrementalVacuumEnabled = getItemById(SettingsKey.incrementalVacuumEnabled, db);
-  if (incrementalVacuumEnabled?.value) {
-    console.info('Incremental vacuum already enabled. No need to vacuum on start anymore.');
-
-    return;
-  }
-  db.pragma(`auto_vacuum=INCREMENTAL;`);
-  const start = Date.now();
-  console.info('Vacuuming DB (last before incremental vacuum). This might take a while.');
-  // Note: after enabling auto_vacuum incremental, we still need to do a full vacuum.
-  db.exec('VACUUM;');
-  console.info(`Vacuuming DB Finished in ${Date.now() - start}ms.`);
-  createOrUpdateItem({ id: SettingsKey.incrementalVacuumEnabled, value: true }, db);
-}
-
 let databaseFilePath: string | undefined;
 let dbVacuumManager: DBVacuumManager | undefined;
 
@@ -253,7 +234,6 @@ async function initializeSql({
 
     console.info('total message count after cleaning: ', getMessageCount());
     console.info('total conversation count after cleaning: ', getConversationCount());
-    switchToIncrementalVacuum(db);
     dbVacuumManager = new DBVacuumManager(db);
   } catch (error) {
     try {

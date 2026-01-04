@@ -37,7 +37,6 @@ const localAttachmentEncryptionKey = 'local_attachment_encrypted_key';
 
 export const SettingsKey = {
   lastShutdownWasGraceful: 'lastShutdownWasGraceful',
-  incrementalVacuumEnabled: 'incrementalVacuumEnabled',
   settingsReadReceipt,
   settingsTypingIndicator,
   settingsAutoUpdate,

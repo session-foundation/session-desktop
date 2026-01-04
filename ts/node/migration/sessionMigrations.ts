@@ -123,6 +123,7 @@ const LOKI_SCHEMA_VERSIONS: Array<
   updateToSessionSchemaVersion48,
   updateToSessionSchemaVersion49,
   updateToSessionSchemaVersion50,
+  updateToSessionSchemaVersion51,
 ];
 
 function updateToSessionSchemaVersion1(currentVersion: number, db: BetterSqlite3.Database) {
@@ -2237,6 +2238,24 @@ async function updateToSessionSchemaVersion50(currentVersion: number, db: Better
     writeSessionSchemaVersion(targetVersion, db);
   })();
 
+  console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
+}
+
+async function updateToSessionSchemaVersion51(currentVersion: number, db: BetterSqlite3.Database) {
+  const targetVersion = 51;
+  if (currentVersion >= targetVersion) {
+    return;
+  }
+  console.log(`updateToSessionSchemaVersion${targetVersion}: starting...`);
+  const start = Date.now();
+
+  // Note: no transactions here as we cannot vacuum inside a transaction
+  db.pragma(`auto_vacuum=INCREMENTAL;`);
+  console.info('Vacuuming DB (last before incremental vacuum). This might take a while.');
+  // Note: after enabling auto_vacuum incremental, we still need to do a full vacuum.
+  db.exec('VACUUM;');
+  writeSessionSchemaVersion(targetVersion, db);
+  console.info(`Vacuuming DB Finished in ${Date.now() - start}ms.`);
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
