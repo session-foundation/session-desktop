@@ -792,10 +792,9 @@ export const getMessageReactsProps = createSelector(
         return msgProps;
       }
 
-      const sortedReacts = Object.entries(msgProps.reacts).sort((a, b) => {
-        return a[1].index < b[1].index ? -1 : a[1].index > b[1].index ? 1 : 0;
+      msgProps.sortedReacts = Object.entries(msgProps.reacts).sort((a, b) => {
+        return a[1].count > b[1].count ? -1 : a[1].count < b[1].count ? 1 : 0;
       });
-      msgProps.sortedReacts = sortedReacts;
     }
 
     return msgProps;
