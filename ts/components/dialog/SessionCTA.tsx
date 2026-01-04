@@ -45,6 +45,8 @@ import { Data } from '../../data/data';
 import { getUrlInteractionsForUrl, URLInteraction } from '../../util/urlHistory';
 import { Localizer } from '../basic/Localizer';
 
+let donateCTAShown = false;
+
 function useIsProCTAVariant(v: CTAVariant): v is ProCTAVariant {
   return useMemo(() => isProCTAVariant(v), [v]);
 }
@@ -446,9 +448,11 @@ export async function handleTriggeredProCTAs(dispatch: Dispatch<any>) {
       const donateInteractions = getUrlInteractionsForUrl(APP_URL.DONATE);
       if (
         !donateInteractions.includes(URLInteraction.COPY) &&
-        !donateInteractions.includes(URLInteraction.OPEN)
+        !donateInteractions.includes(URLInteraction.OPEN) &&
+        !donateCTAShown
       ) {
         dispatch(updateSessionCTA({ variant: CTAVariant.DONATE_GENERIC }));
+        donateCTAShown = true;
       }
     }
   }
