@@ -252,7 +252,7 @@
     "win": {
       "asarUnpack": "node_modules/spellchecker/vendor/hunspell_dictionaries",
       "signtoolOptions": {
-        "publisherName": "Oxen Labs"
+        "publisherName": "Session Technology Stiftung"
       },
       "verifyUpdateCodeSignature": false,
       "icon": "build/icon.ico",
