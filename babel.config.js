@@ -5,6 +5,8 @@ const path = require('path');
 const { SourceMapConsumer } = require('source-map');
 const { globSync } = require('glob');
 
+// Project root directory (where babel.config.js lives)
+const PROJECT_ROOT = __dirname;
 const fileFilter = process.env.SESSION_RC_FILE_FILTER;
 const allowErrors = process.env.SESSION_RC_ALLOW_ERRORS;
 
@@ -12,15 +14,16 @@ const allowErrors = process.env.SESSION_RC_ALLOW_ERRORS;
 const babelInclude = 'ts/**/*.js';
 const babelIgnore = ['ts/test/**'];
 
-// This can be turned into an array if we need more than 1 file ignored by the react compiler
-const fileIgnoredByReactCompiler =
-  // NOTE: [react-compiler] we are telling the compiler to not attempt to compile this
-  // file in the babel config as it is highly complex and has a lot of very fine tuned
-  // callbacks, its probably not worth trying to refactor at this stage
-  path.normalize('ts/components/conversation/composition/CompositionTextArea.js');
-
-// Project root directory (where babel.config.js lives)
-const PROJECT_ROOT = __dirname;
+// NOTE: [react-compiler] we are telling the compiler to not attempt
+// to compile these files in the babel config as they are highly
+// complex and have a lot of very fine tuned callbacks and useEffect
+// logic, so it's probably not worth trying to refactor at this stage.
+const filesIgnoredByReactCompiler = new Set(
+  [
+    'ts/components/conversation/composition/CompositionTextArea.js',
+    'ts/components/conversation/SessionStagedLinkPreview.js',
+  ].map(f => path.join(PROJECT_ROOT, f))
+);
 
 // ANSI color codes
 const c = code => (process.env.NO_COLOR ? '' : `\x1b[${code}m`);
@@ -481,7 +484,7 @@ module.exports = {
         target: reactTargetMajor,
         sources: filename => {
           // Skip specific file(s) from React Compiler
-          if (filename.includes(fileIgnoredByReactCompiler)) {
+          if (filesIgnoredByReactCompiler.has(filename)) {
             skippedFiles.add(filename);
             registerCleanup();
             return false;
