@@ -46,8 +46,8 @@ module.exports = {
     react: 'commonjs2 react',
   },
   optimization: {
-    minimize: false,
+    minimize: true,
   },
-  mode: 'development',
+  mode: 'production',
   devtool: false,
 };
