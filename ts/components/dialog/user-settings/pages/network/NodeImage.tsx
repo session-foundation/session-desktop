@@ -19,7 +19,7 @@ import {
 } from '../../../../../svgs/index';
 import { useInfoFakeRefreshing } from '../../../../../state/selectors/networkModal';
 
-const StyledNodeImage = styled(Block)<{ $nodeColor: string; $pathColor: string }>`
+const StyledNodeImage = styled(Block) <{ $nodeColor: string; $pathColor: string }>`
   display: flex;
   justify-content: center;
   align-items: center;
@@ -71,7 +71,7 @@ export const NodeImage = ({ width, height }: Props) => {
       $alignItems="center"
       $nodeColor="var(--primary-color)"
       $pathColor="var(--text-primary-color)"
-      $borderColor={!loading ? 'hidden' : undefined}
+      $borderColor={!loading ? 'transparent' : undefined}
       width={width}
       height={height}
       style={{ position: 'relative', overflow: 'hidden' }}
