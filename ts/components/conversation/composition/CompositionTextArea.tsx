@@ -84,12 +84,12 @@ function useMembersInThisChat(): Array<SearchableSuggestion> {
     const model = convo.get(id);
     const searchable: Array<string> = [id];
 
-    const nickname = model.getNicknameOrRealUsernameOrPlaceholder();
+    const nickname = model?.getNicknameOrRealUsernameOrPlaceholder();
     if (nickname) {
       searchable.push(nickname.toLowerCase());
     }
 
-    const username = model.getRealSessionUsername();
+    const username = model?.getRealSessionUsername();
     if (username && username !== nickname) {
       searchable.push(username.toLowerCase());
     }

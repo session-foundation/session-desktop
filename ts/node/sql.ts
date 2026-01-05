@@ -2419,19 +2419,6 @@ function cleanUpUnusedNodeForKeyEntriesOnStart() {
   }
 }
 
-function cleanUpMessagesJson() {
-  console.info('cleanUpMessagesJson ');
-  const start = Date.now();
-  assertGlobalInstance().transaction(() => {
-    assertGlobalInstance().exec(`
-      UPDATE ${MESSAGES_TABLE} SET
-      json = json_remove(json, '$.schemaVersion', '$.recipients', '$.decrypted_at', '$.sourceDevice')
-    `);
-  })();
-
-  console.info(`cleanUpMessagesJson took ${Date.now() - start}ms`);
-}
-
 function cleanUpOldOpengroupsOnStart() {
   const ourNumber = getItemById(SettingsKey.numberId);
   if (!ourNumber || !ourNumber.value) {
@@ -2558,8 +2545,6 @@ function cleanUpOldOpengroupsOnStart() {
         } completely inactive convos done in ${Date.now() - start}ms`
       );
     }
-
-    cleanUpMessagesJson();
   })();
 }
 

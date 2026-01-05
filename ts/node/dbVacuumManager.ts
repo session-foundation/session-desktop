@@ -4,7 +4,7 @@ import { DURATION } from '../session/constants';
 
 const category = '[dbVacuumManager]';
 
-const logDebug = true;
+const logDebug = process.env.DB_VACUUM_MANAGER_DEBUG === '1';
 
 function logWithPrefix(
   level: keyof Pick<typeof console, 'log' | 'info' | 'warn' | 'error' | 'debug'>,
@@ -180,7 +180,7 @@ export class DBVacuumManager {
           `Vacuumed ${pagesVacuumed} total pages (${pagesToVacuumAfter} remaining)`
         );
       } catch (error) {
-        logWithPrefix('error', 'Vacuum error: ', error);
+        logWithPrefix('error', 'Vacuum error: ', error.message);
         this.stopVacuum();
       }
     }, this.vacuumIntervalMs);
