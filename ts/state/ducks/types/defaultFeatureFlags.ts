@@ -59,6 +59,7 @@ export const defaultProDataFeatureFlags = {
   mockProPinnedConversations: null,
   mockProBadgesSent: null,
   mockProGroupsUpgraded: null,
+  mockNetworkPageNodeCount: null,
 } as const;
 
 export const defaultDataFeatureFlags = {

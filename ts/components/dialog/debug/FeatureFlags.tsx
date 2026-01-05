@@ -1,4 +1,4 @@
-import { isBoolean } from 'lodash';
+import { isBoolean, isNil } from 'lodash';
 import { Dispatch, useCallback, useEffect, useMemo, useState } from 'react';
 import { clipboard } from 'electron';
 import useAsync from 'react-use/lib/useAsync';
@@ -256,6 +256,8 @@ type FlagIntegerInputProps = {
   flag: SessionDataFeatureFlagKeys;
   visibleWithBooleanFlag?: SessionBooleanFeatureFlagKeys;
   label: string;
+  min?: number;
+  max?: number;
 };
 
 export const FlagIntegerInput = ({
@@ -263,12 +265,25 @@ export const FlagIntegerInput = ({
   forceUpdate,
   visibleWithBooleanFlag,
   label,
+  min,
+  max,
 }: FlagIntegerInputProps) => {
   const currentValue = getDataFeatureFlagMemo(flag);
   const key = `feature-flag-integer-input-${flag}`;
   const [value, setValue] = useState<number>(() => {
     const initValue = window.sessionDataFeatureFlags[flag];
-    return typeof initValue === 'number' && Number.isFinite(initValue) ? initValue : 0;
+    if (typeof initValue === 'number' && Number.isFinite(initValue)) {
+      return initValue;
+    }
+
+    if (!isNil(min)) {
+      return min;
+    }
+
+    if (!isNil(max)) {
+      return max;
+    }
+    return 0;
   });
 
   if (!isFeatureFlagAvailable(flag)) {
@@ -315,7 +330,8 @@ export const FlagIntegerInput = ({
         <input
           type="number"
           value={value}
-          min={0}
+          min={min ?? 0}
+          max={max ?? undefined}
           onChange={e => setValue(e.target.valueAsNumber)}
           style={{
             width: '100px',
@@ -527,6 +543,13 @@ export function DebugFeatureFlags({ forceUpdate }: { forceUpdate: () => void }) 
       {debugFeatureFlags.map(props => (
         <FlagToggle {...props} forceUpdate={forceUpdate} />
       ))}
+      <FlagIntegerInput
+        flag="mockNetworkPageNodeCount"
+        forceUpdate={forceUpdate}
+        label="Network Page Node Count"
+        min={1}
+        max={10}
+      />
     </DebugMenuSection>
   );
 }

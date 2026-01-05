@@ -76,6 +76,7 @@ export type SessionDataFeatureFlags = {
   mockProPinnedConversations: number | null;
   mockProBadgesSent: number | null;
   mockProGroupsUpgraded: number | null;
+  mockNetworkPageNodeCount: number | null;
 };
 
 export type SessionBooleanFeatureFlagKeys = keyof SessionBooleanFeatureFlags;

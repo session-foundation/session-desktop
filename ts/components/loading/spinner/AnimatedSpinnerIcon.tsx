@@ -18,9 +18,9 @@ export function AnimatedSpinnerIcon({ size }: AnimatedSpinnerIconProps) {
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
         stroke="var(--text-primary-color)"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        stroke-width="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
         viewBox="0 0 24 24"
       >
         <path d="M12 2v4">
