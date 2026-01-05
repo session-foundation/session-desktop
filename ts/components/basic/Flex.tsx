@@ -40,9 +40,9 @@ export interface FlexProps {
   height?: string;
   $maxHeight?: string;
   $minHeight?: string;
-  overflow?: 'hidden' | 'visible' | 'scroll' | 'auto';
-  overflowX?: 'hidden' | 'visible' | 'scroll' | 'auto';
-  overflowY?: 'hidden' | 'visible' | 'scroll' | 'auto';
+  $overflow?: 'hidden' | 'visible' | 'scroll' | 'auto';
+  $overflowX?: 'hidden' | 'visible' | 'scroll' | 'auto';
+  $overflowY?: 'hidden' | 'visible' | 'scroll' | 'auto';
   // RTL support
   dir?: HTMLDirection;
   $paddingInline?: string;
@@ -69,9 +69,9 @@ export const Flex = styled.div<FlexProps>`
   height: ${props => props.height || 'auto'};
   max-height: ${props => props.$maxHeight || 'none'};
   min-height: ${props => props.$minHeight || 'none'};
-  overflow: ${props => (props.overflow !== undefined ? props.overflow : undefined)};
-  overflow-x: ${props => (props.overflowX !== undefined ? props.overflowX : undefined)};
-  overflow-y: ${props => (props.overflowY !== undefined ? props.overflowY : undefined)};
+  overflow: ${props => (props.$overflow !== undefined ? props.$overflow : undefined)};
+  overflow-x: ${props => (props.$overflowX !== undefined ? props.$overflowX : undefined)};
+  overflow-y: ${props => (props.$overflowY !== undefined ? props.$overflowY : undefined)};
   direction: ${props => props.dir || undefined};
   padding-inline: ${props => props.$paddingInline || undefined};
   padding-block: ${props => props.$paddingBlock || undefined};
@@ -97,7 +97,7 @@ export const AnimatedFlex = styled(motion.div)<HTMLMotionProps<'div'> & FlexProp
   height: ${props => props.height || 'auto'};
   max-height: ${props => props.$maxHeight || 'none'};
   min-height: ${props => props.$minHeight || 'none'};
-  overflow: ${props => (props.overflow !== undefined ? props.overflow : undefined)};
+  overflow: ${props => (props.$overflow !== undefined ? props.$overflow : undefined)};
   direction: ${props => props.dir || undefined};
   padding-inline: ${props => props.$paddingInline || undefined};
   padding-block: ${props => props.$paddingBlock || undefined};

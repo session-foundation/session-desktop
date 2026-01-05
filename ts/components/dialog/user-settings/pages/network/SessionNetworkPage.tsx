@@ -73,7 +73,7 @@ export function SessionNetworkPage(modalState: UserSettingsModalState) {
       {!dataIsStale && lastRefreshedTimestamp && !loading ? (
         <>
           <SpacerXL />
-          <ExtraSmallText color={'var(--text-secondary-color)'} textAlignment="center">
+          <ExtraSmallText color={'var(--text-secondary-color)'} $textAlignment="center">
             <LastRefreshedText />
           </ExtraSmallText>
           <SpacerXS />

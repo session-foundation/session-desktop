@@ -256,6 +256,8 @@ type FlagIntegerInputProps = {
   flag: SessionDataFeatureFlagKeys;
   visibleWithBooleanFlag?: SessionBooleanFeatureFlagKeys;
   label: string;
+  min?: number;
+  max?: number;
 };
 
 export const FlagIntegerInput = ({
@@ -263,12 +265,16 @@ export const FlagIntegerInput = ({
   forceUpdate,
   visibleWithBooleanFlag,
   label,
+  min,
+  max,
 }: FlagIntegerInputProps) => {
   const currentValue = getDataFeatureFlagMemo(flag);
   const key = `feature-flag-integer-input-${flag}`;
   const [value, setValue] = useState<number>(() => {
     const initValue = window.sessionDataFeatureFlags[flag];
-    return typeof initValue === 'number' && Number.isFinite(initValue) ? initValue : 0;
+    return typeof initValue === 'number' && Number.isFinite(initValue)
+      ? initValue
+      : Math.max(Math.min(0, max ?? Number.NEGATIVE_INFINITY), min ?? Number.POSITIVE_INFINITY);
   });
 
   if (!isFeatureFlagAvailable(flag)) {
@@ -315,7 +321,8 @@ export const FlagIntegerInput = ({
         <input
           type="number"
           value={value}
-          min={0}
+          min={min ?? 0}
+          max={max ?? undefined}
           onChange={e => setValue(e.target.valueAsNumber)}
           style={{
             width: '100px',
@@ -527,6 +534,13 @@ export function DebugFeatureFlags({ forceUpdate }: { forceUpdate: () => void }) 
       {debugFeatureFlags.map(props => (
         <FlagToggle {...props} forceUpdate={forceUpdate} />
       ))}
+      <FlagIntegerInput
+        flag="mockNetworkPageNodeCount"
+        forceUpdate={forceUpdate}
+        label="Network Page Node Count"
+        min={1}
+        max={10}
+      />
     </DebugMenuSection>
   );
 }

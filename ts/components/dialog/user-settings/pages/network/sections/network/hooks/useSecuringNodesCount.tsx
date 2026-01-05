@@ -11,6 +11,7 @@ import {
 } from '../../../../../../../../state/selectors/networkData';
 import { UserUtils } from '../../../../../../../../session/utils';
 import { SnodePool } from '../../../../../../../../session/apis/snode_api/snodePool';
+import { getDataFeatureFlagMemo } from '../../../../../../../../state/ducks/types/releasedFeaturesReduxTypes';
 
 export function useSecuringNodesCount() {
   const privateConversationsCount = useSelector(getLeftPaneConversationIdsCount);
@@ -18,13 +19,14 @@ export function useSecuringNodesCount() {
   const networkSize = useNetworkSize();
   const dataIsStale = useDataIsStale();
 
+  const mockSwarmSize = getDataFeatureFlagMemo('mockNetworkPageNodeCount');
+
   if (!networkSize) {
     window.log.debug('[useSecuringNodesCount] networkSize is not defined');
   }
 
-  const ourSwarmNodeCount = SnodePool.getCachedSwarmSizeForPubkey(
-    UserUtils.getOurPubKeyStrFromCache()
-  );
+  const ourSwarmNodeCount =
+    mockSwarmSize ?? SnodePool.getCachedSwarmSizeForPubkey(UserUtils.getOurPubKeyStrFromCache());
 
   // NOTE: Groups count includes legacy groups
   const estimatedValue = isNil(ourSwarmNodeCount)
