@@ -33,7 +33,7 @@ module.exports = {
     ],
   },
   resolve: {
-    extensions: ['.ts', '.js', '.svg'],
+    extensions: ['.ts', '.svg'],
   },
   output: {
     filename: 'index.js',
