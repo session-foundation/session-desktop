@@ -23,6 +23,7 @@ commitlint.config.js
 password_preload.js
 sass.config.js
 *.worker.config.js
+svgs.webpack.config.js
 
 babel.config.js
 minify.js

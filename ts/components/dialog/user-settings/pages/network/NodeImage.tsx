@@ -19,7 +19,7 @@ import {
 } from '../../../../../svgs/index';
 import { useInfoFakeRefreshing } from '../../../../../state/selectors/networkModal';
 
-const StyledNodeImage = styled(Block) <{ $nodeColor: string; $pathColor: string }>`
+const StyledNodeImage = styled(Block)<{ $nodeColor: string; $pathColor: string }>`
   display: flex;
   justify-content: center;
   align-items: center;
