@@ -1,5 +1,5 @@
 import { noop } from 'lodash';
-import { useDispatch } from 'react-redux';
+import { getAppDispatch } from '../../../../state/dispatch';
 import { tr } from '../../../../localization/localeTools';
 import {
   ConversationSettingsModalPage,
@@ -25,7 +25,7 @@ export function useTitleFromPage(page: ConversationSettingsModalPage | undefined
 }
 
 export function useCloseActionFromPage(props: ConversationSettingsModalState) {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const showConvoSettingsCb = useShowConversationSettingsFor(props?.conversationId);
   if (!props?.conversationId || !showConvoSettingsCb) {
     return noop;

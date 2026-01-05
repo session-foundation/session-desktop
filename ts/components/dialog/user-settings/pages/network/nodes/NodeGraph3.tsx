@@ -18,9 +18,9 @@ export const NodeGraph3 = (props: NodeGraphProps) => (
     <g filter="url(#NodeGraph3a)">
       <path
         fill={props.nodeColor}
-        fill-rule="evenodd"
+        fillRule="evenodd"
         d="M79.965 101.232c2.159 6.134 8.88 9.358 15.015 7.199 6.134-2.158 9.357-8.88 7.199-15.014s-8.88-9.357-15.015-7.2c-6.134 2.159-9.357 8.881-7.199 15.015m-1.828.643c2.514 7.144 10.342 10.898 17.486 8.384s10.897-10.342 8.384-17.485c-2.514-7.144-10.342-10.897-17.486-8.384-7.143 2.513-10.897 10.342-8.383 17.485"
-        clip-rule="evenodd"
+        clipRule="evenodd"
       />
     </g>
     <g filter="url(#NodeGraph3b)">
@@ -35,9 +35,9 @@ export const NodeGraph3 = (props: NodeGraphProps) => (
     <g filter="url(#NodeGraph3c)">
       <path
         fill={props.nodeColor}
-        fill-rule="evenodd"
+        fillRule="evenodd"
         d="M91.017 44.415c2.512 7.14 10.336 10.891 17.476 8.38 7.14-2.513 10.892-10.337 8.38-17.477s-10.337-10.891-17.477-8.38c-7.14 2.513-10.891 10.337-8.379 17.477m-2.127.749c2.925 8.314 12.037 12.683 20.352 9.758S121.926 42.884 119 34.569c-2.925-8.314-12.037-12.683-20.352-9.758S85.964 36.85 88.89 45.164"
-        clip-rule="evenodd"
+        clipRule="evenodd"
       />
     </g>
     <g filter="url(#NodeGraph3d)">

@@ -1,5 +1,6 @@
 import { Menu } from 'react-contexify';
 
+import type { JSX } from 'react';
 import { useConvoIdFromContext } from '../../contexts/ConvoIdContext';
 import { useIsLegacyGroup, useIsPinned } from '../../hooks/useParamSelector';
 import { useIsSearchingForType } from '../../state/selectors/search';

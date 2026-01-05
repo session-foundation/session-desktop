@@ -1,4 +1,4 @@
-import { useDispatch } from 'react-redux';
+import { getAppDispatch } from '../../state/dispatch';
 import {
   useIsMe,
   useIsBlocked,
@@ -14,7 +14,7 @@ export function useShowBlockUnblock(convoId?: string) {
   const isBlocked = useIsBlocked(convoId);
   const isPrivate = useIsPrivate(convoId);
   const isIncomingRequest = useIsIncomingRequest(convoId);
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   const showBlockUnblock =
     convoId && !isMe && isPrivate && !isIncomingRequest && !PubKey.isBlinded(convoId);

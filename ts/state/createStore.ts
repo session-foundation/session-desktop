@@ -1,30 +1,27 @@
-/* eslint-disable no-console */
-import storage from 'redux-persist/lib/storage';
-
 import { configureStore } from '@reduxjs/toolkit';
-
-import { persistReducer } from 'redux-persist';
-
 import promiseMiddleware from 'redux-promise-middleware';
+import { setGlobalDevModeChecks } from 'reselect';
 import { rootReducer } from './reducer';
+import { isDebugMode } from '../shared/env_vars';
 
-const persistConfig = {
-  key: 'root',
-  storage,
-  whitelist: ['userConfig'],
-};
-
-const persistedReducer = persistReducer(persistConfig, rootReducer);
+// NOTE: debugging tool for redux selectors globally
+if (isDebugMode()) {
+  setGlobalDevModeChecks({
+    inputStabilityCheck: 'always',
+    identityFunctionCheck: 'always',
+  });
+}
 
 const middlewareList = [promiseMiddleware];
 
 export const createStore = (initialState: any) =>
   configureStore({
-    reducer: persistedReducer,
+    reducer: rootReducer,
     preloadedState: initialState,
     middleware: (getDefaultMiddleware: any) =>
       getDefaultMiddleware({
-        serializableCheck: true,
         immutableCheck: true,
       }).concat(middlewareList),
   });
+
+export type AppDispatch = ReturnType<typeof createStore>['dispatch'];

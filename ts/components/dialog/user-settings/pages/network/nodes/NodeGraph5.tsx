@@ -17,9 +17,9 @@ export const NodeGraph5 = (props: NodeGraphProps) => (
     />
     <path
       fill={props.nodeColor}
-      fill-rule="evenodd"
+      fillRule="evenodd"
       d="M109.171 57.809c5.859 2.82 12.896.358 15.717-5.501 2.82-5.86.357-12.896-5.502-15.716-5.859-2.821-12.895-.358-15.716 5.5-2.821 5.86-.358 12.896 5.501 15.717m-.84 1.746c6.823 3.285 15.017.417 18.302-6.407s.417-15.017-6.406-18.302-15.018-.417-18.303 6.406-.416 15.018 6.407 18.303"
-      clip-rule="evenodd"
+      clipRule="evenodd"
     />
     <g filter="url(#NodeGraph5a)">
       <circle
@@ -32,9 +32,9 @@ export const NodeGraph5 = (props: NodeGraphProps) => (
     </g>
     <path
       fill={props.nodeColor}
-      fill-rule="evenodd"
+      fillRule="evenodd"
       d="M73.439 96.16c5.859 2.821 12.895.358 15.716-5.5 2.82-5.86.358-12.896-5.501-15.717-5.86-2.82-12.895-.358-15.716 5.501-2.821 5.86-.358 12.896 5.5 15.717m-.84 1.746c6.823 3.285 15.017.417 18.302-6.406s.417-15.018-6.407-18.303-15.017-.416-18.302 6.407-.417 15.017 6.406 18.302"
-      clip-rule="evenodd"
+      clipRule="evenodd"
     />
     <g filter="url(#NodeGraph5b)">
       <circle
@@ -47,9 +47,9 @@ export const NodeGraph5 = (props: NodeGraphProps) => (
     </g>
     <path
       fill={props.nodeColor}
-      fill-rule="evenodd"
+      fillRule="evenodd"
       d="M41.155 48.12c6.82 3.283 15.01.416 18.293-6.404 3.284-6.82.417-15.01-6.403-18.293s-15.01-.416-18.293 6.403c-3.283 6.82-.416 15.01 6.403 18.293m-.978 2.031c7.942 3.824 17.48.485 21.303-7.457 3.824-7.941.485-17.48-7.457-21.303s-17.48-.485-21.303 7.457-.485 17.48 7.457 21.303"
-      clip-rule="evenodd"
+      clipRule="evenodd"
     />
     <g filter="url(#NodeGraph5c)">
       <circle

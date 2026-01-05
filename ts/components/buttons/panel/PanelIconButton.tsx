@@ -23,10 +23,10 @@ type PanelIconButtonProps = Omit<PanelButtonProps, 'children' | 'subText' | 'sub
   rowReverse?: boolean;
 };
 
-const IconContainer = styled.div<{ rowReverse?: boolean }>`
+const IconContainer = styled.div<{ $rowReverse?: boolean }>`
   flex-shrink: 0;
   margin: ${props =>
-    props.rowReverse
+    props.$rowReverse
       ? '0 var(--margins-sm) 0 var(--margins-lg)'
       : '0 var(--margins-lg) 0 var(--margins-sm)'};
   padding: 0;
@@ -55,8 +55,8 @@ export const PanelIconButton = (
         color={color}
         style={{ minHeight: '55px' }}
       >
-        <StyledContent disabled={disabled} rowReverse={rowReverse}>
-          <IconContainer rowReverse={rowReverse}>{props.iconElement}</IconContainer>
+        <StyledContent disabled={disabled} $rowReverse={rowReverse}>
+          <IconContainer $rowReverse={rowReverse}>{props.iconElement}</IconContainer>
           {subTextProps ? (
             <PanelButtonTextWithSubText
               text={text}

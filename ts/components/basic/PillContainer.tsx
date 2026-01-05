@@ -4,10 +4,10 @@ import { Flex } from './Flex';
 
 type PillContainerProps = {
   children: ReactNode;
-  margin?: string;
-  padding?: string;
+  $margin?: string;
+  $padding?: string;
   onClick?: () => void;
-  disableHover?: boolean;
+  $disableHover?: boolean;
 };
 
 export const StyledPillContainerHoverable = styled(Flex)<PillContainerProps>`
@@ -33,21 +33,21 @@ const StyledPillInner = styled.div<PillContainerProps>`
   white-space: nowrap;
   text-overflow: ellipsis;
 
-  padding: ${props => props.padding || ''};
-  margin: ${props => props.margin || ''};
+  padding: ${props => props.$padding || ''};
+  margin: ${props => props.$margin || ''};
   border-radius: 300px;
-  cursor: ${props => (props.disableHover ? 'unset' : 'pointer')};
+  cursor: ${props => (props.$disableHover ? 'unset' : 'pointer')};
   border: 1px solid var(--border-color);
   transition: var(--default-duration);
   &:hover {
     background: ${props =>
-      props.disableHover ? 'none' : 'var(--button-solid-background-hover-color)'};
+      props.$disableHover ? 'none' : 'var(--button-solid-background-hover-color)'};
   }
 `;
 
-export const PillContainerHoverable = (props: Omit<PillContainerProps, 'disableHover'>) => {
+export const PillContainerHoverable = (props: Omit<PillContainerProps, '$disableHover'>) => {
   return (
-    <StyledPillInner {...props} disableHover={!props.onClick}>
+    <StyledPillInner {...props} $disableHover={!props.onClick}>
       {props.children}
     </StyledPillInner>
   );

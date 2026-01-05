@@ -1,7 +1,7 @@
 import { isEmpty, isEqual } from 'lodash';
 import { useEffect, useMemo, useState } from 'react';
-import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
+import { getAppDispatch } from '../../state/dispatch';
 import { useMessageReactsPropsById } from '../../hooks/useParamSelector';
 import { isUsAnySogsFromCache } from '../../session/apis/open_group_api/sogsv3/knownBlindedkeys';
 import { UserUtils } from '../../session/utils';
@@ -97,7 +97,7 @@ type ReactionSendersProps = {
 
 const ReactionSenders = (props: ReactionSendersProps) => {
   const { messageId, currentReact, senders, me, conversationId } = props;
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   const handleRemoveReaction = async () => {
     await Reactions.sendMessageReaction(messageId, currentReact);
@@ -200,7 +200,7 @@ const handleSenders = (senders: Array<string>, me: string) => {
 export const ReactListModal = (props: Props) => {
   const { reaction, messageId } = props;
 
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const [reactions, setReactions] = useState<SortedReactionList>([]);
 
   const [currentReact, setCurrentReact] = useState('');

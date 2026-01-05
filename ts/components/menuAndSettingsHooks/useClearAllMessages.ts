@@ -1,4 +1,4 @@
-import { useDispatch } from 'react-redux';
+import { getAppDispatch } from '../../state/dispatch';
 import { deleteAllMessagesByConvoIdNoConfirmation } from '../../interactions/conversationInteractions';
 import { updateConfirmModal } from '../../state/ducks/modalDialog';
 import { SessionButtonColor } from '../basic/SessionButton';
@@ -17,7 +17,7 @@ import { ToastUtils } from '../../session/utils';
 import { groupInfoActions } from '../../state/ducks/metaGroups';
 
 export function useClearAllMessagesCb({ conversationId }: { conversationId: string }) {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   const isKickedFromGroup = useIsKickedFromGroup(conversationId);
   const isMe = useIsMe(conversationId);

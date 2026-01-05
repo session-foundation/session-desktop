@@ -328,7 +328,7 @@ const StagedLinkPreview = ({ isLoading, data, onClose }: StagedLinkPreviewProps)
       $justifyContent={isLoading ? 'center' : 'space-between'}
       $alignItems="center"
       width={'100%'}
-      padding={'var(--margins-md)'}
+      $padding={'var(--margins-md)'}
     >
       <Flex
         $container={true}
@@ -336,7 +336,7 @@ const StagedLinkPreview = ({ isLoading, data, onClose }: StagedLinkPreviewProps)
         $alignItems={'center'}
       >
         {isLoading ? (
-          <SessionSpinner loading={isLoading} data-testid="link-preview-loading" />
+          <SessionSpinner $loading={isLoading} data-testid="link-preview-loading" />
         ) : null}
         {!isLoading && isContentTypeImage && blobUrl ? (
           <StyledImage data-testid="link-preview-image">

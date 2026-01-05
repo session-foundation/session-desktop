@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
-import { useDispatch } from 'react-redux';
-
 import { PubkeyType } from 'libsession_util_nodejs';
+import { getAppDispatch } from '../../state/dispatch';
+
 import { ToastUtils } from '../../session/utils';
 
 import { updateGroupMembersModal } from '../../state/ducks/modalDialog';
@@ -60,19 +60,33 @@ function useSortedListOfMembers(convoId: string) {
   return sortedMembers;
 }
 
+// NOTE: [react-compiler] this has to live here for the hook to be identified as static
+function useContactsToInviteToInternal() {
+  return useContactsToInviteTo('manage-group-members');
+}
+
 const useFilteredSortedListOfMembers = (convoId: string) => {
   const sortedMembers = useSortedListOfMembers(convoId);
-  const { contactsToInvite: globalSearchResults, searchTerm } =
-    useContactsToInviteTo('manage-group-members');
 
-  return useMemo(
-    () =>
-      !searchTerm || globalSearchResults === undefined
-        ? sortedMembers
-        : sortedMembers.filter(m => globalSearchResults.includes(m)),
-    [sortedMembers, globalSearchResults, searchTerm]
-  );
+  const { contactsToInvite: globalSearchResults, searchTerm } = useContactsToInviteToInternal();
+
+  return !searchTerm || globalSearchResults === undefined
+    ? sortedMembers
+    : sortedMembers.filter(m => globalSearchResults.includes(m));
 };
+
+// NOTE: [react-compiler] this has to live here for the hook to be identified as static
+function useMembersListDetailsInternal(conversationId: string) {
+  const weAreAdmin = useWeAreAdmin(conversationId);
+  const isV2Group = useSelectedIsGroupV2();
+  const groupAdmins = useGroupAdmins(conversationId);
+
+  return {
+    weAreAdmin,
+    isV2Group,
+    groupAdmins,
+  };
+}
 
 const MemberList = (props: {
   convoId: string;
@@ -81,9 +95,8 @@ const MemberList = (props: {
   onUnselect: (m: string) => void;
 }) => {
   const { onSelect, convoId, onUnselect, selectedMembers } = props;
-  const weAreAdmin = useWeAreAdmin(convoId);
-  const isV2Group = useSelectedIsGroupV2();
-  const groupAdmins = useGroupAdmins(convoId);
+  const { weAreAdmin, isV2Group, groupAdmins } = useMembersListDetailsInternal(convoId);
+
   const sortedMembers = useFilteredSortedListOfMembers(convoId);
 
   return (
@@ -126,7 +139,7 @@ export const UpdateGroupMembersDialog = (props: Props) => {
 
   const { addTo, removeFrom, uniqueValues: membersToRemove } = useSet<string>([]);
 
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   if (isPrivate || isPublic) {
     throw new Error('UpdateGroupMembersDialog invalid convoProps');
@@ -250,7 +263,7 @@ export const UpdateGroupMembersDialog = (props: Props) => {
       </StyledContactListInModal>
 
       <SpacerLG />
-      <SessionSpinner loading={isProcessingUIChange} />
+      <SessionSpinner $loading={isProcessingUIChange} />
       <SpacerLG />
     </SessionWrapperModal>
   );

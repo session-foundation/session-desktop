@@ -1,8 +1,7 @@
-import { useDispatch } from 'react-redux';
-
 import type { PubkeyType } from 'libsession_util_nodejs';
 import { useCallback } from 'react';
 import styled from 'styled-components';
+import { getAppDispatch } from '../../../state/dispatch';
 
 import {
   use05GroupMembers,
@@ -108,7 +107,7 @@ const RecreateGroupContainer = styled.div`
 `;
 
 function useShowRecreateModal() {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   return useCallback(
     (name: string, members: Array<PubkeyType>) => {
@@ -134,14 +133,36 @@ function useShowRecreateModal() {
   );
 }
 
-function RecreateGroupButton() {
+// NOTE: [react-compiler] this has to live here for the hook to be identified as static
+function useGroupDetailsInternal() {
   const isLegacyGroup = useSelectedIsLegacyGroup();
   const selectedConvo = useSelectedConversationKey();
-
   const name = useConversationUsernameWithFallback(true, selectedConvo);
   const members = use05GroupMembers(selectedConvo);
-
   const weAreAdmin = useSelectedWeAreAdmin();
+
+  return {
+    isLegacyGroup,
+    name,
+    members,
+    weAreAdmin,
+  };
+}
+
+async function ensureMemberConvosExist(members: Array<string>) {
+  for (let index = 0; index < members.length; index++) {
+    const m = members[index];
+    /* eslint-disable no-await-in-loop */
+    const memberConvo = await ConvoHub.use().getOrCreateAndWait(m, ConversationTypeEnum.PRIVATE);
+    if (!memberConvo.get('active_at')) {
+      memberConvo.setActiveAt(Constants.CONVERSATION.LAST_JOINED_FALLBACK_TIMESTAMP);
+      await memberConvo.commit();
+    }
+  }
+}
+
+function RecreateGroupButton() {
+  const { isLegacyGroup, name, members, weAreAdmin } = useGroupDetailsInternal();
 
   const showRecreateGroupModal = useShowRecreateModal();
 
@@ -156,19 +177,7 @@ function RecreateGroupButton() {
         margin="var(--margins-sm)"
         onClick={async () => {
           try {
-            for (let index = 0; index < members.length; index++) {
-              const m = members[index];
-              /* eslint-disable no-await-in-loop */
-              const memberConvo = await ConvoHub.use().getOrCreateAndWait(
-                m,
-                ConversationTypeEnum.PRIVATE
-              );
-              if (!memberConvo.get('active_at')) {
-                memberConvo.setActiveAt(Constants.CONVERSATION.LAST_JOINED_FALLBACK_TIMESTAMP);
-                await memberConvo.commit();
-              }
-              /* eslint-enable no-await-in-loop */
-            }
+            await ensureMemberConvosExist(members);
           } catch (e) {
             window.log.warn('recreate group: failed to recreate a member convo', e.message);
           }

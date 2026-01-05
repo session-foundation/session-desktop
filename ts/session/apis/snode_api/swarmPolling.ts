@@ -6,10 +6,10 @@ import {
   type WithDecodedEnvelope,
   type WithMessageHash,
 } from 'libsession_util_nodejs';
-import { z } from 'zod';
 
 import { compact, concat, flatten, isArray, isEmpty, last, omit, sampleSize, uniqBy } from 'lodash';
 import { v4 } from 'uuid';
+import z from '../../../util/zod';
 import { Data } from '../../../data/data';
 import * as Receiver from '../../../receiver/receiver';
 import { PubKey } from '../../types';

@@ -29,7 +29,7 @@ module.exports = {
     'plugin:import/typescript',
   ],
 
-  plugins: ['mocha', 'more', '@typescript-eslint'],
+  plugins: ['mocha', 'more', '@typescript-eslint', 'local-rules'],
   parser: '@typescript-eslint/parser',
   parserOptions: { project: ['tsconfig.json'] },
 
@@ -122,7 +122,7 @@ module.exports = {
         ignoreRegExpLiterals: true,
       },
     ],
-    'no-restricted-imports': [
+    '@typescript-eslint/no-restricted-imports': [
       'error',
       {
         paths: [
@@ -132,7 +132,20 @@ module.exports = {
             message:
               "Don't import from 'react-use' directly. Please use a default import for each hook from 'react-use/lib' instead.",
           },
+          {
+            name: 'zod',
+            allowTypeImports: true,
+            message:
+              "Don't import from 'zod' directly. Please use a default import from 'ts/utils/zod' instead.",
+          },
         ],
+      },
+    ],
+    'local-rules/styled-components-transient-props': [
+      'error',
+      {
+        additionalValidProps: ['as', 'forwardedAs', 'theme'],
+        ignoreComponentPatterns: ['^Motion', '^Animated'],
       },
     ],
   },

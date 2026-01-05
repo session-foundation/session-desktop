@@ -8,11 +8,11 @@ interface TypingBubbleProps {
   isTyping: boolean;
 }
 
-const TypingBubbleContainer = styled.div<Pick<TypingBubbleProps, 'isTyping'>>`
-  height: ${props => (props.isTyping ? 'auto' : '0px')};
+const TypingBubbleContainer = styled.div<{ $isTyping: boolean }>`
+  height: ${props => (props.$isTyping ? 'auto' : '0px')};
   display: flow-root;
-  padding-bottom: ${props => (props.isTyping ? '4px' : '0px')};
-  padding-top: ${props => (props.isTyping ? '4px' : '0px')};
+  padding-bottom: ${props => (props.$isTyping ? '4px' : '0px')};
+  padding-top: ${props => (props.$isTyping ? '4px' : '0px')};
   transition: var(--default-duration);
   padding-inline-end: 16px;
   padding-inline-start: 4px;
@@ -27,7 +27,7 @@ export const TypingBubble = (props: TypingBubbleProps) => {
   }
 
   return (
-    <TypingBubbleContainer isTyping={props.isTyping}>
+    <TypingBubbleContainer $isTyping={props.isTyping}>
       <TypingAnimation />
     </TypingBubbleContainer>
   );

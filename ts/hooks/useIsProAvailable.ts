@@ -1,9 +1,9 @@
-import { useFeatureFlag } from '../state/ducks/types/releasedFeaturesReduxTypes';
+import { getFeatureFlagMemo } from '../state/ducks/types/releasedFeaturesReduxTypes';
 
-export function useIsProAvailable() {
-  return !!useFeatureFlag('proAvailable');
+export function getIsProAvailableMemo() {
+  return !!getFeatureFlagMemo('proAvailable');
 }
 
-export function useIsProGroupsAvailable() {
-  return !!useFeatureFlag('proGroupsAvailable');
+export function getIsProGroupsAvailableMemo() {
+  return !!getFeatureFlagMemo('proGroupsAvailable');
 }

@@ -1,5 +1,5 @@
-import { useDispatch } from 'react-redux';
 import clsx from 'clsx';
+import { getAppDispatch } from '../../../../state/dispatch';
 
 import { MessageRenderingProps } from '../../../../models/messageType';
 import {
@@ -28,7 +28,7 @@ type Props = {
 const linkPreviewsImageSize = 100;
 
 export const MessageLinkPreview = (props: Props) => {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const direction = useMessageDirection(props.messageId);
   const attachments = useMessageAttachments(props.messageId);
   const previews = useMessageLinkPreview(props.messageId);

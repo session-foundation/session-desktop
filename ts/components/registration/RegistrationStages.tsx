@@ -1,6 +1,6 @@
 import { AnimatePresence } from 'framer-motion';
 import styled from 'styled-components';
-import { useDispatch } from 'react-redux';
+import { getAppDispatch } from '../../state/dispatch';
 import { Data } from '../../data/data';
 import { ConvoHub } from '../../session/conversations';
 import {
@@ -47,7 +47,7 @@ export const RegistrationStages = () => {
   const creationStep = useOnboardAccountCreationStep();
   const restorationStep = useOnboardAccountRestorationStep();
 
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   return (
     <AnimatePresence>

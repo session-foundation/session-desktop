@@ -1,9 +1,9 @@
 import { CSSProperties, MouseEvent, MutableRefObject, useRef } from 'react';
 
 import { isUndefined } from 'lodash';
-import { useDispatch } from 'react-redux';
 import useUnmount from 'react-use/lib/useUnmount';
 import styled from 'styled-components';
+import { getAppDispatch } from '../../state/dispatch';
 import { useDisableDrag } from '../../hooks/useDisableDrag';
 import { useEncryptedFileFetch } from '../../hooks/useEncryptedFileFetch';
 import { updateLightBoxOptions } from '../../state/ducks/modalDialog';
@@ -257,7 +257,7 @@ const LightboxObject = ({
 
 export const Lightbox = (props: Props) => {
   const renderedRef = useRef<any>(null);
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const { caption, contentType, objectURL, onNext, onPrevious, onSave, onClose } = props;
 
   const onObjectClick = (event: any) => {

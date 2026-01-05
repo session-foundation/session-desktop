@@ -19,7 +19,6 @@ import {
   reducer as stagedAttachments,
   StagedAttachmentsStateType,
 } from './ducks/stagedAttachments';
-import { userConfigReducer as userConfig, UserConfigState } from './ducks/userConfig';
 import { userGroupReducer, UserGroupState } from './ducks/userGroups';
 import releasedFeaturesReducer, { type ReleasedFeaturesState } from './ducks/releasedFeatures';
 import { debugReducer, type DebugState } from './ducks/debug';
@@ -37,7 +36,6 @@ export type StateType = {
   defaultRooms: DefaultRoomsState;
   onionPaths: OnionState;
   modals: ModalState;
-  userConfig: UserConfigState;
   stagedAttachments: StagedAttachmentsStateType;
   call: CallStateType;
   sogsRoomInfo: SogsRoomInfoState;
@@ -61,7 +59,6 @@ const reducers = {
   defaultRooms,
   onionPaths,
   modals,
-  userConfig,
   stagedAttachments,
   call,
   sogsRoomInfo: ReduxSogsRoomInfos.sogsRoomInfoReducer,
@@ -78,3 +75,5 @@ const reducers = {
 // Making this work would require that our reducer signature supported AnyAction, not
 //   our restricted actions
 export const rootReducer = combineReducers(reducers);
+
+export type RootState = ReturnType<typeof rootReducer>;

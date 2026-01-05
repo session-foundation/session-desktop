@@ -2,7 +2,7 @@ import { type RefObject, useCallback, useEffect } from 'react';
 import { debounce } from 'lodash';
 
 interface DebouncedSpellcheckProps {
-  elementRef: RefObject<HTMLDivElement | HTMLInputElement | HTMLTextAreaElement>;
+  elementRef: RefObject<HTMLDivElement | HTMLInputElement | HTMLTextAreaElement | null>;
   delay?: number;
 }
 

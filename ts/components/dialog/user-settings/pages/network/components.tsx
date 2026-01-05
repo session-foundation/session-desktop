@@ -173,16 +173,16 @@ const GradientPrimary = styled(Gradient)<GradientProps & { color: string }>`
 type GradientContainerProps = {
   height?: string;
   width?: string;
-  paddingInline?: string;
-  paddingBlock?: string;
+  $paddingInline?: string;
+  $paddingBlock?: string;
 };
 
 const GradientContainer = styled.div<GradientContainerProps>`
   position: relative;
   ${props => props.height && `height: ${props.height};`}
   ${props => props.width && `width: ${props.width};`}
-  ${props => props.paddingInline && `padding-inline: ${props.paddingInline};`}
-  ${props => props.paddingBlock && `padding-block: ${props.paddingBlock};`}
+  ${props => props.$paddingInline && `padding-inline: ${props.$paddingInline};`}
+  ${props => props.$paddingBlock && `padding-block: ${props.$paddingBlock};`}
 `;
 
 export const BackgroundGradientContainer = ({
@@ -190,8 +190,8 @@ export const BackgroundGradientContainer = ({
   noGradient,
   height,
   width,
-  paddingInline,
-  paddingBlock,
+  $paddingInline: paddingInline,
+  $paddingBlock: paddingBlock,
 }: GradientContainerProps & {
   children: ReactNode;
   noGradient?: boolean;
@@ -202,8 +202,8 @@ export const BackgroundGradientContainer = ({
     <GradientContainer
       height={height}
       width={width}
-      paddingInline={paddingInline}
-      paddingBlock={paddingBlock}
+      $paddingInline={paddingInline}
+      $paddingBlock={paddingBlock}
     >
       {!noGradient ? (
         <>

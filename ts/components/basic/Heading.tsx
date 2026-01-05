@@ -30,11 +30,11 @@ const StyledHeading = styled.h1<StyledHeadingProps>`
 
 const squashAsH6 = ['h6', 'h7', 'h8', 'h9'];
 
-const Heading = (props: StyledHeadingProps) => {
+const Heading = ({ dataTestId, ...props }: StyledHeadingProps) => {
   const tag = squashAsH6.includes(props.size) ? 'h6' : props.size;
 
   return (
-    <StyledHeading as={tag} {...props} data-testid={props.dataTestId}>
+    <StyledHeading as={tag} {...props} data-testid={dataTestId}>
       {props.children}
     </StyledHeading>
   );

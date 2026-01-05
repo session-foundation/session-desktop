@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
+import { getAppDispatch } from '../../../state/dispatch';
 import { useDisappearingMessageSettingText } from '../../../hooks/useParamSelector';
 import { useIsRightPanelShowing } from '../../../hooks/useUI';
 import { closeRightPanel } from '../../../state/ducks/conversations';
@@ -163,34 +163,71 @@ const StyledName = styled.span`
   text-overflow: ellipsis;
 `;
 
-export const ConversationHeaderTitle = ({ showSubtitle }: { showSubtitle: boolean }) => {
-  const dispatch = useDispatch();
+// NOTE: [react-compiler] this has to live here for the hook to be identified as static
+function useConversationHeaderTitleInternal() {
   const convoId = useSelectedConversationKey();
   const convoName = useSelectedNicknameOrProfileNameOrShortenedPubkey();
   const isRightPanelOn = useIsRightPanelShowing();
   const isMe = useSelectedIsNoteToSelf();
-
   const isLegacyGroup = useSelectedIsLegacyGroup();
-
+  const isBlocked = useSelectedIsBlocked();
   const expirationMode = useSelectedConversationDisappearingMode();
-  const [subtitleIndex, setSubtitleIndex] = useState(0);
 
+  const showProBadgeForUser = useShowProBadgeFor(convoId);
+  const showPro = useProBadgeOnClickCb({
+    context: 'conversation-header-title',
+    args: { userHasPro: showProBadgeForUser, isMe },
+  });
+  const showConvoSettingsCb = useShowConversationSettingsFor(convoId);
+
+  return {
+    convoId,
+    convoName,
+    isRightPanelOn,
+    isMe,
+    isLegacyGroup,
+    expirationMode,
+    isBlocked,
+    showConvoSettingsCb,
+    showPro,
+  };
+}
+
+// NOTE: [react-compiler] this convinces the compiler the hook is static
+const useSubtitleArrayInternal = useSubtitleArray;
+
+// NOTE: [react-compiler] this has to live here for the hook to be identified as static
+function useSubtitleIndex(convoId?: string) {
+  const [subtitleIndex, setSubtitleIndex] = useState(0);
   // reset the subtitle selected index when the convoId changes (so the page is always 0 by default)
   useEffect(() => {
     setSubtitleIndex(0);
   }, [convoId]);
 
-  const showConvoSettingsCb = useShowConversationSettingsFor(convoId);
+  return {
+    subtitleIndex,
+    setSubtitleIndex,
+  };
+}
 
-  const subtitles = useSubtitleArray(convoId);
-  const isBlocked = useSelectedIsBlocked();
+export const ConversationHeaderTitle = ({ showSubtitle }: { showSubtitle: boolean }) => {
+  const dispatch = getAppDispatch();
 
-  const showProBadgeForUser = useShowProBadgeFor(convoId);
+  const {
+    convoId,
+    convoName,
+    isRightPanelOn,
+    isMe,
+    isLegacyGroup,
+    expirationMode,
+    isBlocked,
+    showConvoSettingsCb,
+    showPro,
+  } = useConversationHeaderTitleInternal();
 
-  const showPro = useProBadgeOnClickCb({
-    context: 'conversation-header-title',
-    args: { userHasPro: showProBadgeForUser, isMe },
-  });
+  const { subtitleIndex, setSubtitleIndex } = useSubtitleIndex(convoId);
+
+  const subtitles = useSubtitleArrayInternal(convoId);
 
   const onHeaderClick = () => {
     if (isLegacyGroup || !convoId) {
@@ -228,9 +265,8 @@ export const ConversationHeaderTitle = ({ showSubtitle }: { showSubtitle: boolea
 
   const displayName = isMe ? tr('noteToSelf') : convoName;
 
-  const clampedSubtitleIndex = useMemo(() => {
-    return Math.max(0, Math.min(subtitles.length - 1, subtitleIndex));
-  }, [subtitles, subtitleIndex]);
+  const clampedSubtitleIndex = Math.max(0, Math.min(subtitles.length - 1, subtitleIndex));
+
   const visibleSubtitle = subtitles?.[clampedSubtitleIndex];
 
   const handleTitleCycle = (direction: 1 | -1) => {

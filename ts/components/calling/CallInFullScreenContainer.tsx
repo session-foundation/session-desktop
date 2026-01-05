@@ -1,8 +1,9 @@
 import { useEffect, useRef } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 
 import useKey from 'react-use/lib/useKey';
 import styled from 'styled-components';
+import { getAppDispatch } from '../../state/dispatch';
 import { useVideoCallEventsListener } from '../../hooks/useVideoEventListener';
 import { setFullScreenCall } from '../../state/ducks/call';
 import {
@@ -26,17 +27,17 @@ const CallInFullScreenVisible = styled.div`
   opacity: 1;
 `;
 
-const StyledLocalVideoElement = styled.video<{ isVideoMuted: boolean }>`
+const StyledLocalVideoElement = styled.video<{ $isVideoMuted: boolean }>`
   height: 20%;
   width: 20%;
   bottom: 0;
   right: 0;
   position: absolute;
-  opacity: ${props => (props.isVideoMuted ? 0 : 1)};
+  opacity: ${props => (props.$isVideoMuted ? 0 : 1)};
 `;
 
 export const CallInFullScreenContainer = () => {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const ongoingCallWithFocused = useSelector(getHasOngoingCallWithFocusedConvo);
   const hasOngoingCallFullScreen = useSelector(getCallIsInFullScreen);
 
@@ -91,12 +92,12 @@ export const CallInFullScreenContainer = () => {
       <StyledVideoElement
         ref={videoRefRemote}
         autoPlay={true}
-        isVideoMuted={remoteStreamVideoIsMuted}
+        $isVideoMuted={remoteStreamVideoIsMuted}
       />
       <StyledLocalVideoElement
         ref={videoRefLocal}
         autoPlay={true}
-        isVideoMuted={localStreamVideoIsMuted}
+        $isVideoMuted={localStreamVideoIsMuted}
       />
       <CallWindowControls
         currentConnectedAudioInputs={currentConnectedAudioInputs}

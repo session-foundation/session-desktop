@@ -44,7 +44,7 @@ function AccountId({ conversationId }: WithConvoId) {
   );
 }
 
-const StyledDescription = styled.div<{ expanded: boolean }>`
+const StyledDescription = styled.div<{ $expanded: boolean }>`
   color: var(--text-secondary-color);
   font-size: var(--font-display-size-md);
   text-align: center;
@@ -55,7 +55,7 @@ const StyledDescription = styled.div<{ expanded: boolean }>`
   white-space: pre-wrap;
   word-break: break-word;
   overflow: hidden;
-  -webkit-line-clamp: ${({ expanded }) => (expanded ? 'unset' : '2')};
+  -webkit-line-clamp: ${({ $expanded }) => ($expanded ? 'unset' : '2')};
   display: -webkit-box;
   -webkit-box-orient: vertical;
   // some padding so we always have room to show the ellipsis, if needed
@@ -101,7 +101,7 @@ function Description({ conversationId }: WithConvoId) {
 
   return (
     <>
-      <StyledDescription data-testid="group-description" expanded={expanded} ref={ref}>
+      <StyledDescription data-testid="group-description" $expanded={expanded} ref={ref}>
         {description}
       </StyledDescription>
       {isClamped && (

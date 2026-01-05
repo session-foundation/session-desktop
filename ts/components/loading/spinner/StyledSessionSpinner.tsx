@@ -1,17 +1,17 @@
 import styled from 'styled-components';
 
 export type StyledSessionSpinnerProps = {
-  loading: boolean;
-  height?: string;
-  width?: string;
-  color?: string;
+  $loading: boolean;
+  $height?: string;
+  $width?: string;
+  $color?: string;
 };
 
 export const StyledSessionSpinner = styled.div<StyledSessionSpinnerProps>`
   display: inline-block;
   position: relative;
-  width: ${props => (props.width ? props.width : '80px')};
-  height: ${props => (props.height ? props.height : '80px')};
+  width: ${props => (props.$width ? props.$width : '80px')};
+  height: ${props => (props.$height ? props.$height : '80px')};
   flex-shrink: 0;
 
   div {
@@ -20,7 +20,7 @@ export const StyledSessionSpinner = styled.div<StyledSessionSpinnerProps>`
     width: 13px;
     height: 13px;
     border-radius: 50%;
-    background: ${props => props.color || 'var(--primary-color)'};
+    background: ${props => props.$color || 'var(--primary-color)'};
     animation-timing-function: cubic-bezier(0, 1, 1, 0);
   }
   div:nth-child(1) {

@@ -71,7 +71,7 @@ export const SessionToast = (props: Props) => {
       $alignItems="center"
       onClick={props.onToastClick}
       data-testid="session-toast"
-      padding="var(--margins-sm) 0"
+      $padding="var(--margins-sm) 0"
     >
       <IconDiv>
         <LucideIcon iconSize="huge" unicode={toastIcon} />

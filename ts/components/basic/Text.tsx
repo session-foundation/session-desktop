@@ -3,23 +3,23 @@ import styled, { CSSProperties } from 'styled-components';
 
 type TextProps = {
   text: string;
-  subtle?: boolean;
-  maxWidth?: string;
-  padding?: string;
-  textAlign?: 'center';
-  ellipsisOverflow?: boolean;
+  $subtle?: boolean;
+  $maxWidth?: string;
+  $padding?: string;
+  $textAlign?: 'center';
+  $ellipsisOverflow?: boolean;
 };
 
 const StyledDefaultText = styled.div<Omit<TextProps, 'text'>>`
   transition: var(--default-duration);
-  max-width: ${props => (props.maxWidth ? props.maxWidth : '')};
-  padding: ${props => (props.padding ? props.padding : '')};
-  text-align: ${props => (props.textAlign ? props.textAlign : '')};
+  max-width: ${props => (props.$maxWidth ? props.$maxWidth : '')};
+  padding: ${props => (props.$padding ? props.$padding : '')};
+  text-align: ${props => (props.$textAlign ? props.$textAlign : '')};
   font-family: var(--font-default);
-  color: ${props => (props.subtle ? 'var(--text-secondary-color)' : 'var(--text-primary-color)')};
-  white-space: ${props => (props.ellipsisOverflow ? 'nowrap' : null)};
-  overflow: ${props => (props.ellipsisOverflow ? 'hidden' : null)};
-  text-overflow: ${props => (props.ellipsisOverflow ? 'ellipsis' : null)};
+  color: ${props => (props.$subtle ? 'var(--text-secondary-color)' : 'var(--text-primary-color)')};
+  white-space: ${props => (props.$ellipsisOverflow ? 'nowrap' : null)};
+  overflow: ${props => (props.$ellipsisOverflow ? 'hidden' : null)};
+  text-overflow: ${props => (props.$ellipsisOverflow ? 'ellipsis' : null)};
 `;
 
 export const Text = (props: TextProps) => {

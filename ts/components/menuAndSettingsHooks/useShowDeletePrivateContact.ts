@@ -1,4 +1,4 @@
-import { useDispatch } from 'react-redux';
+import { getAppDispatch } from '../../state/dispatch';
 import {
   useConversationUsernameWithFallback,
   useIsIncomingRequest,
@@ -18,10 +18,13 @@ function useShowDeletePrivateContact({ conversationId }: { conversationId: strin
   return isPrivate && !isRequest && !isMe;
 }
 
+// NOTE: [react-compiler] this convinces the compiler the hook is static
+const useConversationUsernameWithFallbackInternal = useConversationUsernameWithFallback;
+
 export function useShowDeletePrivateContactCb({ conversationId }: { conversationId: string }) {
   const showDeletePrivateContact = useShowDeletePrivateContact({ conversationId });
-  const dispatch = useDispatch();
-  const name = useConversationUsernameWithFallback(true, conversationId);
+  const dispatch = getAppDispatch();
+  const name = useConversationUsernameWithFallbackInternal(true, conversationId);
 
   if (!showDeletePrivateContact) {
     return null;

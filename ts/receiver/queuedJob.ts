@@ -1,12 +1,10 @@
 import _, { isEmpty, isNumber, toNumber } from 'lodash';
 import { queueAttachmentDownloads } from './attachments';
-
 import { Data } from '../data/data';
 import { ConversationModel } from '../models/conversation';
 import { MessageModel } from '../models/message';
 import { ConvoHub } from '../session/conversations';
 import { Quote, type BaseDecodedEnvelope, type SwarmDecodedEnvelope } from './types';
-
 import { MessageDirection } from '../models/messageType';
 import { ConversationTypeEnum } from '../models/types';
 import { SignalService } from '../protobuf';
@@ -18,13 +16,13 @@ import {
   lookupQuote,
   pushQuotedMessageDetails,
 } from '../state/ducks/conversations';
-import { showMessageRequestBannerOutsideRedux } from '../state/ducks/userConfig';
 import { selectMemberInviteSentOutsideRedux } from '../state/selectors/groups';
-import { getHideMessageRequestBannerOutsideRedux } from '../state/selectors/userConfig';
 import { LinkPreviews } from '../util/linkPreviews';
 import { GroupV2Receiver } from './groupv2/handleGroupV2Message';
 import { Constants } from '../session';
 import { longOrNumberToNumber } from '../types/long/longOrNumberToNumber';
+import { getHideMessageRequestBannerOutsideRedux } from '../state/selectors/settings';
+import { showMessageRequestBannerOutsideRedux } from '../state/ducks/settings';
 import { getFeatureFlag } from '../state/ducks/types/releasedFeaturesReduxTypes';
 
 function isMessageModel(
@@ -178,7 +176,7 @@ async function toggleMsgRequestBannerIfNeeded(
     isFirstRequestMessage &&
     getHideMessageRequestBannerOutsideRedux()
   ) {
-    showMessageRequestBannerOutsideRedux();
+    await showMessageRequestBannerOutsideRedux();
   }
 
   // For edge case when messaging a client that's unable to explicitly send request approvals

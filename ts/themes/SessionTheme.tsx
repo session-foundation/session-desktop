@@ -9,7 +9,7 @@ import { switchThemeTo } from './switchTheme';
 import { Storage } from '../util/storage';
 
 export async function ensureThemeConsistency(): Promise<boolean> {
-  const theme = window.Events.getThemeSetting();
+  const theme = window.getSettingValue(SettingsKey.settingsTheme);
 
   return new Promise(resolve => {
     ipcRenderer.send('get-native-theme');
@@ -33,7 +33,7 @@ export async function ensureThemeConsistency(): Promise<boolean> {
 
 const setupTheme = async () => {
   const shouldFollowSystemTheme = window.getSettingValue(SettingsKey.hasFollowSystemThemeEnabled);
-  const theme = window.Events.getThemeSetting();
+  const theme = window.getSettingValue(SettingsKey.settingsTheme);
   const themeConfig = {
     theme,
     mainWindow: true,

@@ -1,18 +1,18 @@
 import { isBoolean } from 'lodash';
 import { Dispatch, useCallback, useEffect, useMemo, useState } from 'react';
 import { clipboard } from 'electron';
-import { useDispatch } from 'react-redux';
 import useAsync from 'react-use/lib/useAsync';
 import { ProConfig, ProProof } from 'libsession_util_nodejs';
+import { getAppDispatch } from '../../../state/dispatch';
 import {
   getDataFeatureFlag,
   getFeatureFlag,
   MockProAccessExpiryOptions,
   SessionDataFeatureFlags,
-  useDataFeatureFlag,
+  getDataFeatureFlagMemo,
   type SessionDataFeatureFlagKeys,
   type SessionBooleanFeatureFlagKeys,
-  useFeatureFlag,
+  getFeatureFlagMemo,
 } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { Flex } from '../../basic/Flex';
 import { SessionToggle } from '../../basic/SessionToggle';
@@ -38,8 +38,11 @@ import {
   defaultProDataFeatureFlags,
 } from '../../../state/ducks/types/defaultFeatureFlags';
 import { UserConfigWrapperActions } from '../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
-import { useProAccessDetails } from '../../../hooks/useHasPro';
 import { isDebugMode } from '../../../shared/env_vars';
+import {
+  useProBackendProDetails,
+  useProBackendRefetch,
+} from '../../../state/selectors/proBackendData';
 
 type FeatureFlagToggleType = {
   forceUpdate: () => void;
@@ -261,7 +264,7 @@ export const FlagIntegerInput = ({
   visibleWithBooleanFlag,
   label,
 }: FlagIntegerInputProps) => {
-  const currentValue = useDataFeatureFlag(flag);
+  const currentValue = getDataFeatureFlagMemo(flag);
   const key = `feature-flag-integer-input-${flag}`;
   const [value, setValue] = useState<number>(() => {
     const initValue = window.sessionDataFeatureFlags[flag];
@@ -623,8 +626,8 @@ export function FeatureFlagDumper({ forceUpdate }: { forceUpdate: () => void }) 
 }
 
 function MessageProFeatures({ forceUpdate }: { forceUpdate: () => void }) {
-  const proIsAvailable = useFeatureFlag('proAvailable');
-  const value = useDataFeatureFlag('mockMessageProFeatures') ?? [];
+  const proIsAvailable = getFeatureFlagMemo('proAvailable');
+  const value = getDataFeatureFlagMemo('mockMessageProFeatures') ?? [];
 
   if (!proIsAvailable) {
     return null;
@@ -841,7 +844,8 @@ function ProConfigForm({
 }
 
 function ProConfigManager({ forceUpdate }: { forceUpdate: () => void }) {
-  const { refetch, isFetching } = useProAccessDetails();
+  const { isFetching } = useProBackendProDetails();
+  const refetch = useProBackendRefetch();
   const [proConfig, setProConfig] = useState<ProConfig | null>(null);
   const getProConfig = useCallback(async () => {
     const config = await UserConfigWrapperActions.getProConfig();
@@ -883,9 +887,9 @@ export const ProDebugSection = ({
   forceUpdate,
   setPage,
 }: DebugMenuPageProps & { forceUpdate: () => void }) => {
-  const dispatch = useDispatch();
-  const mockExpiry = useDataFeatureFlag('mockProAccessExpiry');
-  const proAvailable = useFeatureFlag('proAvailable');
+  const dispatch = getAppDispatch();
+  const mockExpiry = getDataFeatureFlagMemo('mockProAccessExpiry');
+  const proAvailable = getFeatureFlagMemo('proAvailable');
 
   const resetPro = useCallback(async () => {
     await UserConfigWrapperActions.removeProConfig();

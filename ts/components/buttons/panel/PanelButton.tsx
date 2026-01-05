@@ -9,9 +9,9 @@ import type { TrArgs } from '../../../localization/localeTools';
 import { useIsDarkTheme } from '../../../state/theme/selectors/theme';
 
 // NOTE Used for descendant components
-export const StyledContent = styled.div<{ disabled?: boolean; rowReverse?: boolean }>`
+export const StyledContent = styled.div<{ disabled?: boolean; $rowReverse?: boolean }>`
   display: flex;
-  flex-direction: ${props => (props.rowReverse ? 'row-reverse' : 'row')};
+  flex-direction: ${props => (props.$rowReverse ? 'row-reverse' : 'row')};
   justify-content: space-between;
   align-items: center;
   width: 100%;
@@ -64,15 +64,18 @@ export function PanelLabelWithDescription({
   );
 }
 
-const StyledRoundedPanelButtonGroup = styled.div<{ isSidePanel?: boolean; isDarkTheme?: boolean }>`
+const StyledRoundedPanelButtonGroup = styled.div<{
+  $isSidePanel?: boolean;
+  $isDarkTheme?: boolean;
+}>`
   display: flex;
   flex-direction: column;
   justify-content: center;
   overflow: hidden;
   background: ${props =>
-    props.isSidePanel
+    props.$isSidePanel
       ? 'var(--background-tertiary-color)'
-      : props.isDarkTheme
+      : props.$isDarkTheme
         ? 'var(--background-primary-color)'
         : 'var(--background-secondary-color)'};
   border-radius: 16px;
@@ -103,8 +106,8 @@ export const PanelButtonGroup = (
   return (
     <StyledRoundedPanelButtonGroup
       style={style}
-      isSidePanel={isSidePanel}
-      isDarkTheme={isDarkTheme}
+      $isSidePanel={isSidePanel}
+      $isDarkTheme={isDarkTheme}
     >
       <PanelButtonContainer style={containerStyle}>{children}</PanelButtonContainer>
     </StyledRoundedPanelButtonGroup>
@@ -113,12 +116,12 @@ export const PanelButtonGroup = (
 
 export const StyledPanelButton = styled.button<{
   disabled: boolean;
-  color?: string;
-  isDarkTheme: boolean;
-  defaultCursorWhenDisabled?: boolean;
+  $color?: string;
+  $isDarkTheme: boolean;
+  $defaultCursorWhenDisabled?: boolean;
 }>`
   cursor: ${props =>
-    props.disabled ? (props.defaultCursorWhenDisabled ? 'default' : 'not-allowed') : 'pointer'};
+    props.disabled ? (props.$defaultCursorWhenDisabled ? 'default' : 'not-allowed') : 'pointer'};
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -127,7 +130,7 @@ export const StyledPanelButton = styled.button<{
   font-family: var(--font-default);
   width: 100%;
   transition: var(--default-duration);
-  color: ${props => (props.disabled ? 'var(--disabled-color)' : props.color)};
+  color: ${props => (props.disabled ? 'var(--disabled-color)' : props.$color)};
   padding-inline: var(--margins-lg);
   padding-block: var(--margins-sm);
   min-height: var(--panel-button-container-min-height);
@@ -137,7 +140,7 @@ export const StyledPanelButton = styled.button<{
       if (props.disabled) {
         return 'transparent'; // let the PanelButtonGroup background be visible
       }
-      if (props.isDarkTheme) {
+      if (props.$isDarkTheme) {
         return 'color-mix(in srgb, var(--background-tertiary-color) 95%, white)';
       }
       return 'color-mix(in srgb, var(--background-tertiary-color) 95%, black)';
@@ -168,8 +171,8 @@ export const PanelButton = (props: PanelButtonProps) => {
       onClick={onClick}
       style={style}
       data-testid={dataTestId}
-      color={color}
-      isDarkTheme={isDarkTheme}
+      $color={color}
+      $isDarkTheme={isDarkTheme}
     >
       {children}
     </StyledPanelButton>
@@ -210,8 +213,8 @@ const PanelButtonTextInternal = (props: PropsWithChildren) => {
       width={'100%'}
       $flexDirection={'column'}
       $alignItems={'flex-start'}
-      margin="0 var(--margins-lg) 0 0"
-      minWidth="0"
+      $margin="0 var(--margins-lg) 0 0"
+      $minWidth="0"
     >
       {props.children}
     </Flex>

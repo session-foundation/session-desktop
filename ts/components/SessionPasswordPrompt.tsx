@@ -215,7 +215,7 @@ const SessionPasswordPromptInner = () => {
       <ModalFlexContainer>
         {loading ? (
           <>
-            <SessionSpinner loading={true} />
+            <SessionSpinner $loading={true} />
             <TextPleaseWait isLoading={loading} />
             <SpacerMD />
           </>

@@ -1,9 +1,10 @@
 // Audio Player
 import { SessionDataTestId, useEffect, useRef, useState } from 'react';
 import H5AudioPlayer, { RHAP_UI } from 'react-h5-audio-player';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 import { contextMenu } from 'react-contexify';
+import { getAppDispatch } from '../../state/dispatch';
 import { useEncryptedFileFetch } from '../../hooks/useEncryptedFileFetch';
 import { setNextMessageToPlayId } from '../../state/ducks/conversations';
 import { useMessageDirection, useMessageSelected } from '../../state/selectors';
@@ -11,11 +12,11 @@ import {
   getNextMessageToPlayId,
   getSortedMessagesOfSelectedConversation,
 } from '../../state/selectors/conversations';
-import { getAudioAutoplay } from '../../state/selectors/userConfig';
 import { SessionButton, SessionButtonType } from '../basic/SessionButton';
 import { useIsMessageSelectionMode } from '../../state/selectors/selectedConversation';
-import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
+import { getAudioAutoplay } from '../../state/selectors/settings';
+import { LucideIcon } from '../icon/LucideIcon';
 
 const StyledSpeedButton = styled.div`
   padding: var(--margins-xs);
@@ -156,7 +157,7 @@ export const AudioPlayerWithEncryptedFile = (props: {
   messageId: string;
 }) => {
   const { messageId, contentType, src } = props;
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
   const { urlToLoad } = useEncryptedFileFetch(src, contentType, false);
   const player = useRef<H5AudioPlayer | null>(null);
@@ -279,14 +280,10 @@ export const AudioPlayerWithEncryptedFile = (props: {
       customProgressBarSection={[RHAP_UI.CURRENT_LEFT_TIME, RHAP_UI.PROGRESS_BAR]}
       customIcons={{
         play: (
-          <SessionLucideIconButton
-            unicode={LUCIDE_ICONS_UNICODE.PLAY}
-            iconSize="medium"
-            iconColor={iconColor}
-          />
+          <LucideIcon unicode={LUCIDE_ICONS_UNICODE.PLAY} iconSize="medium" iconColor={iconColor} />
         ),
         pause: (
-          <SessionLucideIconButton
+          <LucideIcon
             unicode={LUCIDE_ICONS_UNICODE.PAUSE}
             iconSize="medium"
             iconColor={iconColor}

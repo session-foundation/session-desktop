@@ -15,13 +15,13 @@ import { LucideIcon } from '../../../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 
 export const StyledMessageReactionsContainer = styled(Flex)<{
-  noAvatar: boolean;
+  $noAvatar: boolean;
 }>`
-  ${props => !props.noAvatar && 'margin-inline-start: var(--width-avatar-group-msg-list);'}
+  ${props => !props.$noAvatar && 'margin-inline-start: var(--width-avatar-group-msg-list);'}
 `;
 
-export const StyledMessageReactions = styled(Flex)<{ fullWidth: boolean }>`
-  ${props => (props.fullWidth ? '' : 'max-width: 640px;')}
+export const StyledMessageReactions = styled(Flex)<{ $fullWidth: boolean }>`
+  ${props => (props.$fullWidth ? '' : 'max-width: 640px;')}
 `;
 
 const StyledReactionOverflow = styled.button`
@@ -59,7 +59,7 @@ const Reactions = (props: ReactionsProps) => {
       $container={true}
       $flexWrap={inModal ? 'nowrap' : 'wrap'}
       $alignItems={'center'}
-      fullWidth={inModal}
+      $fullWidth={inModal}
     >
       {reactions.map(([emoji]) => (
         <Reaction key={`${messageId}-${emoji}`} emoji={emoji} {...props} />
@@ -79,7 +79,7 @@ const CompressedReactions = (props: ExpandReactionsProps) => {
       $container={true}
       $flexWrap={inModal ? 'nowrap' : 'wrap'}
       $alignItems={'center'}
-      fullWidth={true}
+      $fullWidth={true}
     >
       {reactions.slice(0, 4).map(([emoji]) => (
         <Reaction key={`${messageId}-${emoji}`} emoji={emoji} {...props} />
@@ -109,7 +109,7 @@ const CompressedReactions = (props: ExpandReactionsProps) => {
 const ExpandedReactions = (props: ExpandReactionsProps) => {
   const { handleExpand } = props;
   return (
-    <Flex $container={true} $flexDirection={'column'} $alignItems={'center'} margin="4px 0 0">
+    <Flex $container={true} $flexDirection={'column'} $alignItems={'center'} $margin="4px 0 0">
       <Reactions {...props} />
       <StyledReadLess onClick={handleExpand}>
         <LucideIcon
@@ -199,7 +199,7 @@ export const MessageReactions = (props: Props) => {
       $flexDirection={'column'}
       $justifyContent={'center'}
       $alignItems={inModal ? 'flex-start' : 'center'}
-      noAvatar={noAvatar}
+      $noAvatar={noAvatar}
     >
       {sortedReacts &&
         sortedReacts?.length !== 0 &&

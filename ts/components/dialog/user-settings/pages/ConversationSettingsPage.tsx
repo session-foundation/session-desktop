@@ -1,5 +1,6 @@
 import useUpdate from 'react-use/lib/useUpdate';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
+import { getAppDispatch } from '../../../../state/dispatch';
 
 import {
   userSettingsModal,
@@ -16,11 +17,10 @@ import {
 import { SettingsKey } from '../../../../data/settings-key';
 import { SettingsToggleBasic } from '../components/SettingsToggleBasic';
 import { ToastUtils } from '../../../../session/utils';
-import { toggleAudioAutoplay } from '../../../../state/ducks/userConfig';
 
-import { getAudioAutoplay } from '../../../../state/selectors/userConfig';
 import { SettingsChevronBasic } from '../components/SettingsChevronBasic';
 import { UserSettingsModalContainer } from '../components/UserSettingsModalContainer';
+import { getAudioAutoplay } from '../../../../state/selectors/settings';
 
 async function toggleCommunitiesPruning() {
   try {
@@ -40,7 +40,7 @@ export function ConversationSettingsPage(modalState: UserSettingsModalState) {
   const backAction = useUserSettingsBackAction(modalState);
   const closeAction = useUserSettingsCloseAction(modalState);
   const title = useUserSettingsTitle(modalState);
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   const isOpengroupPruningEnabled = Boolean(
     window.getSettingValue(SettingsKey.settingsOpengroupPruning)
@@ -95,7 +95,7 @@ export function ConversationSettingsPage(modalState: UserSettingsModalState) {
           baseDataTestId="audio-message-autoplay"
           active={audioAutoPlay}
           onClick={async () => {
-            dispatch(toggleAudioAutoplay());
+            await window.setSettingValue(SettingsKey.audioAutoplay, !audioAutoPlay);
             forceUpdate();
           }}
           text={{ token: 'conversationsAutoplayAudioMessage' }}

@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useEffect, useState, Dispatch } from 'react';
+import { useSelector } from 'react-redux';
 import styled from 'styled-components';
+import { getAppDispatch } from '../../../../../state/dispatch';
 import { setDisappearingMessagesByConvoId } from '../../../../../interactions/conversationInteractions';
 import { TimerOptions } from '../../../../../session/disappearing_messages/timerOptions';
 import { DisappearingMessageConversationModeType } from '../../../../../session/disappearing_messages/types';
@@ -82,30 +83,116 @@ function useSingleMode(disappearingModeOptions: Record<string, boolean> | undefi
   return { singleMode };
 }
 
-export const DisappearingMessagesForConversationModal = (props: ConversationSettingsModalState) => {
-  const dispatch = useDispatch();
+// NOTE: [react-compiler] this has to live here for the hook to be identified as static
+function useDisappearingMessagesForConversationModalInternal(
+  props: ConversationSettingsModalState
+) {
   const onClose = useCloseActionFromPage(props);
   const title = useTitleFromPage(props?.settingsModalPage);
   const selectedConversationKey = useSelectedConversationKey();
   const disappearingModeOptions = useSelector(getSelectedConversationExpirationModes);
-  const { singleMode } = useSingleMode(disappearingModeOptions);
-  const hasOnlyOneMode = !!(singleMode && singleMode.length > 0);
-
   const isGroup = useSelectedIsGroupOrCommunity();
   const expirationMode = useSelectedConversationDisappearingMode() || 'off';
   const expireTimer = useSelectedExpireTimer();
   const backAction = useBackActionForPage(props);
-
-  const [modeSelected, setModeSelected] = useState<DisappearingMessageConversationModeType>(
-    hasOnlyOneMode ? singleMode : expirationMode
-  );
-
-  const [timeSelected, setTimeSelected] = useState(expireTimer || 0);
   const isStandalone = useConversationSettingsModalIsStandalone();
 
+  const showConvoSettingsCb = useShowConversationSettingsFor(selectedConversationKey);
+
+  return {
+    onClose,
+    title,
+    selectedConversationKey,
+    disappearingModeOptions,
+    isGroup,
+    expirationMode,
+    expireTimer,
+    backAction,
+    isStandalone,
+    showConvoSettingsCb,
+  };
+}
+
+// NOTE: [react-compiler] this has to live here for the hook to be identified as static
+function useDisappearingMessagesForConversationStateInternal(
+  initialExpirationModeSelected: DisappearingMessageConversationModeType,
+  expireTimer?: number
+) {
+  const [modeSelected, setModeSelected] = useState<DisappearingMessageConversationModeType>(
+    initialExpirationModeSelected
+  );
+  const [timeSelected, setTimeSelected] = useState(expireTimer || 0);
   const [loading, setLoading] = useState(false);
 
-  const showConvoSettingsCb = useShowConversationSettingsFor(selectedConversationKey);
+  return {
+    modeSelected,
+    setModeSelected,
+    timeSelected,
+    setTimeSelected,
+    loading,
+    setLoading,
+  };
+}
+
+// NOTE: [react-compiler] this has to live here for the hook to be identified as static
+function useHandleExpirationTimeChange(
+  setTimeSelected: Dispatch<number>,
+  modeSelected: DisappearingMessageConversationModeType,
+  hasOnlyOneMode: boolean,
+  expireTimer?: number
+) {
+  useEffect(() => {
+    // NOTE loads a time value from the conversation model or the default
+    setTimeSelected(
+      expireTimer !== undefined && expireTimer > -1
+        ? expireTimer
+        : loadDefaultTimeValue(modeSelected, hasOnlyOneMode)
+    );
+  }, [expireTimer, hasOnlyOneMode, modeSelected, setTimeSelected]);
+}
+
+/**
+ * NOTE: [react-compiler] Helper function to handle the async operation with try/catch.
+ * This is extracted outside the component to work around the React Compiler limitation:
+ * "Support value blocks (conditional, logical, optional chaining, etc) within a try/catch statement"
+ */
+async function setDisappearingMessagesWithErrorHandling(
+  convoKey: string,
+  mode: DisappearingMessageConversationModeType,
+  time: number
+): Promise<{ success: true } | { success: false; error: unknown }> {
+  try {
+    await setDisappearingMessagesByConvoId(convoKey, mode, time);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error };
+  }
+}
+
+export const DisappearingMessagesForConversationModal = (props: ConversationSettingsModalState) => {
+  const dispatch = getAppDispatch();
+
+  const {
+    onClose,
+    title,
+    selectedConversationKey,
+    disappearingModeOptions,
+    isGroup,
+    expirationMode,
+    expireTimer,
+    backAction,
+    isStandalone,
+    showConvoSettingsCb,
+  } = useDisappearingMessagesForConversationModalInternal(props);
+
+  const { singleMode } = useSingleMode(disappearingModeOptions);
+  const hasOnlyOneMode = !!(singleMode && singleMode.length > 0);
+
+  const { modeSelected, setModeSelected, timeSelected, setTimeSelected, loading, setLoading } =
+    useDisappearingMessagesForConversationStateInternal(
+      hasOnlyOneMode ? singleMode : expirationMode,
+      expireTimer
+    );
 
   function closeOrBackInPage() {
     if (isStandalone) {
@@ -121,38 +208,41 @@ export const DisappearingMessagesForConversationModal = (props: ConversationSett
     if (!selectedConversationKey) {
       return;
     }
+
     if (hasOnlyOneMode) {
       if (singleMode) {
-        try {
-          await setDisappearingMessagesByConvoId(
-            selectedConversationKey,
-            timeSelected === 0 ? 'off' : singleMode,
-            timeSelected
-          );
+        const modeToSet = timeSelected === 0 ? 'off' : singleMode;
+        setLoading(true);
+        const result = await setDisappearingMessagesWithErrorHandling(
+          selectedConversationKey,
+          modeToSet,
+          timeSelected
+        );
+        setLoading(false);
+        if (result.success) {
           closeOrBackInPage();
-        } finally {
-          setLoading(false);
+        } else {
+          throw result.error;
         }
       }
       return;
     }
+
     setLoading(true);
-    try {
-      await setDisappearingMessagesByConvoId(selectedConversationKey, modeSelected, timeSelected);
+    const result = await setDisappearingMessagesWithErrorHandling(
+      selectedConversationKey,
+      modeSelected,
+      timeSelected
+    );
+    setLoading(false);
+    if (result.success) {
       closeOrBackInPage();
-    } finally {
-      setLoading(false);
+    } else {
+      throw result.error;
     }
   };
 
-  useEffect(() => {
-    // NOTE loads a time value from the conversation model or the default
-    setTimeSelected(
-      expireTimer !== undefined && expireTimer > -1
-        ? expireTimer
-        : loadDefaultTimeValue(modeSelected, hasOnlyOneMode)
-    );
-  }, [expireTimer, hasOnlyOneMode, modeSelected]);
+  useHandleExpirationTimeChange(setTimeSelected, modeSelected, hasOnlyOneMode, expireTimer);
 
   if (!disappearingModeOptions) {
     return null;
@@ -180,7 +270,7 @@ export const DisappearingMessagesForConversationModal = (props: ConversationSett
       buttonChildren={
         <ModalActionsContainer buttonType={SessionButtonType.Outline}>
           {loading ? (
-            <SessionSpinner loading={true} />
+            <SessionSpinner $loading={true} />
           ) : (
             <SessionButton
               buttonColor={SessionButtonColor.PrimaryDark}

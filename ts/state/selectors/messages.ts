@@ -15,7 +15,7 @@ import { PubKey } from '../../session/types';
 import { useIsMe } from '../../hooks/useParamSelector';
 import { UserUtils } from '../../session/utils';
 import { tr } from '../../localization/localeTools';
-import { useDataFeatureFlag } from '../ducks/types/releasedFeaturesReduxTypes';
+import { getDataFeatureFlagMemo } from '../ducks/types/releasedFeaturesReduxTypes';
 
 function useMessagePropsByMessageId(messageId: string | undefined) {
   const props = useSelector((state: StateType) => getMessagePropsByMessageId(state, messageId));
@@ -34,10 +34,13 @@ const useSenderConvoProps = (
   });
 };
 
+// NOTE: [react-compiler] this convinces the compiler the hook is static
+const useIsMeInternal = useIsMe;
+
 export const useAuthorProfileName = (messageId: string): string | null => {
   const msg = useMessagePropsByMessageId(messageId);
   const senderProps = useSenderConvoProps(msg);
-  const senderIsUs = useIsMe(msg?.propsForMessage?.sender);
+  const senderIsUs = useIsMeInternal(msg?.propsForMessage?.sender);
   if (!msg || !senderProps) {
     return null;
   }
@@ -100,14 +103,14 @@ export const useMessageDirection = (
 
 export const useMessageLinkPreview = (messageId: string | undefined): Array<any> | undefined => {
   const previews = useMessagePropsByMessageId(messageId)?.propsForMessage.previews;
-  return useMemo(() => previews, [previews]);
+  return previews;
 };
 
 export const useMessageAttachments = (
   messageId: string | undefined
 ): Array<PropsForAttachment> | undefined => {
   const attachments = useMessagePropsByMessageId(messageId)?.propsForMessage.attachments;
-  return useMemo(() => attachments, [attachments]);
+  return attachments;
 };
 
 export const useMessageSenderIsAdmin = (messageId: string | undefined): boolean => {
@@ -181,9 +184,9 @@ export const useMessageText = (messageId: string | undefined): string | undefine
 };
 
 export function useHideAvatarInMsgList(messageId?: string, isDetailView?: boolean) {
-  const msgProps = useMessagePropsByMessageId(messageId);
+  const messageDirection = useMessageDirection(messageId);
   const selectedIsPrivate = useSelectedIsPrivate();
-  return isDetailView || msgProps?.propsForMessage.direction === 'outgoing' || selectedIsPrivate;
+  return isDetailView || messageDirection === 'outgoing' || selectedIsPrivate;
 }
 
 export function useMessageSelected(messageId?: string) {
@@ -192,15 +195,10 @@ export function useMessageSelected(messageId?: string) {
 
 export function useMessageSentWithProFeatures(messageId?: string) {
   const msgProps = useMessagePropsByMessageId(messageId);
-  const mockedFeatureFlags = useDataFeatureFlag('mockMessageProFeatures');
+  const mockedFeatureFlags = getDataFeatureFlagMemo('mockMessageProFeatures');
   const proFeatures = mockedFeatureFlags ?? msgProps?.propsForMessage.proFeaturesUsed;
 
-  return useMemo(() => {
-    if (!proFeatures) {
-      return null;
-    }
-    return proFeatures;
-  }, [proFeatures]);
+  return proFeatures ?? null;
 }
 
 /**

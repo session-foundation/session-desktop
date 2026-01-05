@@ -4,6 +4,7 @@ import { updateTheme } from '../state/theme/ducks/theme';
 import { THEMES, ThemeStateType, convertThemeStateToName } from './constants/colors';
 import { setThemeValues } from './globals';
 import { findPrimaryColorId, switchPrimaryColorTo } from './switchPrimaryColor';
+import { SettingsKey } from '../data/settings-key';
 
 type SwitchThemeProps = {
   theme: ThemeStateType;
@@ -39,7 +40,7 @@ export async function switchThemeTo(props: SwitchThemeProps) {
 
   if (newTheme) {
     if (mainWindow) {
-      await window.setTheme(theme);
+      await window.setSettingValue(SettingsKey.settingsTheme, theme);
     }
 
     if (dispatch) {

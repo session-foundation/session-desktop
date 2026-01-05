@@ -4,14 +4,14 @@ import { Constants } from '../../../../session';
 import { tr } from '../../../../localization/localeTools';
 import { useMessagesContainerRef } from '../../../../contexts/MessagesContainerRefContext';
 
-export const StyledMessageBubble = styled.div<{ expanded: boolean }>`
+export const StyledMessageBubble = styled.div<{ $expanded: boolean }>`
   position: relative;
   display: flex;
   flex-direction: column;
   width: 100%;
 
-  ${({ expanded }) =>
-    !expanded &&
+  ${({ $expanded }) =>
+    !$expanded &&
     css`
       pre,
       .message-body {
@@ -134,7 +134,7 @@ export function MessageBubble({ children }: { children: ReactNode }) {
 
   return (
     <>
-      <StyledMessageBubble ref={msgBubbleRef} expanded={expanded}>
+      <StyledMessageBubble ref={msgBubbleRef} $expanded={expanded}>
         {children}
       </StyledMessageBubble>
       {showReadMore && !expanded ? (

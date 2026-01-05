@@ -59,9 +59,9 @@ const ReactButton = styled.span`
   }
 `;
 
-const StyledContainer = styled.div<{ expirationTimestamp: number | null }>`
+const StyledContainer = styled.div<{ $expirationTimestamp: number | null }>`
   position: absolute;
-  top: ${props => (props.expirationTimestamp ? '-106px' : '-56px')};
+  top: ${props => (props.$expirationTimestamp ? '-106px' : '-56px')};
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -154,7 +154,7 @@ export const MessageReactBar = ({ action, additionalAction, messageId }: Props) 
   const expirationTimestamp = useIsRenderedExpiresInItem(messageId);
 
   return (
-    <StyledContainer expirationTimestamp={expirationTimestamp}>
+    <StyledContainer $expirationTimestamp={expirationTimestamp}>
       <StyledMessageReactBar>
         {recentReactions &&
           recentReactions.map(emoji => (

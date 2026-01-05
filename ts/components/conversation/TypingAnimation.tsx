@@ -12,7 +12,7 @@ const StyledTypingContainer = styled.div`
   padding-inline-end: 1px;
 `;
 
-const StyledTypingDot = styled.div<{ index: number }>`
+const StyledTypingDot = styled.div<{ $index: number }>`
   border-radius: 50%;
   background-color: var(--text-secondary-color);
 
@@ -60,9 +60,9 @@ const StyledTypingDot = styled.div<{ index: number }>`
   }
 
   animation: ${props =>
-      props.index === 0
+      props.$index === 0
         ? 'typing-animation-first'
-        : props.index === 1
+        : props.$index === 1
           ? 'typing-animation-second'
           : 'typing-animation-third'}
     var(--duration-typing-animation) ease infinite;
@@ -75,12 +75,12 @@ const StyledSpacer = styled.div`
 export const TypingAnimation = () => {
   return (
     <StyledTypingContainer aria-label={tr('typingIndicators')}>
-      <StyledTypingDot index={0} />
+      <StyledTypingDot $index={0} />
       <StyledSpacer />
-      <StyledTypingDot index={1} />
+      <StyledTypingDot $index={1} />
 
       <StyledSpacer />
-      <StyledTypingDot index={2} />
+      <StyledTypingDot $index={2} />
     </StyledTypingContainer>
   );
 };

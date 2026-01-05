@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
-import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
+import { getAppDispatch } from '../../../state/dispatch';
 import { updateQuitModal } from '../../../state/onboarding/ducks/modals';
 import {
   AccountRestoration,
@@ -75,7 +75,7 @@ const BackButton = ({
   const step = useOnboardStep();
   const restorationStep = useOnboardAccountRestorationStep();
 
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   return (
     <SessionLucideIconButton
