@@ -6,7 +6,7 @@ import styled from 'styled-components';
 import { AbortController } from 'abort-controller';
 
 import autoBind from 'auto-bind';
-import { Component, createRef, RefObject, KeyboardEvent, type JSX } from 'react';
+import { Component, createRef, RefObject, KeyboardEvent } from 'react';
 import { FrequentlyUsed } from 'emoji-mart';
 import * as MIME from '../../../types/MIME';
 import { SessionEmojiPanel, StyledEmojiPanel } from '../SessionEmojiPanel';
