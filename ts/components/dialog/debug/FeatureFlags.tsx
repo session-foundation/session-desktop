@@ -1,4 +1,4 @@
-import { isBoolean } from 'lodash';
+import { isBoolean, isNil } from 'lodash';
 import { Dispatch, useCallback, useEffect, useMemo, useState } from 'react';
 import { clipboard } from 'electron';
 import useAsync from 'react-use/lib/useAsync';
@@ -272,9 +272,18 @@ export const FlagIntegerInput = ({
   const key = `feature-flag-integer-input-${flag}`;
   const [value, setValue] = useState<number>(() => {
     const initValue = window.sessionDataFeatureFlags[flag];
-    return typeof initValue === 'number' && Number.isFinite(initValue)
-      ? initValue
-      : Math.max(Math.min(0, max ?? Number.NEGATIVE_INFINITY), min ?? Number.POSITIVE_INFINITY);
+    if (typeof initValue === 'number' && Number.isFinite(initValue)) {
+      return initValue;
+    }
+
+    if (!isNil(min)) {
+      return min;
+    }
+
+    if (!isNil(max)) {
+      return max;
+    }
+    return 0;
   });
 
   if (!isFeatureFlagAvailable(flag)) {
