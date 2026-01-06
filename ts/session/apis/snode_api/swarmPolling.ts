@@ -55,6 +55,7 @@ import {
   getCachedUserConfig,
   UserConfigWrapperActions,
 } from '../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
+import { isTestIntegration } from '../../../shared/env_vars';
 
 const minMsgCountShouldRetry = 95;
 /**
@@ -969,6 +970,11 @@ export class SwarmPolling {
         window.log.info(
           `[onboarding] about to pollOnceForOurDisplayName of ${ed25519Str(pubkey.key)} from snode: ${ed25519Str(toPollFrom.pubkey_ed25519)} namespaces: ${[SnodeNamespaces.UserProfile]} `
         );
+        if (isTestIntegration()) {
+          // During integration tests, often deviceA might not have pushed to the swarm the userConfig that deviceB is looking for.
+          // To deal with, this, we wait a bit here before trying to fetch the userConfig.
+          await sleepFor(2000);
+        }
         const retrieved = await SnodeAPIRetrieve.retrieveNextMessagesNoRetries(
           toPollFrom,
           pubkey.key,
@@ -983,13 +989,17 @@ export class SwarmPolling {
           `[onboarding] pollOnceForOurDisplayName of ${ed25519Str(pubkey.key)} from snode: ${ed25519Str(toPollFrom.pubkey_ed25519)} namespaces: ${[SnodeNamespaces.UserProfile]} returned: ${retrieved?.length}`
         );
         if (!retrieved?.length) {
+          // Note: always print something so we know if the polling is hanging
+          window.log.info(
+            `[onboarding] pollOnceForOurDisplayName of ${ed25519Str(pubkey.key)} from snode: ${ed25519Str(toPollFrom.pubkey_ed25519)} namespaces: ${[SnodeNamespaces.UserProfile]} returned: ${retrieved?.length}`
+          );
+
           /**
            * Sometimes, a snode is out of sync with its swarm but still replies with what he thinks is the swarm's content.
            * When that happens, we can get a "no display name" error, as indeed, that snode didn't have a config message on user profile.
            * To fix this, we've added a check over all of the snodes of our swarm, and we pick the first one that reports having a config message on user profile.
            * This won't take care of the case where a snode has a message with an empty display name, but it's not the root issue that this was added for.
            */
-
           throw new Error(
             `pollOnceForOurDisplayName of ${ed25519Str(pubkey.key)} from snode: ${ed25519Str(toPollFrom.pubkey_ed25519)}  no results from user profile`
           );
