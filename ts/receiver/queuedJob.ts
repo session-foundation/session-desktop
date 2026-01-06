@@ -350,6 +350,7 @@ export async function handleMessageJob(
   regularDataMessage: RegularMessageType,
   decodedEnvelope: SwarmDecodedEnvelope
 ) {
+
   window?.log?.info(
     `Starting handleMessageJob for message ${messageModel.idForLogging()}, ${
       messageModel.get('serverTimestamp') || messageModel.get('timestamp')
