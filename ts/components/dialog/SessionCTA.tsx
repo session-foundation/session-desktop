@@ -417,7 +417,7 @@ export const useShowSessionCTACbWithVariant = () => {
   };
 };
 
-export async function handleTriggeredProCTAs(dispatch: Dispatch<any>) {
+export async function handleTriggeredCTAs(dispatch: Dispatch<any>, fromAppStart: boolean) {
   const proAvailable = getFeatureFlag('proAvailable');
 
   if (Storage.get(SettingsKey.proExpiringSoonCTA)) {
@@ -441,6 +441,10 @@ export async function handleTriggeredProCTAs(dispatch: Dispatch<any>) {
     );
     await Storage.put(SettingsKey.proExpiredCTA, false);
   } else {
+    if (!fromAppStart) {
+      // we only want to show the DonateCTA when the app starts, if needed
+      return;
+    }
     const dbCreationTimestampMs = await Data.getDBCreationTimestampMs();
     if (dbCreationTimestampMs && dbCreationTimestampMs + 7 * DURATION.DAYS < Date.now()) {
       const donateInteractions = getUrlInteractionsForUrl(APP_URL.DONATE);

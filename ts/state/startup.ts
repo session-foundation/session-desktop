@@ -29,7 +29,7 @@ import { initialNetworkDataState, networkDataActions } from './ducks/networkData
 import { initialProBackendDataState, proBackendDataActions } from './ducks/proBackendData';
 import { MessageQueue } from '../session/sending';
 import { AvatarMigrate } from '../session/utils/job_runners/jobs/AvatarMigrateJob';
-import { handleTriggeredProCTAs } from '../components/dialog/SessionCTA';
+import { handleTriggeredCTAs } from '../components/dialog/SessionCTA';
 import { UserSync } from '../session/utils/job_runners/jobs/UserSyncJob';
 import { forceSyncConfigurationNowIfNeeded } from '../session/utils/sync/syncUtils';
 import { SnodePool } from '../session/apis/snode_api/snodePool';
@@ -166,18 +166,19 @@ export const doAppStartUp = async () => {
       proBackendDataActions.refreshGetProDetailsFromProBackend({}) as any
     );
     if (window.inboxStore) {
-      if (getDataFeatureFlag('useLocalDevNet') && isTestIntegration()) {
-        /**
-         * When running on the local dev net (during the regression tests), the network is too fast
-         * and we show the DonateCTA before we got the time to grab the recovery phrase.
-         * This sleepFor is there to give some time so we can grab the recovery phrase.
-         * The regression test this is about is `Donate CTA, DB age >= 7 days`
-         */
-        await sleepFor(1000);
-      }
-      if (window.inboxStore?.dispatch) {
-        void handleTriggeredProCTAs(window.inboxStore.dispatch);
-      }
+      const delayedTimeout = getDataFeatureFlag('useLocalDevNet') && isTestIntegration() ? 2000 : 0;
+      /**
+       * When running on the local dev net (during the regression tests), the network is too fast
+       * and we show the DonateCTA before we got the time to grab the recovery phrase.
+       * This sleepFor is there to give some time so we can grab the recovery phrase.
+       * The regression test this is about is `Donate CTA, DB age >= 7 days`
+       */
+      // eslint-disable-next-line more/no-then
+      void sleepFor(delayedTimeout).then(() => {
+        if (window.inboxStore?.dispatch) {
+          void handleTriggeredCTAs(window.inboxStore.dispatch, true);
+        }
+      });
     }
     // we want to (try) to fetch from the revocation server before we process
     // incoming messages, as some might have a pro proof that has been revoked

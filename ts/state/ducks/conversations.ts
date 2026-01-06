@@ -33,7 +33,7 @@ import { sectionActions } from './section';
 import { ed25519Str } from '../../session/utils/String';
 import { UserUtils } from '../../session/utils';
 import type { ProMessageFeature } from '../../models/proMessageFeature';
-import { handleTriggeredProCTAs } from '../../components/dialog/SessionCTA';
+import { handleTriggeredCTAs } from '../../components/dialog/SessionCTA';
 import { getFeatureFlag } from './types/releasedFeaturesReduxTypes';
 
 export type MessageModelPropsWithoutConvoProps = {
@@ -1148,7 +1148,7 @@ export async function openConversationWithMessages(args: {
 
   if (window.inboxStore) {
     if (getFeatureFlag('proAvailable')) {
-      await handleTriggeredProCTAs(window.inboxStore.dispatch);
+      await handleTriggeredCTAs(window.inboxStore.dispatch, false);
     }
   }
 }

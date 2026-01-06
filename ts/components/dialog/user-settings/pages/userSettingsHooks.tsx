@@ -6,7 +6,7 @@ import {
   type UserSettingsPage,
 } from '../../../../state/ducks/modalDialog';
 import { assertUnreachable } from '../../../../types/sqlSharedTypes';
-import { handleTriggeredProCTAs } from '../../SessionCTA';
+import { handleTriggeredCTAs } from '../../SessionCTA';
 import { getFeatureFlag } from '../../../../state/ducks/types/releasedFeaturesReduxTypes';
 
 export function useUserSettingsTitle(page: UserSettingsModalState | undefined) {
@@ -82,7 +82,7 @@ export function useUserSettingsCloseAction(props: UserSettingsModalState) {
       return () => {
         dispatch(userSettingsModal(null));
         if (getFeatureFlag('proAvailable')) {
-          void handleTriggeredProCTAs(dispatch);
+          void handleTriggeredCTAs(dispatch, false);
         }
         props.afterCloseAction?.();
       };
