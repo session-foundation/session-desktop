@@ -267,7 +267,7 @@
   "deleteAfterLegacyGroupsGroupUpdateErrorTitle": "Dështoi përditësimi i grupit",
   "deleteAfterMessageDeletionStandardisationMessageDeletionForbidden": "Ju nuk keni leje për të fshirë mesazhet e të tjerëve",
   "deleteMessage": "{count, plural, one [Fshije Mesazhin] other [Fshini mesazhe]}",
-  "deleteMessageDeleted": "{count, plural, one [Mesazhi u fshi]}",
+  "deleteMessageDeleted": "{count, plural, one [Mesazhi u fshi] other [Messages deleted]}",
   "deleteMessageDeletedGlobally": "Ky mesazh u fshi",
   "deleteMessageDeletedLocally": "Ky mesazh u fshi në këtë pajisje",
   "deleteMessageDescriptionEveryone": "A jeni të sigurt që doni ta fshini këtë mesazh për të gjithë?",

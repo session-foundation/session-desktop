@@ -918,7 +918,7 @@
   "proDiscountTooltip": "Tam Session Pro qiymətinə sahib Pro erişiminiz üçün artıq {percent}% endirim var.",
   "proErrorRefreshingStatus": "Pro statusunu təzələmə xətası",
   "proExpired": "Müddəti bitib",
-  "proExpiredDescription": "Təəssüf ki, Pro erişiminizin istifadə müddəti bitib. Session Pro üzrə eksklüziv imtiyazları və özəllikləri təkrar aktivləşdirmək üçün yeniləyin.",
+  "proExpiredDescription": "Təəssüf ki, Pro erişiminizin istifadə müddəti bitib.<br/>Session Pro üzrə eksklüziv imtiyazları və özəllikləri təkrar aktivləşdirmək üçün yeniləyin.",
   "proExpiringSoon": "Tezliklə bitir",
   "proExpiringTime": "Pro, <b>{time}</b> vaxtında başa çatır",
   "proFaq": "Pro TVS",

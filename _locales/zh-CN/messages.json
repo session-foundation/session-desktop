@@ -600,6 +600,7 @@
   "info": "信息",
   "invalidShortcut": "无效的快捷方式",
   "inviteContactsPlural": "{count, plural, other [邀请联系人]}",
+  "inviteFailed": "{count, plural, other [Invites Failed]}",
   "inviteFailedDescription": "{count, plural, other [无法发送邀请。您想重试吗？]}",
   "inviteMembers": "{count, plural, other [邀请成员]}",
   "inviteNewMemberGroupLink": "通过输入朋友的账户 ID、ONS 或扫描其二维码邀请新成员加入群组 {icon}",

@@ -1115,6 +1115,7 @@
   "remindMeLater": "Remind Me Later",
   "remove": "Remove",
   "removeMember": "{count, plural, one [Remove Member] other [Remove Members]}",
+  "removeMemberLowercase": "{count, plural, one [Remove member] other [Remove members]}",
   "removeMemberMessages": "{count, plural, one [Remove member and their messages] other [Remove members and their messages]}",
   "removePasswordFail": "Failed to remove password",
   "removePasswordModalDescription": "Remove your current password for Session. Locally stored data will be re-encrypted with a randomly generated key, stored on your device.",
