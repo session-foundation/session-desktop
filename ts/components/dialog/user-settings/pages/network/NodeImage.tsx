@@ -29,14 +29,6 @@ const StyledNodeImage = styled(Block)<{ $nodeColor: string; $pathColor: string }
   ${AnimatedSpinnerIconWrapper} {
     margin: auto;
   }
-
-  svg,
-  ${AnimatedSpinnerIconWrapper} {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-  }
 `;
 
 type Props = {
