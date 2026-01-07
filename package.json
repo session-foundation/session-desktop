@@ -276,7 +276,7 @@
     "linux": {
       "category": "Network;InstantMessaging;Chat",
       "asarUnpack": "node_modules/spellchecker/vendor/hunspell_dictionaries",
-      "target": "appImage",
+      "target": "deb",
       "icon": "build/icon-linux.icns",
       "files": [
         "!node_modules/@img/sharp-libvips*/lib/*.a*",
