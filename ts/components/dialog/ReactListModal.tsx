@@ -39,7 +39,7 @@ const StyledReactionsContainer = styled.div`
 
 const StyledSendersContainer = styled(Flex)`
   width: 100%;
-  min-height: 332px;
+  min-height: 200px;
   height: 100%;
   max-height: 496px;
   overflow-x: hidden;
@@ -301,7 +301,6 @@ export const ReactListModal = (props: Props) => {
       })
     );
   };
-
   return (
     <SessionWrapperModal onClose={handleClose} headerChildren={null} modalId="reactListModal">
       <StyledReactListContainer
@@ -319,7 +318,7 @@ export const ReactListModal = (props: Props) => {
             noAvatar={true}
           />
         </StyledReactionsContainer>
-        {reactionsMap && currentReact && (
+        {reactionsMap && currentReact ? (
           <StyledSendersContainer
             $container={true}
             $flexDirection={'column'}
@@ -363,6 +362,11 @@ export const ReactListModal = (props: Props) => {
               <CountText count={count} emoji={currentReact} />
             )}
           </StyledSendersContainer>
+        ) : (
+          // The focus trap needs at least a button to  be always present (or crashes)
+          // But because of the complicated useEffect above, we don't have a button to focus on when that component is mounted.
+          // As a temporary hack, we add an invisible button here. The better fix is to break the useEffect above and move it to redux.
+          <button style={{ width: '0px', height: '0px' }} />
         )}
       </StyledReactListContainer>
     </SessionWrapperModal>
