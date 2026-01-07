@@ -41,7 +41,7 @@ export const defaultBooleanFeatureFlags = {
   debugBuiltSnodeRequests: !isEmpty(process.env.SESSION_DEBUG_BUILT_SNODE_REQUEST),
   debugSwarmPolling: !isEmpty(process.env.SESSION_DEBUG_SWARM_POLLING),
   debugServerRequests: !isEmpty(process.env.SESSION_DEBUG_SERVER_REQUESTS),
-  debugNonSnodeRequests: false,
+  debugNonSnodeRequests: !isEmpty(process.env.SESSION_DEBUG_NON_SNODE_REQUESTS),
   debugOnionRequests: false,
   debugOnionPaths: !isEmpty(process.env.SESSION_DEBUG_ONION_PATHS),
   debugSnodePool: !isEmpty(process.env.SESSION_DEBUG_SNODE_POOL),
