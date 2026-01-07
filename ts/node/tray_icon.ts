@@ -2,7 +2,7 @@ import path from 'path';
 
 import { app, type BrowserWindow, Menu, Tray } from 'electron';
 import { getAppRootPath } from './getRootPath';
-import { LOCALE_DEFAULTS } from '../localization/constants';
+import { LOCALE_DEFAULTS } from '../localization/generated/constants';
 import { tr } from '../localization/localeTools';
 
 let trayContextMenu = null;

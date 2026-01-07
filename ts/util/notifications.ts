@@ -6,7 +6,7 @@ import { isMacOS } from '../OS';
 import { isAudioNotificationSupported } from '../types/Settings';
 import { isWindowFocused } from './focusListener';
 import { Storage } from './storage';
-import { LOCALE_DEFAULTS } from '../localization/constants';
+import { LOCALE_DEFAULTS } from '../localization/generated/constants';
 import {
   isSessionFeatureFlag,
   type SessionBooleanFeatureFlagKeys,

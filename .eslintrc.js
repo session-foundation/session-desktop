@@ -167,7 +167,7 @@ module.exports = {
       rules: { 'no-console': 'off', 'import/no-extraneous-dependencies': 'off' },
     },
     {
-      files: ['ts/localization/*.ts', 'ts/localization/**/*.ts'], // anything in ts/localization has to only reference the files in that folder (this makes it reusable)
+      files: ['ts/localization/*.ts', 'ts/localization/generated/*.ts'], // anything in ts/localization has to only reference the files in that folder (this makes it reusable)
       rules: {
         'no-restricted-imports': [
           'error',
@@ -210,6 +210,7 @@ module.exports = {
               '8*',
               '9*',
               '!./*',
+              '!./generated/*',
             ], // Disallow everything except ts/localization, this is the worst,
             // but regexes are broken on our eslint8, and upgrading it means
             // we need to bump node, which needs to bump electron.... and having '*' makes the other rules droped..

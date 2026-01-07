@@ -1,4 +1,4 @@
-import { LOCALE_DEFAULTS } from '../localization/constants';
+import { LOCALE_DEFAULTS } from '../localization/generated/constants';
 import {
   FEATURE_RELEASE_CHECK_INTERVAL,
   type SessionBooleanFeatureFlagKeys,

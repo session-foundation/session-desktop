@@ -199,7 +199,6 @@ import { classicDark } from '../themes';
 
 import { isSessionLocaleSet, getCrowdinLocale, keepFullLocalePart } from '../util/i18n/shared';
 import { loadLocalizedDictionary } from '../node/locale';
-import { simpleDictionaryNoArgs } from '../localization/locales';
 import LIBSESSION_CONSTANTS from '../session/utils/libsession/libsession_constants';
 import { isReleaseChannel } from '../updater/types';
 import { canAutoUpdate, checkForUpdates } from '../updater/updater';
@@ -207,7 +206,7 @@ import { initializeMainProcessLogger } from '../util/logger/main_process_logging
 
 import * as log from '../util/logger/log';
 import { DURATION } from '../session/constants';
-import { tr } from '../localization/localeTools';
+import { getSimpleStringNoArgs, tr } from '../localization/localeTools';
 
 import { logCrash } from '../node/crash/log_crash';
 
@@ -1039,7 +1038,7 @@ ipc.on('password-recovery-phrase', async (event, passPhrase) => {
     // no issues. send back undefined, meaning OK
     sendResponse(undefined);
   } catch (e) {
-    const localisedError = simpleDictionaryNoArgs.passwordIncorrect[getCrowdinLocale()];
+    const localisedError = getSimpleStringNoArgs('passwordIncorrect', getCrowdinLocale());
     // send back the error
     sendResponse(localisedError);
   }

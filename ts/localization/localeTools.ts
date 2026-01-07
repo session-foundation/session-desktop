@@ -1,20 +1,49 @@
-import { CrowdinLocale } from './constants';
+import { CrowdinLocale } from './generated/constants';
 import {
-  pluralsDictionaryWithArgs,
-  simpleDictionaryNoArgs,
-  simpleDictionaryWithArgs,
+  enSimpleNoArgs,
+  enSimpleWithArgs,
+  enPlurals,
+  translationsSimpleNoArgs,
+  translationsSimpleWithArgs,
+  translationsPlurals,
+  type PluralForms,
   type TokenPluralWithArgs,
   type TokenSimpleNoArgs,
   type TokenSimpleWithArgs,
   type TokensPluralAndArgs,
   type TokensSimpleAndArgs,
-} from './locales';
+} from './generated/locales';
+
 
 // NOTE: this forces a plural string to use the "1" variant
 export const PLURAL_COUNT_ONE = 1;
 
 // NOTE: this forces a plural string to use the "other" variant
 export const PLURAL_COUNT_OTHER = 99;
+
+// Get a simple string without args for the given locale, falling back to English.
+export function getSimpleStringNoArgs(token: TokenSimpleNoArgs, locale: CrowdinLocale): string {
+  if (locale === 'en') {
+    return enSimpleNoArgs[token];
+  }
+  return translationsSimpleNoArgs[locale]?.[token] ?? enSimpleNoArgs[token];
+}
+
+// Get a simple string with args for the given locale, falling back to English.
+function getSimpleStringWithArgs(token: TokenSimpleWithArgs, locale: CrowdinLocale): string {
+  if (locale === 'en') {
+    return enSimpleWithArgs[token];
+  }
+  return translationsSimpleWithArgs[locale]?.[token] ?? enSimpleWithArgs[token];
+}
+
+// Get plural forms for the given locale, falling back to English.
+function getPluralStringForms(token: TokenPluralWithArgs, locale: CrowdinLocale): PluralForms {
+  if (locale === 'en') {
+    return enPlurals[token];
+  }
+  return translationsPlurals[locale]?.[token] ?? enPlurals[token];
+}
 
 // Note: those two functions are actually duplicates of Errors.toString.
 // We should maybe make that a module that we reuse?
@@ -94,22 +123,21 @@ function log(message: string) {
 }
 
 export function isSimpleTokenNoArgs(token: string): token is TokenSimpleNoArgs {
-  return token in simpleDictionaryNoArgs;
+  return token in enSimpleNoArgs;
 }
 
 export function isSimpleTokenWithArgs(token: string): token is TokenSimpleWithArgs {
-  return token in simpleDictionaryWithArgs;
+  return token in enSimpleWithArgs;
 }
 
 export function isPluralToken(token: string): token is TokenPluralWithArgs {
-  return token in pluralsDictionaryWithArgs;
+  return token in enPlurals;
 }
 
 export function isTokenWithArgs(token: string): token is MergedTokenWithArgs {
   return isSimpleTokenWithArgs(token) || isPluralToken(token);
 }
 
-type PluralDictionaryWithArgs = typeof pluralsDictionaryWithArgs;
 // those are still a string of the type "string" | "number" and not the typescript types themselves
 
 type AllTokensWithArgs = TokensSimpleAndArgs & TokensPluralAndArgs;
@@ -136,8 +164,8 @@ type WithToken<T extends MergedLocalizerTokens> = { token: T };
 /** The arguments for retrieving a localized message */
 export type GetMessageArgs<T extends MergedLocalizerTokens> = T extends MergedLocalizerTokens
   ? T extends MergedTokenWithArgs
-    ? WithToken<T> & ArgsFromToken<T>
-    : WithToken<T>
+  ? WithToken<T> & ArgsFromToken<T>
+  : WithToken<T>
   : never;
 
 export type TrArgs = GetMessageArgs<MergedLocalizerTokens>;
@@ -145,7 +173,7 @@ export type TrArgs = GetMessageArgs<MergedLocalizerTokens>;
 export type WithTrArgs = { trArgs: TrArgs };
 
 export function tStrippedWithObj<T extends MergedLocalizerTokens>(opts: GetMessageArgs<T>): string {
-  const builder = new LocalizedStringBuilder<T>(opts.token as T, localeInUse).stripIt();
+  const builder = new LocalizedStringBuilder<T>(opts.token as T).stripIt();
   const args = messageArgsToArgsOnly(opts);
   if (args) {
     builder.withArgs(args);
@@ -212,16 +240,15 @@ export function getRawMessage<T extends MergedLocalizerTokens>(
   const args = messageArgsToArgsOnly(details);
   try {
     if (isSimpleTokenNoArgs(token)) {
-      return simpleDictionaryNoArgs[token][crowdinLocale];
+      return getSimpleStringNoArgs(token, crowdinLocale);
     }
     if (isSimpleTokenWithArgs(token)) {
-      return simpleDictionaryWithArgs[token][crowdinLocale];
+      return getSimpleStringWithArgs(token, crowdinLocale);
     }
     if (!isPluralToken(token)) {
       throw new Error('invalid token, neither simple nor plural');
     }
-    const pluralsObjects = pluralsDictionaryWithArgs[token];
-    const localePluralsObject = pluralsObjects[crowdinLocale];
+    const localePluralsObject = getPluralStringForms(token, crowdinLocale);
 
     if (!localePluralsObject || isEmptyObject(localePluralsObject)) {
       log(`Attempted to get translation for nonexistent key: '${token}'`);
@@ -232,8 +259,7 @@ export function getRawMessage<T extends MergedLocalizerTokens>(
 
     const cardinalRule = new Intl.PluralRules(crowdinLocale).select(num);
 
-    const pluralString = getStringForRule({
-      dictionary: pluralsDictionaryWithArgs,
+    const pluralString = getStringForCardinalRule({
       crowdinLocale,
       cardinalRule,
       token,
@@ -251,19 +277,19 @@ export function getRawMessage<T extends MergedLocalizerTokens>(
   }
 }
 
-function getStringForRule({
-  dictionary,
+function getStringForCardinalRule({
   token,
   crowdinLocale,
   cardinalRule,
 }: {
-  dictionary: PluralDictionaryWithArgs;
   token: TokenPluralWithArgs;
   crowdinLocale: CrowdinLocale;
   cardinalRule: Intl.LDMLPluralRule;
-}) {
-  const dictForLocale = dictionary[token][crowdinLocale];
-  return cardinalRule in dictForLocale ? ((dictForLocale as any)[cardinalRule] as string) : token;
+}): string | undefined {
+  const pluralForms = getPluralStringForms(token, crowdinLocale);
+  // cardinalRule is one of 'zero' | 'one' | 'two' | 'few' | 'many' | 'other'
+  // which matches our PluralForm type
+  return pluralForms[cardinalRule as keyof typeof pluralForms];
 }
 
 /**
@@ -307,14 +333,12 @@ export class LocalizedStringBuilder<T extends MergedLocalizerTokens> extends Str
   private args?: ArgsFromToken<T>;
   private isStripped = false;
   private isEnglishForced = false;
-  private crowdinLocale: CrowdinLocale;
 
   private readonly renderStringAsToken: boolean;
 
-  constructor(token: T, crowdinLocale: CrowdinLocale, renderStringAsToken?: boolean) {
+  constructor(token: T, renderStringAsToken?: boolean) {
     super(token);
     this.token = token;
-    this.crowdinLocale = crowdinLocale;
     this.renderStringAsToken = renderStringAsToken || false;
   }
 
@@ -370,7 +394,7 @@ export class LocalizedStringBuilder<T extends MergedLocalizerTokens> extends Str
   }
 
   private localeToTarget(): CrowdinLocale {
-    return this.isEnglishForced ? 'en' : this.crowdinLocale;
+    return this.isEnglishForced ? 'en' : localeInUse;
   }
 
   private getRawString(): string {
@@ -380,10 +404,10 @@ export class LocalizedStringBuilder<T extends MergedLocalizerTokens> extends Str
       }
 
       if (isSimpleTokenNoArgs(this.token)) {
-        return simpleDictionaryNoArgs[this.token][this.localeToTarget()];
+        return getSimpleStringNoArgs(this.token, this.localeToTarget());
       }
       if (isSimpleTokenWithArgs(this.token)) {
-        return simpleDictionaryWithArgs[this.token][this.localeToTarget()];
+        return getSimpleStringWithArgs(this.token, this.localeToTarget());
       }
 
       if (!isPluralToken(this.token)) {
@@ -430,10 +454,9 @@ export class LocalizedStringBuilder<T extends MergedLocalizerTokens> extends Str
       throw new Error('resolvePluralString can only be called with a plural string');
     }
 
-    let pluralString = getStringForRule({
+    let pluralString = getStringForCardinalRule({
       cardinalRule,
       crowdinLocale: localeToTarget,
-      dictionary: pluralsDictionaryWithArgs,
       token: this.token,
     });
 
@@ -442,10 +465,9 @@ export class LocalizedStringBuilder<T extends MergedLocalizerTokens> extends Str
         `Plural string not found for cardinal '${cardinalRule}': '${this.token}' Falling back to 'other' cardinal`
       );
 
-      pluralString = getStringForRule({
+      pluralString = getStringForCardinalRule({
         cardinalRule: 'other',
         crowdinLocale: localeToTarget,
-        dictionary: pluralsDictionaryWithArgs,
         token: this.token,
       });
 
@@ -468,7 +490,7 @@ export class LocalizedStringBuilder<T extends MergedLocalizerTokens> extends Str
           : undefined;
 
       if (arg === pluralKey && typeof matchedArg === 'number' && Number.isFinite(matchedArg)) {
-        return new Intl.NumberFormat(this.crowdinLocale).format(matchedArg);
+        return new Intl.NumberFormat(this.localeToTarget()).format(matchedArg);
       }
 
       return matchedArg?.toString() ?? match;
@@ -480,7 +502,7 @@ export function tr<T extends MergedLocalizerTokens>(
   token: T,
   ...args: ArgsFromToken<T> extends undefined ? [] : [args: ArgsFromToken<T>]
 ): string {
-  const builder = new LocalizedStringBuilder<T>(token, localeInUse);
+  const builder = new LocalizedStringBuilder<T>(token);
   if (args.length) {
     builder.withArgs(args[0]);
   }
@@ -491,7 +513,7 @@ export function tEnglish<T extends MergedLocalizerTokens>(
   token: T,
   ...args: ArgsFromToken<T> extends undefined ? [] : [args: ArgsFromToken<T>]
 ): string {
-  const builder = new LocalizedStringBuilder<T>(token, localeInUse).forceEnglish();
+  const builder = new LocalizedStringBuilder<T>(token).forceEnglish();
   if (args.length) {
     builder.withArgs(args[0]);
   }
@@ -502,7 +524,7 @@ export function tStripped<T extends MergedLocalizerTokens>(
   token: T,
   ...args: ArgsFromToken<T> extends undefined ? [] : [args: ArgsFromToken<T>]
 ): string {
-  const builder = new LocalizedStringBuilder<T>(token, localeInUse).stripIt();
+  const builder = new LocalizedStringBuilder<T>(token).stripIt();
   if (args.length) {
     builder.withArgs(args[0]);
   }

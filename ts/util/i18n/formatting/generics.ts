@@ -10,7 +10,7 @@ import {
 import { omit, upperFirst } from 'lodash';
 import { getBrowserLocale, getTimeLocaleDictionary } from '../shared';
 import { getForcedEnglishTimeLocale, timeLocaleMap } from '../timeLocaleMap';
-import type { CrowdinLocale } from '../../../localization/constants';
+import type { CrowdinLocale } from '../../../localization/generated/constants';
 
 /**
  * Formats a duration in milliseconds into a localized human-readable string.

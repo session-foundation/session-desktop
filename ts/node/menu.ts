@@ -1,5 +1,5 @@
 import { isString } from 'lodash';
-import { LOCALE_DEFAULTS } from '../localization/constants';
+import { LOCALE_DEFAULTS } from '../localization/generated/constants';
 import { tr } from '../localization/localeTools';
 
 /**
