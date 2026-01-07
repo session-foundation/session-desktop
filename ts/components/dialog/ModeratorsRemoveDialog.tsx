@@ -1,6 +1,6 @@
 import { compact } from 'lodash';
 import { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { getAppDispatch } from '../../state/dispatch';
 
 import { ConvoHub } from '../../session/conversations';
 import { PubKey } from '../../session/types';
@@ -61,7 +61,7 @@ export const RemoveModeratorsDialog = (props: Props) => {
   const { conversationId } = props;
   const [removingInProgress, setRemovingInProgress] = useState(false);
   const [modsToRemove, setModsToRemove] = useState<Array<string>>([]);
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const closeDialog = () => {
     dispatch(updateRemoveModeratorsModal(null));
   };
@@ -137,7 +137,7 @@ export const RemoveModeratorsDialog = (props: Props) => {
         </p>
       )}
 
-      <SessionSpinner loading={removingInProgress} />
+      <SessionSpinner $loading={removingInProgress} />
     </SessionWrapperModal>
   );
 };

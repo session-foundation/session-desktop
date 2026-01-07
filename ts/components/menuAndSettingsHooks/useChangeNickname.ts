@@ -1,9 +1,9 @@
-import { useDispatch } from 'react-redux';
+import { getAppDispatch } from '../../state/dispatch';
 import { useIsMe, useIsPrivate, useIsPrivateAndFriend } from '../../hooks/useParamSelector';
 import { changeNickNameModal } from '../../state/ducks/modalDialog';
 
 export function useChangeNickname(conversationId?: string) {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const isMe = useIsMe(conversationId);
   const isPrivate = useIsPrivate(conversationId);
   const isPrivateAndFriend = useIsPrivateAndFriend(conversationId);

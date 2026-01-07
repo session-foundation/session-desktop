@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
-import { Dispatch, useCallback, useEffect, useRef, useState } from 'react';
+import { Dispatch, RefObject, useCallback, useEffect, useRef, useState } from 'react';
 
 import { isNumber } from 'lodash';
 import { ItemParams, Menu, useContextMenu } from 'react-contexify';
-import { useDispatch } from 'react-redux';
 import useClickAway from 'react-use/lib/useClickAway';
 import useMouse from 'react-use/lib/useMouse';
 import styled from 'styled-components';
+import { getAppDispatch } from '../../../../state/dispatch';
 import { Data } from '../../../../data/data';
 
 import { MessageInteraction } from '../../../../interactions';
@@ -158,7 +158,7 @@ export const showMessageInfoOverlay = async ({
 
 export const MessageContextMenu = (props: Props) => {
   const { messageId, contextMenuId, enableReactions } = props;
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const { hideAll } = useContextMenu();
   const isLegacyGroup = useSelectedIsLegacyGroup();
 
@@ -183,8 +183,9 @@ export const MessageContextMenu = (props: Props) => {
   const emojiPanelWidth = 354;
   const emojiPanelHeight = 435;
 
-  const contextMenuRef = useRef(null);
-  const { docX, docY } = useMouse(contextMenuRef);
+  const contextMenuRef = useRef<HTMLDivElement | null>(null);
+  // FIXME: remove as cast
+  const { docX, docY } = useMouse(contextMenuRef as RefObject<Element>);
   const [mouseX, setMouseX] = useState(0);
   const [mouseY, setMouseY] = useState(0);
 

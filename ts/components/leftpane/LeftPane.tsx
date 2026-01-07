@@ -10,7 +10,7 @@ import { useIsRtl } from '../../util/i18n/rtlSupport';
 
 export const leftPaneListWidth = 300; // var(--left-panel-width) without the 80px of the action gutter
 
-const StyledLeftPane = styled.div<{ isRtl: boolean }>`
+const StyledLeftPane = styled.div<{ $isRtl: boolean }>`
   width: ${() => `${leftPaneListWidth}px`};
   height: 100%;
   display: inline-flex;
@@ -19,7 +19,7 @@ const StyledLeftPane = styled.div<{ isRtl: boolean }>`
   flex-shrink: 0;
   border-left: 1px solid var(--border-color);
   border-right: 1px solid var(--border-color);
-  direction: ${({ isRtl }) => (isRtl ? 'rtl' : 'ltr')};
+  direction: ${({ $isRtl }) => ($isRtl ? 'rtl' : 'ltr')};
 `;
 
 const LeftPaneSection = () => {
@@ -51,7 +51,7 @@ export const LeftPane = () => {
       <SessionToastContainer />
       <ActionsPanel />
 
-      <StyledLeftPane isRtl={isRtl}>
+      <StyledLeftPane $isRtl={isRtl}>
         <LeftPaneSection />
       </StyledLeftPane>
     </StyledLeftPaneSession>

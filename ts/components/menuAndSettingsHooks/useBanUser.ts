@@ -1,10 +1,10 @@
-import { useDispatch } from 'react-redux';
+import { getAppDispatch } from '../../state/dispatch';
 import { useIsPublic } from '../../hooks/useParamSelector';
 import { updateBanOrUnbanUserModal } from '../../state/ducks/modalDialog';
 import { useWeAreCommunityAdminOrModerator } from '../../state/selectors/conversations';
 
 export function useBanUserCb(conversationId?: string, pubkey?: string) {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const isPublic = useIsPublic(conversationId);
   const weAreCommunityAdminOrModerator = useWeAreCommunityAdminOrModerator(conversationId);
 

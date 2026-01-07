@@ -1,5 +1,6 @@
 import type { DecodedPro } from 'libsession_util_nodejs';
 import { isNil } from 'lodash';
+import { ProRevocationCache } from '../session/revocation_list/pro_revocation_list';
 
 export interface Quote {
   id: number; // this is in fact a uint64 so we will have an issue
@@ -77,8 +78,9 @@ export abstract class BaseDecodedEnvelope {
     this.messageExpirationFromRetrieve = args.messageExpirationFromRetrieve;
 
     // we only want to set this if the pro proof has been confirmed valid
-    // Note: this does not validate the expiry of the proof, it only validates that the signature is valid. Use `isProProofValid` for that
-    this.validPro = args.decodedPro?.proStatus === 'Valid' ? args.decodedPro : null;
+    // Note: this does not validate the expiry of the proof (or revoked), it only validates that the signature is valid.
+    // Use this isProProof... methods for that
+    this.validPro = args.decodedPro?.proStatus === 'ValidOrExpired' ? args.decodedPro : null;
   }
 
   public getAuthor() {
@@ -86,17 +88,42 @@ export abstract class BaseDecodedEnvelope {
   }
 
   /**
-   * Return true if the pro proof is set and is valid at the given timestamp.
-   * Note: you should use the NetworkTime as timestampMs here (unless you check against a message timestamp)
+   * Return true if the pro proof is set and is valid or expired at the given timestamp.
+   * Warning: this does not check for a revoked proof as we do not always want to ignore a revoked change.
    */
-  public isProProofValidAtMs(timestampMs: number) {
+  public isProProofValidOrExpired() {
     if (!this.validPro) {
       return false;
     }
-    if (this.validPro.proStatus !== 'Valid') {
+
+    return this.validPro.proStatus === 'ValidOrExpired';
+  }
+
+  /**
+   * Return true if the pro proof is set and is valid or expired at the given timestamp.
+   * Note: you should use the NetworkTime as timestampMs here (unless you check against a message timestamp)
+   * Warning: this does not check for a revoked proof as we do not always want to ignore a revoked change.
+   */
+  public isProProofExpiredAtMs(timestampMs: number) {
+    if (!this.validPro) {
       return false;
     }
-    return this.validPro.proProof.expiryMs > timestampMs;
+    return this.validPro.proProof.expiryMs < timestampMs;
+  }
+
+  /**
+   * Returns true if there is a pro proof that is marked as revoked.
+   * Note: this does not check for pro proof validity/expiry. Use `isProProofValidAtMs` for that.
+   */
+  public isProProofRevoked() {
+    if (!this.validPro) {
+      return false;
+    }
+    const alreadyRevoked = ProRevocationCache.isB64HashRevoked(
+      this.validPro.proProof.genIndexHashB64
+    );
+
+    return alreadyRevoked;
   }
 }
 

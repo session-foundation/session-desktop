@@ -9,6 +9,7 @@ import { MIME } from '../../types';
 import { processNewAttachment } from '../../types/MessageAttachment';
 import { updateConversationDetailsModal, updateEditProfilePictureModal } from './modalDialog';
 import { changeRoomDetailsSogsV3 } from '../../session/apis/open_group_api/sogsv3/sogsV3RoomInfosChange';
+import { SessionProfileSetAvatarDownloadedAny } from '../../models/profile';
 
 type RoomInfo = {
   canWrite: boolean;
@@ -77,7 +78,7 @@ const roomAvatarChange = createAsyncThunk(
   }) => {
     const convo = ConvoHub.use().get(conversationId);
 
-    if (!convo?.isPublic()) {
+    if (!convo?.isOpenGroupV2()) {
       throw new Error('changeCommunityAvatar can only be used for communities');
     }
     const blobAvatarAlreadyScaled = await urlToBlob(avatarObjectUrl);
@@ -118,14 +119,15 @@ const roomAvatarChange = createAsyncThunk(
       isRaw: true,
       contentType: MIME.IMAGE_UNKNOWN, // contentType is mostly used to generate previews and screenshot. We do not care for those in this case.
     });
-    await convo.setSessionProfile({
-      type: 'setAvatarDownloadedCommunity',
+    const profile = new SessionProfileSetAvatarDownloadedAny({
+      convo,
       profileKey: new Uint8Array(), // communities avatar don't have a profile key
       displayName: null, // null so we don't overwrite it
       avatarPath: upgraded.path,
       avatarPointer: fileUrl,
       fallbackAvatarPath: upgraded.path, // no need for a fallback for a community
     });
+    await profile.applyChangesIfNeeded();
 
     window.inboxStore?.dispatch(updateEditProfilePictureModal(null));
 

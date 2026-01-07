@@ -13,6 +13,10 @@ import { processAvatarData } from '../../../../util/avatar/processAvatarData';
 import { DecryptedAttachmentsManager } from '../../../crypto/DecryptedAttachmentsManager';
 import { IMAGE_JPEG } from '../../../../types/MIME';
 import { NetworkTime } from '../../../../util/NetworkTime';
+import {
+  SessionProfileResetAvatarPrivate,
+  SessionProfileSetAvatarDownloadedAny,
+} from '../../../../models/profile';
 
 const defaultMsBetweenRetries = 10000;
 const defaultMaxAttempts = 3;
@@ -129,14 +133,18 @@ class AvatarMigrateJob extends PersistedJob<AvatarMigratePersistedData> {
       const decryptedData = await decryptedBlob.arrayBuffer();
 
       if (!decryptedData) {
-        await conversation.setSessionProfile({
+        const profile = new SessionProfileResetAvatarPrivate({
+          convo: conversation,
           displayName: null, // null to not update the display name.
-          type: 'resetAvatarPrivate',
           // this is the AvatarMigrateJob.
           // We want to override the avatars that was stored for that user
           // as we can't decrypt it.
           profileUpdatedAtSeconds: NetworkTime.nowSeconds(),
+          // Don't overwrite those if they are set
+          proDetails: { bitsetProFeatures: null, proExpiryTsMs: null, proGenIndexHashB64: null },
         });
+        await profile.applyChangesIfNeeded();
+
         return RunJobResult.Success;
       }
 
@@ -157,14 +165,16 @@ class AvatarMigrateJob extends PersistedJob<AvatarMigratePersistedData> {
       const fallbackAvatarPath = upgradedFallbackAvatar?.path || upgradedMainAvatar.path;
       conversation = ConvoHub.use().getOrThrow(convoId);
 
-      await conversation.setSessionProfile({
+      const profile = new SessionProfileSetAvatarDownloadedAny({
+        convo: conversation,
         displayName: null, // null to not update the display name.
         avatarPath: mainAvatarPath,
         fallbackAvatarPath,
         avatarPointer: existingAvatarPointer,
-        type: 'setAvatarDownloadedPrivate',
         profileKey: existingProfileKeyHex,
       });
+
+      await profile.applyChangesIfNeeded();
 
       return RunJobResult.Success;
     } catch (e) {
@@ -178,14 +188,17 @@ class AvatarMigrateJob extends PersistedJob<AvatarMigratePersistedData> {
         (conversation.getAvatarInProfilePath() || conversation.getFallbackAvatarInProfilePath())
       ) {
         // there is no valid avatar to download, make sure the local file of the avatar of that user is removed
-        await conversation.setSessionProfile({
+        const profile = new SessionProfileResetAvatarPrivate({
+          convo: conversation,
           displayName: null, // null to not update the display name.
-          type: 'resetAvatarPrivate',
           // this is the AvatarMigrateJob.
-          // We want to override the avatars that was stored for that user
+          // We want to override the avatar that was stored for that user
           // as we can't decrypt it.
           profileUpdatedAtSeconds: NetworkTime.nowSeconds(),
+          // Don't overwrite those if they are set
+          proDetails: { bitsetProFeatures: null, proExpiryTsMs: null, proGenIndexHashB64: null },
         });
+        await profile.applyChangesIfNeeded();
       }
       return RunJobResult.RetryJobIfPossible;
     }

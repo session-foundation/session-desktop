@@ -16,6 +16,9 @@ import {
   UserGenericWrapperActions,
   MetaGroupWrapperActions,
   UtilitiesActions,
+  UserGroupsWrapperActions,
+  ContactsWrapperActions,
+  ConvoInfoVolatileWrapperActions,
 } from '../../../webworker/workers/browser/libsession_worker_interface';
 import {
   SnodeNamespace,
@@ -29,6 +32,7 @@ import {
 import { PubKey } from '../../types';
 import { ed25519Str } from '../String';
 import type { WithMessageHash } from '../../types/with';
+import { UserConfigWrapperActions } from '../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 
 const requiredUserVariants: Array<ConfigWrapperUser> = [
   'UserConfig',
@@ -68,11 +72,31 @@ async function initializeLibSessionUtilWrappers() {
       `initializeLibSessionUtilWrappers init from dump "${variant}", length: ${dump.data.length}: ${to_hex(dump.data)}`
     );
     try {
-      await UserGenericWrapperActions.init(
-        variant,
-        privateKeyEd25519,
-        dump.data.length ? dump.data : null
-      );
+      switch (variant) {
+        case 'UserConfig':
+          await UserConfigWrapperActions.init(
+            privateKeyEd25519,
+            dump.data.length ? dump.data : null
+          );
+          break;
+        case 'ContactsConfig':
+          await ContactsWrapperActions.init(privateKeyEd25519, dump.data.length ? dump.data : null);
+          break;
+        case 'UserGroupsConfig':
+          await UserGroupsWrapperActions.init(
+            privateKeyEd25519,
+            dump.data.length ? dump.data : null
+          );
+          break;
+        case 'ConvoInfoVolatileConfig':
+          await ConvoInfoVolatileWrapperActions.init(
+            privateKeyEd25519,
+            dump.data.length ? dump.data : null
+          );
+          break;
+        default:
+          throw new Error(`initializeLibSessionUtilWrappers failed with ${variant}`);
+      }
 
       userVariantsBuildWithoutErrors.add(variant);
     } catch (e) {
@@ -91,10 +115,26 @@ async function initializeLibSessionUtilWrappers() {
     window.log.warn(
       `initializeLibSessionUtilWrappers: missingRequiredVariants "${missingVariant}"`
     );
-    await UserGenericWrapperActions.init(missingVariant, privateKeyEd25519, null);
+    switch (missingVariant) {
+      case 'UserConfig':
+        await UserConfigWrapperActions.init(privateKeyEd25519, null);
+        break;
+      case 'ContactsConfig':
+        await ContactsWrapperActions.init(privateKeyEd25519, null);
+        break;
+      case 'UserGroupsConfig':
+        await UserGroupsWrapperActions.init(privateKeyEd25519, null);
+        break;
+      case 'ConvoInfoVolatileConfig':
+        await ConvoInfoVolatileWrapperActions.init(privateKeyEd25519, null);
+        break;
+      default:
+        throw new Error(`initializeLibSessionUtilWrappers failed with ${missingVariant}`);
+    }
     // save the newly created dump to the database even if it is empty, just so we do not need to recreate one next run
 
     const dump = await UserGenericWrapperActions.dump(missingVariant);
+
     await ConfigDumpData.saveConfigDump({
       data: dump,
       publicKey: UserUtils.getOurPubKeyStrFromCache(),
@@ -166,6 +206,7 @@ async function pendingChangesForUs(): Promise<UserDestinationChanges> {
     const variant = userVariants[index];
 
     const needsPush = await UserGenericWrapperActions.needsPush(variant);
+
     if (!needsPush) {
       continue;
     }

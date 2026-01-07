@@ -1,5 +1,5 @@
 import useUpdate from 'react-use/lib/useUpdate';
-import { useDispatch } from 'react-redux';
+import { getAppDispatch } from '../../../../state/dispatch';
 
 import { tr } from '../../../../localization/localeTools';
 import {
@@ -31,7 +31,7 @@ import { getPasswordHash, Storage } from '../../../../util/storage';
 import { SettingsToggleBasic } from '../components/SettingsToggleBasic';
 import { SettingsPanelButtonInlineBasic } from '../components/SettingsPanelButtonInlineBasic';
 import { UserSettingsModalContainer } from '../components/UserSettingsModalContainer';
-import { UserConfigWrapperActions } from '../../../../webworker/workers/browser/libsession_worker_interface';
+import { UserConfigWrapperActions } from '../../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 
 const toggleCallMediaPermissions = async (triggerUIUpdate: () => void) => {
   const currentValue = window.getCallMediaPermissions();
@@ -89,7 +89,7 @@ async function toggleLinkPreviews(isToggleOn: boolean, forceUpdate: () => void) 
 }
 
 function HasPasswordSubSection() {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   return (
     <PanelButtonGroup>
       <SettingsPanelButtonInlineBasic
@@ -116,7 +116,7 @@ function HasPasswordSubSection() {
   );
 }
 function NoPasswordSubSection() {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   return (
     <PanelButtonGroup>

@@ -1,9 +1,9 @@
-import { useDispatch } from 'react-redux';
+import { getAppDispatch } from '../../state/dispatch';
 import { useIsPublic, useWeAreAdmin } from '../../hooks/useParamSelector';
 import { updateRemoveModeratorsModal } from '../../state/ducks/modalDialog';
 
 export function useRemoveModeratorsCb(conversationId: string) {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const isPublic = useIsPublic(conversationId);
   const weAreAdmin = useWeAreAdmin(conversationId);
   // only an admin can remove moderators from a community. Another moderator cannot.

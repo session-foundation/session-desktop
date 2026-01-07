@@ -86,7 +86,7 @@ export const InteractionNotification = (props: WithMessageId) => {
         $flexDirection="row"
         $alignItems="center"
         $justifyContent="center"
-        margin={'var(--margins-md) var(--margins-sm)'}
+        $margin={'var(--margins-md) var(--margins-sm)'}
         data-testid="control-message"
       >
         <StyledFailText>{text}</StyledFailText>

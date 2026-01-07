@@ -5,13 +5,12 @@ import { processNewAttachment } from '../../types/MessageAttachment';
 import { encryptProfile } from '../../util/crypto/profileEncrypter';
 import type { ConversationModel } from '../../models/conversation';
 import { processAvatarData } from '../../util/avatar/processAvatarData';
-import {
-  MultiEncryptWrapperActions,
-  UserConfigWrapperActions,
-} from '../../webworker/workers/browser/libsession_worker_interface';
+import { MultiEncryptWrapperActions } from '../../webworker/workers/browser/libsession_worker_interface';
 import { UserUtils } from '../../session/utils';
 import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
+import { SessionProfileSetAvatarDownloadedAny } from '../../models/profile';
 import { fromHexToArray } from '../../session/utils/String';
+import { UserConfigWrapperActions } from '../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 
 export async function uploadAndSetOurAvatarShared({
   decryptedAvatarData,
@@ -83,14 +82,16 @@ export async function uploadAndSetOurAvatarShared({
 
   // Replace our temporary image with the attachment pointer from the server.
   // Note: this commits already to the DB.
-  await ourConvo.setSessionProfile({
+  const profile = new SessionProfileSetAvatarDownloadedAny({
+    convo: ourConvo,
     avatarPath: savedMainAvatar.path,
     fallbackAvatarPath: processedFallbackAvatar?.path || savedMainAvatar.path,
     displayName: null,
     avatarPointer: fileUrl,
-    type: 'setAvatarDownloadedPrivate',
     profileKey: encryptionKey,
   });
+  await profile.applyChangesIfNeeded();
+
   if (context === 'uploadNewAvatar') {
     await UserConfigWrapperActions.setNewProfilePic({
       key: encryptionKey,

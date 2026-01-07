@@ -33,10 +33,10 @@ export const StyledSubtitleContainer = styled.div`
 
 export const StyledSubtitleDotMenu = styled(Flex)``;
 
-const StyledSubtitleDot = styled.span<{ active: boolean }>`
+const StyledSubtitleDot = styled.span<{ $active: boolean }>`
   border-radius: 50%;
   background-color: ${props =>
-    props.active ? 'var(--text-primary-color)' : 'var(--text-secondary-color)'};
+    props.$active ? 'var(--text-primary-color)' : 'var(--text-secondary-color)'};
 
   height: 5px;
   width: 5px;
@@ -61,7 +61,7 @@ export const SubtitleDotMenu = ({
         return (
           <StyledSubtitleDot
             key={`subtitleDotMenu-${id}-${index}`}
-            active={selectedOptionIndex === index}
+            $active={selectedOptionIndex === index}
           />
         );
       })}

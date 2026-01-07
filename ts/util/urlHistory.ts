@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import z, { zodSafeParse } from './zod';
 import { SettingsKey } from '../data/settings-key';
 import { Storage } from './storage';
 import { tr } from '../localization/localeTools';
@@ -27,7 +27,7 @@ export enum URLInteraction {
 const UrlInteractionSchema = z.object({
   url: z.string(),
   lastUpdated: z.number(),
-  interactions: z.array(z.nativeEnum(URLInteraction)),
+  interactions: z.array(z.enum(URLInteraction)),
 });
 
 const UrlInteractionsSchema = z.array(UrlInteractionSchema);
@@ -37,7 +37,7 @@ export type UrlInteractionsType = z.infer<typeof UrlInteractionsSchema>;
 export function getUrlInteractions() {
   let interactions: UrlInteractionsType = [];
   const rawInteractions = Storage.get(SettingsKey.urlInteractions) ?? [];
-  const result = UrlInteractionsSchema.safeParse(rawInteractions);
+  const result = zodSafeParse(UrlInteractionsSchema, rawInteractions);
   if (result.error) {
     window?.log?.error(`failed to parse ${SettingsKey.urlInteractions}`, result.error);
   } else {

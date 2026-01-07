@@ -11,12 +11,16 @@ import { showLinkVisitWarningDialog } from '../../components/dialog/OpenUrlModal
 import { ProStatus } from '../../session/apis/pro_backend_api/types';
 import { SettingsKey } from '../../data/settings-key';
 import { ProDetailsResultType } from '../../session/apis/pro_backend_api/schemas';
-import { UserConfigWrapperActions } from '../../webworker/workers/browser/libsession_worker_interface';
 import { Storage } from '../../util/storage';
 import { NetworkTime } from '../../util/NetworkTime';
 import { assertUnreachable } from '../../types/sqlSharedTypes';
 import { DURATION } from '../../session/constants';
 import { SessionBackendBaseResponseType } from '../../session/apis/session_backend_server';
+import {
+  getCachedUserConfig,
+  UserConfigWrapperActions,
+} from '../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
+import { ConvoHub } from '../../session/conversations';
 
 type RequestState<D = unknown> = {
   isFetching: boolean;
@@ -182,10 +186,10 @@ async function handleNewProProof(rotatingPrivKeyHex: string): Promise<ProProof |
   if (response?.status_code === 200) {
     const proProof = {
       expiryMs: response.result.expiry_unix_ts_ms,
-      genIndexHashB64: response.result.gen_index_hash,
-      rotatingPubkeyHex: response.result.rotating_pkey,
+      genIndexHashB64: response.result.gen_index_hash_b64,
+      rotatingPubkeyHex: response.result.rotating_pkey_hex,
       version: response.result.version,
-      signatureHex: response.result.sig,
+      signatureHex: response.result.sig_hex,
     } satisfies ProProof;
     await UserConfigWrapperActions.setProConfig({ proProof, rotatingPrivKeyHex });
     return proProof;
@@ -196,7 +200,7 @@ async function handleNewProProof(rotatingPrivKeyHex: string): Promise<ProProof |
 
 async function handleClearProProof() {
   await UserConfigWrapperActions.removeProConfig();
-  // TODO: remove access expiry timestamp from synced user config
+  await UserConfigWrapperActions.setProAccessExpiry(null);
 }
 
 async function handleExpiryCTAs(
@@ -263,9 +267,7 @@ async function handleProProof(accessExpiryTsMs: number, autoRenewing: boolean, s
     return;
   }
 
-  const proConfig = await UserConfigWrapperActions.getProConfig();
-
-  // TODO: if the user config access expiry timestamp is different, set it and sync the user config
+  const proConfig = getCachedUserConfig().proConfig;
 
   let proofExpiry: number | null = null;
 
@@ -295,6 +297,9 @@ async function handleProProof(accessExpiryTsMs: number, autoRenewing: boolean, s
         proofExpiry = newProof.expiryMs;
       }
     }
+  }
+  if (proofExpiry) {
+    await UserConfigWrapperActions.setProAccessExpiry(proofExpiry);
   }
 
   const accessExpiryRefreshTimestamp = accessExpiryTsMs + 30 * DURATION.SECONDS;
@@ -340,6 +345,7 @@ const fetchGetProDetailsFromProBackend = createAsyncThunk(
           }
           switch (state.data.status) {
             case ProStatus.Active:
+              window.log.debug(`[handleBackendProStatusChange] ProStatus.Active`);
               await handleProProof(
                 state.data.expiry_unix_ts_ms,
                 state.data.auto_renewing,
@@ -348,10 +354,13 @@ const fetchGetProDetailsFromProBackend = createAsyncThunk(
               break;
 
             case ProStatus.NeverBeenPro:
+              window.log.debug(`[handleBackendProStatusChange] ProStatus.NeverBeenPro`);
               await handleClearProProof();
               break;
 
             case ProStatus.Expired:
+              window.log.debug(`[handleBackendProStatusChange] ProStatus.Expired`);
+
               await handleClearProProof();
               break;
 
@@ -369,6 +378,8 @@ const fetchGetProDetailsFromProBackend = createAsyncThunk(
         if (state.data) {
           await putProDetailsInStorage(state.data);
         }
+        // trigger a UI refresh so our state and Pro rights are up to date without a restart (animated image should stop animating)
+        ConvoHub.use().get(UserUtils.getOurPubKeyStrFromCache())?.triggerUIRefresh();
         return state;
       },
       contextHandler: async state => {

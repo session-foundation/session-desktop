@@ -66,24 +66,24 @@ export const MessageStatus = ({ messageId, dataTestId }: Props) => {
 };
 
 const MessageStatusContainer = styled.div<{
-  isIncoming: boolean;
-  isGroup: boolean;
-  clickable: boolean;
+  $isIncoming: boolean;
+  $isGroup: boolean;
+  $clickable: boolean;
 }>`
   display: inline-block;
-  align-self: ${props => (props.isIncoming ? 'flex-start' : 'flex-end')};
+  align-self: ${props => (props.$isIncoming ? 'flex-start' : 'flex-end')};
   flex-direction: ${props =>
-    props.isIncoming
+    props.$isIncoming
       ? 'row-reverse'
       : 'row'}; // we want {icon}{text} for incoming read messages, but {text}{icon} for outgoing messages
 
   margin-bottom: 2px;
   margin-inline-start: 5px;
-  cursor: ${props => (props.clickable ? 'pointer' : 'inherit')};
+  cursor: ${props => (props.$clickable ? 'pointer' : 'inherit')};
   display: flex;
   align-items: center;
   margin-inline-start: ${props =>
-    props.isGroup || !props.isIncoming ? 'var(--width-avatar-group-msg-list)' : 0};
+    props.$isGroup || !props.$isIncoming ? 'var(--width-avatar-group-msg-list)' : 0};
 `;
 
 const StyledStatusText = styled.div<{ $textColor: string }>`
@@ -142,9 +142,9 @@ const MessageStatusSending = ({ dataTestId }: Omit<Props, 'isDetailView'>) => {
     <MessageStatusContainer
       data-testid={dataTestId}
       data-testtype="sending"
-      isIncoming={false}
-      isGroup={false}
-      clickable={false}
+      $isIncoming={false}
+      $isGroup={false}
+      $clickable={false}
     >
       <TextDetails text={tr('sending')} textColor="var(--text-secondary-color)" />
       <IconNormal unicode={LUCIDE_ICONS_UNICODE.CIRCLE_ELLIPSES} />
@@ -169,10 +169,13 @@ function IconForExpiringMessageId({
   );
 }
 
+// NOTE: [react-compiler] this convinces the compiler the hook is static
+const useSelectedIsGroupOrCommunityInternal = useSelectedIsGroupOrCommunity;
+
 const MessageStatusSent = ({ dataTestId, messageId }: Omit<Props, 'isDetailView'>) => {
   const isExpiring = useIsExpiring(messageId);
   const isMostRecentOutgoingMessage = useIsMostRecentOutgoingMessage(messageId);
-  const isGroup = useSelectedIsGroupOrCommunity();
+  const isGroup = useSelectedIsGroupOrCommunityInternal();
 
   // we hide the "sent" message status for a non-expiring messages unless it's the most recent outgoing message
   if (!isExpiring && !isMostRecentOutgoingMessage) {
@@ -182,9 +185,9 @@ const MessageStatusSent = ({ dataTestId, messageId }: Omit<Props, 'isDetailView'
     <MessageStatusContainer
       data-testid={dataTestId}
       data-testtype="sent"
-      isIncoming={false}
-      isGroup={isGroup}
-      clickable={false}
+      $isIncoming={false}
+      $isGroup={isGroup}
+      $clickable={false}
     >
       <TextDetails text={tr('disappearingMessagesSent')} textColor="var(--text-secondary-color)" />
       <IconForExpiringMessageId messageId={messageId} unicode={LUCIDE_ICONS_UNICODE.CHECK} />
@@ -198,7 +201,7 @@ const MessageStatusRead = ({
   isIncoming,
 }: Omit<Props, 'isDetailView'> & { isIncoming: boolean }) => {
   const isExpiring = useIsExpiring(messageId);
-  const isGroup = useSelectedIsGroupOrCommunity();
+  const isGroup = useSelectedIsGroupOrCommunityInternal();
 
   const isMostRecentOutgoingMessage = useIsMostRecentOutgoingMessage(messageId);
 
@@ -211,9 +214,9 @@ const MessageStatusRead = ({
     <MessageStatusContainer
       data-testid={dataTestId}
       data-testtype="read"
-      isIncoming={isIncoming}
-      isGroup={isGroup}
-      clickable={false}
+      $isIncoming={isIncoming}
+      $isGroup={isGroup}
+      $clickable={false}
     >
       <TextDetails text={tr('read')} textColor="var(--text-secondary-color)" />
       <IconForExpiringMessageId messageId={messageId} unicode={LUCIDE_ICONS_UNICODE.EYE} />
@@ -233,9 +236,9 @@ const MessageStatusError = ({ dataTestId }: Omit<Props, 'isDetailView'>) => {
       onClick={() => {
         void saveLogToDesktop();
       }}
-      isIncoming={false}
-      clickable={true}
-      isGroup={isGroup}
+      $isIncoming={false}
+      $clickable={true}
+      $isGroup={isGroup}
     >
       <TextDetails text={tr('messageStatusFailedToSend')} textColor="var(--danger-color)" />
       <LucideIcon

@@ -52,7 +52,7 @@ export function pushLoadAttachmentFailure(message?: string) {
   }
 }
 
-// TODOLATER pushToast functions should take I18nArgs and then run strip in the function itself.
+// TODO pushToast functions should take I18nArgs and then run strip in the function itself.
 
 export function pushFileSizeErrorAsByte() {
   pushToastError('fileSizeWarning', tStripped('attachmentsErrorSize'));

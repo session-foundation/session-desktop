@@ -32,7 +32,7 @@ import { StyledMentionAnother } from './AddMentions';
 import { MessagesContainerRefContext } from '../../contexts/MessagesContainerRefContext';
 
 export type SessionMessageListProps = {
-  messageContainerRef: RefObject<HTMLDivElement>;
+  messageContainerRef: RefObject<HTMLDivElement | null>;
 };
 export const messageContainerDomID = 'messages-container';
 

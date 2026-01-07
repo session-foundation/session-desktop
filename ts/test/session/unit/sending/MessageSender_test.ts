@@ -72,7 +72,7 @@ describe('MessageSender', () => {
       let rawMessage: OutgoingRawMessage;
 
       beforeEach(async () => {
-        rawMessage = await MessageUtils.toRawMessage(
+        rawMessage = MessageUtils.toRawMessage(
           TestUtils.generateFakePubKey(),
           TestUtils.generateVisibleMessage(),
           SnodeNamespaces.Default
@@ -132,7 +132,7 @@ describe('MessageSender', () => {
         const visibleMessage = TestUtils.generateVisibleMessage();
         Sinon.stub(ConvoHub.use(), 'get').returns(undefined as any);
 
-        const rawMessage = await MessageUtils.toRawMessage(
+        const rawMessage = MessageUtils.toRawMessage(
           device,
           visibleMessage,
           SnodeNamespaces.Default
@@ -174,7 +174,7 @@ describe('MessageSender', () => {
         const device = TestUtils.generateFakePubKey();
         Sinon.stub(ConvoHub.use(), 'get').returns(undefined as any);
         const visibleMessage = TestUtils.generateVisibleMessage();
-        const rawMessage = await MessageUtils.toRawMessage(
+        const rawMessage = MessageUtils.toRawMessage(
           device,
           visibleMessage,
           SnodeNamespaces.Default

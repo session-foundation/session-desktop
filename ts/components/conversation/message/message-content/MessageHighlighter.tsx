@@ -7,12 +7,12 @@ const StyledMessageHighlighter = styled(motion.div)``;
 
 export function MessageHighlighter(props: {
   children: ReactNode;
-  highlight: boolean;
+  $highlight: boolean;
   role?: string;
   className?: string;
   onClick?: (event: MouseEvent<HTMLDivElement>) => void;
 }) {
-  const { className, children, highlight, role, onClick } = props;
+  const { className, children, $highlight, role, onClick } = props;
 
   return (
     <StyledMessageHighlighter
@@ -20,7 +20,7 @@ export function MessageHighlighter(props: {
       role={role}
       onClick={onClick}
       animate={{
-        opacity: highlight ? [1, 0.2, 1, 0.2, 1] : undefined,
+        opacity: $highlight ? [1, 0.2, 1, 0.2, 1] : undefined,
         transition: {
           duration: THEME_GLOBALS['--duration-message-highlight-seconds'],
           ease: 'linear',

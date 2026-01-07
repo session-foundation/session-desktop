@@ -1,5 +1,10 @@
 /* eslint-disable no-case-declarations */
-import { BaseConvoInfoVolatile, ConvoVolatileType, GroupPubkeyType } from 'libsession_util_nodejs';
+import {
+  BaseConvoInfoVolatile,
+  ConvoVolatileType,
+  GroupPubkeyType,
+  type ConvoInfoVolatileGet1o1,
+} from 'libsession_util_nodejs';
 import { isEmpty, isFinite } from 'lodash';
 import { Data } from '../../../data/data';
 import { OpenGroupData } from '../../../data/opengroups';
@@ -19,7 +24,7 @@ import { SessionUtilUserProfile } from './libsession_utils_user_profile';
 /**
  * The key of this map is the convoId as stored in the database.
  */
-const mapped1o1WrapperValues = new Map<string, BaseConvoInfoVolatile>();
+const mapped1o1WrapperValues = new Map<string, ConvoInfoVolatileGet1o1>();
 
 /**
  * The key of this map is the convoId as stored in the database. So the legacy group 05 sessionID
@@ -79,7 +84,7 @@ async function insertConvoFromDBIntoWrapperAndRefresh(convoId: string): Promise<
   const isForcedUnread = foundConvo.isMarkedUnread();
   const timestampFromDbMs = (await Data.fetchConvoMemoryDetails(convoId))?.lastReadTimestampMessage;
 
-  // Note: not having a last read timestamp fallsback to 0, which keeps the existing value in the wrapper if it is already set (as done in src/convo_info_volatile_config.cpp)
+  // Note: not having a last read timestamp falls back to 0, which keeps the existing value in the wrapper if it is already set (as done in src/convo_info_volatile_config.cpp)
   // we actually do the max() of whatever is inside the wrapper and the value from the DB
   const lastReadMessageTimestamp =
     !!timestampFromDbMs && isFinite(timestampFromDbMs) && timestampFromDbMs > 0
@@ -94,12 +99,16 @@ async function insertConvoFromDBIntoWrapperAndRefresh(convoId: string): Promise<
   switch (convoType) {
     case '1o1':
       try {
+        const proDetails = foundConvo.dbContactProDetails();
         // this saves the details for contacts and `Note To Self`
-        await ConvoInfoVolatileWrapperActions.set1o1(
-          convoId,
-          lastReadMessageTimestamp,
-          isForcedUnread
-        );
+        const toSet = {
+          forcedUnread: isForcedUnread,
+          lastReadTsMs: lastReadMessageTimestamp,
+          proGenIndexHashB64: proDetails?.proGenIndexHashB64 || null,
+          proExpiryTsMs: proDetails?.proExpiryTsMs || null,
+        };
+        await ConvoInfoVolatileWrapperActions.set1o1(convoId, toSet);
+
         await refreshConvoVolatileCached(convoId, false, false);
       } catch (e) {
         window.log.warn(
@@ -109,11 +118,10 @@ async function insertConvoFromDBIntoWrapperAndRefresh(convoId: string): Promise<
       break;
     case 'LegacyGroup':
       try {
-        await ConvoInfoVolatileWrapperActions.setLegacyGroup(
-          convoId,
-          lastReadMessageTimestamp,
-          isForcedUnread
-        );
+        await ConvoInfoVolatileWrapperActions.setLegacyGroup(convoId, {
+          lastReadTsMs: lastReadMessageTimestamp,
+          forcedUnread: isForcedUnread,
+        });
         await refreshConvoVolatileCached(convoId, true, false);
       } catch (e) {
         window.log.warn(
@@ -126,11 +134,10 @@ async function insertConvoFromDBIntoWrapperAndRefresh(convoId: string): Promise<
         if (!PubKey.is03Pubkey(convoId)) {
           throw new Error('group but not with 03 prefix');
         }
-        await ConvoInfoVolatileWrapperActions.setGroup(
-          convoId,
-          lastReadMessageTimestamp,
-          isForcedUnread
-        );
+        await ConvoInfoVolatileWrapperActions.setGroup(convoId, {
+          lastReadTsMs: lastReadMessageTimestamp,
+          forcedUnread: isForcedUnread,
+        });
         await refreshConvoVolatileCached(convoId, true, false);
       } catch (e) {
         window.log.warn(
@@ -154,11 +161,10 @@ async function insertConvoFromDBIntoWrapperAndRefresh(convoId: string): Promise<
         );
 
         // this does the create or the update of the matching existing community
-        await ConvoInfoVolatileWrapperActions.setCommunityByFullUrl(
-          fullUrlWithPubkey,
-          lastReadMessageTimestamp,
-          isForcedUnread
-        );
+        await ConvoInfoVolatileWrapperActions.setCommunityByFullUrl(fullUrlWithPubkey, {
+          lastReadTsMs: lastReadMessageTimestamp,
+          forcedUnread: isForcedUnread,
+        });
 
         await refreshConvoVolatileCached(convoId, false, false);
       } catch (e) {
@@ -252,6 +258,10 @@ function getVolatileInfoCached(convoId: string): BaseConvoInfoVolatile | undefin
   );
 }
 
+function get1o1VolatileInfoCached(convoId: string): ConvoInfoVolatileGet1o1 | undefined {
+  return mapped1o1WrapperValues.get(convoId);
+}
+
 /**
  * Removes the matching community from the wrapper and from the cached list of communities
  */
@@ -318,6 +328,7 @@ export const SessionUtilConvoInfoVolatile = {
   refreshConvoVolatileCached,
   getConvoInfoVolatileTypes,
   getVolatileInfoCached,
+  get1o1VolatileInfoCached,
 
   // 1o1
   removeContactFromWrapper,

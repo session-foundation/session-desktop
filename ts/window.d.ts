@@ -2,7 +2,6 @@
 import {} from 'styled-components/cssprop';
 
 import { Store } from '@reduxjs/toolkit';
-import { Persistor } from 'redux-persist/es/types';
 
 import { PrimaryColorStateType, ThemeStateType } from './themes/constants/colors';
 import type { EventEmitter } from './shared/event_emitter';
@@ -29,7 +28,6 @@ declare global {
     sessionDataFeatureFlags: SessionDataFeatureFlags;
     onLogin: (pw: string) => Promise<void>; // only set on the password window
     onTryPassword: (pw: string) => Promise<void>; // only set on the main window
-    persistStore?: Persistor;
     restart: () => void;
     getSeedNodeList: () => Array<string> | undefined;
     setPassword: (
@@ -44,7 +42,6 @@ declare global {
     toggleSpellCheck: () => void;
     primaryColor: PrimaryColorStateType;
     theme: ThemeStateType;
-    setTheme: (newTheme: string) => Promise<void>;
     versionInfo: { environment: string; version: string; commitHash: string; appInstance: string };
     readyForUpdates: () => void;
     drawAttention: () => void;

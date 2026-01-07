@@ -61,8 +61,13 @@ function getBitMaskForFeature(feature: ProMessageFeature, context: ProFeaturesCo
   }
 }
 
-function hasProFeature(args: bigint, feature: ProMessageFeature, context: ProFeaturesContext) {
-  return !!(args & getBitMaskForFeature(feature, context));
+function hasProFeature(
+  value: bigint | string,
+  feature: ProMessageFeature,
+  context: ProFeaturesContext
+) {
+  const parsed = typeof value === 'string' ? BigInt(value) : value;
+  return !!(parsed & getBitMaskForFeature(feature, context));
 }
 
 function addProFeature(bitset: bigint, feature: ProMessageFeature, context: ProFeaturesContext) {

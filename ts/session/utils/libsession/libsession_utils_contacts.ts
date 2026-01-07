@@ -76,6 +76,9 @@ async function insertContactFromDBIntoWrapperAndRefresh(
   const expirationMode = foundConvo.get('expirationMode') || undefined;
   const expireTimer = foundConvo.get('expireTimer') || 0;
   const dbProfileUpdatedAtSeconds = foundConvo.getProfileUpdatedSeconds() || 0;
+  const proDetails = foundConvo.dbContactProDetails();
+  const bitsetProFeatures =
+    (proDetails?.bitsetProFeatures ? BigInt(proDetails.bitsetProFeatures) : undefined) || undefined;
 
   const wrapperContact = getContactInfoFromDBValues({
     id,
@@ -91,6 +94,7 @@ async function insertContactFromDBIntoWrapperAndRefresh(
     expirationMode,
     expireTimer,
     dbProfileUpdatedAtSeconds,
+    bitsetProFeatures,
   });
   try {
     await ContactsWrapperActions.set(wrapperContact);

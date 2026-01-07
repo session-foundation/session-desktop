@@ -14,8 +14,8 @@ const StyledQuoteContainer = styled.div`
 `;
 
 const StyledQuote = styled.div<{
-  hasAttachment: boolean;
-  isIncoming: boolean;
+  $hasAttachment: boolean;
+  $isIncoming: boolean;
   onClick: ((e: MouseEvent<HTMLDivElement>) => void) | undefined;
 }>`
   position: relative;
@@ -24,9 +24,9 @@ const StyledQuote = styled.div<{
   flex-direction: row;
   align-items: stretch;
   margin: var(--margins-xs);
-  ${props => !props.hasAttachment && 'border-left: 4px solid;'}
+  ${props => !props.$hasAttachment && 'border-left: 4px solid;'}
   border-color: ${props =>
-    props.isIncoming
+    props.$isIncoming
       ? 'var(--message-bubbles-received-text-color)'
       : 'var(--message-bubbles-sent-text-color)'};
   cursor: ${props => (props.onClick ? 'pointer' : 'auto')};
@@ -81,8 +81,8 @@ export const Quote = (props: QuoteProps) => {
   return (
     <StyledQuoteContainer>
       <StyledQuote
-        hasAttachment={Boolean(!isEmpty(attachment))}
-        isIncoming={isIncoming}
+        $hasAttachment={Boolean(!isEmpty(attachment))}
+        $isIncoming={isIncoming}
         onClick={e => {
           if (onClick && !isSelectionMode) {
             onClick(e);

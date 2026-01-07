@@ -230,10 +230,16 @@ def identifyLocaleDynamicVariableDifferences(locales, locale_b_tags,
           value, locale_value
         )
 
+        if(locale_issues["missing_variables"][key]):
+          print(f"[{locale_name}] missing vars for '{key}':", locale_issues["missing_variables"][key])
+
         # Find the dynamic variables that are additional to the locale. If there are none this will set the value to an empty list.
         locale_issues["additional_variables"][key] = missingFromList(
           locale_value, value
         )
+        if(locale_issues["additional_variables"][key]):
+          print(f"[{locale_name}] additional vars for '{key}':", locale_issues["additional_variables"][key])
+
 
         locale_issues["missing_b_tags"][key] = len(master_locale_b_tags[key]) - len(current_locale_b_tags[key])
         locale_issues["missing_br_tags"][key] = len(master_locale_br_tags[key]) - len(current_locale_br_tags[key])

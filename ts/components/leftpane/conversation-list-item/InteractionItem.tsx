@@ -16,8 +16,8 @@ import { tr } from '../../../localization/localeTools';
 import { getStyleForMessageItemText } from './MessageItem';
 import { useSelectedConversationKey } from '../../../state/selectors/selectedConversation';
 
-const StyledInteractionItemText = styled.div<{ isError: boolean }>`
-  ${props => props.isError && 'color: var(--danger-color) !important;'}
+const StyledInteractionItemText = styled.div<{ $isError: boolean }>`
+  ${props => props.$isError && 'color: var(--danger-color) !important;'}
 `;
 
 type InteractionItemProps = {
@@ -102,7 +102,7 @@ export const InteractionItem = (props: InteractionItemProps) => {
   return (
     <div className="module-conversation-list-item__message">
       <StyledInteractionItemText
-        isError={Boolean(interactionStatus === ConversationInteractionStatus.Error)}
+        $isError={Boolean(interactionStatus === ConversationInteractionStatus.Error)}
         style={getStyleForMessageItemText(hasUnread, isSelectedConvo)}
       >
         <MessageBody

@@ -1,12 +1,13 @@
 import { useState } from 'react';
-
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import useKey from 'react-use/lib/useKey';
 import styled from 'styled-components';
+import { List, AutoSizer, ListRowProps } from 'react-virtualized';
 
 import { concat, isEmpty } from 'lodash';
 import useBoolean from 'react-use/lib/useBoolean';
 import type { PubkeyType } from 'libsession_util_nodejs';
+import { getAppDispatch } from '../../../state/dispatch';
 import { MemberListItem } from '../../MemberListItem';
 import { SessionButton, SessionButtonColor } from '../../basic/SessionButton';
 
@@ -28,39 +29,68 @@ import { PubKey } from '../../../session/types';
 import { searchActions } from '../../../state/ducks/search';
 import { useContactsToInviteTo } from '../../../hooks/useContactsToInviteToGroup';
 import { NoContacts, NoResultsForSearch } from '../../search/NoResults';
-import { SimpleSessionTextarea } from '../../inputs/SessionInput';
+import { SimpleSessionTextarea } from '../../inputs/SimpleSessionTextarea';
 import { tr, tStripped } from '../../../localization/localeTools';
 import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
+
+const ROW_HEIGHT = 50;
 
 const StyledGroupMemberListContainer = styled.div`
   display: flex;
   flex-direction: column;
   flex: 1;
   width: 100%;
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow: hidden;
 `;
 
-export const OverlayClosedGroupV2 = () => {
-  const dispatch = useDispatch();
-  const us = useOurPkStr();
-  const { contactsToInvite, searchTerm } = useContactsToInviteTo('create-group');
-  const isCreatingGroup = useIsCreatingGroupFromUIPending();
-  const groupName = useSelector((state: StateType) => state.groups.creationGroupName) || '';
-  const [inviteAsAdmin, setInviteAsAdmin] = useBoolean(false);
+function getSelectedMemberIds(state: StateType) {
+  return state.groups.creationMembersSelected || [];
+}
+
+function getGroupName(state: StateType) {
+  return state.groups.creationGroupName || '';
+}
+
+function useSelectedMemberIds() {
+  return useSelector(getSelectedMemberIds);
+}
+
+function useGroupName() {
+  return useSelector(getGroupName);
+}
+
+// NOTE: [react-compiler] this convinces the compiler the hook is static
+const useOurPkStrInternal = useOurPkStr;
+const useIsCreatingGroupFromUIPendingInternal = useIsCreatingGroupFromUIPending;
+
+// NOTE: [react-compiler] this convinces the compiler the hook is static
+function useContactsToInviteToInternal() {
+  return useContactsToInviteTo('create-group');
+}
+
+function useGroupNameError() {
   const [groupNameError, setGroupNameError] = useState<string | undefined>();
+  return { groupNameError, setGroupNameError };
+}
 
-  const selectedMemberIds = useSelector(
-    (state: StateType) => state.groups.creationMembersSelected || []
-  );
+export const OverlayClosedGroupV2 = () => {
+  const dispatch = getAppDispatch();
+  const us = useOurPkStrInternal();
+  const { contactsToInvite, searchTerm } = useContactsToInviteToInternal();
+  const isCreatingGroup = useIsCreatingGroupFromUIPendingInternal();
+  const groupName = useGroupName();
+  const [inviteAsAdmin, setInviteAsAdmin] = useBoolean(false);
+  const { groupNameError, setGroupNameError } = useGroupNameError();
 
-  function addMemberToSelection(member: PubkeyType) {
+  const selectedMemberIds = useSelectedMemberIds();
+
+  const addMemberToSelection = (member: PubkeyType) => {
     dispatch(groupInfoActions.addSelectedGroupMember({ memberToAdd: member }));
-  }
+  };
 
-  function removeMemberFromSelection(member: PubkeyType) {
+  const removeMemberFromSelection = (member: PubkeyType) => {
     dispatch(groupInfoActions.removeSelectedGroupMember({ memberToRemove: member }));
-  }
+  };
 
   function closeOverlay() {
     dispatch(searchActions.clearSearch());
@@ -78,7 +108,6 @@ export const OverlayClosedGroupV2 = () => {
       return;
     }
 
-    // Validate groupName and groupMembers length
     if (groupName.length === 0) {
       ToastUtils.pushToastError('invalidGroupName', tr('groupNameEnterPlease'));
       return;
@@ -88,9 +117,6 @@ export const OverlayClosedGroupV2 = () => {
       return;
     }
 
-    // >= because we add ourself as a member AFTER this. so a 10 member group is already invalid as it will be 11 with us
-    // the same is valid with groups count < 1
-
     if (selectedMemberIds.length < 1) {
       ToastUtils.pushToastError('pickClosedGroupMember', tr('groupCreateErrorNoMembers'));
       return;
@@ -99,7 +125,7 @@ export const OverlayClosedGroupV2 = () => {
       ToastUtils.pushToastError('closedGroupMaxSize', tStripped('groupAddMemberMaximum'));
       return;
     }
-    // trigger the add through redux.
+
     dispatch(
       groupInfoActions.initNewGroupInWrapper({
         members: concat(selectedMemberIds, [us]),
@@ -113,8 +139,28 @@ export const OverlayClosedGroupV2 = () => {
   useKey('Escape', closeOverlay);
 
   const noContactsForClosedGroup = isEmpty(searchTerm) && contactsToInvite.length === 0;
-
   const disableCreateButton = isCreatingGroup || (!selectedMemberIds.length && !groupName.length);
+
+  const rowRenderer = ({ index, key, style }: ListRowProps) => {
+    const memberPubkey = contactsToInvite[index];
+
+    if (!PubKey.is05Pubkey(memberPubkey)) {
+      throw new Error('Invalid member rendered in member list');
+    }
+
+    return (
+      <div key={key} style={style}>
+        <MemberListItem
+          pubkey={memberPubkey}
+          isSelected={selectedMemberIds.includes(memberPubkey)}
+          onSelect={addMemberToSelection}
+          onUnselect={removeMemberFromSelection}
+          withBorder={false}
+          disabled={isCreatingGroup}
+        />
+      </div>
+    );
+  };
 
   return (
     <StyledLeftPaneOverlay
@@ -128,7 +174,7 @@ export const OverlayClosedGroupV2 = () => {
         width={'100%'}
         $flexDirection="column"
         $alignItems="center"
-        padding={'var(--margins-md)'}
+        $padding={'var(--margins-md)'}
       >
         <SimpleSessionTextarea
           // not monospaced. This is a plain text input for a group name
@@ -167,7 +213,7 @@ export const OverlayClosedGroupV2 = () => {
           </>
         )}
 
-        <SessionSpinner loading={isCreatingGroup} />
+        <SessionSpinner $loading={isCreatingGroup} />
         <SpacerLG />
       </Flex>
 
@@ -179,28 +225,25 @@ export const OverlayClosedGroupV2 = () => {
         ) : searchTerm && !contactsToInvite.length ? (
           <NoResultsForSearch searchTerm={searchTerm} />
         ) : (
-          contactsToInvite.map((memberPubkey: string) => {
-            if (!PubKey.is05Pubkey(memberPubkey)) {
-              throw new Error('Invalid member rendered in member list');
-            }
-
-            return (
-              <MemberListItem
-                key={`member-list-${memberPubkey}`}
-                pubkey={memberPubkey}
-                isSelected={selectedMemberIds.includes(memberPubkey)}
-                onSelect={addMemberToSelection}
-                onUnselect={removeMemberFromSelection}
-                withBorder={false}
-                disabled={isCreatingGroup}
+          <AutoSizer>
+            {({ width, height }) => (
+              <List
+                width={width}
+                height={height}
+                rowCount={contactsToInvite.length}
+                rowHeight={ROW_HEIGHT}
+                rowRenderer={rowRenderer}
+                // NOTE: These are passed as props to trigger a re-render when they change
+                selectedMemberIds={selectedMemberIds}
+                isCreatingGroup={isCreatingGroup}
               />
-            );
-          })
+            )}
+          </AutoSizer>
         )}
       </StyledGroupMemberListContainer>
 
       <SpacerLG style={{ flexShrink: 0 }} />
-      <Flex $container={true} width={'100%'} $flexDirection="column" padding={'var(--margins-md)'}>
+      <Flex $container={true} width={'100%'} $flexDirection="column" $padding={'var(--margins-md)'}>
         <SessionButton
           text={tr('create')}
           disabled={disableCreateButton}

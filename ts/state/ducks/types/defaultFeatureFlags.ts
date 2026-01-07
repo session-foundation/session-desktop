@@ -16,7 +16,6 @@ export const defaultProBooleanFeatureFlags = {
   mockCurrentUserHasProInGracePeriod: !isEmpty(process.env.SESSION_USER_HAS_PRO_IN_GRACE),
   mockProRecoverButtonAlwaysSucceed: !isEmpty(process.env.SESSION_PRO_RECOVER_ALWAYS_SUCCEED),
   mockProRecoverButtonAlwaysFail: !isEmpty(process.env.SESSION_PRO_RECOVER_ALWAYS_FAIL),
-  mockOthersHavePro: !isEmpty(process.env.SESSION_OTHERS_HAVE_PRO),
   mockProBackendLoading: !isEmpty(process.env.SESSION_PRO_BACKEND_LOADING),
   mockProBackendError: !isEmpty(process.env.SESSION_PRO_BACKEND_ERROR),
 } as const;
@@ -28,6 +27,9 @@ export const defaultBooleanFeatureFlags = {
   useDeterministicEncryption: !isEmpty(process.env.SESSION_ATTACH_DETERMINISTIC_ENCRYPTION),
   disableOnionRequests: false,
   disableImageProcessor: !isEmpty(process.env.SESSION_DISABLE_IMAGE_PROCESSOR),
+  disableLocalAttachmentEncryption: !isEmpty(
+    process.env.SESSION_DISABLE_LOCAL_ATTACHMENT_ENCRYPTION
+  ),
   useTestNet: isTestNet() || isTestIntegration(),
   debugInputCommands: !isEmpty(process.env.SESSION_DEBUG),
   alwaysShowRemainingChars: false,
@@ -57,6 +59,7 @@ export const defaultProDataFeatureFlags = {
   mockProPinnedConversations: null,
   mockProBadgesSent: null,
   mockProGroupsUpgraded: null,
+  mockNetworkPageNodeCount: null,
 } as const;
 
 export const defaultDataFeatureFlags = {

@@ -95,7 +95,10 @@ import { ReduxOnionSelectors } from '../state/selectors/onions';
 import { tStrippedWithObj, tr, tStripped } from '../localization/localeTools';
 import type { QuotedAttachmentType } from '../components/conversation/message/message-content/quote/Quote';
 import { ProFeatures, ProMessageFeature } from './proMessageFeature';
+import { privateSet, privateSetKey } from './modelFriends';
 import { getFeatureFlag } from '../state/ducks/types/releasedFeaturesReduxTypes';
+import type { OutgoingProMessageDetails } from '../types/message/OutgoingProMessageDetails';
+import { longOrNumberToBigInt } from '../types/Bigint';
 
 // tslint:disable: cyclomatic-complexity
 
@@ -323,7 +326,7 @@ export class MessageModel extends Model<MessageAttributes> {
 
         if (convo) {
           const isGroup = !convo.isPrivate();
-          const isCommunity = convo.isPublic();
+          const isCommunity = convo.isOpenGroupV2();
 
           switch (interactionType) {
             case ConversationInteractionType.Hide:
@@ -578,10 +581,6 @@ export class MessageModel extends Model<MessageAttributes> {
       return 'read';
     }
     const sent = this.get('sent');
-    // control messages we've sent, synced from the network appear to just have the
-    // sent_at field set, but our current devices also have this field set when we are just sending it... So idk how to have behavior work fine.,
-    // TODOLATER
-    // const sentAt = this.get('sent_at');
     const sentTo = this.get('sent_to') || [];
 
     if (sent || sentTo.length > 0) {
@@ -799,7 +798,7 @@ export class MessageModel extends Model<MessageAttributes> {
     const firstPreviewWithData = previewWithData?.[0] || null;
 
     // we want to go for the v1, if this is an OpenGroupV1 or not an open group at all
-    if (conversation?.isPublic()) {
+    if (conversation?.isOpenGroupV2()) {
       const openGroupV2 = conversation.toOpenGroupV2();
       attachmentPromise = uploadAttachmentsV3(finalAttachments, openGroupV2);
       linkPreviewPromise = uploadLinkPreviewsV3(firstPreviewWithData, openGroupV2);
@@ -894,7 +893,7 @@ export class MessageModel extends Model<MessageAttributes> {
       }
       const { body, attachments, preview, quote, fileIdsToLink } = await this.uploadData();
 
-      if (conversation.isPublic()) {
+      if (conversation.isOpenGroupV2()) {
         const openGroupParams: OpenGroupVisibleMessageParams = {
           identifier: this.id,
           createAtNetworkTimestamp: NetworkTime.now(),
@@ -1111,7 +1110,7 @@ export class MessageModel extends Model<MessageAttributes> {
       if (syncMessage) {
         await MessageSender.sendSingleMessage({
           isSyncMessage: true,
-          message: await MessageUtils.toRawMessage(
+          message: MessageUtils.toRawMessage(
             PubKey.cast(UserUtils.getOurPubKeyStrFromCache()),
             syncMessage,
             SnodeNamespaces.Default
@@ -1329,16 +1328,22 @@ export class MessageModel extends Model<MessageAttributes> {
     this.set({ expireTimer: expireTimerSeconds });
   }
 
+  /**
+   * Exposed for convenience, but not recommended to use directly.
+   */
   public set(attrs: Partial<MessageAttributes>) {
-    super.set(attrs);
+    super[privateSet](attrs);
     return this;
   }
 
+  /**
+   * Exposed for convenience, but not recommended to use directly.
+   */
   public setKey<K extends keyof MessageAttributes>(
     key: K,
     value: MessageAttributes[K] | undefined
   ) {
-    super.setKey(key, value);
+    super[privateSetKey](key, value);
     return this;
   }
 
@@ -1431,6 +1436,56 @@ export class MessageModel extends Model<MessageAttributes> {
     this.set({ proProfileBitset: proProfileStr });
     this.set({ proMessageBitset: proMessageStr });
     return true;
+  }
+
+  public async applyProFeatures(outgoingProMessageDetails: OutgoingProMessageDetails | null) {
+    const proProfileBitset = this.get('proProfileBitset');
+    const proMessageBitset = this.get('proMessageBitset');
+
+    if (
+      proProfileBitset ||
+      proMessageBitset ||
+      !outgoingProMessageDetails ||
+      (!outgoingProMessageDetails.proMessageBitset && !outgoingProMessageDetails.proProfileBitset)
+    ) {
+      // if
+      //  - We already have some bitset set for this message in the DB,
+      //  - or the proMessageDetails is empty
+      //  - or the proMessageDetails has no bitset set
+      // then,
+      // - we do not need to apply the bitset from the details.
+      // - we also don't need the update the pro stats with this change (as we can assume the change was already counted).
+
+      return;
+    }
+    const proDetails = outgoingProMessageDetails?.toProtobufDetails();
+    // store the bitset that was used to send that message on the sending side too
+    if (proDetails) {
+      this.setProFeaturesUsed({
+        proMessageBitset: longOrNumberToBigInt(proDetails.messageBitset),
+        proProfileBitset: longOrNumberToBigInt(proDetails.profileBitset),
+      });
+      await this.commit();
+      const proFeaturesUsed = this.getProFeaturesUsed();
+      await Promise.all(
+        proFeaturesUsed.map(async proFeature => {
+          switch (proFeature) {
+            case ProMessageFeature.PRO_INCREASED_MESSAGE_LENGTH:
+              await Storage.increment(SettingsKey.proLongerMessagesSent);
+              break;
+            case ProMessageFeature.PRO_BADGE:
+              await Storage.increment(SettingsKey.proBadgesSent);
+              break;
+            case ProMessageFeature.PRO_ANIMATED_DISPLAY_PICTURE:
+              // nothing to do for animated display picture
+              break;
+
+            default:
+              assertUnreachable(proFeature, 'Unknown pro feature');
+          }
+        })
+      );
+    }
   }
 
   private dispatchMessageUpdate() {

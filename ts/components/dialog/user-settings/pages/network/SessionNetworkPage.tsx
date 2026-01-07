@@ -1,4 +1,4 @@
-import { useDispatch } from 'react-redux';
+import { getAppDispatch } from '../../../../../state/dispatch';
 import { ModalBasicHeader } from '../../../../SessionWrapperModal';
 import { StakeSection } from './sections/StakeSection';
 import { ExtraSmallText, LastRefreshedText } from './components';
@@ -23,7 +23,7 @@ import { ModalBackButton } from '../../../shared/ModalBackButton';
 import { UserSettingsModalContainer } from '../../components/UserSettingsModalContainer';
 
 function ReloadButton({ loading }: { loading: boolean }) {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   return (
     <SessionLucideIconButton
@@ -73,7 +73,7 @@ export function SessionNetworkPage(modalState: UserSettingsModalState) {
       {!dataIsStale && lastRefreshedTimestamp && !loading ? (
         <>
           <SpacerXL />
-          <ExtraSmallText color={'var(--text-secondary-color)'} textAlignment="center">
+          <ExtraSmallText color={'var(--text-secondary-color)'} $textAlignment="center">
             <LastRefreshedText />
           </ExtraSmallText>
           <SpacerXS />

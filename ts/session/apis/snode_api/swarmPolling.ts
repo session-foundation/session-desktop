@@ -6,10 +6,10 @@ import {
   type WithDecodedEnvelope,
   type WithMessageHash,
 } from 'libsession_util_nodejs';
-import { z } from 'zod';
 
 import { compact, concat, flatten, isArray, isEmpty, last, omit, sampleSize, uniqBy } from 'lodash';
 import { v4 } from 'uuid';
+import z from '../../../util/zod';
 import { Data } from '../../../data/data';
 import * as Receiver from '../../../receiver/receiver';
 import { PubKey } from '../../types';
@@ -21,7 +21,6 @@ import { assertUnreachable } from '../../../types/sqlSharedTypes';
 import {
   UserGenericWrapperActions,
   MetaGroupWrapperActions,
-  UserConfigWrapperActions,
   UserGroupsWrapperActions,
   MultiEncryptWrapperActions,
 } from '../../../webworker/workers/browser/libsession_worker_interface';
@@ -52,6 +51,11 @@ import ProBackendAPI from '../pro_backend_api/ProBackendAPI';
 import { NetworkTime } from '../../../util/NetworkTime';
 import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { setIsOnlineIfDifferent } from '../../utils/InsecureNodeFetch';
+import {
+  getCachedUserConfig,
+  UserConfigWrapperActions,
+} from '../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
+import { isTestIntegration } from '../../../shared/env_vars';
 
 const minMsgCountShouldRetry = 95;
 /**
@@ -531,7 +535,6 @@ export class SwarmPolling {
             messageHash: m.hash,
           })),
           {
-            nowMs: NetworkTime.now(),
             proBackendPubkeyHex: ProBackendAPI.getServer().server.edPkHex,
             ed25519GroupPubkeyHex: pubkey,
             groupEncKeys,
@@ -564,7 +567,6 @@ export class SwarmPolling {
         messageHash: m.hash,
       })),
       {
-        nowMs: NetworkTime.now(),
         proBackendPubkeyHex: ProBackendAPI.getServer().server.edPkHex,
         ed25519PrivateKeyHex,
       }
@@ -968,6 +970,11 @@ export class SwarmPolling {
         window.log.info(
           `[onboarding] about to pollOnceForOurDisplayName of ${ed25519Str(pubkey.key)} from snode: ${ed25519Str(toPollFrom.pubkey_ed25519)} namespaces: ${[SnodeNamespaces.UserProfile]} `
         );
+        if (isTestIntegration()) {
+          // During integration tests, often deviceA might not have pushed to the swarm the userConfig that deviceB is looking for.
+          // To deal with, this, we wait a bit here before trying to fetch the userConfig.
+          await sleepFor(2000);
+        }
         const retrieved = await SnodeAPIRetrieve.retrieveNextMessagesNoRetries(
           toPollFrom,
           pubkey.key,
@@ -982,13 +989,17 @@ export class SwarmPolling {
           `[onboarding] pollOnceForOurDisplayName of ${ed25519Str(pubkey.key)} from snode: ${ed25519Str(toPollFrom.pubkey_ed25519)} namespaces: ${[SnodeNamespaces.UserProfile]} returned: ${retrieved?.length}`
         );
         if (!retrieved?.length) {
+          // Note: always print something so we know if the polling is hanging
+          window.log.info(
+            `[onboarding] pollOnceForOurDisplayName of ${ed25519Str(pubkey.key)} from snode: ${ed25519Str(toPollFrom.pubkey_ed25519)} namespaces: ${[SnodeNamespaces.UserProfile]} returned: ${retrieved?.length}`
+          );
+
           /**
            * Sometimes, a snode is out of sync with its swarm but still replies with what he thinks is the swarm's content.
            * When that happens, we can get a "no display name" error, as indeed, that snode didn't have a config message on user profile.
            * To fix this, we've added a check over all of the snodes of our swarm, and we pick the first one that reports having a config message on user profile.
            * This won't take care of the case where a snode has a message with an empty display name, but it's not the root issue that this was added for.
            */
-
           throw new Error(
             `pollOnceForOurDisplayName of ${ed25519Str(pubkey.key)} from snode: ${ed25519Str(toPollFrom.pubkey_ed25519)}  no results from user profile`
           );
@@ -1040,7 +1051,7 @@ export class SwarmPolling {
       await UserConfigWrapperActions.init(privateKeyEd25519, null);
       await UserConfigWrapperActions.merge(incomingConfigMessages);
 
-      const foundName = await UserConfigWrapperActions.getName();
+      const foundName = getCachedUserConfig().name;
       if (!foundName) {
         throw new Error('UserInfo not found or name is empty');
       }

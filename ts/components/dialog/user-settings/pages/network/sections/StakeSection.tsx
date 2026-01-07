@@ -1,6 +1,6 @@
 import styled from 'styled-components';
-import { useDispatch } from 'react-redux';
 import type { SessionDataTestId } from 'react';
+import { getAppDispatch } from '../../../../../../state/dispatch';
 import { SessionNetworkParagraph, SectionHeading, SessionNetworkButton } from '../components';
 import { LOCALE_DEFAULTS } from '../../../../../../localization/constants';
 import { Localizer } from '../../../../../basic/Localizer';
@@ -22,7 +22,7 @@ import {
 } from '../../../../../../state/selectors/networkModal';
 import { tr } from '../../../../../../localization/localeTools';
 
-const StyledTokenSection = styled(Flex)<{ loading: boolean }>`
+const StyledTokenSection = styled(Flex)<{ $loading: boolean }>`
   font-size: var(--font-display-size-lg);
   padding: var(--margins-lg) 0;
   span {
@@ -30,7 +30,7 @@ const StyledTokenSection = styled(Flex)<{ loading: boolean }>`
   }
 
   span:nth-child(2) {
-    ${props => (props.loading ? 'color: var(--text-secondary-color);' : '')};
+    ${props => (props.$loading ? 'color: var(--text-secondary-color);' : '')};
   }
 
   &:not(:last-child) {
@@ -51,7 +51,7 @@ const TokenSection = ({
 }) => {
   return (
     <StyledTokenSection
-      loading={loading}
+      $loading={loading}
       $container={true}
       width={'100%'}
       $flexWrap="wrap"
@@ -74,7 +74,7 @@ export function StakeSection() {
   const usdMarketCap = useUSDMarketCap();
   const dataIsStale = useDataIsStale();
 
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const isFakeRefreshing = useInfoFakeRefreshing();
 
   const stakingRewardPoolValue =
@@ -109,7 +109,7 @@ export function StakeSection() {
       $justifyContent={'flex-start'}
       $alignItems={'center'}
     >
-      <SectionHeading margin={'0 0 var(--margins-xs)'}>
+      <SectionHeading $margin={'0 0 var(--margins-xs)'}>
         {LOCALE_DEFAULTS.token_name_long}
       </SectionHeading>
       <SessionNetworkParagraph>

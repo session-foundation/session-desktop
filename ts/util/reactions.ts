@@ -90,7 +90,7 @@ const sendMessageReaction = async (messageId: string, emoji: string) => {
     let me: string = UserUtils.getOurPubKeyStrFromCache();
     let id = Number(found.get('sent_at'));
 
-    if (conversationModel.isPublic()) {
+    if (conversationModel.isOpenGroupV2()) {
       if (found.get('serverId')) {
         id = found.get('serverId') || id;
         me = conversationModel.getUsInThatConversation();
@@ -128,7 +128,7 @@ const sendMessageReaction = async (messageId: string, emoji: string) => {
       emoji,
       'reaction for message',
       id,
-      conversationModel.isPublic() ? `on ${conversationModel.id}` : ''
+      conversationModel.isOpenGroupV2() ? `on ${conversationModel.id}` : ''
     );
     return reaction;
   }
@@ -274,7 +274,7 @@ const handleOpenGroupMessageReactions = async (
     return undefined;
   }
 
-  if (!convo.isPublic()) {
+  if (!convo.isOpenGroupV2()) {
     window.log.warn('handleOpenGroupMessageReactions() should only be used in opengroups');
     return undefined;
   }

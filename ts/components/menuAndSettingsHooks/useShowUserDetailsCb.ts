@@ -1,4 +1,4 @@
-import { useDispatch } from 'react-redux';
+import { getAppDispatch } from '../../state/dispatch';
 import {
   findCachedBlindedMatchOrLookItUp,
   getCachedNakedKeyFromBlindedNoServerPubkey,
@@ -17,7 +17,7 @@ import { OpenGroupData } from '../../data/opengroups';
  * Show the user details modal for a given message in the currently selected conversation.
  */
 export function useShowUserDetailsCbFromMessage() {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   const selectedConvoKey = useSelectedConversationKey();
   const isPublic = useIsPublic(selectedConvoKey);
@@ -83,7 +83,7 @@ export function useShowUserDetailsCbFromConversation(
   conversationId?: string,
   allowForNts?: boolean
 ) {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   const isPrivate = useIsPrivate(conversationId);
 
@@ -103,7 +103,7 @@ export function useShowUserDetailsCbFromConversation(
     ? null
     : () => {
         const convo = ConvoHub.use().get(conversationId);
-        if (!convo || convo.isPublic() || convo.isGroup()) {
+        if (!convo || convo.isOpenGroupV2() || convo.isGroup()) {
           return;
         }
 

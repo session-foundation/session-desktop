@@ -81,7 +81,6 @@ export interface ConversationAttributes {
 
   conversationIdOrigin?: string; // The conversation from which this conversation originated from: blinded message request or 03-group admin who invited us
 
-  // TODOLATER those two items are only used for legacy closed groups and will be removed when we get rid of the legacy closed groups support
   lastJoinedTimestamp: number; // GroupV2: last time we were added to this group, should eventually be removed to rely on libsession value directly
 
   // ===========================================================================

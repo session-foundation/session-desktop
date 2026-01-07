@@ -191,7 +191,7 @@ function ProMessageFeaturesDetails({ messageId }: { messageId: string }) {
     <Flex
       $container={true}
       $flexDirection="column"
-      marginBlock="0 var(--margins-md)"
+      $marginBlock="0 var(--margins-md)"
       $flexGap="var(--margins-xs)"
     >
       <StyledProMessageTitle>

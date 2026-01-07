@@ -1,5 +1,5 @@
-import { useDispatch } from 'react-redux';
 import useUpdate from 'react-use/lib/useUpdate';
+import { getAppDispatch } from '../../../../state/dispatch';
 import { tr } from '../../../../localization/localeTools';
 import { Storage } from '../../../../util/storage';
 import { updateConfirmModal } from '../../../../state/ducks/modalDialog';
@@ -14,7 +14,7 @@ export const useReleaseChannel = (): {
   setReleaseChannel: (channel: ReleaseChannels) => void;
 } => {
   const releaseChannel = Storage.get('releaseChannel') as ReleaseChannels;
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const forceUpdate = useUpdate();
 
   return {

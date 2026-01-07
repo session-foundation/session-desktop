@@ -60,6 +60,10 @@ import type { StoreGroupMessageSubRequest } from '../../session/apis/snode_api/S
 import { sectionActions } from './section';
 import { processAvatarData } from '../../util/avatar/processAvatarData';
 import { getFeatureFlag } from './types/releasedFeaturesReduxTypes';
+import {
+  SessionProfileResetAvatarGroupCommunity,
+  SessionProfileSetAvatarDownloadedAny,
+} from '../../models/profile';
 
 export type GroupState = {
   infos: Record<GroupPubkeyType, GroupInfoGet>;
@@ -1038,14 +1042,16 @@ async function handleAvatarChangeFromUI({
       })
     : undefined;
 
-  await convo.setSessionProfile({
+  const profile = new SessionProfileSetAvatarDownloadedAny({
+    convo,
     displayName: null, // null so we don't overwrite it
-    type: 'setAvatarDownloadedGroup',
     profileKey,
     avatarPath: upgradedMainAvatar.path,
     fallbackAvatarPath: upgradedFallbackAvatar?.path || upgradedMainAvatar.path,
     avatarPointer: fileUrl,
   });
+  await profile.applyChangesIfNeeded();
+
   infos.profilePicture = { url: fileUrl, key: profileKey };
   await MetaGroupWrapperActions.infoSet(groupPk, infos);
   const createAtNetworkTimestamp = NetworkTime.now();
@@ -1143,10 +1149,11 @@ async function handleClearAvatarFromUI({ groupPk }: WithGroupPubkey) {
   }
 
   await checkWeAreAdminOrThrow(groupPk, 'handleAvatarChangeFromUI');
-  await convo.setSessionProfile({
-    type: 'resetAvatarGroup',
+  const profile = new SessionProfileResetAvatarGroupCommunity({
+    convo,
     displayName: null,
   });
+  await profile.applyChangesIfNeeded();
 
   const createAtNetworkTimestamp = NetworkTime.now();
   // we want to add an update message even if the change was done remotely

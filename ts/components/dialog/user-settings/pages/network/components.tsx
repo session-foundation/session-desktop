@@ -21,8 +21,8 @@ export const SessionNetworkButton = styled(SessionButton)<SessionButtonProps>`
 `;
 
 export const SectionHeading = styled.h3<{
-  margin?: string;
-  textAlignment?: 'start' | 'center' | 'end';
+  $margin?: string;
+  $textAlignment?: 'start' | 'center' | 'end';
 }>`
   direction: 'auto';
   color: var(--text-secondary-color);
@@ -32,13 +32,13 @@ export const SectionHeading = styled.h3<{
   line-height: var(--font-line-height);
   width: 100%;
   padding: 0;
-  margin: ${props => props.margin ?? '0'};
-  text-align: ${props => props.textAlignment ?? 'start'};
+  margin: ${props => props.$margin ?? '0'};
+  text-align: ${props => props.$textAlignment ?? 'start'};
 `;
 
 export const SessionNetworkHeading = styled.h4<{
   color?: string;
-  textAlignment?: 'start' | 'center' | 'end';
+  $textAlignment?: 'start' | 'center' | 'end';
   width?: string;
 }>`
   direction: 'auto';
@@ -49,16 +49,16 @@ export const SessionNetworkHeading = styled.h4<{
   padding: 0;
   margin: 0;
 
-  text-align: ${props => props.textAlignment ?? 'start'};
+  text-align: ${props => props.$textAlignment ?? 'start'};
   ${props => props.color && `color: ${props.color};`}
   ${props => props.width && `width: ${props.width};`}
 `;
 
 type SessionNetworkParagraphProps = {
   children: ReactNode;
-  interactive?: boolean;
+  $interactive?: boolean;
   onClick?: () => void;
-  textAlignment?: 'start' | 'center' | 'end';
+  $textAlignment?: 'start' | 'center' | 'end';
   width?: string;
   color?: string;
 };
@@ -74,21 +74,22 @@ const StyledSessionNetworkParagraph = styled.p<SessionNetworkParagraphProps>`
 
   /* NOTE we want to bold Learn CTA */
   ${props =>
-    props.interactive &&
+    props.$interactive &&
     'cursor: pointer; div span { font-weight: 700; span[role="img"] { font-weight: unset; } }'}
   ${props => props.width && `width: ${props.width};`}
-  text-align: ${props => props.textAlignment ?? 'start'};
+  text-align: ${props => props.$textAlignment ?? 'start'};
   ${props => props.color && `color: ${props.color};`}
 `;
 
 export const SessionNetworkParagraph = (props: SessionNetworkParagraphProps) => {
-  return <StyledSessionNetworkParagraph {...props} role={props.interactive ? 'link' : undefined} />;
+  return (
+    <StyledSessionNetworkParagraph {...props} role={props.$interactive ? 'link' : undefined} />
+  );
 };
 
 export const ExtraSmallText = styled.p<{
   color?: string;
-  margin?: string;
-  textAlignment?: 'start' | 'center' | 'end';
+  $textAlignment?: 'start' | 'center' | 'end';
 }>`
   direction: 'auto';
   font-family: var(--font-default);
@@ -97,16 +98,16 @@ export const ExtraSmallText = styled.p<{
   line-height: var(--font-line-height);
   width: 100%;
   padding: 0;
-  margin: ${props => props.margin ?? '0'};
-  text-align: ${props => props.textAlignment ?? 'start'};
+  margin: 0;
+  text-align: ${props => props.$textAlignment ?? 'start'};
   ${props => props.color && `color: ${props.color};`}
 `;
 
-export const Block = styled(Flex)<{ backgroundColor?: string; borderColor?: string }>`
+export const Block = styled(Flex)<{ $backgroundColor?: string; $borderColor?: string }>`
   position: relative;
-  ${props => props.backgroundColor && `background-color: ${props.backgroundColor};`};
+  ${props => props.$backgroundColor && `background-color: ${props.$backgroundColor};`};
   border-radius: 8px;
-  border: 1px solid ${props => props.borderColor ?? 'var(--border-color)'};
+  border: 1px solid ${props => props.$borderColor ?? 'var(--border-color)'};
   font-size: var(--font-display-size-lg);
   line-height: var(--font-line-height);
 `;
@@ -173,16 +174,16 @@ const GradientPrimary = styled(Gradient)<GradientProps & { color: string }>`
 type GradientContainerProps = {
   height?: string;
   width?: string;
-  paddingInline?: string;
-  paddingBlock?: string;
+  $paddingInline?: string;
+  $paddingBlock?: string;
 };
 
 const GradientContainer = styled.div<GradientContainerProps>`
   position: relative;
   ${props => props.height && `height: ${props.height};`}
   ${props => props.width && `width: ${props.width};`}
-  ${props => props.paddingInline && `padding-inline: ${props.paddingInline};`}
-  ${props => props.paddingBlock && `padding-block: ${props.paddingBlock};`}
+  ${props => props.$paddingInline && `padding-inline: ${props.$paddingInline};`}
+  ${props => props.$paddingBlock && `padding-block: ${props.$paddingBlock};`}
 `;
 
 export const BackgroundGradientContainer = ({
@@ -190,8 +191,8 @@ export const BackgroundGradientContainer = ({
   noGradient,
   height,
   width,
-  paddingInline,
-  paddingBlock,
+  $paddingInline: paddingInline,
+  $paddingBlock: paddingBlock,
 }: GradientContainerProps & {
   children: ReactNode;
   noGradient?: boolean;
@@ -202,8 +203,8 @@ export const BackgroundGradientContainer = ({
     <GradientContainer
       height={height}
       width={width}
-      paddingInline={paddingInline}
-      paddingBlock={paddingBlock}
+      $paddingInline={paddingInline}
+      $paddingBlock={paddingBlock}
     >
       {!noGradient ? (
         <>

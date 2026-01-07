@@ -1,8 +1,8 @@
 import { useCallback } from 'react';
-import { useDispatch } from 'react-redux';
 import useInterval from 'react-use/lib/useInterval';
 import useMount from 'react-use/lib/useMount';
 import styled from 'styled-components';
+import { getAppDispatch } from '../../../../state/dispatch';
 import { useIsDetailMessageView } from '../../../../contexts/isDetailViewContext';
 import { useMessageExpirationPropsById } from '../../../../hooks/useParamSelector';
 import { MessageModelType } from '../../../../models/messageType';
@@ -23,7 +23,7 @@ function useIsExpired(
 ) {
   const { convoId, messageId, expirationDurationMs, expirationTimestamp, isExpired } = props;
 
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   const checkExpired = useCallback(async () => {
     const now = Date.now();
@@ -65,11 +65,11 @@ function useIsExpired(
 }
 
 const StyledReadableMessage = styled(ReadableMessage)<{
-  isIncoming: boolean;
+  $isIncoming: boolean;
 }>`
   display: flex;
-  justify-content: flex-end; // ${props => (props.isIncoming ? 'flex-start' : 'flex-end')};
-  align-items: ${props => (props.isIncoming ? 'flex-start' : 'flex-end')};
+  justify-content: flex-end; // ${props => (props.$isIncoming ? 'flex-start' : 'flex-end')};
+  align-items: ${props => (props.$isIncoming ? 'flex-start' : 'flex-end')};
   width: 100%;
   flex-direction: column;
 `;
@@ -99,9 +99,13 @@ function ExpireTimerControlMessage({
   );
 }
 
+// NOTE: [react-compiler] this convinces the compiler the hook is static
+const useMessageExpirationPropsByIdInternal = useMessageExpirationPropsById;
+const useIsDetailMessageViewInternal = useIsDetailMessageView;
+
 export const ExpirableReadableMessage = (props: ExpirableReadableMessageProps) => {
-  const selected = useMessageExpirationPropsById(props.messageId);
-  const isDetailView = useIsDetailMessageView();
+  const selected = useMessageExpirationPropsByIdInternal(props.messageId);
+  const isDetailView = useIsDetailMessageViewInternal();
 
   const { isControlMessage, onClick, onDoubleClickCapture, role, dataTestId } = props;
 
@@ -134,7 +138,7 @@ export const ExpirableReadableMessage = (props: ExpirableReadableMessageProps) =
     <StyledReadableMessage
       messageId={messageId}
       isUnread={!!isUnread}
-      isIncoming={isIncoming}
+      $isIncoming={isIncoming}
       onClick={onClick}
       onDoubleClickCapture={onDoubleClickCapture}
       role={role}

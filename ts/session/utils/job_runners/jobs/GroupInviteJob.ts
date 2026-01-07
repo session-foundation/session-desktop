@@ -246,7 +246,7 @@ class GroupInviteJob extends PersistedJob<GroupInvitePersistedData> {
 
       const controller = new AbortController();
 
-      const rawMessage = await MessageUtils.toRawMessage(
+      const rawMessage = MessageUtils.toRawMessage(
         PubKey.cast(member),
         inviteDetails,
         SnodeNamespaces.Default

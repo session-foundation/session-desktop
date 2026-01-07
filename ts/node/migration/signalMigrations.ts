@@ -660,8 +660,33 @@ function getSQLCipherVersion(db: BetterSqlite3.Database) {
   return db.pragma('cipher_version', { simple: true });
 }
 
+/**
+ * This function is used to check if the database is in a good state as `cipher_integrity_check` can be quite slow on large databases.
+ */
+function performLightQuery(db: BetterSqlite3.Database) {
+  let passed = false;
+  try {
+    const rows = db.prepare('SELECT count(*) FROM sqlite_master').all();
+
+    passed = rows.length !== 0;
+  } catch (e) {
+    console.error('performLightQuery error', e);
+  }
+  return passed;
+}
+
+/**
+ * Run an integrity check on the database, and return the result.
+ * Note: the sql cipher integrity check will only be run if a simple query cannot be run on the database first.
+ */
 export function getSQLCipherIntegrityCheck(db: BetterSqlite3.Database) {
+  const lightQueryPassed = performLightQuery(db);
+  if (lightQueryPassed) {
+    return undefined;
+  }
+  const start = Date.now();
   const rows = db.pragma('cipher_integrity_check');
+  console.info(`cipher_integrity_check done in ${Date.now() - start}ms`);
   if (rows.length === 0) {
     return undefined;
   }

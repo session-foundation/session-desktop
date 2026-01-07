@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useDispatch } from 'react-redux';
 import useKey from 'react-use/lib/useKey';
+import { getAppDispatch } from '../../state/dispatch';
 import { updateQuitModal, type QuitModalProps } from '../../state/onboarding/ducks/modals';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import {
@@ -12,7 +12,7 @@ import { ModalDescription } from './shared/ModalDescriptionContainer';
 import { tr } from '../../localization/localeTools';
 
 export const QuitModal = (props: QuitModalProps) => {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const { onClickOk, onClickCancel, i18nMessage } = props;
   const title = tr('warning');
 

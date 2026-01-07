@@ -1,4 +1,4 @@
-import { useCurrentUserHasPro, useUserHasPro } from '../../../hooks/useHasPro';
+import { useCurrentUserHasPro, useShowProBadgeFor } from '../../../hooks/useHasPro';
 import {
   useIsPublic,
   useIsClosedGroup,
@@ -29,13 +29,13 @@ function useOnTitleClickCb(conversationId: string, editable: boolean) {
 function ProBadge({ conversationId }: WithConvoId) {
   const weArePro = useCurrentUserHasPro();
 
-  const userHasPro = useUserHasPro(conversationId);
+  const showProBadgeForUser = useShowProBadgeFor(conversationId);
   const isMe = useIsMe(conversationId);
   const isGroupV2 = useIsGroupV2(conversationId);
 
   const onProClickCb = useProBadgeOnClickCb({
     context: 'conversation-title-dialog',
-    args: { userHasPro, currentUserHasPro: weArePro, isMe, isGroupV2 },
+    args: { userHasPro: showProBadgeForUser, currentUserHasPro: weArePro, isMe, isGroupV2 },
   });
 
   if (!onProClickCb.show) {
@@ -49,16 +49,29 @@ function ProBadge({ conversationId }: WithConvoId) {
   return <ProIconButton {...sharedProps} onClick={onProClickCb.cb} />;
 }
 
+// NOTE: [react-compiler] this has to live here for the hook to be identified as static
+function useConversationDetailsInternal(conversationId?: string) {
+  const nicknameOrDisplayName = useConversationUsernameWithFallback(true, conversationId);
+  const isCommunity = useIsPublic(conversationId);
+  const isClosedGroup = useIsClosedGroup(conversationId);
+  const isMe = useIsMe(conversationId);
+
+  return {
+    nicknameOrDisplayName,
+    isCommunity,
+    isClosedGroup,
+    isMe,
+  };
+}
+
 export const ConversationTitleDialog = ({
   conversationId,
   editable,
 }: WithConvoId & {
   editable: boolean;
 }) => {
-  const nicknameOrDisplayName = useConversationUsernameWithFallback(true, conversationId);
-  const isCommunity = useIsPublic(conversationId);
-  const isClosedGroup = useIsClosedGroup(conversationId);
-  const isMe = useIsMe(conversationId);
+  const { nicknameOrDisplayName, isCommunity, isClosedGroup, isMe } =
+    useConversationDetailsInternal(conversationId);
 
   const onClickCb = useOnTitleClickCb(conversationId, editable);
 

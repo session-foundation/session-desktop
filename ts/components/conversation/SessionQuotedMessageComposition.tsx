@@ -1,6 +1,7 @@
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import useKey from 'react-use/lib/useKey';
 import styled from 'styled-components';
+import { getAppDispatch } from '../../state/dispatch';
 
 import { quoteMessage } from '../../state/ducks/conversations';
 import { getQuotedMessage } from '../../state/selectors/conversations';
@@ -24,8 +25,8 @@ const QuotedMessageComposition = styled(Flex)`
   border-top: 1px solid var(--border-color);
 `;
 
-const QuotedMessageCompositionReply = styled(Flex)<{ hasAttachments: boolean }>`
-  ${props => !props.hasAttachments && 'border-left: 3px solid var(--primary-color);'}
+const QuotedMessageCompositionReply = styled(Flex)<{ $hasAttachments: boolean }>`
+  ${props => !props.$hasAttachments && 'border-left: 3px solid var(--primary-color);'}
 `;
 
 const Subtle = styled.div`
@@ -67,7 +68,7 @@ function checkHasAttachments(attachments: Array<any> | undefined) {
 }
 
 export const SessionQuotedMessageComposition = () => {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const quotedMessageProps = useSelector(getQuotedMessage);
   const conversationId = useSelectedConversationKey();
 
@@ -121,13 +122,13 @@ export const SessionQuotedMessageComposition = () => {
       $alignItems="center"
       width={'100%'}
       $flexGrow={1}
-      padding={'var(--margins-md)'}
+      $padding={'var(--margins-md)'}
     >
       <QuotedMessageCompositionReply
         $container={true}
         $justifyContent="flex-start"
         $alignItems={'center'}
-        hasAttachments={hasAttachments}
+        $hasAttachments={hasAttachments}
       >
         {hasAttachments && (
           <StyledImage>

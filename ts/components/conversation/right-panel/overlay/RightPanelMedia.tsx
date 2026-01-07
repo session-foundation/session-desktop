@@ -1,7 +1,7 @@
 import { compact, flatten, isEqual } from 'lodash';
 import { useEffect, useState } from 'react';
-import { useDispatch } from 'react-redux';
 import useInterval from 'react-use/lib/useInterval';
+import { getAppDispatch } from '../../../../state/dispatch';
 
 import { Data } from '../../../../data/data';
 
@@ -95,7 +95,7 @@ async function getMediaGalleryProps(conversationId: string): Promise<{
 export const RightPanelMedia = () => {
   const [documents, setDocuments] = useState<Array<MediaItemType>>([]);
   const [media, setMedia] = useState<Array<MediaItemType>>([]);
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   const selectedConvoKey = useSelectedConversationKey();
   const isShowing = useIsRightPanelShowing();

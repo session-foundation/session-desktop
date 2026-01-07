@@ -11,7 +11,7 @@ import { MessageBody } from '../MessageBody';
 import { QuoteProps } from './Quote';
 import { tr } from '../../../../../localization/localeTools';
 
-const StyledQuoteText = styled.div<{ isIncoming: boolean }>`
+const StyledQuoteText = styled.div<{ $isIncoming: boolean }>`
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 1;
@@ -27,12 +27,12 @@ const StyledQuoteText = styled.div<{ isIncoming: boolean }>`
   white-space: pre-wrap;
 
   color: ${props =>
-    props.isIncoming
+    props.$isIncoming
       ? 'var(--message-bubbles-received-text-color)'
       : 'var(--message-bubbles-sent-text-color)'};
   a {
     color: ${props =>
-      props.isIncoming
+      props.$isIncoming
         ? 'var(--color-received-message-text)'
         : 'var(--message-bubbles-sent-text-color)'};
   }
@@ -78,7 +78,7 @@ export const QuoteText = (
   }
 
   return (
-    <StyledQuoteText isIncoming={isIncoming} dir="auto">
+    <StyledQuoteText $isIncoming={isIncoming} dir="auto">
       <MessageBody
         text={text || tr('messageErrorOriginal')}
         disableRichContent={true}

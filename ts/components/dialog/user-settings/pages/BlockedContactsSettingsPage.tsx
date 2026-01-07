@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import useUpdate from 'react-use/lib/useUpdate';
 import styled from 'styled-components';
-import { useDispatch } from 'react-redux';
+import { getAppDispatch } from '../../../../state/dispatch';
 
 import {
   updateBlockOrUnblockModal,
@@ -43,7 +43,7 @@ export function BlockedContactsSettingsPage(modalState: UserSettingsModalState) 
   const backAction = useUserSettingsBackAction(modalState);
   const closeAction = useUserSettingsCloseAction(modalState);
   const title = useUserSettingsTitle(modalState);
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const [selectedIds, setSelectedIds] = useState<Array<string>>([]);
 
   async function unBlockThoseUsers() {

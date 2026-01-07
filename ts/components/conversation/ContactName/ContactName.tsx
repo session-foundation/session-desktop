@@ -14,7 +14,7 @@ import { tr } from '../../../localization/localeTools';
 import { isUsAnySogsFromCache } from '../../../session/apis/open_group_api/sogsv3/knownBlindedkeys';
 import type { ContactNameContext } from './ContactNameContext';
 import { useProBadgeOnClickCb } from '../../menuAndSettingsHooks/useProBadgeOnClickCb';
-import { useCurrentUserHasPro, useUserHasPro } from '../../../hooks/useHasPro';
+import { useCurrentUserHasPro, useShowProBadgeFor } from '../../../hooks/useHasPro';
 import { ProIconButton } from '../../buttons/ProButton';
 import { useMessageIdFromContext } from '../../../contexts/MessageIdContext';
 import { useMessageDirection } from '../../../state/selectors';
@@ -255,7 +255,7 @@ export const ContactName = ({
 
   const displayedName = shouldShowShortenPkAsName ? shortPubkey : displayName;
 
-  const userHasPro = useUserHasPro(pubkey);
+  const userHasPro = useShowProBadgeFor(pubkey);
 
   const showConversationSettingsCb = useShowUserDetailsCbFromConversation(
     pubkey,

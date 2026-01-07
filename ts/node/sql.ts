@@ -87,13 +87,50 @@ import {
 import { OpenGroupV2Room } from '../data/types';
 import { tr } from '../localization/localeTools';
 import { getFileCreationTimestampMs } from './fs_utility';
+import { isDebugMode } from '../shared/env_vars';
+import { DBVacuumManager } from './dbVacuumManager';
 
 // eslint:disable: function-name non-literal-fs-path
 
 const MAX_PUBKEYS_MEMBERS = 300;
 
+function lastShutdownWasGraceful(db: BetterSqlite3.Database) {
+  const parsed = getItemById(SettingsKey.lastShutdownWasGraceful, db);
+  if (!parsed) {
+    return false;
+  }
+  if (isDebugMode()) {
+    console.info(`lastShutdownWasGraceful: ${parsed?.value}`);
+  }
+  if (parsed?.value) {
+    return true;
+  }
+  return false;
+}
+
+function setGracefulLastShutdown(db: BetterSqlite3.Database, graceful: boolean) {
+  if (isDebugMode()) {
+    console.info(`setGracefulLastShutdown with ${graceful}`);
+  }
+  createOrUpdateItem({ id: SettingsKey.lastShutdownWasGraceful, value: graceful }, db);
+}
+
+/**
+ * On start, we check if the last shutdown was graceful.
+ * If it was, we don't run the quick check pragma.
+ * If it wasn't graceful (i.e. a crash happened and the flag couldn't be reset), we run the quick check pragma.
+ */
 function getSQLIntegrityCheck(db: BetterSqlite3.Database) {
+  if (lastShutdownWasGraceful(db)) {
+    console.info(`last shutdown was graceful, not running quick_check`);
+
+    return undefined;
+  }
+  const start = Date.now();
+  console.info(`last shutdown was not graceful, running quick_check...`);
+
   const checkResult = db.pragma('quick_check', { simple: true });
+  console.info(`quick_check done in ${Date.now() - start}ms`);
   if (checkResult !== 'ok') {
     return checkResult;
   }
@@ -116,17 +153,8 @@ function setSQLPassword(password: string) {
   assertGlobalInstance().pragma(`rekey = ${value}`);
 }
 
-function vacuumDatabase(db: BetterSqlite3.Database) {
-  if (!db) {
-    throw new Error('vacuum: db is not initialized');
-  }
-  const start = Date.now();
-  console.info('Vacuuming DB. This might take a while.');
-  db.exec('VACUUM;');
-  console.info(`Vacuuming DB Finished in ${Date.now() - start}ms.`);
-}
-
 let databaseFilePath: string | undefined;
+let dbVacuumManager: DBVacuumManager | undefined;
 
 function _initializePaths(configDir: string) {
   const dbDir = path.join(configDir, 'sql');
@@ -192,6 +220,9 @@ async function initializeSql({
 
     // At this point we can allow general access to the database
     initDbInstanceWith(db);
+    // Now that we've did our checks, mark the DB last shutdown as being not graceful.
+    // When we do exit the app gracefully, this flag will be reset to true.
+    setGracefulLastShutdown(db, false);
 
     console.info('total message count before cleaning: ', getMessageCount());
     console.info('total conversation count before cleaning: ', getConversationCount());
@@ -203,9 +234,14 @@ async function initializeSql({
 
     console.info('total message count after cleaning: ', getMessageCount());
     console.info('total conversation count after cleaning: ', getConversationCount());
-    // Clear any already deleted db entries on each app start.
-    vacuumDatabase(db);
+    dbVacuumManager = new DBVacuumManager(db);
   } catch (error) {
+    try {
+      dbVacuumManager?.cleanup();
+      dbVacuumManager = undefined;
+    } catch (e) {
+      // nothing to do
+    }
     console.error('error', error);
     if (passwordAttempt) {
       throw error;
@@ -565,11 +601,6 @@ function fetchConvoMemoryDetails(convoId: string): SaveConversationReturn {
   const unreadCount = getUnreadCountByConversation(convoId);
   const lastReadTimestampMessageSentTimestamp = getLastMessageReadInConversation(convoId);
 
-  // TODOLATER it would be nice to be able to remove the lastMessage and lastMessageStatus from the conversation table, and just return it when saving the conversation
-  // and saving it in memory only.
-  // But we'd need to update a bunch of things as we do some logic before setting the lastUpdate text and status mostly in `getMessagePropStatus` and `getNotificationText()`
-  // const lastMessages = getLastMessagesByConversation(convoId, 1) as Array:Record<string, any>>;
-
   return {
     mentionedUs: hasMentionedUsUnread,
     unreadCount,
@@ -616,7 +647,7 @@ export function getIdentityKeys(db: BetterSqlite3.Database) {
 
     const ed25519PrivateKeyUintArray = parsedIdentityKey?.value?.ed25519KeyPair?.privateKey;
 
-    // TODOLATER migrate the ed25519KeyPair for all the users already logged in to a base64 representation
+    // TODO migrate the ed25519KeyPair for all the users already logged in to a base64 representation
     const privateEd25519 = new Uint8Array(Object.values(ed25519PrivateKeyUintArray));
 
     if (!privateEd25519 || isEmpty(privateEd25519)) {
@@ -1751,7 +1782,6 @@ function getFirstUnreadMessageWithMention(
   }
   const likeMatch = `%@${ourPkInThatConversation}%`;
 
-  // TODOLATER make this use the fts search table rather than this one?
   const rows = assertGlobalInstanceOrInstance(instance)
     .prepare(
       `
@@ -2389,19 +2419,6 @@ function cleanUpUnusedNodeForKeyEntriesOnStart() {
   }
 }
 
-function cleanUpMessagesJson() {
-  console.info('cleanUpMessagesJson ');
-  const start = Date.now();
-  assertGlobalInstance().transaction(() => {
-    assertGlobalInstance().exec(`
-      UPDATE ${MESSAGES_TABLE} SET
-      json = json_remove(json, '$.schemaVersion', '$.recipients', '$.decrypted_at', '$.sourceDevice')
-    `);
-  })();
-
-  console.info(`cleanUpMessagesJson took ${Date.now() - start}ms`);
-}
-
 function cleanUpOldOpengroupsOnStart() {
   const ourNumber = getItemById(SettingsKey.numberId);
   if (!ourNumber || !ourNumber.value) {
@@ -2528,14 +2545,23 @@ function cleanUpOldOpengroupsOnStart() {
         } completely inactive convos done in ${Date.now() - start}ms`
       );
     }
-
-    cleanUpMessagesJson();
   })();
 }
 
 export type SqlNodeType = typeof sqlNode;
 
 export function close() {
+  try {
+    setGracefulLastShutdown(assertGlobalInstance(), true);
+  } catch (e) {
+    // console.info('setGracefulLastShutdown failed', e.message);
+  }
+  try {
+    dbVacuumManager?.cleanup();
+    dbVacuumManager = undefined;
+  } catch (e) {
+    // nothing to do
+  }
   closeDbInstance();
 }
 

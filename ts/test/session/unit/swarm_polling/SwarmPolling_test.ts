@@ -4,7 +4,6 @@ import Sinon, * as sinon from 'sinon';
 
 import chaiAsPromised from 'chai-as-promised';
 import { getSwarmPollingInstance } from '../../../../session/apis/snode_api';
-import { resetHardForkCachedValues } from '../../../../session/apis/snode_api/hfHandling';
 import { SnodeAPIRetrieve } from '../../../../session/apis/snode_api/retrieveRequest';
 import { SwarmPolling } from '../../../../session/apis/snode_api/swarmPolling';
 import { SWARM_POLLING_TIMEOUT } from '../../../../session/constants';
@@ -65,7 +64,6 @@ describe('SwarmPolling', () => {
     Sinon.restore();
     ConvoHub.use().reset();
     clock.restore();
-    resetHardForkCachedValues();
   });
 
   describe('getPollingTimeout', () => {

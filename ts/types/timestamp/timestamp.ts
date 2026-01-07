@@ -77,4 +77,46 @@ export class Timestamp {
     }
     return Math.floor(this.value / 1000);
   }
+
+  isBefore(other: Timestamp): boolean {
+    return this.ms() < other.ms();
+  }
+
+  isAfter(other: Timestamp): boolean {
+    return this.ms() > other.ms();
+  }
+
+  isEqual(other: Timestamp): boolean {
+    return this.ms() === other.ms();
+  }
+
+  isBeforeMs({ ms }: { ms: number }): boolean {
+    const other = new Timestamp({ value: ms, expectedUnit: 'ms' });
+    return this.isBefore(other);
+  }
+
+  isAfterMs({ ms }: { ms: number }): boolean {
+    const other = new Timestamp({ value: ms, expectedUnit: 'ms' });
+    return this.isAfter(other);
+  }
+
+  isEqualMs({ ms }: { ms: number }): boolean {
+    const other = new Timestamp({ value: ms, expectedUnit: 'ms' });
+    return this.isEqual(other);
+  }
+
+  isBeforeSeconds({ seconds }: { seconds: number }): boolean {
+    const other = new Timestamp({ value: seconds, expectedUnit: 'seconds' });
+    return this.isBefore(other);
+  }
+
+  isAfterSeconds({ seconds }: { seconds: number }): boolean {
+    const other = new Timestamp({ value: seconds, expectedUnit: 'seconds' });
+    return this.isAfter(other);
+  }
+
+  isEqualSeconds({ seconds }: { seconds: number }): boolean {
+    const other = new Timestamp({ value: seconds, expectedUnit: 'seconds' });
+    return this.isEqual(other);
+  }
 }
