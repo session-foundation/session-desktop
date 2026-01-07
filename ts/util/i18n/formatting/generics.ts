@@ -83,7 +83,12 @@ export const formatTimeDistanceToNow = (
   });
 };
 
-type FormatNumberOptionsType = Intl.NumberFormatOptions & { locale?: CrowdinLocale };
+type CurrencyCode = 'USD';
+
+type FormatNumberOptionsType = Intl.NumberFormatOptions & {
+  locale?: CrowdinLocale;
+  currency?: CurrencyCode;
+};
 
 /**
  * Formats a number as a string using the browser's locale.

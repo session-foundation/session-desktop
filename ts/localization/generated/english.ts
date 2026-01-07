@@ -8,7 +8,7 @@
 import type { TokenSimpleNoArgs, TokenSimpleWithArgs, TokenPluralWithArgs, PluralForms } from './locales';
 
 /** English strings without dynamic arguments */
-export const enSimpleNoArgs: Record<TokenSimpleNoArgs, string> = {
+export const enSimpleNoArgs = {
   about: 'About',
   accept: 'Accept',
   accountIDCopy: 'Copy Account ID',
@@ -1021,10 +1021,10 @@ export const enSimpleNoArgs: Record<TokenSimpleNoArgs, string> = {
   yourRecoveryPassword: 'Your Recovery Password',
   zoomFactor: 'Zoom Factor',
   zoomFactorDescription: 'Adjust the size of text and visual elements.',
-} as const;
+} as const satisfies Record<TokenSimpleNoArgs, string>;
 
 /** English strings with dynamic arguments */
-export const enSimpleWithArgs: Record<TokenSimpleWithArgs, string> = {
+export const enSimpleWithArgs = {
   accountIdShare: 'Hey, I\'ve been using Session to chat with complete privacy and security. Come join me! My Account ID is<br/><br/>{account_id}<br/><br/>Download it at https://getsession.org/download',
   adminMorePromotedToAdmin: '<b>{name}</b> and <b>{count} others</b> were promoted to Admin.',
   adminPromoteDescription: 'Are you sure you want to promote <b>{name}</b> to admin? Admins cannot be removed.',
@@ -1261,10 +1261,10 @@ export const enSimpleWithArgs: Record<TokenSimpleWithArgs, string> = {
   viaPlatformWebsiteDescription: 'Change your plan using the {platform_account} you used to sign up with, via the <b><span>{platform} website</span></b> .',
   viaStoreWebsite: 'Via the {platform} website',
   viaStoreWebsiteDescription: 'Update your Pro access using the {platform_account} you used to sign up with, via the <b><span>{platform_store}</span></b> website.',
-} as const;
+} as const satisfies Record<TokenSimpleWithArgs, string>;
 
 /** English plural strings */
-export const enPlurals: Record<TokenPluralWithArgs, PluralForms> = {
+export const enPlurals = {
   addAdmin: {
     one: 'Add Admin',
     other: 'Add Admins',
@@ -1457,4 +1457,4 @@ export const enPlurals: Record<TokenPluralWithArgs, PluralForms> = {
     one: 'Sending Promotion',
     other: 'Sending Promotions',
   },
-} as const;
+} as const satisfies Record<TokenPluralWithArgs, PluralForms>;

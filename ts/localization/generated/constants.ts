@@ -2,23 +2,6 @@
 // at https://github.com/session-foundation/session-shared-scripts
 // Translations can be changed at https://getsession.org/translate
 
-/** Non-translatable string constants */
-export enum LOCALE_DEFAULTS {
-  app_name = 'Session',
-  app_pro = 'Session Pro',
-  entity_rangeproof = 'Rangeproof PTY LTD',
-  entity_stf = 'The Session Technology Foundation',
-  gif = 'GIF',
-  network_name = 'Session Network',
-  oxen_foundation = 'Oxen Foundation',
-  pro = 'Pro',
-  session_download_url = 'https://getsession.org/download',
-  session_foundation = 'Session Foundation',
-  staking_reward_pool = 'Staking Reward Pool',
-  token_name_long = 'Session Token',
-  token_name_short = 'SESH',
-  usd_name_short = 'USD',
-}
 
 /** Right-to-left locale codes */
 export const rtlLocales = ['ar', 'fa', 'he', 'ps', 'ur'];

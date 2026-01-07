@@ -14,7 +14,6 @@ import {
   type TokensSimpleAndArgs,
 } from './generated/locales';
 
-
 // NOTE: this forces a plural string to use the "1" variant
 export const PLURAL_COUNT_ONE = 1;
 
@@ -164,8 +163,8 @@ type WithToken<T extends MergedLocalizerTokens> = { token: T };
 /** The arguments for retrieving a localized message */
 export type GetMessageArgs<T extends MergedLocalizerTokens> = T extends MergedLocalizerTokens
   ? T extends MergedTokenWithArgs
-  ? WithToken<T> & ArgsFromToken<T>
-  : WithToken<T>
+    ? WithToken<T> & ArgsFromToken<T>
+    : WithToken<T>
   : never;
 
 export type TrArgs = GetMessageArgs<MergedLocalizerTokens>;
@@ -203,7 +202,7 @@ export function sanitizeArgs(
  * Formats a localized message string with arguments and returns the formatted string.
  * @param rawMessage - The raw message string to format. After using @see {@link getRawMessage} to get the raw string.
  * @param args - An optional record of substitution variables and their replacement values. This
- * is required if the string has dynamic variables. This can be optional as a strings args may be defined in @see {@link LOCALE_DEFAULTS}
+ * is required if the string has dynamic variables.
  *
  * @returns The formatted message string.
  *
@@ -509,15 +508,17 @@ export function tr<T extends MergedLocalizerTokens>(
   return builder.toString();
 }
 
+type EnglishStringNoArgs = typeof enSimpleNoArgs;
+
 export function tEnglish<T extends MergedLocalizerTokens>(
   token: T,
   ...args: ArgsFromToken<T> extends undefined ? [] : [args: ArgsFromToken<T>]
-): string {
+): T extends TokenSimpleNoArgs ? EnglishStringNoArgs[T] : string {
   const builder = new LocalizedStringBuilder<T>(token).forceEnglish();
   if (args.length) {
     builder.withArgs(args[0]);
   }
-  return builder.toString();
+  return builder.toString() as T extends TokenSimpleNoArgs ? EnglishStringNoArgs[T] : string;
 }
 
 export function tStripped<T extends MergedLocalizerTokens>(

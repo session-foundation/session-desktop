@@ -6,12 +6,11 @@ import { isMacOS } from '../OS';
 import { isAudioNotificationSupported } from '../types/Settings';
 import { isWindowFocused } from './focusListener';
 import { Storage } from './storage';
-import { LOCALE_DEFAULTS } from '../localization/generated/constants';
 import {
   isSessionFeatureFlag,
   type SessionBooleanFeatureFlagKeys,
 } from '../state/ducks/types/releasedFeaturesReduxTypes';
-import { tr } from '../localization/localeTools';
+import { tEnglish, tr } from '../localization/localeTools';
 
 function filter(text?: string) {
   return (text || '')
@@ -189,7 +188,7 @@ function getNotificationDetails(
     default:
       // default case: assume we want the most privacy so COUNT of messages only
       return {
-        title: LOCALE_DEFAULTS.app_name,
+        title: tEnglish('appName'),
         message: newMessageCountLabel,
       };
   }

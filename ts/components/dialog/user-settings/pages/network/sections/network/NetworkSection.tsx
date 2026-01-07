@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import type { CSSProperties } from 'styled-components';
 import { useMemo } from 'react';
 import { getAppDispatch } from '../../../../../../../state/dispatch';
-import { tr } from '../../../../../../../localization/localeTools';
+import { tEnglish, tr } from '../../../../../../../localization/localeTools';
 import { Flex } from '../../../../../../basic/Flex';
 import { SpacerMD, SpacerXS } from '../../../../../../basic/Text';
 import {
@@ -17,7 +17,6 @@ import {
 } from '../../components';
 import { useIsDarkTheme } from '../../../../../../../state/theme/selectors/theme';
 import { Localizer } from '../../../../../../basic/Localizer';
-import { LOCALE_DEFAULTS } from '../../../../../../../localization/generated/constants';
 import { NodeImage } from '../../NodeImage';
 import { showLinkVisitWarningDialog } from '../../../../../OpenUrlModal';
 import { useSecuringNodesCount } from './hooks/useSecuringNodesCount';
@@ -125,7 +124,7 @@ const CurrentPriceBlock = () => {
   // if we have usdPrice (and not stale), we can show it
   const currentPrice =
     usdPrice && !isFakeRefreshing && !dataIsStale
-      ? `$${formatNumber(usdPrice, { currency: LOCALE_DEFAULTS.usd_name_short, minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true })} ${tr('usdNameShort')}`
+      ? `$${formatNumber(usdPrice, { currency: tEnglish('usdNameShort'), minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true })} ${tEnglish('usdNameShort')}`
       : infoLoading || isFakeRefreshing
         ? tr('loading')
         : tr('unavailable');
@@ -212,7 +211,7 @@ const SecuredByBlock = () => {
   const formattedNumberOrFallback =
     securedByUSD && !isFakeRefreshing && !dataIsStale
       ? formatNumber(securedByUSD, {
-          currency: LOCALE_DEFAULTS.usd_name_short,
+          currency: tEnglish('usdNameShort'),
           minimumFractionDigits: 0,
           maximumFractionDigits: 0,
           useGrouping: true,

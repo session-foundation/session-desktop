@@ -19,7 +19,7 @@ import {
   useInfoFakeRefreshing,
   useInfoLoading,
 } from '../../../../../../state/selectors/networkModal';
-import { tr } from '../../../../../../localization/localeTools';
+import { tEnglish, tr } from '../../../../../../localization/localeTools';
 
 const StyledTokenSection = styled(Flex)<{ $loading: boolean }>`
   font-size: var(--font-display-size-lg);
@@ -90,7 +90,7 @@ export function StakeSection() {
   const networkMarketCapValue =
     usdMarketCap && !isFakeRefreshing && !dataIsStale
       ? `$${formatNumber(usdMarketCap, {
-          currency: tr('usdNameShort'),
+          currency: tEnglish('usdNameShort'),
           minimumFractionDigits: 0,
           maximumFractionDigits: 0,
           useGrouping: true,
