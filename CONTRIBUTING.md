@@ -42,6 +42,12 @@ files so your changes can be built and tested locally. You **must not** modify a
 changes to any files in [`ts/localization/generated/`](ts/localization/generated/) as they are generated. If your
 changes require new strings, they can be requested as part of the PR.
 
+### Python
+
+You will need a [Python](https://www.python.org) version which matches our current version so you can use node-gyp. You can check [`.tool-versions` in the `dev` branch](https://github.com/session-foundation/session-desktop/blob/dev/.tool-versions) to see what the current version is.
+
+See [node-gyp installation instructions](https://github.com/nodejs/node-gyp#installation) for setting up Python.
+
 ## Linux
 
 - Depending on your distribution, you might need to install [hunspell](https://github.com/hunspell/hunspell) and your specific locale (`hunspell-<lang>`) e.g. `hunspell-en-au`.
