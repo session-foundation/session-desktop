@@ -24,7 +24,7 @@ import { Registration } from '../util/registration';
 import { Storage, isSignInByLinking } from '../util/storage';
 import { getOppositeTheme, isThemeMismatched } from '../util/theme';
 import { getCrowdinLocale } from '../util/i18n/shared';
-import { rtlLocales } from '../localization/generated/constants';
+import { rtlLocales } from '../localization';
 import { SessionEventEmitter } from '../shared/event_emitter';
 import { doAppStartUp } from '../state/startup';
 import { getSodiumRenderer } from '../session/crypto';

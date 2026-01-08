@@ -228,11 +228,12 @@ Now, run these commands in your preferred terminal in a good directory for devel
 ```sh
 git clone https://github.com/session-foundation/session-desktop.git
 cd session-desktop
-npm install --global yarn      # (only if you don’t already have `yarn`)
-yarn install --frozen-lockfile # Install and build dependencies (this will take a while)
+git submodule update --init --recursive # Initialize and fetch submodules
+npm install --global yarn               # (only if you don’t already have `yarn`)
+yarn install --frozen-lockfile          # Install and build dependencies (this will take a while)
 yarn build
-yarn test                      # A good idea to make sure tests run first
-yarn start-prod                # Start Session!
+yarn test                               # A good idea to make sure tests run first
+yarn start-prod                         # Start Session!
 ```
 
 This will build the project and start the application in production mode.

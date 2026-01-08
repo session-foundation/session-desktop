@@ -1,8 +1,7 @@
 // this file is a weird one as it is used by both sides of electron at the same time
 
 import { i18nLog, setInitialLocale } from './shared';
-import type { CrowdinLocale } from '../../localization/generated/constants';
-import { setLocaleInUse, setLogger } from '../../localization/localeTools';
+import { type CrowdinLocale, setLocaleInUse, setLogger } from '../../localization';
 import { isUnitTest } from '../../shared/env_vars';
 
 /**
