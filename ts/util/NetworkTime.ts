@@ -16,12 +16,16 @@ function getLatestTimestampOffset() {
   return latestTimestampOffset;
 }
 
-function setLatestTimestampOffset(newOffset: number) {
+function setLatestTimestampOffset(newOffset: number, request: string) {
+  const oldTimestampOffset = latestTimestampOffset;
   latestTimestampOffset = newOffset;
   if (latestTimestampOffset === Number.MAX_SAFE_INTEGER) {
     window?.log?.info(`first timestamp offset received:  ${newOffset}ms`);
+  } else if (Math.abs(oldTimestampOffset - newOffset) > 1000) {
+    window?.log?.debug(
+      `latestTimestampOffset changed more than 1s, from ${oldTimestampOffset}ms to ${newOffset}ms on request "${request}"`
+    );
   }
-  latestTimestampOffset = newOffset;
 }
 
 function now() {
