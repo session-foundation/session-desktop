@@ -262,6 +262,18 @@ function scheduleRefresh(timestampMs: number) {
   }, delay);
 }
 
+async function fetchNewProof(rotatingPrivKeyHex: string) {
+  try {
+    const newProof = await handleNewProProof(rotatingPrivKeyHex);
+    if (newProof) {
+      return newProof.expiryMs;
+    }
+  } catch (e) {
+    window?.log?.error(e);
+  }
+  return null;
+}
+
 async function handleProProof(accessExpiryTsMs: number, autoRenewing: boolean, status: ProStatus) {
   if (status !== ProStatus.Active) {
     return;
@@ -269,37 +281,36 @@ async function handleProProof(accessExpiryTsMs: number, autoRenewing: boolean, s
 
   const proConfig = getCachedUserConfig().proConfig;
 
-  let proofExpiry: number | null = null;
+  const rotatingPrivKeyHex =
+    proConfig?.rotatingPrivKeyHex ?? (await UserUtils.getProRotatingPrivateKeyHex());
 
-  if (!proConfig || !proConfig.proProof) {
-    try {
-      const rotatingPrivKeyHex = await UserUtils.getProRotatingPrivateKeyHex();
-      const newProof = await handleNewProProof(rotatingPrivKeyHex);
-      if (newProof) {
-        proofExpiry = newProof.expiryMs;
-      }
-    } catch (e) {
-      window?.log?.error(e);
-    }
-  } else {
-    proofExpiry = proConfig.proProof.expiryMs;
-    const sixtyMinutesBeforeAccessExpiry = accessExpiryTsMs - DURATION.HOURS;
-    const sixtyMinutesBeforeProofExpiry = proConfig.proProof.expiryMs - DURATION.HOURS;
-    const now = NetworkTime.now();
-    if (
-      sixtyMinutesBeforeProofExpiry < now &&
-      now < sixtyMinutesBeforeAccessExpiry &&
-      autoRenewing
-    ) {
-      const rotatingPrivKeyHex = proConfig.rotatingPrivKeyHex;
-      const newProof = await handleNewProProof(rotatingPrivKeyHex);
-      if (newProof) {
-        proofExpiry = newProof.expiryMs;
-      }
+  const cachedProofExpiry = proConfig?.proProof.expiryMs;
+
+  // We want to fetch a new pro proof when:
+  // 1. we don't have one yet
+  // 2. we have one that has already expired
+  // 3. we have one that is expiring soon (within the next 60 minutes)
+  const now = NetworkTime.now();
+  let refreshedProofExpiry: number | null = null;
+
+  const shouldRefreshNoProProof = !proConfig || !proConfig.proProof; // case 1: we don't have a pro proof yet
+  const shouldRefreshProofExpired = proConfig && proConfig.proProof.expiryMs < now; // case 2: we have a pro proof that has expired
+  const shouldRefreshProofExpiresSoon = // case 3: we have a pro proof that is expiring soon
+    proConfig &&
+    proConfig.proProof.expiryMs < now + DURATION.HOURS && // the cached proof expires in the next 60 minutes
+    accessExpiryTsMs > now + DURATION.HOURS && // the access expiry expires in more than 60 minutes
+    autoRenewing;
+
+  if (shouldRefreshNoProProof || shouldRefreshProofExpired || shouldRefreshProofExpiresSoon) {
+    refreshedProofExpiry = await fetchNewProof(rotatingPrivKeyHex);
+    if (refreshedProofExpiry) {
+      await UserConfigWrapperActions.setProAccessExpiry(refreshedProofExpiry);
     }
   }
-  if (proofExpiry) {
-    await UserConfigWrapperActions.setProAccessExpiry(proofExpiry);
+
+  // fallback to the cached expiry if we didn't get a new one
+  if (!refreshedProofExpiry) {
+    refreshedProofExpiry = cachedProofExpiry ?? null;
   }
 
   const accessExpiryRefreshTimestamp = accessExpiryTsMs + 30 * DURATION.SECONDS;
@@ -312,16 +323,16 @@ async function handleProProof(accessExpiryTsMs: number, autoRenewing: boolean, s
   }
 
   if (
-    proofExpiry &&
-    (!scheduledProofExpiryTaskTimestamp || proofExpiry !== lastKnownProofExpiryTimestamp)
+    refreshedProofExpiry &&
+    (!scheduledProofExpiryTaskTimestamp || refreshedProofExpiry !== lastKnownProofExpiryTimestamp)
   ) {
     if (scheduledProofExpiryTaskId) {
       clearTimeout(scheduledProofExpiryTaskId);
     }
     // Random number of minutes between 10 and 60
     const minutes = Math.floor(Math.random() * 51) + 10;
-    lastKnownProofExpiryTimestamp = proofExpiry;
-    scheduledProofExpiryTaskTimestamp = proofExpiry - minutes * DURATION.MINUTES;
+    lastKnownProofExpiryTimestamp = refreshedProofExpiry;
+    scheduledProofExpiryTaskTimestamp = refreshedProofExpiry - minutes * DURATION.MINUTES;
     scheduledProofExpiryTaskId = scheduleRefresh(scheduledProofExpiryTaskTimestamp);
   }
 }
