@@ -6,7 +6,6 @@ import { cleanSearchTerm } from '../../util/cleanSearchTerm';
 
 import { UserUtils } from '../../session/utils';
 import { MessageResultProps } from '../../types/message';
-import { ReduxConversationType } from './conversations';
 import { tEnglish, tr } from '../../localization/localeTools';
 import { BlockedNumberController } from '../../util';
 
@@ -77,24 +76,46 @@ async function queryMessages(query: string): Promise<Array<MessageResultProps>> 
 
 async function queryContactsAndGroups(providedQuery: string, options: SearchOptions) {
   const { ourNumber, noteToSelf, savedMessages } = options;
-  // we don't need to use cleanSearchTerm here because the query is wrapped as a wild card and is not referenced in the SQL query directly
-  const query = providedQuery.replace(/[+-.()]*/g, '');
 
-  const searchResults: Array<ReduxConversationType> = await Data.searchConversations(query);
+  const queryRaw = providedQuery.replace(/[+-.()]*/g, '');
+  const queryLower = queryRaw.toLocaleLowerCase();
+
+  // Fetch all conversations to filter in memory using JS.
+  const allConversations = await Data.getAllConversations();
+
+  const searchResults = allConversations.filter((conversation: any) => {
+    const attrs = conversation.attributes || {};
+
+    // Check against multiple fields to ensure we find the contact hidden behind a nickname
+    const candidates = [
+      conversation.id,
+      conversation.name,
+      conversation.nickname,
+      conversation.displayName,
+      conversation.profileName,
+      attrs.displayNameInProfile,
+      attrs.name,
+      attrs.nickname,
+      attrs.profileName
+    ];
+
+    return candidates.some(candidate =>
+      candidate && typeof candidate === 'string' && candidate.toLocaleLowerCase().includes(queryLower)
+    );
+  });
 
   const filteredResults = options.excludeBlocked
-    ? searchResults.filter(c => !BlockedNumberController.isBlocked(c.id))
+    ? searchResults.filter((c: any) => !BlockedNumberController.isBlocked(c.id))
     : searchResults;
 
-  let contactsAndGroups: Array<string> = filteredResults.map(conversation => conversation.id);
+  let contactsAndGroups: Array<string> = filteredResults.map((conversation: any) => conversation.id);
 
-  const queryLowered = query.toLowerCase();
+  const queryLoweredLegacy = providedQuery.toLowerCase();
   if (
-    noteToSelf.some(str => str.includes(query) || str.includes(queryLowered)) ||
-    savedMessages.includes(query) ||
-    savedMessages.includes(queryLowered)
+    noteToSelf.some(str => str.includes(providedQuery) || str.includes(queryLoweredLegacy)) ||
+    savedMessages.includes(providedQuery) ||
+    savedMessages.includes(queryLoweredLegacy)
   ) {
-    // Ensure that we don't have duplicates in our results
     contactsAndGroups = contactsAndGroups.filter(id => id !== ourNumber);
     contactsAndGroups.unshift(ourNumber);
   }
