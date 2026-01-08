@@ -2,8 +2,7 @@ import path from 'path';
 
 import { app, type BrowserWindow, Menu, Tray } from 'electron';
 import { getAppRootPath } from './getRootPath';
-import { LOCALE_DEFAULTS } from '../localization/constants';
-import { tr } from '../localization/localeTools';
+import { tEnglish, tr } from '../localization/localeTools';
 
 let trayContextMenu = null;
 let tray: Tray | null = null;
@@ -65,7 +64,7 @@ export function createTrayIcon(getMainWindow: () => BrowserWindow | null) {
 
   tray.on('click', trayAny.toggleWindowVisibility);
 
-  tray.setToolTip(LOCALE_DEFAULTS.app_name);
+  tray.setToolTip(tEnglish('appName'));
   trayAny.updateContextMenu();
 
   return tray;

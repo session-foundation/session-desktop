@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import type { CSSProperties } from 'styled-components';
 import { useMemo } from 'react';
 import { getAppDispatch } from '../../../../../../../state/dispatch';
-import { tr } from '../../../../../../../localization/localeTools';
+import { tEnglish, tr } from '../../../../../../../localization/localeTools';
 import { Flex } from '../../../../../../basic/Flex';
 import { SpacerMD, SpacerXS } from '../../../../../../basic/Text';
 import {
@@ -17,7 +17,6 @@ import {
 } from '../../components';
 import { useIsDarkTheme } from '../../../../../../../state/theme/selectors/theme';
 import { Localizer } from '../../../../../../basic/Localizer';
-import { LOCALE_DEFAULTS } from '../../../../../../../localization/constants';
 import { NodeImage } from '../../NodeImage';
 import { showLinkVisitWarningDialog } from '../../../../../OpenUrlModal';
 import { useSecuringNodesCount } from './hooks/useSecuringNodesCount';
@@ -125,7 +124,7 @@ const CurrentPriceBlock = () => {
   // if we have usdPrice (and not stale), we can show it
   const currentPrice =
     usdPrice && !isFakeRefreshing && !dataIsStale
-      ? `$${formatNumber(usdPrice, { currency: LOCALE_DEFAULTS.usd_name_short, minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true })} ${LOCALE_DEFAULTS.usd_name_short}`
+      ? `$${formatNumber(usdPrice, { currency: tEnglish('usdNameShort'), minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true })} ${tEnglish('usdNameShort')}`
       : infoLoading || isFakeRefreshing
         ? tr('loading')
         : tr('unavailable');
@@ -170,7 +169,7 @@ const CurrentPriceBlock = () => {
           <b>{currentPrice}</b>
         </BlockPrimaryText>
         <SpacerXS />
-        <BlockSecondaryText>{LOCALE_DEFAULTS.token_name_long}</BlockSecondaryText>
+        <BlockSecondaryText>{tr('tokenNameLong')}</BlockSecondaryText>
       </Flex>
       <SessionTooltip
         content={tooltipContent}
@@ -204,7 +203,7 @@ const SecuredByBlock = () => {
 
   const securedAmountSESH =
     securedBySESH && !isFakeRefreshing && !dataIsStale
-      ? `${abbreviateNumber(securedBySESH, 0).toUpperCase()} ${LOCALE_DEFAULTS.token_name_short}`
+      ? `${abbreviateNumber(securedBySESH, 0).toUpperCase()} ${tr('tokenNameShort')}`
       : infoLoading || isFakeRefreshing
         ? tr('loading')
         : tr('unavailable');
@@ -212,13 +211,13 @@ const SecuredByBlock = () => {
   const formattedNumberOrFallback =
     securedByUSD && !isFakeRefreshing && !dataIsStale
       ? formatNumber(securedByUSD, {
-          currency: LOCALE_DEFAULTS.usd_name_short,
+          currency: tEnglish('usdNameShort'),
           minimumFractionDigits: 0,
           maximumFractionDigits: 0,
           useGrouping: true,
         })
       : '-';
-  const securedAmountUSD = `$${formattedNumberOrFallback} ${LOCALE_DEFAULTS.usd_name_short}`;
+  const securedAmountUSD = `$${formattedNumberOrFallback} ${tr('usdNameShort')}`;
 
   return (
     <Block
@@ -258,9 +257,7 @@ export function NetworkSection() {
       $justifyContent={'flex-start'}
       $alignItems={'center'}
     >
-      <SectionHeading $margin={'0 0 var(--margins-xs)'}>
-        {LOCALE_DEFAULTS.network_name}
-      </SectionHeading>
+      <SectionHeading $margin={'0 0 var(--margins-xs)'}>{tr('networkName')}</SectionHeading>
       <SessionNetworkParagraph
         $interactive={true}
         onClick={() => {

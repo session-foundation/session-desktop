@@ -1,6 +1,5 @@
 import { isString } from 'lodash';
-import { LOCALE_DEFAULTS } from '../localization/constants';
-import { tr } from '../localization/localeTools';
+import { tEnglish, tr } from '../localization/localeTools';
 
 /**
  * Adds the accelerator prefix to the label for the menu item
@@ -166,7 +165,7 @@ function updateForMac(template: any, options: { showAbout: () => void; showWindo
 
   // Add the OSX-specific Session Desktop menu to the far left
   template.unshift({
-    label: LOCALE_DEFAULTS.app_name,
+    label: tEnglish('appName'),
     submenu: [
       {
         label: tr('about'),

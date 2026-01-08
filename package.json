@@ -29,9 +29,7 @@
     "start-perf": "cross-env NODE_ENV=development NODE_APP_INSTANCE=devprod$MULTI electron --inspect-brk=9229 --enable-precise-memory-info --js-flags=\"--expose-gc --allow-natives-syntax\" .",
     "start-dev:perf": "yarn start-perf | pino-pretty",
     "build-no-compiler": "yarn build-pre && tsc && yarn build-post",
-    "build:locales": "python3 ./tools/localization/generateLocales.py --generate-types --print-problems --error-on-problems --error-old-dynamic-variables",
-    "build:locales-soft": "python3 ./tools/localization/generateLocales.py --generate-types --print-problems --print-problem-strings",
-    "build-pre": "yarn print-deps && yarn clean && yarn protobuf && yarn update-git-info && yarn sass && yarn build:locales-soft",
+    "build-pre": "yarn print-deps && yarn clean && yarn protobuf && yarn update-git-info && yarn sass",
     "build-ts": "tsc",
     "build-ts-source-maps": "tsc --sourceMap --inlineSources",
     "build-ts-source-maps:watch": "tsc --sourceMap --inlineSources --watch",
@@ -60,8 +58,8 @@
     "worker:image_processor": "webpack  --config=./image_processor.worker.config.js",
     "dedup": "npx --yes yarn-deduplicate yarn.lock",
     "prepare": "husky",
-    "print-deps": "node -v  && python3 --version",
-    "watch": "yarn clean && yarn update-git-info && concurrently -n PBJS,SASS,LOCALES,UTIL,LIBSESSION,IMAGE,TS -c yellow,green,red,blue,blue,blue,green \"yarn protobuf\" \"yarn sass --watch\" \"yarn build:locales-soft\" \"yarn worker:utils --watch\" \"yarn worker:libsession --watch\" \"yarn worker:image_processor --watch\" \"yarn build-ts-source-maps:watch\""
+    "print-deps": "node -v",
+    "watch": "yarn clean && yarn update-git-info && concurrently -n PBJS,SASS,UTIL,LIBSESSION,IMAGE,TS -c yellow,green,blue,blue,blue,green \"yarn protobuf\" \"yarn sass --watch\" \"yarn worker:utils --watch\" \"yarn worker:libsession --watch\" \"yarn worker:image_processor --watch\" \"yarn build-ts-source-maps:watch\""
   },
   "dependencies": {
     "@emoji-mart/data": "^1.2.1",
@@ -311,7 +309,6 @@
       "background.html",
       "about.html",
       "password.html",
-      "_locales/**",
       "mnemonic_languages/**",
       "protos/*",
       "js/**",
