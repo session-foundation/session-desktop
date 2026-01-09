@@ -88,7 +88,6 @@ async function saveProxySettings(settings: ProxySettings): Promise<boolean> {
 
   if (applyResult) {
     // Surface apply errors instead of silently failing
-    console.error('apply-proxy-settings failed:', applyResult);
     ToastUtils.pushToastError('proxyTestFailed', tr('proxyTestFailedDescription'));
     return false;
   }
