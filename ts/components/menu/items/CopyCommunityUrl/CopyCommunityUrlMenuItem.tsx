@@ -1,3 +1,4 @@
+import type { JSX } from 'react';
 import { Localizer } from '../../../basic/Localizer';
 import { useShowCopyCommunityUrlCb } from '../../../menuAndSettingsHooks/useCopyCommunityUrl';
 import { ItemWithDataTestId } from '../MenuItemWithDataTestId';

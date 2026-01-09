@@ -1,5 +1,4 @@
 import { useSelector } from 'react-redux';
-import { useUnreadCount } from '../../hooks/useParamSelector';
 import { isOpenOrClosedGroup } from '../../models/conversationAttributes';
 import { ConversationTypeEnum } from '../../models/types';
 import {
@@ -13,9 +12,9 @@ import {
   getSelectedConversation,
   getSelectedMessageIds,
 } from './conversations';
-import { selectLibMembersPubkeys, useLibGroupName } from './groups';
+import { selectLibGroupName, selectLibMembersPubkeys } from './groups';
 import { getCanWrite, getSubscriberCount } from './sogsRoomInfo';
-import { getLibGroupDestroyed, getLibGroupKicked, useLibGroupDestroyed } from './userGroups';
+import { getLibGroupDestroyed, getLibGroupKicked } from './userGroups';
 import { tr } from '../../localization/localeTools';
 
 const getIsSelectedPrivate = (state: StateType): boolean => {
@@ -39,6 +38,20 @@ const getIsSelectedActive = (state: StateType): boolean => {
 
 const getIsSelectedNoteToSelf = (state: StateType): boolean => {
   return getSelectedConversation(state)?.isMe || false;
+};
+
+const getSelectedUnreadCount = (state: StateType): number => {
+  return getSelectedConversation(state)?.unreadCount ?? 0;
+};
+
+const getSelectedLibGroupDestroyed = (state: StateType) => {
+  const selectedConversationId = getSelectedConversation(state)?.id;
+  return getLibGroupDestroyed(state, selectedConversationId);
+};
+
+const getSelectedGroupName = (state: StateType) => {
+  const selectedConversationId = getSelectedConversation(state)?.id;
+  return selectLibGroupName(state, selectedConversationId);
 };
 
 export const getSelectedConversationKey = (state: StateType): string | undefined => {
@@ -307,8 +320,7 @@ export function useSelectedIsActive() {
 }
 
 export function useSelectedUnreadCount() {
-  const selectedConversation = useSelectedConversationKey();
-  return useUnreadCount(selectedConversation);
+  return useSelector(getSelectedUnreadCount);
 }
 
 export function useSelectedIsNoteToSelf() {
@@ -334,8 +346,11 @@ export function useSelectedIsKickedFromGroup() {
 }
 
 export function useSelectedIsGroupDestroyed() {
-  const convoKey = useSelectedConversationKey();
-  return useLibGroupDestroyed(convoKey);
+  return useSelector(getSelectedLibGroupDestroyed);
+}
+
+export function useSelectedGroupName() {
+  return useSelector(getSelectedGroupName);
 }
 
 export function useSelectedExpireTimer(): number | undefined {
@@ -384,7 +399,7 @@ export function useSelectedNicknameOrProfileNameOrShortenedPubkey() {
   const profileName = useSelectedDisplayNameInProfile();
   const shortenedPubkey = useSelectedShortenedPubkeyOrFallback();
   const isMe = useSelectedIsNoteToSelf();
-  const libGroupName = useLibGroupName(selectedId);
+  const libGroupName = useSelectedGroupName();
   if (isMe) {
     return tr('noteToSelf');
   }

@@ -1,5 +1,5 @@
 import useUpdate from 'react-use/lib/useUpdate';
-import { useDispatch } from 'react-redux';
+import { getAppDispatch } from '../../../../state/dispatch';
 
 import { tr } from '../../../../localization/localeTools';
 import {
@@ -89,7 +89,7 @@ async function toggleLinkPreviews(isToggleOn: boolean, forceUpdate: () => void) 
 }
 
 function HasPasswordSubSection() {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   return (
     <PanelButtonGroup>
       <SettingsPanelButtonInlineBasic
@@ -116,7 +116,7 @@ function HasPasswordSubSection() {
   );
 }
 function NoPasswordSubSection() {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   return (
     <PanelButtonGroup>

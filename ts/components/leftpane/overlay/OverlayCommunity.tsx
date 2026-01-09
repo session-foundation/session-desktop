@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import { useState } from 'react';
-import { useDispatch } from 'react-redux';
 import useKey from 'react-use/lib/useKey';
+import { getAppDispatch } from '../../../state/dispatch';
 
 import { SessionJoinableRooms } from './SessionJoinableDefaultRooms';
 
@@ -22,7 +22,7 @@ import { Spacer2XL } from '../../basic/Text';
 import { StyledLeftPaneOverlay } from './OverlayMessage';
 import LIBSESSION_CONSTANTS from '../../../session/utils/libsession/libsession_constants';
 import { sectionActions } from '../../../state/ducks/section';
-import { SimpleSessionTextarea } from '../../inputs/SessionInput';
+import { SimpleSessionTextarea } from '../../inputs/SimpleSessionTextarea';
 import { tr } from '../../../localization/localeTools';
 
 async function joinOpenGroup(
@@ -44,7 +44,7 @@ async function joinOpenGroup(
 }
 
 export const OverlayCommunity = () => {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   const [groupUrl, setGroupUrl] = useState('');
   const [groupUrlError, setGroupUrlError] = useState<string | undefined>(undefined);
@@ -96,7 +96,7 @@ export const OverlayCommunity = () => {
       $flexDirection={'column'}
       $flexGrow={1}
       $alignItems={'center'}
-      padding={'var(--margins-md)'}
+      $padding={'var(--margins-md)'}
     >
       <SimpleSessionTextarea
         // not monospaced. This is a plain text input for a community url
@@ -124,7 +124,7 @@ export const OverlayCommunity = () => {
         buttonColor={SessionButtonColor.PrimaryDark}
       />
       {!loading ? <Spacer2XL /> : null}
-      <SessionSpinner loading={loading} />
+      <SessionSpinner $loading={loading} />
       <SessionJoinableRooms onJoinClick={onTryJoinRoom} alreadyJoining={loading} />
     </StyledLeftPaneOverlay>
   );

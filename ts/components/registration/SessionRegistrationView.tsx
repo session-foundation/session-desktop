@@ -74,7 +74,7 @@ export const SessionRegistrationView = () => {
               height="100%"
               $flexGrow={1}
             >
-              <Flex $container={true} margin="auto" $alignItems="center" $flexDirection="column">
+              <Flex $container={true} $margin="auto" $alignItems="center" $flexDirection="column">
                 <SessionToastContainer />
                 <ModalContainer />
                 <RegistrationStages />

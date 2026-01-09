@@ -1,5 +1,5 @@
-import { useDispatch } from 'react-redux';
-import { useIsProAvailable } from '../../hooks/useIsProAvailable';
+import { getAppDispatch } from '../../state/dispatch';
+import { getIsProAvailableMemo } from '../../hooks/useIsProAvailable';
 import { ProMessageFeature } from '../../models/proMessageFeature';
 import { SessionCTAState, updateSessionCTA } from '../../state/ducks/modalDialog';
 import { assertUnreachable } from '../../types/sqlSharedTypes';
@@ -121,9 +121,9 @@ function proFeatureToVariant(proFeature: ProMessageFeature): CTAVariant {
 export function useProBadgeOnClickCb(
   opts: ProBadgeContext
 ): ShowTagWithCb | ShowTagNoCb | DoNotShowTag {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const handleShowProInfoModal = useShowSessionCTACbWithVariant();
-  const isProAvailable = useIsProAvailable();
+  const isProAvailable = getIsProAvailableMemo();
 
   if (!isProAvailable) {
     // if pro is globally disabled, we never show the badge.

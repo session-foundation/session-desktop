@@ -1,8 +1,8 @@
 import { shell } from 'electron';
 import { isEmpty } from 'lodash';
 import { Dispatch } from 'react';
-import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
+import { getAppDispatch } from '../../state/dispatch';
 import { MessageInteraction } from '../../interactions';
 import { OpenUrlModalState, updateOpenUrlModal } from '../../state/ducks/modalDialog';
 import {
@@ -23,7 +23,7 @@ const StyledScrollDescriptionContainer = styled.div`
 `;
 
 export function OpenUrlModal(props: OpenUrlModalState) {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   if (!props || isEmpty(props) || !props.urlToOpen) {
     return null;

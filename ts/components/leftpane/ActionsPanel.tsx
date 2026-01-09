@@ -1,13 +1,14 @@
 import { ipcRenderer } from 'electron';
 import { useState } from 'react';
 
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import useInterval from 'react-use/lib/useInterval';
 import useTimeoutFn from 'react-use/lib/useTimeoutFn';
 
 import useMount from 'react-use/lib/useMount';
 import useThrottleFn from 'react-use/lib/useThrottleFn';
 import styled from 'styled-components';
+import { getAppDispatch } from '../../state/dispatch';
 
 import {
   getOurPrimaryConversation,
@@ -37,7 +38,6 @@ import { useIsDarkTheme } from '../../state/theme/selectors/theme';
 import { switchThemeTo } from '../../themes/switchTheme';
 import { getOppositeTheme } from '../../util/theme';
 
-import { useCheckReleasedFeatures } from '../../hooks/useCheckReleasedFeatures';
 import { useDebugMode } from '../../state/selectors/debug';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { themesArray } from '../../themes/constants/colors';
@@ -47,10 +47,11 @@ import { useZoomShortcuts } from '../../hooks/useZoomingShortcut';
 import { OnionStatusLight } from '../dialog/OnionStatusPathDialog';
 import { AvatarReupload } from '../../session/utils/job_runners/jobs/AvatarReuploadJob';
 import { useDebugMenuModal } from '../../state/selectors/modal';
-import { useFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
+import { getFeatureFlagMemo } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 import { useDebugKey } from '../../hooks/useDebugKey';
 import { UpdateProRevocationList } from '../../session/utils/job_runners/jobs/UpdateProRevocationListJob';
-import { useIsProAvailable } from '../../hooks/useIsProAvailable';
+import { getIsProAvailableMemo } from '../../hooks/useIsProAvailable';
+import { SettingsKey } from '../../data/settings-key';
 
 const StyledContainerAvatar = styled.div`
   padding: var(--margins-lg);
@@ -59,7 +60,7 @@ const StyledContainerAvatar = styled.div`
 `;
 
 function handleThemeSwitch() {
-  const currentTheme = window.Events.getThemeSetting();
+  const currentTheme = window.getSettingValue(SettingsKey.settingsTheme);
   let newTheme = getOppositeTheme(currentTheme);
   if (isDebugMode()) {
     // rotate over the 4 themes
@@ -98,7 +99,7 @@ function useUpdateBadgeCount() {
  * Note: a job will only be added if it wasn't fetched recently, so there is no harm in running this every minute.
  */
 function usePeriodicFetchRevocationList() {
-  const proAvailable = useIsProAvailable();
+  const proAvailable = getIsProAvailableMemo();
   useInterval(
     () => {
       if (!proAvailable) {
@@ -119,7 +120,7 @@ function useDebugThemeSwitch() {
 }
 
 function DebugMenuModalButton() {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const debugMenuModalState = useDebugMenuModal();
 
   useDebugKey({
@@ -143,19 +144,21 @@ function DebugMenuModalButton() {
   );
 }
 
-/**
- * ActionsPanel is the far left banner (not the left pane).
- * The panel with buttons to switch between the message/contact/settings/theme views
- */
-export const ActionsPanel = () => {
-  const dispatch = useDispatch();
+// NOTE: [react-compiler] this has to live here for the hook to be identified as static
+function useActionsPanelInternal() {
   const [startCleanUpMedia, setStartCleanUpMedia] = useState(false);
   const ourPrimaryConversation = useSelector(getOurPrimaryConversation);
   const showDebugMenu = useDebugMode();
   const ourNumber = useSelector(getOurNumber);
   const isDarkTheme = useIsDarkTheme();
-  const fsTTL30sEnabled = useFeatureFlag('fsTTL30s');
-  useDebugThemeSwitch();
+
+  useFetchLatestReleaseFromFileServer();
+  // setup our own shortcuts so that it changes show in the appearance tab too
+  useZoomShortcuts();
+  useInterval(
+    DecryptedAttachmentsManager.cleanUpOldDecryptedMedias,
+    startCleanUpMedia ? cleanUpMediasInterval : null
+  );
 
   // wait for cleanUpMediasInterval and then start cleaning up medias
   // this would be way easier to just be able to not trigger a call with the setInterval
@@ -165,17 +168,27 @@ export const ActionsPanel = () => {
     return () => clearTimeout(timeout);
   });
 
+  return {
+    ourPrimaryConversation,
+    ourNumber,
+    showDebugMenu,
+    isDarkTheme,
+  };
+}
+
+/**
+ * ActionsPanel is the far left banner (not the left pane).
+ * The panel with buttons to switch between the message/contact/settings/theme views
+ */
+export const ActionsPanel = () => {
+  const dispatch = getAppDispatch();
+  const { ourPrimaryConversation, ourNumber, showDebugMenu, isDarkTheme } =
+    useActionsPanelInternal();
+
+  const fsTTL30sEnabled = getFeatureFlagMemo('fsTTL30s');
+  useDebugThemeSwitch();
   useUpdateBadgeCount();
   usePeriodicFetchRevocationList();
-  // setup our own shortcuts so that it changes show in the appearance tab too
-  useZoomShortcuts();
-
-  useInterval(
-    DecryptedAttachmentsManager.cleanUpOldDecryptedMedias,
-    startCleanUpMedia ? cleanUpMediasInterval : null
-  );
-
-  useFetchLatestReleaseFromFileServer();
 
   useInterval(() => {
     if (!ourPrimaryConversation) {
@@ -211,8 +224,6 @@ export const ActionsPanel = () => {
     },
     fsTTL30sEnabled ? DURATION.SECONDS * 1 : DURATION.DAYS * 1
   );
-
-  useCheckReleasedFeatures();
 
   if (!ourPrimaryConversation) {
     window?.log?.warn('ActionsPanel: ourPrimaryConversation is not set');

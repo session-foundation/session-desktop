@@ -1,5 +1,5 @@
-import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
+import { getAppDispatch } from '../../state/dispatch';
 import {
   removeAllStagedAttachmentsInConversation,
   removeStagedAttachmentInConversation,
@@ -54,7 +54,7 @@ const StyledAttachmentsContainer = styled.div`
 export const StagedAttachmentList = (props: Props) => {
   const { attachments, onAddAttachment, onClickAttachment } = props;
 
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const conversationKey = useSelectedConversationKey();
 
   const onRemoveAllStaged = () => {

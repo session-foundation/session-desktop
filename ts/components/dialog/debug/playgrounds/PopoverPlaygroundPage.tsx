@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { RefObject, useRef, useState } from 'react';
 import styled from 'styled-components';
 import useUpdate from 'react-use/lib/useUpdate';
 import { SessionTooltip, type TooltipProps, useTriggerPosition } from '../../../SessionTooltip';
@@ -9,12 +9,12 @@ import { SessionButton } from '../../../basic/SessionButton';
 import { SpacerXS } from '../../../basic/Text';
 import { SimpleSessionInput } from '../../../inputs/SessionInput';
 
-const StyledPopoverContainer = styled.div<{ marginTop?: number; marginBottom?: number }>`
+const StyledPopoverContainer = styled.div<{ $marginTop?: number; $marginBottom?: number }>`
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   align-self: center;
-  margin-top: ${({ marginTop }) => marginTop ?? 0}px;
-  margin-bottom: ${({ marginBottom }) => marginBottom ?? 0}px;
+  margin-top: ${({ $marginTop: marginTop }) => marginTop ?? 0}px;
+  margin-bottom: ${({ $marginBottom: marginBottom }) => marginBottom ?? 0}px;
 `;
 const StyledTrigger = styled.div`
   font-size: var(--text-size-xs);
@@ -35,16 +35,17 @@ function PopoverGrid(
   const r5 = useRef<HTMLDivElement>(null);
   const r6 = useRef<HTMLDivElement>(null);
 
-  const t1 = useTriggerPosition(r1);
-  const t2 = useTriggerPosition(r2);
-  const t3 = useTriggerPosition(r3);
-  const t4 = useTriggerPosition(r4);
-  const t5 = useTriggerPosition(r5);
-  const t6 = useTriggerPosition(r6);
+  // FIXME: remove as cast
+  const t1 = useTriggerPosition(r1 as RefObject<HTMLDivElement>);
+  const t2 = useTriggerPosition(r2 as RefObject<HTMLDivElement>);
+  const t3 = useTriggerPosition(r3 as RefObject<HTMLDivElement>);
+  const t4 = useTriggerPosition(r4 as RefObject<HTMLDivElement>);
+  const t5 = useTriggerPosition(r5 as RefObject<HTMLDivElement>);
+  const t6 = useTriggerPosition(r6 as RefObject<HTMLDivElement>);
 
   return (
     <>
-      <StyledPopoverContainer marginTop={40}>
+      <StyledPopoverContainer $marginTop={40}>
         <StyledTrigger ref={r1}>Left</StyledTrigger>
         <SessionPopoverContent
           {...props}
@@ -67,7 +68,7 @@ function PopoverGrid(
           verticalPosition="top"
         />
       </StyledPopoverContainer>
-      <StyledPopoverContainer marginBottom={40}>
+      <StyledPopoverContainer $marginBottom={40}>
         <StyledTrigger ref={r4}>Left</StyledTrigger>
         <SessionPopoverContent
           {...props}
@@ -97,7 +98,7 @@ function PopoverGrid(
 function TooltipGrid(props: Omit<TooltipProps, 'children'>) {
   return (
     <>
-      <StyledPopoverContainer marginTop={40}>
+      <StyledPopoverContainer $marginTop={40}>
         <SessionTooltip {...props} horizontalPosition="left" verticalPosition="top">
           <StyledTrigger>Left</StyledTrigger>
         </SessionTooltip>
@@ -108,7 +109,7 @@ function TooltipGrid(props: Omit<TooltipProps, 'children'>) {
           <StyledTrigger>Right</StyledTrigger>
         </SessionTooltip>
       </StyledPopoverContainer>
-      <StyledPopoverContainer marginBottom={40}>
+      <StyledPopoverContainer $marginBottom={40}>
         <SessionTooltip {...props} horizontalPosition="left" verticalPosition="bottom">
           <StyledTrigger>Left</StyledTrigger>
         </SessionTooltip>

@@ -123,6 +123,8 @@ const LOKI_SCHEMA_VERSIONS: Array<
   updateToSessionSchemaVersion48,
   updateToSessionSchemaVersion49,
   updateToSessionSchemaVersion50,
+  updateToSessionSchemaVersion51,
+  updateToSessionSchemaVersion52,
 ];
 
 function updateToSessionSchemaVersion1(currentVersion: number, db: BetterSqlite3.Database) {
@@ -2233,6 +2235,44 @@ async function updateToSessionSchemaVersion50(currentVersion: number, db: Better
           ALTER TABLE ${CONVERSATIONS_TABLE} ADD COLUMN proGenIndexHashB64 TEXT;
           ALTER TABLE ${CONVERSATIONS_TABLE} ADD COLUMN proExpiryTsMs INTEGER;
          `);
+
+    writeSessionSchemaVersion(targetVersion, db);
+  })();
+
+  console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
+}
+
+async function updateToSessionSchemaVersion51(currentVersion: number, db: BetterSqlite3.Database) {
+  const targetVersion = 51;
+  if (currentVersion >= targetVersion) {
+    return;
+  }
+  console.log(`updateToSessionSchemaVersion${targetVersion}: starting...`);
+  const start = Date.now();
+
+  // Note: no transactions here as we cannot vacuum inside a transaction
+  db.pragma(`auto_vacuum=INCREMENTAL;`);
+  console.info('Vacuuming DB (last before incremental vacuum). This might take a while.');
+  // Note: after enabling auto_vacuum incremental, we still need to do a full vacuum.
+  db.exec('VACUUM;');
+  writeSessionSchemaVersion(targetVersion, db);
+  console.info(`Vacuuming DB Finished in ${Date.now() - start}ms.`);
+  console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
+}
+
+async function updateToSessionSchemaVersion52(currentVersion: number, db: BetterSqlite3.Database) {
+  const targetVersion = 52;
+  if (currentVersion >= targetVersion) {
+    return;
+  }
+  console.log(`updateToSessionSchemaVersion${targetVersion}: starting...`);
+
+  // Note: this used to be run on app start (and take 1s on a large DB ), but we can just run it as a migration.
+  db.transaction(() => {
+    db.exec(`
+      UPDATE ${MESSAGES_TABLE} SET
+      json = json_remove(json, '$.schemaVersion', '$.recipients', '$.decrypted_at', '$.sourceDevice')
+    `);
 
     writeSessionSchemaVersion(targetVersion, db);
   })();

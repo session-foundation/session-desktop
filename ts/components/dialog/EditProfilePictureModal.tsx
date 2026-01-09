@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
-import { useDispatch } from 'react-redux';
 import type { AnyAction, Dispatch } from 'redux';
 import styled from 'styled-components';
+import { getAppDispatch } from '../../state/dispatch';
 import { ToastUtils, UserUtils } from '../../session/utils';
 import {
   userSettingsModal,
@@ -29,7 +29,7 @@ import {
   ModalBasicHeader,
   SessionWrapperModal,
 } from '../SessionWrapperModal';
-import { useIsProAvailable } from '../../hooks/useIsProAvailable';
+import { getIsProAvailableMemo } from '../../hooks/useIsProAvailable';
 import { SpacerLG, SpacerSM } from '../basic/Text';
 import { AvatarSize } from '../avatar/Avatar';
 import { ProIconButton } from '../buttons/ProButton';
@@ -51,14 +51,14 @@ const StyledAvatarContainer = styled.div`
   position: relative;
 `;
 
-const StyledCTADescription = styled.span<{ reverseDirection: boolean }>`
+const StyledCTADescription = styled.span<{ $reverseDirection: boolean }>`
   text-align: center;
   cursor: pointer;
   font-size: var(--font-size-lg);
   color: var(--text-secondary-color);
   line-height: normal;
   display: inline-flex;
-  flex-direction: ${props => (props.reverseDirection ? 'row-reverse' : 'row')};
+  flex-direction: ${props => (props.$reverseDirection ? 'row-reverse' : 'row')};
   align-items: center;
   gap: var(--margins-xs);
   padding: 3px;
@@ -134,12 +134,12 @@ const triggerRemovalProfileAvatar = async (conversationId: string) => {
 };
 
 export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureModalProps) => {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   const isMe = useIsMe(conversationId);
   const isCommunity = useIsPublic(conversationId);
   const weHavePro = useCurrentUserHasPro() && isMe;
-  const isProAvailable = useIsProAvailable();
+  const isProAvailable = getIsProAvailableMemo();
 
   const avatarPath = useAvatarPath(conversationId) || '';
 
@@ -312,7 +312,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
       $flexGap="var(--margins-sm)"
     >
       {isMe && proBadgeCb.cb ? (
-        <StyledCTADescription reverseDirection={weHavePro} onClick={proBadgeCb.cb}>
+        <StyledCTADescription $reverseDirection={weHavePro} onClick={proBadgeCb.cb}>
           {tr(
             weHavePro
               ? 'proAnimatedDisplayPictureModalDescription'
@@ -363,7 +363,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
         <>
           <SpacerSM />
           {isMe && !isProcessing ? <Localizer token="updating" /> : null}
-          <SessionSpinner loading={loading} height="30px" />
+          <SessionSpinner $loading={loading} $height="30px" />
         </>
       ) : (
         <SpacerLG />

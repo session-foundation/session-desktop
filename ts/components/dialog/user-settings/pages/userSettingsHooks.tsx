@@ -1,4 +1,4 @@
-import { useDispatch } from 'react-redux';
+import { getAppDispatch } from '../../../../state/dispatch';
 import { tr } from '../../../../localization/localeTools';
 import {
   userSettingsModal,
@@ -6,7 +6,7 @@ import {
   type UserSettingsPage,
 } from '../../../../state/ducks/modalDialog';
 import { assertUnreachable } from '../../../../types/sqlSharedTypes';
-import { handleTriggeredProCTAs } from '../../SessionCTA';
+import { handleTriggeredCTAs } from '../../SessionCTA';
 import { getFeatureFlag } from '../../../../state/ducks/types/releasedFeaturesReduxTypes';
 
 export function useUserSettingsTitle(page: UserSettingsModalState | undefined) {
@@ -58,7 +58,7 @@ export function useUserSettingsTitle(page: UserSettingsModalState | undefined) {
 }
 
 export function useUserSettingsCloseAction(props: UserSettingsModalState) {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   if (!props?.userSettingsPage) {
     return null;
   }
@@ -85,7 +85,7 @@ export function useUserSettingsCloseAction(props: UserSettingsModalState) {
       return () => {
         dispatch(userSettingsModal(null));
         if (getFeatureFlag('proAvailable')) {
-          void handleTriggeredProCTAs(dispatch);
+          void handleTriggeredCTAs(dispatch, false);
         }
         props.afterCloseAction?.();
       };
@@ -97,7 +97,7 @@ export function useUserSettingsCloseAction(props: UserSettingsModalState) {
 }
 
 export function useUserSettingsBackAction(modalState: UserSettingsModalState) {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   if (modalState?.overrideBackAction) {
     return modalState.overrideBackAction;

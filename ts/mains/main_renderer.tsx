@@ -1,12 +1,9 @@
 import { toPairs } from 'lodash';
 import { createRoot } from 'react-dom/client';
-
 import nativeEmojiData from '@emoji-mart/data';
 import { ipcRenderer } from 'electron';
-// eslint-disable-next-line import/no-named-default
-
 import { isMacOS } from '../OS';
-import { doAppStartUp, SessionInboxView } from '../components/SessionInboxView';
+import { SessionInboxView } from '../components/SessionInboxView';
 import { SessionRegistrationView } from '../components/registration/SessionRegistrationView';
 import { Data } from '../data/data';
 import { OpenGroupData } from '../data/opengroups';
@@ -16,7 +13,6 @@ import { loadKnownBlindedKeys } from '../session/apis/open_group_api/sogsv3/know
 import { ConvoHub } from '../session/conversations';
 import { DisappearingMessages } from '../session/disappearing_messages';
 import { AttachmentDownloads, ToastUtils } from '../session/utils';
-import { getOurPubKeyStrFromCache } from '../session/utils/User';
 import { runners } from '../session/utils/job_runners/JobRunner';
 import { LibSessionUtil } from '../session/utils/libsession/libsession_utils';
 import { switchPrimaryColorTo } from '../themes/switchPrimaryColor';
@@ -28,8 +24,9 @@ import { Registration } from '../util/registration';
 import { Storage, isSignInByLinking } from '../util/storage';
 import { getOppositeTheme, isThemeMismatched } from '../util/theme';
 import { getCrowdinLocale } from '../util/i18n/shared';
-import { rtlLocales } from '../localization/constants';
+import { rtlLocales } from '../localization/generated/constants';
 import { SessionEventEmitter } from '../shared/event_emitter';
+import { doAppStartUp } from '../state/startup';
 import { getSodiumRenderer } from '../session/crypto';
 
 // Globally disable drag and drop
@@ -69,28 +66,12 @@ window.log.info('Storage fetch');
 
 void Storage.fetch();
 
-function mapOldThemeToNew(theme: string) {
-  switch (theme) {
-    case 'dark':
-    case 'light':
-      return `classic-${theme}`;
-    case 'android-dark':
-      return 'classic-dark';
-    case 'android':
-    case 'ios':
-    case '':
-      return 'classic-dark';
-    default:
-      return theme;
-  }
-}
-
 // using __unused as lodash is imported using _
 ipcRenderer.on('native-theme-update', (__unused, shouldUseDarkColors) => {
   const shouldFollowSystemTheme = window.getSettingValue(SettingsKey.hasFollowSystemThemeEnabled);
 
   if (shouldFollowSystemTheme) {
-    const theme = window.Events.getThemeSetting();
+    const theme = window.getSettingValue(SettingsKey.settingsTheme);
     if (isThemeMismatched(theme, shouldUseDarkColors)) {
       const newTheme = getOppositeTheme(theme);
       void switchThemeTo({
@@ -127,22 +108,11 @@ Storage.onready(async () => {
   // Update zoom
   window.updateZoomFactor();
 
-  // Ensure accounts created prior to 1.0.0-beta8 do have their
-  // 'primaryDevicePubKey' defined.
-
-  if (Registration.isDone() && !Storage.get('primaryDevicePubKey')) {
-    await Storage.put('primaryDevicePubKey', getOurPubKeyStrFromCache());
-  }
-
   // These make key operations available to IPC handlers created in preload.js
   window.Events = {
     getPrimaryColorSetting: () => Storage.get('primary-color-setting', 'green'),
     setPrimaryColorSetting: async (value: any) => {
       await Storage.put('primary-color-setting', value);
-    },
-    getThemeSetting: () => Storage.get('theme-setting', 'classic-dark'),
-    setThemeSetting: async (value: any) => {
-      await Storage.put('theme-setting', value);
     },
     getHideMenuBar: () => Storage.get('hide-menu-bar'),
     setHideMenuBar: async (value: boolean) => {
@@ -178,10 +148,6 @@ Storage.onready(async () => {
     window.log.info(`[updater] New version detected: ${currentVersion}; previous: ${lastVersion}`);
     await Data.cleanupOrphanedAttachments();
   }
-
-  const themeSetting = window.Events.getThemeSetting();
-  const newThemeSetting = mapOldThemeToNew(themeSetting);
-  await window.Events.setThemeSetting(newThemeSetting);
 
   try {
     if (Registration.isDone()) {
@@ -273,6 +239,9 @@ async function start() {
     const container = document.getElementById('root');
     const root = createRoot(container!);
     await doAppStartUp();
+    if (!window.inboxStore) {
+      throw new Error('window.inboxStore is not defined in openInbox');
+    }
     root.render(<SessionInboxView />);
   }
 
@@ -305,10 +274,6 @@ async function start() {
   const prevLaunchCount = window.getSettingValue('launch-count');
 
   const launchCount = !prevLaunchCount ? 1 : prevLaunchCount + 1;
-
-  window.setTheme = async newTheme => {
-    await window.Events.setThemeSetting(newTheme);
-  };
 
   window.toggleMenuBar = () => {
     const current = window.getSettingValue('hide-menu-bar');

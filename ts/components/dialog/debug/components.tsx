@@ -1,6 +1,5 @@
 import useAsync from 'react-use/lib/useAsync';
 import { ipcRenderer, shell } from 'electron';
-import { useDispatch } from 'react-redux';
 import { useCallback, useState } from 'react';
 import useAsyncFn from 'react-use/lib/useAsyncFn';
 import useInterval from 'react-use/lib/useInterval';
@@ -9,6 +8,7 @@ import styled from 'styled-components';
 
 import type { ProProof, PubkeyType } from 'libsession_util_nodejs';
 import { chunk, toNumber } from 'lodash';
+import { getAppDispatch } from '../../../state/dispatch';
 import { Flex } from '../../basic/Flex';
 import { SpacerXS } from '../../basic/Text';
 import { tr } from '../../../localization/localeTools';
@@ -56,7 +56,7 @@ import {
 import { formatRoundedUpTimeUntilTimestamp } from '../../../util/i18n/formatting/generics';
 import { LucideIcon } from '../../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
-import { useIsProAvailable } from '../../../hooks/useIsProAvailable';
+import { getIsProAvailableMemo } from '../../../hooks/useIsProAvailable';
 import { UserConfigWrapperActions } from '../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 
 type DebugButtonProps = SessionButtonProps & { shiny?: boolean; hide?: boolean };
@@ -177,7 +177,7 @@ const CheckVersionButton = ({ channelToCheck }: { channelToCheck: ReleaseChannel
         );
       }}
     >
-      <SessionSpinner loading={loading || state.loading} color={'var(--text-primary-color)'} />
+      <SessionSpinner $loading={loading || state.loading} $color={'var(--text-primary-color)'} />
       {!loading && !state.loading ? `Check ${channelToCheck} version` : null}
     </DebugButton>
   );
@@ -220,7 +220,7 @@ const CheckForUpdatesButton = () => {
         void handleCheckForUpdates();
       }}
     >
-      <SessionSpinner loading={state.loading} color={'var(--text-primary-color)'} />
+      <SessionSpinner $loading={state.loading} $color={'var(--text-primary-color)'} />
       {!state.loading ? 'Check for updates' : null}
     </DebugButton>
   );
@@ -314,7 +314,7 @@ export const LoggingDebugSection = ({ forceUpdate }: { forceUpdate: () => void }
 };
 
 export const Playgrounds = ({ setPage }: DebugMenuPageProps) => {
-  const proAvailable = useIsProAvailable();
+  const proAvailable = getIsProAvailableMemo();
 
   if (!proAvailable) {
     return null;
@@ -329,8 +329,8 @@ export const Playgrounds = ({ setPage }: DebugMenuPageProps) => {
 };
 
 export const DebugActions = () => {
-  const dispatch = useDispatch();
-  const proAvailable = useIsProAvailable();
+  const dispatch = getAppDispatch();
+  const proAvailable = getIsProAvailableMemo();
 
   return (
     <DebugMenuSection title="Actions" rowWrap={true}>
@@ -479,7 +479,7 @@ export const DebugUrlInteractionsSection = () => {
 };
 
 export const ExperimentalActions = ({ forceUpdate }: { forceUpdate: () => void }) => {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   // const refreshedAt = useReleasedFeaturesRefreshedAt();
   // const sesh101NotificationAt = useSesh101NotificationAt();
 

@@ -1,8 +1,8 @@
 import { useCallback, useEffect } from 'react';
 
 import { isEmpty, isString } from 'lodash';
-import { useDispatch } from 'react-redux';
 import useKey from 'react-use/lib/useKey';
+import { getAppDispatch } from '../../../../state/dispatch';
 import { SpacerSM } from '../../../basic/Text';
 import { StyledLeftPaneOverlay } from '../OverlayMessage';
 import { ActionRow, StyledActionRowContainer } from './ActionRow';
@@ -13,7 +13,7 @@ import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 import { tr } from '../../../../localization/localeTools';
 
 export const OverlayChooseAction = () => {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   function closeOverlay() {
     dispatch(sectionActions.resetLeftOverlayMode());

@@ -39,15 +39,16 @@ type Props = {
   onError?: () => void;
 };
 
-const StyledOverlay = styled.div<Pick<Props, 'darkOverlay' | 'softCorners'>>`
+const StyledOverlay = styled.div<{ $darkOverlay?: boolean }>`
   position: absolute;
   top: 0;
   bottom: 0;
   left: 0;
   right: 0;
   background-color: ${props =>
-    props.darkOverlay ? 'var(--message-link-preview-background-color)' : 'unset'};
+    props.$darkOverlay ? 'var(--message-link-preview-background-color)' : 'unset'};
 `;
+
 export const Image = (props: Props) => {
   const {
     alt,
@@ -178,8 +179,7 @@ export const Image = (props: Props) => {
 
       <StyledOverlay
         className={clsx(softCorners ? 'module-image--soft-corners' : null)}
-        darkOverlay={darkOverlay}
-        softCorners={softCorners}
+        $darkOverlay={darkOverlay}
       />
       {closeButton ? (
         <StagedAttachmentsCloseButton

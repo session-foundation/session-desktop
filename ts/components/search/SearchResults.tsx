@@ -16,7 +16,7 @@ import { calcContactRowHeight } from '../leftpane/overlay/choose-action/Contacts
 import { NoResultsForSearch } from './NoResults';
 import { tr } from '../../localization/localeTools';
 
-const StyledSeparatorSection = styled.div<{ isSubtitle: boolean }>`
+const StyledSeparatorSection = styled.div<{ $isSubtitle: boolean }>`
   height: 36px;
   line-height: 36px;
   letter-spacing: 0;
@@ -25,7 +25,7 @@ const StyledSeparatorSection = styled.div<{ isSubtitle: boolean }>`
   font-weight: 400;
 
   ${props =>
-    props.isSubtitle
+    props.$isSubtitle
       ? 'color: var(--text-secondary-color); font-size: var(--font-size-sm);'
       : 'color: var(--text-primary-color); font-size: var(--font-size-lg);'}
 `;
@@ -48,7 +48,7 @@ const SectionHeader = ({
   style: CSSProperties;
 }) => {
   return (
-    <StyledSeparatorSection isSubtitle={isSubtitle} style={style}>
+    <StyledSeparatorSection $isSubtitle={isSubtitle} style={style}>
       {title}
     </StyledSeparatorSection>
   );

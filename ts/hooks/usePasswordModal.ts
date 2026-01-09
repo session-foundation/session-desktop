@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useDispatch } from 'react-redux';
 import useMount from 'react-use/lib/useMount';
+import { getAppDispatch } from '../state/dispatch';
 import { updateEnterPasswordModal } from '../state/ducks/modalDialog';
 import { getPasswordHash } from '../util/storage';
 
@@ -17,7 +17,7 @@ export function usePasswordModal({
   onSuccess?: () => void;
   onClose?: () => void;
 }) {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   const hashFromStorage = getPasswordHash();
   const [hasPassword] = useState(!!hashFromStorage);

@@ -10,7 +10,8 @@ import {
   useState,
 } from 'react';
 import { InView } from 'react-intersection-observer';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
+import { getAppDispatch } from '../../../../state/dispatch';
 import { useScrollToLoadedMessage } from '../../../../contexts/ScrollToLoadedMessage';
 import { Data } from '../../../../data/data';
 import { useHasUnread } from '../../../../hooks/useParamSelector';
@@ -108,7 +109,7 @@ export const ReadableMessage = (props: ReadableMessageProps) => {
   } = props;
 
   const isAppFocused = useSelector(getIsAppFocused);
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   const selectedConversationKey = useSelectedConversationKey();
   const mostRecentMessageId = useSelector(getMostRecentMessageId);

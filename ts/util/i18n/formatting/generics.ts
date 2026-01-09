@@ -10,7 +10,7 @@ import {
 import { omit, upperFirst } from 'lodash';
 import { getBrowserLocale, getTimeLocaleDictionary } from '../shared';
 import { getForcedEnglishTimeLocale, timeLocaleMap } from '../timeLocaleMap';
-import type { CrowdinLocale } from '../../../localization/constants';
+import type { CrowdinLocale } from '../../../localization/generated/constants';
 
 /**
  * Formats a duration in milliseconds into a localized human-readable string.
@@ -83,7 +83,12 @@ export const formatTimeDistanceToNow = (
   });
 };
 
-type FormatNumberOptionsType = Intl.NumberFormatOptions & { locale?: CrowdinLocale };
+type CurrencyCode = 'USD';
+
+type FormatNumberOptionsType = Intl.NumberFormatOptions & {
+  locale?: CrowdinLocale;
+  currency?: CurrencyCode;
+};
 
 /**
  * Formats a number as a string using the browser's locale.

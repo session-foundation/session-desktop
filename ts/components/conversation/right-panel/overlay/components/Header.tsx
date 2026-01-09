@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
-import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
+import { getAppDispatch } from '../../../../../state/dispatch';
 import { closeRightPanel } from '../../../../../state/ducks/conversations';
 import { Flex } from '../../../../basic/Flex';
 import { sectionActions } from '../../../../../state/ducks/section';
@@ -32,13 +32,13 @@ type HeaderProps = (
 
 export const Header = (props: HeaderProps) => {
   const { children, hideCloseButton, closeButtonOnClick, paddingTop } = props;
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   return (
     <Flex
       $container={true}
       width={'100%'}
-      padding={`${paddingTop} var(--margins-lg) var(--margins-md)`}
+      $padding={`${paddingTop} var(--margins-lg) var(--margins-md)`}
     >
       <Flex
         $container={true}
@@ -46,7 +46,7 @@ export const Header = (props: HeaderProps) => {
         $justifyContent={'flex-start'}
         $alignItems={'center'}
         width={'100%'}
-        margin={'-5px auto auto'}
+        $margin={'-5px auto auto'}
       >
         {children}
       </Flex>

@@ -5,7 +5,7 @@ import autoBind from 'auto-bind';
 import { blobToArrayBuffer } from 'blob-util';
 import { Component, RefObject, createRef } from 'react';
 import styled from 'styled-components';
-import { useDispatch } from 'react-redux';
+import { getAppDispatch } from '../../state/dispatch';
 import {
   CompositionBox,
   SendMessageType,
@@ -97,7 +97,7 @@ const StyledSpinnerContainer = styled.div`
 const ConvoLoadingSpinner = () => {
   return (
     <StyledSpinnerContainer>
-      <SessionSpinner loading={true} />
+      <SessionSpinner $loading={true} />
     </StyledSpinnerContainer>
   );
 };
@@ -117,7 +117,7 @@ const GroupMarkedAsExpired = () => {
 };
 
 export class SessionConversation extends Component<Props, State> {
-  private readonly messageContainerRef: RefObject<HTMLDivElement>;
+  private readonly messageContainerRef: RefObject<HTMLDivElement | null>;
   private dragCounter: number;
   private publicMembersRefreshTimeout?: NodeJS.Timeout;
   private readonly updateMemberList: () => any;
@@ -647,7 +647,7 @@ const renderImagePreview = async (contentType: string, file: File, fileName: str
 };
 
 function OutdatedLegacyGroupBanner() {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   const weAreAdmin = useSelectedWeAreAdmin();
   const selectedConversationKey = useSelectedConversationKey();

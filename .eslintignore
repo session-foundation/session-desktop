@@ -23,6 +23,12 @@ commitlint.config.js
 password_preload.js
 sass.config.js
 *.worker.config.js
+svgs.webpack.config.js
+
+babel.config.js
+minify.js
+eslint-local-rules.js
+eslint-rules/
 
 # Not too sure why we can't have eslint on those files atm
 ts/webworker/workers/node/util/util.worker.ts

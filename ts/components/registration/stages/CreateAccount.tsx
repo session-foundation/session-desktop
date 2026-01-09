@@ -1,7 +1,7 @@
 import { isEmpty } from 'lodash';
-import { useDispatch } from 'react-redux';
 import useMount from 'react-use/lib/useMount';
 import { useState } from 'react';
+import { getAppDispatch } from '../../../state/dispatch';
 import { SettingsKey } from '../../../data/settings-key';
 import { mnDecode } from '../../../session/crypto/mnemonic';
 import { ProfileManager } from '../../../session/profile_manager/ProfileManager';
@@ -61,7 +61,7 @@ export const CreateAccount = () => {
   const displayName = useDisplayName();
   const displayNameError = useDisplayNameError();
 
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   const [cannotContinue, setCannotContinue] = useState(true);
 
@@ -141,7 +141,7 @@ export const CreateAccount = () => {
         width="100%"
         $flexDirection="column"
         $alignItems="flex-start"
-        margin={'0 0 0 8px'}
+        $margin={'0 0 0 8px'}
       >
         <OnboardHeading>{tr('displayNamePick')}</OnboardHeading>
         <SpacerSM />

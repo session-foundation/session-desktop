@@ -1,8 +1,8 @@
 import { isNil } from 'lodash';
 import { Dispatch, useMemo, type ReactNode } from 'react';
-import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
 import type { CSSProperties } from 'styled-components';
+import { getAppDispatch } from '../../state/dispatch';
 import {
   type SessionCTAState,
   updateSessionCTA,
@@ -24,7 +24,7 @@ import {
 import { SpacerSM, SpacerXL } from '../basic/Text';
 import type { MergedLocalizerTokens } from '../../localization/localeTools';
 import { SessionButtonShiny } from '../basic/SessionButtonShiny';
-import { useIsProAvailable } from '../../hooks/useIsProAvailable';
+import { getIsProAvailableMemo } from '../../hooks/useIsProAvailable';
 import { useCurrentUserHasPro } from '../../hooks/useHasPro';
 import { assertUnreachable } from '../../types/sqlSharedTypes';
 import { Storage } from '../../util/storage';
@@ -44,6 +44,8 @@ import { APP_URL, DURATION } from '../../session/constants';
 import { Data } from '../../data/data';
 import { getUrlInteractionsForUrl, URLInteraction } from '../../util/urlHistory';
 import { Localizer } from '../basic/Localizer';
+
+let donateCTAShown = false;
 
 function useIsProCTAVariant(v: CTAVariant): v is ProCTAVariant {
   return useMemo(() => isProCTAVariant(v), [v]);
@@ -77,9 +79,9 @@ const StyledAnimationImage = styled.img`
   position: absolute;
 `;
 
-const StyledAnimatedCTAImageContainer = styled.div<{ noColor?: boolean }>`
+const StyledAnimatedCTAImageContainer = styled.div<{ $noColor?: boolean }>`
   position: relative;
-  ${props => (props.noColor ? 'filter: grayscale(100%) brightness(0.8);' : '')}
+  ${props => (props.$noColor ? 'filter: grayscale(100%) brightness(0.8);' : '')}
 `;
 
 function AnimatedCTAImage({
@@ -94,19 +96,19 @@ function AnimatedCTAImage({
   noColor?: boolean;
 }) {
   return (
-    <StyledAnimatedCTAImageContainer noColor={noColor}>
+    <StyledAnimatedCTAImageContainer $noColor={noColor}>
       <StyledCTAImage src={ctaLayerSrc} />
       <StyledAnimationImage src={animatedLayerSrc} style={animationStyle} />
     </StyledAnimatedCTAImageContainer>
   );
 }
 
-export const StyledCTATitle = styled.span<{ reverseDirection?: boolean }>`
+export const StyledCTATitle = styled.span<{ $reverseDirection?: boolean }>`
   font-size: var(--font-size-h4);
   font-weight: bold;
   line-height: normal;
   display: inline-flex;
-  flex-direction: ${props => (props.reverseDirection ? 'row-reverse' : 'row')};
+  flex-direction: ${props => (props.$reverseDirection ? 'row-reverse' : 'row')};
   align-items: center;
   gap: var(--margins-xs);
   padding: 3px;
@@ -231,7 +233,7 @@ function Buttons({
   afterActionButtonCallback?: () => void;
   actionButtonNextModalAfterCloseCallback?: () => void;
 }) {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   const actionButton = useMemo(() => {
     if (!isVariantWithActionButton(variant)) {
@@ -339,7 +341,7 @@ function Buttons({
 }
 
 export function SessionCTA(props: SessionCTAState) {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const hasPro = useCurrentUserHasPro();
 
   function onClose() {
@@ -393,9 +395,8 @@ export const showSessionCTA = (variant: CTAVariant, dispatch: Dispatch<any>) => 
 };
 
 export const useShowSessionCTACb = (variant: CTAVariant) => {
-  const dispatch = useDispatch();
-
-  const isProAvailable = useIsProAvailable();
+  const dispatch = getAppDispatch();
+  const isProAvailable = getIsProAvailableMemo();
   const isProCTA = useIsProCTAVariant(variant);
   if (isProCTA && !isProAvailable) {
     return () => null;
@@ -405,9 +406,8 @@ export const useShowSessionCTACb = (variant: CTAVariant) => {
 };
 
 export const useShowSessionCTACbWithVariant = () => {
-  const dispatch = useDispatch();
-
-  const isProAvailable = useIsProAvailable();
+  const dispatch = getAppDispatch();
+  const isProAvailable = getIsProAvailableMemo();
 
   return (variant: CTAVariant) => {
     if (isProCTAVariant(variant) && !isProAvailable) {
@@ -417,7 +417,7 @@ export const useShowSessionCTACbWithVariant = () => {
   };
 };
 
-export async function handleTriggeredProCTAs(dispatch: Dispatch<any>) {
+export async function handleTriggeredCTAs(dispatch: Dispatch<any>, fromAppStart: boolean) {
   const proAvailable = getFeatureFlag('proAvailable');
 
   if (Storage.get(SettingsKey.proExpiringSoonCTA)) {
@@ -441,14 +441,20 @@ export async function handleTriggeredProCTAs(dispatch: Dispatch<any>) {
     );
     await Storage.put(SettingsKey.proExpiredCTA, false);
   } else {
+    if (!fromAppStart) {
+      // we only want to show the DonateCTA when the app starts, if needed
+      return;
+    }
     const dbCreationTimestampMs = await Data.getDBCreationTimestampMs();
     if (dbCreationTimestampMs && dbCreationTimestampMs + 7 * DURATION.DAYS < Date.now()) {
       const donateInteractions = getUrlInteractionsForUrl(APP_URL.DONATE);
       if (
         !donateInteractions.includes(URLInteraction.COPY) &&
-        !donateInteractions.includes(URLInteraction.OPEN)
+        !donateInteractions.includes(URLInteraction.OPEN) &&
+        !donateCTAShown
       ) {
         dispatch(updateSessionCTA({ variant: CTAVariant.DONATE_GENERIC }));
+        donateCTAShown = true;
       }
     }
   }

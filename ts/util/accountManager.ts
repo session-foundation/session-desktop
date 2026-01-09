@@ -257,8 +257,6 @@ export async function registrationDone(ourPubkey: string, displayName: string) {
 
 export const deleteDbLocally = async () => {
   window?.log?.info('last message sent successfully. Deleting everything');
-  await window.persistStore?.purge();
-  window?.log?.info('store purged');
 
   await deleteAllLogs();
   window?.log?.info('deleteAllLogs: done');

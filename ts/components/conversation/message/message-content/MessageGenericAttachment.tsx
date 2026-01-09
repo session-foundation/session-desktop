@@ -10,7 +10,6 @@ import { LucideIcon } from '../../../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 
 const StyledGenericAttachmentContainer = styled(MessageHighlighter)<{
-  highlight: boolean;
   selected: boolean;
 }>`
   ${props => props.selected && 'box-shadow: var(--drop-shadow);'}
@@ -36,7 +35,7 @@ export function MessageGenericAttachment({
 
   return (
     <StyledGenericAttachmentContainer
-      highlight={highlight}
+      $highlight={highlight}
       selected={selected}
       className={'module-message__generic-attachment'}
       onClick={onClick}

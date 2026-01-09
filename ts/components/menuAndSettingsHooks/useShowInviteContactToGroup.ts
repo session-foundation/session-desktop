@@ -1,4 +1,4 @@
-import { useDispatch } from 'react-redux';
+import { getAppDispatch } from '../../state/dispatch';
 import {
   useIsBlocked,
   useIsGroupDestroyed,
@@ -9,7 +9,7 @@ import {
 import { updateInviteContactModal } from '../../state/ducks/modalDialog';
 
 export function useShowInviteContactToGroupCb(conversationId: string) {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const isGroupV2 = useIsGroupV2(conversationId);
   const isBlocked = useIsBlocked(conversationId);
   const isKickedFromGroup = useIsKickedFromGroup(conversationId);

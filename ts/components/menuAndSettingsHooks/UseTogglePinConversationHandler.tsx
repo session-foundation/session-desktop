@@ -1,4 +1,5 @@
-import { useIsProAvailable } from '../../hooks/useIsProAvailable';
+import { useSelector } from 'react-redux';
+import { getIsProAvailableMemo } from '../../hooks/useIsProAvailable';
 import { ConvoHub } from '../../session/conversations';
 import {
   useIsKickedFromGroup,
@@ -12,7 +13,7 @@ import { Constants } from '../../session';
 import { useIsMessageRequestOverlayShown } from '../../state/selectors/section';
 import { useCurrentUserHasPro } from '../../hooks/useHasPro';
 import { CTAVariant } from '../dialog/cta/types';
-import { usePinnedConversationsCount } from '../../state/selectors/conversations';
+import { getPinnedConversationsCount } from '../../state/selectors/conversations';
 
 function useShowPinUnpin(conversationId: string) {
   const isPrivateAndFriend = useIsPrivateAndFriend(conversationId);
@@ -35,17 +36,26 @@ function useShowPinUnpin(conversationId: string) {
   return !isMessageRequest && (!isPrivate || (isPrivate && isPrivateAndFriend));
 }
 
+// NOTE: [react-compiler] this has to live here for the hook to be identified as static
+function usePinnedConversationCount() {
+  return useSelector(getPinnedConversationsCount);
+}
+
+// NOTE: [react-compiler] this convinces the compiler the hook is static
+const useHasProInternal = useCurrentUserHasPro;
+const useIsPinnedInternal = useIsPinned;
+const useCTACallbackInternal = useShowSessionCTACbWithVariant;
+
 export function useTogglePinConversationHandler(id: string) {
   const conversation = ConvoHub.use().get(id);
-  const isPinned = useIsPinned(id);
-
-  const pinnedConversationsCount = usePinnedConversationsCount();
-  const isProAvailable = useIsProAvailable();
-  const hasPro = useCurrentUserHasPro();
-
-  const handleShowProDialog = useShowSessionCTACbWithVariant();
+  const isPinned = useIsPinnedInternal(id);
+  const pinnedConversationsCount = usePinnedConversationCount();
+  const hasPro = useHasProInternal();
+  const handleShowProDialog = useCTACallbackInternal();
 
   const showPinUnpin = useShowPinUnpin(id);
+
+  const isProAvailable = getIsProAvailableMemo();
 
   if (!showPinUnpin) {
     return null;

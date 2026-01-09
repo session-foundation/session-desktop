@@ -1,4 +1,4 @@
-import { useDispatch } from 'react-redux';
+import { getAppDispatch } from '../../../../state/dispatch';
 
 import { tr } from '../../../../localization/localeTools';
 import { type UserSettingsModalState } from '../../../../state/ducks/modalDialog';
@@ -22,7 +22,7 @@ export function HelpSettingsPage(modalState: UserSettingsModalState) {
   const closeAction = useUserSettingsCloseAction(modalState);
   const title = useUserSettingsTitle(modalState);
 
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   return (
     <UserSettingsModalContainer

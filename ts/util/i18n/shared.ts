@@ -1,5 +1,5 @@
-import { Locale } from 'date-fns';
-import { CrowdinLocale } from '../../localization/constants';
+import type { Locale } from 'date-fns';
+import type { CrowdinLocale } from '../../localization/generated/constants';
 import { timeLocaleMap } from './timeLocaleMap';
 import { isUnitTest } from '../../shared/env_vars';
 

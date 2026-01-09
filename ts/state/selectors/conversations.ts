@@ -57,15 +57,18 @@ export const getGroupConversationsCount = createSelector(getConversationLookup, 
   return Object.values(state).filter(convo => !convo.isPrivate && !convo.isPublic).length;
 });
 
-const getPinnedConversationsCount = createSelector(getConversationLookup, (state): number => {
-  return Object.values(state).filter(
-    convo =>
-      convo &&
-      convo.priority &&
-      isFinite(convo.priority) &&
-      convo.priority > CONVERSATION_PRIORITIES.default
-  ).length;
-});
+export const getPinnedConversationsCount = createSelector(
+  getConversationLookup,
+  (state): number => {
+    return Object.values(state).filter(
+      convo =>
+        convo &&
+        convo.priority &&
+        isFinite(convo.priority) &&
+        convo.priority > CONVERSATION_PRIORITIES.default
+    ).length;
+  }
+);
 
 export function usePinnedConversationsCount() {
   return useSelector(getPinnedConversationsCount);
@@ -203,35 +206,38 @@ function getConversationTitle(conversation: ReduxConversationType): string {
 
 const collator = new Intl.Collator();
 
-export const _getConversationComparator = () => {
-  return (left: ReduxConversationType, right: ReduxConversationType): number => {
-    // Pin is the first criteria to check
-    const leftPriority = left.priority || 0;
-    const rightPriority = right.priority || 0;
-    if (leftPriority > rightPriority) {
-      return -1;
-    }
-    if (rightPriority > leftPriority) {
-      return 1;
-    }
-    // Then if none are pinned, check other criteria
-    const leftActiveAt = left.activeAt;
-    const rightActiveAt = right.activeAt;
-    if (leftActiveAt && !rightActiveAt) {
-      return -1;
-    }
-    if (rightActiveAt && !leftActiveAt) {
-      return 1;
-    }
-    if (leftActiveAt && rightActiveAt && leftActiveAt !== rightActiveAt) {
-      return rightActiveAt - leftActiveAt;
-    }
-    const leftTitle = getConversationTitle(left).toLowerCase();
-    const rightTitle = getConversationTitle(right).toLowerCase();
+export const conversationComparator = (
+  left: ReduxConversationType,
+  right: ReduxConversationType
+): number => {
+  // Pin is the first criteria to check
+  const leftPriority = left.priority || 0;
+  const rightPriority = right.priority || 0;
+  if (leftPriority > rightPriority) {
+    return -1;
+  }
+  if (rightPriority > leftPriority) {
+    return 1;
+  }
+  // Then if none are pinned, check other criteria
+  const leftActiveAt = left.activeAt;
+  const rightActiveAt = right.activeAt;
+  if (leftActiveAt && !rightActiveAt) {
+    return -1;
+  }
+  if (rightActiveAt && !leftActiveAt) {
+    return 1;
+  }
+  if (leftActiveAt && rightActiveAt && leftActiveAt !== rightActiveAt) {
+    return rightActiveAt - leftActiveAt;
+  }
+  const leftTitle = getConversationTitle(left).toLowerCase();
+  const rightTitle = getConversationTitle(right).toLowerCase();
 
-    return collator.compare(leftTitle, rightTitle);
-  };
+  return collator.compare(leftTitle, rightTitle);
 };
+
+export const _getConversationComparator = () => conversationComparator;
 
 const _getLeftPaneConversationIds = (
   sortedConversations: Array<ReduxConversationType>
@@ -792,10 +798,9 @@ export const getMessageReactsProps = createSelector(
         return msgProps;
       }
 
-      const sortedReacts = Object.entries(msgProps.reacts).sort((a, b) => {
-        return a[1].index < b[1].index ? -1 : a[1].index > b[1].index ? 1 : 0;
+      msgProps.sortedReacts = Object.entries(msgProps.reacts).sort((a, b) => {
+        return a[1].count > b[1].count ? -1 : a[1].count < b[1].count ? 1 : 0;
       });
-      msgProps.sortedReacts = sortedReacts;
     }
 
     return msgProps;

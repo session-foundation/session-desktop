@@ -35,21 +35,21 @@ type WithExtraRightButton = {
 type WithShowExitIcon = { showExitIcon?: boolean };
 
 const StyledModalHeader = styled(Flex)<{
-  bigHeader?: boolean;
-  scrolled: boolean;
-  floatingHeader?: boolean;
+  $bigHeader?: boolean;
+  $scrolled: boolean;
+  $floatingHeader?: boolean;
 }>`
-  position: ${props => (props.floatingHeader ? 'absolute' : 'relative')};
+  position: ${props => (props.$floatingHeader ? 'absolute' : 'relative')};
   font-family: var(--font-default);
-  font-size: ${props => (props.bigHeader ? 'var(--font-size-h4)' : 'var(--font-size-xl)')};
+  font-size: ${props => (props.$bigHeader ? 'var(--font-size-h4)' : 'var(--font-size-xl)')};
   font-weight: 500;
   text-align: center;
   line-height: 18px;
   background-color: ${props =>
-    props.floatingHeader && !props.scrolled
+    props.$floatingHeader && !props.$scrolled
       ? 'var(--transparent-color)'
       : 'var(--modal-background-content-color)'};
-  width: ${props => (props.floatingHeader ? '-webkit-fill-available' : 'auto')};
+  width: ${props => (props.$floatingHeader ? '-webkit-fill-available' : 'auto')};
   transition-duration: var(--default-duration);
   z-index: 3;
 
@@ -64,7 +64,7 @@ const StyledModalHeader = styled(Flex)<{
     background: linear-gradient(to bottom, var(--modal-shadow-color), transparent);
 
     pointer-events: none;
-    opacity: ${props => (!props.scrolled ? '0' : '1')};
+    opacity: ${props => (!props.$scrolled ? '0' : '1')};
   }
 `;
 
@@ -129,14 +129,14 @@ const StyledModal = styled.div<{
   }
 `;
 
-const StyledModalBody = styled.div<{ shouldOverflow: boolean; removeScrollbarGutter?: boolean }>`
-  ${props => (!props.removeScrollbarGutter ? 'scrollbar-gutter: stable;' : '')}
+const StyledModalBody = styled.div<{ $shouldOverflow: boolean; $removeScrollbarGutter?: boolean }>`
+  ${props => (!props.$removeScrollbarGutter ? 'scrollbar-gutter: stable;' : '')}
   margin: 0;
   font-family: var(--font-default);
   line-height: var(--font-size-md);
   font-size: var(--font-size-md);
   height: 100%;
-  overflow-y: ${props => (props.shouldOverflow ? 'auto' : 'hidden')};
+  overflow-y: ${props => (props.$shouldOverflow ? 'auto' : 'hidden')};
   overflow-x: hidden;
 
   .message {
@@ -144,12 +144,12 @@ const StyledModalBody = styled.div<{ shouldOverflow: boolean; removeScrollbarGut
   }
 `;
 
-const StyledTitle = styled.div<{ bigHeader?: boolean }>`
+const StyledTitle = styled.div<{ $bigHeader?: boolean }>`
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
   padding: ${props =>
-    props.bigHeader ? 'var(--margins-sm)' : 'var(--margins-xs) var(--margins-sm)'};
+    props.$bigHeader ? 'var(--margins-sm)' : 'var(--margins-xs) var(--margins-sm)'};
 `;
 
 export const ModalActionsContainer = ({
@@ -171,7 +171,7 @@ export const ModalActionsContainer = ({
       $container={true}
       width={'100%'}
       $justifyContent="space-evenly"
-      maxWidth={maxWidth || '300px'}
+      $maxWidth={maxWidth || '300px'}
       $alignItems="center"
       $flexGap="var(--margins-md)"
       height="unset"
@@ -333,17 +333,17 @@ export const ModalBasicHeader = ({
       $flexDirection={'row'}
       $justifyContent={'space-between'}
       $alignItems={'center'}
-      padding={'var(--margins-lg) var(--margins-lg) var(--margins-sm) var(--margins-lg)'}
-      bigHeader={bigHeader}
-      floatingHeader={floatingHeader}
-      scrolled={scrolled}
+      $padding={'var(--margins-lg) var(--margins-lg) var(--margins-sm) var(--margins-lg)'}
+      $bigHeader={bigHeader}
+      $floatingHeader={floatingHeader}
+      $scrolled={scrolled}
     >
       <Flex
         $container={true}
         $flexDirection={'row'}
         $alignItems={'center'}
-        padding={'0'}
-        margin={'0'}
+        $padding={'0'}
+        $margin={'0'}
       >
         {extraLeftButton}
         {/* Note: this is just here to keep the title centered, no matter the buttons we have */}
@@ -354,7 +354,7 @@ export const ModalBasicHeader = ({
         />
       </Flex>
       <StyledTitle
-        bigHeader={bigHeader}
+        $bigHeader={bigHeader}
         tabIndex={!showExitIcon && !extraLeftButton ? 0 : undefined}
         data-testid="modal-heading"
       >
@@ -364,8 +364,8 @@ export const ModalBasicHeader = ({
         $container={true}
         $flexDirection={'row'}
         $alignItems={'center'}
-        padding={'0'}
-        margin={'0'}
+        $padding={'0'}
+        $margin={'0'}
       >
         {/* Note: this is just here to keep the title centered, no matter the buttons we have */}
         <ExtraSpacerRight
@@ -447,7 +447,7 @@ export const SessionWrapperModal = (props: SessionWrapperModalType & { onClose?:
       <IsModalScrolledContext.Provider value={scrolled}>
         <OnModalCloseContext.Provider value={onClose ?? null}>
           <StyledRootDialog
-            shouldOverflow={shouldOverflow}
+            $shouldOverflow={shouldOverflow}
             className={clsx('modal', classes)}
             onMouseDown={handleClick}
             role="dialog"
@@ -466,15 +466,15 @@ export const SessionWrapperModal = (props: SessionWrapperModalType & { onClose?:
               {separateHeader}
               <StyledModalBody
                 onScroll={handleScroll}
-                shouldOverflow={shouldOverflow}
-                removeScrollbarGutter={removeScrollbarGutter}
+                $shouldOverflow={shouldOverflow}
+                $removeScrollbarGutter={removeScrollbarGutter}
               >
                 {bodyHeader}
                 <Flex
                   $container={true}
                   $alignItems="center"
                   $flexDirection="column"
-                  paddingInline="var(--margins-lg)" // add the padding here so that the rest of the modal isn't affected (including buttonChildren/ModalHeader)
+                  $paddingInline="var(--margins-lg)" // add the padding here so that the rest of the modal isn't affected (including buttonChildren/ModalHeader)
                   $flexGap={$flexGap}
                 >
                   {props.children}

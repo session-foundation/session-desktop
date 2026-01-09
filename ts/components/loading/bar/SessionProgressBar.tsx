@@ -59,7 +59,7 @@ export function SessionProgressBar(props: Props) {
       width={width}
       $flexDirection={'column'}
       $alignItems={'flex-start'}
-      margin={margin}
+      $margin={margin}
     >
       {title ? (
         <>

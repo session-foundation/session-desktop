@@ -1,7 +1,7 @@
-import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
 import { PubkeyType } from 'libsession_util_nodejs';
 import { isNil } from 'lodash';
+import { getAppDispatch } from '../../state/dispatch';
 
 import {
   useSelectedConversationDisappearingMode,
@@ -46,7 +46,7 @@ function useFollowSettingsButtonClick({ messageId }: WithMessageId) {
   const disabled = useMessageExpirationUpdateDisabled(messageId);
   const timespanText = useMessageExpirationUpdateTimespanText(messageId);
 
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const onExit = () => dispatch(updateConfirmModal(null));
 
   const doIt = () => {
@@ -119,9 +119,13 @@ function useOurExpirationMatches({ messageId }: WithMessageId) {
   return false;
 }
 
+// NOTE: [react-compiler] this convinces the compiler the hook is static
+const useSelectedIsPrivateFriendInternal = useSelectedIsPrivateFriend;
+const useMessageAuthorIsUsInternal = useMessageAuthorIsUs;
+
 const FollowSettingsButton = ({ messageId }: WithMessageId) => {
-  const isPrivateAndFriend = useSelectedIsPrivateFriend();
-  const authorIsUs = useMessageAuthorIsUs(messageId);
+  const isPrivateAndFriend = useSelectedIsPrivateFriendInternal();
+  const authorIsUs = useMessageAuthorIsUsInternal(messageId);
 
   const click = useFollowSettingsButtonClick({
     messageId,
@@ -184,9 +188,9 @@ export const TimerNotification = (props: WithMessageId) => {
         $alignItems="center"
         $justifyContent="center"
         width="90%"
-        maxWidth="700px"
-        margin="5px auto 10px auto" // top margin is smaller that bottom one to make the stopwatch icon of expirable message closer to its content
-        padding="5px 10px"
+        $maxWidth="700px"
+        $margin="5px auto 10px auto" // top margin is smaller that bottom one to make the stopwatch icon of expirable message closer to its content
+        $padding="5px 10px"
         style={{ textAlign: 'center' }}
       >
         {renderOffIcon && (
@@ -199,7 +203,7 @@ export const TimerNotification = (props: WithMessageId) => {
             <SpacerMD />
           </>
         )}
-        <TextWithChildren subtle={true}>
+        <TextWithChildren $subtle={true}>
           <Localizer {...i18nProps} />
         </TextWithChildren>
         <FollowSettingsButton {...props} />

@@ -1814,7 +1814,11 @@ export class ConversationModel extends Model<ConversationAttributes> {
      * We only want to return the stored pro details if this is a contact.
      * A contact is a private, non NTS, non blinded, and approved at least on one side.
      */
-    if (this.getConvoType() !== ConvoTypeNarrow.contact) {
+    if (
+      this.getConvoType() !== ConvoTypeNarrow.contact &&
+      this.getConvoType() !== ConvoTypeNarrow.blindedContact &&
+      this.getConvoType() !== ConvoTypeNarrow.blindedAcquaintance
+    ) {
       return null;
     }
     const proGenIndexHashB64 = this.get('proGenIndexHashB64');

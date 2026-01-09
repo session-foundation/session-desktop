@@ -1,7 +1,7 @@
-import { useDispatch } from 'react-redux';
 import { useIsHidden, useIsMe } from '../../hooks/useParamSelector';
 import { tr } from '../../localization/localeTools';
 import { ConvoHub } from '../../session/conversations';
+import { getAppDispatch } from '../../state/dispatch';
 import { updateConfirmModal } from '../../state/ducks/modalDialog';
 import { SessionButtonColor } from '../basic/SessionButton';
 
@@ -14,7 +14,7 @@ function useShowHideNoteToSelf({ conversationId }: { conversationId: string }) {
 
 export function useHideNoteToSelfCb({ conversationId }: { conversationId: string }) {
   const showHideNTS = useShowHideNoteToSelf({ conversationId });
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   if (!showHideNTS) {
     return null;

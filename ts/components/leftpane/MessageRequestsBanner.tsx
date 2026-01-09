@@ -5,11 +5,11 @@ import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 import { getUnreadConversationRequests } from '../../state/selectors/conversations';
 import { useIsSearchingForType } from '../../state/selectors/search';
-import { getHideMessageRequestBanner } from '../../state/selectors/userConfig';
 import { MessageRequestBannerContextMenu } from '../menu/MessageRequestBannerContextMenu';
 import { Localizer } from '../basic/Localizer';
 import { LucideIcon } from '../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
+import { getHideMessageRequestBanner } from '../../state/selectors/settings';
 
 const StyledMessageRequestBanner = styled.div`
   // The conversation list item row is set to 64px height
@@ -118,5 +118,11 @@ export const MessageRequestsBanner = (props: { handleOnClick: () => any }) => {
 };
 
 const Portal = ({ children }: { children: ReactNode }) => {
-  return createPortal(children, document.querySelector('.inbox.index') as Element);
+  const container = document.querySelector('.inbox.index');
+
+  if (!container) {
+    return null;
+  }
+
+  return createPortal(children, container);
 };

@@ -1,18 +1,18 @@
-import { isBoolean } from 'lodash';
+import { isBoolean, isNil } from 'lodash';
 import { Dispatch, useCallback, useEffect, useMemo, useState } from 'react';
 import { clipboard } from 'electron';
-import { useDispatch } from 'react-redux';
 import useAsync from 'react-use/lib/useAsync';
 import { ProConfig, ProProof } from 'libsession_util_nodejs';
+import { getAppDispatch } from '../../../state/dispatch';
 import {
   getDataFeatureFlag,
   getFeatureFlag,
   MockProAccessExpiryOptions,
   SessionDataFeatureFlags,
-  useDataFeatureFlag,
+  getDataFeatureFlagMemo,
   type SessionDataFeatureFlagKeys,
   type SessionBooleanFeatureFlagKeys,
-  useFeatureFlag,
+  getFeatureFlagMemo,
 } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { Flex } from '../../basic/Flex';
 import { SessionToggle } from '../../basic/SessionToggle';
@@ -38,8 +38,11 @@ import {
   defaultProDataFeatureFlags,
 } from '../../../state/ducks/types/defaultFeatureFlags';
 import { UserConfigWrapperActions } from '../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
-import { useProAccessDetails } from '../../../hooks/useHasPro';
 import { isDebugMode } from '../../../shared/env_vars';
+import {
+  useProBackendProDetails,
+  useProBackendRefetch,
+} from '../../../state/selectors/proBackendData';
 
 type FeatureFlagToggleType = {
   forceUpdate: () => void;
@@ -253,6 +256,8 @@ type FlagIntegerInputProps = {
   flag: SessionDataFeatureFlagKeys;
   visibleWithBooleanFlag?: SessionBooleanFeatureFlagKeys;
   label: string;
+  min?: number;
+  max?: number;
 };
 
 export const FlagIntegerInput = ({
@@ -260,12 +265,25 @@ export const FlagIntegerInput = ({
   forceUpdate,
   visibleWithBooleanFlag,
   label,
+  min,
+  max,
 }: FlagIntegerInputProps) => {
-  const currentValue = useDataFeatureFlag(flag);
+  const currentValue = getDataFeatureFlagMemo(flag);
   const key = `feature-flag-integer-input-${flag}`;
   const [value, setValue] = useState<number>(() => {
     const initValue = window.sessionDataFeatureFlags[flag];
-    return typeof initValue === 'number' && Number.isFinite(initValue) ? initValue : 0;
+    if (typeof initValue === 'number' && Number.isFinite(initValue)) {
+      return initValue;
+    }
+
+    if (!isNil(min)) {
+      return min;
+    }
+
+    if (!isNil(max)) {
+      return max;
+    }
+    return 0;
   });
 
   if (!isFeatureFlagAvailable(flag)) {
@@ -312,7 +330,8 @@ export const FlagIntegerInput = ({
         <input
           type="number"
           value={value}
-          min={0}
+          min={min ?? 0}
+          max={max ?? undefined}
           onChange={e => setValue(e.target.valueAsNumber)}
           style={{
             width: '100px',
@@ -524,6 +543,13 @@ export function DebugFeatureFlags({ forceUpdate }: { forceUpdate: () => void }) 
       {debugFeatureFlags.map(props => (
         <FlagToggle {...props} forceUpdate={forceUpdate} />
       ))}
+      <FlagIntegerInput
+        flag="mockNetworkPageNodeCount"
+        forceUpdate={forceUpdate}
+        label="Network Page Node Count"
+        min={1}
+        max={10}
+      />
     </DebugMenuSection>
   );
 }
@@ -623,8 +649,8 @@ export function FeatureFlagDumper({ forceUpdate }: { forceUpdate: () => void }) 
 }
 
 function MessageProFeatures({ forceUpdate }: { forceUpdate: () => void }) {
-  const proIsAvailable = useFeatureFlag('proAvailable');
-  const value = useDataFeatureFlag('mockMessageProFeatures') ?? [];
+  const proIsAvailable = getFeatureFlagMemo('proAvailable');
+  const value = getDataFeatureFlagMemo('mockMessageProFeatures') ?? [];
 
   if (!proIsAvailable) {
     return null;
@@ -841,7 +867,8 @@ function ProConfigForm({
 }
 
 function ProConfigManager({ forceUpdate }: { forceUpdate: () => void }) {
-  const { refetch, isFetching } = useProAccessDetails();
+  const { isFetching } = useProBackendProDetails();
+  const refetch = useProBackendRefetch();
   const [proConfig, setProConfig] = useState<ProConfig | null>(null);
   const getProConfig = useCallback(async () => {
     const config = await UserConfigWrapperActions.getProConfig();
@@ -883,9 +910,9 @@ export const ProDebugSection = ({
   forceUpdate,
   setPage,
 }: DebugMenuPageProps & { forceUpdate: () => void }) => {
-  const dispatch = useDispatch();
-  const mockExpiry = useDataFeatureFlag('mockProAccessExpiry');
-  const proAvailable = useFeatureFlag('proAvailable');
+  const dispatch = getAppDispatch();
+  const mockExpiry = getDataFeatureFlagMemo('mockProAccessExpiry');
+  const proAvailable = getFeatureFlagMemo('proAvailable');
 
   const resetPro = useCallback(async () => {
     await UserConfigWrapperActions.removeProConfig();

@@ -49,16 +49,29 @@ function ProBadge({ conversationId }: WithConvoId) {
   return <ProIconButton {...sharedProps} onClick={onProClickCb.cb} />;
 }
 
+// NOTE: [react-compiler] this has to live here for the hook to be identified as static
+function useConversationDetailsInternal(conversationId?: string) {
+  const nicknameOrDisplayName = useConversationUsernameWithFallback(true, conversationId);
+  const isCommunity = useIsPublic(conversationId);
+  const isClosedGroup = useIsClosedGroup(conversationId);
+  const isMe = useIsMe(conversationId);
+
+  return {
+    nicknameOrDisplayName,
+    isCommunity,
+    isClosedGroup,
+    isMe,
+  };
+}
+
 export const ConversationTitleDialog = ({
   conversationId,
   editable,
 }: WithConvoId & {
   editable: boolean;
 }) => {
-  const nicknameOrDisplayName = useConversationUsernameWithFallback(true, conversationId);
-  const isCommunity = useIsPublic(conversationId);
-  const isClosedGroup = useIsClosedGroup(conversationId);
-  const isMe = useIsMe(conversationId);
+  const { nicknameOrDisplayName, isCommunity, isClosedGroup, isMe } =
+    useConversationDetailsInternal(conversationId);
 
   const onClickCb = useOnTitleClickCb(conversationId, editable);
 

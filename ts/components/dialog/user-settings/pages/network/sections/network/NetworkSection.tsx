@@ -1,9 +1,9 @@
 /* eslint-disable no-unneeded-ternary */
 import styled from 'styled-components';
-import { useDispatch } from 'react-redux';
 import type { CSSProperties } from 'styled-components';
 import { useMemo } from 'react';
-import { tr } from '../../../../../../../localization/localeTools';
+import { getAppDispatch } from '../../../../../../../state/dispatch';
+import { tEnglish, tr } from '../../../../../../../localization/localeTools';
 import { Flex } from '../../../../../../basic/Flex';
 import { SpacerMD, SpacerXS } from '../../../../../../basic/Text';
 import {
@@ -17,7 +17,6 @@ import {
 } from '../../components';
 import { useIsDarkTheme } from '../../../../../../../state/theme/selectors/theme';
 import { Localizer } from '../../../../../../basic/Localizer';
-import { LOCALE_DEFAULTS } from '../../../../../../../localization/constants';
 import { NodeImage } from '../../NodeImage';
 import { showLinkVisitWarningDialog } from '../../../../../OpenUrlModal';
 import { useSecuringNodesCount } from './hooks/useSecuringNodesCount';
@@ -70,9 +69,9 @@ const NodesStats = ({ style }: { style?: CSSProperties }) => {
         width="100%"
         $justifyContent="space-between"
         $alignItems="center"
-        overflowY="hidden"
+        $overflowY="hidden"
         height="100%"
-        maxHeight="64px"
+        $maxHeight="64px"
       >
         <SessionNetworkHeading width="60%">
           <Localizer token={'sessionNetworkNodesSwarm'} />
@@ -94,10 +93,10 @@ const NodesStats = ({ style }: { style?: CSSProperties }) => {
         width="100%"
         $justifyContent="space-between"
         $alignItems="center"
-        overflowY="hidden"
+        $overflowY="hidden"
         height="100%"
-        maxHeight="64px"
-        margin="0 0 auto 0"
+        $maxHeight="64px"
+        $margin="0 0 auto 0"
       >
         <SessionNetworkHeading width="60%">
           <Localizer token={'sessionNetworkNodesSecuring'} />
@@ -125,7 +124,7 @@ const CurrentPriceBlock = () => {
   // if we have usdPrice (and not stale), we can show it
   const currentPrice =
     usdPrice && !isFakeRefreshing && !dataIsStale
-      ? `$${formatNumber(usdPrice, { currency: LOCALE_DEFAULTS.usd_name_short, minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true })} ${LOCALE_DEFAULTS.usd_name_short}`
+      ? `$${formatNumber(usdPrice, { currency: tEnglish('usdNameShort'), minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true })} ${tEnglish('usdNameShort')}`
       : infoLoading || isFakeRefreshing
         ? tr('loading')
         : tr('unavailable');
@@ -154,12 +153,12 @@ const CurrentPriceBlock = () => {
       $flexDirection="row"
       $justifyContent="space-between"
       $alignItems="flex-start"
-      paddingInline={'12px 0'}
-      paddingBlock={'var(--margins-md)'}
-      backgroundColor={
+      $paddingInline={'12px 0'}
+      $paddingBlock={'var(--margins-md)'}
+      $backgroundColor={
         isDarkTheme ? 'var(--background-primary-color)' : 'var(--background-secondary-color)'
       }
-      borderColor={'var(--transparent-color)'}
+      $borderColor={'var(--transparent-color)'}
     >
       <Flex $container={true} $flexDirection="column" $alignItems="flex-start">
         <BlockText>
@@ -170,7 +169,7 @@ const CurrentPriceBlock = () => {
           <b>{currentPrice}</b>
         </BlockPrimaryText>
         <SpacerXS />
-        <BlockSecondaryText>{LOCALE_DEFAULTS.token_name_long}</BlockSecondaryText>
+        <BlockSecondaryText>{tr('tokenNameLong')}</BlockSecondaryText>
       </Flex>
       <SessionTooltip
         content={tooltipContent}
@@ -204,7 +203,7 @@ const SecuredByBlock = () => {
 
   const securedAmountSESH =
     securedBySESH && !isFakeRefreshing && !dataIsStale
-      ? `${abbreviateNumber(securedBySESH, 0).toUpperCase()} ${LOCALE_DEFAULTS.token_name_short}`
+      ? `${abbreviateNumber(securedBySESH, 0).toUpperCase()} ${tr('tokenNameShort')}`
       : infoLoading || isFakeRefreshing
         ? tr('loading')
         : tr('unavailable');
@@ -212,13 +211,13 @@ const SecuredByBlock = () => {
   const formattedNumberOrFallback =
     securedByUSD && !isFakeRefreshing && !dataIsStale
       ? formatNumber(securedByUSD, {
-          currency: LOCALE_DEFAULTS.usd_name_short,
+          currency: tEnglish('usdNameShort'),
           minimumFractionDigits: 0,
           maximumFractionDigits: 0,
           useGrouping: true,
         })
       : '-';
-  const securedAmountUSD = `$${formattedNumberOrFallback} ${LOCALE_DEFAULTS.usd_name_short}`;
+  const securedAmountUSD = `$${formattedNumberOrFallback} ${tr('usdNameShort')}`;
 
   return (
     <Block
@@ -227,12 +226,12 @@ const SecuredByBlock = () => {
       $alignItems="flex-start"
       $flexGrow={1}
       width={'100%'}
-      paddingInline={'12px 0'}
-      paddingBlock={'var(--margins-md)'}
-      backgroundColor={
+      $paddingInline={'12px 0'}
+      $paddingBlock={'var(--margins-md)'}
+      $backgroundColor={
         isDarkTheme ? 'var(--background-primary-color)' : 'var(--background-secondary-color)'
       }
-      borderColor={'var(--transparent-color)'}
+      $borderColor={'var(--transparent-color)'}
     >
       <BlockText>{tr('sessionNetworkSecuredBy')}</BlockText>
       <SpacerXS />
@@ -247,11 +246,7 @@ const SecuredByBlock = () => {
 
 export function NetworkSection() {
   const htmlDirection = useHTMLDirection();
-  const dispatch = useDispatch();
-
-  const { swarmNodeCount, dataIsStale } = useSecuringNodesCount();
-
-  const isFakeRefreshing = useInfoFakeRefreshing();
+  const dispatch = getAppDispatch();
 
   return (
     <Flex
@@ -262,11 +257,9 @@ export function NetworkSection() {
       $justifyContent={'flex-start'}
       $alignItems={'center'}
     >
-      <SectionHeading margin={'0 0 var(--margins-xs)'}>
-        {LOCALE_DEFAULTS.network_name}
-      </SectionHeading>
+      <SectionHeading $margin={'0 0 var(--margins-xs)'}>{tr('networkName')}</SectionHeading>
       <SessionNetworkParagraph
-        interactive={true}
+        $interactive={true}
         onClick={() => {
           showLinkVisitWarningDialog('https://docs.getsession.org/session-network', dispatch);
         }}
@@ -275,6 +268,7 @@ export function NetworkSection() {
         <Localizer
           token={'sessionNetworkDescription'}
           icon={LUCIDE_ICONS_UNICODE.EXTERNAL_LINK_ICON}
+          asTag="span"
         />
       </SessionNetworkParagraph>
       <SpacerMD />
@@ -285,12 +279,7 @@ export function NetworkSection() {
         $gridGap="var(--margins-md)"
         width="100%"
       >
-        <NodeImage
-          count={swarmNodeCount ?? 0}
-          width={'153px'}
-          height={'133px'}
-          loading={!swarmNodeCount || dataIsStale || isFakeRefreshing}
-        />
+        <NodeImage width={'153px'} height={'133px'} />
         <NodesStats />
         <CurrentPriceBlock />
         <SecuredByBlock />

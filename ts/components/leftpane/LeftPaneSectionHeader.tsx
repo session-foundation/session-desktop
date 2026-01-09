@@ -1,11 +1,13 @@
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import styled from 'styled-components';
+import { getAppDispatch } from '../../state/dispatch';
 import { LeftOverlayMode, sectionActions } from '../../state/ducks/section';
-import { disableRecoveryPhrasePrompt } from '../../state/ducks/userConfig';
 import { useLeftOverlayMode } from '../../state/selectors/section';
-import { useHideRecoveryPasswordEnabled } from '../../state/selectors/settings';
+import {
+  getShowRecoveryPhrasePrompt,
+  useHideRecoveryPasswordEnabled,
+} from '../../state/selectors/settings';
 import { useIsDarkTheme } from '../../state/theme/selectors/theme';
-import { getShowRecoveryPhrasePrompt } from '../../state/selectors/userConfig';
 import { isSignWithRecoveryPhrase } from '../../util/storage';
 import { Flex } from '../basic/Flex';
 import { SessionButton, SessionButtonColor } from '../basic/SessionButton';
@@ -19,6 +21,7 @@ import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { tr } from '../../localization/localeTools';
 import { userSettingsModal } from '../../state/ducks/modalDialog';
+import { SettingsKey } from '../../data/settings-key';
 
 const StyledLeftPaneSectionHeader = styled(Flex)`
   height: var(--main-view-header-height);
@@ -110,10 +113,10 @@ export const LeftPaneBanner = () => {
   const isSignInWithRecoveryPhrase = isSignWithRecoveryPhrase();
   const hideRecoveryPassword = useHideRecoveryPasswordEnabled();
 
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
-  const showRecoveryPhraseModal = () => {
-    dispatch(disableRecoveryPhrasePrompt());
+  const showRecoveryPhraseModal = async () => {
+    await window.setSettingValue(SettingsKey.showRecoveryPhrasePrompt, false);
     dispatch(userSettingsModal({ userSettingsPage: 'recovery-password' }));
   };
 
@@ -131,7 +134,7 @@ export const LeftPaneBanner = () => {
         width={'100%'}
         $flexDirection="column"
         $alignItems={'flex-start'}
-        padding={'var(--margins-md)'}
+        $padding={'var(--margins-md)'}
       >
         <Flex $container={true} width={'100%'} $alignItems="flex-start">
           <StyledBannerTitle>
@@ -161,7 +164,7 @@ export const LeftPaneSectionHeader = () => {
   const showRecoveryPhrasePrompt = useSelector(getShowRecoveryPhrasePrompt);
   const leftOverlayMode = useLeftOverlayMode();
 
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const goBack = () => {
     if (!leftOverlayMode) {
       return;

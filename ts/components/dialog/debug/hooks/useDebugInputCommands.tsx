@@ -1,7 +1,7 @@
 import { type Dispatch, useEffect } from 'react';
 import { isDevProd } from '../../../../shared/env_vars';
 import { Constants } from '../../../../session';
-import { useFeatureFlag } from '../../../../state/ducks/types/releasedFeaturesReduxTypes';
+import { getFeatureFlagMemo } from '../../../../state/ducks/types/releasedFeaturesReduxTypes';
 
 type DebugInputCommandsArgs = {
   value: string;
@@ -25,7 +25,7 @@ export function useDebugInputCommands({ value, setValue }: DebugInputCommandsArg
   }
 
   // eslint-disable-next-line react-hooks/rules-of-hooks -- Conditional doesn't change at runtime
-  const debugInputCommands = useFeatureFlag('debugInputCommands');
+  const debugInputCommands = getFeatureFlagMemo('debugInputCommands');
 
   // eslint-disable-next-line react-hooks/rules-of-hooks
   useEffect(() => {

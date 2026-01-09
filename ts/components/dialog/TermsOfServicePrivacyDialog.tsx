@@ -1,5 +1,5 @@
 import { shell } from 'electron';
-import { useDispatch } from 'react-redux';
+import { getAppDispatch } from '../../state/dispatch';
 import { updateTermsOfServicePrivacyModal } from '../../state/onboarding/ducks/modals';
 import { SessionButton, SessionButtonType } from '../basic/SessionButton';
 import {
@@ -18,7 +18,7 @@ export type TermsOfServicePrivacyDialogProps = {
 export function TermsOfServicePrivacyDialog(props: TermsOfServicePrivacyDialogProps) {
   const { show } = props;
 
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   const onClose = () => {
     dispatch(updateTermsOfServicePrivacyModal(null));

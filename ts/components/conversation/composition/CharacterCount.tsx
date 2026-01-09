@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 import { Constants } from '../../../session';
-import { useFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
+import { getFeatureFlagMemo } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { SessionTooltip } from '../../SessionTooltip';
 import { StyledCTA } from '../../basic/StyledCTA';
 import { formatNumber } from '../../../util/i18n/formatting/generics';
@@ -27,8 +27,8 @@ const StyledCharacterCountContainer = styled.div`
   inset-inline-end: var(--margins-md);
 `;
 
-const StyledRemainingNumber = styled.span<{ pastLimit: boolean }>`
-  color: ${props => (props.pastLimit ? 'var(--danger-color)' : 'var(--text-primary-color)')};
+const StyledRemainingNumber = styled.span<{ $pastLimit: boolean }>`
+  color: ${props => (props.$pastLimit ? 'var(--danger-color)' : 'var(--text-primary-color)')};
 `;
 
 function ProCta() {
@@ -52,7 +52,7 @@ function ProCta() {
 }
 
 export function CharacterCount({ count }: CharacterCountProps) {
-  const alwaysShowFlag = useFeatureFlag('alwaysShowRemainingChars');
+  const alwaysShowFlag = getFeatureFlagMemo('alwaysShowRemainingChars');
 
   const currentUserHasPro = useCurrentUserHasPro();
 
@@ -74,7 +74,7 @@ export function CharacterCount({ count }: CharacterCountProps) {
         })}
         dataTestId="tooltip-character-count"
       >
-        <StyledRemainingNumber pastLimit={pastLimit}>
+        <StyledRemainingNumber $pastLimit={pastLimit}>
           {formatNumber(remaining)}
         </StyledRemainingNumber>
       </SessionTooltip>

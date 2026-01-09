@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useDispatch } from 'react-redux';
 import useMount from 'react-use/lib/useMount';
 import styled from 'styled-components';
+import { getAppDispatch } from '../../../state/dispatch';
 import { sleepFor } from '../../../session/utils/Promise';
 import {
   AccountCreation,
@@ -20,9 +20,9 @@ import { TermsAndConditions } from '../TermsAndConditions';
 import { tr } from '../../../localization/localeTools';
 
 // NOTE we want to prevent the buttons from flashing when the app starts
-const StyledStart = styled.div<{ ready: boolean }>`
+const StyledStart = styled.div<{ $ready: boolean }>`
   ${props =>
-    !props.ready &&
+    !props.$ready &&
     `.session-button {
     transition: none;
   }`}
@@ -31,7 +31,7 @@ const StyledStart = styled.div<{ ready: boolean }>`
 export const Start = () => {
   const [ready, setReady] = useState(false);
 
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   useMount(() => {
     dispatch(resetOnboardingState());
@@ -42,7 +42,7 @@ export const Start = () => {
   });
 
   return (
-    <StyledStart ready={ready}>
+    <StyledStart $ready={ready}>
       <SessionButton
         ariaLabel={'Create account button'}
         onClick={() => {
