@@ -8,13 +8,14 @@ import { gt as isVersionGreaterThan, parse as parseVersion } from 'semver';
 
 import { filesize } from 'filesize';
 import { windowMarkShouldQuit } from '../node/window_state';
+import { sqlNode } from '../node/sql';
+import { SettingsKey } from '../data/settings-key';
 
 import { DURATION, UPDATER_INTERVAL_MS } from '../session/constants';
 import { showCannotUpdateDialog, showDownloadUpdateDialog, showUpdateDialog } from './common';
 import { getLatestRelease } from '../node/latest_desktop_release';
 import { Errors } from '../types/Errors';
 import type { LoggerType } from '../util/logger/Logging';
-import { isProxyEnabled } from '../session/utils/InsecureNodeFetch';
 
 let isUpdating = false;
 let downloadIgnored = false;
@@ -81,10 +82,17 @@ export async function checkForUpdates(
     return false;
   }
 
+  let proxyEnabled = false;
+  try {
+    proxyEnabled = Boolean(sqlNode.getItemById(SettingsKey.proxyEnabled)?.value);
+  } catch (error) {
+    logger.error('[updater] failed to read proxy setting:', Errors.toString(error));
+  }
+
   // SECURITY: Disable auto-updater when SOCKS proxy is enabled
   // electron-updater uses native HTTP clients that bypass our proxy configuration
   // To prevent traffic leaks, we disable auto-updates when proxy is active
-  if (isProxyEnabled()) {
+  if (proxyEnabled) {
     logger.info(
       '[updater] SOCKS proxy is enabled, skipping auto-update check to prevent traffic leaks. Please update manually.'
     );

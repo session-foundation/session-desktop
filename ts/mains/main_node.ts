@@ -1235,19 +1235,26 @@ let proxyPassword: string | null = null;
 
 async function applyProxySettings() {
   try {
-    const enabled = sqlNode.getItemById('proxy-enabled')?.value || false;
+    const enabled = Boolean(sqlNode.getItemById(SettingsKey.proxyEnabled)?.value);
+    const bootstrapOnly = Boolean(sqlNode.getItemById(SettingsKey.proxyBootstrapOnly)?.value);
 
-    if (!enabled) {
-      // Clear proxy if disabled
+    if (!enabled || bootstrapOnly) {
+      // Clear proxy if disabled or when only bootstrap traffic should use the per-request agent
       await session.defaultSession.setProxy({ proxyRules: '' });
-      console.log('Proxy disabled');
+      proxyUsername = null;
+      proxyPassword = null;
+      console.log(
+        enabled
+          ? 'Proxy enabled (bootstrap-only): skipping global Electron proxy configuration.'
+          : 'Proxy disabled'
+      );
       return;
     }
 
-    const host = (sqlNode.getItemById('proxy-host')?.value || '') as string;
-    const port = sqlNode.getItemById('proxy-port')?.value || 0;
-    const username = (sqlNode.getItemById('proxy-username')?.value || '') as string;
-    const password = (sqlNode.getItemById('proxy-password')?.value || '') as string;
+    const host = (sqlNode.getItemById(SettingsKey.proxyHost)?.value || '') as string;
+    const port = sqlNode.getItemById(SettingsKey.proxyPort)?.value || 0;
+    const username = (sqlNode.getItemById(SettingsKey.proxyUsername)?.value || '') as string;
+    const password = (sqlNode.getItemById(SettingsKey.proxyPassword)?.value || '') as string;
 
     if (!host || !port) {
       console.warn('Proxy enabled but host or port is missing');

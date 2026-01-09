@@ -64,11 +64,11 @@ function validateProxySettings(settings: ProxySettings): { valid: boolean; error
   return { valid: true };
 }
 
-async function saveProxySettings(settings: ProxySettings): Promise<void> {
+async function saveProxySettings(settings: ProxySettings): Promise<boolean> {
   const validation = validateProxySettings(settings);
   if (!validation.valid) {
     ToastUtils.pushToastError('proxyValidationError', validation.error || '');
-    return;
+    return false;
   }
 
   await window.setSettingValue(SettingsKey.proxyEnabled, settings.enabled);
@@ -79,9 +79,22 @@ async function saveProxySettings(settings: ProxySettings): Promise<void> {
   await window.setSettingValue(SettingsKey.proxyPassword, settings.password);
 
   // Notify main process to apply proxy settings
-  ipcRenderer.send('apply-proxy-settings');
+  const applyResult = await new Promise<Error | null>(resolve => {
+    ipcRenderer.once('apply-proxy-settings-response', (_event, error) => {
+      resolve(error ?? null);
+    });
+    ipcRenderer.send('apply-proxy-settings');
+  });
+
+  if (applyResult) {
+    // Surface apply errors instead of silently failing
+    console.error('apply-proxy-settings failed:', applyResult);
+    ToastUtils.pushToastError('proxyTestFailed', tr('proxyTestFailedDescription'));
+    return false;
+  }
 
   ToastUtils.pushToastSuccess('proxySaved', tr('proxySavedDescription'));
+  return true;
 }
 
 export function ProxySettingsPage(modalState: UserSettingsModalState) {
@@ -120,8 +133,10 @@ export function ProxySettingsPage(modalState: UserSettingsModalState) {
   };
 
   const handleSave = async () => {
-    await saveProxySettings(settings);
-    forceUpdate();
+    const saved = await saveProxySettings(settings);
+    if (saved) {
+      forceUpdate();
+    }
   };
 
   if (isLoading) {
