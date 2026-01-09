@@ -972,6 +972,27 @@ export type TokenSimpleNoArgs =
   'sessionNotifications' |
   'sessionPermissions' |
   'sessionPrivacy' |
+  'sessionProxy' |
+  'proxyEnabled' |
+  'proxyDescription' |
+  'proxyBootstrapOnly' |
+  'proxyBootstrapOnlyDescription' |
+  'proxyHost' |
+  'proxyHostPlaceholder' |
+  'proxyPort' |
+  'proxyPortPlaceholder' |
+  'proxyAuthUsername' |
+  'proxyAuthPassword' |
+  'proxySaved' |
+  'proxySavedDescription' |
+  'proxyValidationError' |
+  'proxyValidationErrorHost' |
+  'proxyValidationErrorPort' |
+  'proxySettings' |
+  'proxyTestFailed' |
+  'proxyTestFailedDescription' |
+  'proxyTestSuccess' |
+  'proxyTestSuccessDescription' |
   'sessionProBeta' |
   'sessionRecoveryPassword' |
   'sessionSettings' |

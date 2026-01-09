@@ -947,6 +947,7 @@ export const enSimpleNoArgs = {
   sessionNotifications: 'Notifications',
   sessionPermissions: 'Permissions',
   sessionPrivacy: 'Privacy',
+  sessionProxy: 'Proxy',
   sessionProBeta: 'Session Pro Beta',
   sessionRecoveryPassword: 'Recovery Password',
   sessionSettings: 'Settings',
