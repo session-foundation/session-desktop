@@ -212,7 +212,7 @@
     "webpack-cli": "6.0.1"
   },
   "engines": {
-    "node": "20.18.2"
+    "node": "24.12.0"
   },
   "build": {
     "appId": "com.loki-project.messenger-desktop",
