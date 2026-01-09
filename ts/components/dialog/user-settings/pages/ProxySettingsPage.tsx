@@ -219,7 +219,7 @@ export function ProxySettingsPage(modalState: UserSettingsModalState) {
       <Flex
         $container={true}
         $justifyContent="flex-end"
-        padding="var(--margins-md) 0 0 0"
+        $padding="var(--margins-md) 0 0 0"
         width="100%"
       >
         <SessionButton
