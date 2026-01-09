@@ -205,6 +205,14 @@ async function initializeSql({
     }
     await updateSchema(db);
 
+    // Register deterministic UDF to fix SQLite's ASCII-only NOCASE by using V8's Unicode support.
+    db.function('NOCASE_JS', { deterministic: true }, (text: unknown) => {
+      if (typeof text !== 'string') {
+        return '';
+      }
+      return text.toLowerCase();
+    });
+
     // test database
 
     const cipherIntegrityResult = getSQLCipherIntegrityCheck(db);
@@ -762,24 +770,24 @@ function getPubkeysInPublicConversation(conversationId: string) {
   return map(rows, row => row.source);
 }
 
-function searchConversations(query: string) {
+export function searchConversations(query: string) {
+  // Normalize once in JS to ensure strict Unicode lowercase matching
+  const normalizedQuery = `%${query.toLowerCase()}%`;
+
   const rows = assertGlobalInstance()
     .prepare(
       `SELECT * FROM ${CONVERSATIONS_TABLE} WHERE
     (
-      displayNameInProfile LIKE $displayNameInProfile COLLATE NOCASE OR
-      nickname LIKE $nickname COLLATE NOCASE OR
-      (id LIKE $id AND
-        (displayNameInProfile IS NULL OR displayNameInProfile = '') AND (nickname IS NULL OR nickname = '')
-      )
-    ) AND active_at > 0
-    ORDER BY (COALESCE(NULLIF(nickname, ''), displayNameInProfile) COLLATE NOCASE)
+      NOCASE_JS(displayNameInProfile) LIKE $query OR
+      NOCASE_JS(nickname) LIKE $query OR
+      id LIKE $query
+    ) 
+    AND active_at > 0
+    ORDER BY COALESCE(NULLIF(NOCASE_JS(nickname), ''), NOCASE_JS(displayNameInProfile)) ASC
     LIMIT $limit`
     )
     .all({
-      displayNameInProfile: `%${query}%`,
-      id: `%${query}%`,
-      nickname: `%${query}%`,
+      query: normalizedQuery,
       limit: 50,
     });
 
