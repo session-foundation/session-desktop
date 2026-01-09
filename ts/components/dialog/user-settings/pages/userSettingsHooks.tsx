@@ -35,6 +35,8 @@ export function useUserSettingsTitle(page: UserSettingsModalState | undefined) {
       return tr('sessionHelp');
     case 'preferences':
       return tr('preferences');
+    case 'proxy':
+      return tr('proxySettings');
     case 'network':
       return tr('networkName');
     case 'password':
@@ -74,6 +76,7 @@ export function useUserSettingsCloseAction(props: UserSettingsModalState) {
     case 'help':
     case 'clear-data':
     case 'preferences':
+    case 'proxy':
     case 'blocked-contacts':
     case 'password':
     case 'network':
@@ -126,6 +129,7 @@ export function useUserSettingsBackAction(modalState: UserSettingsModalState) {
     case 'notifications':
     case 'privacy':
     case 'preferences':
+    case 'proxy':
     case 'network':
     case 'pro':
       settingsPageToDisplayOnBack = 'default';

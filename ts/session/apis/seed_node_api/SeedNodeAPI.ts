@@ -14,7 +14,7 @@ import { sha256 } from '../../crypto';
 import { allowOnlyOneAtATime } from '../../utils/Promise';
 import { GetServicesNodesFromSeedRequest } from '../snode_api/SnodeRequestTypes';
 import { getDataFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
-import { FetchDestination, insecureNodeFetch } from '../../utils/InsecureNodeFetch';
+import { FetchDestination, insecureNodeFetch, isProxyEnabled } from '../../utils/InsecureNodeFetch';
 
 /**
  * Fetch all snodes from seed nodes.
@@ -262,9 +262,13 @@ async function getSnodesFromSeedUrl(urlObj: URL): Promise<Array<any>> {
     urlObj.protocol !== Constants.PROTOCOLS.HTTP
   );
 
+  // CRITICAL: Use longer timeout when proxy is enabled
+  // SOCKS handshake + proxy routing requires more time than direct connection
+  const requestTimeout = isProxyEnabled() ? 30000 : 5000;
+
   const fetchOptions = {
     method: 'POST',
-    timeout: 5000,
+    timeout: requestTimeout,
     body: JSON.stringify(body),
     headers: {
       'User-Agent': 'WhatsApp',

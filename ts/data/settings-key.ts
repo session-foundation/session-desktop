@@ -35,6 +35,15 @@ const lastMessageGroupsRegenerated = 'lastMessageGroupsRegenerated';
 
 const localAttachmentEncryptionKey = 'local_attachment_encrypted_key';
 
+// Proxy settings
+const proxyEnabled = 'proxy-enabled';
+const proxyType = 'proxy-type';
+const proxyHost = 'proxy-host';
+const proxyPort = 'proxy-port';
+const proxyUsername = 'proxy-username';
+const proxyPassword = 'proxy-password';
+const proxyBootstrapOnly = 'proxy-bootstrap-only';
+
 export const SettingsKey = {
   lastShutdownWasGraceful: 'lastShutdownWasGraceful',
   settingsReadReceipt,
@@ -87,6 +96,14 @@ export const SettingsKey = {
   // NOTE: for these CTAs undefined means it has never been shown in this cycle of pro access, true means it needs to be shown and false means it has been shown and dont show it again.
   proExpiringSoonCTA: 'proExpiringSoonCTA',
   proExpiredCTA: 'proExpiredCTA',
+  // Proxy settings
+  proxyEnabled,
+  proxyType,
+  proxyHost,
+  proxyPort,
+  proxyUsername,
+  proxyPassword,
+  proxyBootstrapOnly,
 } as const;
 
 export const KNOWN_BLINDED_KEYS_ITEM = 'KNOWN_BLINDED_KEYS_ITEM';

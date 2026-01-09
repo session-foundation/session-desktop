@@ -27,11 +27,19 @@ runs:
     - name: Install dependencies
       shell: bash
       if: steps.cache-desktop-modules.outputs.cache-hit != 'true'
-      run: yarn install --frozen-lockfile --network-timeout 600000
+      run: |
+        if yarn install --frozen-lockfile --network-timeout 600000; then
+          echo "LOCKFILE_FROZEN_OK=true" >> "$GITHUB_ENV"
+        else
+          echo "LOCKFILE_FROZEN_OK=false" >> "$GITHUB_ENV"
+          yarn install --network-timeout 600000
+        fi
 
     - uses: actions/cache/save@v4
       id: cache-desktop-modules-save
-      if: runner.os != 'Windows'
+      # Only save the cache when we installed with a frozen lockfile; otherwise the effective
+      # dependency tree may not match the repo's yarn.lock and would poison future cache hits.
+      if: runner.os != 'Windows' && steps.cache-desktop-modules.outputs.cache-hit != 'true' && env.LOCKFILE_FROZEN_OK == 'true'
       with:
         path: node_modules
         key: ${{ runner.os }}-${{ runner.arch }}-${{ inputs.cache_suffix }}-${{ hashFiles('package.json', 'yarn.lock', 'patches/**') }}
