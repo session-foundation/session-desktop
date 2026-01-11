@@ -1,5 +1,5 @@
 import { setupI18n } from '../util/i18n/i18n';
-import { CrowdinLocale, isCrowdinLocale } from '../localization/generated/constants';
+import { CrowdinLocale, isCrowdinLocale } from '../localization';
 import { keepFullLocalePart } from '../util/i18n/shared';
 
 function normalizeLocaleName(locale: string) {
