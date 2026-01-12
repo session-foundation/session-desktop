@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 /* eslint-disable no-console */
-import { app, type BrowserWindow } from 'electron';
+import { app, session, type BrowserWindow } from 'electron';
 import { autoUpdater, DOWNLOAD_PROGRESS, type UpdateInfo } from 'electron-updater';
 import * as fs from 'fs-extra';
 import * as path from 'path';
@@ -8,8 +8,6 @@ import { gt as isVersionGreaterThan, parse as parseVersion } from 'semver';
 
 import { filesize } from 'filesize';
 import { windowMarkShouldQuit } from '../node/window_state';
-import { sqlNode } from '../node/sql';
-import { SettingsKey } from '../data/settings-key';
 
 import { DURATION, UPDATER_INTERVAL_MS } from '../session/constants';
 import { showCannotUpdateDialog, showDownloadUpdateDialog, showUpdateDialog } from './common';
@@ -39,6 +37,7 @@ export async function start(getMainWindow: () => BrowserWindow | null, logger: L
 
   autoUpdater.logger = logger;
   autoUpdater.autoDownload = false;
+  autoUpdater.netSession = session.defaultSession;
 
   interval = global.setInterval(async () => {
     try {
@@ -78,23 +77,6 @@ export async function checkForUpdates(
   if (stopped || isUpdating || (downloadIgnored && !force)) {
     logger.info(
       `[updater] checkForUpdates is returning early stopped ${stopped} isUpdating ${isUpdating} downloadIgnored ${downloadIgnored}`
-    );
-    return false;
-  }
-
-  let proxyEnabled = false;
-  try {
-    proxyEnabled = Boolean(sqlNode.getItemById(SettingsKey.proxyEnabled)?.value);
-  } catch (error) {
-    logger.error('[updater] failed to read proxy setting:', Errors.toString(error));
-  }
-
-  // SECURITY: Disable auto-updater when SOCKS proxy is enabled
-  // electron-updater uses native HTTP clients that bypass our proxy configuration
-  // To prevent traffic leaks, we disable auto-updates when proxy is active
-  if (proxyEnabled) {
-    logger.info(
-      '[updater] SOCKS proxy is enabled, skipping auto-update check to prevent traffic leaks. Please update manually.'
     );
     return false;
   }

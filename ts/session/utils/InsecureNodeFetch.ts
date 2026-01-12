@@ -91,6 +91,7 @@ type NodeFetchParams = {
   fetchOptions?: RequestInit;
   destination: FetchDestination;
   caller: string;
+  tlsOptions?: Partial<Record<TlsOptionKey, unknown>>;
 };
 
 type ProxySettings = {
@@ -304,24 +305,34 @@ function getProxyAgent(
   return agent;
 }
 
+function resolveTlsOptions(params: NodeFetchParams): Partial<Record<TlsOptionKey, unknown>> {
+  if (params.tlsOptions) {
+    return params.tlsOptions;
+  }
+  return getTlsOptionsFromAgent(params.fetchOptions?.agent);
+}
+
+function buildAgentForRequest(params: NodeFetchParams): RequestInit['agent'] | undefined {
+  const tlsOptions = resolveTlsOptions(params);
+  const proxyAgent = getProxyAgent(tlsOptions, params.destination);
+  if (proxyAgent) {
+    window?.log?.info(
+      `insecureNodeFetch: Using proxy for request to ${params.url} (destination: ${FetchDestination[params.destination]})`
+    );
+    return proxyAgent;
+  }
+
+  return params.fetchOptions?.agent;
+}
+
 export async function insecureNodeFetch(params: NodeFetchParams) {
   try {
-    // Extract TLS options from the original agent (if present) to preserve security settings
-    // This ensures certificate pinning and other TLS configurations work through the proxy
-    const tlsOptions = getTlsOptionsFromAgent(params.fetchOptions?.agent);
-    const proxyAgent = getProxyAgent(tlsOptions, params.destination);
+    const finalAgent = buildAgentForRequest(params);
 
-    // CRITICAL: Proxy agent must override any other agent (like sslAgent) to route through SOCKS
     const fetchOptions = {
       ...params.fetchOptions,
-      ...(proxyAgent ? { agent: proxyAgent } : {}),
+      ...(finalAgent ? { agent: finalAgent } : {}),
     } as RequestInit;
-
-    if (proxyAgent) {
-      window?.log?.info(
-        `insecureNodeFetch: Using proxy for request to ${params.url} (destination: ${FetchDestination[params.destination]})`
-      );
-    }
 
     debugLogRequestIfEnabled(params);
     const result = await nodeFetch(params.url, fetchOptions);
@@ -330,7 +341,6 @@ export async function insecureNodeFetch(params: NodeFetchParams) {
     return result;
   } catch (e) {
     handleGoOffline(e);
-    // Enhanced error logging for debugging proxy issues
     const errorDetails = {
       message: (e as Error).message,
       name: (e as Error).name,
@@ -340,7 +350,8 @@ export async function insecureNodeFetch(params: NodeFetchParams) {
       type: (e as any).type,
       stack: (e as Error).stack?.split('\n').slice(0, 3).join('\n'),
     };
-    window?.log?.error('insecureNodeFetch error', errorDetails);
+    window?.log?.error('insecureNodeFetch error:', errorDetails.message);
+    window?.log?.debug('insecureNodeFetch error details', errorDetails);
     throw e;
   }
 }

@@ -1243,6 +1243,9 @@ async function applyProxySettings() {
       await session.defaultSession.setProxy({ proxyRules: '' });
       proxyUsername = null;
       proxyPassword = null;
+      delete process.env.HTTPS_PROXY;
+      delete process.env.HTTP_PROXY;
+      delete process.env.NO_PROXY;
       console.log(
         enabled
           ? 'Proxy enabled (bootstrap-only): skipping global Electron proxy configuration.'
@@ -1266,10 +1269,19 @@ async function applyProxySettings() {
     proxyPassword = password || null;
 
     const proxyRules = `socks5://${host}:${port}`;
+    const proxyEnv =
+      proxyUsername && proxyPassword
+        ? `socks5://${encodeURIComponent(proxyUsername)}:${encodeURIComponent(proxyPassword)}@${host}:${port}`
+        : proxyRules;
     await session.defaultSession.setProxy({
       proxyRules,
       proxyBypassRules: '<local>',
     });
+
+    // Ensure libraries that rely on standard proxy env vars (including electron-updater) route through SOCKS.
+    process.env.HTTPS_PROXY = proxyEnv;
+    process.env.HTTP_PROXY = proxyEnv;
+    process.env.NO_PROXY = '<local>';
 
     console.log(`Proxy configured: ${proxyRules}`);
   } catch (e) {

@@ -36,7 +36,7 @@ type ProxySettings = {
   password: string;
 };
 
-async function loadProxySettings(): Promise<ProxySettings> {
+function loadProxySettings(): ProxySettings {
   const enabled = Boolean(window.getSettingValue(SettingsKey.proxyEnabled));
   const bootstrapOnly = Boolean(window.getSettingValue(SettingsKey.proxyBootstrapOnly));
   const host = (window.getSettingValue(SettingsKey.proxyHost) as string) || '';
@@ -114,19 +114,17 @@ export function ProxySettingsPage(modalState: UserSettingsModalState) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    void (async () => {
-      const loadedSettings = await loadProxySettings();
-      setSettings(loadedSettings);
-      setIsLoading(false);
-    })();
+    const loadedSettings = loadProxySettings();
+    setSettings(loadedSettings);
+    setIsLoading(false);
   }, []);
 
-  const handleToggleEnabled = async () => {
+  const handleToggleEnabled = () => {
     const newSettings = { ...settings, enabled: !settings.enabled };
     setSettings(newSettings);
   };
 
-  const handleToggleBootstrapOnly = async () => {
+  const handleToggleBootstrapOnly = () => {
     const newSettings = { ...settings, bootstrapOnly: !settings.bootstrapOnly };
     setSettings(newSettings);
   };

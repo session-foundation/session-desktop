@@ -37,7 +37,6 @@ const localAttachmentEncryptionKey = 'local_attachment_encrypted_key';
 
 // Proxy settings
 const proxyEnabled = 'proxy-enabled';
-const proxyType = 'proxy-type';
 const proxyHost = 'proxy-host';
 const proxyPort = 'proxy-port';
 const proxyUsername = 'proxy-username';
@@ -98,7 +97,6 @@ export const SettingsKey = {
   proExpiredCTA: 'proExpiredCTA',
   // Proxy settings
   proxyEnabled,
-  proxyType,
   proxyHost,
   proxyPort,
   proxyUsername,

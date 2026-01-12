@@ -57,12 +57,20 @@ export async function fetchSnodePoolFromSeedNodeWithRetries(
   }
 }
 
-const getSslAgentForSeedNode = async (seedNodeHost: string, isSsl = false) => {
+type SeedNodeAgentConfig = {
+  agent?: https.Agent;
+  tlsOptions?: https.AgentOptions;
+};
+
+const getSslAgentForSeedNode = async (
+  seedNodeHost: string,
+  isSsl = false
+): Promise<SeedNodeAgentConfig> => {
   let certContent = '';
   let pubkey256 = '';
   let cert256 = '';
   if (!isSsl) {
-    return undefined;
+    return {};
   }
 
   if (getDataFeatureFlag('useLocalDevNet')) {
@@ -72,7 +80,7 @@ const getSslAgentForSeedNode = async (seedNodeHost: string, isSsl = false) => {
       keepAlive: true,
     };
 
-    return new https.Agent(sslOptions);
+    return { agent: new https.Agent(sslOptions), tlsOptions: sslOptions };
   }
 
   switch (seedNodeHost) {
@@ -144,7 +152,7 @@ const getSslAgentForSeedNode = async (seedNodeHost: string, isSsl = false) => {
   };
 
   // we're creating a new Agent that will now use the certs we have configured
-  return new https.Agent(sslOptions);
+  return { agent: new https.Agent(sslOptions), tlsOptions: sslOptions };
 };
 
 export interface SnodeFromSeed {
@@ -257,7 +265,7 @@ async function getSnodesFromSeedUrl(urlObj: URL): Promise<Array<any>> {
     },
   };
 
-  const sslAgent = await getSslAgentForSeedNode(
+  const { agent: sslAgent, tlsOptions } = await getSslAgentForSeedNode(
     urlObj.hostname,
     urlObj.protocol !== Constants.PROTOCOLS.HTTP
   );
@@ -286,6 +294,7 @@ async function getSnodesFromSeedUrl(urlObj: URL): Promise<Array<any>> {
     fetchOptions,
     destination: FetchDestination.SEED_NODE,
     caller: 'getSnodesFromSeedUrl',
+    tlsOptions,
   });
 
   if (response.status !== 200) {

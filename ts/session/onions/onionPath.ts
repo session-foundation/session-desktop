@@ -381,6 +381,7 @@ export async function testGuardNode(snode: Snode) {
       fetchOptions,
       destination: FetchDestination.SERVICE_NODE,
       caller: 'testGuardNode',
+      tlsOptions: { rejectUnauthorized: false },
     });
   } catch (e) {
     if (e.type === 'request-timeout') {
