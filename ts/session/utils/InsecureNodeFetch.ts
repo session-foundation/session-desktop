@@ -183,7 +183,11 @@ function buildTlsOptionsCacheKey(
     return 'no-tls';
   }
 
-  if (typeof tlsOptions.checkServerIdentity === 'function') {
+  if (
+    tlsOptions &&
+    'checkServerIdentity' in tlsOptions &&
+    typeof (tlsOptions as Record<string, unknown>).checkServerIdentity === 'function'
+  ) {
     return undefined;
   }
 
