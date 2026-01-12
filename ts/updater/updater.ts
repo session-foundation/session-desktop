@@ -37,7 +37,6 @@ export async function start(getMainWindow: () => BrowserWindow | null, logger: L
 
   autoUpdater.logger = logger;
   autoUpdater.autoDownload = false;
-  autoUpdater.netSession = session.defaultSession;
 
   interval = global.setInterval(async () => {
     try {

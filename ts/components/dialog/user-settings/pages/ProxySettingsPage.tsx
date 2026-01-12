@@ -119,12 +119,12 @@ export function ProxySettingsPage(modalState: UserSettingsModalState) {
     setIsLoading(false);
   }, []);
 
-  const handleToggleEnabled = () => {
+  const handleToggleEnabled = async () => {
     const newSettings = { ...settings, enabled: !settings.enabled };
     setSettings(newSettings);
   };
 
-  const handleToggleBootstrapOnly = () => {
+  const handleToggleBootstrapOnly = async () => {
     const newSettings = { ...settings, bootstrapOnly: !settings.bootstrapOnly };
     setSettings(newSettings);
   };
