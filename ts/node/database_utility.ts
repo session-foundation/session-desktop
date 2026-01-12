@@ -1,10 +1,13 @@
-import * as BetterSqlite3 from '@signalapp/better-sqlite3';
+import { type Database } from '@signalapp/sqlcipher';
 import { difference, isFinite, isNumber, omit, pick } from 'lodash';
+import { isUndefined } from 'lodash/fp';
 import {
   ConversationAttributes,
   ConversationAttributesWithNotSavedOnes,
 } from '../models/conversationAttributes';
 import { CONVERSATION_PRIORITIES } from '../models/types';
+import type { JSONRow, SQLInsertable } from '../types/sqlSharedTypes';
+import { isDevProd } from '../shared/env_vars';
 
 export const CONVERSATIONS_TABLE = 'conversations';
 export const MESSAGES_TABLE = 'messages';
@@ -28,6 +31,10 @@ export function jsonToObject(json: string): Record<string, any> {
   return JSON.parse(json);
 }
 
+export function parseJsonRows(rows: Array<JSONRow>) {
+  return rows.map(row => jsonToObject(row.json));
+}
+
 function jsonToArray(json: string): Array<string> {
   try {
     return JSON.parse(json);
@@ -41,7 +48,7 @@ export function arrayStrToJson(arr: Array<string>): string {
   return JSON.stringify(arr);
 }
 
-export function toSqliteBoolean(val: boolean): number {
+export function toSqliteBoolean(val?: boolean | 0 | 1): number {
   return val ? 1 : 0;
 }
 
@@ -84,7 +91,8 @@ const allowedKeysFormatRowOfConversation = [
 ];
 
 export function formatRowOfConversation(
-  row: Record<string, any>,
+  // TODO: There isnt an easy way to type this while having it mutable in the function, find a solution
+  row: JSONRow<any>,
   from: string,
   unreadCount: number,
   mentionedUs: boolean
@@ -263,7 +271,7 @@ export function assertValidConversationAttributes(
   return pick(data, allowedKeysOfConversationAttributes) as ConversationAttributes;
 }
 
-export function dropFtsAndTriggers(db: BetterSqlite3.Database) {
+export function dropFtsAndTriggers(db: Database) {
   console.info('dropping fts5 table');
 
   db.exec(`
@@ -274,7 +282,7 @@ export function dropFtsAndTriggers(db: BetterSqlite3.Database) {
       `);
 }
 
-export function rebuildFtsTable(db: BetterSqlite3.Database) {
+export function rebuildFtsTable(db: Database) {
   console.info('rebuildFtsTable');
   db.exec(`
           -- Then we create our full-text search table and populate it
@@ -307,4 +315,21 @@ export function rebuildFtsTable(db: BetterSqlite3.Database) {
           END;
           `);
   console.info('rebuildFtsTable built');
+}
+
+export function devAssertValidSQLPayload(table: string, payload: SQLInsertable) {
+  if (!isDevProd()) {
+    return;
+  }
+  const undefinedFields: Array<string> = [];
+  Object.entries(payload).forEach(([key, value]) => {
+    if (isUndefined(value)) {
+      undefinedFields.push(key);
+    }
+  });
+  if (undefinedFields.length) {
+    throw new Error(
+      `unexpected type 'undefined' in SQL in payload for '${table}' in param${undefinedFields.length > 1 ? 's:' : ''} ${undefinedFields.join(', ')} `
+    );
+  }
 }

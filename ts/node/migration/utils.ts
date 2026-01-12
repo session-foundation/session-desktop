@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-expressions */
-import * as BetterSqlite3 from '@signalapp/better-sqlite3';
+import { type Database } from '@signalapp/sqlcipher';
 import { isArray } from 'lodash';
 import { CONVERSATIONS_TABLE } from '../database_utility';
 import { getIdentityKeys, sqlNode } from '../sql';
@@ -24,7 +24,7 @@ export function checkTargetMigration(version: number, targetVersion: number) {
  * Returns the logged in user conversation attributes and the keys.
  * If the keys exists but a conversation for that pubkey does not exist yet, the keys are still returned
  */
-export function getLoggedInUserConvoDuringMigration(db: BetterSqlite3.Database) {
+export function getLoggedInUserConvoDuringMigration(db: Database) {
   const ourKeys = getIdentityKeys(db);
 
   if (!ourKeys || !ourKeys.publicKeyHex || !ourKeys.privateEd25519) {
@@ -38,7 +38,7 @@ export function getLoggedInUserConvoDuringMigration(db: BetterSqlite3.Database) 
   return { ourKeys, ourConversation: ourConversation || null };
 }
 
-export function getBlockedNumbersDuringMigration(db: BetterSqlite3.Database) {
+export function getBlockedNumbersDuringMigration(db: Database) {
   try {
     const blockedItem = sqlNode.getItemById(SettingsKey.blocked, db);
     if (!blockedItem) {
