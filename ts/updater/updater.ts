@@ -238,6 +238,14 @@ export async function canAutoUpdate(): Promise<boolean> {
 }
 
 async function configureUpdaterProxy(logger: LoggerType) {
+  const updaterAny = autoUpdater as any;
+  const getUpdaterSession = () => updaterAny._netSession || session.defaultSession;
+  const setUpdaterSession = (targetSession: Electron.Session | null) => {
+    // electron-updater exposes only a getter `netSession`; we must set the backing field
+    // to avoid TypeError: "Cannot set property netSession of #<AppUpdater> which has only a getter".
+    updaterAny._netSession = targetSession;
+  };
+
   try {
     const enabled = Boolean(sqlNode.getItemById(SettingsKey.proxyEnabled)?.value);
     const bootstrapOnly = Boolean(sqlNode.getItemById(SettingsKey.proxyBootstrapOnly)?.value);
@@ -248,7 +256,7 @@ async function configureUpdaterProxy(logger: LoggerType) {
 
     if (!enabled || !host || !port) {
       if (lastAppliedProxy) {
-        (autoUpdater as any).netSession = session.defaultSession;
+        setUpdaterSession(null);
         lastAppliedProxy = null;
       }
       return;
@@ -263,7 +271,7 @@ async function configureUpdaterProxy(logger: LoggerType) {
       ? session.fromPartition('persist:auto-updater')
       : session.defaultSession;
 
-    if (lastAppliedProxy === proxyRules && (autoUpdater as any).netSession === targetSession) {
+    if (lastAppliedProxy === proxyRules && getUpdaterSession() === targetSession) {
       return;
     }
 
@@ -272,7 +280,7 @@ async function configureUpdaterProxy(logger: LoggerType) {
       proxyBypassRules: '<local>',
     });
 
-    (autoUpdater as any).netSession = targetSession;
+    setUpdaterSession(targetSession);
     lastAppliedProxy = proxyRules;
     logger.info(
       `[updater] applied proxy for auto-updater (bootstrapOnly=${bootstrapOnly}) using ${proxyRules}`
