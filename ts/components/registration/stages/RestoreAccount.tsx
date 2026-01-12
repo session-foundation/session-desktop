@@ -47,6 +47,7 @@ import { useRecoveryProgressEffect } from '../hooks';
 import { tr } from '../../../localization/localeTools';
 import { sanitizeDisplayNameOrToast } from '../utils';
 import { ShowHideSessionInput, SimpleSessionInput } from '../../inputs/SessionInput';
+import { configurationMessageReceived } from '../../../shims/events';
 
 type AccountRestoreDetails = {
   recoveryPassword: string;
@@ -75,9 +76,9 @@ async function signInAndFetchDisplayName({
     const promiseLink = signInByLinkingDevice(recoveryPassword, 'english', abortSignal);
     const promiseWait = PromiseUtils.waitForTask(done => {
       window.Whisper.events.on(
-        'configurationMessageReceived',
+        configurationMessageReceived,
         async (ourPubkey: string, displayName: string) => {
-          window.Whisper.events.off('configurationMessageReceived');
+          window.Whisper.events.off(configurationMessageReceived);
           await setSignInByLinking(false);
           dispatch(setHexGeneratedPubKey(ourPubkey));
           dispatch(setDisplayName(displayName));
