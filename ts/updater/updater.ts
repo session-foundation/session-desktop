@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 /* eslint-disable no-console */
-import { app, session, type BrowserWindow } from 'electron';
+import { app, type BrowserWindow } from 'electron';
 import { autoUpdater, DOWNLOAD_PROGRESS, type UpdateInfo } from 'electron-updater';
 import * as fs from 'fs-extra';
 import * as path from 'path';
