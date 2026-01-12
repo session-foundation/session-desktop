@@ -134,40 +134,6 @@ class SocksProxyAgentWithTls extends SocksProxyAgent {
   }
 }
 
-function getTlsOptionsFromAgent(
-  agent: RequestInit['agent']
-): Partial<Record<TlsOptionKey, unknown>> {
-  if (!agent || typeof agent === 'function') {
-    return {};
-  }
-
-  const options = (agent as { options?: Record<string, unknown> }).options;
-  if (!options || typeof options !== 'object') {
-    return {};
-  }
-
-  const tlsOptionKeys: Array<TlsOptionKey> = [
-    'ca',
-    'cert',
-    'key',
-    'rejectUnauthorized',
-    'checkServerIdentity',
-    'servername',
-    'ciphers',
-    'minVersion',
-    'maxVersion',
-  ];
-  const tlsOptions: Partial<Record<TlsOptionKey, unknown>> = {};
-
-  tlsOptionKeys.forEach(key => {
-    if (options[key] !== undefined) {
-      tlsOptions[key] = options[key];
-    }
-  });
-
-  return tlsOptions;
-}
-
 // Cache for proxy agents with different TLS configurations
 const cachedAgents = new Map<string, SocksProxyAgent>();
 
@@ -206,12 +172,12 @@ export function isProxyEnabled(): boolean {
   return getProxySettings() !== undefined;
 }
 
-function hasTlsOptions(tlsOptions: Partial<Record<TlsOptionKey, unknown>>): boolean {
-  return Object.keys(tlsOptions).length > 0;
+function hasTlsOptions(tlsOptions?: Partial<Record<TlsOptionKey, unknown>>): boolean {
+  return !!tlsOptions && Object.keys(tlsOptions).length > 0;
 }
 
 function buildTlsOptionsCacheKey(
-  tlsOptions: Partial<Record<TlsOptionKey, unknown>>
+  tlsOptions?: Partial<Record<TlsOptionKey, unknown>>
 ): string | undefined {
   if (!hasTlsOptions(tlsOptions)) {
     return 'no-tls';
@@ -221,7 +187,7 @@ function buildTlsOptionsCacheKey(
     return undefined;
   }
 
-  const parts = Object.entries(tlsOptions)
+  const parts = Object.entries(tlsOptions || {})
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([key, value]) => {
       if (Array.isArray(value)) {
@@ -249,7 +215,7 @@ function shouldUseProxyForDestination(
 }
 
 function getProxyAgent(
-  tlsOptions: Partial<Record<TlsOptionKey, unknown>> = {},
+  tlsOptions: Partial<Record<TlsOptionKey, unknown>> | undefined,
   destination?: FetchDestination
 ): SocksProxyAgent | undefined {
   const settings = getProxySettings();
@@ -309,16 +275,9 @@ function getProxyAgent(
   return agent;
 }
 
-function resolveTlsOptions(params: NodeFetchParams): Partial<Record<TlsOptionKey, unknown>> {
-  if (params.tlsOptions) {
-    return params.tlsOptions;
-  }
-  return getTlsOptionsFromAgent(params.fetchOptions?.agent);
-}
-
 function buildAgentForRequest(params: NodeFetchParams): RequestInit['agent'] | undefined {
-  const tlsOptions = resolveTlsOptions(params);
-  const proxyAgent = getProxyAgent(tlsOptions, params.destination);
+  // Build proxy agent directly from provided TLS options (if any).
+  const proxyAgent = getProxyAgent(params.tlsOptions, params.destination);
   if (proxyAgent) {
     window?.log?.info(
       `insecureNodeFetch: Using proxy for request to ${params.url} (destination: ${FetchDestination[params.destination]})`
