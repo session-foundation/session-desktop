@@ -1,13 +1,27 @@
 import { Timestamp } from '../types/timestamp/timestamp';
 
-let latestTimestampOffset = Number.MAX_SAFE_INTEGER;
+const rollingAverageWindowSize = 10;
+
+const defaultValue = Number.MAX_SAFE_INTEGER;
+const latestTimestampOffsets = Array(rollingAverageWindowSize).fill(defaultValue);
+let currentIndex = 0;
+
+function getAverageTimestampOffset() {
+  const toConsider = latestTimestampOffsets.filter(offset => offset !== defaultValue);
+  if (toConsider.length === 0) {
+    return defaultValue;
+  }
+  const average = toConsider.reduce((acc, offset) => acc + offset, 0) / toConsider.length;
+  return Math.floor(average);
+}
 
 /**
  * This function has no use to be called except during tests.
  * @returns the current offset we have with the rest of the network.
  */
 function getLatestTimestampOffset() {
-  if (latestTimestampOffset === Number.MAX_SAFE_INTEGER) {
+  const latestTimestampOffset = getAverageTimestampOffset();
+  if (latestTimestampOffset === defaultValue) {
     window.log.debug('latestTimestampOffset is not set yet');
     return 0;
   }
@@ -17,15 +31,22 @@ function getLatestTimestampOffset() {
 }
 
 function setLatestTimestampOffset(newOffset: number, request: string) {
-  const oldTimestampOffset = latestTimestampOffset;
-  latestTimestampOffset = newOffset;
-  if (latestTimestampOffset === Number.MAX_SAFE_INTEGER) {
+  const previousTimestampOffset =
+    latestTimestampOffsets[currentIndex] === defaultValue
+      ? 0
+      : latestTimestampOffsets[currentIndex];
+
+  const newIndex = (currentIndex + 1) % rollingAverageWindowSize;
+  latestTimestampOffsets[newIndex] = newOffset;
+
+  if (currentIndex === 0 && latestTimestampOffsets.every(offset => offset === defaultValue)) {
     window?.log?.info(`first timestamp offset received:  ${newOffset}ms`);
-  } else if (Math.abs(oldTimestampOffset - newOffset) > 1000) {
+  } else if (Math.abs(previousTimestampOffset - newOffset) > 1000) {
     window?.log?.debug(
-      `latestTimestampOffset changed more than 1s, from ${oldTimestampOffset}ms to ${newOffset}ms on request "${request}"`
+      `latestTimestampOffset changed more than 1s, from ${previousTimestampOffset}ms to ${newOffset}ms on request "${request}" but we have a rolling average of ${getAverageTimestampOffset()}ms`
     );
   }
+  currentIndex = newIndex;
 }
 
 function now() {
@@ -44,10 +65,16 @@ function nowTs() {
   return new Timestamp({ value: NetworkTime.now(), expectedUnit: 'ms' });
 }
 
+function reset() {
+  latestTimestampOffsets.fill(defaultValue);
+  currentIndex = 0;
+}
+
 export const NetworkTime = {
   getLatestTimestampOffset,
   now,
   nowTs,
   nowSeconds,
   setLatestTimestampOffset,
+  reset,
 };
