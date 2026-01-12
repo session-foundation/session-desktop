@@ -238,7 +238,8 @@ function getProxyAgent(
       : '';
   const proxyUrl = `socks5h://${auth}${settings.host}:${settings.port}`;
 
-  const tlsOptionsKey = buildTlsOptionsCacheKey(tlsOptions);
+  const tlsOpts = hasTlsOptions(tlsOptions) ? tlsOptions : undefined;
+  const tlsOptionsKey = buildTlsOptionsCacheKey(tlsOpts);
   const cacheKey = tlsOptionsKey ? `${proxyUrl}:${tlsOptionsKey}` : undefined;
 
   if (cacheKey) {
@@ -253,10 +254,10 @@ function getProxyAgent(
   window?.log?.info(
     `getProxyAgent: Creating new SOCKS5 agent for ${settings.host}:${settings.port}`
   );
-  const useTlsOptions = hasTlsOptions(tlsOptions);
-  if (useTlsOptions) {
+  const useTlsOptions = hasTlsOptions(tlsOpts);
+  if (useTlsOptions && tlsOpts) {
     window?.log?.debug(
-      `getProxyAgent: Applying TLS options to SOCKS agent: ${Object.keys(tlsOptions).join(', ')}`
+      `getProxyAgent: Applying TLS options to SOCKS agent: ${Object.keys(tlsOpts).join(', ')}`
     );
   }
   const agent = new SocksProxyAgentWithTls(
@@ -264,7 +265,7 @@ function getProxyAgent(
     {
       timeout: 30000, // 30 seconds timeout for SOCKS connection
     },
-    useTlsOptions ? tlsOptions : undefined
+    useTlsOptions ? tlsOpts : undefined
   );
 
   if (cacheKey) {

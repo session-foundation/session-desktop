@@ -104,12 +104,12 @@ export function ProxySettingsPage(modalState: UserSettingsModalState) {
 
   const [settings, setSettings] = useState<ProxySettings>(loadProxySettings());
 
-  const handleToggleEnabled = () => {
+  const handleToggleEnabled = async () => {
     const newSettings = { ...settings, enabled: !settings.enabled };
     setSettings(newSettings);
   };
 
-  const handleToggleBootstrapOnly = () => {
+  const handleToggleBootstrapOnly = async () => {
     const newSettings = { ...settings, bootstrapOnly: !settings.bootstrapOnly };
     setSettings(newSettings);
   };
