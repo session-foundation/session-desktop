@@ -134,7 +134,9 @@ class SocksProxyAgentWithTls extends SocksProxyAgent {
   }
 }
 
-function getTlsOptionsFromAgent(agent: RequestInit['agent']): Partial<Record<TlsOptionKey, unknown>> {
+function getTlsOptionsFromAgent(
+  agent: RequestInit['agent']
+): Partial<Record<TlsOptionKey, unknown>> {
   if (!agent || typeof agent === 'function') {
     return {};
   }
@@ -282,7 +284,9 @@ function getProxyAgent(
   }
 
   // Create new agent with SOCKS5 configuration
-  window?.log?.info(`getProxyAgent: Creating new SOCKS5 agent for ${settings.host}:${settings.port}`);
+  window?.log?.info(
+    `getProxyAgent: Creating new SOCKS5 agent for ${settings.host}:${settings.port}`
+  );
   const useTlsOptions = hasTlsOptions(tlsOptions);
   if (useTlsOptions) {
     window?.log?.debug(
