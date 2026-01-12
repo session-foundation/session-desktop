@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 /* eslint-disable no-console */
-import { app, type BrowserWindow } from 'electron';
+import { app, session, type BrowserWindow } from 'electron';
 import { autoUpdater, DOWNLOAD_PROGRESS, type UpdateInfo } from 'electron-updater';
 import * as fs from 'fs-extra';
 import * as path from 'path';
@@ -13,12 +13,15 @@ import { DURATION, UPDATER_INTERVAL_MS } from '../session/constants';
 import { showCannotUpdateDialog, showDownloadUpdateDialog, showUpdateDialog } from './common';
 import { getLatestRelease } from '../node/latest_desktop_release';
 import { Errors } from '../types/Errors';
+import { sqlNode } from '../node/sql';
+import { SettingsKey } from '../data/settings-key';
 import type { LoggerType } from '../util/logger/Logging';
 
 let isUpdating = false;
 let downloadIgnored = false;
 let interval: NodeJS.Timeout | undefined;
 let stopped = false;
+let lastAppliedProxy: string | null = null;
 
 autoUpdater.on(DOWNLOAD_PROGRESS, eventDownloadProgress => {
   console.log(
@@ -73,6 +76,8 @@ export async function checkForUpdates(
   logger: LoggerType,
   force?: boolean
 ) {
+  await configureUpdaterProxy(logger);
+
   if (stopped || isUpdating || (downloadIgnored && !force)) {
     logger.info(
       `[updater] checkForUpdates is returning early stopped ${stopped} isUpdating ${isUpdating} downloadIgnored ${downloadIgnored}`
@@ -230,4 +235,49 @@ export async function canAutoUpdate(): Promise<boolean> {
       resolve(false);
     }
   });
+}
+
+async function configureUpdaterProxy(logger: LoggerType) {
+  try {
+    const enabled = Boolean(sqlNode.getItemById(SettingsKey.proxyEnabled)?.value);
+    const bootstrapOnly = Boolean(sqlNode.getItemById(SettingsKey.proxyBootstrapOnly)?.value);
+    const host = (sqlNode.getItemById(SettingsKey.proxyHost)?.value || '') as string;
+    const port = Number(sqlNode.getItemById(SettingsKey.proxyPort)?.value || 0);
+    const username = (sqlNode.getItemById(SettingsKey.proxyUsername)?.value || '') as string;
+    const password = (sqlNode.getItemById(SettingsKey.proxyPassword)?.value || '') as string;
+
+    if (!enabled || !host || !port) {
+      if (lastAppliedProxy) {
+        (autoUpdater as any).netSession = session.defaultSession;
+        lastAppliedProxy = null;
+      }
+      return;
+    }
+
+    const auth =
+      username && password
+        ? `${encodeURIComponent(username)}:${encodeURIComponent(password)}@`
+        : '';
+    const proxyRules = `socks5://${auth}${host}:${port}`;
+    const targetSession = bootstrapOnly
+      ? session.fromPartition('persist:auto-updater')
+      : session.defaultSession;
+
+    if (lastAppliedProxy === proxyRules && (autoUpdater as any).netSession === targetSession) {
+      return;
+    }
+
+    await targetSession.setProxy({
+      proxyRules,
+      proxyBypassRules: '<local>',
+    });
+
+    (autoUpdater as any).netSession = targetSession;
+    lastAppliedProxy = proxyRules;
+    logger.info(
+      `[updater] applied proxy for auto-updater (bootstrapOnly=${bootstrapOnly}) using ${proxyRules}`
+    );
+  } catch (error) {
+    logger.warn('[updater] failed to apply proxy for auto-updater', Errors.toString(error));
+  }
 }
