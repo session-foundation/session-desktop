@@ -272,7 +272,8 @@ async function getSnodesFromSeedUrl(urlObj: URL): Promise<Array<any>> {
 
   // CRITICAL: Use longer timeout when proxy is enabled
   // SOCKS handshake + proxy routing requires more time than direct connection
-  const requestTimeout = isProxyEnabled() ? 30000 : 5000;
+  // Seed requests are typically fast; when proxy is enabled, allow extra time for SOCKS handshake/routing.
+  const requestTimeout = isProxyEnabled() ? 10000 : 5000;
 
   const fetchOptions = {
     method: 'POST',

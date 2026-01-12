@@ -354,7 +354,7 @@ export async function insecureNodeFetch(params: NodeFetchParams) {
       type: (e as any).type,
       stack: (e as Error).stack?.split('\n').slice(0, 3).join('\n'),
     };
-    window?.log?.error('insecureNodeFetch error:', errorDetails.message);
+    window?.log?.error(`insecureNodeFetch error: ${errorDetails.message}`);
     window?.log?.debug('insecureNodeFetch error details', errorDetails);
     throw e;
   }

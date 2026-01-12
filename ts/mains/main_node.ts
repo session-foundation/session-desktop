@@ -1229,10 +1229,6 @@ ipc.on('media-access', async () => {
   await askForMediaAccess();
 });
 
-// Proxy settings
-let proxyUsername: string | null = null;
-let proxyPassword: string | null = null;
-
 async function applyProxySettings() {
   try {
     const enabled = Boolean(sqlNode.getItemById(SettingsKey.proxyEnabled)?.value);
@@ -1241,8 +1237,6 @@ async function applyProxySettings() {
     if (!enabled || bootstrapOnly) {
       // Clear proxy if disabled or when only bootstrap traffic should use the per-request agent
       await session.defaultSession.setProxy({ proxyRules: '' });
-      proxyUsername = null;
-      proxyPassword = null;
       delete process.env.HTTPS_PROXY;
       delete process.env.HTTP_PROXY;
       delete process.env.NO_PROXY;
@@ -1264,14 +1258,10 @@ async function applyProxySettings() {
       return;
     }
 
-    // Store credentials for login handler
-    proxyUsername = username || null;
-    proxyPassword = password || null;
-
     const proxyRules = `socks5://${host}:${port}`;
     const proxyEnv =
-      proxyUsername && proxyPassword
-        ? `socks5://${encodeURIComponent(proxyUsername)}:${encodeURIComponent(proxyPassword)}@${host}:${port}`
+      username && password
+        ? `socks5://${encodeURIComponent(username)}:${encodeURIComponent(password)}@${host}:${port}`
         : proxyRules;
     await session.defaultSession.setProxy({
       proxyRules,
@@ -1291,8 +1281,10 @@ async function applyProxySettings() {
 
 // Handle proxy authentication
 app.on('login', (_event, _webContents, _authenticationResponseDetails, authInfo, callback) => {
-  if (authInfo.isProxy && proxyUsername && proxyPassword) {
-    callback(proxyUsername, proxyPassword);
+  const username = (sqlNode.getItemById(SettingsKey.proxyUsername)?.value || '') as string;
+  const password = (sqlNode.getItemById(SettingsKey.proxyPassword)?.value || '') as string;
+  if (authInfo.isProxy && username && password) {
+    callback(username, password);
   } else {
     callback('', ''); // Cancel the auth request
   }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import useUpdate from 'react-use/lib/useUpdate';
 import styled from 'styled-components';
 import { ipcRenderer } from 'electron';
@@ -102,29 +102,14 @@ export function ProxySettingsPage(modalState: UserSettingsModalState) {
   const title = useUserSettingsTitle(modalState);
   const forceUpdate = useUpdate();
 
-  const [settings, setSettings] = useState<ProxySettings>({
-    enabled: false,
-    bootstrapOnly: false,
-    host: '',
-    port: '1080',
-    username: '',
-    password: '',
-  });
+  const [settings, setSettings] = useState<ProxySettings>(loadProxySettings());
 
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const loadedSettings = loadProxySettings();
-    setSettings(loadedSettings);
-    setIsLoading(false);
-  }, []);
-
-  const handleToggleEnabled = async () => {
+  const handleToggleEnabled = () => {
     const newSettings = { ...settings, enabled: !settings.enabled };
     setSettings(newSettings);
   };
 
-  const handleToggleBootstrapOnly = async () => {
+  const handleToggleBootstrapOnly = () => {
     const newSettings = { ...settings, bootstrapOnly: !settings.bootstrapOnly };
     setSettings(newSettings);
   };
@@ -135,10 +120,6 @@ export function ProxySettingsPage(modalState: UserSettingsModalState) {
       forceUpdate();
     }
   };
-
-  if (isLoading) {
-    return null;
-  }
 
   return (
     <UserSettingsModalContainer
