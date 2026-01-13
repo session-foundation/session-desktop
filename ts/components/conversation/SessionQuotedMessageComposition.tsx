@@ -27,6 +27,7 @@ const QuotedMessageComposition = styled(Flex)`
 
 const QuotedMessageCompositionReply = styled(Flex)<{ $hasAttachments: boolean }>`
   ${props => !props.$hasAttachments && 'border-left: 3px solid var(--primary-color);'}
+  min-width: 0;
 `;
 
 const Subtle = styled.div`
@@ -48,7 +49,8 @@ const StyledImage = styled.div`
 `;
 
 const StyledText = styled(Flex)`
-  margin: 0 0 0 var(--margins-sm);
+  margin: 0 var(--margins-sm) 0 var(--margins-sm);
+  min-width: 0;
   p {
     font-weight: bold;
     margin: 0;
@@ -158,6 +160,7 @@ export const SessionQuotedMessageComposition = () => {
             pubkey={contact.pubkey}
             conversationId={conversationId}
             contactNameContext="quoted-message-composition"
+            style={{ maxWidth: '100%', whiteSpace: 'nowrap' }}
           />
           {subtitleText && <Subtle>{subtitleText}</Subtle>}
         </StyledText>
