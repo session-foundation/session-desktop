@@ -297,6 +297,7 @@ export const SimpleSessionInput = (props: SimpleSessionInputProps) => {
       event.preventDefault();
       onEnterPressed();
     }
+    event.stopPropagation();
   };
 
   const containerProps = {
