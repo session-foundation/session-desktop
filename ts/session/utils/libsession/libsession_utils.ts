@@ -34,6 +34,8 @@ import { ed25519Str } from '../String';
 import type { WithMessageHash } from '../../types/with';
 import { UserConfigWrapperActions } from '../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 import { HexString } from '../../../node/hexStrings';
+import { ConvoHub } from '../../conversations';
+import { getSwarmPollingInstance } from '../../apis/snode_api';
 
 const requiredUserVariants: Array<ConfigWrapperUser> = [
   'UserConfig',
@@ -699,7 +701,7 @@ async function createInitialDumpsMissingForGroups() {
     `createInitialDumpsMissingForGroups: creating ${inUserGroupsWithKeysWithoutDumps.length} groups from user config that does not have a dump`
   );
   window.log.debug(
-    `createInitialDumpsMissingForGroups: creating: ${JSON.stringify(inUserGroupsWithKeysWithoutDumps)} groups from user config that does not have a dump`
+    `createInitialDumpsMissingForGroups: creating: [${inUserGroupsWithKeysWithoutDumps.map(ed25519Str)}] groups from user config that does not have a dump`
   );
 
   // All of the groups for which we have authData or secretKey should have a dump.
@@ -720,6 +722,19 @@ async function createInitialDumpsMissingForGroups() {
       metaDumped: null,
     });
     await LibSessionUtil.saveDumpsToDb(groupPk);
+    if (!groupDetails.invitePending) {
+      window.log.debug(
+        `createInitialDumpsMissingForGroups: creating: ${ed25519Str(groupPk)} should be polled. Resetting last hashes and starting polling`
+      );
+      // if that group should already be polled, reset the last hashes and start polling
+      // yes, we really want to refetch the whole history of messages from that group...
+      await ConvoHub.use().resetLastHashesForConversation(groupPk);
+      getSwarmPollingInstance().addGroupId(groupPk);
+    } else {
+      window.log.debug(
+        `createInitialDumpsMissingForGroups: creating: ${ed25519Str(groupPk)} should not be polled.`
+      );
+    }
   }
 }
 
