@@ -593,14 +593,16 @@ function batchResultsToUserSuccessfulChange(
 /**
  * Check if the wrappers related to that pubkeys need to be dumped to the DB, and if yes, do it.
  */
-async function saveDumpsToDb(pubkey: PubkeyType | GroupPubkeyType) {
+async function saveDumpsToDb(pubkey: PubkeyType | GroupPubkeyType, forceSaveDump = false) {
   // first check if this is relating a group
   if (PubKey.is03Pubkey(pubkey)) {
     try {
       const metaNeedsDump = await MetaGroupWrapperActions.needsDump(pubkey);
       // save the concatenated dumps as a single entry in the DB if any of the dumps had a need for dump
-      if (metaNeedsDump) {
-        window.log.debug(`About to make and save dumps for metagroup ${ed25519Str(pubkey)}`);
+      if (metaNeedsDump || forceSaveDump) {
+        window.log.debug(
+          `About to make and save dumps for metagroup ${ed25519Str(pubkey)} (forceSaveDump: ${forceSaveDump})`
+        );
 
         const dump = await MetaGroupWrapperActions.metaDump(pubkey);
         await ConfigDumpData.saveConfigDump({
@@ -634,15 +636,14 @@ async function saveDumpsToDb(pubkey: PubkeyType | GroupPubkeyType) {
     const variant = LibSessionUtil.requiredUserVariants[i];
     const needsDump = await UserGenericWrapperActions.needsDump(variant);
 
-    if (!needsDump) {
-      continue;
+    if (needsDump || forceSaveDump) {
+      const dump = await UserGenericWrapperActions.dump(variant);
+      await ConfigDumpData.saveConfigDump({
+        data: dump,
+        publicKey: pubkey,
+        variant,
+      });
     }
-    const dump = await UserGenericWrapperActions.dump(variant);
-    await ConfigDumpData.saveConfigDump({
-      data: dump,
-      publicKey: pubkey,
-      variant,
-    });
   }
 }
 
@@ -721,7 +722,7 @@ async function createInitialDumpsMissingForGroups() {
       userEd25519Secretkey: toFixedUint8ArrayOfLength(userEd25519Secretkey, 64).buffer,
       metaDumped: null,
     });
-    await LibSessionUtil.saveDumpsToDb(groupPk);
+    await LibSessionUtil.saveDumpsToDb(groupPk, true);
     if (!groupDetails.invitePending) {
       window.log.debug(
         `createInitialDumpsMissingForGroups: creating: ${ed25519Str(groupPk)} should be polled. Resetting last hashes and starting polling`
