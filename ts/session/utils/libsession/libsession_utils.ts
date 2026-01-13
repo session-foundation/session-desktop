@@ -7,7 +7,7 @@ import { compact, difference, flatten, isEmpty, isNil, isString, omit } from 'lo
 import Long from 'long';
 import { UserUtils } from '..';
 import { ConfigDumpData } from '../../../data/configDump/configDump';
-import { assertUnreachable } from '../../../types/sqlSharedTypes';
+import { assertUnreachable, toFixedUint8ArrayOfLength } from '../../../types/sqlSharedTypes';
 import {
   ConfigWrapperUser,
   isUserConfigWrapperType,
@@ -33,6 +33,7 @@ import { PubKey } from '../../types';
 import { ed25519Str } from '../String';
 import type { WithMessageHash } from '../../types/with';
 import { UserConfigWrapperActions } from '../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
+import { HexString } from '../../../node/hexStrings';
 
 const requiredUserVariants: Array<ConfigWrapperUser> = [
   'UserConfig',
@@ -677,6 +678,51 @@ async function createMemberAndSetDetails({
   await MetaGroupWrapperActions.memberSetProfileDetails(groupPk, memberPubkey, details);
 }
 
+/**
+ * This function is called to make sure that all of the groups in the wrapper have a dump in the DB, even if empty.
+ */
+async function createInitialDumpsMissingForGroups() {
+  const variantsWithData = await ConfigDumpData.getAllDumpsWithData();
+  const allUserGroupsWithKeys = (await UserGroupsWrapperActions.getAllGroups()).filter(
+    m => m.authData?.length || m.secretKey?.length
+  );
+  const allIdsInUserGroupsWithKeys = allUserGroupsWithKeys.map(m => m.pubkeyHex);
+  const allIdsWithDump = variantsWithData
+    .filter(m => m.data.length)
+    .map(m => m.variant.substring(m.variant.indexOf('-03') + 1));
+  const inUserGroupsWithKeysWithoutDumps = allIdsInUserGroupsWithKeys.filter(
+    groupPk => !allIdsWithDump.includes(`MetaGroupConfig-${groupPk}`)
+  );
+
+  const userEd25519Secretkey = (await UserUtils.getUserED25519KeyPairBytes()).privKeyBytes;
+  window.log.info(
+    `createInitialDumpsMissingForGroups: creating ${inUserGroupsWithKeysWithoutDumps.length} groups from user config that does not have a dump`
+  );
+  window.log.debug(
+    `createInitialDumpsMissingForGroups: creating: ${JSON.stringify(inUserGroupsWithKeysWithoutDumps)} groups from user config that does not have a dump`
+  );
+
+  // All of the groups for which we have authData or secretKey should have a dump.
+  // Here, we iterate over all of those that don't and force create a dump for them
+  for (let index = 0; index < inUserGroupsWithKeysWithoutDumps.length; index++) {
+    const groupPk = inUserGroupsWithKeysWithoutDumps[index];
+    const groupDetails = allUserGroupsWithKeys.find(m => m.pubkeyHex === groupPk);
+    if (!groupDetails) {
+      continue;
+    }
+
+    await MetaGroupWrapperActions.init(groupPk, {
+      groupEd25519Pubkey: toFixedUint8ArrayOfLength(HexString.fromHexStringNoPrefix(groupPk), 32)
+        .buffer,
+
+      groupEd25519Secretkey: groupDetails?.secretKey || null,
+      userEd25519Secretkey: toFixedUint8ArrayOfLength(userEd25519Secretkey, 64).buffer,
+      metaDumped: null,
+    });
+    await LibSessionUtil.saveDumpsToDb(groupPk);
+  }
+}
+
 export const LibSessionUtil = {
   initializeLibSessionUtilWrappers,
   userNamespaceToVariant,
@@ -684,6 +730,7 @@ export const LibSessionUtil = {
   pendingChangesForUs,
   pendingChangesForGroup,
   saveDumpsToDb,
+  createInitialDumpsMissingForGroups,
   batchResultsToGroupSuccessfulChange,
   batchResultsToUserSuccessfulChange,
   createMemberAndSetDetails,

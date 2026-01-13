@@ -638,6 +638,7 @@ async function handleSingleGroupUpdate({
       groupEd25519Pubkey: toFixedUint8ArrayOfLength(HexString.fromHexString(groupPk.slice(2)), 32)
         .buffer,
     });
+    await LibSessionUtil.saveDumpsToDb(groupPk);
   } catch (e) {
     window.log.warn(
       `handleSingleGroupUpdate meta wrapper init of "${groupPk}" failed with`,
