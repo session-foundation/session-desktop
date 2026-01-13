@@ -337,7 +337,11 @@ function ProStats() {
       <PanelLabelWithDescription
         title={{ token: 'proStats' }}
         extraInlineNode={
-          <SessionTooltip content={tr('proStatsTooltip')} maxContentWidth={'300px'}>
+          <SessionTooltip
+            content={tr('proStatsTooltip')}
+            maxContentWidth={'300px'}
+            style={{ textAlign: 'center' }}
+          >
             <LucideIcon iconSize="small" unicode={LUCIDE_ICONS_UNICODE.CIRCLE_HELP} />
           </SessionTooltip>
         }
@@ -410,6 +414,7 @@ function ProStats() {
                 content={tr('proLargerGroupsTooltip')}
                 horizontalPosition="left"
                 maxContentWidth={'300px'}
+                style={{ textAlign: 'center' }}
               >
                 <LucideIcon
                   iconSize="small"
