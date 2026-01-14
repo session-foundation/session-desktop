@@ -191,7 +191,13 @@ async function handleNewProProof(rotatingPrivKeyHex: string): Promise<ProProof |
       version: response.result.version,
       signatureHex: response.result.sig_hex,
     } satisfies ProProof;
+    const { proConfig, proAccessExpiry, proProfileBitset } = getCachedUserConfig();
+    // If we have a new proof but it seems that we never had one before, set the pro badge feature as enabled
+    if (!proConfig && !proAccessExpiry && !proProfileBitset) {
+      await UserConfigWrapperActions.setProBadge(true);
+    }
     await UserConfigWrapperActions.setProConfig({ proProof, rotatingPrivKeyHex });
+
     return proProof;
   }
   window?.log?.error('failed to get new pro proof: ', response);
