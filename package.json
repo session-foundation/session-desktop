@@ -55,7 +55,7 @@
     "start-prod-test": "cross-env NODE_ENV=production NODE_APP_INSTANCE=$MULTI electron .",
     "test-internal": "cross-env IS_UNIT_TEST=1 mocha",
     "test": "yarn --cwd app test",
-    "build-release-base": "cross-env NODE_ENV=production electron-builder --config.build.directories.app=app --config.extraMetadata.environment=production",
+    "build-release-base": "cross-env NODE_ENV=production electron-builder --config.directories.app=app --config.extraMetadata.environment=production",
     "build-release": "yarn build-release-base --publish=never",
     "build-release-publish": "yarn build-release-base --publish=always",
     "ready": "yarn dedup --fail && yarn build && yarn lint && yarn test",
