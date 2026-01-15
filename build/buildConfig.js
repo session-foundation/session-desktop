@@ -24,6 +24,7 @@ const BUILD_CONFIG = {
     'protos',
     'mnemonic_languages',
     'node_modules',
+    'ts/protobuf',
   ],
 };
 
