@@ -111,7 +111,8 @@ function sharpFrom(inputBuffer: ArrayBufferLike | Buffer, options?: sharp.SharpO
   if (inputBuffer instanceof Buffer) {
     return sharp(inputBuffer, options).rotate();
   }
-  return sharp(new Uint8Array(inputBuffer), options).rotate();
+  // TODO: fix the array buffer type
+  return sharp(new Uint8Array(inputBuffer as ArrayBuffer), options).rotate();
 }
 
 function metadataToFrameHeight(metadata: sharp.Metadata) {
@@ -795,8 +796,7 @@ const workerActions: ImageProcessorWorkerActions = {
 
         const size = metadataSizeIsSetOrThrow(outputMetadata, 'processForFileServerUpload');
         logIfOn(
-          `[imageProcessorWorker] processForFileServerUpload: DONE quality ${quality} took ${
-            Date.now() - start
+          `[imageProcessorWorker] processForFileServerUpload: DONE quality ${quality} took ${Date.now() - start
           }ms for}`
         );
         logIfOn(
@@ -816,8 +816,7 @@ const workerActions: ImageProcessorWorkerActions = {
         };
       }
       logIfOn(
-        `[imageProcessorWorker] processForFileServerUpload: took so far ${
-          Date.now() - start
+        `[imageProcessorWorker] processForFileServerUpload: took so far ${Date.now() - start
         }ms with quality ${quality}`
       );
       logIfOn(
