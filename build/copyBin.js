@@ -28,7 +28,7 @@ async function copyBinDirectory() {
       execSync(`rm -rf "${destBinPath}"`, { stdio: 'inherit' });
     }
 
-    execSync(`cp -r "${sourceBinPath}" "${destBinPath}"`, { stdio: 'inherit' });
+    execSync(`cp -a "${sourceBinPath}" "${destBinPath}"`, { stdio: 'inherit' });
 
     console.log('✓ Successfully copied node_modules/.bin/');
   } catch (error) {
