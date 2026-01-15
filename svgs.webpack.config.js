@@ -2,6 +2,7 @@
 const path = require('path');
 
 const svgsPath = path.resolve(__dirname, 'ts', 'svgs');
+const outPath = path.resolve(__dirname, 'app', 'ts', 'svgs');
 
 module.exports = {
   entry: './index.ts',
@@ -37,7 +38,7 @@ module.exports = {
   },
   output: {
     filename: 'index.js',
-    path: svgsPath,
+    path: outPath,
     library: {
       type: 'commonjs2',
     },
@@ -46,8 +47,12 @@ module.exports = {
     react: 'commonjs2 react',
   },
   optimization: {
-    minimize: true,
+    minimize: process.env.NODE_ENV === 'production',
   },
-  mode: 'production',
-  devtool: false,
+  mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
+  watch: false, // false by default but can be overridden by the command line
+  watchOptions: {
+    aggregateTimeout: 200,
+    poll: 1000,
+  },
 };

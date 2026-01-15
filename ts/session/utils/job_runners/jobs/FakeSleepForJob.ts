@@ -1,13 +1,13 @@
 import { isNumber } from 'lodash';
 import { v4 } from 'uuid';
-import { sleepFor } from '../../../../../session/utils/Promise';
 import {
   AddJobCheckReturn,
   FakeSleepForMultiJobData,
   FakeSleepJobData,
   PersistedJob,
   RunJobResult,
-} from '../../../../../session/utils/job_runners/PersistedJob';
+} from '../PersistedJob';
+import { sleepFor } from '../../Promise';
 
 export class FakeSleepForMultiJob extends PersistedJob<FakeSleepForMultiJobData> {
   constructor({

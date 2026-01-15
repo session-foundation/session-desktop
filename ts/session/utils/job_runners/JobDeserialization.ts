@@ -1,8 +1,5 @@
 import { isEmpty, isString } from 'lodash';
-import {
-  FakeSleepForJob,
-  FakeSleepForMultiJob,
-} from '../../../test/session/unit/utils/job_runner/FakeSleepForJob';
+import { FakeSleepForJob, FakeSleepForMultiJob } from './jobs/FakeSleepForJob';
 import { AvatarDownload } from './jobs/AvatarDownloadJob';
 import { UserSync } from './jobs/UserSyncJob';
 import { PersistedJob, TypeOfPersistedData } from './PersistedJob';

@@ -1,4 +1,5 @@
 build/**
+app/**
 dist/**
 mnemonic_languages/**
 
@@ -29,6 +30,8 @@ babel.config.js
 minify.js
 eslint-local-rules.js
 eslint-rules/
+
+.build-cache
 
 # Not too sure why we can't have eslint on those files atm
 ts/webworker/workers/node/util/util.worker.ts

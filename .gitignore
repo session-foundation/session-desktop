@@ -55,3 +55,6 @@ stylesheets/dist/
 ts/webworker/workers/node/**/*.node
 
 .yarn/
+app/
+dist/
+.build-cache
