@@ -796,7 +796,8 @@ const workerActions: ImageProcessorWorkerActions = {
 
         const size = metadataSizeIsSetOrThrow(outputMetadata, 'processForFileServerUpload');
         logIfOn(
-          `[imageProcessorWorker] processForFileServerUpload: DONE quality ${quality} took ${Date.now() - start
+          `[imageProcessorWorker] processForFileServerUpload: DONE quality ${quality} took ${
+            Date.now() - start
           }ms for}`
         );
         logIfOn(
@@ -816,7 +817,8 @@ const workerActions: ImageProcessorWorkerActions = {
         };
       }
       logIfOn(
-        `[imageProcessorWorker] processForFileServerUpload: took so far ${Date.now() - start
+        `[imageProcessorWorker] processForFileServerUpload: took so far ${
+          Date.now() - start
         }ms with quality ${quality}`
       );
       logIfOn(
