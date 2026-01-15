@@ -929,7 +929,7 @@ function HeroStatusText({
   if (isLoading) {
     return (
       <div style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--margins-xs)' }}>
-        <Localizer token={isPro ? 'proStatusLoading' : 'checkingProStatus'} />
+        <Localizer token={isPro ? 'proStatusLoadingSubtitle' : 'checkingProStatus'} />
         <AnimatedSpinnerIcon size="small" />
       </div>
     );
