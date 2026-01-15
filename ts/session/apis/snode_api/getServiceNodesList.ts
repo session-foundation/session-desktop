@@ -1,6 +1,5 @@
 import { compact, intersectionWith, sampleSize } from 'lodash';
 import { BatchRequests } from './batchRequest';
-import { GetNetworkTime } from './getNetworkTime';
 import { SnodePool } from './snodePool';
 import { Snode } from '../../../data/types';
 import { GetServiceNodesSubRequest } from './SnodeRequestTypes';
@@ -49,7 +48,6 @@ async function getSnodePoolFromSnode(targetNode: Snode): Promise<Array<Snode>> {
         pubkey_ed25519: snode.pubkey_ed25519,
         storage_server_version: snode.storage_server_version,
       }));
-    GetNetworkTime.handleTimestampOffsetFromNetwork('get_service_nodes', json.t);
 
     // we the return list by the snode is already made of uniq snodes
     return compact(snodes);

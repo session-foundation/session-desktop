@@ -15,6 +15,7 @@ import {
 import { NotEmptyArrayOfBatchResults } from './BatchResultEntry';
 import { MergedAbortSignal, WithTimeoutMs } from './requestWith';
 import { WithAllow401s, WithAssociatedWith, WithTargetNode } from '../../types/with';
+import { GetNetworkTime } from './getNetworkTime';
 
 function logSubRequests(requests: Array<BuiltSnodeSubRequests>) {
   return `[${requests.map(builtRequestToLoggingId).join(', ')}]`;
@@ -81,19 +82,30 @@ async function doSnodeBatchRequestNoRetries({
     );
   }
   const decoded = decodeBatchRequest(result);
-
-  if (decoded?.length) {
-    for (let index = 0; index < decoded.length; index++) {
-      const resultRow = decoded[index];
-      // eslint-disable-next-line no-await-in-loop
-      await processOnionRequestErrorAtDestination({
-        statusCode: resultRow.code,
-        body: JSON.stringify(resultRow.body),
-        associatedWith: associatedWith || undefined,
-        destinationSnodeEd25519: targetNode.pubkey_ed25519,
-        allow401s,
-      });
+  if (!decoded?.length) {
+    return decoded;
+  }
+  // update our offset with any result entries that has a timestamp field
+  for (let index = 0; index < decoded.length; index++) {
+    const resultRow = decoded[index];
+    if (resultRow.body.t) {
+      GetNetworkTime.handleTimestampOffsetFromNetwork(subRequests[index].method, resultRow.body.t);
     }
+  }
+
+  // then process the requests.
+  // Note: this throws on the first invalid status code, hence why we process
+  for (let index = 0; index < decoded.length; index++) {
+    const resultRow = decoded[index];
+
+    // eslint-disable-next-line no-await-in-loop
+    await processOnionRequestErrorAtDestination({
+      statusCode: resultRow.code,
+      body: JSON.stringify(resultRow.body),
+      associatedWith: associatedWith || undefined,
+      destinationSnodeEd25519: targetNode.pubkey_ed25519,
+      allow401s,
+    });
   }
 
   return decoded;

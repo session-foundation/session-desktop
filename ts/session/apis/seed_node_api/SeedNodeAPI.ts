@@ -196,7 +196,7 @@ export function getMinTimeout() {
 }
 
 /**
- * This functions choose randonly a seed node from seedNodes and try to get the snodes from it, or throws.
+ * This functions choose randomly a seed node from seedNodes and try to get the snodes from it, or throws.
  * This function is to be used with a pRetry caller
  */
 export async function TEST_fetchSnodePoolFromSeedNodeRetryable(
