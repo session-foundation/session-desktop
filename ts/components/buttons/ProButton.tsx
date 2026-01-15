@@ -21,7 +21,7 @@ const sharedProps = {
   iconColor: 'var(--black-color)',
 } as const;
 
-const defaultStyle = { flexShrink: 0 };
+const defaultStyle = { flexShrink: 0, borderRadius: '4px' };
 
 export function ProIconButton({
   iconSize,

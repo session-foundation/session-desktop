@@ -69,9 +69,6 @@ export const InteractionItem = (props: InteractionItemProps) => {
   const name = ConvoHub.use().get(conversationId)?.getNicknameOrRealUsernameOrPlaceholder();
 
   switch (interactionType) {
-    case ConversationInteractionType.Hide:
-      // if it's hidden or pending hiding, we don't show any text
-      return null;
     case ConversationInteractionType.Leave:
       errorText = isCommunity
         ? tr('communityLeaveError', {

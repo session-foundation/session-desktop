@@ -1,5 +1,5 @@
 import AbortController from 'abort-controller';
-import { isEmpty, isFinite, isNumber, isString, toNumber } from 'lodash';
+import { isEmpty, isFinite, isNumber, isString, omit, toNumber } from 'lodash';
 
 import { BlindingActions } from '../../../webworker/workers/browser/libsession_worker_interface';
 import { OnionSending } from '../../onions/onionSend';
@@ -115,7 +115,10 @@ export const downloadFileFromFileServer = async (
     timeoutMs: 30 * DURATION.SECONDS, // longer time for file download
   });
   if (getFeatureFlag('debugServerRequests')) {
-    window.log.info(`download fsv2: "${toDownload.fullUrl} got result:`, stringify(result));
+    window.log.info(
+      `download fsv2: "${toDownload.fullUrl} got result:`,
+      stringify(omit(result, 'bodyBinary'))
+    );
   }
   if (!result) {
     return null;
