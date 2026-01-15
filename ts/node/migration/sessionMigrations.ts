@@ -1226,13 +1226,13 @@ function updateToSessionSchemaVersion30(currentVersion: number, db: Database) {
       `UPDATE ${CONVERSATIONS_TABLE} SET
             active_at = 0
             WHERE type = 'private' AND active_at > 0 AND active_at < ${1000 * 1651363200};` // 1st may 2022 GMT
-    ).run({});
+    ).run();
 
     db.prepare(
       `UPDATE ${CONVERSATIONS_TABLE} SET
         priority = ${CONVERSATION_PRIORITIES.hidden}
         WHERE type = 'private' AND (active_at IS NULL OR active_at = 0 );`
-    ).run({});
+    ).run();
 
     // create the table which is going to handle the wrappers, without any content in this migration.
     db.exec(`CREATE TABLE ${CONFIG_DUMP_TABLE}(
@@ -1299,7 +1299,7 @@ function updateToSessionSchemaVersion30(currentVersion: number, db: Database) {
       `UPDATE ${CONVERSATIONS_TABLE} SET
         priority = ${CONVERSATION_PRIORITIES.default}
         WHERE priority IS NULL;`
-    ).run({});
+    ).run();
 
     writeSessionSchemaVersion(targetVersion, db);
   })();
