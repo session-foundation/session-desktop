@@ -10,7 +10,6 @@ import {
 import { NotFoundError } from '../../utils/errors';
 import { OnsResolveSubRequest } from './SnodeRequestTypes';
 import { BatchRequests } from './batchRequest';
-import { GetNetworkTime } from './getNetworkTime';
 import { SnodePool } from './snodePool';
 import { DURATION } from '../../constants';
 
@@ -50,7 +49,6 @@ async function getSessionIDForOnsName(onsNameCase: string) {
       throw new Error('OnsResolve :Failed to resolve ONS');
     }
     const parsedBody = firstResult.body;
-    GetNetworkTime.handleTimestampOffsetFromNetwork('ons_resolve', parsedBody.t);
 
     const intermediate = parsedBody?.result;
 

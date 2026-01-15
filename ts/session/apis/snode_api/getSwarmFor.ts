@@ -2,7 +2,6 @@ import { isArray } from 'lodash';
 import pRetry from 'p-retry';
 import { PubKey } from '../../types';
 import { BatchRequests } from './batchRequest';
-import { GetNetworkTime } from './getNetworkTime';
 import { SnodePool } from './snodePool';
 import { Snode } from '../../../data/types';
 import { SwarmForSubRequest } from './SnodeRequestTypes';
@@ -57,7 +56,6 @@ async function requestSnodesForPubkeyWithTargetNodeRetryable(
 
     // NOTE Filter out 0.0.0.0 nodes which haven't submitted uptime proofs
     const snodes = body.snodes.filter((tSnode: any) => tSnode.ip !== '0.0.0.0');
-    GetNetworkTime.handleTimestampOffsetFromNetwork('get_swarm', body.t);
     return snodes;
   } catch (e) {
     throw new Error('Invalid json');
