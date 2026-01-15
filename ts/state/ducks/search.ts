@@ -75,24 +75,47 @@ async function queryMessages(query: string): Promise<Array<MessageResultProps>> 
   }
 }
 
-async function queryContactsAndGroups(providedQuery: string, options: SearchOptions) {
+function convoMatchesSearch(convo: ReduxConversationType, searchTermLower: string): boolean {
+  if (!convo) {
+    return false;
+  }
+
+  return (
+    convo.id.toLowerCase().includes(searchTermLower) ||
+    (convo.nickname?.toLocaleLowerCase().includes(searchTermLower) ?? false) ||
+    (convo.displayNameInProfile?.toLocaleLowerCase().includes(searchTermLower) ?? false)
+  );
+}
+
+export async function queryContactsAndGroups(providedQuery: string, options: SearchOptions) {
   const { ourNumber, noteToSelf, savedMessages } = options;
-  // we don't need to use cleanSearchTerm here because the query is wrapped as a wild card and is not referenced in the SQL query directly
+
+  // Remove formatting characters from the query
   const query = providedQuery.replace(/[+-.()]*/g, '');
+  const queryLower = query.toLocaleLowerCase();
 
-  const searchResults: Array<ReduxConversationType> = await Data.searchConversations(query);
+  // Using memory cache avoids slow DB queries and ICU/case-sensitivity issues.
+  const state = window.inboxStore?.getState() as any;
+  const conversationLookup = (state?.conversations?.conversationLookup || {}) as Record<
+    string,
+    ReduxConversationType
+  >;
 
-  const filteredResults = options.excludeBlocked
-    ? searchResults.filter(c => !BlockedNumberController.isBlocked(c.id))
-    : searchResults;
+  const searchResults = Object.values(conversationLookup).filter(convo => {
+    if (options.excludeBlocked && BlockedNumberController.isBlocked(convo.id)) {
+      return false;
+    }
+    return convoMatchesSearch(convo, queryLower);
+  });
 
-  let contactsAndGroups: Array<string> = filteredResults.map(conversation => conversation.id);
+  let contactsAndGroups: Array<string> = searchResults.map(conversation => conversation.id);
 
-  const queryLowered = query.toLowerCase();
+  const isSavedMessagesMatch =
+    typeof savedMessages === 'string' ? savedMessages.includes(query) : false;
+
   if (
-    noteToSelf.some(str => str.includes(query) || str.includes(queryLowered)) ||
-    savedMessages.includes(query) ||
-    savedMessages.includes(queryLowered)
+    noteToSelf.some(str => str.includes(query) || str.toLocaleLowerCase().includes(queryLower)) ||
+    isSavedMessagesMatch
   ) {
     // Ensure that we don't have duplicates in our results
     contactsAndGroups = contactsAndGroups.filter(id => id !== ourNumber);
