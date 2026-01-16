@@ -37,7 +37,6 @@ const fakeSnodePoolFromSeedNode: Array<SnodeFromSeed> = fakeSnodePool.map(m => {
     storage_port: m.port,
     pubkey_x25519: m.pubkey_x25519,
     pubkey_ed25519: m.pubkey_ed25519,
-    storage_server_version: m.storage_server_version,
   };
 });
 
@@ -53,7 +52,7 @@ describe('SeedNodeAPI', () => {
 
       Onions.resetSnodeFailureCount();
       OnionPaths.resetPathFailureCount();
-      SnodePool.TEST_resetState();
+      SnodePool.resetState();
     });
 
     afterEach(() => {
@@ -61,9 +60,9 @@ describe('SeedNodeAPI', () => {
     });
 
     it('if the cached snode pool has less than 12 snodes, trigger a fetch from the seed nodes with retries', async () => {
-      const TEST_fetchSnodePoolFromSeedNodeRetryable = Sinon.stub(
+      const fetchSnodePoolFromSeedNodeRetryable = Sinon.stub(
         SeedNodeAPI,
-        'TEST_fetchSnodePoolFromSeedNodeRetryable'
+        'fetchSnodePoolFromSeedNodeRetryable'
       )
         .onFirstCall()
         .throws()
@@ -82,8 +81,8 @@ describe('SeedNodeAPI', () => {
       expect(sortedFetch).to.deep.equal(sortedFakeSnodePool);
 
       expect(
-        TEST_fetchSnodePoolFromSeedNodeRetryable.callCount,
-        'TEST_fetchSnodePoolFromSeedNodeRetryable called twice as the first one failed'
+        fetchSnodePoolFromSeedNodeRetryable.callCount,
+        'fetchSnodePoolFromSeedNodeRetryable called twice as the first one failed'
       ).to.be.eq(2);
     });
   });

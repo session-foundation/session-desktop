@@ -1,7 +1,8 @@
 import https from 'https';
 import tls from 'tls';
 import { setDefaultAutoSelectFamilyAttemptTimeout } from 'net';
-import _ from 'lodash';
+import _, { isEmpty, isString } from 'lodash';
+import { ipcRenderer } from 'electron';
 
 import pRetry from 'p-retry';
 
@@ -15,6 +16,7 @@ import { allowOnlyOneAtATime } from '../../utils/Promise';
 import { GetServicesNodesFromSeedRequest } from '../snode_api/SnodeRequestTypes';
 import { getDataFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { FetchDestination, insecureNodeFetch } from '../../utils/InsecureNodeFetch';
+import z, { zodSafeParse } from '../../../util/zod';
 
 /**
  * Fetch all snodes from seed nodes.
@@ -37,7 +39,6 @@ export async function fetchSnodePoolFromSeedNodeWithRetries(
       port: snode.storage_port,
       pubkey_x25519: snode.pubkey_x25519,
       pubkey_ed25519: snode.pubkey_ed25519,
-      storage_server_version: snode.storage_server_version,
     }));
     window?.log?.info(
       'SeedNodeAPI::fetchSnodePoolFromSeedNodeWithRetries - Refreshed random snode pool with',
@@ -147,13 +148,21 @@ const getSslAgentForSeedNode = async (seedNodeHost: string, isSsl = false) => {
   return new https.Agent(sslOptions);
 };
 
-export interface SnodeFromSeed {
-  public_ip: string;
-  storage_port: number;
-  pubkey_x25519: string;
-  pubkey_ed25519: string;
-  storage_server_version: Array<number>;
-}
+/**
+ * The service node item from the seed node and from a snode do not match exactly.
+ * Here is the one as returned by the seed node.
+ */
+const ServiceNodeFromSeedSchema = z.object({
+  public_ip: z.string(),
+  storage_port: z.number(),
+  pubkey_ed25519: z.string(),
+  pubkey_x25519: z.string(),
+});
+
+const ServiceNodesFromSeedSchema = z.array(ServiceNodeFromSeedSchema);
+
+export type SnodeFromSeed = z.infer<typeof ServiceNodeFromSeedSchema>;
+export type SnodesFromSeed = z.infer<typeof ServiceNodesFromSeedSchema>;
 
 const getSnodeListFromSeednodeOneAtAtime = async (seedNodes: Array<string>) =>
   allowOnlyOneAtATime('getSnodeListFromSeednode', () => getSnodeListFromSeednode(seedNodes));
@@ -174,7 +183,7 @@ async function getSnodeListFromSeednode(seedNodes: Array<string>): Promise<Array
         throw new Error('getSnodeListFromSeednode - seedNodes are empty');
       }
       // do not try/catch, we do want exception to bubble up so pRetry, well, retries
-      const snodes = await SeedNodeAPI.TEST_fetchSnodePoolFromSeedNodeRetryable(seedNodes);
+      const snodes = await SeedNodeAPI.fetchSnodePoolFromSeedNodeRetryable(seedNodes);
 
       return snodes;
     },
@@ -195,11 +204,40 @@ export function getMinTimeout() {
   return 1000;
 }
 
+async function loadSnodePoolFromAsset(): Promise<SnodesFromSeed> {
+  return new Promise((resolve, reject) => {
+    ipcRenderer.once('load-build-time-snode-pool-complete', (_event, content) => {
+      if (!content || isEmpty(content) || !isString(content)) {
+        window?.log?.error('Failed to load build time snode pool data');
+
+        reject(new Error('Failed to load build time snode pool data'));
+        return;
+      }
+      try {
+        const json = JSON.parse(content);
+        const parseResult = zodSafeParse(ServiceNodesFromSeedSchema, json);
+        if (parseResult.error) {
+          window?.log?.error('Failed to parse build time snode pool data', parseResult.error);
+          reject(new Error('Failed to parse build time snode pool data'));
+          return;
+        }
+        window?.log?.info(`parsed from asset ${parseResult.data.length} snodes`);
+
+        resolve(parseResult.data);
+      } catch (e) {
+        window?.log?.error('build time snode pool is not json');
+        reject(new Error('build time snode pool is not json'));
+      }
+    });
+    ipcRenderer.send('load-build-time-snode-pool');
+  });
+}
+
 /**
  * This functions choose randomly a seed node from seedNodes and try to get the snodes from it, or throws.
  * This function is to be used with a pRetry caller
  */
-export async function TEST_fetchSnodePoolFromSeedNodeRetryable(
+export async function fetchSnodePoolFromSeedNodeRetryable(
   seedNodes: Array<string>
 ): Promise<Array<SnodeFromSeed>> {
   window?.log?.info('fetchSnodePoolFromSeedNodeRetryable starting...');
@@ -217,16 +255,27 @@ export async function TEST_fetchSnodePoolFromSeedNodeRetryable(
     throw new Error('fetchSnodePoolFromSeedNodeRetryable: Seed nodes are empty #2');
   }
 
-  const snodes = await Promise.race(seedNodes.map(s => getSnodesFromSeedUrl(new URL(s))));
+  try {
+    // we want to get the first valid snode list from the seed node.
+    // There is a 5s timeout on that request
+    const snodes = await Promise.any(seedNodes.map(s => getSnodesFromSeedUrl(new URL(s))));
 
-  if (snodes.length === 0) {
-    window?.log?.warn(
-      `loki_snode_api::fetchSnodePoolFromSeedNodeRetryable - Promise.race did not return any snodes`
-    );
-    throw new Error(`Failed to contact seed node: Promise.race did not return any snodes`);
+    if (snodes.length === 0) {
+      window?.log?.warn(
+        `loki_snode_api::fetchSnodePoolFromSeedNodeRetryable - Promise.race did not return any snodes`
+      );
+      throw new Error(`Failed to contact seed node: Promise.race did not return any snodes`);
+    }
+
+    return snodes;
+  } catch (e) {
+    window.log.warn(`failed to fetch from seed nodes. Falling back to embedded list from assets`);
+    const fromAsset = await loadSnodePoolFromAsset();
+    if (fromAsset.length) {
+      return fromAsset;
+    }
+    throw new Error('Failed to fetch from seed nodes and embedded list from assets');
   }
-
-  return snodes;
 }
 
 /**
@@ -234,7 +283,7 @@ export async function TEST_fetchSnodePoolFromSeedNodeRetryable(
  * This function throws for whatever reason might happen (timeout, invalid response, 0 valid snodes returned, ...)
  * This function is to be used inside a pRetry function
  */
-async function getSnodesFromSeedUrl(urlObj: URL): Promise<Array<any>> {
+async function getSnodesFromSeedUrl(urlObj: URL) {
   // Removed limit until there is a way to get snode info
   // for individual nodes (needed for guard nodes);  this way
   // we get all active nodes
@@ -252,7 +301,6 @@ async function getSnodesFromSeedUrl(urlObj: URL): Promise<Array<any>> {
         storage_port: true,
         pubkey_x25519: true,
         pubkey_ed25519: true,
-        storage_server_version: true,
       },
     },
   };
@@ -316,10 +364,12 @@ async function getSnodesFromSeedUrl(urlObj: URL): Promise<Array<any>> {
       (snode: any) => snode.public_ip && snode.public_ip !== '0.0.0.0'
     );
 
-    if (validNodes.length === 0) {
+    const parsedResult = ServiceNodesFromSeedSchema.safeParse(validNodes);
+
+    if (parsedResult.error || parsedResult.data.length === 0) {
       throw new Error(`Did not get a single valid snode from ${urlObj.href}`);
     }
-    return validNodes;
+    return parsedResult.data;
   } catch (e) {
     window?.log?.error('Invalid json response. error:', e.message);
     throw new Error(`getSnodesFromSeedUrl: cannot parse content as JSON from ${urlObj.href}`);
