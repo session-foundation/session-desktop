@@ -9,6 +9,7 @@ import { MessageResultProps } from '../../types/message';
 import { ReduxConversationType } from './conversations';
 import { tEnglish, tr } from '../../localization/localeTools';
 import { BlockedNumberController } from '../../util';
+import { toSearchableString } from '../../session/searchableString';
 
 export type SearchType = 'global' | 'create-group' | 'invite-contact-to' | 'manage-group-members';
 
@@ -80,10 +81,10 @@ function convoMatchesSearch(convo: ReduxConversationType, searchTermLower: strin
     return false;
   }
 
-  return (
-    convo.id.toLowerCase().includes(searchTermLower) ||
-    (convo.nickname?.toLocaleLowerCase().includes(searchTermLower) ?? false) ||
-    (convo.displayNameInProfile?.toLocaleLowerCase().includes(searchTermLower) ?? false)
+  return !!(
+    toSearchableString(convo.id).includes(searchTermLower) ||
+    toSearchableString(convo.nickname).includes(searchTermLower) ||
+    toSearchableString(convo.displayNameInProfile).includes(searchTermLower)
   );
 }
 
@@ -92,7 +93,7 @@ export async function queryContactsAndGroups(providedQuery: string, options: Sea
 
   // Remove formatting characters from the query
   const query = providedQuery.replace(/[+-.()]*/g, '');
-  const queryLower = query.toLocaleLowerCase();
+  const queryLower = toSearchableString(query);
 
   // Using memory cache avoids slow DB queries and ICU/case-sensitivity issues.
   const state = window.inboxStore?.getState() as any;
@@ -114,7 +115,7 @@ export async function queryContactsAndGroups(providedQuery: string, options: Sea
     typeof savedMessages === 'string' ? savedMessages.includes(query) : false;
 
   if (
-    noteToSelf.some(str => str.includes(query) || str.toLocaleLowerCase().includes(queryLower)) ||
+    noteToSelf.some(str => str.includes(query) || toSearchableString(str).includes(queryLower)) ||
     isSavedMessagesMatch
   ) {
     // Ensure that we don't have duplicates in our results
