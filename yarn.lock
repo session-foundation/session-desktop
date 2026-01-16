@@ -2167,9 +2167,9 @@
     "@types/node" "*"
 
 "@types/node@*", "@types/node@>=13.7.0", "@types/node@^20.9.0", "@types/node@^24.10.8", "@types/node@^24.9.0":
-  version "24.10.8"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-24.10.8.tgz#9b529d32e7e5adb74b13d1fc9b83615e9a12a701"
-  integrity sha512-r0bBaXu5Swb05doFYO2kTWHMovJnNVbCsII0fhesM8bNRlLhXIuckley4a2DaD+vOdmm5G+zGkQZAPZsF80+YQ==
+  version "24.10.9"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-24.10.9.tgz#1aeb5142e4a92957489cac12b07f9c7fe26057d0"
+  integrity sha512-ne4A0IpG3+2ETuREInjPNhUGis1SFjv1d5asp8MzEAGtOZeTeHVDOYqOgqfhvseqg/iXty2hjBf1zAOb7RNiNw==
   dependencies:
     undici-types "~7.16.0"
 
@@ -6846,9 +6846,9 @@ no-case@^3.0.4:
     tslib "^2.0.3"
 
 node-abi@^4.2.0:
-  version "4.24.0"
-  resolved "https://registry.yarnpkg.com/node-abi/-/node-abi-4.24.0.tgz#fcc1b4c645ffb4c0f39e2dbfb9c41698ba7e782e"
-  integrity sha512-u2EC1CeNe25uVtX3EZbdQ275c74zdZmmpzrHEQh2aIYqoVjlglfUpOX9YY85x1nlBydEKDVaSmMNhR7N82Qj8A==
+  version "4.25.0"
+  resolved "https://registry.yarnpkg.com/node-abi/-/node-abi-4.25.0.tgz#4cd4f082c8fe5e29e2f3b529a49ce9aaab34513c"
+  integrity sha512-BRrQZc23ljOLms7EXVds3MOpB59/x7gaORodNuIwt96JKlflUmrOgv5hSJZEEM/WkW3uXpjZ4x1wcFu8V9mTpw==
   dependencies:
     semver "^7.6.3"
 
