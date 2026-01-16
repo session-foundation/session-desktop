@@ -276,7 +276,11 @@ function ProInfoBlockUpdate() {
             textElement={
               <Localizer
                 token="viaStoreWebsiteDescription"
-                platform_store={data.providerConstants.platform}
+                platform_store={
+                  data.provider === ProPaymentProvider.iOSAppStore
+                    ? data.providerConstants.platform // we want `Apple website` for apple
+                    : data.providerConstants.store // but `Google Play Store website` for google...
+                }
                 platform_account={data.providerConstants.platform_account}
               />
             }
