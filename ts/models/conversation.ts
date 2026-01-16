@@ -1815,6 +1815,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
      * A contact is a private, non NTS, non blinded, and approved at least on one side.
      */
     if (
+      this.getConvoType() !== ConvoTypeNarrow.privateAcquaintance &&
       this.getConvoType() !== ConvoTypeNarrow.contact &&
       this.getConvoType() !== ConvoTypeNarrow.blindedContact &&
       this.getConvoType() !== ConvoTypeNarrow.blindedAcquaintance
