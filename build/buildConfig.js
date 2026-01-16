@@ -15,13 +15,12 @@ const BUILD_CONFIG = {
     'preload.js',
     'yarn.lock',
     'mmdb/GeoLite2-Country.mmdb',
+    'stylesheets/fonts.css'
   ],
   directoriesToCopy: [
     'images',
     'fonts',
-    'stylesheets',
     'config',
-    'protos',
     'mnemonic_languages',
     'node_modules',
     'ts/protobuf',

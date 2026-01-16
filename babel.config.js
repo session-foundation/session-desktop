@@ -12,7 +12,7 @@ const allowErrors = process.env.SESSION_RC_ALLOW_ERRORS;
 
 // File patterns for babel
 const babelInclude = 'dist/ts/**/*.js';
-const babelIgnore = ['dist/ts/test/**'];
+const babelIgnore = ['dist/ts/test/**', 'dist/ts/svgs/**'];
 
 // NOTE: [react-compiler] we are telling the compiler to not attempt
 // to compile these files in the babel config as they are highly
