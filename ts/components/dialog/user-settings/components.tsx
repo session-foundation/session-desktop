@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import { Avatar, AvatarSize } from '../../avatar/Avatar';
 import { Flex } from '../../basic/Flex';
 import { useProBadgeOnClickCb } from '../../menuAndSettingsHooks/useProBadgeOnClickCb';
-import { useCurrentUserHasPro } from '../../../hooks/useHasPro';
+import { useCurrentUserHasExpiredPro, useCurrentUserHasPro } from '../../../hooks/useHasPro';
 import { ProIconButton } from '../../buttons/ProButton';
 import { AvatarQrCodeButton } from '../../buttons/avatar/AvatarQrCodeButton';
 
@@ -106,10 +106,11 @@ export const ProfileName = (props: { profileName: string; onClick: () => void })
   const { profileName, onClick } = props;
 
   const currentUserHasPro = useCurrentUserHasPro();
+  const currentUserHasExpiredPro = useCurrentUserHasExpiredPro();
 
   const showPro = useProBadgeOnClickCb({
     context: 'show-our-profile-dialog',
-    args: { currentUserHasPro, providedCb: onClick },
+    args: { currentUserHasPro, currentUserHasExpiredPro, providedCb: onClick },
   });
 
   return (
@@ -122,6 +123,7 @@ export const ProfileName = (props: { profileName: string; onClick: () => void })
             dataTestId="pro-badge-profile-name"
             onClick={showPro.cb}
             style={{ display: 'inline-flex', marginInlineStart: 'var(--margins-sm)' }}
+            noColors={currentUserHasExpiredPro}
           />
         ) : null}
       </StyledName>

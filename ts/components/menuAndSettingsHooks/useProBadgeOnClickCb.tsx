@@ -10,6 +10,7 @@ import { CTAVariant } from '../dialog/cta/types';
 type WithUserHasPro = { userHasPro: boolean };
 type WithMessageSentWithProFeat = { messageSentWithProFeat: Array<ProMessageFeature> | null };
 type WithCurrentUserHasPro = { currentUserHasPro: boolean };
+type WithCurrentUserHasExpiredPro = { currentUserHasExpiredPro: boolean };
 
 type WithIsMe = { isMe: boolean };
 type WithContactNameContext = { contactNameContext: ContactNameContext };
@@ -20,7 +21,10 @@ type WithProCTA = { cta: SessionCTAState };
 
 type ProBadgeContext =
   | { context: 'edit-profile-pic'; args: WithProCTA }
-  | { context: 'show-our-profile-dialog'; args: WithCurrentUserHasPro & WithProvidedCb }
+  | {
+      context: 'show-our-profile-dialog';
+      args: WithCurrentUserHasPro & WithCurrentUserHasExpiredPro & WithProvidedCb;
+    }
   | {
       context: 'conversation-title-dialog'; // the title in the conversation settings ConversationSettingsHeader/UserProfileDialog
       args: WithUserHasPro & WithCurrentUserHasPro & WithIsMe & WithIsGroupV2;
@@ -140,8 +144,8 @@ export function useProBadgeOnClickCb(
   }
 
   if (context === 'show-our-profile-dialog') {
-    if (args.currentUserHasPro) {
-      // if the current user already has pro, we want to show the badge, but use a custom callback
+    if (args.currentUserHasPro || args.currentUserHasExpiredPro) {
+      // if the current user already has or had pro, we want to show the badge, but use a custom callback
       // i.e. it won't open the CTA but allow to edit our name
       return { show: true, cb: args.providedCb };
     }

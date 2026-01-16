@@ -25,7 +25,7 @@ describe('Privacy', () => {
     it('redact sessionID without the 05 prefix', () => {
       expect(
         redactAll(
-          'start 2d3096a72d2271bbba0d820729a3548749a2b3890c3b41ea08c4c2722616dd2b middle 2d3096a72d2271bbba0d820729a3548749a2b3890c3b41ea08c4c2722616dd2c end'
+          'start 053096a72d2271bbba0d820729a3548749a2b3890c3b41ea08c4c2722616dd2bda middle 033096a72d2271bbba0d820729a3548749a2b3890c3b41ea08c4c2722616dd2cda end'
         )
       ).to.be.equal('start [REDACTED] middle [REDACTED] end');
     });

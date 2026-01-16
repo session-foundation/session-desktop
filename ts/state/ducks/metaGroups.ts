@@ -164,6 +164,7 @@ const initNewGroupInWrapper = createAsyncThunk(
         groupEd25519Secretkey: newGroup.secretKey,
         groupEd25519Pubkey: toFixedUint8ArrayOfLength(groupEd2519Pk, 32).buffer,
       });
+      await LibSessionUtil.saveDumpsToDb(groupPk);
 
       const infos = await MetaGroupWrapperActions.infoGet(groupPk);
       if (!infos) {
@@ -335,6 +336,7 @@ const handleUserGroupUpdate = createAsyncThunk(
         groupEd25519Secretkey: userGroup.secretKey,
         groupEd25519Pubkey: toFixedUint8ArrayOfLength(groupEd2519Pk, 32).buffer,
       });
+      await LibSessionUtil.saveDumpsToDb(groupPk);
     } catch (e) {
       window.log.warn(`failed to init meta wrapper ${groupPk}`);
     }
@@ -375,6 +377,8 @@ const loadMetaDumpsFromDB = createAsyncThunk(
       throw new Error('user has no ed25519KeyPairBytes.');
     }
 
+    // Make sure all of the groups that should have a dump in DB, actually have one before we load them
+    await LibSessionUtil.createInitialDumpsMissingForGroups();
     const variantsWithData = await ConfigDumpData.getAllDumpsWithData();
     const allUserGroups = await UserGroupsWrapperActions.getAllGroups();
     const toReturn: Array<GroupDetailsUpdate> = [];
