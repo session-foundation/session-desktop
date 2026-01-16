@@ -47,12 +47,8 @@ module.exports = {
     react: 'commonjs2 react',
   },
   optimization: {
-    minimize: process.env.NODE_ENV === 'production',
+    minimize: true,
   },
-  mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
-  watch: false, // false by default but can be overridden by the command line
-  watchOptions: {
-    aggregateTimeout: 200,
-    poll: 1000,
-  },
+  mode: 'production',
+  devtool: false,
 };
