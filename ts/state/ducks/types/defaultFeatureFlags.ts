@@ -59,7 +59,7 @@ function getMockNetworkPageNodeCount() {
     if (Number.isFinite(num) && num > 0 && num < 11) {
       return num;
     }
-    throw new Error(`Value is invalid for mock node count: ${num}`)
+    throw new Error(`Value is invalid for mock node count: ${num}`);
   } catch (e) {
     window.log.error('getMockNetworkPageNodeCount:', e);
     return null;
