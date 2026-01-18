@@ -1,5 +1,6 @@
 import 'react';
 import type { ReleaseChannels } from './updater/types';
+import { ThemeStateType } from './themes/constants/colors';
 
 /**
  * WARNING: if you change something here, you will most likely break some integration tests.
