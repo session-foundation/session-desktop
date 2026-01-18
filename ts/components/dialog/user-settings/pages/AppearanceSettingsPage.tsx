@@ -131,7 +131,7 @@ const Themes = () => {
       {themes.map(theme => (
         <>
           <PanelButton
-            dataTestId="invalid-data-testid"
+            dataTestId={`${theme.id}-themes-settings-menu-item`}
             key={theme.id}
             onClick={() => {
               void switchThemeTo({

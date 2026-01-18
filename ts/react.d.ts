@@ -279,6 +279,7 @@ declare module 'react' {
     | `${MenuItems}-menu-item`
     | `${SettingsMenuItems}-settings-menu-item`
     | `${Inputs}-input`
+    | `${ThemeStateType}-themes-settings-menu-item`
 
     // Pro settings
     | `${ProFeatureItems}-pro-settings-menu-item`
