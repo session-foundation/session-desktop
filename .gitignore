@@ -57,4 +57,10 @@ ts/webworker/workers/node/**/*.node
 .yarn/
 app/
 dist/
+build/buildConfig.js
+build/clean.js
+build/copyBin.js
+build/copyUtils.js
+build/copySource.js
+build/copyTests.js
 .build-cache

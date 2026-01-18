@@ -1,12 +1,12 @@
-const { execSync } = require('child_process');
-const fs = require('fs');
-const path = require('path');
-const BUILD_CONFIG = require('./buildConfig');
+import { execSync } from 'child_process';
+import fs from 'fs';
+import path from 'path';
+import BUILD_CONFIG from './buildConfig';
 
 const { APP_DIR } = BUILD_CONFIG;
 const PROJECT_ROOT = path.join(__dirname, '..');
 
-async function copyBinDirectory() {
+async function copyBinDirectory(): Promise<void> {
   const sourceBinPath = path.join(PROJECT_ROOT, 'node_modules', '.bin');
   const destNodeModulesPath = path.join(APP_DIR, 'node_modules');
   const destBinPath = path.join(destNodeModulesPath, '.bin');
@@ -32,12 +32,13 @@ async function copyBinDirectory() {
 
     console.log('✓ Successfully copied node_modules/.bin/');
   } catch (error) {
-    console.error('Error copying .bin directory:', error.message);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error('Error copying .bin directory:', errorMessage);
     process.exit(1);
   }
 }
 
-copyBinDirectory().catch(error => {
+copyBinDirectory().catch((error: Error) => {
   console.error('Error:', error);
   process.exit(1);
 });

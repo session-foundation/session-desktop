@@ -1,8 +1,18 @@
-const path = require('path');
+import path from 'path';
 
 const PROJECT_ROOT = path.join(__dirname, '..');
 
-const BUILD_CONFIG = {
+export interface BuildConfig {
+  APP_DIR: string;
+  DIST_DIR: string;
+  CACHE_FILE: string;
+  filesToCopy: string[];
+  directoriesToCopy: string[];
+}
+
+// NOTE: a modified version of package.json is also copied into the app dir
+
+const BUILD_CONFIG: BuildConfig = {
   APP_DIR: path.join(PROJECT_ROOT, 'app'),
   DIST_DIR: path.join(PROJECT_ROOT, 'dist'),
   CACHE_FILE: path.join(PROJECT_ROOT, '.build-cache', 'file-cache.json'),
@@ -27,4 +37,4 @@ const BUILD_CONFIG = {
   ],
 };
 
-module.exports = BUILD_CONFIG;
+export default BUILD_CONFIG;

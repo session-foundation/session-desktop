@@ -1,11 +1,11 @@
-const fs = require('fs/promises');
-const fsSync = require('fs');
-const path = require('path');
-const BUILD_CONFIG = require('./buildConfig');
+import fs from 'fs/promises';
+import fsSync from 'fs';
+import path from 'path';
+import BUILD_CONFIG from './buildConfig';
 
 const { APP_DIR, DIST_DIR, CACHE_FILE, filesToCopy, directoriesToCopy } = BUILD_CONFIG;
 
-function isCopiedPath(relativePath) {
+function isCopiedPath(relativePath: string): boolean {
   if (filesToCopy.includes(relativePath) || relativePath === 'package.json') {
     return true;
   }
@@ -14,7 +14,7 @@ function isCopiedPath(relativePath) {
   return directoriesToCopy.includes(firstDir);
 }
 
-async function removeBuiltFiles(dir, baseDir = dir) {
+async function removeBuiltFiles(dir: string, baseDir: string = dir): Promise<void> {
   try {
     const entries = await fs.readdir(dir, { withFileTypes: true });
 
@@ -35,20 +35,22 @@ async function removeBuiltFiles(dir, baseDir = dir) {
             await fs.rmdir(fullPath);
             console.log(`  Removed empty dir: ${relativePath}`);
           }
-        } catch {}
+        } catch {
+          // Directory might have been removed or is not empty
+        }
       } else {
         await fs.unlink(fullPath);
         console.log(`  Removed: ${relativePath}`);
       }
     }
   } catch (error) {
-    if (error.code !== 'ENOENT') {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
       throw error;
     }
   }
 }
 
-async function clean() {
+async function clean(): Promise<void> {
   const cleanDist = process.argv.includes('--dist');
   const cleanCache = process.argv.includes('--cache');
 
@@ -77,7 +79,7 @@ async function clean() {
   console.log('\n✨ Clean complete!');
 }
 
-clean().catch(error => {
+clean().catch((error: Error) => {
   console.error('Error:', error);
   process.exit(1);
 });
