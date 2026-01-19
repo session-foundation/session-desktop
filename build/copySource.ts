@@ -6,15 +6,13 @@ import { shouldCopy, copyWithCache } from './copyUtils';
 const { APP_DIR, filesToCopy, directoriesToCopy } = BUILD_CONFIG;
 const PROJECT_ROOT = path.join(__dirname, '..');
 
-interface PackageJson {
+type PackageJson = Record<string, unknown> & {
   build?: unknown;
-  scripts: {
+  scripts: Record<string, string> & {
     test?: string;
     'test-internal'?: string;
-    [key: string]: string | undefined;
   };
-  [key: string]: unknown;
-}
+};
 
 async function copySource(): Promise<void> {
   console.log('📦 Copying source files...\n');
@@ -30,7 +28,9 @@ async function copySource(): Promise<void> {
     const packageJsonContent = await fs.readFile(packageJsonPath, 'utf-8');
     const packageJson: PackageJson = JSON.parse(packageJsonContent);
 
+    // NOTE: electron-builder requires the build item to be removed in the app dir
     delete packageJson.build;
+    // NOTE: we swap the test scripts so we can run "yarn test" from the root dir
     if (packageJson.scripts['test-internal']) {
       packageJson.scripts.test = packageJson.scripts['test-internal'];
       delete packageJson.scripts['test-internal'];

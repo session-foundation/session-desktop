@@ -2,13 +2,13 @@ import path from 'path';
 
 const PROJECT_ROOT = path.join(__dirname, '..');
 
-export interface BuildConfig {
+export type BuildConfig = {
   APP_DIR: string;
   DIST_DIR: string;
   CACHE_FILE: string;
-  filesToCopy: string[];
-  directoriesToCopy: string[];
-}
+  filesToCopy: Array<string>;
+  directoriesToCopy: Array<string>;
+};
 
 // NOTE: a modified version of package.json is also copied into the app dir
 

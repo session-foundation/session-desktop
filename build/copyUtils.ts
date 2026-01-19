@@ -7,27 +7,25 @@ import BUILD_CONFIG from './buildConfig';
 const { CACHE_FILE } = BUILD_CONFIG;
 const PROJECT_ROOT = path.join(__dirname, '..');
 
-interface CacheEntry {
+type CacheEntry = {
   size: number;
   mtimeMs: number;
   hash?: string;
-}
+};
 
-interface FileCache {
-  [key: string]: CacheEntry;
-}
+type FileCache = Record<string, CacheEntry>;
 
-export interface CopyStats {
+export type CopyStats = {
   copied: number;
   skipped: number;
   metadataHits: number;
   hashHits: number;
   hashComputations: number;
-}
+};
 
 let cache: FileCache = {};
 
-async function loadCache(): Promise<void> {
+async function loadCache() {
   try {
     const data = await fs.readFile(CACHE_FILE, 'utf-8');
     cache = JSON.parse(data);
@@ -36,7 +34,7 @@ async function loadCache(): Promise<void> {
   }
 }
 
-async function saveCache(): Promise<void> {
+async function saveCache() {
   const dir = path.dirname(CACHE_FILE);
   await fs.mkdir(dir, { recursive: true });
   await fs.writeFile(CACHE_FILE, JSON.stringify(cache, null, 2));

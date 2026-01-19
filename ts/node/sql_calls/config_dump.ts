@@ -25,7 +25,7 @@ function parseRow(
 }
 
 function parseRowNoData(
-  row: Pick<ConfigDumpRow, 'data' | 'publicKey' | 'variant'>
+  row: Pick<ConfigDumpRow, 'publicKey' | 'variant'>
 ): ConfigDumpRowWithoutData | null {
   const toRet: ConfigDumpRowWithoutData = {
     publicKey: row.publicKey,
@@ -75,7 +75,7 @@ export const configDumpData: ConfigDumpDataNode = {
   getAllDumpsWithoutData: () => {
     const rows = assertGlobalInstance()
       .prepare(`SELECT variant, publicKey from ${CONFIG_DUMP_TABLE};`)
-      .all<ConfigDumpRow>();
+      .all<Pick<ConfigDumpRow, 'variant' | 'publicKey'>>();
 
     if (!rows) {
       return [];
@@ -87,7 +87,7 @@ export const configDumpData: ConfigDumpDataNode = {
   getAllDumpsWithoutDataFor: (publicKey: string) => {
     const rows = assertGlobalInstance()
       .prepare(`SELECT variant, publicKey from ${CONFIG_DUMP_TABLE} WHERE publicKey=$publicKey;`)
-      .all<ConfigDumpRow>({ publicKey });
+      .all<Pick<ConfigDumpRow, 'variant' | 'publicKey'>>({ publicKey });
 
     if (!rows) {
       return [];

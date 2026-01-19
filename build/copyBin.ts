@@ -6,7 +6,8 @@ import BUILD_CONFIG from './buildConfig';
 const { APP_DIR } = BUILD_CONFIG;
 const PROJECT_ROOT = path.join(__dirname, '..');
 
-async function copyBinDirectory(): Promise<void> {
+// This is required to make the unit test run, as for some reason fs.copyFile corrupts the bins
+async function copyBinDirectory() {
   const sourceBinPath = path.join(PROJECT_ROOT, 'node_modules', '.bin');
   const destNodeModulesPath = path.join(APP_DIR, 'node_modules');
   const destBinPath = path.join(destNodeModulesPath, '.bin');

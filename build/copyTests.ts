@@ -8,7 +8,7 @@ const { APP_DIR, DIST_DIR } = BUILD_CONFIG;
 let totalCopied = 0;
 let totalSkipped = 0;
 
-async function copyTests(): Promise<void> {
+async function copyTests() {
   const testsDir = 'ts/test';
   const testsBuildPath = path.join(DIST_DIR, testsDir);
   const testsAppPath = path.join(APP_DIR, testsDir);
