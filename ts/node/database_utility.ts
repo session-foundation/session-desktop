@@ -19,6 +19,17 @@ export const CLOSED_GROUP_V2_KEY_PAIRS_TABLE = 'encryptionKeyPairsForClosedGroup
 export const LAST_HASHES_TABLE = 'lastHashes';
 export const SEEN_MESSAGE_TABLE = 'seenMessages';
 
+export const MessageColumns = {
+  /**
+   * A column that coalesce serverTimestamp & sentTimestamp & receivedAt
+   */
+  coalesceSentAndReceivedAt: 'sort_timestamp_full',
+  /**
+   * A column that coalesce serverTimestamp & sentTimestamp
+   */
+  coalesceForSentOnly: 'sort_timestamp_sent_only',
+};
+
 export const HEX_KEY = /[^0-9A-Fa-f]/;
 
 export function objectToJSON(data: Record<any, any>) {
@@ -307,4 +318,46 @@ export function rebuildFtsTable(db: BetterSqlite3.Database) {
           END;
           `);
   console.info('rebuildFtsTable built');
+}
+
+/**
+ *
+ * This new version of the fts table saves storage space by referencing the message table.
+ * It stores the token for search in the fts table, but the body is only on the messages tables.
+ * We need to do a join, to fetch the body, but that has a small impact on performance, saving half of the used storage of the message table.
+ */
+export function rebuildFtsTableReferencingMessages(db: BetterSqlite3.Database) {
+  const start = Date.now();
+  console.info('rebuildFtsTableReferencingMessages');
+  db.exec(`
+    -- Create FTS5 table that references the messages table
+    CREATE VIRTUAL TABLE ${MESSAGES_FTS_TABLE}
+      USING fts5(
+        body,
+        ${MessageColumns.coalesceSentAndReceivedAt} UNINDEXED,
+        content=${MESSAGES_TABLE},
+        content_rowid=rowid
+      );
+
+    -- Populate the FTS index from existing messages
+    INSERT INTO ${MESSAGES_FTS_TABLE}(rowid, body)
+      SELECT rowid, body FROM ${MESSAGES_TABLE};
+    -- Then we set up triggers to keep the full-text search table up to date
+    CREATE TRIGGER messages_on_insert AFTER INSERT ON ${MESSAGES_TABLE} BEGIN
+      INSERT INTO ${MESSAGES_FTS_TABLE}(rowid, body)
+      VALUES (new.rowid, new.body);
+    END;
+
+    CREATE TRIGGER messages_on_delete AFTER DELETE ON ${MESSAGES_TABLE} BEGIN
+      DELETE FROM ${MESSAGES_FTS_TABLE} WHERE rowid = old.rowid;
+    END;
+
+    CREATE TRIGGER messages_on_update AFTER UPDATE ON ${MESSAGES_TABLE}
+    WHEN new.body <> old.body BEGIN
+      DELETE FROM ${MESSAGES_FTS_TABLE} WHERE rowid = old.rowid;
+      INSERT INTO ${MESSAGES_FTS_TABLE}(rowid, body)
+      VALUES (new.rowid, new.body);
+    END;
+  `);
+  console.info('rebuildFtsTableReferencingMessages built in ', Date.now() - start, 'ms');
 }

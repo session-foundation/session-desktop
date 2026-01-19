@@ -19,12 +19,14 @@ import {
   ITEMS_TABLE,
   LAST_HASHES_TABLE,
   MESSAGES_TABLE,
+  MessageColumns,
   NODES_FOR_PUBKEY_TABLE,
   OPEN_GROUP_ROOMS_V2_TABLE,
   SEEN_MESSAGE_TABLE,
   dropFtsAndTriggers,
   objectToJSON,
   rebuildFtsTable,
+  rebuildFtsTableReferencingMessages,
 } from '../database_utility';
 
 import { SettingsKey, SNODE_POOL_ITEM_ID } from '../../data/settings-key';
@@ -125,6 +127,7 @@ const LOKI_SCHEMA_VERSIONS: Array<
   updateToSessionSchemaVersion50,
   updateToSessionSchemaVersion51,
   updateToSessionSchemaVersion52,
+  updateToSessionSchemaVersion53,
 ];
 
 function updateToSessionSchemaVersion1(currentVersion: number, db: BetterSqlite3.Database) {
@@ -2273,6 +2276,83 @@ async function updateToSessionSchemaVersion52(currentVersion: number, db: Better
       UPDATE ${MESSAGES_TABLE} SET
       json = json_remove(json, '$.schemaVersion', '$.recipients', '$.decrypted_at', '$.sourceDevice')
     `);
+
+    writeSessionSchemaVersion(targetVersion, db);
+  })();
+
+  console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
+}
+
+async function updateToSessionSchemaVersion53(currentVersion: number, db: BetterSqlite3.Database) {
+  const targetVersion = 53;
+  if (currentVersion >= targetVersion) {
+    return;
+  }
+  console.log(`updateToSessionSchemaVersion${targetVersion}: starting...`);
+
+  db.transaction(() => {
+    dropFtsAndTriggers(db);
+    // rebuild the fts table, this time with the referencing messages table logic
+    rebuildFtsTableReferencingMessages(db);
+    db.exec(`
+      ALTER TABLE ${MESSAGES_TABLE}
+      ADD COLUMN ${MessageColumns.coalesceSentAndReceivedAt} INTEGER;
+    `);
+    db.exec(`
+      ALTER TABLE ${MESSAGES_TABLE}
+      ADD COLUMN ${MessageColumns.coalesceForSentOnly} INTEGER;
+    `);
+
+    // Populate existing rows
+    db.exec(`
+      UPDATE ${MESSAGES_TABLE}
+      SET ${MessageColumns.coalesceSentAndReceivedAt} = COALESCE(serverTimestamp, sent_at, received_at),
+      ${MessageColumns.coalesceForSentOnly} = COALESCE(serverTimestamp, sent_at);
+    `);
+
+    // create trigger on update of messages to MessageColumns.coalesceSentAndReceivedAt
+    db.exec(`
+  -- Insert trigger
+  CREATE TRIGGER messages_insert_sort_timestamp
+  AFTER INSERT ON ${MESSAGES_TABLE}
+  BEGIN
+    UPDATE ${MESSAGES_TABLE}
+    SET ${MessageColumns.coalesceSentAndReceivedAt} = COALESCE(NEW.serverTimestamp, NEW.sent_at, NEW.received_at),
+        ${MessageColumns.coalesceForSentOnly} = COALESCE(NEW.serverTimestamp, NEW.sent_at)
+    WHERE rowid = NEW.rowid;
+  END;
+
+  -- Update trigger
+  CREATE TRIGGER messages_update_sort_timestamp
+  AFTER UPDATE OF serverTimestamp, sent_at, received_at ON ${MESSAGES_TABLE}
+  BEGIN
+    UPDATE ${MESSAGES_TABLE}
+    SET ${MessageColumns.coalesceSentAndReceivedAt} = COALESCE(NEW.serverTimestamp, NEW.sent_at, NEW.received_at),
+        ${MessageColumns.coalesceForSentOnly} = COALESCE(NEW.serverTimestamp, NEW.sent_at)
+    WHERE rowid = NEW.rowid;
+  END;
+`);
+
+    db.exec(
+      `CREATE INDEX ${MessageColumns.coalesceSentAndReceivedAt}_index ON ${MESSAGES_TABLE}(${MessageColumns.coalesceSentAndReceivedAt} DESC);`
+    );
+
+    db.exec(
+      `CREATE INDEX ${MessageColumns.coalesceForSentOnly}_index ON ${MESSAGES_TABLE}(${MessageColumns.coalesceForSentOnly} DESC);`
+    );
+
+    // Also, use this migration to create a few indexes on what is called as part of `fetchConvoMemoryDetails`
+    // this one is for what is used in `getLastMessageReadInConversation`
+    db.exec(`
+    CREATE INDEX messages_conversation_unread_sort
+    ON ${MESSAGES_TABLE}(conversationId, unread, ${MessageColumns.coalesceForSentOnly} DESC);
+  `);
+
+    // this one is for what is used in `getUnreadCountByConversation`
+    db.exec(`
+    CREATE INDEX messages_conversation_unread
+    ON ${MESSAGES_TABLE}(conversationId, unread);
+  `);
 
     writeSessionSchemaVersion(targetVersion, db);
   })();

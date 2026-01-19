@@ -40,6 +40,7 @@ import {
   ITEMS_TABLE,
   jsonToObject,
   LAST_HASHES_TABLE,
+  MessageColumns,
   MESSAGES_FTS_TABLE,
   MESSAGES_TABLE,
   NODES_FOR_PUBKEY_TABLE,
@@ -762,45 +763,6 @@ function getPubkeysInPublicConversation(conversationId: string) {
   return map(rows, row => row.source);
 }
 
-function searchConversations(query: string) {
-  const rows = assertGlobalInstance()
-    .prepare(
-      `SELECT * FROM ${CONVERSATIONS_TABLE} WHERE
-    (
-      displayNameInProfile LIKE $displayNameInProfile COLLATE NOCASE OR
-      nickname LIKE $nickname COLLATE NOCASE OR
-      (id LIKE $id AND
-        (displayNameInProfile IS NULL OR displayNameInProfile = '') AND (nickname IS NULL OR nickname = '')
-      )
-    ) AND active_at > 0
-    ORDER BY (COALESCE(NULLIF(nickname, ''), displayNameInProfile) COLLATE NOCASE)
-    LIMIT $limit`
-    )
-    .all({
-      displayNameInProfile: `%${query}%`,
-      id: `%${query}%`,
-      nickname: `%${query}%`,
-      limit: 50,
-    });
-
-  return (rows || []).map(m => {
-    const unreadCount = getUnreadCountByConversation(m.id);
-    const mentionedUsStillUnread = !!getFirstUnreadMessageWithMention(m.id);
-
-    const formatted = formatRowOfConversation(
-      m,
-      'searchConversations',
-      unreadCount,
-      mentionedUsStillUnread
-    );
-
-    return formatted;
-  });
-}
-
-// order by clause is the same as orderByClause but with a table prefix so we cannot reuse it
-const orderByMessageCoalesceClause = `ORDER BY COALESCE(${MESSAGES_TABLE}.serverTimestamp, ${MESSAGES_TABLE}.sent_at, ${MESSAGES_TABLE}.received_at) DESC`;
-
 function searchMessages(query: string, limit: number) {
   if (!limit) {
     throw new Error('searchMessages limit must be set');
@@ -812,10 +774,10 @@ function searchMessages(query: string, limit: number) {
       ${MESSAGES_TABLE}.json,
       snippet(${MESSAGES_FTS_TABLE}, -1, '<<left>>', '<<right>>', '...', 5) as snippet
     FROM ${MESSAGES_FTS_TABLE}
-    INNER JOIN ${MESSAGES_TABLE} on ${MESSAGES_FTS_TABLE}.rowid = ${MESSAGES_TABLE}.rowid
+    INNER JOIN ${MESSAGES_TABLE} ON ${MESSAGES_FTS_TABLE}.rowid = ${MESSAGES_TABLE}.rowid
     WHERE
-     ${MESSAGES_FTS_TABLE}.body match $query
-    ${orderByMessageCoalesceClause}
+     ${MESSAGES_FTS_TABLE}.body MATCH $query
+      ORDER BY ${MESSAGES_TABLE}.${MessageColumns.coalesceSentAndReceivedAt} DESC
     LIMIT $limit;`
     )
     .all({
@@ -1425,7 +1387,7 @@ function getUnreadByConversation(conversationId: string, sentBeforeTimestamp: nu
       `SELECT * FROM ${MESSAGES_TABLE} WHERE
       unread = $unread AND
       conversationId = $conversationId AND
-      COALESCE(serverTimestamp, sent_at) <= $sentBeforeTimestamp
+      ${MessageColumns.coalesceForSentOnly} <= $sentBeforeTimestamp
      ${orderByClauseASC};`
     )
     .all({
@@ -1443,7 +1405,7 @@ function getUnreadDisappearingByConversation(conversationId: string, sentBeforeT
       `SELECT * FROM ${MESSAGES_TABLE} WHERE
       unread = $unread AND expireTimer > 0 AND
       conversationId = $conversationId AND
-      COALESCE(serverTimestamp, sent_at) <= $sentBeforeTimestamp
+      ${MessageColumns.coalesceForSentOnly} <= $sentBeforeTimestamp
      ${orderByClauseASC};`
     )
     .all({
@@ -1537,8 +1499,8 @@ function getMessageCountByType(conversationId: string, type = '%') {
 
 // Note: Sorting here is necessary for getting the last message (with limit 1)
 // be sure to update the sorting order to sort messages on redux too (sortMessages)
-const orderByClause = 'ORDER BY COALESCE(serverTimestamp, sent_at, received_at) DESC';
-const orderByClauseASC = 'ORDER BY COALESCE(serverTimestamp, sent_at, received_at) ASC';
+const orderByClause = `ORDER BY ${MessageColumns.coalesceSentAndReceivedAt} DESC`;
+const orderByClauseASC = `ORDER BY ${MessageColumns.coalesceSentAndReceivedAt} ASC`;
 
 function getMessagesByConversation(
   conversationId: string,
@@ -1582,7 +1544,7 @@ function getMessagesByConversation(
     const messagesBefore = assertGlobalInstance()
       .prepare(
         `SELECT id, conversationId, json
-            FROM ${MESSAGES_TABLE} WHERE conversationId = $conversationId AND COALESCE(serverTimestamp, sent_at, received_at) <= $msgTimestamp
+            FROM ${MESSAGES_TABLE} WHERE conversationId = $conversationId AND ${MessageColumns.coalesceSentAndReceivedAt} <= $msgTimestamp
             ${orderByClause}
             LIMIT $limit`
       )
@@ -1591,7 +1553,7 @@ function getMessagesByConversation(
     const messagesAfter = assertGlobalInstance()
       .prepare(
         `SELECT id, conversationId, json
-            FROM ${MESSAGES_TABLE} WHERE conversationId = $conversationId AND COALESCE(serverTimestamp, sent_at, received_at) > $msgTimestamp
+            FROM ${MESSAGES_TABLE} WHERE conversationId = $conversationId AND ${MessageColumns.coalesceSentAndReceivedAt} > $msgTimestamp
             ${orderByClauseASC}
             LIMIT $limit`
       )
@@ -1705,7 +1667,7 @@ function getFirstUnreadMessageIdInConversation(conversationId: string) {
     SELECT id FROM ${MESSAGES_TABLE} WHERE
       conversationId = $conversationId AND
       unread = $unread
-      ORDER BY serverTimestamp ASC, serverId ASC, sent_at ASC, received_at ASC
+      ORDER BY ${MessageColumns.coalesceSentAndReceivedAt} ASC
     LIMIT 1;
     `
     )
@@ -1727,10 +1689,10 @@ function getLastMessageReadInConversation(conversationId: string): number | null
   const rows = assertGlobalInstance()
     .prepare(
       `
-      SELECT MAX(MAX(COALESCE(serverTimestamp, 0)), MAX(COALESCE(sent_at, 0)) ) AS max_sent_at
-      FROM ${MESSAGES_TABLE} WHERE
-        conversationId = $conversationId AND
-        unread = $unread;
+      SELECT MAX(${MessageColumns.coalesceForSentOnly}) AS max_sent_at
+       FROM ${MESSAGES_TABLE}
+       WHERE conversationId = $conversationId
+         AND unread = $unread;
     `
     )
     .get({
@@ -1750,23 +1712,22 @@ function getFirstUnreadMessageWithMention(
   if (!ourPkInThatConversation || !ourPkInThatConversation.length) {
     throw new Error('getFirstUnreadMessageWithMention needs our pubkey but nothing was given');
   }
-  const likeMatch = `%@${ourPkInThatConversation}%`;
 
   const rows = assertGlobalInstanceOrInstance(instance)
     .prepare(
-      `
-    SELECT id FROM ${MESSAGES_TABLE} WHERE
-      conversationId = $conversationId AND
-      unread = $unread AND
-      body LIKE $likeMatch
-      ORDER BY serverTimestamp ASC, serverId ASC, sent_at ASC, received_at ASC
-    LIMIT 1;
-    `
+      `SELECT ${MESSAGES_TABLE}.id
+     FROM ${MESSAGES_FTS_TABLE}
+     INNER JOIN ${MESSAGES_TABLE} ON ${MESSAGES_FTS_TABLE}.rowid = ${MESSAGES_TABLE}.rowid
+     WHERE ${MESSAGES_TABLE}.conversationId = $conversationId
+       AND ${MESSAGES_TABLE}.unread = $unread
+       AND ${MESSAGES_FTS_TABLE}.body MATCH $query
+     ORDER BY ${MESSAGES_TABLE}.${MessageColumns.coalesceSentAndReceivedAt} ASC
+     LIMIT 1;`
     )
     .all({
       conversationId,
       unread: toSqliteBoolean(true),
-      likeMatch,
+      query: `@${ourPkInThatConversation}*`,
     });
 
   if (rows.length === 0) {
@@ -2568,7 +2529,6 @@ export const sqlNode = {
   getPubkeysInPublicConversation,
   removeAllConversations,
 
-  searchConversations,
   searchMessages,
 
   getMessageCount,

@@ -32,7 +32,6 @@ const channelsToMake = new Set([
   'removeConversation',
   'getAllConversations',
   'getPubkeysInPublicConversation',
-  'searchConversations',
   'searchMessages',
   'saveMessage',
   'cleanSeenMessages',

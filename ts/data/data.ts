@@ -160,11 +160,6 @@ async function getPubkeysInPublicConversation(id: string): Promise<Array<string>
   return channels.getPubkeysInPublicConversation(id);
 }
 
-async function searchConversations(query: string): Promise<Array<any>> {
-  const conversations = await channels.searchConversations(query);
-  return conversations;
-}
-
 async function searchMessages(query: string, limit: number): Promise<Array<MessageResultProps>> {
   const messages = (await channels.searchMessages(query, limit)) as Array<MessageResultProps>;
   return _.uniqWith(messages, (left: { id: string }, right: { id: string }) => {
@@ -795,7 +790,6 @@ export const Data = {
   removeConversation,
   getAllConversations,
   getPubkeysInPublicConversation,
-  searchConversations,
   searchMessages,
   cleanSeenMessages,
   cleanLastHashes,
