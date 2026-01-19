@@ -111,8 +111,13 @@ function sharpFrom(inputBuffer: ArrayBufferLike | Buffer, options?: sharp.SharpO
   if (inputBuffer instanceof Buffer) {
     return sharp(inputBuffer, options).rotate();
   }
-  // TODO: fix the array buffer type
-  return sharp(new Uint8Array(inputBuffer as ArrayBuffer), options).rotate();
+
+  if (inputBuffer instanceof SharedArrayBuffer) {
+    const arrayBuffer = inputBuffer.slice(0);
+    return sharp(new Uint8Array(arrayBuffer), options).rotate();
+  }
+
+  return sharp(new Uint8Array(inputBuffer), options).rotate();
 }
 
 function metadataToFrameHeight(metadata: sharp.Metadata) {
