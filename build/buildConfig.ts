@@ -29,6 +29,7 @@ const BUILD_CONFIG: BuildConfig = {
   ],
   directoriesToCopy: [
     'images',
+    'sound',
     'fonts',
     'config',
     'mnemonic_languages',

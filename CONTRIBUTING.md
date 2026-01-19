@@ -50,8 +50,6 @@ See [node-gyp installation instructions](https://github.com/nodejs/node-gyp#inst
 
 ## Linux
 
-- Depending on your distribution, you might need to install [hunspell](https://github.com/hunspell/hunspell) and your specific locale (`hunspell-<lang>`) e.g. `hunspell-en-au`.
-
 - Install the required build tools for your operating system
 
   <details>
