@@ -22,8 +22,6 @@
     "nanoid": "^3.3.8",
     "csstype": "^3.1.3",
     "reselect": "5.1.1",
-    "@emotion/is-prop-valid": "^1.4.0",
-    "@emotion/memoize": "^0.9.0",
     "redux": "5.0.1",
     "linkify-it": "^5.0.0",
     "uc.micro": "^2.1.0"
@@ -73,8 +71,8 @@
   "dependencies": {
     "@emoji-mart/data": "^1.2.1",
     "@emoji-mart/react": "^1.1.1",
-    "@emotion/is-prop-valid": "^1.4.0",
-    "@emotion/memoize": "^0.9.0",
+    "@emotion/is-prop-valid": "1.2.2",
+    "@emotion/memoize": "0.8.1",
     "@reduxjs/toolkit": "^2.11.1",
     "@signalapp/sqlcipher": "3.1.0",
     "abort-controller": "3.0.0",
