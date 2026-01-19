@@ -56,20 +56,17 @@ async function clean(): Promise<void> {
 
   console.log('🧹 Cleaning build artifacts...\n');
 
-  // Clean app directory (built files only)
   if (fsSync.existsSync(APP_DIR)) {
     console.log('Cleaning app/ (preserving copied files)...');
     await removeBuiltFiles(APP_DIR);
   }
 
-  // Clean dist directory if requested
   if (cleanDist && fsSync.existsSync(DIST_DIR)) {
     console.log('\nCleaning dist/...');
     await fs.rm(DIST_DIR, { recursive: true, force: true });
     console.log('  Removed dist/');
   }
 
-  // Clean cache if requested
   if (cleanCache && fsSync.existsSync(CACHE_FILE)) {
     console.log('\nCleaning cache...');
     await fs.unlink(CACHE_FILE);

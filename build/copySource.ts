@@ -19,8 +19,7 @@ interface PackageJson {
 async function copySource(): Promise<void> {
   console.log('📦 Copying source files...\n');
 
-  // Copy files and directories
-  const stats = await copyWithCache(filesToCopy, directoriesToCopy, APP_DIR, PROJECT_ROOT);
+  await copyWithCache(filesToCopy, directoriesToCopy, APP_DIR, PROJECT_ROOT);
 
   // Handle package.json separately with modifications
   console.log('\nProcessing package.json...');
