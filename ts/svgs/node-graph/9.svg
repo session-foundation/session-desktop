@@ -2,7 +2,7 @@
   <!-- Connector lines -->
   <path stroke="var(--c2)" stroke-width="2.5" fill="none" d="m41.31 104.44 19.05-11.67M40.77 67.2l17.89 8.37m26.69 20.18 7.76 9.62m-2.28-25.79 25.97-8.2M43.22 110l45.18 3.54m-3.05-44.09L96.3 53.4M73.19 65.35l-.56-15.85m62.46.62.66-11.08m-25.9 65.39 13.9-22.85M34.36 51.54l6.4-22.2m-6.4 71.05-2.48-27.24m26.78-43.88-9.46-3.36M93.1 42.4l-6.06-2.95m36.71-6.97-13.83 8.34"/>
   <!-- Border -->
-  <rect stroke="var(--c1)" fill="none" width="159" height="139" x=".5" y=".5" rx="7.55"/>
+  <rect stroke="var(--c1)" fill="none" width="158" height="138" x="1" y="1" rx="7.55"/>
   <!-- Nodes -->
   <g filter="url(#g)" stroke="var(--c1)" fill="var(--c1)">
     <circle cx="101.77" cy="114.89" r="12.74" fill="none" stroke-width="2"/>

@@ -279,7 +279,7 @@ export function NetworkSection() {
         $gridGap="var(--margins-md)"
         width="100%"
       >
-        <NodeImage width={'153px'} height={'133px'} />
+        <NodeImage />
         <NodesStats />
         <CurrentPriceBlock />
         <SecuredByBlock />

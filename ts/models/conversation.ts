@@ -1814,7 +1814,12 @@ export class ConversationModel extends Model<ConversationAttributes> {
      * We only want to return the stored pro details if this is a contact.
      * A contact is a private, non NTS, non blinded, and approved at least on one side.
      */
-    if (this.getConvoType() !== ConvoTypeNarrow.contact) {
+    if (
+      this.getConvoType() !== ConvoTypeNarrow.privateAcquaintance &&
+      this.getConvoType() !== ConvoTypeNarrow.contact &&
+      this.getConvoType() !== ConvoTypeNarrow.blindedContact &&
+      this.getConvoType() !== ConvoTypeNarrow.blindedAcquaintance
+    ) {
       return null;
     }
     const proGenIndexHashB64 = this.get('proGenIndexHashB64');
@@ -3130,18 +3135,22 @@ export function hasValidIncomingRequestValues({
   priority: number | undefined;
 }): boolean {
   // if a convo is not active, it means we didn't get any messages nor sent any.
-  const isActive = activeAt && isFinite(activeAt) && activeAt > 0;
+  const isActive = Boolean(activeAt && isFinite(activeAt) && activeAt > 0);
   const priorityWithDefault = priority ?? CONVERSATION_PRIORITIES.default;
   const isHidden = priorityWithDefault < 0;
-  return Boolean(
-    (isPrivate || (PubKey.is03Pubkey(id) && invitePending)) &&
-      !isMe &&
-      !isApproved &&
-      !isBlocked &&
-      isActive &&
-      didApproveMe &&
-      !isHidden
-  );
+
+  /**
+   * For 03 groups, an incoming request is one that has the invitePending flag set to true.
+   * We do not care about the database flags (invitePending comes from the user group wrapper)
+   */
+  const validFor03Groups = PubKey.is03Pubkey(id) && invitePending;
+
+  /**
+   * For contacts, an incoming request is one that approved us but that we did not approve ourselves yet.
+   */
+  const validForContact = isPrivate && !isMe && !isApproved && didApproveMe;
+
+  return isActive && !isHidden && !isBlocked && (validFor03Groups || validForContact);
 }
 
 async function cleanUpExpireHistoryFromConvo(conversationId: string, isPrivate: boolean) {

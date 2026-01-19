@@ -35,7 +35,6 @@ import {
 } from '../apis/snode_api/SnodeRequestTypes';
 import { NotEmptyArrayOfBatchResults } from '../apis/snode_api/BatchResultEntry';
 import { BatchRequests } from '../apis/snode_api/batchRequest';
-import { GetNetworkTime } from '../apis/snode_api/getNetworkTime';
 import { SnodeNamespace, SnodeNamespaces } from '../apis/snode_api/namespaces';
 import {
   SigResultAdmin,
@@ -493,8 +492,6 @@ async function sendMessagesDataToSnode<T extends PubkeyType | GroupPubkeyType>({
         throw new Error('sendMessagesDataToSnode: Invalid status code');
       }
     }
-
-    GetNetworkTime.handleTimestampOffsetFromNetwork('store', firstResult.body.t);
 
     if (!isEmpty(responses)) {
       window?.log?.info(

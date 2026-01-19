@@ -25,7 +25,7 @@ const BUILD_CONFIG: BuildConfig = {
     'preload.js',
     'yarn.lock',
     'mmdb/GeoLite2-Country.mmdb',
-    'stylesheets/fonts.css'
+    'stylesheets/fonts.css',
   ],
   directoriesToCopy: [
     'images',

@@ -157,12 +157,13 @@ export const SimpleSessionTextarea = (
             aria-label={ariaLabel}
             spellCheck={false} // maybe we should make this a prop, but it seems we never want spellcheck for those fields
             onKeyDown={e => {
+              e.stopPropagation();
+
               if (!props.singleLine) {
                 return;
               }
               if (e.key === 'Enter') {
                 e.preventDefault();
-                e.stopPropagation();
                 props?.onEnterPressed();
               }
             }}

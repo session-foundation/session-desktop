@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 140">
   <!-- Border -->
-  <rect stroke="var(--c1)" fill="none" width="159" height="139" x=".5" y=".5" rx="7.55"/>
+  <rect stroke="var(--c1)" fill="none" width="158" height="138" x="1" y="1" rx="7.55"/>
   <!-- Nodes -->
   <g filter="url(#g)" stroke="var(--c1)" fill="var(--c1)">
     <circle cx="80" cy="70" r="27.05" fill="none" stroke-width="2"/>

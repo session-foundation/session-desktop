@@ -68,10 +68,7 @@ export async function shouldCopy(
   const cached = cache[cacheKey];
 
   // Fast path: Check metadata first (size + modification time)
-  if (cached &&
-    cached.size === fileStats.size &&
-    cached.mtimeMs === fileStats.mtimeMs) {
-
+  if (cached && cached.size === fileStats.size && cached.mtimeMs === fileStats.mtimeMs) {
     // Metadata unchanged - file very likely unchanged
     try {
       await fs.access(destPath);
@@ -94,7 +91,7 @@ export async function shouldCopy(
     cache[cacheKey] = {
       size: fileStats.size,
       mtimeMs: fileStats.mtimeMs,
-      hash
+      hash,
     };
 
     try {
@@ -110,7 +107,7 @@ export async function shouldCopy(
   cache[cacheKey] = {
     size: fileStats.size,
     mtimeMs: fileStats.mtimeMs,
-    hash
+    hash,
   };
   return true;
 }
@@ -154,7 +151,7 @@ export async function copyWithCache(
     skipped: 0,
     metadataHits: 0,
     hashHits: 0,
-    hashComputations: 0
+    hashComputations: 0,
   };
 
   console.log('Copying files and directories...\n');

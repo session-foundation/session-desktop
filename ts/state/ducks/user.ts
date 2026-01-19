@@ -89,6 +89,7 @@ const clearOurAvatar = createAsyncThunk('user/clearOurAvatar', async () => {
     url: null,
     key: null,
   });
+  await UserConfigWrapperActions.setAnimatedAvatar(false);
 
   await SyncUtils.forceSyncConfigurationNowIfNeeded(true);
   window.inboxStore?.dispatch(updateEditProfilePictureModal(null));

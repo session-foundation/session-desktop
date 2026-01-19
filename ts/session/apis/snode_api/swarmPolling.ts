@@ -634,7 +634,7 @@ export class SwarmPolling {
     if (type === ConversationTypeEnum.GROUPV2 && PubKey.is03Pubkey(pubkey)) {
       const toBump = await MetaGroupWrapperActions.activeHashes(pubkey);
       window.log.debug(
-        `SwarmPolling: configHashesToBump group(${ed25519Str(pubkey)}) count: ${toBump.length}`
+        `SwarmPolling: configHashesToBump ${ed25519Str(pubkey)} count: ${toBump.length}`
       );
       return toBump;
     }

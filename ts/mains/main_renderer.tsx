@@ -153,7 +153,7 @@ Storage.onready(async () => {
     if (Registration.isDone()) {
       try {
         await LibSessionUtil.initializeLibSessionUtilWrappers();
-        window.log.warn('LibSessionUtil.initializeLibSessionUtilWrappers init OK');
+        window.log.info('LibSessionUtil.initializeLibSessionUtilWrappers init OK');
       } catch (e) {
         window.log.warn('LibSessionUtil.initializeLibSessionUtilWrappers failed with', e.message);
         // I don't think there is anything we can do if this happens

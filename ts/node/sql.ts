@@ -847,36 +847,6 @@ function searchMessages(query: string, limit: number) {
   }));
 }
 
-/**
- * Search for matching messages in a specific conversation.
- * Currently unused but kept as we want to add it back at some point.
- */
-function searchMessagesInConversation(query: string, conversationId: string, limit: number) {
-  const rows = assertGlobalInstance()
-    .prepare(
-      `SELECT
-      ${MESSAGES_TABLE}.json,
-      snippet(${MESSAGES_FTS_TABLE}, -1, '<<left>>', '<<right>>', '...', 15) as snippet
-    FROM ${MESSAGES_FTS_TABLE}
-    INNER JOIN ${MESSAGES_TABLE} on ${MESSAGES_FTS_TABLE}.id = ${MESSAGES_TABLE}.id
-    WHERE
-    ${MESSAGES_FTS_TABLE} match $query AND
-      ${MESSAGES_TABLE}.conversationId = $conversationId
-    ${orderByMessageCoalesceClause}
-      LIMIT $limit;`
-    )
-    .all<JSONRow<{ snippet: string }>>({
-      query,
-      conversationId,
-      limit: limit || 100,
-    });
-
-  return map(rows, row => ({
-    ...jsonToObject(row.json),
-    snippet: row.snippet,
-  }));
-}
-
 function getMessageCount() {
   const row = assertGlobalInstance().prepare(`SELECT count(*) from ${MESSAGES_TABLE};`).get();
 
@@ -2631,7 +2601,6 @@ export const sqlNode = {
 
   searchConversations,
   searchMessages,
-  searchMessagesInConversation,
 
   getMessageCount,
   saveMessage,
