@@ -354,9 +354,8 @@ async function getMessages({
   const messagesProps: Array<MessageModelPropsWithoutConvoProps> = messagesCollection.map(m => {
     return m.getMessageModelProps();
   });
-  const time = Date.now() - beforeTimestamp;
   window?.log?.info(
-    `Loading ${messagesProps.length} messages took ${time}ms to load for convo ${ed25519Str(conversationKey)}.`
+    `Loading ${messagesProps.length} messages took ${Date.now() - beforeTimestamp}ms to load for convo ${ed25519Str(conversationKey)}.`
   );
 
   const quotesProps: QuoteLookupType = {};
@@ -366,7 +365,7 @@ async function getMessages({
       timestamp: toNumber(quote.id),
       source: String(quote.author),
     }));
-
+    const quoteStart = Date.now();
     const quotedMessagesCollection = await Data.getMessagesBySenderAndSentAt(quotePropsList);
 
     if (quotedMessagesCollection?.length) {
@@ -380,6 +379,9 @@ async function getMessages({
           }
         }
       }
+      window?.log?.info(
+        `Quote loading of ${quotedMessagesCollection.length} took ${Date.now() - quoteStart}ms`
+      );
     }
   }
 

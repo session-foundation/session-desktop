@@ -361,3 +361,41 @@ export function rebuildFtsTableReferencingMessages(db: BetterSqlite3.Database) {
   `);
   console.info('rebuildFtsTableReferencingMessages built in ', Date.now() - start, 'ms');
 }
+
+export function analyzeQuery<T>(
+  db: BetterSqlite3.Database,
+  query: string,
+  params: any,
+  shouldAnalyze: boolean,
+  executeFunc: () => T
+): T {
+  if (shouldAnalyze) {
+    const start = Date.now();
+    // First, analyze the query
+    try {
+      const plan = db.prepare(`EXPLAIN QUERY PLAN ${query}`).all(params);
+
+      const hasTableScan = plan.some(row => row.detail && row.detail.includes('SCAN TABLE'));
+      const hasTempBTree = plan.some(row => row.detail && row.detail.includes('TEMP B-TREE'));
+
+      if (hasTableScan || hasTempBTree) {
+        console.warn(
+          `\t⚠️ PERFORMANCE WARNING: Query uses table scan or temp b-tree and took ${Date.now() - start}ms`
+        );
+      } else {
+        console.log(`\t✅ Query uses index and took ${Date.now() - start}ms`);
+      }
+
+      console.log('\tQuery:', query.replace(/\s+/g, ' ').trim());
+      console.log('\tParams:', params);
+      console.log('\tExecution plan:');
+      plan.forEach(row => console.log(`\t\t${row.detail}`));
+      console.log('\t------');
+    } catch (err) {
+      console.error('\tFailed to analyze query:', err);
+    }
+  }
+
+  // Execute and return the actual query result
+  return executeFunc();
+}

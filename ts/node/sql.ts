@@ -15,6 +15,7 @@ import {
   intersection,
   isArray,
   isEmpty,
+  isFinite,
   isNumber,
   isObject,
   isString,
@@ -29,6 +30,7 @@ import { GroupPubkeyType } from 'libsession_util_nodejs';
 import { ConversationAttributes } from '../models/conversationAttributes';
 import { redactAll } from '../util/privacy';
 import {
+  analyzeQuery,
   arrayStrToJson,
   assertValidConversationAttributes,
   ATTACHMENT_DOWNLOADS_TABLE,
@@ -754,7 +756,7 @@ function getPubkeysInPublicConversation(conversationId: string) {
     .prepare(
       `SELECT DISTINCT source FROM ${MESSAGES_TABLE} WHERE
     conversationId = $conversationId ${whereClause}
-   ORDER BY received_at DESC LIMIT ${MAX_PUBKEYS_MEMBERS};`
+   ORDER BY ${MessageColumns.coalesceSentAndReceivedAt} DESC LIMIT ${MAX_PUBKEYS_MEMBERS};`
     )
     .all({
       conversationId,
@@ -767,10 +769,7 @@ function searchMessages(query: string, limit: number) {
   if (!limit) {
     throw new Error('searchMessages limit must be set');
   }
-
-  const rows = assertGlobalInstance()
-    .prepare(
-      `SELECT
+  const sql = `SELECT
       ${MESSAGES_TABLE}.json,
       snippet(${MESSAGES_FTS_TABLE}, -1, '<<left>>', '<<right>>', '...', 5) as snippet
     FROM ${MESSAGES_FTS_TABLE}
@@ -778,12 +777,16 @@ function searchMessages(query: string, limit: number) {
     WHERE
      ${MESSAGES_FTS_TABLE}.body MATCH $query
       ORDER BY ${MESSAGES_TABLE}.${MessageColumns.coalesceSentAndReceivedAt} DESC
-    LIMIT $limit;`
-    )
-    .all({
-      query,
-      limit,
-    });
+    LIMIT $limit;`;
+  const params = { query, limit };
+
+  const rows = analyzeQuery(
+    assertGlobalInstance(),
+    sql,
+    params,
+    process.env.ANALYZE_QUERIES === '1',
+    () => assertGlobalInstance().prepare(sql).all(params)
+  );
 
   return map(rows, row => ({
     ...jsonToObject(row.json),
@@ -1541,54 +1544,57 @@ function getMessagesByConversation(
           : absLimit,
     };
 
-    const messagesBefore = assertGlobalInstance()
-      .prepare(
-        `SELECT id, conversationId, json
+    const sqlBefore = `SELECT id, conversationId, json
             FROM ${MESSAGES_TABLE} WHERE conversationId = $conversationId AND ${MessageColumns.coalesceSentAndReceivedAt} <= $msgTimestamp
-            ${orderByClause}
-            LIMIT $limit`
-      )
-      .all(commonArgs);
-
-    const messagesAfter = assertGlobalInstance()
-      .prepare(
-        `SELECT id, conversationId, json
+            ${orderByClauseASC}
+            LIMIT $limit`;
+    const sqlAfter = `SELECT id, conversationId, json
             FROM ${MESSAGES_TABLE} WHERE conversationId = $conversationId AND ${MessageColumns.coalesceSentAndReceivedAt} > $msgTimestamp
             ${orderByClauseASC}
-            LIMIT $limit`
-      )
-      .all(commonArgs);
+            LIMIT $limit`;
+
+    const messagesBefore = analyzeQuery(
+      assertGlobalInstance(),
+      sqlBefore,
+      commonArgs,
+      process.env.ANALYZE_QUERIES === '1',
+      () => assertGlobalInstance().prepare(sqlBefore).all(commonArgs)
+    );
+
+    const messagesAfter = analyzeQuery(
+      assertGlobalInstance(),
+      sqlAfter,
+      commonArgs,
+      process.env.ANALYZE_QUERIES === '1',
+      () => assertGlobalInstance().prepare(sqlAfter).all(commonArgs)
+    );
 
     console.info(`getMessagesByConversation around took ${Date.now() - start}ms `);
 
     // sorting is made in redux already when rendered, but some things are made outside of redux, so let's make sure the order is right
-    messages = map([...messagesBefore, ...messagesAfter], row => jsonToObject(row.json)).sort(
-      (a, b) => {
-        return (
-          (b.serverTimestamp || b.sent_at || b.received_at) -
-          (a.serverTimestamp || a.sent_at || a.received_at)
-        );
-      }
-    );
+    messages = map([...messagesBefore, ...messagesAfter], row => jsonToObject(row.json));
   } else {
     const limit =
       numberOfMessagesInConvo < floorLoadAllMessagesInConvo
         ? floorLoadAllMessagesInConvo
         : absLimit * 2;
-
-    const rows = assertGlobalInstance()
-      .prepare(
-        `
-    SELECT json FROM ${MESSAGES_TABLE} WHERE
+    const sql = `SELECT json FROM ${MESSAGES_TABLE} WHERE
       conversationId = $conversationId
       ${orderByClause}
-    LIMIT $limit;
-    `
-      )
-      .all({
-        conversationId,
-        limit,
-      });
+    LIMIT $limit;`;
+
+    const params = {
+      conversationId,
+      limit,
+    };
+
+    const rows = analyzeQuery(
+      assertGlobalInstance(),
+      sql,
+      params,
+      process.env.ANALYZE_QUERIES === '1',
+      () => assertGlobalInstance().prepare(sql).all(params)
+    );
 
     messages = map(rows, row => jsonToObject(row.json));
   }
@@ -1727,7 +1733,7 @@ function getFirstUnreadMessageWithMention(
     .all({
       conversationId,
       unread: toSqliteBoolean(true),
-      query: `@${ourPkInThatConversation}*`,
+      query: `"@${ourPkInThatConversation}*"`,
     });
 
   if (rows.length === 0) {
@@ -1741,7 +1747,7 @@ function getMessagesBySentAt(sentAt: number) {
     .prepare(
       `SELECT json FROM ${MESSAGES_TABLE}
      WHERE sent_at = $sent_at
-     ORDER BY received_at DESC;`
+     ORDER BY ${MessageColumns.coalesceSentAndReceivedAt} DESC;`
     )
     .all({
       sent_at: sentAt,
@@ -1972,7 +1978,7 @@ function getMessagesWithVisualMediaAttachments(conversationId: string, limit?: n
       `SELECT json FROM ${MESSAGES_TABLE} WHERE
       conversationId = $conversationId AND
       hasVisualMediaAttachments = 1
-     ORDER BY received_at DESC
+     ORDER BY ${MessageColumns.coalesceSentAndReceivedAt} DESC
      LIMIT $limit;`
     )
     .all({
@@ -1989,7 +1995,7 @@ function getMessagesWithFileAttachments(conversationId: string, limit: number) {
       `SELECT json FROM ${MESSAGES_TABLE} WHERE
       conversationId = $conversationId AND
       hasFileAttachments = 1
-     ORDER BY received_at DESC
+     ORDER BY ${MessageColumns.coalesceSentAndReceivedAt} DESC
      LIMIT $limit;`
     )
     .all({
@@ -2278,7 +2284,7 @@ function getEntriesCountInTable(tbl: string) {
     const row = assertGlobalInstance().prepare(`SELECT count(*) from ${tbl};`).get();
     return row['count(*)'];
   } catch (e) {
-    console.error(e);
+    console.error(`getEntriesCountInTable for ${tbl} failed with`, e.message);
     return 0;
   }
 }
@@ -2296,7 +2302,6 @@ function printDbStats() {
     'messages',
     'messages_fts',
     'messages_fts_config',
-    'messages_fts_content',
     'messages_fts_data',
     'messages_fts_docsize',
     'messages_fts_idx',

@@ -2341,6 +2341,15 @@ async function updateToSessionSchemaVersion53(currentVersion: number, db: Better
       `CREATE INDEX ${MessageColumns.coalesceForSentOnly}_index ON ${MESSAGES_TABLE}(${MessageColumns.coalesceForSentOnly} DESC);`
     );
 
+    // also create indexes on the coalesce columns with convo id
+    db.exec(
+      `CREATE INDEX ${MessageColumns.coalesceSentAndReceivedAt}_conversation_index ON ${MESSAGES_TABLE}(conversationId, ${MessageColumns.coalesceSentAndReceivedAt} DESC);`
+    );
+
+    db.exec(
+      `CREATE INDEX ${MessageColumns.coalesceForSentOnly}_conversation_index ON ${MESSAGES_TABLE}(conversationId, ${MessageColumns.coalesceForSentOnly} DESC);`
+    );
+
     // Also, use this migration to create a few indexes on what is called as part of `fetchConvoMemoryDetails`
     // this one is for what is used in `getLastMessageReadInConversation`
     db.exec(`
@@ -2353,6 +2362,12 @@ async function updateToSessionSchemaVersion53(currentVersion: number, db: Better
     CREATE INDEX messages_conversation_unread
     ON ${MESSAGES_TABLE}(conversationId, unread);
   `);
+
+    // Create indexes for searching expired/expiring messages
+    db.exec(`CREATE INDEX messages_expiring_index ON ${MESSAGES_TABLE} (expires_at);`);
+    db.exec(
+      `CREATE INDEX messages_expiring_timer_outgoing_index ON ${MESSAGES_TABLE} (expires_at, expireTimer, type);`
+    );
 
     writeSessionSchemaVersion(targetVersion, db);
   })();
