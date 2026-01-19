@@ -44,7 +44,7 @@ const StyledMessageContent = styled.div<{ $msgDirection: MessageModelType }>`
   align-self: ${props => (props.$msgDirection === 'incoming' ? 'flex-start' : 'flex-end')};
 `;
 
-const StyledMessageOpaqueContent = styled(MessageHighlighter)<{
+const StyledMessageOpaqueContent = styled.div<{
   $isIncoming: boolean;
   $highlight: boolean;
   $selected: boolean;
@@ -104,6 +104,7 @@ export const MessageContent = (props: Props) => {
       if (!highlight && !didScroll) {
         // scroll to me and flash me
         scrollToLoadedMessage(props.messageId, 'quote-or-search-result');
+
         setDidScroll(true);
         if (shouldHighlightMessage) {
           setHighlight(true);
@@ -167,22 +168,24 @@ export const MessageContent = (props: Props) => {
         <IsMessageVisibleContext.Provider value={isMessageVisible}>
           <ContextMessageProvider value={props.messageId}>
             {hasContentBeforeAttachment && (
-              <StyledMessageOpaqueContent
-                $isIncoming={direction === 'incoming'}
-                $highlight={highlight}
-                $selected={selected}
-              >
-                {!isDeleted && (
-                  <>
-                    <MessageQuote messageId={props.messageId} />
-                    <MessageLinkPreview
-                      messageId={props.messageId}
-                      handleImageError={handleImageError}
-                    />
-                  </>
-                )}
-                <MessageText messageId={props.messageId} />
-              </StyledMessageOpaqueContent>
+              <MessageHighlighter $highlight={highlight}>
+                <StyledMessageOpaqueContent
+                  $isIncoming={direction === 'incoming'}
+                  $highlight={highlight}
+                  $selected={selected}
+                >
+                  {!isDeleted && (
+                    <>
+                      <MessageQuote messageId={props.messageId} />
+                      <MessageLinkPreview
+                        messageId={props.messageId}
+                        handleImageError={handleImageError}
+                      />
+                    </>
+                  )}
+                  <MessageText messageId={props.messageId} />
+                </StyledMessageOpaqueContent>
+              </MessageHighlighter>
             )}
             {!isDeleted ? (
               <MessageAttachment
