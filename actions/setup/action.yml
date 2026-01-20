@@ -34,6 +34,7 @@ runs:
         key: lint-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'patches/**', '.eslintrc.js', '.eslint/**', 'tsconfig.json') }}
 
     - name: Install Desktop node_modules
+      shell: bash
       run: pnpm install
       env:
         NPM_CONFIG_LOGLEVEL: verbose
