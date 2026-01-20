@@ -40,5 +40,3 @@ window.onLogin = passPhrase =>
     });
     ipcRenderer.send('password-window-login', passPhrase);
   });
-
-require('./ts/util/logging');
