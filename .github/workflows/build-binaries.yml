@@ -257,7 +257,7 @@ jobs:
 
   build_windows:
     runs-on: windows-2022
-    needs: [create_draft_release_if_needed]
+    needs: [create_draft_release_if_needed, lint]
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     name: "windows x64"
@@ -319,7 +319,7 @@ jobs:
     runs-on: ${{ matrix.runner }}
     name: "${{ matrix.architecture }}"
 
-    needs: [create_draft_release_if_needed]
+    needs: [create_draft_release_if_needed, lint]
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       MAC_CERTIFICATE: ${{ secrets.MAC_CERTIFICATE }}
