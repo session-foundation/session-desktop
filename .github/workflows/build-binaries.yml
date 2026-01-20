@@ -126,6 +126,7 @@ jobs:
       env:
         NPM_CONFIG_LOGLEVEL: verbose
 
+    - run: pnpm run build:protobuf
     - run: pnpm run lint
 
     - run: git diff --exit-code
