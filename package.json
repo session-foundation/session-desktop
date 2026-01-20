@@ -1,5 +1,6 @@
 {
   "$schema": "./package.schema.json",
+  "packageManager": "pnpm@10.28.1",
   "name": "session-desktop",
   "productName": "Session",
   "description": "Private messaging from your desktop",
