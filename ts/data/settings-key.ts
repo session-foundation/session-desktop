@@ -71,6 +71,7 @@ export const SettingsKey = {
   spellCheckEnabled: 'spell-check',
   settingsTheme: 'settingsTheme',
   urlInteractions: 'urlInteractions',
+  ctaInteractions: 'ctaInteractions',
   proMasterKeyHex: 'proMasterKeyHex',
   proRotatingPrivateKeyHex: 'proRotatingPrivateKeyHex',
   /**

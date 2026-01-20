@@ -56,6 +56,7 @@ export async function registerUrlInteraction(url: string, interaction: URLIntera
   if (idx !== -1) {
     if (!interactions[idx].interactions.includes(interaction)) {
       interactions[idx].interactions.push(interaction);
+      interactions[idx].lastUpdated = Date.now();
     }
   } else {
     interactions.push({
@@ -85,10 +86,9 @@ export async function removeUrlInteractionHistory(url: string) {
   const interactions = getUrlInteractions();
   const idx = interactions.findIndex(item => item.url === url);
   if (idx !== -1) {
-    interactions.splice(idx);
+    interactions.splice(idx, 1);
+    await Storage.put(SettingsKey.urlInteractions, interactions);
   }
-
-  await Storage.put(SettingsKey.urlInteractions, interactions);
 }
 
 export function urlInteractionToString(interaction: URLInteraction) {
