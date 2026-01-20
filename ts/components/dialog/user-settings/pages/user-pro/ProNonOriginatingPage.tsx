@@ -22,11 +22,24 @@ import type { ProNonOriginatingPageVariant } from '../../../../../types/ReduxTyp
 import { useCurrentNeverHadPro } from '../../../../../hooks/useHasPro';
 import LIBSESSION_CONSTANTS from '../../../../../session/utils/libsession/libsession_constants';
 import { ProPaymentProvider } from '../../../../../session/apis/pro_backend_api/types';
-import { useProBackendProDetails } from '../../../../../state/selectors/proBackendData';
+import {
+  useProBackendProDetails,
+  type ProcessedProDetails,
+} from '../../../../../state/selectors/proBackendData';
 
 type VariantPageProps = {
   variant: ProNonOriginatingPageVariant;
 };
+
+/**
+ * For some texts, we want `Apple website` for apple but `Google Play Store website` for google...
+ * Those two are not stored in the same field, so this hook can be used to fetch the right one
+ */
+function useStoreOrPlatformFromProvider(data: ProcessedProDetails['data']) {
+  return data.provider === ProPaymentProvider.iOSAppStore
+    ? data.providerConstants.platform // we want `Apple website` for apple
+    : data.providerConstants.store; // but `Google Play Store website` for google...
+}
 
 function ProStatusTextUpdate() {
   const { data } = useProBackendProDetails();
@@ -170,12 +183,18 @@ function ProInfoBlockDeviceLinked() {
 
 function ProInfoBlockWebsite({ textElement }: { textElement: ReactNode }) {
   const { data } = useProBackendProDetails();
+  const storeOrPlatform = useStoreOrPlatformFromProvider(data);
+
   return (
     <ProInfoBlockItem
       iconElement={<ProInfoBlockIconElement unicode={LUCIDE_ICONS_UNICODE.GLOBE} />}
       textElement={
         <ProInfoBlockText>
-          <strong>{tr('viaStoreWebsite', { platform: data.providerConstants.platform })}</strong>
+          <strong>
+            {tr('viaStoreWebsite', {
+              platform: storeOrPlatform,
+            })}
+          </strong>
           {textElement}
         </ProInfoBlockText>
       }
@@ -248,6 +267,8 @@ function ProInfoBlockUpgrade() {
 
 function ProInfoBlockUpdate() {
   const { data } = useProBackendProDetails();
+  const storeOrPlatform = useStoreOrPlatformFromProvider(data);
+
   return (
     <ProInfoBlockLayout
       titleElement={tr('updateAccess')}
@@ -276,11 +297,7 @@ function ProInfoBlockUpdate() {
             textElement={
               <Localizer
                 token="viaStoreWebsiteDescription"
-                platform_store={
-                  data.provider === ProPaymentProvider.iOSAppStore
-                    ? data.providerConstants.platform // we want `Apple website` for apple
-                    : data.providerConstants.store // but `Google Play Store website` for google...
-                }
+                platform_store={storeOrPlatform}
                 platform_account={data.providerConstants.platform_account}
               />
             }
@@ -501,6 +518,8 @@ function ProInfoBlock({ variant }: VariantPageProps) {
 function ProPageButtonUpdate() {
   const dispatch = getAppDispatch();
   const { data } = useProBackendProDetails();
+  const storeOrPlatform = useStoreOrPlatformFromProvider(data);
+
   return (
     <SessionButton
       {...proButtonProps}
@@ -510,7 +529,7 @@ function ProPageButtonUpdate() {
       }}
       dataTestId="pro-open-platform-website-button"
     >
-      <Localizer token="openPlatformWebsite" platform={data.providerConstants.platform} />
+      <Localizer token="openPlatformWebsite" platform={storeOrPlatform} />
     </SessionButton>
   );
 }
