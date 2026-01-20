@@ -44,6 +44,11 @@ import { APP_URL, DURATION } from '../../session/constants';
 import { Data } from '../../data/data';
 import { getUrlInteractionsForUrl, URLInteraction } from '../../util/urlHistory';
 import { Localizer } from '../basic/Localizer';
+import {
+  CTAInteraction,
+  getCtaInteractionsForCta,
+  registerCtaInteraction,
+} from '../../util/ctaHistory';
 
 let donateCTAShown = false;
 
@@ -248,6 +253,7 @@ function Buttons({
             width: '100%',
           }}
           onClick={() => {
+            void registerCtaInteraction(variant, CTAInteraction.ACTION);
             showLinkVisitWarningDialog(APP_URL.DONATE, dispatch);
             onClose();
           }}
@@ -287,6 +293,7 @@ function Buttons({
           width: '100%',
         }}
         onClick={() => {
+          void registerCtaInteraction(variant, CTAInteraction.ACTION);
           onClose();
           dispatch(userSettingsModal(settingsModalProps));
           afterActionButtonCallback?.();
@@ -345,6 +352,9 @@ export function SessionCTA(props: SessionCTAState) {
   const hasPro = useCurrentUserHasPro();
 
   function onClose() {
+    if (props?.variant) {
+      void registerCtaInteraction(props.variant, CTAInteraction.CLOSE);
+    }
     dispatch(updateSessionCTA(null));
   }
 
@@ -447,14 +457,17 @@ export async function handleTriggeredCTAs(dispatch: Dispatch<any>, fromAppStart:
     }
     const dbCreationTimestampMs = await Data.getDBCreationTimestampMs();
     if (dbCreationTimestampMs && dbCreationTimestampMs + 7 * DURATION.DAYS < Date.now()) {
-      const donateInteractions = getUrlInteractionsForUrl(APP_URL.DONATE);
+      const donateUrlInteractions = getUrlInteractionsForUrl(APP_URL.DONATE);
       if (
-        !donateInteractions.includes(URLInteraction.COPY) &&
-        !donateInteractions.includes(URLInteraction.OPEN) &&
+        !donateUrlInteractions.includes(URLInteraction.COPY) &&
+        !donateUrlInteractions.includes(URLInteraction.OPEN) &&
         !donateCTAShown
       ) {
-        dispatch(updateSessionCTA({ variant: CTAVariant.DONATE_GENERIC }));
-        donateCTAShown = true;
+        const donateCtaInteractions = getCtaInteractionsForCta(CTAVariant.DONATE_GENERIC);
+        if (donateCtaInteractions?.open && donateCtaInteractions.open < 4) {
+          dispatch(updateSessionCTA({ variant: CTAVariant.DONATE_GENERIC }));
+          donateCTAShown = true;
+        }
       }
     }
   }
