@@ -31,3 +31,9 @@ export type InteractionNotificationType = {
 export type PropsForInteractionNotification = {
   notificationType: InteractionNotificationType;
 };
+
+export type FetchMessageSharedResult = {
+  mostRecentMessageId: string | null;
+  oldestMessageId: string | null;
+  firstUnreadMessageId: string | null;
+};

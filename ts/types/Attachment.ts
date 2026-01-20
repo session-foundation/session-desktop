@@ -208,7 +208,7 @@ export function areAllAttachmentsVisual(
   return true;
 }
 
-export function getAlt(attachment: AttachmentType): string {
+export function getAlt(attachment: Pick<AttachmentType, 'contentType'>): string {
   return isVideoAttachment(attachment)
     ? AriaLabels.screenshotVideoInMsg
     : AriaLabels.imageAttachmentAlt;

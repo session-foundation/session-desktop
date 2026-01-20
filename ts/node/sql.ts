@@ -23,6 +23,7 @@ import {
   map,
   omit,
   some,
+  toNumber,
   uniq,
 } from 'lodash';
 
@@ -70,7 +71,6 @@ import {
 } from '../data/sharedDataTypes';
 import { MessageAttributes } from '../models/messageType';
 import { SignalService } from '../protobuf';
-import { Quote } from '../receiver/types';
 import { DURATION } from '../session/constants';
 import { createDeleter, getAttachmentsPath } from '../shared/attachments/shared_attachments';
 import { ed25519Str } from '../session/utils/String';
@@ -92,6 +92,7 @@ import { tr } from '../localization/localeTools';
 import { getFileCreationTimestampMs } from './fs_utility';
 import { isDebugMode } from '../shared/env_vars';
 import { DBVacuumManager } from './dbVacuumManager';
+import type { FetchMessageSharedResult } from '../state/ducks/types';
 
 // eslint:disable: function-name non-literal-fs-path
 
@@ -1206,7 +1207,7 @@ function cleanUpExpirationTimerUpdateHistory(
   }
   const rows = assertGlobalInstanceOrInstance(db)
     .prepare(
-      `SELECT id, source FROM ${MESSAGES_TABLE} WHERE conversationId = $conversationId and flags = ${SignalService.DataMessage.Flags.EXPIRATION_TIMER_UPDATE} ${orderByClause}`
+      `SELECT id, source FROM ${MESSAGES_TABLE} WHERE conversationId = $conversationId and flags = ${SignalService.DataMessage.Flags.EXPIRATION_TIMER_UPDATE} ${orderByClauseDESC}`
     )
     .all({ conversationId });
 
@@ -1358,6 +1359,35 @@ function getMessagesBySenderAndSentAt(
   return uniq(map(rows, row => jsonToObject(row.json)));
 }
 
+async function getMessagesByConvoIdAndSentAt(
+  propsList: Array<{
+    convoId: string;
+    sentAt: number;
+  }>
+) {
+  const db = assertGlobalInstance();
+  const rows = [];
+
+  // eslint-disable-next-line no-restricted-syntax
+  for (const msgProps of propsList) {
+    const { convoId, sentAt } = msgProps;
+
+    const _rows = db
+      .prepare(
+        `SELECT json FROM ${MESSAGES_TABLE} WHERE
+      conversationId = $convoId AND
+      sent_at = $sentAt;`
+      )
+      .all({
+        convoId,
+        sentAt,
+      });
+    rows.push(..._rows);
+  }
+
+  return uniq(map(rows, row => jsonToObject(row.json)));
+}
+
 function filterAlreadyFetchedOpengroupMessage(
   msgDetails: MsgDuplicateSearchOpenGroup
 ): MsgDuplicateSearchOpenGroup {
@@ -1502,85 +1532,98 @@ function getMessageCountByType(conversationId: string, type = '%') {
 
 // Note: Sorting here is necessary for getting the last message (with limit 1)
 // be sure to update the sorting order to sort messages on redux too (sortMessages)
-const orderByClause = `ORDER BY ${MessageColumns.coalesceSentAndReceivedAt} DESC`;
+const orderByClauseDESC = `ORDER BY ${MessageColumns.coalesceSentAndReceivedAt} DESC`;
 const orderByClauseASC = `ORDER BY ${MessageColumns.coalesceSentAndReceivedAt} ASC`;
 
 function getMessagesByConversation(
   conversationId: string,
   { messageId = null, returnQuotes = false } = {}
-): { messages: Array<Record<string, any>>; quotes: Array<Quote> } {
+): FetchMessageSharedResult & {
+  messages: Array<Record<string, any>>;
+  quotedMessages: Array<Record<string, any>> | null;
+} {
   const absLimit = 30;
   // If messageId is given it means we are opening the conversation to that specific messageId,
   // or that we just scrolled to it by a quote click and needs to load around it.
   // If messageId is null, it means we are just opening the convo to the last unread message, or at the bottom
-  const firstUnread = getFirstUnreadMessageIdInConversation(conversationId);
+  const firstUnreadMessageId = getFirstUnreadMessageIdInConversation(conversationId);
+  const oldestMessageId = getOldestMessageIdInConversation(conversationId);
+  const mostRecentMessageId = getLastMessageIdInConversation(conversationId);
 
   const numberOfMessagesInConvo = getMessagesCountByConversation(conversationId);
   const floorLoadAllMessagesInConvo = 70;
 
   let messages: Array<Record<string, any>> = [];
-  let quotes: Array<any> = [];
+  let quotedMessages: Array<Record<string, any>> = [];
 
-  if (messageId || firstUnread) {
-    const messageFound = getMessageById(messageId || firstUnread);
+  const messageIdToGoTo = messageId || firstUnreadMessageId;
 
-    if (!messageFound || messageFound.conversationId !== conversationId) {
-      console.info(
-        `getMessagesByConversation: Could not find messageId ${messageId} in db with conversationId: ${conversationId}. Just fetching the convo as usual. messageFound:`,
-        messageFound
-      );
-      return { messages, quotes };
-    }
-    const start = Date.now();
-    const msgTimestamp =
-      messageFound.serverTimestamp || messageFound.sent_at || messageFound.received_at;
+  if (messageIdToGoTo) {
+    const messageFound = getMessageById(messageIdToGoTo);
 
-    const commonArgs = {
-      conversationId,
-      msgTimestamp,
-      limit:
-        numberOfMessagesInConvo < floorLoadAllMessagesInConvo
-          ? floorLoadAllMessagesInConvo
-          : absLimit,
-    };
+    if (messageFound && messageFound.conversationId === conversationId) {
+      const start = Date.now();
+      const msgTimestamp =
+        messageFound.serverTimestamp || messageFound.sent_at || messageFound.received_at;
 
-    const sqlBefore = `SELECT id, conversationId, json
+      const commonArgs = {
+        conversationId,
+        msgTimestamp,
+        limit:
+          numberOfMessagesInConvo < floorLoadAllMessagesInConvo
+            ? floorLoadAllMessagesInConvo
+            : absLimit,
+      };
+
+      const sqlBefore = `SELECT id, conversationId, ${MessageColumns.coalesceSentAndReceivedAt},json
             FROM ${MESSAGES_TABLE} WHERE conversationId = $conversationId AND ${MessageColumns.coalesceSentAndReceivedAt} <= $msgTimestamp
-            ${orderByClauseASC}
+            ${orderByClauseDESC}
             LIMIT $limit`;
-    const sqlAfter = `SELECT id, conversationId, json
+      const sqlAfter = `SELECT id, conversationId, ${MessageColumns.coalesceSentAndReceivedAt}, json
             FROM ${MESSAGES_TABLE} WHERE conversationId = $conversationId AND ${MessageColumns.coalesceSentAndReceivedAt} > $msgTimestamp
             ${orderByClauseASC}
             LIMIT $limit`;
 
-    const messagesBefore = analyzeQuery(
-      assertGlobalInstance(),
-      sqlBefore,
-      commonArgs,
-      process.env.ANALYZE_QUERIES === '1',
-      () => assertGlobalInstance().prepare(sqlBefore).all(commonArgs)
-    );
+      const messagesBefore = analyzeQuery(
+        assertGlobalInstance(),
+        sqlBefore,
+        commonArgs,
+        process.env.ANALYZE_QUERIES === '1',
+        () => assertGlobalInstance().prepare(sqlBefore).all(commonArgs)
+      );
 
-    const messagesAfter = analyzeQuery(
-      assertGlobalInstance(),
-      sqlAfter,
-      commonArgs,
-      process.env.ANALYZE_QUERIES === '1',
-      () => assertGlobalInstance().prepare(sqlAfter).all(commonArgs)
-    );
+      const messagesAfter = analyzeQuery(
+        assertGlobalInstance(),
+        sqlAfter,
+        commonArgs,
+        process.env.ANALYZE_QUERIES === '1',
+        () => assertGlobalInstance().prepare(sqlAfter).all(commonArgs)
+      );
 
-    console.info(`getMessagesByConversation around took ${Date.now() - start}ms `);
+      console.info(`getMessagesByConversation around took ${Date.now() - start}ms `);
 
-    // sorting is made in redux already when rendered, but some things are made outside of redux, so let's make sure the order is right
-    messages = map([...messagesBefore, ...messagesAfter], row => jsonToObject(row.json));
-  } else {
+      messagesBefore.reverse();
+
+      // sorting is made in redux already when rendered, but some things are made outside of redux, so let's make sure the order is right
+      const sorted = [...messagesBefore, ...messagesAfter];
+
+      messages = map(sorted, row => jsonToObject(row.json));
+    } else {
+      console.info(
+        `getMessagesByConversation: Could not find messageId ${messageId} in db with conversationId: ${conversationId}. Just fetching the convo as usual. messageFound:`,
+        messageFound
+      );
+    }
+  }
+
+  if (!messages.length) {
     const limit =
       numberOfMessagesInConvo < floorLoadAllMessagesInConvo
         ? floorLoadAllMessagesInConvo
         : absLimit * 2;
     const sql = `SELECT json FROM ${MESSAGES_TABLE} WHERE
       conversationId = $conversationId
-      ${orderByClause}
+      ${orderByClauseDESC}
     LIMIT $limit;`;
 
     const params = {
@@ -1600,10 +1643,36 @@ function getMessagesByConversation(
   }
 
   if (returnQuotes) {
-    quotes = uniq(messages.filter(message => message.quote).map(message => message.quote));
+    const quotes = compact(
+      uniq(
+        messages
+          .filter(message => message.quote)
+          .map(message => message.quote)
+          .filter(m => {
+            if (
+              m.author &&
+              isString(m.author) &&
+              ((isNumber(m.timestamp) && isFinite(m.timestamp)) || isString(m.timestamp))
+            ) {
+              return { ...m, timestamp: toNumber(m.timestamp) };
+            }
+            return null;
+          })
+      )
+    );
+
+    quotedMessages = getMessagesBySenderAndSentAt(
+      quotes.map(m => ({ source: m.author, timestamp: m.timestamp }))
+    );
   }
 
-  return { messages, quotes };
+  return {
+    messages,
+    quotedMessages,
+    firstUnreadMessageId: firstUnreadMessageId ?? null,
+    mostRecentMessageId,
+    oldestMessageId,
+  };
 }
 
 function getLastMessagesByConversation(conversationId: string, limit: number) {
@@ -1616,7 +1685,7 @@ function getLastMessagesByConversation(conversationId: string, limit: number) {
       `
     SELECT json FROM ${MESSAGES_TABLE} WHERE
       conversationId = $conversationId
-      ${orderByClause}
+      ${orderByClauseDESC}
     LIMIT $limit;
     `
     )
@@ -1625,6 +1694,24 @@ function getLastMessagesByConversation(conversationId: string, limit: number) {
       limit,
     });
   return map(rows, row => jsonToObject(row.json));
+}
+
+function getLastMessageIdInConversation(conversationId: string) {
+  const row = assertGlobalInstance()
+    .prepare(
+      `
+    SELECT id FROM ${MESSAGES_TABLE} WHERE
+      conversationId = $conversationId
+      ${orderByClauseDESC}
+    LIMIT $limit;
+    `
+    )
+    .get({
+      conversationId,
+      limit: 1,
+    });
+
+  return row.id;
 }
 
 /**
@@ -1647,6 +1734,23 @@ function getOldestMessageInConversation(conversationId: string) {
   return map(rows, row => jsonToObject(row.json));
 }
 
+function getOldestMessageIdInConversation(conversationId: string) {
+  const row = assertGlobalInstance()
+    .prepare(
+      `
+    SELECT id FROM ${MESSAGES_TABLE} WHERE
+      conversationId = $conversationId
+      ${orderByClauseASC}
+    LIMIT $limit;
+    `
+    )
+    .get({
+      conversationId,
+      limit: 1,
+    });
+  return row.id;
+}
+
 function hasConversationOutgoingMessage(conversationId: string) {
   const row = assertGlobalInstance()
     .prepare(
@@ -1666,7 +1770,7 @@ function hasConversationOutgoingMessage(conversationId: string) {
   return Boolean(row['count(*)']);
 }
 
-function getFirstUnreadMessageIdInConversation(conversationId: string) {
+function getFirstUnreadMessageIdInConversation(conversationId: string): undefined | string {
   const rows = assertGlobalInstance()
     .prepare(
       `
@@ -2563,6 +2667,7 @@ export const sqlNode = {
 
   filterAlreadyFetchedOpengroupMessage,
   getMessagesBySenderAndSentAt,
+  getMessagesByConvoIdAndSentAt,
   getMessageIdsFromServerIds,
   getMessageById,
   getMessagesById,
@@ -2578,6 +2683,7 @@ export const sqlNode = {
   getOldestMessageInConversation,
   getFirstUnreadMessageIdInConversation,
   getFirstUnreadMessageWithMention,
+  getOldestMessageIdInConversation,
   hasConversationOutgoingMessage,
 
   getNextAttachmentDownloadJobs,

@@ -15,6 +15,7 @@ import {
   InteractionNotificationType,
 } from '../state/ducks/types';
 import type { SignalService } from '../protobuf';
+import type { Quote } from '../session/messages/outgoing/visibleMessage/VisibleMessage';
 
 export type MessageModelType = 'incoming' | 'outgoing';
 
@@ -27,9 +28,13 @@ type SharedMessageAttributes = {
    */
   source: string;
   /**
-   * the quoted details
+   * The quoted message. We only need a timestamp to find the corresponding message in the DB.
+   * - We already know it is in the current conversation
+   * - We assume there are no two messages timestamps to the millisecond from the same (or different) author in the same conversation.
+   *
+   * But because, a quoted reference not found should still display the author, we also need keep the author here. We just don't use it for lookup
    */
-  quote?: any;
+  quote?: Quote;
   received_at?: number;
   sent_at?: number;
   /**

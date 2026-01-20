@@ -11,7 +11,6 @@ import {
   type MessageAttributesOptionals,
 } from '../models/messageType';
 import { StorageItem } from '../node/storage_item';
-import { Quote } from '../receiver/types';
 import { getSodiumRenderer } from '../session/crypto';
 import { DisappearingMessages } from '../session/disappearing_messages';
 import { fromArrayBufferToBase64, fromBase64ToArrayBuffer } from '../session/utils/String';
@@ -33,6 +32,7 @@ import {
   FindAllMessageHashesInConversationTypeArgs,
 } from './sharedDataTypes';
 import { GuardNode, Snode } from './types';
+import type { FetchMessageSharedResult } from '../state/ducks/types';
 
 const ERASE_SQL_KEY = 'erase-sql-key';
 const ERASE_ATTACHMENTS_KEY = 'erase-attachments';
@@ -329,6 +329,29 @@ async function getMessagesBySenderAndSentAt(
   if (!messages || !Array.isArray(messages) || !messages.length) {
     return null;
   }
+  // eslint-disable-next-line no-restricted-syntax
+  for (const message of messages) {
+    message.skipTimerInit = true;
+  }
+
+  return makeMessageModels(messages);
+}
+
+async function getMessagesByConvoIdAndSentAt(
+  propsList: Array<{
+    convoId: string;
+    sentAt: number;
+  }>
+): Promise<Array<MessageModel> | null> {
+  const messages: unknown = await channels.getMessagesByConvoIdAndSentAt(propsList);
+
+  if (!messages || !Array.isArray(messages) || !messages.length) {
+    return null;
+  }
+  // eslint-disable-next-line no-restricted-syntax
+  for (const message of messages) {
+    message.skipTimerInit = true;
+  }
 
   return makeMessageModels(messages);
 }
@@ -387,22 +410,35 @@ async function getMessagesByConversation(
     returnQuotes = false,
     messageId = null,
   }: { skipTimerInit?: false; returnQuotes?: boolean; messageId: string | null }
-): Promise<{ messages: Array<MessageModel>; quotes: Array<Quote> }> {
-  const { messages, quotes } = await channels.getMessagesByConversation(conversationId, {
-    messageId,
-    returnQuotes,
-  });
+): Promise<
+  FetchMessageSharedResult & {
+    messages: Array<MessageModel>;
+    quotedMessages: Array<MessageModel> | null;
+  }
+> {
+  const { messages, quotedMessages, ...args } = await channels.getMessagesByConversation(
+    conversationId,
+    {
+      messageId,
+      returnQuotes,
+    }
+  );
 
   if (skipTimerInit) {
     // eslint-disable-next-line no-restricted-syntax
     for (const message of messages) {
       message.skipTimerInit = skipTimerInit;
     }
+    // eslint-disable-next-line no-restricted-syntax
+    for (const message of quotedMessages) {
+      message.skipTimerInit = skipTimerInit;
+    }
   }
 
   return {
+    ...args,
     messages: makeMessageModels(messages),
-    quotes,
+    quotedMessages: makeMessageModels(quotedMessages),
   };
 }
 
@@ -446,14 +482,9 @@ async function getLastMessageInConversation(conversationId: string) {
   return makeMessageModels(messages)?.[0] || null;
 }
 
-async function getOldestMessageInConversation(conversationId: string) {
-  const messages = await channels.getOldestMessageInConversation(conversationId);
-  // eslint-disable-next-line no-restricted-syntax
-  for (const message of messages) {
-    message.skipTimerInit = true;
-  }
-
-  return makeMessageModels(messages)?.[0] || null;
+async function getOldestMessageIdInConversation(conversationId: string) {
+  const messageId = await channels.getOldestMessageIdInConversation(conversationId);
+  return messageId || null;
 }
 
 /**
@@ -808,6 +839,7 @@ export const Data = {
   getMessageById,
   getMessagesById,
   getMessagesBySenderAndSentAt,
+  getMessagesByConvoIdAndSentAt,
   getMessageByServerId,
   filterAlreadyFetchedOpengroupMessage,
   getUnreadByConversation,
@@ -819,7 +851,7 @@ export const Data = {
   getLastMessagesByConversation,
   getLastMessageIdInConversation,
   getLastMessageInConversation,
-  getOldestMessageInConversation,
+  getOldestMessageIdInConversation,
   getMessageCount,
   getFirstUnreadMessageIdInConversation,
   getFirstUnreadMessageWithMention,
