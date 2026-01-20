@@ -65,7 +65,6 @@
     "worker:utils": "webpack --config=./utils.worker.config.js",
     "worker:libsession": "webpack --config=./libsession.worker.config.js",
     "worker:image_processor": "webpack --config=./image_processor.worker.config.js",
-    "dedup": "pnpx yarn-deduplicate yarn.lock",
     "prepare": "husky",
     "print-deps": "node -v",
     "watch": "pnpm build:setup && concurrently -n TS,BABEL,SASS,SVG,UTIL,LIBSESSION,IMAGE -c green,blue,blue,blue,blue,blue,blue \"tsc --sourceMap --inlineSources --watch\" \"pnpm build-compile --watch\" \"pnpm build:sass --watch\" \"pnpm build:svg --watch\" \"pnpm worker:utils --watch\" \"pnpm worker:libsession --watch\" \"pnpm worker:image_processor --watch\""
@@ -334,7 +333,7 @@
       "!**/node_modules/*/build/**",
       "!**/*.{o,hprof,orig,pyc,pyo,rbc}",
       "!**/._*",
-      "!**/{.DS_Store,.git,.hg,.svn,CVS,RCS,SCCS,__pycache__,thumbs.db,.gitignore,.gitattributes,.editorconfig,.flowconfig,.yarn-metadata.json,.idea,appveyor.yml,.travis.yml,circle.yml,npm-debug.log,,yarn.lock,.yarn-integrity,.map,.prettierrc,.nvmrc,.gitmodules,.clang-format,.CMakeLists.txt}",
+      "!**/{.DS_Store,.git,.hg,.svn,CVS,RCS,SCCS,__pycache__,thumbs.db,.gitignore,.gitattributes,.editorconfig,.flowconfig,.idea,appveyor.yml,.travis.yml,circle.yml,npm-debug.log,,pnpm-lock.yml,.map,.prettierrc,.nvmrc,.gitmodules,.clang-format,.CMakeLists.txt}",
       "!**/*.ts",
       "!**/*.cts",
       "!**/*.mts",
