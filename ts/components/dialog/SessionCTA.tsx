@@ -464,7 +464,7 @@ export async function handleTriggeredCTAs(dispatch: Dispatch<any>, fromAppStart:
         !donateCTAShown
       ) {
         const donateCtaInteractions = getCtaInteractionsForCta(CTAVariant.DONATE_GENERIC);
-        if (donateCtaInteractions?.open && donateCtaInteractions.open < 4) {
+        if (!donateCtaInteractions?.open || donateCtaInteractions.open < 4) {
           dispatch(updateSessionCTA({ variant: CTAVariant.DONATE_GENERIC }));
           donateCTAShown = true;
         }

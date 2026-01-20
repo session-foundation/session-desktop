@@ -46,6 +46,7 @@ export async function registerCtaInteraction(variant: CTAVariant, interaction: C
   const idx = interactions.findIndex(item => item.variant === variant);
   if (idx !== -1) {
     interactions[idx][interaction] = (interactions[idx][interaction] ?? 0) + 1;
+    interactions[idx].lastUpdated = Date.now();
   } else {
     interactions.push({
       [interaction]: 1,
@@ -74,10 +75,9 @@ export async function removeCtaInteractionHistory(variant: CTAVariant) {
   const interactions = getCtaInteractions();
   const idx = interactions.findIndex(item => item.variant === variant);
   if (idx !== -1) {
-    interactions.splice(idx);
+    interactions.splice(idx, 1);
+    await Storage.put(SettingsKey.ctaInteractions, interactions);
   }
-
-  await Storage.put(SettingsKey.ctaInteractions, interactions);
 }
 
 export function ctaInteractionToString(interaction: CTAInteraction) {

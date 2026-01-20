@@ -58,7 +58,11 @@ import { LucideIcon } from '../../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 import { getIsProAvailableMemo } from '../../../hooks/useIsProAvailable';
 import { UserConfigWrapperActions } from '../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
-import { getCtaInteractions, removeCtaInteractionHistory } from '../../../util/ctaHistory';
+import {
+  clearAllCtaInteractions,
+  getCtaInteractions,
+  removeCtaInteractionHistory,
+} from '../../../util/ctaHistory';
 import { CTAVariant } from '../cta/types';
 
 type DebugButtonProps = SessionButtonProps & { shiny?: boolean; hide?: boolean };
@@ -492,7 +496,7 @@ export const DebugCtaInteractionsSection = () => {
     [refresh]
   );
   const clearAll = useCallback(async () => {
-    await clearAllUrlInteractions();
+    await clearAllCtaInteractions();
     refresh();
   }, [refresh]);
 
