@@ -108,7 +108,7 @@ export const OverlayInvite = () => {
           <LucideIcon
             unicode={LUCIDE_ICONS_UNICODE.CIRCLE_CHECK}
             iconSize={'huge2'}
-            iconColor={'var(--primary-color)'}
+            iconColor={'var(--menu-button-border-color)'}
           />
           <SpacerMD />
           <StyledHeadingContainer $container={true} $justifyContent="center" $alignItems="center">
