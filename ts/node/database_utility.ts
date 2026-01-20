@@ -366,10 +366,10 @@ export function analyzeQuery<T>(
   db: BetterSqlite3.Database,
   query: string,
   params: any,
-  shouldAnalyze: boolean,
   executeFunc: () => T
 ): T {
-  if (shouldAnalyze) {
+  const prefix = '[QUERY PLAN]: ';
+  if (process.env.ANALYZE_QUERIES === '1') {
     const start = Date.now();
     try {
       const plan = db.prepare(`EXPLAIN QUERY PLAN ${query}`).all(params);
@@ -378,14 +378,14 @@ export function analyzeQuery<T>(
       const hasTempBTree = plan.some(row => row.detail && row.detail.includes('TEMP B-TREE'));
 
       if (hasTableScan || hasTempBTree) {
-        console.warn(
-          `\t⚠️ PERFORMANCE WARNING: Query uses table scan or temp b-tree and took ${Date.now() - start}ms`
+        console.info(
+          `${prefix}⚠️ PERFORMANCE WARNING: Query uses table scan or temp b-tree and took ${Date.now() - start}ms`
         );
-        console.log('\tQuery:', query.replace(/\s+/g, ' ').trim());
-        console.log('\tParams:', params);
-        console.log('\tExecution plan:');
-        plan.forEach(row => console.log(`\t\t${row.detail}`));
-        console.log('\t------');
+        console.info(`${prefix}Query: ${query.replace(/\s+/g, ' ').trim()}`);
+        console.info(`${prefix}Params: $${JSON.stringify(params)}`);
+        console.info(`${prefix}Execution plan:`);
+        plan.forEach(row => console.info(`${prefix}\t${row.detail}`));
+        console.info(`${prefix}\t------`);
       }
     } catch (err) {
       console.error('\tFailed to analyze query:', err);
