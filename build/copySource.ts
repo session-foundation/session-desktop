@@ -30,11 +30,6 @@ async function copySource(): Promise<void> {
 
     // NOTE: electron-builder requires the build item to be removed in the app dir
     delete packageJson.build;
-    // NOTE: we swap the test scripts so we can run "yarn test" from the root dir
-    if (packageJson.scripts['test-internal']) {
-      packageJson.scripts.test = packageJson.scripts['test-internal'];
-      delete packageJson.scripts['test-internal'];
-    }
 
     await fs.writeFile(destPackageJsonPath, JSON.stringify(packageJson, null, 2));
     console.log('  ✓ Modified and copied package.json');
