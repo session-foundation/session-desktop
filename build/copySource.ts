@@ -10,8 +10,12 @@ type PackageJson = Record<string, unknown> & {
   build?: unknown;
   scripts: Record<string, string> & {
     test?: string;
-    'test-internal'?: string;
+    'test-hoisted'?: string;
   };
+};
+
+type MocharcJson = Record<string, unknown> & {
+  spec: Array<string>;
 };
 
 async function copySource(): Promise<void> {
@@ -24,18 +28,35 @@ async function copySource(): Promise<void> {
   const packageJsonPath = path.join(PROJECT_ROOT, 'package.json');
   const destPackageJsonPath = path.join(APP_DIR, 'package.json');
 
-  if (await shouldCopy(packageJsonPath, destPackageJsonPath)) {
-    const packageJsonContent = await fs.readFile(packageJsonPath, 'utf-8');
-    const packageJson: PackageJson = JSON.parse(packageJsonContent);
+  const packageJsonContent = await fs.readFile(packageJsonPath, 'utf-8');
+  const packageJson: PackageJson = JSON.parse(packageJsonContent);
 
-    // NOTE: electron-builder requires the build item to be removed in the app dir
-    delete packageJson.build;
-    // NOTE: pnpm requres the app dir not have a resolutions item
-    delete packageJson.resolutions;
+  // NOTE: electron-builder requires the build item to be removed in the app dir
+  delete packageJson.build;
+  // NOTE: pnpm requres the app dir not have a resolutions item
+  delete packageJson.resolutions;
 
-    await fs.writeFile(destPackageJsonPath, JSON.stringify(packageJson, null, 2));
-    console.log('  ✓ Modified and copied package.json');
-  }
+  await fs.writeFile(destPackageJsonPath, JSON.stringify(packageJson, null, 2));
+  console.log('  ✓ Modified and copied package.json');
+
+  // Handle .mocharc.json separately with modifications
+  console.log('\nProcessing .mocharc.json...');
+  const mocharcJsonPath = path.join(PROJECT_ROOT, '.mocharc.json');
+  const destMocharcJsonPath = path.join(APP_DIR, '.mocharc.json');
+
+  const mocharcJsonContent = await fs.readFile(mocharcJsonPath, 'utf-8');
+  const mocharcJson: MocharcJson = JSON.parse(mocharcJsonContent);
+
+  // NOTE: to run tests from the app directory it needs valid spec paths from itself
+  mocharcJson.spec = mocharcJson.spec.map(specPath => {
+    if (specPath.startsWith('app/')) {
+      return specPath.slice(4);
+    }
+    return specPath;
+  });
+
+  await fs.writeFile(destMocharcJsonPath, JSON.stringify(mocharcJson, null, 2));
+  console.log('  ✓ Modified and copied .mocharc.json');
 
   console.log('\n✨ Source copy complete!');
 }

@@ -285,7 +285,7 @@ jobs:
 
         # we want to test on all platforms since some are testing the rendered menus (and are dependent on the platform)
       - name: Unit Test
-        run: pnpm run test
+        run: pnpm run test-hoisted
 
       - name: Make release build but do not publish
         # always run this, except on "push" to "master" or alpha releases
