@@ -2302,6 +2302,10 @@ async function updateToSessionSchemaVersion53(currentVersion: number, db: Better
       ALTER TABLE ${MESSAGES_TABLE}
       ADD COLUMN ${MessageColumns.coalesceForSentOnly} INTEGER;
     `);
+    db.exec(`
+      ALTER TABLE ${MESSAGES_TABLE}
+      ADD COLUMN ${MessageColumns.mentionsUs} BOOLEAN;
+    `);
 
     // Populate existing rows
     db.exec(`
@@ -2367,6 +2371,11 @@ async function updateToSessionSchemaVersion53(currentVersion: number, db: Better
     db.exec(`CREATE INDEX messages_expiring_index ON ${MESSAGES_TABLE} (expires_at);`);
     db.exec(
       `CREATE INDEX messages_expiring_timer_outgoing_index ON ${MESSAGES_TABLE} (expires_at, expireTimer, type);`
+    );
+
+    // Create an index on the mentionsUs column with unread & conversationId. Needed for `getFirstUnreadMessageWithMention`
+    db.exec(
+      `CREATE INDEX messages_mentionsUs_index ON ${MESSAGES_TABLE} (conversationId, unread, ${MessageColumns.mentionsUs});`
     );
 
     writeSessionSchemaVersion(targetVersion, db);

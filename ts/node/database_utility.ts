@@ -28,6 +28,11 @@ export const MessageColumns = {
    * A column that coalesce serverTimestamp & sentTimestamp
    */
   coalesceForSentOnly: 'sort_timestamp_sent_only',
+
+  /**
+   * A column that is true if the message mentions us
+   */
+  mentionsUs: 'mentions_us',
 };
 
 export const HEX_KEY = /[^0-9A-Fa-f]/;
@@ -369,8 +374,12 @@ export function analyzeQuery<T>(
   executeFunc: () => T
 ): T {
   const prefix = '[QUERY PLAN]: ';
+
+  // Run the actual query and grab how long it took
+  const start = Date.now();
+  const result = executeFunc();
+  const end = Date.now();
   if (process.env.ANALYZE_QUERIES === '1') {
-    const start = Date.now();
     try {
       const plan = db.prepare(`EXPLAIN QUERY PLAN ${query}`).all(params);
 
@@ -379,7 +388,7 @@ export function analyzeQuery<T>(
 
       if (hasTableScan || hasTempBTree) {
         console.info(
-          `${prefix}⚠️ PERFORMANCE WARNING: Query uses table scan or temp b-tree and took ${Date.now() - start}ms`
+          `${prefix}⚠️ PERFORMANCE WARNING: Query uses table scan or temp b-tree and took ${end - start}ms`
         );
         console.info(`${prefix}Query: ${query.replace(/\s+/g, ' ').trim()}`);
         console.info(`${prefix}Params: $${JSON.stringify(params)}`);
@@ -392,6 +401,5 @@ export function analyzeQuery<T>(
     }
   }
 
-  // Run the actual query
-  return executeFunc();
+  return result;
 }

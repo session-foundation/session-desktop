@@ -808,9 +808,11 @@ const conversationsSlice = createSlice({
 
       if (
         action.payload.initialMessages?.length <= messagesToConsiderForShowingUnreadBanner ||
+        // if the most recent message of the conversation is not in the first messages,
+        //  we show the scroll button
         action.payload.initialMessages
           ?.slice(0, messagesToConsiderForShowingUnreadBanner)
-          .some(n => n.propsForMessage.id === action.payload.firstUnreadMessageId)
+          .some(n => n.propsForMessage.id === action.payload.mostRecentMessageId)
       ) {
         showScrollButton = false;
       }

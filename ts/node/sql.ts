@@ -953,6 +953,11 @@ function saveMessages(dataArray: Array<MessageAttributes>): Array<string> {
       expirationTimerUpdate,
     } = data;
 
+    // Check if this message mentions us
+    const ourBlindedId = getUsBlindedInThatServerIfNeeded(conversationId);
+    // Note: should we also check the quotes author here?
+    const mentionsUs = body?.includes(`@${ourBlindedId}`) ?? false;
+
     const flags = !isEmpty(expirationTimerUpdate)
       ? SignalService.DataMessage.Flags.EXPIRATION_TIMER_UPDATE
       : 0;
@@ -980,6 +985,7 @@ function saveMessages(dataArray: Array<MessageAttributes>): Array<string> {
       flags, // Note: we need to keep storing this as there are some indexed queries that rely on it (cleanUpExpirationTimerUpdateHistory)
       messageHash,
       errors,
+      mentionsUs: toSqliteBoolean(mentionsUs),
     };
   });
 
@@ -1007,7 +1013,8 @@ function saveMessages(dataArray: Array<MessageAttributes>): Array<string> {
       unread,
       flags,
       messageHash,
-      errors
+      errors,
+      ${MessageColumns.mentionsUs}
     ) VALUES (
       $id,
       $json,
@@ -1030,7 +1037,8 @@ function saveMessages(dataArray: Array<MessageAttributes>): Array<string> {
       $unread,
       $flags,
       $messageHash,
-      $errors
+      $errors,
+      $mentionsUs
     )`
   );
 
@@ -1376,7 +1384,7 @@ function getMessagesBySenderAndSentAt(
   return uniq(map(rows, row => jsonToObject(row.json)));
 }
 
-async function getMessagesByConvoIdAndSentAt(
+function getMessagesByConvoIdAndSentAt(
   propsList: Array<{
     convoId: string;
     sentAt: number;
@@ -1675,8 +1683,8 @@ function getMessagesByConversation(
       )
     );
 
-    quotedMessages = getMessagesBySenderAndSentAt(
-      quotes.map(m => ({ source: m.author, timestamp: m.timestamp }))
+    quotedMessages = getMessagesByConvoIdAndSentAt(
+      quotes.map(m => ({ convoId: conversationId, sentAt: m.timestamp }))
     );
   }
 
@@ -1811,17 +1819,16 @@ function getFirstUnreadMessageWithMention(
   }
 
   const sql = `SELECT ${MESSAGES_TABLE}.id
-     FROM ${MESSAGES_FTS_TABLE}
-     INNER JOIN ${MESSAGES_TABLE} ON ${MESSAGES_FTS_TABLE}.rowid = ${MESSAGES_TABLE}.rowid
+     FROM ${MESSAGES_TABLE}
      WHERE ${MESSAGES_TABLE}.conversationId = $conversationId
        AND ${MESSAGES_TABLE}.unread = $unread
-       AND ${MESSAGES_FTS_TABLE}.body MATCH $query
+       AND ${MESSAGES_TABLE}.${MessageColumns.mentionsUs} = $mentionsUs
      ORDER BY ${MESSAGES_TABLE}.${MessageColumns.coalesceSentAndReceivedAt} ASC
      LIMIT 1;`;
   const params = {
     conversationId,
     unread: toSqliteBoolean(true),
-    query: `"@${ourPkInThatConversation}*"`,
+    mentionsUs: toSqliteBoolean(true),
   };
   const rows = analyzeQuery(assertGlobalInstanceOrInstance(instance), sql, params, () =>
     assertGlobalInstanceOrInstance(instance).prepare(sql).all(params)
