@@ -30,6 +30,8 @@ async function copySource(): Promise<void> {
 
     // NOTE: electron-builder requires the build item to be removed in the app dir
     delete packageJson.build;
+    // NOTE: pnpm requres the app dir not have a resolutions item
+    delete packageJson.resolutions;
 
     await fs.writeFile(destPackageJsonPath, JSON.stringify(packageJson, null, 2));
     console.log('  ✓ Modified and copied package.json');

@@ -1,0 +1,44 @@
+name: 'Setup'
+description: 'Setup Session Desktop'
+inputs:
+  cache_suffix:
+    description: 'the package we are currently building (used as key for the cached node_modules)'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      with:
+        ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target_branch || github.ref  }}
+        submodules: 'recursive'
+
+    - name: Setup pnpm
+      uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4
+
+    - name: Setup node.js
+      uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
+      with:
+        node-version-file: '.nvmrc'
+        cache: 'pnpm'
+        cache-dependency-path: 'pnpm-lock.yaml'
+
+    - name: Cache .electron-gyp
+      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+      with:
+        path: ~/.electron-gyp
+        key: electron-gyp-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+    - name: Restore cached .eslintcache and tsconfig.tsbuildinfo
+      uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+      id: cache-lint
+      with:
+        path: |
+          .eslintcache
+          tsconfig.tsbuildinfo
+        key: lint-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'patches/**', '.eslintrc.js', '.eslint/**', 'tsconfig.json') }}
+
+    - name: Install Desktop node_modules
+      run: pnpm install
+      env:
+        NPM_CONFIG_LOGLEVEL: verbose
