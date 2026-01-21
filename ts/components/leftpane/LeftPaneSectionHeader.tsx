@@ -22,7 +22,6 @@ import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { tr } from '../../localization/localeTools';
 import { userSettingsModal } from '../../state/ducks/modalDialog';
 import { SettingsKey } from '../../data/settings-key';
-import { getLeftPaneConversationIdsCount } from '../../state/selectors/conversations';
 
 const StyledLeftPaneSectionHeader = styled(Flex)`
   height: var(--main-view-header-height);
@@ -117,6 +116,7 @@ export const LeftPaneBanner = () => {
   const dispatch = getAppDispatch();
 
   const showRecoveryPhraseModal = async () => {
+    await window.setSettingValue(SettingsKey.dismissedRecoveryPhrasePrompt, true);
     await window.setSettingValue(SettingsKey.showRecoveryPhrasePrompt, false);
     dispatch(userSettingsModal({ userSettingsPage: 'recovery-password' }));
   };
@@ -161,14 +161,8 @@ export const LeftPaneBanner = () => {
   );
 };
 
-function useShowRecoveryPhrasePrompt() {
-  const showRecoveryPhrasePrompt = useSelector(getShowRecoveryPhrasePrompt);
-  const leftPaneConversationCount = useSelector(getLeftPaneConversationIdsCount);
-  return showRecoveryPhrasePrompt && leftPaneConversationCount > 2;
-}
-
 export const LeftPaneSectionHeader = () => {
-  const showRecoveryPhrasePrompt = useShowRecoveryPhrasePrompt();
+  const showRecoveryPhrasePrompt = useSelector(getShowRecoveryPhrasePrompt);
   const leftOverlayMode = useLeftOverlayMode();
 
   const dispatch = getAppDispatch();
