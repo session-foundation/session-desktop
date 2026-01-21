@@ -652,7 +652,7 @@ const conversationsSlice = createSlice({
         return state;
       }
 
-      return { ...state, showRightPanel: true };
+      return { ...state, showRightPanel: window.innerWidth >= 680 };
     },
     closeRightPanel(state: ConversationsStateType) {
       return { ...state, showRightPanel: false, messageInfoId: undefined };
