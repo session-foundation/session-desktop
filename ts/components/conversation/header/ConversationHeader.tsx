@@ -93,8 +93,8 @@ export const ConversationHeaderWithDetails = () => {
               onAvatarClick={
                 showConvoSettingsCb
                   ? () => {
-                    showConvoSettingsCb({ settingsModalPage: 'default' });
-                  }
+                      showConvoSettingsCb({ settingsModalPage: 'default' });
+                    }
                   : undefined
               }
               pubkey={selectedConvoKey}

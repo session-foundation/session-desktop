@@ -1,14 +1,13 @@
 import { Provider } from 'react-redux';
-import styled from 'styled-components';
 import { AnimatePresence } from 'framer-motion';
+import { clsx } from 'clsx';
 import { LeftPane } from './leftpane/LeftPane';
 import { SessionMainPanel } from './SessionMainPanel';
 import { SessionTheme } from '../themes/SessionTheme';
 import { Flex } from './basic/Flex';
 import { useSelectedConversationKey } from '../state/selectors/selectedConversation';
-import { clsx } from 'clsx';
 
-const StyledGutter = props => {
+const StyledGutter = (props: any) => {
   const conversationKey = useSelectedConversationKey();
 
   return (

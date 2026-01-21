@@ -26,7 +26,6 @@ import {
   SortedMessageModelProps,
   openConversationToSpecificMessage,
   quoteMessage,
-  resetConversationExternal,
   resetSelectedMessageIds,
   updateMentionsMembers,
 } from '../../state/ducks/conversations';
@@ -68,7 +67,6 @@ import {
   useSelectedWeAreAdmin,
 } from '../../state/selectors/selectedConversation';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
-import { SessionLucideIconButton } from '../icon/SessionIconButton';
 
 interface State {
   isDraggingFile: boolean;
@@ -265,17 +263,6 @@ export class SessionConversation extends Component<Props, State> {
     }
     // TODO break selectionMode into it's own container component so we can use hooks to fetch relevant state from the store
     const selectionMode = selectedMessages.length > 0;
-
-    const RecreateGroupContainer = styled.div`
-      display: flex;
-      justify-content: center;
-      align-self: center;
-      width: 100%;
-
-      .session-button {
-        padding-inline: var(--margins-3xl);
-      }
-    `;
 
     return (
       <>
@@ -560,7 +547,8 @@ export class SessionConversation extends Component<Props, State> {
     );
 
     window?.log?.debug(
-      `[perf] getPubkeysInPublicConversation returned '${allPubKeys?.length
+      `[perf] getPubkeysInPublicConversation returned '${
+        allPubKeys?.length
       }' members in ${Date.now() - start}ms`
     );
 
@@ -570,7 +558,7 @@ export class SessionConversation extends Component<Props, State> {
         display: isUsAnySogsFromCache(pubKey)
           ? tr('you')
           : ConvoHub.use().get(pubKey)?.getNicknameOrRealUsernameOrPlaceholder() ||
-          PubKey.shorten(pubKey),
+            PubKey.shorten(pubKey),
       };
     });
 

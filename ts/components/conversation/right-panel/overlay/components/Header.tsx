@@ -18,13 +18,13 @@ export const HeaderTitle = styled.h2`
 
 type HeaderProps = (
   | {
-    hideCloseButton: false;
-    closeButtonOnClick: () => void;
-  }
+      hideCloseButton: false;
+      closeButtonOnClick: () => void;
+    }
   | {
-    hideCloseButton: true;
-    closeButtonOnClick?: undefined;
-  }
+      hideCloseButton: true;
+      closeButtonOnClick?: undefined;
+    }
 ) & {
   children?: ReactNode;
   paddingTop: string;

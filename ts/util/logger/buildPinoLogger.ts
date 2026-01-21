@@ -27,7 +27,7 @@ export function buildPinoLogger(logFile: string, onStreamClosed: () => void) {
         bindings: () => ({}),
       },
       timestamp: pino.stdTimeFunctions.isoTime,
-      level: levelToLog,
+      level: 'error',
     },
     pino.multistream(streams)
   );
