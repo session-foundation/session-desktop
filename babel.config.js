@@ -11,8 +11,8 @@ const fileFilter = process.env.SESSION_RC_FILE_FILTER;
 const allowErrors = process.env.SESSION_RC_ALLOW_ERRORS;
 
 // File patterns for babel
-const babelInclude = 'ts/**/*.js';
-const babelIgnore = ['ts/test/**'];
+const babelInclude = 'dist/ts/**/*.js';
+const babelIgnore = ['dist/ts/test/**', 'dist/ts/svgs/**'];
 
 // NOTE: [react-compiler] we are telling the compiler to not attempt
 // to compile these files in the babel config as they are highly
@@ -20,8 +20,8 @@ const babelIgnore = ['ts/test/**'];
 // logic, so it's probably not worth trying to refactor at this stage.
 const filesIgnoredByReactCompiler = new Set(
   [
-    'ts/components/conversation/composition/CompositionTextArea.js',
-    'ts/components/conversation/SessionStagedLinkPreview.js',
+    'dist/ts/components/conversation/composition/CompositionTextArea.js',
+    'dist/ts/components/conversation/SessionStagedLinkPreview.js',
   ].map(f => path.join(PROJECT_ROOT, f))
 );
 
@@ -57,7 +57,7 @@ const pendingPromises = [];
 
 // File size tracking - measure all js files at startup
 function getTotalSize() {
-  const files = globSync('ts/**/*.js', {
+  const files = globSync('dist/ts/**/*.js', {
     cwd: PROJECT_ROOT,
     ignore: babelIgnore,
   });

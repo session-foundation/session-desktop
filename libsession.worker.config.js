@@ -30,7 +30,7 @@ module.exports = {
   },
   output: {
     filename: 'libsession.worker.compiled.js',
-    path: path.resolve(__dirname, 'ts', 'webworker', 'workers', 'node', 'libsession'),
+    path: path.resolve(__dirname, 'app', 'ts', 'webworker', 'workers', 'node', 'libsession'),
   },
   target: 'node',
   optimization: {

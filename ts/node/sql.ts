@@ -1,4 +1,4 @@
-import * as BetterSqlite3 from '@signalapp/better-sqlite3';
+import { type Database } from '@signalapp/sqlcipher';
 import { app, clipboard, dialog, Notification } from 'electron';
 import fs from 'fs';
 import path from 'path';
@@ -18,6 +18,7 @@ import {
   isNumber,
   isObject,
   isString,
+  isUndefined,
   last,
   map,
   omit,
@@ -33,6 +34,7 @@ import {
   assertValidConversationAttributes,
   ATTACHMENT_DOWNLOADS_TABLE,
   CONVERSATIONS_TABLE,
+  devAssertValidSQLPayload,
   formatRowOfConversation,
   GUARD_NODE_TABLE,
   HEX_KEY,
@@ -45,6 +47,7 @@ import {
   NODES_FOR_PUBKEY_TABLE,
   objectToJSON,
   OPEN_GROUP_ROOMS_V2_TABLE,
+  parseJsonRows,
   SEEN_MESSAGE_TABLE,
   toSqliteBoolean,
 } from './database_utility';
@@ -52,10 +55,17 @@ import { StorageItem } from './storage_item';
 
 import {
   CONFIG_DUMP_TABLE,
+  CountRow,
+  JSONRow,
+  JSONRows,
   MsgDuplicateSearchOpenGroup,
   roomHasBlindEnabled,
   SaveConversationReturn,
   SaveSeenMessageHash,
+  SQLConversationAttributes,
+  SQLInsertable,
+  SQLMessageAttributes,
+  SQLSeenMessageAttributes,
   UpdateLastHashType,
 } from '../types/sqlSharedTypes';
 
@@ -94,7 +104,7 @@ import { DBVacuumManager } from './dbVacuumManager';
 
 const MAX_PUBKEYS_MEMBERS = 300;
 
-function lastShutdownWasGraceful(db: BetterSqlite3.Database) {
+function lastShutdownWasGraceful(db: Database) {
   const parsed = getItemById(SettingsKey.lastShutdownWasGraceful, db);
   if (!parsed) {
     return false;
@@ -108,7 +118,7 @@ function lastShutdownWasGraceful(db: BetterSqlite3.Database) {
   return false;
 }
 
-function setGracefulLastShutdown(db: BetterSqlite3.Database, graceful: boolean) {
+function setGracefulLastShutdown(db: Database, graceful: boolean) {
   if (isDebugMode()) {
     console.info(`setGracefulLastShutdown with ${graceful}`);
   }
@@ -120,7 +130,7 @@ function setGracefulLastShutdown(db: BetterSqlite3.Database, graceful: boolean) 
  * If it was, we don't run the quick check pragma.
  * If it wasn't graceful (i.e. a crash happened and the flag couldn't be reset), we run the quick check pragma.
  */
-function getSQLIntegrityCheck(db: BetterSqlite3.Database) {
+function getSQLIntegrityCheck(db: Database) {
   if (lastShutdownWasGraceful(db)) {
     console.info(`last shutdown was graceful, not running quick_check`);
 
@@ -318,7 +328,7 @@ function getDBCreationTimestampMs(): number | null {
   return getFileCreationTimestampMs(databaseFilePath);
 }
 
-function getIdentityKeyById(id: string, instance: BetterSqlite3.Database) {
+function getIdentityKeyById(id: string, instance: Database) {
   return getById(IDENTITY_KEYS_TABLE, id, instance);
 }
 
@@ -351,26 +361,26 @@ function updateGuardNodes(nodes: Array<string>) {
   })();
 }
 
-function createOrUpdateItem(data: StorageItem, instance?: BetterSqlite3.Database) {
+function createOrUpdateItem(data: StorageItem, instance?: Database) {
   createOrUpdate(ITEMS_TABLE, data, instance);
 }
 
-function getItemById(id: string, instance?: BetterSqlite3.Database) {
+function getItemById(id: string, instance?: Database) {
   return getById(ITEMS_TABLE, id, instance);
 }
 
 function getAllItems() {
-  const rows = assertGlobalInstance()
+  const rows: JSONRows = assertGlobalInstance()
     .prepare(`SELECT json FROM ${ITEMS_TABLE} ORDER BY id ASC;`)
     .all();
-  return map(rows, row => jsonToObject(row.json));
+  return parseJsonRows(rows);
 }
 
 function removeItemById(id: string) {
   removeById(ITEMS_TABLE, id);
 }
 
-function createOrUpdate(table: string, data: StorageItem, instance?: BetterSqlite3.Database) {
+function createOrUpdate(table: string, data: StorageItem, instance?: Database) {
   const { id } = data;
   if (!id) {
     throw new Error('createOrUpdate: Provided data did not have a truthy id');
@@ -392,10 +402,10 @@ function createOrUpdate(table: string, data: StorageItem, instance?: BetterSqlit
     });
 }
 
-function getById(table: string, id: string, instance?: BetterSqlite3.Database) {
+function getById(table: string, id: string, instance?: Database) {
   const row = assertGlobalInstanceOrInstance(instance)
     .prepare(`SELECT * FROM ${table} WHERE id = $id;`)
-    .get({
+    .get<JSONRow>({
       id,
     });
 
@@ -427,7 +437,7 @@ function removeById(table: string, id: string) {
 function getSwarmNodesForPubkey(pubkey: string) {
   const row = assertGlobalInstance()
     .prepare(`SELECT * FROM ${NODES_FOR_PUBKEY_TABLE} WHERE pubkey = $pubkey;`)
-    .get({
+    .get<JSONRow>({
       pubkey,
     });
 
@@ -458,30 +468,30 @@ function updateSwarmNodesForPubkey(pubkey: string, snodeEdKeys: Array<string>) {
 function clearOutAllSnodesNotInPool(edKeysOfSnodePool: Array<string>) {
   const allSwarms = assertGlobalInstance()
     .prepare(`SELECT * FROM ${NODES_FOR_PUBKEY_TABLE};`)
-    .all();
+    .all<JSONRow<{ pubkey: string }>>();
 
-  allSwarms.forEach(swarm => {
+  allSwarms.forEach(row => {
     try {
-      const json = JSON.parse(swarm.json);
+      const json = jsonToObject(row.json);
       if (isArray(json)) {
         const intersect = intersection(json, edKeysOfSnodePool);
         if (intersect.length !== json.length) {
-          updateSwarmNodesForPubkey(swarm.pubkey, intersect);
+          updateSwarmNodesForPubkey(row.pubkey, intersect);
           console.info(
-            `clearOutAllSnodesNotInPool: updating swarm of ${ed25519Str(swarm.pubkey)} to `,
+            `clearOutAllSnodesNotInPool: updating swarm of ${ed25519Str(row.pubkey)} to `,
             intersect
           );
         }
       }
     } catch (e) {
       console.warn(
-        `Failed to parse swarm while iterating in clearOutAllSnodesNotInPool for pk: ${ed25519Str(swarm?.pubkey)}`
+        `Failed to parse swarm while iterating in clearOutAllSnodesNotInPool for pk: ${ed25519Str(row?.pubkey)}`
       );
     }
   });
 }
 
-function getConversationCount(db?: BetterSqlite3.Database) {
+function getConversationCount(db?: Database) {
   const row = assertGlobalInstanceOrInstance(db)
     .prepare(`SELECT count(*) from ${CONVERSATIONS_TABLE};`)
     .get();
@@ -549,6 +559,46 @@ function saveConversation(data: ConversationAttributes): SaveConversationReturn 
     isString(lastMessage) && lastMessage.length > maxLength
       ? lastMessage.substring(0, maxLength)
       : lastMessage;
+
+  const payload = {
+    id,
+    active_at,
+    type,
+    members: members && members.length ? arrayStrToJson(members) : '[]',
+    nickname: nickname || null,
+    profileKey: profileKey || null,
+    left: toSqliteBoolean(left),
+    expirationMode,
+    // TODO: find out why expireTimer can be undefined despite the type not allowing it
+    expireTimer: expireTimer ?? null,
+    isExpired03Group: toSqliteBoolean(isExpired03Group),
+    lastMessageStatus: lastMessageStatus ?? null,
+    lastMessage: shortenedLastMessage || null,
+    // TODO: find out why lastMessageInteractionType can be undefined despite the type not allowing it
+    lastMessageInteractionType: lastMessageInteractionType ?? null,
+    lastMessageInteractionStatus: lastMessageInteractionStatus ?? null,
+    lastJoinedTimestamp,
+    groupAdmins: groupAdmins && groupAdmins.length ? arrayStrToJson(groupAdmins) : '[]',
+    avatarPointer: avatarPointer || null,
+    bitsetProFeatures: bitsetProFeatures || null,
+    proGenIndexHashB64: proGenIndexHashB64 || null,
+    proExpiryTsMs: proExpiryTsMs || null,
+    triggerNotificationsFor,
+    profileUpdatedSeconds: profileUpdatedSeconds || null,
+    isTrustedForAttachmentDownload: toSqliteBoolean(isTrustedForAttachmentDownload),
+    priority,
+    isApproved: toSqliteBoolean(isApproved),
+    didApproveMe: toSqliteBoolean(didApproveMe),
+    avatarInProfile: avatarInProfile || null,
+    fallbackAvatarInProfile: fallbackAvatarInProfile || null,
+    displayNameInProfile: displayNameInProfile || null,
+    conversationIdOrigin: conversationIdOrigin || null,
+    markedAsUnread: toSqliteBoolean(markedAsUnread),
+    blocksSogsMsgReqsTimestamp,
+  } satisfies SQLInsertable;
+
+  devAssertValidSQLPayload(CONVERSATIONS_TABLE, payload);
+
   assertGlobalInstance()
     .prepare(
       `INSERT OR REPLACE INTO ${CONVERSATIONS_TABLE} (
@@ -557,41 +607,7 @@ function saveConversation(data: ConversationAttributes): SaveConversationReturn 
 	   ${valuesArgs}
       )`
     )
-    .run({
-      id,
-      active_at,
-      type,
-      members: members && members.length ? arrayStrToJson(members) : '[]',
-      nickname,
-      profileKey,
-      left: toSqliteBoolean(left),
-      expirationMode,
-      expireTimer,
-      isExpired03Group,
-      lastMessageStatus,
-      lastMessage: shortenedLastMessage,
-      lastMessageInteractionType,
-      lastMessageInteractionStatus,
-
-      lastJoinedTimestamp,
-      groupAdmins: groupAdmins && groupAdmins.length ? arrayStrToJson(groupAdmins) : '[]',
-      avatarPointer,
-      bitsetProFeatures,
-      proGenIndexHashB64,
-      proExpiryTsMs,
-      triggerNotificationsFor,
-      profileUpdatedSeconds,
-      isTrustedForAttachmentDownload: toSqliteBoolean(isTrustedForAttachmentDownload),
-      priority,
-      isApproved: toSqliteBoolean(isApproved),
-      didApproveMe: toSqliteBoolean(didApproveMe),
-      avatarInProfile,
-      fallbackAvatarInProfile,
-      displayNameInProfile,
-      conversationIdOrigin,
-      markedAsUnread: toSqliteBoolean(markedAsUnread),
-      blocksSogsMsgReqsTimestamp,
-    });
+    .run(payload);
 
   return fetchConvoMemoryDetails(id);
 }
@@ -626,8 +642,8 @@ function removeConversation(id: string | Array<string>) {
     .run(id);
 }
 
-export function getIdentityKeys(db: BetterSqlite3.Database) {
-  const row = db.prepare(`SELECT * FROM ${ITEMS_TABLE} WHERE id = $id;`).get({
+export function getIdentityKeys(db: Database) {
+  const row = db.prepare(`SELECT * FROM ${ITEMS_TABLE} WHERE id = $id;`).get<JSONRow>({
     id: 'identityKey',
   });
 
@@ -665,7 +681,7 @@ export function getIdentityKeys(db: BetterSqlite3.Database) {
 
 function getUsBlindedInThatServerIfNeeded(
   convoId: string,
-  instance?: BetterSqlite3.Database
+  instance?: Database
 ): string | undefined {
   const usNaked = getIdentityKeys(assertGlobalInstanceOrInstance(instance))?.publicKeyHex;
   if (!usNaked) {
@@ -693,23 +709,25 @@ function getUsBlindedInThatServerIfNeeded(
   return usNaked;
 }
 
-function getConversationById(id: string, instance?: BetterSqlite3.Database) {
+function getConversationById(id: string, instance?: Database) {
   const row = assertGlobalInstanceOrInstance(instance)
     .prepare(`SELECT * FROM ${CONVERSATIONS_TABLE} WHERE id = $id;`)
-    .get({
+    .get<JSONRow<any>>({
       id,
     });
 
   const unreadCount = getUnreadCountByConversation(id, instance) || 0;
   const mentionedUsStillUnread = !!getFirstUnreadMessageWithMention(id, instance);
 
-  return formatRowOfConversation(row, 'getConversationById', unreadCount, mentionedUsStillUnread);
+  return row
+    ? formatRowOfConversation(row, 'getConversationById', unreadCount, mentionedUsStillUnread)
+    : null;
 }
 
 function getAllConversations() {
   const rows = assertGlobalInstance()
     .prepare(`SELECT * FROM ${CONVERSATIONS_TABLE} ORDER BY id ASC;`)
-    .all();
+    .all<{ id: string }>();
 
   const formatted = compact(
     (rows || []).map(m => {
@@ -776,7 +794,7 @@ function searchConversations(query: string) {
     ORDER BY (COALESCE(NULLIF(nickname, ''), displayNameInProfile) COLLATE NOCASE)
     LIMIT $limit`
     )
-    .all({
+    .all<{ id: string }>({
       displayNameInProfile: `%${query}%`,
       id: `%${query}%`,
       nickname: `%${query}%`,
@@ -818,7 +836,7 @@ function searchMessages(query: string, limit: number) {
     ${orderByMessageCoalesceClause}
     LIMIT $limit;`
     )
-    .all({
+    .all<JSONRow<{ snippet: string }>>({
       query,
       limit,
     });
@@ -879,27 +897,31 @@ function saveMessage(data: MessageAttributes) {
     id,
     json: objectToJSON(data),
 
-    serverId,
-    serverTimestamp,
-    body,
+    serverId: serverId ?? null,
+    serverTimestamp: serverTimestamp ?? null,
+    body: body ?? null,
     conversationId,
-    expirationStartTimestamp,
-    expires_at,
-    expirationType,
+    expirationStartTimestamp: expirationStartTimestamp ?? null,
+    expires_at: expires_at ?? null,
+    expirationType: expirationType ?? null,
     expireTimer,
-    hasAttachments,
-    hasFileAttachments,
-    hasVisualMediaAttachments,
-    received_at,
-    sent,
-    sent_at,
+    hasAttachments: isUndefined(hasAttachments) ? null : hasAttachments,
+    hasFileAttachments: isUndefined(hasFileAttachments) ? null : hasFileAttachments,
+    hasVisualMediaAttachments: isUndefined(hasVisualMediaAttachments)
+      ? null
+      : hasVisualMediaAttachments,
+    received_at: received_at ?? null,
+    sent: toSqliteBoolean(sent),
+    sent_at: sent_at ?? null,
     source,
     type: type || '',
     unread,
     flags, // Note: we need to keep storing this as there are some indexed queries that rely on it (cleanUpExpirationTimerUpdateHistory)
-    messageHash,
-    errors,
-  };
+    messageHash: messageHash ?? null,
+    errors: errors ?? null,
+  } satisfies SQLInsertable;
+
+  devAssertValidSQLPayload(MESSAGES_TABLE, payload);
 
   assertGlobalInstance()
     .prepare(
@@ -1063,7 +1085,7 @@ function saveMessages(arrayOfMessages: Array<MessageAttributes>) {
   })();
 }
 
-function removeMessage(id: string, instance?: BetterSqlite3.Database) {
+function removeMessage(id: string, instance?: Database) {
   if (!isString(id)) {
     throw new Error('removeMessage: only takes single message to delete!');
   }
@@ -1073,7 +1095,7 @@ function removeMessage(id: string, instance?: BetterSqlite3.Database) {
     .run({ id });
 }
 
-function removeMessagesByIds(ids: Array<string>, instance?: BetterSqlite3.Database) {
+function removeMessagesByIds(ids: Array<string>, instance?: Database) {
   if (!Array.isArray(ids)) {
     throw new Error('removeMessagesByIds only allowed an array of strings');
   }
@@ -1094,7 +1116,7 @@ function removeAllMessagesInConversationSentBefore(
     deleteBeforeSeconds,
     conversationId,
   }: { deleteBeforeSeconds: number; conversationId: GroupPubkeyType },
-  instance?: BetterSqlite3.Database
+  instance?: Database
 ) {
   const msgIds = assertGlobalInstanceOrInstance(instance)
     .prepare(
@@ -1116,24 +1138,21 @@ async function getAllMessagesWithAttachmentsInConversationSentBefore(
     deleteAttachBeforeSeconds,
     conversationId,
   }: { deleteAttachBeforeSeconds: number; conversationId: GroupPubkeyType },
-  instance?: BetterSqlite3.Database
+  instance?: Database
 ) {
   const rows = assertGlobalInstanceOrInstance(instance)
     .prepare(
       `SELECT json FROM ${MESSAGES_TABLE} WHERE conversationId = $conversationId AND sent_at <= $beforeMs;`
     )
-    .all({ conversationId, beforeMs: deleteAttachBeforeSeconds * 1000 });
-  const messages = map(rows, row => jsonToObject(row.json));
+    .all<JSONRow>({ conversationId, beforeMs: deleteAttachBeforeSeconds * 1000 });
+  const messages = parseJsonRows(rows);
   const messagesWithAttachments = messages.filter(m => {
     return hasUserVisibleAttachments(m);
   });
   return messagesWithAttachments;
 }
 
-function removeAllMessagesInConversation(
-  conversationId: string,
-  instance?: BetterSqlite3.Database
-) {
+function removeAllMessagesInConversation(conversationId: string, instance?: Database) {
   if (!conversationId) {
     return;
   }
@@ -1146,7 +1165,7 @@ function removeAllMessagesInConversation(
 
 function findAllMessageFromSendersInConversation(
   { groupPk, toRemove, signatureTimestamp }: FindAllMessageFromSendersInConversationTypeArgs,
-  instance?: BetterSqlite3.Database
+  instance?: Database
 ) {
   if (!groupPk || !toRemove.length) {
     return { messageHashes: [] };
@@ -1155,17 +1174,17 @@ function findAllMessageFromSendersInConversation(
     .prepare(
       `SELECT json FROM ${MESSAGES_TABLE} WHERE conversationId = ? AND sent_at <= ? AND source IN ( ${toRemove.map(() => '?').join(', ')} )`
     )
-    .all(groupPk, signatureTimestamp, ...toRemove);
+    .all<JSONRow>([groupPk, signatureTimestamp, ...toRemove]);
 
   if (!rows || isEmpty(rows)) {
     return [];
   }
-  return map(rows, row => jsonToObject(row.json));
+  return parseJsonRows(rows);
 }
 
 function findAllMessageHashesInConversation(
   { groupPk, messageHashes, signatureTimestamp }: FindAllMessageHashesInConversationTypeArgs,
-  instance?: BetterSqlite3.Database
+  instance?: Database
 ) {
   if (!groupPk || !messageHashes.length) {
     return [];
@@ -1175,13 +1194,13 @@ function findAllMessageHashesInConversation(
       .prepare(
         `SELECT json FROM ${MESSAGES_TABLE} WHERE conversationId = ? AND sent_at <= ? AND messageHash IN ( ${messageHashes.map(() => '?').join(', ')} )`
       )
-      .all(groupPk, signatureTimestamp, ...messageHashes)
+      .all<JSONRow>([groupPk, signatureTimestamp, ...messageHashes])
   );
 
   if (!rows || isEmpty(rows)) {
     return [];
   }
-  return map(rows, row => jsonToObject(row.json));
+  return parseJsonRows(rows);
 }
 
 function findAllMessageHashesInConversationMatchingAuthor(
@@ -1191,7 +1210,7 @@ function findAllMessageHashesInConversationMatchingAuthor(
     messageHashes,
     signatureTimestamp,
   }: FindAllMessageHashesInConversationMatchingAuthorTypeArgs,
-  instance?: BetterSqlite3.Database
+  instance?: Database
 ) {
   if (!groupPk || !author || !messageHashes.length) {
     return { msgHashesDeleted: [], msgIdsDeleted: [] };
@@ -1200,18 +1219,15 @@ function findAllMessageHashesInConversationMatchingAuthor(
     .prepare(
       `SELECT json FROM ${MESSAGES_TABLE} WHERE conversationId = ? AND source = ? AND sent_at <= ? AND messageHash IN ( ${messageHashes.map(() => '?').join(', ')} );`
     )
-    .all(groupPk, author, signatureTimestamp, ...messageHashes);
+    .all<JSONRow>([groupPk, author, signatureTimestamp, ...messageHashes]);
 
   if (!rows || isEmpty(rows)) {
     return null;
   }
-  return map(rows, row => jsonToObject(row.json));
+  return parseJsonRows(rows);
 }
 
-function fetchAllGroupUpdateFailedMessage(
-  groupPk: GroupPubkeyType,
-  instance?: BetterSqlite3.Database
-) {
+function fetchAllGroupUpdateFailedMessage(groupPk: GroupPubkeyType, instance?: Database) {
   if (!groupPk) {
     return [];
   }
@@ -1219,12 +1235,12 @@ function fetchAllGroupUpdateFailedMessage(
     .prepare(
       `SELECT json FROM ${MESSAGES_TABLE} WHERE conversationId = ? AND (JSON_EXTRACT(json, '$.group_update') IS NOT NULL OR JSON_EXTRACT(json, '$.expirationTimerUpdate') IS NOT NULL) AND errors IS NOT NULL;`
     )
-    .all(groupPk);
+    .all<JSONRow>([groupPk]);
 
   if (!rows || isEmpty(rows)) {
     return [];
   }
-  const objs = map(rows, row => jsonToObject(row.json)).filter(m => {
+  const objs = parseJsonRows(rows).filter(m => {
     return !isEmpty(m);
   });
 
@@ -1234,7 +1250,7 @@ function fetchAllGroupUpdateFailedMessage(
 function cleanUpExpirationTimerUpdateHistory(
   conversationId: string,
   isPrivate: boolean,
-  db?: BetterSqlite3.Database
+  db?: Database
 ) {
   if (isEmpty(conversationId)) {
     return [];
@@ -1243,7 +1259,7 @@ function cleanUpExpirationTimerUpdateHistory(
     .prepare(
       `SELECT id, source FROM ${MESSAGES_TABLE} WHERE conversationId = $conversationId and flags = ${SignalService.DataMessage.Flags.EXPIRATION_TIMER_UPDATE} ${orderByClause}`
     )
-    .all({ conversationId });
+    .all<SQLMessageAttributes>({ conversationId });
 
   // we keep at most one, so if we have <= 1, we can just return that nothing was removed.
   if (rows.length <= 1) {
@@ -1303,7 +1319,7 @@ function getMessageIdsFromServerIds(serverIds: Array<string | number>, conversat
 function getMessageById(id: string) {
   const row = assertGlobalInstance()
     .prepare(`SELECT * FROM ${MESSAGES_TABLE} WHERE id = $id;`)
-    .get({
+    .get<JSONRow>({
       id,
     });
 
@@ -1320,11 +1336,11 @@ function getMessagesById(ids: Array<string>) {
   }
   const rows = assertGlobalInstance()
     .prepare(`SELECT json FROM ${MESSAGES_TABLE} WHERE id IN ( ${ids.map(() => '?').join(', ')} );`)
-    .all(ids);
+    .all<JSONRow>(ids);
   if (!rows || isEmpty(rows)) {
     return null;
   }
-  return map(rows, row => jsonToObject(row.json));
+  return parseJsonRows(rows);
 }
 
 // serverIds are not unique so we need the conversationId
@@ -1333,7 +1349,7 @@ function getMessageByServerId(conversationId: string, serverId: number) {
     .prepare(
       `SELECT * FROM ${MESSAGES_TABLE} WHERE conversationId = $conversationId AND serverId = $serverId;`
     )
-    .get({
+    .get<JSONRow>({
       conversationId,
       serverId,
     });
@@ -1383,14 +1399,14 @@ function getMessagesBySenderAndSentAt(
       source = $source AND
       sent_at = $timestamp;`
       )
-      .all({
+      .all<JSONRow>({
         source,
         timestamp,
       });
     rows.push(..._rows);
   }
 
-  return uniq(map(rows, row => jsonToObject(row.json)));
+  return uniq(parseJsonRows(rows));
 }
 
 function filterAlreadyFetchedOpengroupMessage(
@@ -1428,13 +1444,13 @@ function getUnreadByConversation(conversationId: string, sentBeforeTimestamp: nu
       COALESCE(serverTimestamp, sent_at) <= $sentBeforeTimestamp
      ${orderByClauseASC};`
     )
-    .all({
+    .all<JSONRow>({
       unread: toSqliteBoolean(true),
       conversationId,
       sentBeforeTimestamp,
     });
 
-  return map(rows, row => jsonToObject(row.json));
+  return parseJsonRows(rows);
 }
 
 function getUnreadDisappearingByConversation(conversationId: string, sentBeforeTimestamp: number) {
@@ -1446,13 +1462,13 @@ function getUnreadDisappearingByConversation(conversationId: string, sentBeforeT
       COALESCE(serverTimestamp, sent_at) <= $sentBeforeTimestamp
      ${orderByClauseASC};`
     )
-    .all({
+    .all<JSONRow>({
       unread: toSqliteBoolean(true),
       conversationId,
       sentBeforeTimestamp,
     });
 
-  return map(rows, row => jsonToObject(row.json));
+  return parseJsonRows(rows);
 }
 
 /**
@@ -1470,7 +1486,7 @@ function markAllAsReadByConversationNoExpiration(
   unread = $unread AND
   conversationId = $conversationId;`
       )
-      .all({
+      .all<JSONRow>({
         unread: toSqliteBoolean(true),
         conversationId,
       });
@@ -1492,17 +1508,14 @@ function markAllAsReadByConversationNoExpiration(
   return toReturn;
 }
 
-function getUnreadCountByConversation(
-  conversationId: string,
-  instance?: BetterSqlite3.Database
-): number {
+function getUnreadCountByConversation(conversationId: string, instance?: Database): number {
   const row = assertGlobalInstanceOrInstance(instance)
     .prepare(
       `SELECT count(*) FROM ${MESSAGES_TABLE} WHERE
     unread = $unread AND
     conversationId = $conversationId;`
     )
-    .get({
+    .get<CountRow>({
       unread: toSqliteBoolean(true),
       conversationId,
     });
@@ -1521,7 +1534,7 @@ function getMessageCountByType(conversationId: string, type = '%') {
       WHERE conversationId = $conversationId
       AND type = $type;`
     )
-    .get({
+    .get<CountRow>({
       conversationId,
       type,
     });
@@ -1556,8 +1569,9 @@ function getMessagesByConversation(
   let messages: Array<Record<string, any>> = [];
   let quotes: Array<any> = [];
 
-  if (messageId || firstUnread) {
-    const messageFound = getMessageById(messageId || firstUnread);
+  const id = messageId || firstUnread;
+  if (id) {
+    const messageFound = getMessageById(id);
 
     if (!messageFound || messageFound.conversationId !== conversationId) {
       console.info(
@@ -1586,7 +1600,7 @@ function getMessagesByConversation(
             ${orderByClause}
             LIMIT $limit`
       )
-      .all(commonArgs);
+      .all<JSONRow>(commonArgs);
 
     const messagesAfter = assertGlobalInstance()
       .prepare(
@@ -1595,7 +1609,7 @@ function getMessagesByConversation(
             ${orderByClauseASC}
             LIMIT $limit`
       )
-      .all(commonArgs);
+      .all<JSONRow>(commonArgs);
 
     console.info(`getMessagesByConversation around took ${Date.now() - start}ms `);
 
@@ -1623,12 +1637,12 @@ function getMessagesByConversation(
     LIMIT $limit;
     `
       )
-      .all({
+      .all<JSONRow>({
         conversationId,
         limit,
       });
 
-    messages = map(rows, row => jsonToObject(row.json));
+    messages = parseJsonRows(rows);
   }
 
   if (returnQuotes) {
@@ -1652,11 +1666,11 @@ function getLastMessagesByConversation(conversationId: string, limit: number) {
     LIMIT $limit;
     `
     )
-    .all({
+    .all<JSONRow>({
       conversationId,
       limit,
     });
-  return map(rows, row => jsonToObject(row.json));
+  return parseJsonRows(rows);
 }
 
 /**
@@ -1672,11 +1686,11 @@ function getOldestMessageInConversation(conversationId: string) {
     LIMIT $limit;
     `
     )
-    .all({
+    .all<JSONRow>({
       conversationId,
       limit: 1,
     });
-  return map(rows, row => jsonToObject(row.json));
+  return parseJsonRows(rows);
 }
 
 function hasConversationOutgoingMessage(conversationId: string) {
@@ -1688,7 +1702,7 @@ function hasConversationOutgoingMessage(conversationId: string) {
       type IS 'outgoing'
     `
     )
-    .get({
+    .get<CountRow>({
       conversationId,
     });
   if (!row) {
@@ -1709,7 +1723,7 @@ function getFirstUnreadMessageIdInConversation(conversationId: string) {
     LIMIT 1;
     `
     )
-    .all({
+    .all<Pick<SQLMessageAttributes, 'id'>>({
       conversationId,
       unread: toSqliteBoolean(true),
     });
@@ -1733,7 +1747,7 @@ function getLastMessageReadInConversation(conversationId: string): number | null
         unread = $unread;
     `
     )
-    .get({
+    .get<{ max_sent_at?: SQLMessageAttributes['sent_at'] }>({
       conversationId,
       unread: toSqliteBoolean(false), // we want to find the message read with the higher sent_at timestamp
     });
@@ -1743,7 +1757,7 @@ function getLastMessageReadInConversation(conversationId: string): number | null
 
 function getFirstUnreadMessageWithMention(
   conversationId: string,
-  instance?: BetterSqlite3.Database
+  instance?: Database
 ): string | undefined {
   const ourPkInThatConversation = getUsBlindedInThatServerIfNeeded(conversationId, instance);
 
@@ -1763,7 +1777,7 @@ function getFirstUnreadMessageWithMention(
     LIMIT 1;
     `
     )
-    .all({
+    .all<Pick<SQLMessageAttributes, 'id'>>({
       conversationId,
       unread: toSqliteBoolean(true),
       likeMatch,
@@ -1782,11 +1796,11 @@ function getMessagesBySentAt(sentAt: number) {
      WHERE sent_at = $sent_at
      ORDER BY received_at DESC;`
     )
-    .all({
+    .all<JSONRow>({
       sent_at: sentAt,
     });
 
-  return map(rows, row => jsonToObject(row.json));
+  return parseJsonRows(rows);
 }
 
 function getLastHashBySnode(convoId: string, snode: string, namespace: number) {
@@ -1810,23 +1824,29 @@ function getLastHashBySnode(convoId: string, snode: string, namespace: number) {
   return row.hash;
 }
 
-function getSeenMessagesByHashList(hashes: Array<string>) {
+function getSeenMessagesByHashList(hashes: Array<string>): Array<string> {
+  if (hashes.some(h => !h)) {
+    const err = 'getSeenMessagesByHashList was given an invalid hash';
+    window.log.error(err);
+    throw new Error(err);
+  }
   const fromSeenTableRows = assertGlobalInstance()
     .prepare(
       `SELECT * FROM ${SEEN_MESSAGE_TABLE} WHERE hash IN ( ${hashes.map(() => '?').join(', ')} );`
     )
-    .all(hashes);
+    .all<SQLSeenMessageAttributes>(hashes);
 
   const fromMessagesTableRows = compact(
     assertGlobalInstance()
       .prepare(
         `SELECT messageHash FROM ${MESSAGES_TABLE} WHERE messageHash IN ( ${hashes.map(() => '?').join(', ')} )`
       )
-      .all(hashes)
+      .all<Pick<SQLMessageAttributes, 'messageHash'>>(hashes)
   );
 
-  const hashesFromSeen: Array<string> = map(fromSeenTableRows, row => row.hash);
-  const hashesFromMessages: Array<string> = map(fromMessagesTableRows, row => row.messageHash);
+  // NOTE: because we check for valid hashes at the input of the function we can cast all result hashes as strings
+  const hashesFromSeen = map(fromSeenTableRows, row => row.hash as string);
+  const hashesFromMessages = map(fromMessagesTableRows, row => row.messageHash as string);
 
   return uniq(hashesFromSeen.concat(hashesFromMessages));
 }
@@ -1840,11 +1860,11 @@ function getExpiredMessages() {
       expires_at <= $expires_at
      ORDER BY expires_at ASC;`
     )
-    .all({
+    .all<JSONRow>({
       expires_at: now,
     });
 
-  return map(rows, row => jsonToObject(row.json));
+  return parseJsonRows(rows);
 }
 
 function cleanUpUnreadExpiredDaRMessages() {
@@ -1896,9 +1916,9 @@ function getOutgoingWithoutExpiresAt() {
     ORDER BY expires_at ASC;
   `
     )
-    .all();
+    .all<JSONRow>();
 
-  return map(rows, row => jsonToObject(row.json));
+  return parseJsonRows(rows);
 }
 
 function getNextExpiringMessage() {
@@ -1911,9 +1931,9 @@ function getNextExpiringMessage() {
     LIMIT 1;
   `
     )
-    .all();
+    .all<JSONRow>();
 
-  return map(rows, row => jsonToObject(row.json));
+  return parseJsonRows(rows);
 }
 
 function getNextAttachmentDownloadJobs(limit: number) {
@@ -1926,12 +1946,12 @@ function getNextAttachmentDownloadJobs(limit: number) {
     ORDER BY timestamp DESC
     LIMIT $limit;`
     )
-    .all({
+    .all<JSONRow>({
       limit,
       timestamp,
     });
 
-  return map(rows, row => jsonToObject(row.json));
+  return parseJsonRows(rows);
 }
 
 function saveAttachmentDownloadJob(job: any) {
@@ -2005,7 +2025,7 @@ function removeAllConversations() {
   assertGlobalInstance().prepare(`DELETE FROM ${CONVERSATIONS_TABLE};`).run();
 }
 
-function getMessagesWithVisualMediaAttachments(conversationId: string, limit?: number) {
+function getMessagesWithVisualMediaAttachments(conversationId: string, limit: number) {
   const rows = assertGlobalInstance()
     .prepare(
       `SELECT json FROM ${MESSAGES_TABLE} WHERE
@@ -2014,12 +2034,12 @@ function getMessagesWithVisualMediaAttachments(conversationId: string, limit?: n
      ORDER BY received_at DESC
      LIMIT $limit;`
     )
-    .all({
+    .all<JSONRow>({
       conversationId,
       limit,
     });
 
-  return map(rows, row => jsonToObject(row.json));
+  return parseJsonRows(rows);
 }
 
 function getMessagesWithFileAttachments(conversationId: string, limit: number) {
@@ -2031,12 +2051,12 @@ function getMessagesWithFileAttachments(conversationId: string, limit: number) {
      ORDER BY received_at DESC
      LIMIT $limit;`
     )
-    .all({
+    .all<JSONRow>({
       conversationId,
       limit,
     });
 
-  return map(rows, row => jsonToObject(row.json));
+  return parseJsonRows(rows);
 }
 
 function getExternalFilesForMessage(message: any) {
@@ -2111,6 +2131,7 @@ function getExternalFilesForConversation(
         path?: string | undefined;
       }
     | undefined
+    | null
 ) {
   const files = [];
 
@@ -2165,12 +2186,12 @@ function removeKnownAttachments(allAttachments: Array<string>) {
        ORDER BY id ASC
        LIMIT $chunkSize;`
       )
-      .all({
+      .all<JSONRow>({
         id,
         chunkSize,
       });
 
-    const messages = map(rows, row => jsonToObject(row.json));
+    const messages = parseJsonRows(rows);
     forEach(messages, message => {
       const externalFiles = getExternalFilesForMessage(message);
       forEach(externalFiles, file => {
@@ -2207,14 +2228,14 @@ function removeKnownAttachments(allAttachments: Array<string>) {
        ORDER BY id ASC
        LIMIT $chunkSize;`
       )
-      .all({
+      .all<SQLConversationAttributes>({
         id,
         chunkSize,
       });
 
     forEach(conversations, conversation => {
-      const avatar = (conversation as ConversationAttributes)?.avatarInProfile;
-      const fallbackAvatar = (conversation as ConversationAttributes)?.fallbackAvatarInProfile;
+      const avatar = conversation.avatarInProfile;
+      const fallbackAvatar = conversation.fallbackAvatarInProfile;
       const externalFilesAvatar = getExternalFilesForConversation(avatar);
       const externalFilesFallbackAvatar = getExternalFilesForConversation(fallbackAvatar);
       forEach(externalFilesAvatar.concat(externalFilesFallbackAvatar), file => {
@@ -2237,11 +2258,11 @@ function removeKnownAttachments(allAttachments: Array<string>) {
 
 function getMessagesCountByConversation(
   conversationId: string,
-  instance?: BetterSqlite3.Database | null
+  instance?: Database | null
 ): number {
   const row = assertGlobalInstanceOrInstance(instance)
     .prepare(`SELECT count(*) from ${MESSAGES_TABLE} WHERE conversationId = $conversationId;`)
-    .get({ conversationId });
+    .get<CountRow>({ conversationId });
 
   return row ? row['count(*)'] : 0;
 }
@@ -2249,10 +2270,10 @@ function getMessagesCountByConversation(
 /**
  * Related to Opengroup V2
  */
-function getAllV2OpenGroupRooms(instance?: BetterSqlite3.Database): Array<OpenGroupV2Room> {
+function getAllV2OpenGroupRooms(instance?: Database): Array<OpenGroupV2Room> {
   const rows = assertGlobalInstanceOrInstance(instance)
     .prepare(`SELECT json FROM ${OPEN_GROUP_ROOMS_V2_TABLE};`)
-    .all();
+    .all<JSONRow>();
 
   if (!rows) {
     return [];
@@ -2261,12 +2282,12 @@ function getAllV2OpenGroupRooms(instance?: BetterSqlite3.Database): Array<OpenGr
   return rows.map(r => jsonToObject(r.json)) as Array<OpenGroupV2Room>;
 }
 
-function getV2OpenGroupRoom(conversationId: string, db?: BetterSqlite3.Database) {
+function getV2OpenGroupRoom(conversationId: string, db?: Database) {
   const row = assertGlobalInstanceOrInstance(db)
     .prepare(
       `SELECT json FROM ${OPEN_GROUP_ROOMS_V2_TABLE} WHERE conversationId = $conversationId;`
     )
-    .get({
+    .get<JSONRow>({
       conversationId,
     });
 
@@ -2277,7 +2298,11 @@ function getV2OpenGroupRoom(conversationId: string, db?: BetterSqlite3.Database)
   return jsonToObject(row.json);
 }
 
-function saveV2OpenGroupRoom(opengroupsV2Room: OpenGroupV2Room, instance?: BetterSqlite3.Database) {
+function saveV2OpenGroupRoom(opengroupsV2Room: OpenGroupV2Room, instance?: Database) {
+  // TODO: made convo id required, but for now this works
+  if (!opengroupsV2Room.conversationId) {
+    throw new Error('saveV2OpenGroupRoom given an invalid conversationId');
+  }
   assertGlobalInstanceOrInstance(instance)
     .prepare(
       `INSERT OR REPLACE INTO ${OPEN_GROUP_ROOMS_V2_TABLE} (
@@ -2314,7 +2339,10 @@ function removeV2OpenGroupRoom(conversationId: string) {
 
 function getEntriesCountInTable(tbl: string) {
   try {
-    const row = assertGlobalInstance().prepare(`SELECT count(*) from ${tbl};`).get();
+    const row = assertGlobalInstance().prepare(`SELECT count(*) from ${tbl};`).get<CountRow>();
+    if (!row) {
+      throw new Error('row is undefined in getEntriesCountInTable');
+    }
     return row['count(*)'];
   } catch (e) {
     console.error(e);
@@ -2415,7 +2443,7 @@ function cleanUpOldOpengroupsOnStart() {
       id LIKE 'http%'
      ORDER BY id ASC;`
     )
-    .all();
+    .all<SQLConversationAttributes>();
 
   const v2ConvosIds = map(rows, row => row.id);
 
@@ -2449,11 +2477,14 @@ function cleanUpOldOpengroupsOnStart() {
         const minute = 1000 * 60;
         const sixMonths = minute * 60 * 24 * 30 * 6;
         const limitTimestamp = Date.now() - sixMonths;
-        const countToRemove = assertGlobalInstance()
+        const row = assertGlobalInstance()
           .prepare(
             `SELECT count(*) from ${MESSAGES_TABLE} WHERE serverTimestamp <= $serverTimestamp AND conversationId = $conversationId;`
           )
-          .get({ conversationId: convoId, serverTimestamp: limitTimestamp })['count(*)'];
+          .get<CountRow>({ conversationId: convoId, serverTimestamp: limitTimestamp });
+
+        const countToRemove = row?.['count(*)'] || 0;
+
         const start = Date.now();
 
         assertGlobalInstance()
@@ -2487,7 +2518,7 @@ function cleanUpOldOpengroupsOnStart() {
         `
     SELECT id FROM ${CONVERSATIONS_TABLE} WHERE type = 'private' AND (active_at IS NULL OR active_at = 0)`
       )
-      .all();
+      .all<SQLConversationAttributes>();
 
     const ourPubkey = ourNumber.value.split('.')[0];
 

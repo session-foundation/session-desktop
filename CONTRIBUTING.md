@@ -50,8 +50,6 @@ See [node-gyp installation instructions](https://github.com/nodejs/node-gyp#inst
 
 ## Linux
 
-- Depending on your distribution, you might need to install [hunspell](https://github.com/hunspell/hunspell) and your specific locale (`hunspell-<lang>`) e.g. `hunspell-en-au`.
-
 - Install the required build tools for your operating system
 
   <details>
@@ -407,3 +405,25 @@ The binaries will be placed inside the `release/` folder.
 You can change in [package.json](./package.json) `"target": "deb",` to any of the [electron-builder targets](https://www.electron.build/linux#target) to build for another target.
 
 </details>
+
+
+# Detailed Build Process
+
+The majority of the codebase is transpiled directly by the TypeScript compiler `tsc`. Notable exceptions are the workers and svgs, these are built using tsc via webpack.
+
+1. `tsc` is run to transpile the majority of the code outputting to `dist`
+2. Babel bundles the `dist` JavaScript, compiles the React code with React Compiler and outputs to `app`
+3. A build script copies all js and non-code source to `app`.
+4. Webpack is run to build all the workers outputting to `dist`
+
+Release builds will target `app` as the source and build from that.
+
+## Cached builds
+
+The cache stores hashes of some items to prevent unnecessary copying of unchanged items.
+
+## Build process TODOs
+
+- Minification is unstable and is currently unsupported, there is a WIP script for it `minify.js`
+- Split babel and react compiler outputs to their own directories and combine their outputs into `app`. Better for debugging and watching.
+

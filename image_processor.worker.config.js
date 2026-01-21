@@ -23,7 +23,7 @@ module.exports = {
   },
   output: {
     filename: 'image_processor.worker.compiled.js',
-    path: path.resolve(__dirname, 'ts', 'webworker', 'workers', 'node', 'image_processor'),
+    path: path.resolve(__dirname, 'app', 'ts', 'webworker', 'workers', 'node', 'image_processor'),
   },
   target: 'node',
   externals: {

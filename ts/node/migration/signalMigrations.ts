@@ -1,6 +1,6 @@
-import * as BetterSqlite3 from '@signalapp/better-sqlite3';
+import SQL, { type DatabaseOptions, type Database } from '@signalapp/sqlcipher';
+
 import { isNumber } from 'lodash';
-import path from 'path';
 
 import {
   ATTACHMENT_DOWNLOADS_TABLE,
@@ -13,28 +13,13 @@ import {
   MESSAGES_TABLE,
   SEEN_MESSAGE_TABLE,
 } from '../database_utility';
-import { getAppRootPath } from '../getRootPath';
 import { updateSessionSchema } from './sessionMigrations';
 
-// eslint:disable: quotemark non-literal-fs-path one-variable-per-declaration
-const openDbOptions = {
-  // eslint-disable-next-line no-constant-condition
-  verbose: false ? console.log : undefined,
-
-  nativeBinding: path.join(
-    getAppRootPath(),
-    'node_modules',
-    '@signalapp',
-    'better-sqlite3',
-    'build',
-    'Release',
-    'better_sqlite3.node'
-  ),
-};
+const openDbOptions = {} satisfies DatabaseOptions;
 
 // eslint:disable: one-variable-per-declaration
 
-function updateToSchemaVersion1(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSchemaVersion1(currentVersion: number, db: Database) {
   if (currentVersion >= 1) {
     return;
   }
@@ -129,7 +114,7 @@ function updateToSchemaVersion1(currentVersion: number, db: BetterSqlite3.Databa
   console.log('updateToSchemaVersion1: success!');
 }
 
-function updateToSchemaVersion2(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSchemaVersion2(currentVersion: number, db: Database) {
   if (currentVersion >= 2) {
     return;
   }
@@ -165,7 +150,7 @@ function updateToSchemaVersion2(currentVersion: number, db: BetterSqlite3.Databa
   console.log('updateToSchemaVersion2: success!');
 }
 
-function updateToSchemaVersion3(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSchemaVersion3(currentVersion: number, db: Database) {
   if (currentVersion >= 3) {
     return;
   }
@@ -197,7 +182,7 @@ function updateToSchemaVersion3(currentVersion: number, db: BetterSqlite3.Databa
   console.log('updateToSchemaVersion3: success!');
 }
 
-function updateToSchemaVersion4(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSchemaVersion4(currentVersion: number, db: Database) {
   if (currentVersion >= 4) {
     return;
   }
@@ -233,7 +218,7 @@ function updateToSchemaVersion4(currentVersion: number, db: BetterSqlite3.Databa
   console.log('updateToSchemaVersion4: success!');
 }
 
-function updateToSchemaVersion6(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSchemaVersion6(currentVersion: number, db: Database) {
   if (currentVersion >= 6) {
     return;
   }
@@ -322,7 +307,7 @@ function updateToSchemaVersion6(currentVersion: number, db: BetterSqlite3.Databa
   console.log('updateToSchemaVersion6: success!');
 }
 
-function updateToSchemaVersion7(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSchemaVersion7(currentVersion: number, db: Database) {
   if (currentVersion >= 7) {
     return;
   }
@@ -354,7 +339,7 @@ function updateToSchemaVersion7(currentVersion: number, db: BetterSqlite3.Databa
   console.log('updateToSchemaVersion7: success!');
 }
 
-function updateToSchemaVersion8(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSchemaVersion8(currentVersion: number, db: Database) {
   if (currentVersion >= 8) {
     return;
   }
@@ -408,7 +393,7 @@ function updateToSchemaVersion8(currentVersion: number, db: BetterSqlite3.Databa
   console.log('updateToSchemaVersion8: success!');
 }
 
-function updateToSchemaVersion9(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSchemaVersion9(currentVersion: number, db: Database) {
   if (currentVersion >= 9) {
     return;
   }
@@ -438,7 +423,7 @@ function updateToSchemaVersion9(currentVersion: number, db: BetterSqlite3.Databa
   console.log('updateToSchemaVersion9: success!');
 }
 
-function updateToSchemaVersion10(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSchemaVersion10(currentVersion: number, db: Database) {
   if (currentVersion >= 10) {
     return;
   }
@@ -499,7 +484,7 @@ function updateToSchemaVersion10(currentVersion: number, db: BetterSqlite3.Datab
   console.log('updateToSchemaVersion10: success!');
 }
 
-function updateToSchemaVersion11(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSchemaVersion11(currentVersion: number, db: Database) {
   if (currentVersion >= 11) {
     return;
   }
@@ -528,7 +513,7 @@ const SCHEMA_VERSIONS = [
   updateToSchemaVersion11,
 ];
 
-export async function updateSchema(db: BetterSqlite3.Database) {
+export async function updateSchema(db: Database) {
   const sqliteVersion = getSQLiteVersion(db);
   const sqlcipherVersion = getSQLCipherVersion(db);
   const userVersion = getUserVersion(db);
@@ -549,7 +534,7 @@ export async function updateSchema(db: BetterSqlite3.Database) {
   await updateSessionSchema(db);
 }
 
-function migrateSchemaVersion(db: BetterSqlite3.Database) {
+function migrateSchemaVersion(db: Database) {
   const userVersion = getUserVersion(db);
   if (userVersion > 0) {
     return;
@@ -565,16 +550,16 @@ function migrateSchemaVersion(db: BetterSqlite3.Database) {
   setUserVersion(db, newUserVersion);
 }
 
-function getUserVersion(db: BetterSqlite3.Database) {
+function getUserVersion(db: Database) {
   try {
-    return db.pragma('user_version', { simple: true });
+    return db.pragma('user_version', { simple: true }) as number;
   } catch (e) {
     console.error('getUserVersion error', e);
     return 0;
   }
 }
 
-function setUserVersion(db: BetterSqlite3.Database, version: number) {
+function setUserVersion(db: Database, version: number) {
   if (!isNumber(version)) {
     throw new Error(`setUserVersion: version ${version} is not a number`);
   }
@@ -588,7 +573,7 @@ export function openAndMigrateDatabase(filePath: string, key: string) {
   // First, we try to open the database without any cipher changes
   try {
     // eslint-disable-next-line new-cap
-    db = new (BetterSqlite3 as any).default(filePath, openDbOptions);
+    db = new SQL(filePath, openDbOptions);
 
     keyDatabase(db, key);
     switchToWAL(db);
@@ -609,7 +594,7 @@ export function openAndMigrateDatabase(filePath: string, key: string) {
   let db1;
   try {
     // eslint-disable-next-line new-cap
-    db1 = new (BetterSqlite3 as any).default(filePath, openDbOptions);
+    db1 = new SQL(filePath, openDbOptions);
     keyDatabase(db1, key);
 
     // https://www.zetetic.net/blog/2018/11/30/sqlcipher-400-release/#compatability-sqlcipher-4-0-0
@@ -628,7 +613,7 @@ export function openAndMigrateDatabase(filePath: string, key: string) {
   let db2;
   try {
     // eslint-disable-next-line new-cap
-    db2 = new (BetterSqlite3 as any).default(filePath, openDbOptions);
+    db2 = new SQL(filePath, openDbOptions);
     keyDatabase(db2, key);
 
     db2.pragma('cipher_migrate');
@@ -647,23 +632,24 @@ export function openAndMigrateDatabase(filePath: string, key: string) {
   }
 }
 
-function getSQLiteVersion(db: BetterSqlite3.Database) {
-  const { sqlite_version } = db.prepare('select sqlite_version() as sqlite_version').get();
-  return sqlite_version;
+function getSQLiteVersion(db: Database) {
+  return (
+    db.prepare('select sqlite_version() AS sqlite_version', { pluck: true }).get<string>() ?? ''
+  );
 }
 
-function getSchemaVersion(db: BetterSqlite3.Database) {
-  return db.pragma('schema_version', { simple: true });
+function getSchemaVersion(db: Database) {
+  return db.pragma('schema_version', { simple: true }) as number;
 }
 
-function getSQLCipherVersion(db: BetterSqlite3.Database) {
-  return db.pragma('cipher_version', { simple: true });
+function getSQLCipherVersion(db: Database) {
+  return db.pragma('cipher_version', { simple: true }) as string | undefined;
 }
 
 /**
  * This function is used to check if the database is in a good state as `cipher_integrity_check` can be quite slow on large databases.
  */
-function performLightQuery(db: BetterSqlite3.Database) {
+function performLightQuery(db: Database) {
   let passed = false;
   try {
     const rows = db.prepare('SELECT count(*) FROM sqlite_master').all();
@@ -679,7 +665,7 @@ function performLightQuery(db: BetterSqlite3.Database) {
  * Run an integrity check on the database, and return the result.
  * Note: the sql cipher integrity check will only be run if a simple query cannot be run on the database first.
  */
-export function getSQLCipherIntegrityCheck(db: BetterSqlite3.Database) {
+export function getSQLCipherIntegrityCheck(db: Database) {
   const lightQueryPassed = performLightQuery(db);
   if (lightQueryPassed) {
     return undefined;
@@ -693,7 +679,7 @@ export function getSQLCipherIntegrityCheck(db: BetterSqlite3.Database) {
   return rows.map((row: any) => row.cipher_integrity_check);
 }
 
-function keyDatabase(db: BetterSqlite3.Database, key: string) {
+function keyDatabase(db: Database, key: string) {
   // https://www.zetetic.net/sqlcipher/sqlcipher-api/#key
   // If the password isn't hex then we need to derive a key from it
 
@@ -706,7 +692,7 @@ function keyDatabase(db: BetterSqlite3.Database, key: string) {
   db.pragma(pragramToRun);
 }
 
-function switchToWAL(db: BetterSqlite3.Database) {
+function switchToWAL(db: Database) {
   // https://sqlite.org/wal.html
   db.pragma('journal_mode = WAL');
   db.pragma('synchronous = FULL');

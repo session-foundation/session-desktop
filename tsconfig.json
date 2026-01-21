@@ -9,7 +9,8 @@
     ],
     "jsx": "react-jsx", // Specify JSX code generation: 'preserve', 'react-native', or 'react-jsx'.
     // "noEmitHelpers": false,
-    "rootDir": "./", // Specify the root directory of input files. Use to control the output directory structure with --outDir
+    "outDir": "./dist/ts", // Output directory for compiled files
+    "rootDir": "./ts", // Specify the root directory of input files. Use to control the output directory structure with --outDir
     "removeComments": true, // Do not emit comments to output.
     // "noEmit": true,                        // Do not emit outputs.
     "importHelpers": false, // Import emit helpers from 'tslib'.
@@ -37,6 +38,10 @@
   },
   "exclude": [
     "node_modules",
+    "package.json",
+    "app",
+    "dist",
+    "build",
     "ts/svgs/index.ts",
     "ts/webworker/workers/node/image_processor/image_processor.worker.ts",
     "ts/webworker/workers/node/libsession/libsession.worker.ts",

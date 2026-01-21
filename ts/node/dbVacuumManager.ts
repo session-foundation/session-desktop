@@ -1,4 +1,4 @@
-import type { Database } from '@signalapp/better-sqlite3';
+import { type Database } from '@signalapp/sqlcipher';
 import { app, BrowserWindow } from 'electron';
 import { DURATION } from '../session/constants';
 

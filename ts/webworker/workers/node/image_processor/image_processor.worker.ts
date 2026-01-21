@@ -111,6 +111,12 @@ function sharpFrom(inputBuffer: ArrayBufferLike | Buffer, options?: sharp.SharpO
   if (inputBuffer instanceof Buffer) {
     return sharp(inputBuffer, options).rotate();
   }
+
+  if (inputBuffer instanceof SharedArrayBuffer) {
+    const arrayBuffer = inputBuffer.slice(0);
+    return sharp(new Uint8Array(arrayBuffer), options).rotate();
+  }
+
   return sharp(new Uint8Array(inputBuffer), options).rotate();
 }
 

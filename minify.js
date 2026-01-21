@@ -41,7 +41,7 @@ function formatBytes(bytes) {
 
 async function main() {
   const startTime = Date.now();
-  const files = globSync('ts/**/*.js', { ignore: ['ts/**/*.min.js'] });
+  const files = globSync('app/ts/**/*.js', { ignore: ['app/ts/**/*.min.js'] });
 
   if (files.length === 0) {
     console.log(`${yellow}No files found to minify${reset}`);
