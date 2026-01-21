@@ -63,6 +63,7 @@ export const SettingsKey = {
   proBadgesSent,
   audioAutoplay: 'audioAutoplay',
   showRecoveryPhrasePrompt: 'showRecoveryPhrasePrompt',
+  dismissedRecoveryPhrasePrompt: 'dismissedRecoveryPhrasePrompt',
   hideMessageRequests: 'hideMessageRequests',
   identityKey: 'identityKey',
   blocked: 'blocked',

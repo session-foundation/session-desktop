@@ -18,7 +18,10 @@ import { PubKey } from '../types';
 import { ConfigDumpData } from '../../data/configDump/configDump';
 import { deleteAllMessagesByConvoIdNoConfirmation } from '../../interactions/conversationInteractions';
 import { groupInfoActions } from '../../state/ducks/metaGroups';
-import { getCurrentlySelectedConversationOutsideRedux } from '../../state/selectors/conversations';
+import {
+  getCurrentlySelectedConversationOutsideRedux,
+  getLeftPaneConversationIdsCount,
+} from '../../state/selectors/conversations';
 import { assertUnreachable, stringify } from '../../types/sqlSharedTypes';
 import {
   MetaGroupWrapperActions,
@@ -45,8 +48,33 @@ import { ConversationTypeEnum } from '../../models/types';
 import { NetworkTime } from '../../util/NetworkTime';
 import { timeoutWithAbort } from '../utils/Promise';
 import { DURATION } from '../constants';
+import { isSignWithRecoveryPhrase } from '../../util/storage';
+import {
+  getDismissedRecoveryPhrasePrompt,
+  getShowRecoveryPhrasePrompt,
+} from '../../state/selectors/settings';
+import { SettingsKey } from '../../data/settings-key';
 
 let instance: ConvoController | null;
+
+export async function handleShowRecoveryPhrasePrompt() {
+  if (isSignWithRecoveryPhrase()) {
+    return;
+  }
+  const state = window.inboxStore?.getState();
+  if (state) {
+    const showRecoveryPhrasePrompt = getShowRecoveryPhrasePrompt(state);
+    const dismissedRecoveryPhrasePrompt = getDismissedRecoveryPhrasePrompt(state);
+    if (!dismissedRecoveryPhrasePrompt && !showRecoveryPhrasePrompt) {
+      const numberOfConvos = getLeftPaneConversationIdsCount(state);
+      if (numberOfConvos > 3) {
+        await window.setSettingValue(SettingsKey.dismissedRecoveryPhrasePrompt, true);
+      } else if (numberOfConvos > 2) {
+        await window.setSettingValue(SettingsKey.showRecoveryPhrasePrompt, true);
+      }
+    }
+  }
+}
 
 const getConvoHub = () => {
   if (instance) {
@@ -152,6 +180,8 @@ class ConvoController {
           data: conversation.getConversationModelProps(),
         })
       );
+
+      void handleShowRecoveryPhrasePrompt();
 
       return conversation;
     };
