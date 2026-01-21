@@ -5,11 +5,22 @@ import { LeftPane } from './leftpane/LeftPane';
 import { SessionMainPanel } from './SessionMainPanel';
 import { SessionTheme } from '../themes/SessionTheme';
 import { Flex } from './basic/Flex';
+import { useSelectedConversationKey } from '../state/selectors/selectedConversation';
+import { clsx } from 'clsx';
 
-const StyledGutter = styled.div`
-  width: var(--left-panel-width) !important;
-  transition: none;
-`;
+const StyledGutter = props => {
+  const conversationKey = useSelectedConversationKey();
+
+  return (
+    <div
+      {...props}
+      className={clsx(
+        'module-session-inbox-view__styled_gutter',
+        conversationKey && 'mobile-active-conversation'
+      )}
+    />
+  );
+};
 
 export const SessionInboxView = () => {
   if (!window.inboxStore) {

@@ -16,3 +16,17 @@
   flex-grow: 0;
   padding-inline-end: 5px;
 }
+
+.module-session-inbox-view__styled_gutter {
+  transition: none;
+  width: 100%;
+  @media screen and (min-width: 680px) {
+    width: var(--left-panel-width);
+  }
+}
+.mobile-active-conversation {
+  display: none;
+  @media screen and (min-width: 680px) {
+    display: block;
+  }
+}
