@@ -254,7 +254,7 @@ function getDefaultWindowSize() {
   return {
     defaultWidth: 880,
     defaultHeight: openDevToolsTestIntegration() ? 1000 : 820, // the dev tools open at the bottom hide some stuff which should be visible
-    minWidth: 880,
+    minWidth: 380,
     minHeight: 600,
   };
 }
