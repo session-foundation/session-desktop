@@ -45,25 +45,16 @@ const TopSplitViewPanel = ({
   children,
   topHeight,
   setTopHeight,
-  splitPaneRef,
 }: {
   children: ReactNode;
   topHeight: number | undefined;
   setTopHeight: (value: number) => void;
-  splitPaneRef: RefObject<HTMLElement | undefined | null> | undefined | null;
 }) => {
   const topRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     if (topRef.current) {
       if (!topHeight) {
-        setTopHeight(
-          Math.max(
-            window.outerWidth < 680 && splitPaneRef?.current
-              ? splitPaneRef?.current?.clientHeight - MIN_HEIGHT_TOP
-              : MIN_HEIGHT_TOP,
-            (topRef.current?.clientHeight || 0) / 2
-          )
-        );
+        setTopHeight(Math.max(MIN_HEIGHT_TOP, (topRef.current?.clientHeight || 0) / 2));
         return;
       }
 
@@ -135,11 +126,7 @@ export const SplitViewContainer = ({ disableTop, top, bottom }: SplitViewProps) 
   return (
     <StyledSplitView ref={splitPaneRef}>
       {!disableTop && (
-        <TopSplitViewPanel
-          topHeight={topHeight}
-          setTopHeight={setTopHeight}
-          splitPaneRef={splitPaneRef}
-        >
+        <TopSplitViewPanel topHeight={topHeight} setTopHeight={setTopHeight}>
           {top}
           <Divider ref={dividerRef} onMouseDown={onMouseDown}>
             <DividerHandle />
