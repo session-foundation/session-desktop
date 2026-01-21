@@ -16,6 +16,7 @@ const StyledGutter = (props: any) => {
       className={clsx(
         'module-session-inbox-view__styled_gutter',
         conversationKey && 'mobile-active-conversation'
+
       )}
     />
   );

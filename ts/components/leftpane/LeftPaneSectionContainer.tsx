@@ -2,7 +2,6 @@ import styled from 'styled-components';
 
 export const LeftPaneSectionContainer = styled.div`
   display: flex;
-
   width: 100%;
   justify-content: space-between;
   align-items: center;
@@ -16,6 +15,11 @@ export const LeftPaneSectionContainer = styled.div`
 
     .session-icon-button {
       padding: 30px 20px;
+    }
+  }
+  .mobile-active-conversation & {
+    @media screen and (max-width: 679px) {
+      z-index: -1;
     }
   }
 `;

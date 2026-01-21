@@ -25,8 +25,9 @@
   }
 }
 .mobile-active-conversation {
-  display: none;
+  width: 1px;
   @media screen and (min-width: 680px) {
-    display: block;
+    width: 100%;
+    max-width: var(--left-panel-width);
   }
 }

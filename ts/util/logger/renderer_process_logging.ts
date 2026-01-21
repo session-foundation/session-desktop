@@ -11,7 +11,7 @@ import pino from 'pino';
 
 import {
   LogLevel,
-  cleanArgs,
+  /**cleanArgs,*/
   getLogLevelString,
   levelMaxLength,
   type LogEntryType,
@@ -64,14 +64,14 @@ function logAtLevel(level: LogLevel, ...args: ReadonlyArray<unknown>): void {
   const prefix = getLogLevelString(level).toUpperCase().padEnd(levelMaxLength, ' ');
   console._log(prefix, now(), ...args);
 
-  const levelString = getLogLevelString(level);
-  const msg = cleanArgs(args);
+  // const levelString = getLogLevelString(level);
+  // const msg = cleanArgs(args);
 
   if (!globalLogger) {
     throw new Error('Logger has not been initialized yet');
   }
   // then we also log with the globalLogger, that logs to stdout and the rotating file
-  globalLogger[levelString](msg);
+  ///globalLogger[levelString](msg);
 }
 
 window.log = {
