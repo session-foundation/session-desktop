@@ -21,13 +21,13 @@ export type SearchStateType = {
   searchType: SearchType | null;
   query: string;
   // For conversations we store just the id, and pull conversation props in the selector
-  contactsAndGroups: Array<string>;
-  messages?: Array<MessageResultProps>;
+  searchResultContactsAndGroups: Array<string>;
+  searchResultMessages?: Array<MessageResultProps>;
 };
 
 type SearchResultsPayloadType = Pick<
   SearchStateType,
-  'searchType' | 'query' | 'contactsAndGroups' | 'messages'
+  'searchType' | 'query' | 'searchResultContactsAndGroups' | 'searchResultMessages'
 >;
 
 export type DoSearchActionType = {
@@ -46,7 +46,7 @@ const doSearch = createAsyncThunk(
     };
     const processedQuery = query;
 
-    const [contactsAndGroups, messages] = await Promise.all([
+    const [searchResultContactsAndGroups, messages] = await Promise.all([
       queryContactsAndGroups(processedQuery, options),
       // we only need to query messages for the global search
       searchType === 'global' ? queryMessages(processedQuery) : Promise.resolve([]),
@@ -55,8 +55,8 @@ const doSearch = createAsyncThunk(
 
     return {
       query,
-      contactsAndGroups,
-      messages: filteredMessages,
+      searchResultContactsAndGroups,
+      searchResultMessages: filteredMessages,
       searchType,
     };
   }
@@ -109,7 +109,9 @@ export async function queryContactsAndGroups(providedQuery: string, options: Sea
     return convoMatchesSearch(convo, queryLower);
   });
 
-  let contactsAndGroups: Array<string> = searchResults.map(conversation => conversation.id);
+  let searchResultContactsAndGroups: Array<string> = searchResults.map(
+    conversation => conversation.id
+  );
 
   const isSavedMessagesMatch =
     typeof savedMessages === 'string' ? savedMessages.includes(query) : false;
@@ -119,11 +121,11 @@ export async function queryContactsAndGroups(providedQuery: string, options: Sea
     isSavedMessagesMatch
   ) {
     // Ensure that we don't have duplicates in our results
-    contactsAndGroups = contactsAndGroups.filter(id => id !== ourNumber);
-    contactsAndGroups.unshift(ourNumber);
+    searchResultContactsAndGroups = searchResultContactsAndGroups.filter(id => id !== ourNumber);
+    searchResultContactsAndGroups.unshift(ourNumber);
   }
 
-  return contactsAndGroups;
+  return searchResultContactsAndGroups;
 }
 
 // Reducer
@@ -131,8 +133,8 @@ export async function queryContactsAndGroups(providedQuery: string, options: Sea
 export const initialSearchState: SearchStateType = {
   searchType: null, // by default the search is off
   query: '',
-  contactsAndGroups: [],
-  messages: [],
+  searchResultContactsAndGroups: [],
+  searchResultMessages: [],
 };
 
 const searchSlice = createSlice({
@@ -154,7 +156,8 @@ const searchSlice = createSlice({
     builder.addCase(
       doSearch.fulfilled,
       (state, action: PayloadAction<SearchResultsPayloadType>) => {
-        const { query, contactsAndGroups, messages, searchType } = action.payload;
+        const { query, searchResultContactsAndGroups, searchResultMessages, searchType } =
+          action.payload;
         // Reject if the associated query is not the most recent user-provided query
         if (state.query !== query) {
           return state;
@@ -167,8 +170,8 @@ const searchSlice = createSlice({
         return {
           ...state,
           query,
-          contactsAndGroups,
-          messages,
+          searchResultContactsAndGroups,
+          searchResultMessages,
           searchType,
         };
       }

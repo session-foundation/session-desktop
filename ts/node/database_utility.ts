@@ -341,6 +341,7 @@ export function rebuildFtsTableReferencingMessages(db: BetterSqlite3.Database) {
         body,
         ${MessageColumns.coalesceSentAndReceivedAt} UNINDEXED,
         content=${MESSAGES_TABLE},
+        tokenize='porter unicode61',
         content_rowid=rowid
       );
 

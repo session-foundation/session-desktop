@@ -767,22 +767,24 @@ function searchMessages(query: string, limit: number) {
   if (!limit) {
     throw new Error('searchMessages limit must be set');
   }
-  const sql = `SELECT
+
+  const params = { query, limit };
+
+  const sqlRank = `SELECT
       ${MESSAGES_TABLE}.json,
       snippet(${MESSAGES_FTS_TABLE}, -1, '<<left>>', '<<right>>', '...', 5) as snippet
     FROM ${MESSAGES_FTS_TABLE}
     INNER JOIN ${MESSAGES_TABLE} ON ${MESSAGES_FTS_TABLE}.rowid = ${MESSAGES_TABLE}.rowid
     WHERE
      ${MESSAGES_FTS_TABLE}.body MATCH $query
-      ORDER BY ${MESSAGES_TABLE}.${MessageColumns.coalesceSentAndReceivedAt} DESC
+      ORDER BY rank ASC
     LIMIT $limit;`;
-  const params = { query, limit };
 
-  const rows = analyzeQuery(assertGlobalInstance(), sql, params, () =>
-    assertGlobalInstance().prepare(sql).all(params)
+  const rowsRank = analyzeQuery(assertGlobalInstance(), sqlRank, params, () =>
+    assertGlobalInstance().prepare(sqlRank).all(params)
   );
 
-  return map(rows, row => ({
+  return map(rowsRank, row => ({
     ...jsonToObject(row.json),
     snippet: row.snippet,
   }));
