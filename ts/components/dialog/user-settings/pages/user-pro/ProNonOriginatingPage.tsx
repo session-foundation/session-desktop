@@ -31,6 +31,9 @@ type VariantPageProps = {
   variant: ProNonOriginatingPageVariant;
 };
 
+const useProBackendProDetailsLocal = useProBackendProDetails;
+const useCurrentNeverHadProLocal = useCurrentNeverHadPro;
+
 /**
  * For some texts, we want `Apple website` for apple but `Google Play Store website` for google...
  * Those two are not stored in the same field, so this hook can be used to fetch the right one
@@ -42,7 +45,7 @@ function useStoreOrPlatformFromProvider(data: ProcessedProDetails['data']) {
 }
 
 function ProStatusTextUpdate() {
-  const { data } = useProBackendProDetails();
+  const { data } = useProBackendProDetailsLocal();
   return data.autoRenew ? (
     <Localizer
       token="proAccessActivatedAutoShort"
@@ -147,7 +150,7 @@ const ProInfoBlockText = styled.div`
 `;
 
 function ProInfoBlockDevice({ textElement }: { textElement: ReactNode }) {
-  const { data } = useProBackendProDetails();
+  const { data } = useProBackendProDetailsLocal();
   return (
     <ProInfoBlockItem
       iconElement={<ProInfoBlockIconElement unicode={LUCIDE_ICONS_UNICODE.SMARTPHONE} />}
@@ -162,8 +165,9 @@ function ProInfoBlockDevice({ textElement }: { textElement: ReactNode }) {
 }
 
 function ProInfoBlockDeviceLinked() {
-  const { data } = useProBackendProDetails();
-  const hasNeverHadPro = useCurrentNeverHadPro();
+  const { data } = useProBackendProDetailsLocal();
+  const hasNeverHadPro = useCurrentNeverHadProLocal();
+
   return (
     <ProInfoBlockItem
       iconElement={<ProInfoBlockIconElement unicode={LUCIDE_ICONS_UNICODE.LINK} />}
@@ -182,7 +186,7 @@ function ProInfoBlockDeviceLinked() {
 }
 
 function ProInfoBlockWebsite({ textElement }: { textElement: ReactNode }) {
-  const { data } = useProBackendProDetails();
+  const { data } = useProBackendProDetailsLocal();
   const storeOrPlatform = useStoreOrPlatformFromProvider(data);
 
   return (
@@ -242,7 +246,7 @@ function ProInfoBlockLayout({
 
 function ProInfoBlockUpgrade() {
   const dispatch = getAppDispatch();
-  const { data } = useProBackendProDetails();
+  const { data } = useProBackendProDetailsLocal();
   return (
     <ProInfoBlockLayout
       titleElement={tr('proUpgradingTo')}
@@ -266,7 +270,7 @@ function ProInfoBlockUpgrade() {
 }
 
 function ProInfoBlockUpdate() {
-  const { data } = useProBackendProDetails();
+  const { data } = useProBackendProDetailsLocal();
   const storeOrPlatform = useStoreOrPlatformFromProvider(data);
 
   return (
@@ -310,7 +314,7 @@ function ProInfoBlockUpdate() {
 
 function ProInfoBlockRenew() {
   const dispatch = getAppDispatch();
-  const { data } = useProBackendProDetails();
+  const { data } = useProBackendProDetailsLocal();
   return (
     <ProInfoBlockLayout
       titleElement={tr('renewingPro')}
@@ -349,7 +353,7 @@ function ProInfoBlockRenew() {
 }
 
 function ProInfoBlockCancel() {
-  const { data } = useProBackendProDetails();
+  const { data } = useProBackendProDetailsLocal();
   return (
     <ProInfoBlockLayout
       titleElement={tr('proCancellation')}
@@ -417,7 +421,7 @@ function ProInfoBlockRefundSessionSupport() {
 }
 
 function ProInfoBlockRefundGooglePlay() {
-  const { data } = useProBackendProDetails();
+  const { data } = useProBackendProDetailsLocal();
   return (
     <PanelButtonGroup
       containerStyle={{
@@ -439,7 +443,7 @@ function ProInfoBlockRefundGooglePlay() {
 }
 
 function ProInfoBlockRefundIOS() {
-  const { data } = useProBackendProDetails();
+  const { data } = useProBackendProDetailsLocal();
   return (
     <ProInfoBlockLayout
       titleElement={tr('proRefunding')}
@@ -480,7 +484,7 @@ function ProInfoBlockRefundIOS() {
 }
 
 function ProInfoBlockRefund() {
-  const { data } = useProBackendProDetails();
+  const { data } = useProBackendProDetailsLocal();
 
   if (!data.isPlatformRefundAvailable) {
     return <ProInfoBlockRefundSessionSupport />;
@@ -517,7 +521,7 @@ function ProInfoBlock({ variant }: VariantPageProps) {
 
 function ProPageButtonUpdate() {
   const dispatch = getAppDispatch();
-  const { data } = useProBackendProDetails();
+  const { data } = useProBackendProDetailsLocal();
   const storeOrPlatform = useStoreOrPlatformFromProvider(data);
 
   return (
@@ -536,7 +540,7 @@ function ProPageButtonUpdate() {
 
 function ProPageButtonCancel() {
   const dispatch = getAppDispatch();
-  const { data } = useProBackendProDetails();
+  const { data } = useProBackendProDetailsLocal();
   return (
     <SessionButton
       {...proButtonProps}
@@ -553,7 +557,7 @@ function ProPageButtonCancel() {
 
 function ProPageButtonRefund() {
   const dispatch = getAppDispatch();
-  const { data } = useProBackendProDetails();
+  const { data } = useProBackendProDetailsLocal();
   return (
     <SessionButton
       {...proButtonProps}
