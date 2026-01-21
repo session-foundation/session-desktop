@@ -273,7 +273,10 @@ export function UpdateConversationDetailsDialog(props: WithConvoId) {
   }
 
   const noChanges = newName === nameOnOpen && newDescription === descriptionOnOpen;
+  window.log.warn('PLOP avatarPointerOnMount', avatarPointerOnMount);
+  window.log.warn('PLOP refreshedAvatarPointer', refreshedAvatarPointer);
   const avatarWasUpdated = avatarPointerOnMount !== refreshedAvatarPointer;
+  window.log.warn('PLOP avatarWasUpdated', avatarWasUpdated);
 
   const partDetail = isMe ? 'profile' : isPublic ? 'community' : 'group';
   const partDetailCap = (partDetail.charAt(0).toUpperCase() + partDetail.slice(1)) as Capitalize<
