@@ -1,13 +1,17 @@
 import styled from 'styled-components';
 
 const StyledHeroContainer = styled.div`
-  width: 40%;
-  height: 100%;
+  display: none;
 
-  div {
-    width: 100%;
+  @media screen and (min-width: 680px) {
+    display: block;
+    width: 40%;
     height: 100%;
-    overflow: hidden;
+    div {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
   }
 `;
 
