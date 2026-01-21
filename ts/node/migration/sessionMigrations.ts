@@ -2291,9 +2291,6 @@ async function updateToSessionSchemaVersion53(currentVersion: number, db: Better
   console.log(`updateToSessionSchemaVersion${targetVersion}: starting...`);
 
   db.transaction(() => {
-    dropFtsAndTriggers(db);
-    // rebuild the fts table, this time with the referencing messages table logic
-    rebuildFtsTableReferencingMessages(db);
     db.exec(`
       ALTER TABLE ${MESSAGES_TABLE}
       ADD COLUMN ${MessageColumns.coalesceSentAndReceivedAt} INTEGER;
@@ -2306,6 +2303,10 @@ async function updateToSessionSchemaVersion53(currentVersion: number, db: Better
       ALTER TABLE ${MESSAGES_TABLE}
       ADD COLUMN ${MessageColumns.mentionsUs} BOOLEAN;
     `);
+
+    dropFtsAndTriggers(db);
+    // rebuild the fts table, this time with the referencing messages table logic
+    rebuildFtsTableReferencingMessages(db);
 
     // Populate existing rows
     db.exec(`

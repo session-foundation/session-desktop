@@ -23,16 +23,16 @@ export const MessageColumns = {
   /**
    * A column that coalesce serverTimestamp & sentTimestamp & receivedAt
    */
-  coalesceSentAndReceivedAt: 'sort_timestamp_full',
+  coalesceSentAndReceivedAt: 'sort_timestamp_full' as const,
   /**
    * A column that coalesce serverTimestamp & sentTimestamp
    */
-  coalesceForSentOnly: 'sort_timestamp_sent_only',
+  coalesceForSentOnly: 'sort_timestamp_sent_only' as const,
 
   /**
    * A column that is true if the message mentions us
    */
-  mentionsUs: 'mentions_us',
+  mentionsUs: 'mentions_us' as const,
 };
 
 export const HEX_KEY = /[^0-9A-Fa-f]/;
@@ -337,9 +337,8 @@ export function rebuildFtsTableReferencingMessages(db: BetterSqlite3.Database) {
   db.exec(`
     -- Create FTS5 table that references the messages table
     CREATE VIRTUAL TABLE ${MESSAGES_FTS_TABLE}
-      USING fts5(
+        USING fts5(
         body,
-        ${MessageColumns.coalesceSentAndReceivedAt} UNINDEXED,
         content=${MESSAGES_TABLE},
         tokenize='porter unicode61',
         content_rowid=rowid
@@ -348,8 +347,11 @@ export function rebuildFtsTableReferencingMessages(db: BetterSqlite3.Database) {
     -- Populate the FTS index from existing messages
     INSERT INTO ${MESSAGES_FTS_TABLE}(rowid, body)
       SELECT rowid, body FROM ${MESSAGES_TABLE};
-    -- Then we set up triggers to keep the full-text search table up to date
-    CREATE TRIGGER messages_on_insert AFTER INSERT ON ${MESSAGES_TABLE} BEGIN
+
+    CREATE TRIGGER messages_on_insert AFTER INSERT ON ${MESSAGES_TABLE}
+    WHEN new.body IS NOT NULL
+    BEGIN
+
       INSERT INTO ${MESSAGES_FTS_TABLE}(rowid, body)
       VALUES (new.rowid, new.body);
     END;
@@ -359,11 +361,17 @@ export function rebuildFtsTableReferencingMessages(db: BetterSqlite3.Database) {
     END;
 
     CREATE TRIGGER messages_on_update AFTER UPDATE ON ${MESSAGES_TABLE}
-    WHEN new.body <> old.body BEGIN
+    WHEN new.body <> old.body
+    BEGIN
+      -- Delete old entry if it existed (old.body was not NULL)
       DELETE FROM ${MESSAGES_FTS_TABLE} WHERE rowid = old.rowid;
+
+      -- Insert new entry if new.body is not NULL
       INSERT INTO ${MESSAGES_FTS_TABLE}(rowid, body)
-      VALUES (new.rowid, new.body);
+      SELECT new.rowid, new.body;
     END;
+
+
   `);
   console.info('rebuildFtsTableReferencingMessages built in ', Date.now() - start, 'ms');
 }

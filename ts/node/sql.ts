@@ -769,24 +769,46 @@ function searchMessages(query: string, limit: number) {
   }
 
   const params = { query, limit };
+  console.warn('limit', limit);
 
-  const sqlRank = `SELECT
-      ${MESSAGES_TABLE}.json,
-      snippet(${MESSAGES_FTS_TABLE}, -1, '<<left>>', '<<right>>', '...', 5) as snippet
-    FROM ${MESSAGES_FTS_TABLE}
-    INNER JOIN ${MESSAGES_TABLE} ON ${MESSAGES_FTS_TABLE}.rowid = ${MESSAGES_TABLE}.rowid
-    WHERE
-     ${MESSAGES_FTS_TABLE}.body MATCH $query
-      ORDER BY rank ASC
-    LIMIT $limit;`;
+  /**
+   * This is overly complex, but on a large DB the ORDER BY is very slow.
+   * To avoid having to do full order by over the join, we fetch the top 1000 results matching the query and we then sort those by timestamp.
+   */
+  const sqlRank = `WITH fts_results AS (
+        SELECT rowid
+        FROM ${MESSAGES_FTS_TABLE}
+        WHERE body MATCH $query
+        ORDER BY rank
+        LIMIT 1000
+      )
+      SELECT
+        ${MESSAGES_TABLE}.rowid,
+        ${MESSAGES_TABLE}.json
+      FROM fts_results
+      INNER JOIN ${MESSAGES_TABLE} ON fts_results.rowid = ${MESSAGES_TABLE}.rowid
+      ORDER BY ${MESSAGES_TABLE}.${MessageColumns.coalesceSentAndReceivedAt} DESC
+      LIMIT $limit;`;
 
   const rowsRank = analyzeQuery(assertGlobalInstance(), sqlRank, params, () =>
     assertGlobalInstance().prepare(sqlRank).all(params)
   );
 
-  return map(rowsRank, row => ({
+  const rowids = rowsRank.map((row: any) => row.rowid);
+  const placeholders = rowids.map(() => '?').join(',');
+
+  const snippetStmt = assertGlobalInstance().prepare(
+    `SELECT rowid, snippet(${MESSAGES_FTS_TABLE}, -1, '<<left>>', '<<right>>', '...', 5) as snippet
+   FROM ${MESSAGES_FTS_TABLE}
+   WHERE body MATCH ? AND rowid IN (${placeholders})`
+  );
+
+  const snippets = snippetStmt.all(query, ...rowids);
+  const snippetMap = new Map(snippets.map((s: any) => [s.rowid, s.snippet]));
+
+  return rowsRank.map((row: any) => ({
     ...jsonToObject(row.json),
-    snippet: row.snippet,
+    snippet: snippetMap.get(row.rowid) || '',
   }));
 }
 
