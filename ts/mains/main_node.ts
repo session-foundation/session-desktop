@@ -988,18 +988,16 @@ ipc.on('close-about', () => {
 
 // Password screen related IPC calls
 ipc.on('password-window-login', async (event, passPhrase) => {
-  const sendResponse = (e: string | undefined) => {
-    event.sender.send('password-window-login-response', e);
-  };
-
   try {
     const passwordAttempt = true;
-
-    // Note: it is important to send the response before we open the window for the ipc event life
-    sendResponse(undefined);
+    // Note: we don't call `password-window-login-response` on success as the ipc listener is linked to a dead object
     await showMainWindow(passPhrase, passwordAttempt);
   } catch (e) {
-    sendResponse(tr('passwordIncorrect'));
+    try {
+      event.sender.send('password-window-login-response', tr('passwordIncorrect'));
+    } catch (e2) {
+      console.warn(`password-window-login-response failed`, e2);
+    }
   }
 });
 
