@@ -22,6 +22,7 @@ import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { tr } from '../../localization/localeTools';
 import { userSettingsModal } from '../../state/ducks/modalDialog';
 import { SettingsKey } from '../../data/settings-key';
+import { getLeftPaneConversationIdsCount } from '../../state/selectors/conversations';
 
 const StyledLeftPaneSectionHeader = styled(Flex)`
   height: var(--main-view-header-height);
@@ -160,8 +161,14 @@ export const LeftPaneBanner = () => {
   );
 };
 
-export const LeftPaneSectionHeader = () => {
+function useShowRecoveryPhrasePrompt() {
   const showRecoveryPhrasePrompt = useSelector(getShowRecoveryPhrasePrompt);
+  const leftPaneConversationCount = useSelector(getLeftPaneConversationIdsCount);
+  return showRecoveryPhrasePrompt && leftPaneConversationCount > 2;
+}
+
+export const LeftPaneSectionHeader = () => {
+  const showRecoveryPhrasePrompt = useShowRecoveryPhrasePrompt();
   const leftOverlayMode = useLeftOverlayMode();
 
   const dispatch = getAppDispatch();
@@ -215,7 +222,7 @@ export const LeftPaneSectionHeader = () => {
         </SectionTitle>
         {!leftOverlayMode && <MenuButton />}
       </StyledLeftPaneSectionHeader>
-      {showRecoveryPhrasePrompt && <LeftPaneBanner />}
+      {showRecoveryPhrasePrompt ? <LeftPaneBanner /> : null}
     </Flex>
   );
 };
