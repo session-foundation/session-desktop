@@ -15,14 +15,14 @@ const StyledLeftPane = styled.div<{ $isRtl: boolean }>`
   @media screen and (min-width: 680px) {
     width: ${() => `${leftPaneListWidth}px`};
     height: 100%;
+    border-left: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
   }
   height: calc(100% - 76px);
   display: inline-flex;
   flex-direction: column;
   position: relative;
   flex-shrink: 0;
-  border-left: 1px solid var(--border-color);
-  border-right: 1px solid var(--border-color);
   direction: ${({ $isRtl }) => ($isRtl ? 'rtl' : 'ltr')};
 `;
 
