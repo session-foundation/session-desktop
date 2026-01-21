@@ -1,4 +1,4 @@
-import { ReactElement, ReactNode, RefObject, useEffect, useRef, useState } from 'react';
+import { ReactElement, ReactNode, useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 
 type SplitViewProps = {
