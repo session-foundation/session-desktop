@@ -105,7 +105,7 @@ jobs:
 
     - name: Update cached .eslintcache and tsconfig.tsbuildinfo
       uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
-      if: github.ref == 'refs/heads/main'
+      if: github.ref == 'refs/heads/dev'
       with:
         path: |
           .eslintcache
