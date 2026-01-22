@@ -453,7 +453,7 @@ class CompositionBoxInner extends Component<Props, State> {
               ref={this.emojiPanel}
               show={showEmojiPanel}
               onEmojiClicked={this.onEmojiClick}
-              onKeyDown={this.onKeyDown}
+              onClose={this.hideEmojiPanel}
             />
           </StyledEmojiPanelContainer>
         ) : null}
@@ -548,6 +548,10 @@ class CompositionBoxInner extends Component<Props, State> {
    * @param event - Keyboard event.
    */
   private async onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.key === 'Escape' && this.state.showEmojiPanel) {
+      this.hideEmojiPanel();
+      return;
+    }
     const isShiftSendEnabled = !!window.getSettingValue(SettingsKey.hasShiftSendEnabled);
     if (
       !event.nativeEvent.isComposing &&
@@ -558,7 +562,6 @@ class CompositionBoxInner extends Component<Props, State> {
       event.stopPropagation();
       await this.onSendMessage();
     }
-    // TODO: Add support for closing the emoji panel, probably should pass an onClose function to it
 
     // TODO: fix the bug with the pageup/down keys popping out the right panel when the box has text in it.
     if (this.state.draft.length && (event.key === 'PageUp' || event.key === 'PageDown')) {
