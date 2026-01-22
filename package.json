@@ -56,7 +56,7 @@
     "test-copy": "npx -y tsx ./build/copyTests.ts",
     "test": "yarn test-copy && yarn --cwd app test",
     "build-release-base": "cross-env NODE_ENV=production electron-builder --config.directories.app=app --config.extraMetadata.environment=production",
-    "build-release": "npx -y tsx tools/snodes-bootstrap/populate_cache.ts && yarn build-release-base --publish=never",
+    "build-release": "yarn build-release-base --publish=never",
     "build-release-publish": "yarn build-release-base --publish=always",
     "ready": "yarn dedup --fail && yarn build && yarn lint && yarn test",
     "postinstall": "yarn patch-package && yarn electron-builder install-app-deps",
@@ -236,8 +236,8 @@
         "from": "./build/launcher-script.sh",
         "to": "./launcher-script.sh"
       },
-      "assets/GeoLite2-Country.mmdb",
-      "assets/service-nodes-cache.json"
+      "volatile_assets/GeoLite2-Country.mmdb",
+      "volatile_assets/service-nodes-cache.json"
     ],
     "mac": {
       "category": "public.app-category.social-networking",

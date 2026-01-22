@@ -37,5 +37,4 @@ eslint-rules/
 ts/webworker/workers/node/util/util.worker.ts
 ts/webworker/workers/node/libsession/libsession.worker.ts
 ts/webworker/workers/node/image_processor/image_processor.worker.ts
-tools/snodes-bootstrap/populate_cache.js
-tools/snodes-bootstrap/populate_cache.*
+volatile_assets/

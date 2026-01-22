@@ -1135,7 +1135,7 @@ ipc.on('load-maxmind-data', async (event: IpcMainEvent) => {
   try {
     const appRoot =
       app.isPackaged && process.resourcesPath ? process.resourcesPath : app.getAppPath();
-    const fileToRead = path.join(appRoot, 'assets', 'GeoLite2-Country.mmdb');
+    const fileToRead = path.join(appRoot, 'volatile_assets', 'GeoLite2-Country.mmdb');
     console.info(`loading maxmind data from file:"${fileToRead}"`);
     const buffer = await readFile(fileToRead);
     event.reply('load-maxmind-data-complete', new Uint8Array(buffer.buffer));
@@ -1148,7 +1148,7 @@ ipc.on('load-build-time-snode-pool', async (event: IpcMainEvent) => {
   try {
     const appRoot =
       app.isPackaged && process.resourcesPath ? process.resourcesPath : app.getAppPath();
-    const fileToRead = path.join(appRoot, 'assets', 'service-nodes-cache.json');
+    const fileToRead = path.join(appRoot, 'volatile_assets', 'service-nodes-cache.json');
     console.info(`loading build time snode pool data from file:"${fileToRead}"`);
     const buffer = await readFile(fileToRead, 'utf-8');
     const stats = fs.statSync(fileToRead);
