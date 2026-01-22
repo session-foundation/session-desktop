@@ -250,12 +250,6 @@ export const MessageContextMenu = (props: Props) => {
     await Reactions.sendMessageReaction(messageId, emoji);
   };
 
-  const onEmojiKeyDown = (event: any) => {
-    if (event.key === 'Escape' && showEmojiPanel) {
-      onCloseEmoji();
-    }
-  };
-
   const saveAttachment = (e: ItemParams) => {
     // this is quite dirty but considering that we want the context menu of the message to show on click on the attachment
     // and the context menu save attachment item to save the right attachment I did not find a better way for now.
@@ -351,7 +345,7 @@ export const MessageContextMenu = (props: Props) => {
             onEmojiClicked={onEmojiClick}
             show={showEmojiPanel}
             isModal={true}
-            onKeyDown={onEmojiKeyDown}
+            onClose={onCloseEmoji}
           />
         </StyledEmojiPanelContainer>
       )}

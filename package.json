@@ -70,8 +70,9 @@
     "watch": "pnpm build:setup && concurrently -n TS,BABEL,SASS,SVG,UTIL,LIBSESSION,IMAGE -c green,blue,blue,blue,blue,blue,blue \"tsc --sourceMap --inlineSources --watch\" \"pnpm build-compile --watch\" \"pnpm build:sass --watch\" \"pnpm build:svg --watch\" \"pnpm worker:utils --watch\" \"pnpm worker:libsession --watch\" \"pnpm worker:image_processor --watch\""
   },
   "dependencies": {
-    "@emoji-mart/data": "^1.2.1",
-    "@emoji-mart/react": "^1.1.1",
+    "@emoji-mart/data": "https://github.com/session-foundation/session-emoji-mart/releases/download/v5.6.0/emoji-mart-data-v1.2.1.tgz",
+    "@emoji-mart/react": "https://github.com/session-foundation/session-emoji-mart/releases/download/v5.6.0/emoji-mart-react-v1.1.1.tgz",
+    "emoji-mart": "https://github.com/session-foundation/session-emoji-mart/releases/download/v5.6.0/emoji-mart-v5.6.0.tgz",
     "@emotion/is-prop-valid": "1.2.2",
     "@emotion/memoize": "0.8.1",
     "@reduxjs/toolkit": "^2.11.1",
@@ -88,7 +89,6 @@
     "dompurify": "^3.2.4",
     "electron-localshortcut": "^3.2.1",
     "electron-updater": "^6.3.9",
-    "emoji-mart": "^5.6.0",
     "filesize": "10.1.6",
     "firstline": "^2.0.2",
     "focus-trap-react": "^11.0.4",
