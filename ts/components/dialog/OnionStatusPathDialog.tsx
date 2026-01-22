@@ -130,6 +130,7 @@ let reader: Reader<CityResponse> | null;
 function loadCityData(forceUpdate: () => void) {
   ipcRenderer.once('load-maxmind-data-complete', (_event, content) => {
     const asArrayBuffer = content as Uint8Array;
+    
     if (asArrayBuffer && isTypedArray(asArrayBuffer) && !isEmpty(asArrayBuffer)) {
       reader = new Reader<CityResponse>(Buffer.from(asArrayBuffer.buffer));
       forceUpdate();
