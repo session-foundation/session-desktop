@@ -22,6 +22,12 @@ export enum CTAVariant {
   DONATE_GENERIC = 100,
 }
 
+const ctaVariants = Object.values(CTAVariant);
+
+export const isCTAVariant = (v: number): v is CTAVariant => {
+  return ctaVariants.includes(v);
+};
+
 const proCTAVariants = [
   CTAVariant.PRO_GENERIC,
   CTAVariant.PRO_MESSAGE_CHARACTER_LIMIT,

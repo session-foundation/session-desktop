@@ -152,7 +152,11 @@ export const doAppStartUp = async () => {
         true
       ),
       audioAutoplay: Storage.getBoolOr(SettingsKey.audioAutoplay, false),
-      showRecoveryPhrasePrompt: Storage.getBoolOr(SettingsKey.showRecoveryPhrasePrompt, true),
+      showRecoveryPhrasePrompt: Storage.getBoolOr(SettingsKey.showRecoveryPhrasePrompt, false),
+      dismissedRecoveryPhrasePrompt: Storage.getBoolOr(
+        SettingsKey.dismissedRecoveryPhrasePrompt,
+        false
+      ),
       hideMessageRequests: Storage.getBoolOr(SettingsKey.hideMessageRequests, false),
     })
   );
