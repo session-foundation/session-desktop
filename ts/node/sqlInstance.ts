@@ -1,8 +1,8 @@
-import * as BetterSqlite3 from '@signalapp/better-sqlite3';
+import { type Database } from '@signalapp/sqlcipher';
 
-let globalInstance: BetterSqlite3.Database | null = null;
+let globalInstance: Database | null = null;
 
-export function assertGlobalInstance(): BetterSqlite3.Database {
+export function assertGlobalInstance(): Database {
   if (!globalInstance) {
     throw new Error('globalInstance is not initialized.');
   }
@@ -13,18 +13,16 @@ export function isInstanceInitialized(): boolean {
   return !!globalInstance;
 }
 
-export function assertGlobalInstanceOrInstance(
-  instance?: BetterSqlite3.Database | null
-): BetterSqlite3.Database {
+export function assertGlobalInstanceOrInstance(instance?: Database | null): Database {
   // if none of them are initialized, throw
   if (!globalInstance && !instance) {
     throw new Error('neither globalInstance nor initialized is initialized.');
   }
   // otherwise, return which ever is true, priority to the global one
-  return globalInstance || (instance as BetterSqlite3.Database);
+  return globalInstance || (instance as Database);
 }
 
-export function initDbInstanceWith(instance: BetterSqlite3.Database) {
+export function initDbInstanceWith(instance: Database) {
   if (globalInstance) {
     throw new Error('already init');
   }

@@ -1,6 +1,6 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-unused-expressions */
-import * as BetterSqlite3 from '@signalapp/better-sqlite3';
+import { type Database } from '@signalapp/sqlcipher';
 import {
   ContactsConfigWrapperNode,
   ConvoInfoVolatileWrapperNode,
@@ -9,9 +9,8 @@ import {
 } from 'libsession_util_nodejs';
 import { compact, isArray, isEmpty, isNil, isString, map, pick } from 'lodash';
 
-import { ConversationAttributes } from '../../models/conversationAttributes';
 import { fromHexToArray } from '../../session/utils/String';
-import { CONFIG_DUMP_TABLE } from '../../types/sqlSharedTypes';
+import { CONFIG_DUMP_TABLE, CountRow, SQLConversationAttributes } from '../../types/sqlSharedTypes';
 import {
   CLOSED_GROUP_V2_KEY_PAIRS_TABLE,
   CONVERSATIONS_TABLE,
@@ -40,21 +39,21 @@ import { CONVERSATION_PRIORITIES } from '../../models/types';
 
 // eslint:disable: quotemark one-variable-per-declaration no-unused-expression
 
-function getSessionSchemaVersion(db: BetterSqlite3.Database) {
+function getSessionSchemaVersion(db: Database) {
   const result = db
     .prepare(
       `
       SELECT MAX(version) as version FROM loki_schema;
       `
     )
-    .get();
+    .get<{ version?: number }>();
   if (!result || !result.version) {
     return 0;
   }
   return result.version;
 }
 
-function createSessionSchemaTable(db: BetterSqlite3.Database) {
+function createSessionSchemaTable(db: Database) {
   db.transaction(() => {
     db.exec(`
       CREATE TABLE loki_schema(
@@ -70,64 +69,63 @@ function createSessionSchemaTable(db: BetterSqlite3.Database) {
   })();
 }
 
-const LOKI_SCHEMA_VERSIONS: Array<
-  (currentVersion: number, db: BetterSqlite3.Database) => void | Promise<void>
-> = [
-  updateToSessionSchemaVersion1,
-  updateToSessionSchemaVersion2,
-  updateToSessionSchemaVersion3,
-  updateToSessionSchemaVersion4,
-  updateToSessionSchemaVersion5,
-  updateToSessionSchemaVersion6,
-  updateToSessionSchemaVersion7,
-  updateToSessionSchemaVersion8,
-  updateToSessionSchemaVersion9,
-  updateToSessionSchemaVersion10,
-  updateToSessionSchemaVersion11,
-  updateToSessionSchemaVersion12,
-  updateToSessionSchemaVersion13,
-  updateToSessionSchemaVersion14,
-  updateToSessionSchemaVersion15,
-  updateToSessionSchemaVersion16,
-  updateToSessionSchemaVersion17,
-  updateToSessionSchemaVersion18,
-  updateToSessionSchemaVersion19,
-  updateToSessionSchemaVersion20,
-  updateToSessionSchemaVersion21,
-  updateToSessionSchemaVersion22,
-  updateToSessionSchemaVersion23,
-  updateToSessionSchemaVersion24,
-  updateToSessionSchemaVersion25,
-  updateToSessionSchemaVersion26,
-  updateToSessionSchemaVersion27,
-  updateToSessionSchemaVersion28,
-  updateToSessionSchemaVersion29,
-  updateToSessionSchemaVersion30,
-  updateToSessionSchemaVersion31,
-  updateToSessionSchemaVersion32,
-  updateToSessionSchemaVersion33,
-  updateToSessionSchemaVersion34,
-  updateToSessionSchemaVersion35,
-  updateToSessionSchemaVersion36,
-  updateToSessionSchemaVersion37,
-  updateToSessionSchemaVersion38,
-  updateToSessionSchemaVersion39,
-  updateToSessionSchemaVersion40,
-  updateToSessionSchemaVersion41,
-  updateToSessionSchemaVersion42,
-  updateToSessionSchemaVersion43,
-  updateToSessionSchemaVersion44,
-  updateToSessionSchemaVersion45,
-  updateToSessionSchemaVersion46,
-  updateToSessionSchemaVersion47,
-  updateToSessionSchemaVersion48,
-  updateToSessionSchemaVersion49,
-  updateToSessionSchemaVersion50,
-  updateToSessionSchemaVersion51,
-  updateToSessionSchemaVersion52,
-];
+const LOKI_SCHEMA_VERSIONS: Array<(currentVersion: number, db: Database) => void | Promise<void>> =
+  [
+    updateToSessionSchemaVersion1,
+    updateToSessionSchemaVersion2,
+    updateToSessionSchemaVersion3,
+    updateToSessionSchemaVersion4,
+    updateToSessionSchemaVersion5,
+    updateToSessionSchemaVersion6,
+    updateToSessionSchemaVersion7,
+    updateToSessionSchemaVersion8,
+    updateToSessionSchemaVersion9,
+    updateToSessionSchemaVersion10,
+    updateToSessionSchemaVersion11,
+    updateToSessionSchemaVersion12,
+    updateToSessionSchemaVersion13,
+    updateToSessionSchemaVersion14,
+    updateToSessionSchemaVersion15,
+    updateToSessionSchemaVersion16,
+    updateToSessionSchemaVersion17,
+    updateToSessionSchemaVersion18,
+    updateToSessionSchemaVersion19,
+    updateToSessionSchemaVersion20,
+    updateToSessionSchemaVersion21,
+    updateToSessionSchemaVersion22,
+    updateToSessionSchemaVersion23,
+    updateToSessionSchemaVersion24,
+    updateToSessionSchemaVersion25,
+    updateToSessionSchemaVersion26,
+    updateToSessionSchemaVersion27,
+    updateToSessionSchemaVersion28,
+    updateToSessionSchemaVersion29,
+    updateToSessionSchemaVersion30,
+    updateToSessionSchemaVersion31,
+    updateToSessionSchemaVersion32,
+    updateToSessionSchemaVersion33,
+    updateToSessionSchemaVersion34,
+    updateToSessionSchemaVersion35,
+    updateToSessionSchemaVersion36,
+    updateToSessionSchemaVersion37,
+    updateToSessionSchemaVersion38,
+    updateToSessionSchemaVersion39,
+    updateToSessionSchemaVersion40,
+    updateToSessionSchemaVersion41,
+    updateToSessionSchemaVersion42,
+    updateToSessionSchemaVersion43,
+    updateToSessionSchemaVersion44,
+    updateToSessionSchemaVersion45,
+    updateToSessionSchemaVersion46,
+    updateToSessionSchemaVersion47,
+    updateToSessionSchemaVersion48,
+    updateToSessionSchemaVersion49,
+    updateToSessionSchemaVersion50,
+    updateToSessionSchemaVersion51,
+    updateToSessionSchemaVersion52,
+  ];
 
-function updateToSessionSchemaVersion1(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSessionSchemaVersion1(currentVersion: number, db: Database) {
   const targetVersion = 1;
   if (currentVersion >= targetVersion) {
     return;
@@ -149,7 +147,7 @@ function updateToSessionSchemaVersion1(currentVersion: number, db: BetterSqlite3
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-function updateToSessionSchemaVersion2(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSessionSchemaVersion2(currentVersion: number, db: Database) {
   const targetVersion = 2;
 
   if (currentVersion >= targetVersion) {
@@ -173,7 +171,7 @@ function updateToSessionSchemaVersion2(currentVersion: number, db: BetterSqlite3
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-function updateToSessionSchemaVersion3(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSessionSchemaVersion3(currentVersion: number, db: Database) {
   const targetVersion = 3;
 
   if (currentVersion >= targetVersion) {
@@ -195,7 +193,7 @@ function updateToSessionSchemaVersion3(currentVersion: number, db: BetterSqlite3
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-function updateToSessionSchemaVersion4(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSessionSchemaVersion4(currentVersion: number, db: Database) {
   const targetVersion = 4;
   if (currentVersion >= targetVersion) {
     return;
@@ -221,7 +219,7 @@ function updateToSessionSchemaVersion4(currentVersion: number, db: BetterSqlite3
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-function updateToSessionSchemaVersion5(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSessionSchemaVersion5(currentVersion: number, db: Database) {
   const targetVersion = 5;
   if (currentVersion >= targetVersion) {
     return;
@@ -242,7 +240,7 @@ function updateToSessionSchemaVersion5(currentVersion: number, db: BetterSqlite3
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-function updateToSessionSchemaVersion6(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSessionSchemaVersion6(currentVersion: number, db: Database) {
   const targetVersion = 6;
   if (currentVersion >= targetVersion) {
     return;
@@ -263,7 +261,7 @@ function updateToSessionSchemaVersion6(currentVersion: number, db: BetterSqlite3
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-function updateToSessionSchemaVersion7(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSessionSchemaVersion7(currentVersion: number, db: Database) {
   const targetVersion = 7;
   if (currentVersion >= targetVersion) {
     return;
@@ -282,7 +280,7 @@ function updateToSessionSchemaVersion7(currentVersion: number, db: BetterSqlite3
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-function updateToSessionSchemaVersion8(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSessionSchemaVersion8(currentVersion: number, db: Database) {
   const targetVersion = 8;
   if (currentVersion >= targetVersion) {
     return;
@@ -300,7 +298,7 @@ function updateToSessionSchemaVersion8(currentVersion: number, db: BetterSqlite3
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-function updateToSessionSchemaVersion9(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSessionSchemaVersion9(currentVersion: number, db: Database) {
   const targetVersion = 9;
   if (currentVersion >= targetVersion) {
     return;
@@ -315,7 +313,7 @@ function updateToSessionSchemaVersion9(currentVersion: number, db: BetterSqlite3
         id LIKE '__textsecure_group__!%';
       `
       )
-      .all();
+      .all<any>();
 
     const conversationIdRows = db
       .prepare(`SELECT id FROM ${CONVERSATIONS_TABLE} ORDER BY id ASC;`)
@@ -365,7 +363,7 @@ function updateToSessionSchemaVersion9(currentVersion: number, db: BetterSqlite3
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-function updateToSessionSchemaVersion10(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSessionSchemaVersion10(currentVersion: number, db: Database) {
   const targetVersion = 10;
   if (currentVersion >= targetVersion) {
     return;
@@ -387,7 +385,7 @@ function updateToSessionSchemaVersion10(currentVersion: number, db: BetterSqlite
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-function updateToSessionSchemaVersion11(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSessionSchemaVersion11(currentVersion: number, db: Database) {
   const targetVersion = 11;
   if (currentVersion >= targetVersion) {
     return;
@@ -401,7 +399,7 @@ function updateToSessionSchemaVersion11(currentVersion: number, db: BetterSqlite
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-function updateToSessionSchemaVersion12(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSessionSchemaVersion12(currentVersion: number, db: Database) {
   const targetVersion = 12;
   if (currentVersion >= targetVersion) {
     return;
@@ -424,7 +422,7 @@ function updateToSessionSchemaVersion12(currentVersion: number, db: BetterSqlite
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-function updateToSessionSchemaVersion13(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSessionSchemaVersion13(currentVersion: number, db: Database) {
   const targetVersion = 13;
   if (currentVersion >= targetVersion) {
     return;
@@ -440,7 +438,7 @@ function updateToSessionSchemaVersion13(currentVersion: number, db: BetterSqlite
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-function updateToSessionSchemaVersion14(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSessionSchemaVersion14(currentVersion: number, db: Database) {
   const targetVersion = 14;
   if (currentVersion >= targetVersion) {
     return;
@@ -462,7 +460,7 @@ function updateToSessionSchemaVersion14(currentVersion: number, db: BetterSqlite
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-function updateToSessionSchemaVersion15(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSessionSchemaVersion15(currentVersion: number, db: Database) {
   const targetVersion = 15;
   if (currentVersion >= targetVersion) {
     return;
@@ -481,7 +479,7 @@ function updateToSessionSchemaVersion15(currentVersion: number, db: BetterSqlite
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-function updateToSessionSchemaVersion16(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSessionSchemaVersion16(currentVersion: number, db: Database) {
   const targetVersion = 16;
   if (currentVersion >= targetVersion) {
     return;
@@ -512,7 +510,7 @@ function updateToSessionSchemaVersion16(currentVersion: number, db: BetterSqlite
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-function updateToSessionSchemaVersion17(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSessionSchemaVersion17(currentVersion: number, db: Database) {
   const targetVersion = 17;
   if (currentVersion >= targetVersion) {
     return;
@@ -534,7 +532,7 @@ function updateToSessionSchemaVersion17(currentVersion: number, db: BetterSqlite
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-function updateToSessionSchemaVersion18(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSessionSchemaVersion18(currentVersion: number, db: Database) {
   const targetVersion = 18;
   if (currentVersion >= targetVersion) {
     return;
@@ -552,7 +550,7 @@ function updateToSessionSchemaVersion18(currentVersion: number, db: BetterSqlite
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-function updateToSessionSchemaVersion19(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSessionSchemaVersion19(currentVersion: number, db: Database) {
   const targetVersion = 19;
   if (currentVersion >= targetVersion) {
     return;
@@ -570,7 +568,7 @@ function updateToSessionSchemaVersion19(currentVersion: number, db: BetterSqlite
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-function updateToSessionSchemaVersion20(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSessionSchemaVersion20(currentVersion: number, db: Database) {
   const targetVersion = 20;
   if (currentVersion >= targetVersion) {
     return;
@@ -609,7 +607,7 @@ function updateToSessionSchemaVersion20(currentVersion: number, db: BetterSqlite
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-function updateToSessionSchemaVersion21(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSessionSchemaVersion21(currentVersion: number, db: Database) {
   const targetVersion = 21;
   if (currentVersion >= targetVersion) {
     return;
@@ -628,7 +626,7 @@ function updateToSessionSchemaVersion21(currentVersion: number, db: BetterSqlite
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-function updateToSessionSchemaVersion22(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSessionSchemaVersion22(currentVersion: number, db: Database) {
   const targetVersion = 22;
   if (currentVersion >= targetVersion) {
     return;
@@ -665,7 +663,7 @@ function updateToSessionSchemaVersion22(currentVersion: number, db: BetterSqlite
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-function updateToSessionSchemaVersion23(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSessionSchemaVersion23(currentVersion: number, db: Database) {
   const targetVersion = 23;
   if (currentVersion >= targetVersion) {
     return;
@@ -696,7 +694,7 @@ function updateToSessionSchemaVersion23(currentVersion: number, db: BetterSqlite
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-function updateToSessionSchemaVersion24(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSessionSchemaVersion24(currentVersion: number, db: Database) {
   const targetVersion = 24;
   if (currentVersion >= targetVersion) {
     return;
@@ -831,7 +829,7 @@ function updateToSessionSchemaVersion24(currentVersion: number, db: BetterSqlite
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-function updateToSessionSchemaVersion25(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSessionSchemaVersion25(currentVersion: number, db: Database) {
   const targetVersion = 25;
   if (currentVersion >= targetVersion) {
     return;
@@ -861,7 +859,7 @@ function updateToSessionSchemaVersion25(currentVersion: number, db: BetterSqlite
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-function updateToSessionSchemaVersion26(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSessionSchemaVersion26(currentVersion: number, db: Database) {
   const targetVersion = 26;
   if (currentVersion >= targetVersion) {
     return;
@@ -879,7 +877,7 @@ function updateToSessionSchemaVersion26(currentVersion: number, db: BetterSqlite
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-function updateToSessionSchemaVersion27(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSessionSchemaVersion27(currentVersion: number, db: Database) {
   const targetVersion = 27;
   if (currentVersion >= targetVersion) {
     return;
@@ -902,7 +900,7 @@ function updateToSessionSchemaVersion27(currentVersion: number, db: BetterSqlite
       ?.replace(ipToRemove, urlToUse);
   }
 
-  function getAllOpenGroupV2Conversations(instance: BetterSqlite3.Database) {
+  function getAllOpenGroupV2Conversations(instance: Database) {
     // first _ matches all opengroup v1 (they are completely removed in a migration now),
     // second _ force a second char to be there, so it can only be opengroup v2 convos
 
@@ -913,12 +911,12 @@ function updateToSessionSchemaVersion27(currentVersion: number, db: BetterSqlite
         id LIKE 'publicChat:__%@%'
        ORDER BY id ASC;`
       )
-      .all();
+      .all<SQLConversationAttributes>();
 
     return rows || [];
   }
 
-  function getRoomIdFromConversationAttributes(attributes?: ConversationAttributes | null) {
+  function getRoomIdFromConversationAttributes(attributes?: SQLConversationAttributes | null) {
     if (!attributes) {
       return null;
     }
@@ -1111,7 +1109,7 @@ function updateToSessionSchemaVersion27(currentVersion: number, db: BetterSqlite
       .prepare(
         `SELECT DISTINCT conversationId FROM ${MESSAGES_TABLE} WHERE conversationID LIKE '%${ipToRemove}%'`
       )
-      .all();
+      .all<any>();
     console.info('messageWithConversationIdsToUpdate', messageWithIdsToUpdate);
     messageWithIdsToUpdate.forEach(oldConvo => {
       const newConvoId = getNewConvoId(oldConvo.conversationId);
@@ -1147,7 +1145,7 @@ function updateToSessionSchemaVersion27(currentVersion: number, db: BetterSqlite
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-function updateToSessionSchemaVersion28(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSessionSchemaVersion28(currentVersion: number, db: Database) {
   const targetVersion = 28;
   if (currentVersion >= targetVersion) {
     return;
@@ -1163,7 +1161,7 @@ function updateToSessionSchemaVersion28(currentVersion: number, db: BetterSqlite
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-function updateToSessionSchemaVersion29(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSessionSchemaVersion29(currentVersion: number, db: Database) {
   const targetVersion = 29;
   if (currentVersion >= targetVersion) {
     return;
@@ -1184,7 +1182,7 @@ function updateToSessionSchemaVersion29(currentVersion: number, db: BetterSqlite
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-function updateToSessionSchemaVersion30(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSessionSchemaVersion30(currentVersion: number, db: Database) {
   const targetVersion = 30;
   if (currentVersion >= targetVersion) {
     return;
@@ -1228,13 +1226,13 @@ function updateToSessionSchemaVersion30(currentVersion: number, db: BetterSqlite
       `UPDATE ${CONVERSATIONS_TABLE} SET
             active_at = 0
             WHERE type = 'private' AND active_at > 0 AND active_at < ${1000 * 1651363200};` // 1st may 2022 GMT
-    ).run({});
+    ).run();
 
     db.prepare(
       `UPDATE ${CONVERSATIONS_TABLE} SET
         priority = ${CONVERSATION_PRIORITIES.hidden}
         WHERE type = 'private' AND (active_at IS NULL OR active_at = 0 );`
-    ).run({});
+    ).run();
 
     // create the table which is going to handle the wrappers, without any content in this migration.
     db.exec(`CREATE TABLE ${CONFIG_DUMP_TABLE}(
@@ -1256,7 +1254,7 @@ function updateToSessionSchemaVersion30(currentVersion: number, db: BetterSqlite
       id LIKE 'publicChat:%'
      ORDER BY id ASC;`
       )
-      .all();
+      .all<any>();
 
     const allValidOpengroupsDetails = allOpengroupsConvo
       .filter(m => isString(m.id) && m.id.indexOf('@') > 0)
@@ -1301,7 +1299,7 @@ function updateToSessionSchemaVersion30(currentVersion: number, db: BetterSqlite
       `UPDATE ${CONVERSATIONS_TABLE} SET
         priority = ${CONVERSATION_PRIORITIES.default}
         WHERE priority IS NULL;`
-    ).run({});
+    ).run();
 
     writeSessionSchemaVersion(targetVersion, db);
   })();
@@ -1309,7 +1307,7 @@ function updateToSessionSchemaVersion30(currentVersion: number, db: BetterSqlite
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-function updateToSessionSchemaVersion31(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSessionSchemaVersion31(currentVersion: number, db: Database) {
   const targetVersion = 31;
   if (currentVersion >= targetVersion) {
     return;
@@ -1443,7 +1441,7 @@ function updateToSessionSchemaVersion31(currentVersion: number, db: BetterSqlite
         .prepare(
           `SELECT * FROM ${CONVERSATIONS_TABLE} WHERE type = 'group' AND active_at > 0 AND id LIKE 'http%' ;`
         )
-        .all({});
+        .all<any>({});
 
       if (isArray(communitiesToWriteInWrapper) && communitiesToWriteInWrapper.length) {
         console.info(
@@ -1474,7 +1472,7 @@ function updateToSessionSchemaVersion31(currentVersion: number, db: BetterSqlite
         .prepare(
           `SELECT * FROM ${CONVERSATIONS_TABLE} WHERE type = 'group' AND active_at > 0 AND id LIKE '05%' AND NOT isKickedFromGroup AND NOT left ;`
         )
-        .all({});
+        .all<any>({});
 
       if (isArray(legacyGroupsToWriteInWrapper) && legacyGroupsToWriteInWrapper.length) {
         console.info(
@@ -1555,7 +1553,7 @@ function updateToSessionSchemaVersion31(currentVersion: number, db: BetterSqlite
   })();
 }
 
-function updateToSessionSchemaVersion32(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSessionSchemaVersion32(currentVersion: number, db: Database) {
   const targetVersion = 32;
   if (currentVersion >= targetVersion) {
     return;
@@ -1575,7 +1573,7 @@ function updateToSessionSchemaVersion32(currentVersion: number, db: BetterSqlite
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-function updateToSessionSchemaVersion33(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSessionSchemaVersion33(currentVersion: number, db: Database) {
   const targetVersion = 33;
   if (currentVersion >= targetVersion) {
     return;
@@ -1634,7 +1632,7 @@ function updateToSessionSchemaVersion33(currentVersion: number, db: BetterSqlite
   })();
 }
 
-function updateToSessionSchemaVersion34(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSessionSchemaVersion34(currentVersion: number, db: Database) {
   const targetVersion = 34;
   if (currentVersion >= targetVersion) {
     return;
@@ -1678,7 +1676,7 @@ function updateToSessionSchemaVersion34(currentVersion: number, db: BetterSqlite
       if (noteToSelfInfo.changes) {
         const ourConversation = db
           .prepare(`SELECT * FROM ${CONVERSATIONS_TABLE} WHERE id = $id`)
-          .get({ id: publicKeyHex });
+          .get<any>({ id: publicKeyHex });
 
         const expirySeconds = ourConversation.expireTimer || 0;
 
@@ -1882,7 +1880,7 @@ function updateToSessionSchemaVersion34(currentVersion: number, db: BetterSqlite
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-function updateToSessionSchemaVersion35(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSessionSchemaVersion35(currentVersion: number, db: Database) {
   const targetVersion = 35;
   if (currentVersion >= targetVersion) {
     return;
@@ -1903,7 +1901,7 @@ function updateToSessionSchemaVersion35(currentVersion: number, db: BetterSqlite
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-function updateToSessionSchemaVersion36(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSessionSchemaVersion36(currentVersion: number, db: Database) {
   const targetVersion = 36;
   if (currentVersion >= targetVersion) {
     return;
@@ -1923,7 +1921,7 @@ function updateToSessionSchemaVersion36(currentVersion: number, db: BetterSqlite
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-function updateToSessionSchemaVersion37(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSessionSchemaVersion37(currentVersion: number, db: Database) {
   const targetVersion = 37;
   if (currentVersion >= targetVersion) {
     return;
@@ -1942,7 +1940,7 @@ function updateToSessionSchemaVersion37(currentVersion: number, db: BetterSqlite
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-function updateToSessionSchemaVersion38(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSessionSchemaVersion38(currentVersion: number, db: Database) {
   const targetVersion = 38;
   if (currentVersion >= targetVersion) {
     return;
@@ -1974,7 +1972,7 @@ function updateToSessionSchemaVersion38(currentVersion: number, db: BetterSqlite
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-function updateToSessionSchemaVersion39(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSessionSchemaVersion39(currentVersion: number, db: Database) {
   const targetVersion = 39;
   if (currentVersion >= targetVersion) {
     return;
@@ -1994,7 +1992,7 @@ function updateToSessionSchemaVersion39(currentVersion: number, db: BetterSqlite
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-function updateToSessionSchemaVersion40(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSessionSchemaVersion40(currentVersion: number, db: Database) {
   const targetVersion = 40;
   if (currentVersion >= targetVersion) {
     return;
@@ -2015,7 +2013,7 @@ function updateToSessionSchemaVersion40(currentVersion: number, db: BetterSqlite
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-function updateToSessionSchemaVersion41(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSessionSchemaVersion41(currentVersion: number, db: Database) {
   const targetVersion = 41;
   if (currentVersion >= targetVersion) {
     return;
@@ -2033,7 +2031,7 @@ function updateToSessionSchemaVersion41(currentVersion: number, db: BetterSqlite
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-function updateToSessionSchemaVersion42(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSessionSchemaVersion42(currentVersion: number, db: Database) {
   const targetVersion = 42;
   if (currentVersion >= targetVersion) {
     return;
@@ -2042,7 +2040,7 @@ function updateToSessionSchemaVersion42(currentVersion: number, db: BetterSqlite
   console.log(`updateToSessionSchemaVersion${targetVersion}: starting...`);
 
   db.transaction(() => {
-    const row = db.prepare(`SELECT count(*) from ${CONVERSATIONS_TABLE};`).get();
+    const row = db.prepare(`SELECT count(*) from ${CONVERSATIONS_TABLE};`).get<CountRow>();
 
     const convoCount = row ? row['count(*)'] || 0 : 0;
     console.log(`convoCount: ${convoCount}`);
@@ -2071,7 +2069,7 @@ function updateToSessionSchemaVersion42(currentVersion: number, db: BetterSqlite
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-function updateToSessionSchemaVersion43(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSessionSchemaVersion43(currentVersion: number, db: Database) {
   const targetVersion = 43;
   if (currentVersion >= targetVersion) {
     return;
@@ -2093,7 +2091,7 @@ function updateToSessionSchemaVersion43(currentVersion: number, db: BetterSqlite
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-function updateToSessionSchemaVersion44(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSessionSchemaVersion44(currentVersion: number, db: Database) {
   const targetVersion = 44;
   if (currentVersion >= targetVersion) {
     return;
@@ -2112,7 +2110,7 @@ function updateToSessionSchemaVersion44(currentVersion: number, db: BetterSqlite
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-function updateToSessionSchemaVersion45(currentVersion: number, db: BetterSqlite3.Database) {
+function updateToSessionSchemaVersion45(currentVersion: number, db: Database) {
   const targetVersion = 45;
   if (currentVersion >= targetVersion) {
     return;
@@ -2145,7 +2143,7 @@ function updateToSessionSchemaVersion45(currentVersion: number, db: BetterSqlite
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-async function updateToSessionSchemaVersion46(currentVersion: number, db: BetterSqlite3.Database) {
+async function updateToSessionSchemaVersion46(currentVersion: number, db: Database) {
   const targetVersion = 46;
   if (currentVersion >= targetVersion) {
     return;
@@ -2163,7 +2161,7 @@ async function updateToSessionSchemaVersion46(currentVersion: number, db: Better
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-async function updateToSessionSchemaVersion47(currentVersion: number, db: BetterSqlite3.Database) {
+async function updateToSessionSchemaVersion47(currentVersion: number, db: Database) {
   const targetVersion = 47;
   if (currentVersion >= targetVersion) {
     return;
@@ -2186,7 +2184,7 @@ async function updateToSessionSchemaVersion47(currentVersion: number, db: Better
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-async function updateToSessionSchemaVersion48(currentVersion: number, db: BetterSqlite3.Database) {
+async function updateToSessionSchemaVersion48(currentVersion: number, db: Database) {
   const targetVersion = 48;
   if (currentVersion >= targetVersion) {
     return;
@@ -2204,7 +2202,7 @@ async function updateToSessionSchemaVersion48(currentVersion: number, db: Better
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-async function updateToSessionSchemaVersion49(currentVersion: number, db: BetterSqlite3.Database) {
+async function updateToSessionSchemaVersion49(currentVersion: number, db: Database) {
   const targetVersion = 49;
   if (currentVersion >= targetVersion) {
     return;
@@ -2222,7 +2220,7 @@ async function updateToSessionSchemaVersion49(currentVersion: number, db: Better
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-async function updateToSessionSchemaVersion50(currentVersion: number, db: BetterSqlite3.Database) {
+async function updateToSessionSchemaVersion50(currentVersion: number, db: Database) {
   const targetVersion = 50;
   if (currentVersion >= targetVersion) {
     return;
@@ -2242,7 +2240,7 @@ async function updateToSessionSchemaVersion50(currentVersion: number, db: Better
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-async function updateToSessionSchemaVersion51(currentVersion: number, db: BetterSqlite3.Database) {
+async function updateToSessionSchemaVersion51(currentVersion: number, db: Database) {
   const targetVersion = 51;
   if (currentVersion >= targetVersion) {
     return;
@@ -2260,7 +2258,7 @@ async function updateToSessionSchemaVersion51(currentVersion: number, db: Better
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-async function updateToSessionSchemaVersion52(currentVersion: number, db: BetterSqlite3.Database) {
+async function updateToSessionSchemaVersion52(currentVersion: number, db: Database) {
   const targetVersion = 52;
   if (currentVersion >= targetVersion) {
     return;
@@ -2280,11 +2278,11 @@ async function updateToSessionSchemaVersion52(currentVersion: number, db: Better
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-export function printTableColumns(table: string, db: BetterSqlite3.Database) {
+export function printTableColumns(table: string, db: Database) {
   console.info(db.pragma(`table_info('${table}');`));
 }
 
-function writeSessionSchemaVersion(newVersion: number, db: BetterSqlite3.Database) {
+function writeSessionSchemaVersion(newVersion: number, db: Database) {
   db.prepare(
     `INSERT INTO loki_schema(
         version
@@ -2294,7 +2292,7 @@ function writeSessionSchemaVersion(newVersion: number, db: BetterSqlite3.Databas
   ).run({ newVersion });
 }
 
-export async function updateSessionSchema(db: BetterSqlite3.Database) {
+export async function updateSessionSchema(db: Database) {
   const result = db
     .prepare(`SELECT name FROM sqlite_master WHERE type = 'table' AND name='loki_schema';`)
     .get();

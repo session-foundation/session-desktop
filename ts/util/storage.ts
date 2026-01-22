@@ -7,6 +7,7 @@ import { SettingsKey } from '../data/settings-key';
 import { ProProofResultType, ProDetailsResultType } from '../session/apis/pro_backend_api/schemas';
 import { UrlInteractionsType } from './urlHistory';
 import { updateStorageSchema } from './storageMigrations';
+import { CtaInteractionsType } from './ctaHistory';
 
 let ready = false;
 
@@ -18,6 +19,7 @@ type ValueType =
   | SessionKeyPair
   | Array<string>
   | UrlInteractionsType
+  | CtaInteractionsType
   | ProDetailsResultType
   | ProProofResultType;
 type InsertedValueType = { id: string; value: ValueType };

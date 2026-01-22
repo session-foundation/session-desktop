@@ -211,7 +211,7 @@ function ProMessageFeaturesDetails({ messageId }: { messageId: string }) {
             <LucideIcon
               unicode={LUCIDE_ICONS_UNICODE.CIRCLE_CHECK}
               iconSize="medium"
-              iconColor="var(--primary-color)"
+              iconColor="var(--menu-button-border-color)"
             />
             <Localizer token={proFeatureToTrKey(feature)} />
           </StyledProFeatureRow>

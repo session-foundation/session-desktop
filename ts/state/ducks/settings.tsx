@@ -12,6 +12,7 @@ const SettingsBoolsKeyTrackedInRedux = [
   SettingsKey.showOnboardingAccountJustCreated,
   SettingsKey.audioAutoplay,
   SettingsKey.showRecoveryPhrasePrompt,
+  SettingsKey.dismissedRecoveryPhrasePrompt,
   SettingsKey.hideMessageRequests,
 ] as const;
 
@@ -29,7 +30,8 @@ export function getSettingsInitialState() {
       hideRecoveryPassword: false,
       showOnboardingAccountJustCreated: true,
       audioAutoplay: false,
-      showRecoveryPhrasePrompt: true,
+      showRecoveryPhrasePrompt: false,
+      dismissedRecoveryPhrasePrompt: false,
       hideMessageRequests: false,
     },
   };
@@ -64,6 +66,7 @@ const settingsSlice = createSlice({
         showOnboardingAccountJustCreated: boolean;
         audioAutoplay: boolean;
         showRecoveryPhrasePrompt: boolean;
+        dismissedRecoveryPhrasePrompt: boolean;
         hideMessageRequests: boolean;
       }>
     ) {
@@ -76,6 +79,7 @@ const settingsSlice = createSlice({
         showOnboardingAccountJustCreated,
         audioAutoplay,
         showRecoveryPhrasePrompt,
+        dismissedRecoveryPhrasePrompt,
         hideMessageRequests,
       } = payload;
 
@@ -87,6 +91,7 @@ const settingsSlice = createSlice({
       state.settingsBools.showOnboardingAccountJustCreated = showOnboardingAccountJustCreated;
       state.settingsBools.audioAutoplay = audioAutoplay;
       state.settingsBools.showRecoveryPhrasePrompt = showRecoveryPhrasePrompt;
+      state.settingsBools.dismissedRecoveryPhrasePrompt = dismissedRecoveryPhrasePrompt;
       state.settingsBools.hideMessageRequests = hideMessageRequests;
 
       return state;

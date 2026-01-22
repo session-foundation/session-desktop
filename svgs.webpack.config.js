@@ -2,6 +2,7 @@
 const path = require('path');
 
 const svgsPath = path.resolve(__dirname, 'ts', 'svgs');
+const outPath = path.resolve(__dirname, 'app', 'ts', 'svgs');
 
 module.exports = {
   entry: './index.ts',
@@ -37,7 +38,7 @@ module.exports = {
   },
   output: {
     filename: 'index.js',
-    path: svgsPath,
+    path: outPath,
     library: {
       type: 'commonjs2',
     },

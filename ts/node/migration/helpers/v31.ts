@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-expressions */
-import * as BetterSqlite3 from '@signalapp/better-sqlite3';
+import { type Database } from '@signalapp/sqlcipher';
 import {
   ContactInfoSet,
   ContactsConfigWrapperNode,
@@ -77,7 +77,7 @@ function insertContactIntoContactWrapper(
   blockedNumbers: Array<string>,
   contactsConfigWrapper: ContactsConfigWrapperNode | null, // set this to null to only insert into the convo volatile wrapper (i.e. for ourConvo case)
   volatileConfigWrapper: ConvoInfoVolatileWrapperNode,
-  db: BetterSqlite3.Database,
+  db: Database,
   version: number
 ) {
   checkTargetMigration(version, targetVersion);
@@ -189,7 +189,7 @@ function insertCommunityIntoWrapper(
   community: { id: string; priority: number },
   userGroupConfigWrapper: UserGroupsWrapperNode,
   volatileConfigWrapper: ConvoInfoVolatileWrapperNode,
-  db: BetterSqlite3.Database,
+  db: Database,
   version: number
 ) {
   checkTargetMigration(version, targetVersion);
@@ -310,7 +310,7 @@ function insertLegacyGroupIntoWrapper(
   > & { members: string; groupAdmins: string }, // members and groupAdmins are still stringified here
   userGroupConfigWrapper: UserGroupsWrapperNode,
   volatileInfoConfigWrapper: ConvoInfoVolatileWrapperNode,
-  db: BetterSqlite3.Database,
+  db: Database,
   version: number
 ) {
   checkTargetMigration(version, targetVersion);

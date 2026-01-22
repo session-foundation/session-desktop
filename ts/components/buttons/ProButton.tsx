@@ -18,11 +18,10 @@ function sizeToBorderRadius(size: SessionIconSize) {
 const sharedProps = {
   sizeIsWidth: false,
   iconType: 'sessionPro',
-  backgroundColor: 'var(--primary-color)',
   iconColor: 'var(--black-color)',
 } as const;
 
-const defaultStyle = { flexShrink: 0 };
+const defaultStyle = { flexShrink: 0, borderRadius: '4px' };
 
 export function ProIconButton({
   iconSize,
@@ -41,9 +40,12 @@ export function ProIconButton({
 }) {
   const mergedStyle = {
     ...defaultStyle,
-    ...(noColors ? { backgroundColor: 'var(--disabled-color)' } : {}),
+    ...(noColors
+      ? { backgroundColor: 'var(--disabled-color)' }
+      : { backgroundColor: 'var(--primary-color)' }),
     ...style,
   };
+
   if (onClick) {
     return (
       <SessionIconButton
