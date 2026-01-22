@@ -550,6 +550,7 @@ class CompositionBoxInner extends Component<Props, State> {
   private async onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
     if (event.key === 'Escape' && this.state.showEmojiPanel) {
       this.hideEmojiPanel();
+      return;
     }
     const isShiftSendEnabled = !!window.getSettingValue(SettingsKey.hasShiftSendEnabled);
     if (
