@@ -1,15 +1,17 @@
+import https from 'https';
+import fetch from 'node-fetch';
+
 /* eslint-disable no-console */
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-restricted-syntax */
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports -- this is a tools script so we want to import zod directly
-import { z } from 'zod';
-import { promises as fs, existsSync, statSync } from 'fs';
+import { z } from '../../ts/util/zod';
+import { ServiceNodesResponseSchema } from '../../ts/session/apis/seed_node_api/types';
 
-import https from 'https';
-import fetch from 'node-fetch';
+import { promises as fs } from 'fs';
+import path from 'path';
 
-const CACHE_FILE = 'assets/service-nodes-cache.json';
-const CACHE_MAX_AGE_MS = 60 * 60 * 1000;
+const CACHE_FILE = path.join('assets', 'service-nodes-cache.json');
 const MIN_NODE_COUNT = 20;
 const SEED_URLS = [
   'https://seed1.getsession.org/json_rpc',
@@ -17,37 +19,12 @@ const SEED_URLS = [
   'https://seed3.getsession.org/json_rpc',
 ];
 const REQUEST_TIMEOUT_MS = 30000;
+
 const agent = new https.Agent({
   rejectUnauthorized: false,
 });
 
-const ServiceNodeSchema = z.object({
-  public_ip: z.string(),
-  storage_port: z.number(),
-  pubkey_ed25519: z.string(),
-  pubkey_x25519: z.string(),
-});
-
-const ServiceNodesResponseSchema = z.object({
-  result: z.object({
-    service_node_states: z.array(ServiceNodeSchema),
-  }),
-});
-
-type ServiceNode = z.infer<typeof ServiceNodeSchema>;
-
-function isCacheRecent(): boolean {
-  if (!existsSync(CACHE_FILE)) {
-    return false;
-  }
-
-  const stats = statSync(CACHE_FILE);
-  const ageMs = Date.now() - stats.mtimeMs;
-
-  return ageMs < CACHE_MAX_AGE_MS;
-}
-
-async function fetchServiceNodes(): Promise<Array<ServiceNode>> {
+async function fetchServiceNodes() {
   const abortDetails = SEED_URLS.map(seedUrl => {
     const controller = new AbortController();
 
@@ -58,7 +35,7 @@ async function fetchServiceNodes(): Promise<Array<ServiceNode>> {
     };
   });
 
-  const validatedSnodes = await Promise.any(
+  const response = await Promise.any(
     SEED_URLS.map(async (seedUrl, index) => {
       console.log(`Trying ${seedUrl}...`);
 
@@ -76,6 +53,8 @@ async function fetchServiceNodes(): Promise<Array<ServiceNode>> {
               storage_port: true,
               pubkey_ed25519: true,
               pubkey_x25519: true,
+              requested_unlock_height: true,
+              height: true,
             },
           },
         }),
@@ -93,7 +72,7 @@ async function fetchServiceNodes(): Promise<Array<ServiceNode>> {
       const validated = ServiceNodesResponseSchema.parse(data);
 
       console.log(`Successfully fetched from ${seedUrl}`);
-      return validated.result.service_node_states;
+      return validated.result;
     })
   );
 
@@ -102,46 +81,36 @@ async function fetchServiceNodes(): Promise<Array<ServiceNode>> {
     details.controller.abort();
   });
 
-  if (!validatedSnodes.length) {
+  if (!response.service_node_states.length) {
     throw new Error('No valid nodes found');
   }
-  return validatedSnodes;
-}
-
-async function loadCachedNodes(): Promise<Array<ServiceNode>> {
-  const cached = await fs.readFile(CACHE_FILE, 'utf-8');
-  const data = JSON.parse(cached);
-
-  // Validate cached data
-  const validated = z.array(ServiceNodeSchema).parse(data);
-  return validated;
+  return response;
 }
 
 async function main() {
   try {
-    let nodes: Array<ServiceNode>;
+    console.log('Fetching fresh service node data...');
+    const parsed = await fetchServiceNodes();
 
-    if (isCacheRecent()) {
-      console.log(`Using cached data from ${CACHE_FILE}`);
-      nodes = await loadCachedNodes();
-    } else {
-      console.log('Fetching fresh service node data...');
-      nodes = await fetchServiceNodes();
-
-      // Save to cache
-      await fs.writeFile(CACHE_FILE, JSON.stringify(nodes, null, 2));
-      console.log(`Cached ${nodes.length} nodes to ${CACHE_FILE}`);
-    }
+    // remove the file so we are sure the date of creation will be correct (needed for session-desktop to know how old the snode pool is)
+    await fs.rm(CACHE_FILE, { force: true });
+    // Save to cache
+    await fs.writeFile(CACHE_FILE, JSON.stringify(parsed, null, 2));
+    console.log(`Cached ${parsed.service_node_states.length} nodes to ${CACHE_FILE}`);
 
     // Validate node count
-    if (nodes.length < MIN_NODE_COUNT) {
-      console.error(`❌ Only ${nodes.length} nodes found (minimum: ${MIN_NODE_COUNT})`);
+    if (parsed.service_node_states.length < MIN_NODE_COUNT) {
+      console.error(
+        `❌ Only ${parsed.service_node_states.length} nodes found (minimum: ${MIN_NODE_COUNT})`
+      );
       process.exit(1);
     }
 
-    console.log(`✅ Found ${nodes.length} service nodes (minimum: ${MIN_NODE_COUNT})`);
+    console.log(
+      `✅ Found ${parsed.service_node_states.length} service nodes (minimum: ${MIN_NODE_COUNT})`
+    );
     console.log('\nSample node:');
-    console.log(JSON.stringify(nodes[0], null, 2));
+    console.log(JSON.stringify(parsed.service_node_states[0], null, 2));
   } catch (error) {
     if (error instanceof z.ZodError) {
       console.error('❌ Validation error:', error);

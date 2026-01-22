@@ -24,4 +24,6 @@ export function zodSafeParse<T>(schema: z.ZodType<T>, data: unknown): z.ZodSafeP
   return schema.safeParse(data, safeParseOptions);
 }
 
+export { z };
+
 export default z;

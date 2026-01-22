@@ -10,9 +10,9 @@ import { SnodePool } from '../../../../session/apis/snode_api/snodePool';
 
 import { Snode } from '../../../../data/types';
 import { SeedNodeAPI } from '../../../../session/apis/seed_node_api';
-import { SnodeFromSeed } from '../../../../session/apis/seed_node_api/SeedNodeAPI';
 import * as OnionPaths from '../../../../session/onions/onionPath';
 import { generateFakeSnodes, generateFakeSnodeWithDetails } from '../../../test-utils/utils';
+import type { SnodesFromSeed } from '../../../../session/apis/seed_node_api/types';
 
 chai.use(chaiAsPromised as any);
 chai.should();
@@ -31,12 +31,13 @@ const fakeSnodePool: Array<Snode> = [
   ...generateFakeSnodes(3),
 ];
 
-const fakeSnodePoolFromSeedNode: Array<SnodeFromSeed> = fakeSnodePool.map(m => {
+const fakeSnodePoolFromSeedNode: SnodesFromSeed = fakeSnodePool.map(m => {
   return {
     public_ip: m.ip,
     storage_port: m.port,
     pubkey_x25519: m.pubkey_x25519,
     pubkey_ed25519: m.pubkey_ed25519,
+    requested_unlock_height: 0,
   };
 });
 

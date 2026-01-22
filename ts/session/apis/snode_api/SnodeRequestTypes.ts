@@ -103,21 +103,6 @@ abstract class StoreSubRequest extends SnodeAPISubRequest<'store'> {
   }
 }
 
-/**
- * If you are thinking of adding the `limit` field here: don't.
- * We fetch the full list because we will remove from every cached swarms the snodes not found in that fresh list.
- * If a `limit` was set, we would remove a lot of valid snodes from those cached swarms.
- */
-type FetchSnodeListParams = {
-  active_only: true;
-  fields: {
-    public_ip: true;
-    storage_port: true;
-    pubkey_x25519: true;
-    pubkey_ed25519: true;
-  };
-};
-
 export type GetServicesNodesFromSeedRequest = {
   method: 'get_n_service_nodes';
   jsonrpc: '2.0';
@@ -126,7 +111,17 @@ export type GetServicesNodesFromSeedRequest = {
    * We fetch the full list because we will remove from every cached swarms the snodes not found in that fresh list.
    * If the limit was set, we would remove a lot of valid snodes from the swarms we've already fetched.
    */
-  params: FetchSnodeListParams;
+  params: {
+    active_only: true;
+    fields: {
+      public_ip: true;
+      storage_port: true;
+      pubkey_x25519: true;
+      pubkey_ed25519: true;
+      requested_unlock_height: true;
+      height: true;
+    };
+  };
 };
 
 export class RetrieveUserSubRequest extends RetrieveSubRequest {

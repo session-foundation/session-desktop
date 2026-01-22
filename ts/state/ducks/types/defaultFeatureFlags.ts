@@ -47,6 +47,7 @@ export const defaultBooleanFeatureFlags = {
   debugSnodePool: !isEmpty(process.env.SESSION_DEBUG_SNODE_POOL),
   debugInsecureNodeFetch: !isEmpty(process.env.SESSION_DEBUG_INSECURE_NODE_FETCH),
   debugOnlineState: !isEmpty(process.env.SESSION_DEBUG_ONLINE_STATE),
+  debugForceSeedNodeFailure: !isEmpty(process.env.SESSION_DEBUG_FORCE_SEED_NODE_FAILURE),
 } satisfies SessionBooleanFeatureFlags;
 
 function getMockNetworkPageNodeCount() {

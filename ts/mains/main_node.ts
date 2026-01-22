@@ -1151,10 +1151,13 @@ ipc.on('load-build-time-snode-pool', async (event: IpcMainEvent) => {
     const fileToRead = path.join(appRoot, 'assets', 'service-nodes-cache.json');
     console.info(`loading build time snode pool data from file:"${fileToRead}"`);
     const buffer = await readFile(fileToRead, 'utf-8');
+    const stats = fs.statSync(fileToRead);
+
+    const fileCreatedMs = stats.mtimeMs;
     if (!buffer || buffer.length === 0) {
       throw new Error('Failed to load build time snode pool data');
     }
-    event.reply('load-build-time-snode-pool-complete', buffer);
+    event.reply('load-build-time-snode-pool-complete', buffer, fileCreatedMs);
   } catch (e) {
     event.reply('load-build-time-snode-pool-complete', null);
   }
