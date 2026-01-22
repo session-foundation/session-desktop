@@ -236,8 +236,8 @@
         "from": "./build/launcher-script.sh",
         "to": "./launcher-script.sh"
       },
-      "volatile_assets/GeoLite2-Country.mmdb",
-      "volatile_assets/service-nodes-cache.json"
+      "dynamic_assets/GeoLite2-Country.mmdb",
+      "dynamic_assets/service-nodes-cache.json"
     ],
     "mac": {
       "category": "public.app-category.social-networking",

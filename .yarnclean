@@ -10,7 +10,7 @@ doc
 website
 images
 assets
-volatile_assets
+dynamic_assets
 
 # examples
 example

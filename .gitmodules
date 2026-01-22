@@ -1,6 +1,6 @@
 [submodule "ts/localization"]
 	path = ts/localization
 	url = https://github.com/session-foundation/session-localization.git
-[submodule "volatile_assets"]
-	path = volatile_assets
-	url = git@github.com:Bilb/session-desktop-volatile-assets.git
+[submodule "dynamic_assets"]
+	path = dynamic_assets
+	url = git@github.com:session-foundation/session-desktop-dynamic-assets.git

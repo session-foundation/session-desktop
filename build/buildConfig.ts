@@ -25,8 +25,8 @@ const BUILD_CONFIG: BuildConfig = {
     'preload.js',
     'yarn.lock',
     'stylesheets/fonts.css',
-    'volatile_assets/GeoLite2-Country.mmdb',
-    'volatile_assets/service-nodes-cache.json',
+    'dynamic_assets/GeoLite2-Country.mmdb',
+    'dynamic_assets/service-nodes-cache.json',
   ],
   directoriesToCopy: [
     'images',

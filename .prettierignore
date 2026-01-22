@@ -33,5 +33,5 @@ stylesheets/dist/**
 ts/localization/generated/
 
 
-volatile_assets/populate_cache.js
+dynamic_assets/populate_cache.js
 
