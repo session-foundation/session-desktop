@@ -7,7 +7,6 @@ export const renderUserMentionRow = (id: string, conversationId?: string) => {
       isSelected={false}
       pubkey={id}
       inMentions={true}
-      dataTestId="mentions-popup-row"
       conversationId={conversationId}
       contactNameSuffix="-mention-row"
     />
