@@ -655,7 +655,10 @@ const conversationsSlice = createSlice({
       return { ...state, showRightPanel: true };
     },
     closeRightPanel(state: ConversationsStateType) {
-      return { ...state, showRightPanel: false, messageInfoId: undefined };
+      return { ...state, showRightPanel: false };
+    },
+    removeMessageInfoId(state: ConversationsStateType) {
+      return { ...state, messageInfoId: undefined };
     },
     addMessageIdToSelection(state: ConversationsStateType, action: PayloadAction<string>) {
       if (state.selectedMessageIds.some(id => id === action.payload)) {
@@ -1094,6 +1097,7 @@ export const {
   showMessageInfoView,
   openRightPanel,
   closeRightPanel,
+  removeMessageInfoId,
   addMessageIdToSelection,
   resetSelectedMessageIds,
   toggleSelectedMessageId,

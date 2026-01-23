@@ -99,7 +99,7 @@ type ThemeGlobals = {
   '--duration-session-spinner': string;
   '--duration-spinner': string;
   '--duration-pulse': string;
-  '--duration-right-panel': string;
+  '--duration-right-panel-seconds': number;
   '--duration-progress-bar': number;
   '--duration-fadein': number;
   '--duration-modal-error-faded': string;
@@ -250,7 +250,7 @@ export const THEME_GLOBALS: ThemeGlobals = {
   '--duration-session-spinner': setDurationStr('0.6s'),
   '--duration-spinner': setDurationStr('3000ms'),
   '--duration-pulse': setDurationStr('1s'),
-  '--duration-right-panel': setDurationStr('0.3s'),
+  '--duration-right-panel-seconds': setDurationNum(0.3),
   '--duration-progress-bar': setDurationNum(0.5),
   '--duration-fadein': setDurationNum(1),
   '--duration-modal-error-faded': setDurationStr('100ms'),
