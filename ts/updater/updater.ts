@@ -210,10 +210,6 @@ function isUpdateAvailable(updateInfo: UpdateInfo): boolean {
  * We use the absence of the file to determine if we are in a deb install.
  */
 export async function isLinuxDebInstall() {
-  // console.warn('isLinuxDebInstall: app.isPackaged', app.isPackaged);
-  // console.warn('isLinuxDebInstall: isDebianBased', isDebianBased());
-  // console.warn('isLinuxDebInstall: isRunningViaAppImage', isRunningViaAppImage());
-
   return app.isPackaged && isDebianBased() && !isRunningViaAppImage();
 }
 

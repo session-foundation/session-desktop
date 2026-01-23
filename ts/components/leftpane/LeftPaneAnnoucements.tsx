@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { getSortedAnnouncements } from '../../state/selectors/announcements';
 import { announcementActions, type Announcement } from '../../state/ducks/announcements';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
@@ -7,6 +7,7 @@ import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { Flex } from '../basic/Flex';
 import { showLinkVisitWarningDialog } from '../dialog/OpenUrlModal';
 import { Localizer } from '../basic/Localizer';
+import { getAppDispatch } from '../../state/dispatch';
 
 const StyledAnnouncementRow = styled.div<{ $canClick: boolean }>`
   padding: var(--margins-sm);
@@ -33,7 +34,8 @@ const StyledAnnouncementDescription = styled.div`
 `;
 
 function Announcement({ announcement }: { announcement: Announcement }) {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
+
   return (
     <StyledAnnouncementRow
       $canClick={!!announcement.link}
