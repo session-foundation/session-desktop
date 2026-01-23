@@ -593,6 +593,8 @@ export function CompositionTextArea(props: Props) {
         aria-autocomplete="list"
         aria-label={messagePlaceHolder}
         data-testid="message-input-text-area"
+        // NOTE: we want to close any mentions when clicking within the input as clicking will invalidate the cursor position
+        onClick={handleMentionCleanup}
       />
       {showPopover ? (
         <SessionPopoverContent
