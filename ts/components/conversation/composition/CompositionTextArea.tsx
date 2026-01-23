@@ -146,6 +146,7 @@ function findValidMention(val: string, cursorPosition: number, prefix: PREFIX) {
   return {
     content,
     prefix,
+    pos,
   };
 }
 
@@ -168,6 +169,11 @@ function getMentionDetails(
 
   const emojiMention = findValidMention(searchableVal, cursorPosition, PREFIX.EMOJI);
   if (emojiMention) {
+    // NOTE: this prevents the emoji list from appearing if the user is typing a url
+    const potentialUrlProtocol = val.slice(Math.max(0, emojiMention.pos - 5), emojiMention.pos);
+    if (potentialUrlProtocol === 'https' || potentialUrlProtocol.endsWith('http')) {
+      return null;
+    }
     return emojiMention;
   }
 
