@@ -55,6 +55,10 @@ stylesheets/dist/
 ts/webworker/workers/node/**/*.node
 
 .yarn/
+service-nodes-cache.json
+tools/**/*.js
+tools/**/*.js.map
+
 app/
 dist/
 build/buildConfig.js

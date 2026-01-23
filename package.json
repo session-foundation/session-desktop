@@ -235,7 +235,8 @@
         "from": "./build/launcher-script.sh",
         "to": "./launcher-script.sh"
       },
-      "mmdb/GeoLite2-Country.mmdb"
+      "dynamic_assets/GeoLite2-Country.mmdb",
+      "dynamic_assets/service-nodes-cache.json"
     ],
     "mac": {
       "category": "public.app-category.social-networking",
@@ -356,7 +357,8 @@
       "!node_modules/libsession_util_nodejs/libsession-util/*",
       "!node_modules/libsession_util_nodejs/src/*",
       "ts/webworker/workers/node/libsession/*.node",
-      "!dev-app-update.yml"
+      "!dev-app-update.yml",
+      "service-nodes-cache.json"
     ]
   }
 }

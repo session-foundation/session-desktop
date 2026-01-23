@@ -10,9 +10,9 @@ import { SnodePool } from '../../../../session/apis/snode_api/snodePool';
 
 import { Snode } from '../../../../data/types';
 import { SeedNodeAPI } from '../../../../session/apis/seed_node_api';
-import { SnodeFromSeed } from '../../../../session/apis/seed_node_api/SeedNodeAPI';
 import * as OnionPaths from '../../../../session/onions/onionPath';
 import { generateFakeSnodes, generateFakeSnodeWithDetails } from '../../../test-utils/utils';
+import type { SnodesFromSeed } from '../../../../session/apis/seed_node_api/types';
 
 chai.use(chaiAsPromised as any);
 chai.should();
@@ -31,13 +31,13 @@ const fakeSnodePool: Array<Snode> = [
   ...generateFakeSnodes(3),
 ];
 
-const fakeSnodePoolFromSeedNode: Array<SnodeFromSeed> = fakeSnodePool.map(m => {
+const fakeSnodePoolFromSeedNode: SnodesFromSeed = fakeSnodePool.map(m => {
   return {
     public_ip: m.ip,
     storage_port: m.port,
     pubkey_x25519: m.pubkey_x25519,
     pubkey_ed25519: m.pubkey_ed25519,
-    storage_server_version: m.storage_server_version,
+    requested_unlock_height: 0,
   };
 });
 
@@ -53,7 +53,7 @@ describe('SeedNodeAPI', () => {
 
       Onions.resetSnodeFailureCount();
       OnionPaths.resetPathFailureCount();
-      SnodePool.TEST_resetState();
+      SnodePool.resetState();
     });
 
     afterEach(() => {
@@ -61,9 +61,9 @@ describe('SeedNodeAPI', () => {
     });
 
     it('if the cached snode pool has less than 12 snodes, trigger a fetch from the seed nodes with retries', async () => {
-      const TEST_fetchSnodePoolFromSeedNodeRetryable = Sinon.stub(
+      const fetchSnodePoolFromSeedNodeRetryable = Sinon.stub(
         SeedNodeAPI,
-        'TEST_fetchSnodePoolFromSeedNodeRetryable'
+        'fetchSnodePoolFromSeedNodeRetryable'
       )
         .onFirstCall()
         .throws()
@@ -82,8 +82,8 @@ describe('SeedNodeAPI', () => {
       expect(sortedFetch).to.deep.equal(sortedFakeSnodePool);
 
       expect(
-        TEST_fetchSnodePoolFromSeedNodeRetryable.callCount,
-        'TEST_fetchSnodePoolFromSeedNodeRetryable called twice as the first one failed'
+        fetchSnodePoolFromSeedNodeRetryable.callCount,
+        'fetchSnodePoolFromSeedNodeRetryable called twice as the first one failed'
       ).to.be.eq(2);
     });
   });
