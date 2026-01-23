@@ -108,7 +108,6 @@ export function generateFakeSnode(): Snode {
     port: 22116,
     pubkey_x25519: generateFakePubKeyStr(),
     pubkey_ed25519: generateFakePubKeyStr(),
-    storage_server_version: [2, 8, 0],
   };
 }
 
@@ -131,7 +130,6 @@ export function generateFakeSnodeWithDetails({
     port: 22116,
     pubkey_x25519: generateFakePubKeyStr(),
     pubkey_ed25519: ed25519Pubkey ?? generateFakePubKeyStr(),
-    storage_server_version: [2, 8, 0],
   };
 }
 
@@ -146,7 +144,7 @@ export function generateFakeSnodes(amount: number): Array<Snode> {
 export function setupTestWithSending() {
   const snodes = generateFakeSnodes(20);
   const swarm = snodes.slice(0, 6);
-  SnodePool.TEST_resetState(snodes);
+  SnodePool.resetState(snodes);
 
   stubData('getSwarmNodesForPubkey').resolves(swarm.map(m => m.pubkey_ed25519));
   return { snodes, swarm };

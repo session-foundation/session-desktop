@@ -24,8 +24,9 @@ const BUILD_CONFIG: BuildConfig = {
     'password_preload.js',
     'preload.js',
     'yarn.lock',
-    'mmdb/GeoLite2-Country.mmdb',
     'stylesheets/fonts.css',
+    'dynamic_assets/GeoLite2-Country.mmdb',
+    'dynamic_assets/service-nodes-cache.json',
   ],
   directoriesToCopy: [
     'images',
@@ -35,6 +36,7 @@ const BUILD_CONFIG: BuildConfig = {
     'mnemonic_languages',
     'node_modules',
     'ts/protobuf',
+    'assets',
   ],
 };
 

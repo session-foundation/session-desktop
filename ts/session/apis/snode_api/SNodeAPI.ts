@@ -140,7 +140,7 @@ const forceNetworkDeletion = async (): Promise<Array<string> | null> => {
       },
       {
         retries: 5,
-        minTimeout: SnodeAPI.TEST_getMinTimeout(),
+        minTimeout: SnodeAPI.getMinTimeout(),
         onFailedAttempt: e => {
           window?.log?.warn(
             `${request.method} OUTER request attempt #${e.attemptNumber} failed. ${e.retriesLeft} retries left... ${e.message}`
@@ -156,7 +156,7 @@ const forceNetworkDeletion = async (): Promise<Array<string> | null> => {
   }
 };
 
-const TEST_getMinTimeout = () => 500;
+const getMinTimeout = () => 500;
 
 /**
  * Delete the specified message hashes from our own swarm only.
@@ -284,7 +284,7 @@ const networkDeleteMessageOurSwarm = async (
       },
       {
         retries: 5,
-        minTimeout: SnodeAPI.TEST_getMinTimeout(),
+        minTimeout: SnodeAPI.getMinTimeout(),
         onFailedAttempt: e => {
           window?.log?.warn(
             `networkDeleteMessageOurSwarm: ${request.method} request attempt #${e.attemptNumber} failed. ${e.retriesLeft} retries left... ${e.message}`
@@ -365,7 +365,7 @@ const networkDeleteMessagesForGroup = async (
       },
       {
         retries: 5,
-        minTimeout: SnodeAPI.TEST_getMinTimeout(),
+        minTimeout: SnodeAPI.getMinTimeout(),
         onFailedAttempt: e => {
           window?.log?.warn(
             `networkDeleteMessagesForGroup: ${request.method} request attempt #${e.attemptNumber} failed. ${e.retriesLeft} retries left... ${e.message}`
@@ -382,7 +382,7 @@ const networkDeleteMessagesForGroup = async (
 };
 
 export const SnodeAPI = {
-  TEST_getMinTimeout,
+  getMinTimeout,
   networkDeleteMessagesForGroup,
   networkDeleteMessageOurSwarm,
   forceNetworkDeletion,

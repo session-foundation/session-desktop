@@ -1130,17 +1130,36 @@ ipc.on('set-password', async (event, passPhrase, oldPhrase) => {
   }
 });
 
-// Debug Log-related IPC calls
+// load the ip to country maxmind database
 ipc.on('load-maxmind-data', async (event: IpcMainEvent) => {
   try {
     const appRoot =
       app.isPackaged && process.resourcesPath ? process.resourcesPath : app.getAppPath();
-    const fileToRead = path.join(appRoot, 'mmdb', 'GeoLite2-Country.mmdb');
+    const fileToRead = path.join(appRoot, 'dynamic_assets', 'GeoLite2-Country.mmdb');
     console.info(`loading maxmind data from file:"${fileToRead}"`);
     const buffer = await readFile(fileToRead);
     event.reply('load-maxmind-data-complete', new Uint8Array(buffer.buffer));
   } catch (e) {
     event.reply('load-maxmind-data-complete', null);
+  }
+});
+
+ipc.on('load-build-time-snode-pool', async (event: IpcMainEvent) => {
+  try {
+    const appRoot =
+      app.isPackaged && process.resourcesPath ? process.resourcesPath : app.getAppPath();
+    const fileToRead = path.join(appRoot, 'dynamic_assets', 'service-nodes-cache.json');
+    console.info(`loading build time snode pool data from file:"${fileToRead}"`);
+    const buffer = await readFile(fileToRead, 'utf-8');
+    const stats = fs.statSync(fileToRead);
+
+    const fileCreatedMs = stats.mtimeMs;
+    if (!buffer || buffer.length === 0) {
+      throw new Error('Failed to load build time snode pool data');
+    }
+    event.reply('load-build-time-snode-pool-complete', buffer, fileCreatedMs);
+  } catch (e) {
+    event.reply('load-build-time-snode-pool-complete', null);
   }
 });
 

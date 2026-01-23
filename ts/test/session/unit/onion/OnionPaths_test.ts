@@ -68,7 +68,7 @@ describe('OnionPaths', () => {
       await OnionPaths.getOnionPath({}); // this triggers a path rebuild
       // get a copy of what old ones look like
 
-      oldOnionPaths = OnionPaths.TEST_getTestOnionPath();
+      oldOnionPaths = OnionPaths.getTestOnionPath();
       if (oldOnionPaths.length !== 3) {
         throw new Error(`onion path length not enough ${oldOnionPaths.length}`);
       }
@@ -79,7 +79,7 @@ describe('OnionPaths', () => {
     describe('with valid snode pool', () => {
       it('rebuilds after removing last snode on path', async () => {
         await OnionPaths.dropSnodeFromPath(oldOnionPaths[2][2].pubkey_ed25519, 'unit test');
-        const newOnionPath = OnionPaths.TEST_getTestOnionPath();
+        const newOnionPath = OnionPaths.getTestOnionPath();
 
         // only the last snode should have been updated
         expect(newOnionPath).to.be.not.deep.equal(oldOnionPaths);
@@ -97,7 +97,7 @@ describe('OnionPaths', () => {
         const oldOnionPathsCopy = cloneDeep(oldOnionPaths);
 
         await OnionPaths.dropSnodeFromPath(oldOnionPathsCopy[2][1].pubkey_ed25519, 'unit test');
-        const newOnionPath = OnionPaths.TEST_getTestOnionPath();
+        const newOnionPath = OnionPaths.getTestOnionPath();
 
         const oldOnionPath2 = oldOnionPathsCopy[2];
         const allEd25519KeysOldOnionPath2 = _.flattenDeep(oldOnionPath2).map(m => m.pubkey_ed25519);
@@ -139,7 +139,7 @@ describe('OnionPaths', () => {
       TestUtils.stubWindow('getSeedNodeList', () => ['seednode1']);
 
       TestUtils.stubWindowLog();
-      SnodePool.TEST_resetState();
+      SnodePool.resetState();
 
       fetchSnodePoolFromSeedNodeWithRetries = Sinon.stub(
         SeedNodeAPI,
@@ -163,12 +163,12 @@ describe('OnionPaths', () => {
 
     it('throws if we cannot find a valid edge snode', async () => {
       const badPool = generateFakeSnodes(0).map(m => {
-        return { ...m, storage_server_version: [2, 1, 1] };
+        return { ...m };
       });
       fetchSnodePoolFromSeedNodeWithRetries.reset();
       fetchSnodePoolFromSeedNodeWithRetries.resolves(badPool);
 
-      if (OnionPaths.TEST_getTestOnionPath().length) {
+      if (OnionPaths.getTestOnionPath().length) {
         throw new Error('expected this to be empty');
       }
 
@@ -185,16 +185,16 @@ describe('OnionPaths', () => {
       fetchSnodePoolFromSeedNodeWithRetries.reset();
       // stubWindow('sessionFeatureFlags', { debugOnionPaths: true, debugSnodePool: true });
 
-      if (OnionPaths.TEST_getTestOnionPath().length) {
+      if (OnionPaths.getTestOnionPath().length) {
         throw new Error('expected this to be empty');
       }
       fetchSnodePoolFromSeedNodeWithRetries.resolves(fakeSnodePool);
       await OnionPaths.getOnionPath({});
 
-      if (OnionPaths.TEST_getTestOnionPath().length !== 3) {
+      if (OnionPaths.getTestOnionPath().length !== 3) {
         throw new Error('should have 3 valid onion paths');
       }
-      const paths = OnionPaths.TEST_getTestOnionPath();
+      const paths = OnionPaths.getTestOnionPath();
       const snodeToDrop = paths[2][1];
       const otherSnodeInPathOfSnodeDropped = paths[2][2];
       const subnet = otherSnodeInPathOfSnodeDropped.ip.slice(
@@ -206,7 +206,7 @@ describe('OnionPaths', () => {
         return { ...m, ip: `${subnet}.${50 + i}` };
       });
       fetchSnodePoolFromSeedNodeWithRetries.resolves(badPool);
-      SnodePool.TEST_resetState(badPool);
+      SnodePool.resetState(badPool);
       // drop a snode from the last path, only allowing snodes with an ip on the same subnet /24 of one of our first node
       const func = async () =>
         OnionPaths.dropSnodeFromPath(snodeToDrop.pubkey_ed25519, 'unit test');
@@ -259,7 +259,7 @@ describe('OnionPaths selection', () => {
 
     it('throws if we cannot build a path filtering with /24 subnet', async () => {
       TestUtils.stubWindowLog();
-      const onStartOnionPaths = OnionPaths.TEST_getTestOnionPath();
+      const onStartOnionPaths = OnionPaths.getTestOnionPath();
       expect(onStartOnionPaths.length).to.eq(0);
 
       // generate a new set of path, this should fail
