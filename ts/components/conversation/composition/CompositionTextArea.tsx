@@ -273,13 +273,14 @@ function usePopoverContent({
       return null;
     }
     return (
-      <ul role="listbox">
+      <ul role="listbox" data-testid="mentions-container">
         {results.map(item => {
           const { id, display } = item;
           const selected = focusedItem.id === id;
           return (
             <li
               role="option"
+              data-testid="mentions-container-row"
               id={id}
               key={id}
               value={id}
