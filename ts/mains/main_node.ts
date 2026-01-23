@@ -202,7 +202,7 @@ import { loadLocalizedDictionary } from '../node/locale';
 import { simpleDictionaryNoArgs } from '../localization/locales';
 import LIBSESSION_CONSTANTS from '../session/utils/libsession/libsession_constants';
 import { isReleaseChannel } from '../updater/types';
-import { canAutoUpdate, checkForUpdates } from '../updater/updater';
+import { canAutoUpdate, checkForUpdates, isLinuxDebInstall } from '../updater/updater';
 import { initializeMainProcessLogger } from '../util/logger/main_process_logging';
 
 import * as log from '../util/logger/log';
@@ -1228,4 +1228,8 @@ ipc.on('media-access', async () => {
 
 ipc.handle('get-storage-profile', async (): Promise<string> => {
   return app.getPath('userData');
+});
+
+ipc.handle('is-deb-install', async (): Promise<boolean> => {
+  return isLinuxDebInstall();
 });

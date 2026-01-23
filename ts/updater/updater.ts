@@ -14,6 +14,7 @@ import { showCannotUpdateDialog, showDownloadUpdateDialog, showUpdateDialog } fr
 import { getLatestRelease } from '../node/latest_desktop_release';
 import { Errors } from '../types/Errors';
 import type { LoggerType } from '../util/logger/Logging';
+import { isDebianBased, isRunningViaAppImage } from '../OS';
 
 let isUpdating = false;
 let downloadIgnored = false;
@@ -205,6 +206,18 @@ function isUpdateAvailable(updateInfo: UpdateInfo): boolean {
 }
 
 /**
+ * Not perfect, but a deb install does not contain the app-update.yml file.
+ * We use the absence of the file to determine if we are in a deb install.
+ */
+export async function isLinuxDebInstall() {
+  // console.warn('isLinuxDebInstall: app.isPackaged', app.isPackaged);
+  // console.warn('isLinuxDebInstall: isDebianBased', isDebianBased());
+  // console.warn('isLinuxDebInstall: isRunningViaAppImage', isRunningViaAppImage());
+
+  return app.isPackaged && isDebianBased() && !isRunningViaAppImage();
+}
+
+/**
  * Check if we have the required files to auto update.
  * These files won't exist inside certain formats such as a linux deb file or when unpackaged e.g. running the dev app
  * @note exported for testing purposes only
@@ -222,12 +235,11 @@ export async function canAutoUpdate(): Promise<boolean> {
   const basePath = isPackaged && process.resourcesPath ? process.resourcesPath : app.getAppPath();
   const appUpdateConfigPath = path.join(basePath, updateFile);
 
-  return new Promise(resolve => {
-    try {
-      const exists = fs.existsSync(appUpdateConfigPath);
-      resolve(exists);
-    } catch (e) {
-      resolve(false);
-    }
-  });
+  try {
+    const exists = fs.existsSync(appUpdateConfigPath);
+
+    return exists;
+  } catch (e) {
+    return false;
+  }
 }

@@ -1290,6 +1290,8 @@
   "window": "Window",
   "yes": "Yes",
   "you": "You",
+  "announcementDebBreakingUpdateTitle": "Auto Update Breaking Changes",
+  "announcementDebBreakingUpdateDescription": "Starting on February 1st 2026, you will need to manually update your configuration for the deb.oxen.io APT repository to continue receiving Session updates. <span>See Details {icon}</span>",
   "yourCpuIsUnsupportedSSE42": "Your CPU does not support SSE 4.2 instructions, which are required by Session on Linux x64 operating systems to process images. Please upgrade to a compatible CPU or use a different operating system.",
   "yourRecoveryPassword": "Your Recovery Password",
   "zoomFactor": "Zoom Factor",
