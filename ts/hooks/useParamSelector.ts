@@ -36,6 +36,12 @@ export function useAvatarPath(convoId: string | undefined) {
   const convoProps = useConversationPropsById(convoId);
   return convoProps?.avatarPath || null;
 }
+
+export function useAvatarPointer(convoId: string | undefined) {
+  const convoProps = useConversationPropsById(convoId);
+  return convoProps?.avatarPointer || null;
+}
+
 export function useOurAvatarPath() {
   return useAvatarPath(UserUtils.getOurPubKeyStrFromCache());
 }

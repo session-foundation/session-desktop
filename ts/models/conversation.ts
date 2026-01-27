@@ -446,6 +446,11 @@ export class ConversationModel extends Model<ConversationAttributes> {
       toRet.avatarPath = proOrNotAvatarPath;
     }
 
+    const avatarPointer = this.getAvatarPointer();
+    if (avatarPointer) {
+      toRet.avatarPointer = avatarPointer;
+    }
+
     if (this.getExpirationMode()) {
       toRet.expirationMode = this.getExpirationMode();
     }

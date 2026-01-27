@@ -1,6 +1,6 @@
 import AbortController from 'abort-controller';
 import type { ZodError } from 'zod';
-import z, { zodSafeParse } from '../../util/zod';
+import { zodSafeParse, z } from '../../util/zod';
 import { BlindingActions } from '../../webworker/workers/browser/libsession_worker_interface';
 import { isOnionV4JSONSnodeResponse, OnionSending } from '../onions/onionSend';
 import { fromUInt8ArrayToBase64 } from '../utils/String';
