@@ -1,5 +1,6 @@
+import { v4 } from 'uuid';
 /* eslint-disable no-restricted-syntax */
-import { type Database } from '@signalapp/sqlcipher';
+import { type Database, type StatementParameters } from '@signalapp/sqlcipher';
 import { app, clipboard, dialog, Notification } from 'electron';
 import fs from 'fs';
 import path from 'path';
@@ -12,7 +13,6 @@ import {
   difference,
   differenceBy,
   forEach,
-  fromPairs,
   intersection,
   isArray,
   isEmpty,
@@ -21,7 +21,6 @@ import {
   isObject,
   isString,
   isUndefined,
-  last,
   map,
   omit,
   some,
@@ -104,6 +103,8 @@ import { getFileCreationTimestampMs } from './fs_utility';
 import { isDebugMode } from '../shared/env_vars';
 import { DBVacuumManager } from './dbVacuumManager';
 import type { FetchMessageSharedResult } from '../state/ducks/types';
+import { generateBulkText } from './seeding/message_seeding';
+import { getLoggedInUserConvoDuringMigration } from './migration/utils';
 
 // eslint:disable: function-name non-literal-fs-path
 
@@ -339,8 +340,9 @@ function getIdentityKeyById(id: string, instance: Database) {
 
 function getGuardNodes() {
   const sql = `SELECT ed25519PubKey FROM ${GUARD_NODE_TABLE};`;
-  const nodes = analyzeQuery(assertGlobalInstance(), sql, [], () =>
-    assertGlobalInstance().prepare(sql).all()
+  const params: StatementParameters<object> = [];
+  const nodes = analyzeQuery(assertGlobalInstance(), sql, params, () =>
+    assertGlobalInstance().prepare(sql).all(params)
   );
 
   if (!nodes) {
@@ -378,8 +380,10 @@ function getItemById(id: string, instance?: Database) {
 
 function getAllItems() {
   const sql = `SELECT json FROM ${ITEMS_TABLE} ORDER BY id ASC;`;
-  const rows: JSONRows = analyzeQuery(assertGlobalInstance(), sql, {}, () =>
-    assertGlobalInstance().prepare(sql).all()
+  const params: StatementParameters<object> = [];
+
+  const rows: JSONRows = analyzeQuery(assertGlobalInstance(), sql, params, () =>
+    assertGlobalInstance().prepare(sql).all(params)
   );
 
   return parseJsonRows(rows);
@@ -727,8 +731,10 @@ function getConversationById(id: string, instance?: Database) {
 
 function getAllConversations() {
   const sql = `SELECT * FROM ${CONVERSATIONS_TABLE} ORDER BY id ASC;`;
-  const rows = analyzeQuery(assertGlobalInstance(), sql, [], () =>
-    assertGlobalInstance().prepare(sql).all<Pick<ConversationAttributes, 'id'>>([])
+  const params: StatementParameters<object> = [];
+
+  const rows = analyzeQuery(assertGlobalInstance(), sql, params, () =>
+    assertGlobalInstance().prepare(sql).all<Pick<ConversationAttributes, 'id'>>(params)
   );
 
   const formatted = compact(
@@ -1990,8 +1996,10 @@ function cleanUpUnreadExpiredDaRMessages() {
  */
 function cleanUpInvalidConversationIds() {
   const sql = `DELETE FROM ${CONVERSATIONS_TABLE} WHERE id = '' OR id IS NULL OR typeof(id) != 'text';`;
-  const deleteResult = analyzeQuery(assertGlobalInstance(), sql, [], () =>
-    assertGlobalInstance().prepare(sql).run([])
+  const params: StatementParameters<object> = [];
+
+  const deleteResult = analyzeQuery(assertGlobalInstance(), sql, params, () =>
+    assertGlobalInstance().prepare(sql).run(params)
   );
 
   console.info(`cleanUpInvalidConversationIds removed ${deleteResult.changes} rows`);
@@ -2004,8 +2012,10 @@ function getOutgoingWithoutExpiresAt() {
       expires_at IS NULL AND
       type IS 'outgoing'
     ORDER BY expires_at ASC;`;
-  const rows = analyzeQuery(assertGlobalInstance(), sql, [], () =>
-    assertGlobalInstance().prepare(sql).all<JSONRow>([])
+  const params: StatementParameters<object> = [];
+
+  const rows = analyzeQuery(assertGlobalInstance(), sql, params, () =>
+    assertGlobalInstance().prepare(sql).all<JSONRow>(params)
   );
 
   return parseJsonRows(rows);
@@ -2017,8 +2027,10 @@ function getNextExpiringMessage() {
     ORDER BY expires_at ASC
 
     LIMIT 1;`;
-  const rows = analyzeQuery(assertGlobalInstance(), sql, [], () =>
-    assertGlobalInstance().prepare(sql).all<JSONRow>([])
+  const params: StatementParameters<object> = [];
+
+  const rows = analyzeQuery(assertGlobalInstance(), sql, params, () =>
+    assertGlobalInstance().prepare(sql).all<JSONRow>(params)
   );
 
   return parseJsonRows(rows);
@@ -2080,8 +2092,12 @@ function setAttachmentDownloadJobPending(id: string, pending: 1 | 0) {
 }
 
 function resetAttachmentDownloadPending() {
+  const params: StatementParameters<object> = [];
+
   const sql = `UPDATE ${ATTACHMENT_DOWNLOADS_TABLE} SET pending = 0 WHERE pending != 0;;`;
-  analyzeQuery(assertGlobalInstance(), sql, [], () => assertGlobalInstance().prepare(sql).run([]));
+  analyzeQuery(assertGlobalInstance(), sql, params, () =>
+    assertGlobalInstance().prepare(sql).run(params)
+  );
 }
 
 function removeAttachmentDownloadJob(id: string) {
@@ -2253,10 +2269,10 @@ async function deleteAll({
 
   console.log(`deleteAll: deleted ${attachments.length} files`);
 }
-
 function removeKnownAttachments(allAttachments: Array<string>) {
-  const lookup = fromPairs(map(allAttachments, file => [file, true]));
-  const chunkSize = 50;
+  const foundFiles = new Set<string>();
+  const chunkSize = 1000;
+  let startTime = Date.now();
 
   const total = getMessageCount();
   console.log(`removeKnownAttachments: About to iterate through ${total} messages`);
@@ -2265,9 +2281,10 @@ function removeKnownAttachments(allAttachments: Array<string>) {
   let complete = false;
   let id = '';
 
+  // Process messages
   while (!complete) {
     const sql = `SELECT json FROM ${MESSAGES_TABLE}
-       WHERE id > $id
+       WHERE id > $id AND hasAttachments=${toSqliteBoolean(true)}
        ORDER BY id ASC
        LIMIT $chunkSize;`;
     const params = { id, chunkSize };
@@ -2276,30 +2293,33 @@ function removeKnownAttachments(allAttachments: Array<string>) {
     );
 
     const messages = parseJsonRows(rows);
-    forEach(messages, message => {
-      const externalFiles = getExternalFilesForMessage(message);
-      forEach(externalFiles, file => {
-        delete lookup[file];
-      });
-    });
 
-    const lastMessage = last(messages);
+    for (const message of messages) {
+      const externalFiles = getExternalFilesForMessage(message);
+      for (const file of externalFiles) {
+        foundFiles.add(file);
+      }
+    }
+
+    const lastMessage = messages[messages.length - 1];
     if (lastMessage) {
-      ({ id } = lastMessage);
+      id = lastMessage.id;
     }
     complete = messages.length < chunkSize;
     count += messages.length;
   }
 
-  console.log(`removeKnownAttachments: Done processing ${count} ${MESSAGES_TABLE}`);
+  console.log(
+    `removeKnownAttachments: Done processing ${count} ${MESSAGES_TABLE} in ${Date.now() - startTime}ms`
+  );
 
+  // Process conversations
   complete = false;
   count = 0;
-  // Though conversations.id is a string, this ensures that, when coerced, this
-  //   value is still a string but it's smaller than every other string.
-  (id as any) = 0;
+  id = 0 as any;
 
   const conversationTotal = getConversationCount();
+  startTime = Date.now();
   console.log(
     `removeKnownAttachments: About to iterate through ${conversationTotal} ${CONVERSATIONS_TABLE}`
   );
@@ -2314,27 +2334,34 @@ function removeKnownAttachments(allAttachments: Array<string>) {
       assertGlobalInstance().prepare(sql).all<SQLConversationAttributes>(params)
     );
 
-    forEach(conversations, conversation => {
-      const avatar = conversation.avatarInProfile;
-      const fallbackAvatar = conversation.fallbackAvatarInProfile;
-      const externalFilesAvatar = getExternalFilesForConversation(avatar);
-      const externalFilesFallbackAvatar = getExternalFilesForConversation(fallbackAvatar);
-      forEach(externalFilesAvatar.concat(externalFilesFallbackAvatar), file => {
-        delete lookup[file];
-      });
-    });
+    for (const conversation of conversations) {
+      const externalFilesAvatar = getExternalFilesForConversation(conversation.avatarInProfile);
+      const externalFilesFallbackAvatar = getExternalFilesForConversation(
+        conversation.fallbackAvatarInProfile
+      );
 
-    const lastMessage = last(conversations);
-    if (lastMessage) {
-      ({ id } = lastMessage);
+      for (const file of externalFilesAvatar) {
+        foundFiles.add(file);
+      }
+      for (const file of externalFilesFallbackAvatar) {
+        foundFiles.add(file);
+      }
+    }
+
+    const lastConversation = conversations[conversations.length - 1];
+    if (lastConversation) {
+      id = lastConversation.id;
     }
     complete = conversations.length < chunkSize;
     count += conversations.length;
   }
 
-  console.log(`removeKnownAttachments: Done processing ${count} ${CONVERSATIONS_TABLE}`);
+  console.log(
+    `removeKnownAttachments: Done processing ${count} ${CONVERSATIONS_TABLE} in ${Date.now() - startTime}ms`
+  );
 
-  return Object.keys(lookup);
+  // Return only attachments that were NOT found in messages/conversations
+  return allAttachments.filter(file => !foundFiles.has(file));
 }
 
 function getMessagesCountByConversation(
@@ -2348,6 +2375,54 @@ function getMessagesCountByConversation(
   );
 
   return row ? row['count(*)'] : 0;
+}
+
+function seedMessages({
+  count,
+  minWords,
+  maxWords,
+}: {
+  count: number;
+  minWords: number;
+  maxWords: number;
+}) {
+  const now = Date.now();
+  console.log(`about to seed ${count} messages`);
+
+  const bulkText = generateBulkText(count, minWords, maxWords);
+
+  const ourPk = getLoggedInUserConvoDuringMigration(assertGlobalInstance())?.ourKeys.publicKeyHex;
+
+  if (!ourPk) {
+    return;
+  }
+
+  const messageAttrsOpts: Array<MessageAttributes> = bulkText.map(body => {
+    return {
+      id: v4(),
+      source: ourPk,
+      type: 'outgoing',
+      direction: 'outgoing',
+      timestamp: Date.now(),
+      conversationId: ourPk,
+      body,
+      received_at: Date.now(),
+      serverTimestamp: Date.now(),
+      expireTimer: 0,
+      expirationStartTimestamp: 0,
+      read_by: [],
+      unread: toSqliteBoolean(false),
+      sent_to: [],
+      sent: true,
+      sentSync: true,
+      synced: true,
+      sync: false,
+    };
+  });
+
+  saveMessages(messageAttrsOpts);
+
+  console.log(`seeded ${count} messages in ${Date.now() - now}ms`);
 }
 
 /**
@@ -2520,8 +2595,10 @@ function cleanUpOldOpengroupsOnStart() {
       type = 'group' AND
       id LIKE 'http%'
      ORDER BY id ASC;`;
-  const rows = analyzeQuery(assertGlobalInstance(), sql, [], () =>
-    assertGlobalInstance().prepare(sql).all<SQLConversationAttributes>([])
+  const params: StatementParameters<object> = [];
+
+  const rows = analyzeQuery(assertGlobalInstance(), sql, params, () =>
+    assertGlobalInstance().prepare(sql).all<SQLConversationAttributes>(params)
   );
 
   const v2ConvosIds = map(rows, row => row.id);
@@ -2749,6 +2826,9 @@ export const sqlNode = {
   getMessagesWithVisualMediaAttachments,
   getMessagesWithFileAttachments,
   getMessagesCountByConversation,
+
+  // seeding
+  seedMessages,
 
   // open group v2
   getV2OpenGroupRoom,

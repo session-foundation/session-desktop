@@ -2374,7 +2374,7 @@ async function updateToSessionSchemaVersion53(currentVersion: number, db: Databa
 
     // Create an index on the mentionsUs column with unread & conversationId. Needed for `getFirstUnreadMessageWithMention`
     db.exec(
-      `CREATE INDEX messages_mentionsUs_index ON ${MESSAGES_TABLE} (conversationId, unread, ${MessageColumns.mentionsUs});`
+      `CREATE INDEX messages_mentionsUs_index ON ${MESSAGES_TABLE} (conversationId, unread, ${MessageColumns.mentionsUs}, ${MessageColumns.coalesceForSentOnly});`
     );
 
     writeSessionSchemaVersion(targetVersion, db);

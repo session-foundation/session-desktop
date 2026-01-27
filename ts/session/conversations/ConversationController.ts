@@ -540,10 +540,13 @@ class ConvoController {
         this.conversations.push(...convoModels);
 
         const start = Date.now();
+        let wrapperStart = Date.now();
+
         const numberOfVariants = LibSessionUtil.requiredUserVariants.length;
         for (let index = 0; index < convoModels.length; index++) {
           const convo = convoModels[index];
           for (let wrapperIndex = 0; wrapperIndex < numberOfVariants; wrapperIndex++) {
+            wrapperStart = Date.now();
             const variant = LibSessionUtil.requiredUserVariants[wrapperIndex];
 
             switch (variant) {
@@ -573,9 +576,12 @@ class ConvoController {
                   `ConversationController: load() unhandled case "${variant}"`
                 );
             }
+            window.log.debug(
+              `refreshAllWrappersMappedValues wrapper took ${Date.now() - wrapperStart}ms for ${ed25519Str(convo.id)} with variant ${variant}`
+            );
           }
         }
-        window.log.info(`refreshAllWrappersMappedValues took ${Date.now() - start}ms`);
+        window.log.debug(`refreshAllWrappersMappedValues took ${Date.now() - start}ms`);
 
         this._initialFetchComplete = true;
         window?.log?.info(

@@ -1,4 +1,4 @@
-import { type Database } from '@signalapp/sqlcipher';
+import { type Database, type StatementParameters } from '@signalapp/sqlcipher';
 import { difference, isFinite, isNumber, isString, omit, pick } from 'lodash';
 import { isUndefined } from 'lodash/fp';
 import {
@@ -6,7 +6,7 @@ import {
   ConversationAttributesWithNotSavedOnes,
 } from '../models/conversationAttributes';
 import { CONVERSATION_PRIORITIES } from '../models/types';
-import type { JSONRow, SQLInsertable } from '../types/sqlSharedTypes';
+import { stringify, type JSONRow, type SQLInsertable } from '../types/sqlSharedTypes';
 import { isDevProd } from '../shared/env_vars';
 
 export const CONVERSATIONS_TABLE = 'conversations';
@@ -384,7 +384,12 @@ export function rebuildFtsTableReferencingMessages(db: Database) {
   console.info('rebuildFtsTableReferencingMessages built in ', Date.now() - start, 'ms');
 }
 
-export function analyzeQuery<T>(db: Database, query: string, params: any, executeFunc: () => T): T {
+export function analyzeQuery<T>(
+  db: Database,
+  query: string,
+  params: StatementParameters<object> | undefined,
+  executeFunc: () => T
+): T {
   const prefix = '[QUERY PLAN]: ';
 
   // Run the actual query and grab how long it took
@@ -413,7 +418,7 @@ export function analyzeQuery<T>(db: Database, query: string, params: any, execut
         console.info(`${prefix}\t------`);
       }
     } catch (err) {
-      console.error('\tFailed to analyze query:', err);
+      console.error('\tFailed to analyze query:', err.message, stringify(err.stack));
     }
   }
 
