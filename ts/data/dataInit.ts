@@ -232,11 +232,6 @@ function updateJob(id: number, data: any) {
 }
 
 function removeJob(id: number) {
-  if (_DEBUG) {
-    jobs[id].complete = true;
-    return;
-  }
-
   if (jobs[id].timer) {
     global.clearTimeout(jobs[id].timer);
     jobs[id].timer = null;

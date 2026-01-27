@@ -647,31 +647,10 @@ async function showPasswordWindow() {
 
   captureClicks(passwordWindow);
 
-  passwordWindow.on('close', e => {
-    // If the application is terminating, just do the default
-    if (windowShouldQuit()) {
-      return;
-    }
-
-    // Prevent the shutdown
-    e.preventDefault();
-    passwordWindow?.hide();
-
-    // On Mac, or on other platforms when the tray icon is in use, the window
-    // should be only hidden, not closed, when the user clicks the close button
-    if (!windowShouldQuit() && (getStartInTray().usingTrayIcon || process.platform === 'darwin')) {
-      // toggle the visibility of the show/hide tray icon menu entries
-      if (tray) {
-        tray.updateContextMenu();
-      }
-
-      return;
-    }
-
-    if (passwordWindow) {
-      (passwordWindow as any).readyForShutdown = true;
-    }
-    // Quit the app if we don't have a main window
+  passwordWindow.on('close', () => {
+    // When the password window is closed, quit the app if we don't have a main window
+    // This can happen when the user manually closes the password window,
+    // but also when the main window closes the password window after a successful login
     if (!mainWindow) {
       app.quit();
     }
@@ -1009,16 +988,16 @@ ipc.on('close-about', () => {
 
 // Password screen related IPC calls
 ipc.on('password-window-login', async (event, passPhrase) => {
-  const sendResponse = (e: string | undefined) => {
-    event.sender.send('password-window-login-response', e);
-  };
-
   try {
     const passwordAttempt = true;
+    // Note: we don't call `password-window-login-response` on success as the ipc listener is linked to a dead object
     await showMainWindow(passPhrase, passwordAttempt);
-    sendResponse(undefined);
   } catch (e) {
-    sendResponse(tr('passwordIncorrect'));
+    try {
+      event.sender.send('password-window-login-response', tr('passwordIncorrect'));
+    } catch (e2) {
+      console.warn(`password-window-login-response failed`, e2);
+    }
   }
 });
 
