@@ -6,6 +6,7 @@ import { getAppDispatch } from '../../state/dispatch';
 
 import {
   useAvatarPath,
+  useAvatarPointer,
   useIsClosedGroup,
   useIsMe,
   useIsPublic,
@@ -166,12 +167,14 @@ function useUpdateConversationDetailsDialogInternal(convo: ConversationModel) {
   };
 }
 
+const useAvatarPointerLocal = useAvatarPointer;
+
 export function UpdateConversationDetailsDialog(props: WithConvoId) {
   const dispatch = getAppDispatch();
   const { conversationId } = props;
+  const refreshedAvatarPointer = useAvatarPointerLocal(conversationId);
   const convo = ConvoHub.use().get(conversationId);
 
-  const refreshedAvatarPointer = convo.getAvatarPointer() || '';
   const {
     isNameChangePending,
     newName,

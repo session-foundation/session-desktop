@@ -1,4 +1,4 @@
-import z, { zodSafeParse } from './zod';
+import { z, zodSafeParse } from './zod';
 import { SettingsKey } from '../data/settings-key';
 import { Storage } from './storage';
 import { tr } from '../localization/localeTools';

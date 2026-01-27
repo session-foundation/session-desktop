@@ -25,5 +25,3 @@ export function zodSafeParse<T>(schema: z.ZodType<T>, data: unknown): z.ZodSafeP
 }
 
 export { z };
-
-export default z;
