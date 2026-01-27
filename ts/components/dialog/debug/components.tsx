@@ -58,6 +58,12 @@ import { LucideIcon } from '../../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 import { getIsProAvailableMemo } from '../../../hooks/useIsProAvailable';
 import { UserConfigWrapperActions } from '../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
+import {
+  clearAllCtaInteractions,
+  getCtaInteractions,
+  removeCtaInteractionHistory,
+} from '../../../util/ctaHistory';
+import { CTAVariant } from '../cta/types';
 
 type DebugButtonProps = SessionButtonProps & { shiny?: boolean; hide?: boolean };
 
@@ -466,6 +472,59 @@ export const DebugUrlInteractionsSection = () => {
                 <DebugButton
                   buttonColor={SessionButtonColor.Danger}
                   onClick={async () => removeUrl(url)}
+                >
+                  <LucideIcon unicode={LUCIDE_ICONS_UNICODE.TRASH2} iconSize="small" />
+                </DebugButton>
+              </td>
+            </tr>
+          );
+        })}
+      </table>
+    </DebugMenuSection>
+  );
+};
+
+export const DebugCtaInteractionsSection = () => {
+  const [ctaInteractions, setCtaInteractions] = useState(getCtaInteractions());
+
+  const refresh = useCallback(() => setCtaInteractions(getCtaInteractions()), []);
+  const removeCta = useCallback(
+    async (variant: CTAVariant) => {
+      await removeCtaInteractionHistory(variant);
+      refresh();
+    },
+    [refresh]
+  );
+  const clearAll = useCallback(async () => {
+    await clearAllCtaInteractions();
+    refresh();
+  }, [refresh]);
+
+  return (
+    <DebugMenuSection title="CTA Interactions">
+      <DebugButton onClick={clearAll} buttonColor={SessionButtonColor.Danger}>
+        Clear All
+      </DebugButton>
+      <DebugButton onClick={refresh}>Refresh</DebugButton>
+      <table>
+        <tr>
+          <th>CTA</th>
+          <th>Open</th>
+          <th>Close</th>
+          <th>Action</th>
+          <th>Cancel</th>
+          <th>Last Updated</th>
+        </tr>
+        {ctaInteractions.map(({ variant, lastUpdated, open, action, cancel, close }) => {
+          const updatedStr = formatRoundedUpTimeUntilTimestamp(lastUpdated);
+          return (
+            <tr key={variant}>
+              <td>{variant}</td> <td>{open ?? 0}</td> <td>{close ?? 0}</td> <td>{action ?? 0}</td>{' '}
+              <td>{cancel ?? 0}</td> <td>{updatedStr}</td>{' '}
+              <td>
+                <DebugButton
+                  buttonColor={SessionButtonColor.Danger}
+                  onClick={async () => removeCta(variant)}
                 >
                   <LucideIcon unicode={LUCIDE_ICONS_UNICODE.TRASH2} iconSize="small" />
                 </DebugButton>

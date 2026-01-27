@@ -124,9 +124,9 @@ type NotSharedMessageAttributes = {
   expirationStartTimestamp: number;
   read_by: Array<string>; // we actually only care about the length of this. values are not used for anything
 
-  hasAttachments: 1 | 0;
-  hasFileAttachments: 1 | 0;
-  hasVisualMediaAttachments: 1 | 0;
+  hasAttachments?: 1 | 0;
+  hasFileAttachments?: 1 | 0;
+  hasVisualMediaAttachments?: 1 | 0;
   /**
    * 1 means unread, 0 or anything else is read.
    * You can use the values from READ_MESSAGE_STATE.unread and READ_MESSAGE_STATE.read

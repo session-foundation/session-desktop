@@ -221,6 +221,10 @@ export interface ReduxConversationType {
    *  - if the corresponding user is not a pro user, his fallback avatar path will be set in this `avatarPath` field.
    */
   avatarPath?: string | null;
+  /**
+   * File server url to the avatar to display for that user/community/group.
+   */
+  avatarPointer?: string;
   groupAdmins?: Array<string>; // admins for closed groups and admins for open groups
   members?: Array<string>; // members for closed groups only
 

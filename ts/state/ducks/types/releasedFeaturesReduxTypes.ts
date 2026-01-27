@@ -28,6 +28,7 @@ type SessionBaseBooleanFeatureFlags = {
   mockProBackendLoading: boolean;
   mockProBackendError: boolean;
   fsTTL30s: boolean;
+  debugForceSeedNodeFailure: boolean;
 };
 
 export type SessionDebugBooleanFeatureFlags = {

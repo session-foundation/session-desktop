@@ -174,7 +174,7 @@ export type TypedStub<T extends Record<string, unknown>, K extends keyof T> = T[
 
 export function stubValidSnodeSwarm() {
   const snodes = TestUtils.generateFakeSnodes(20);
-  SnodePool.TEST_resetState(snodes);
+  SnodePool.resetState(snodes);
   const swarm = snodes.slice(0, 6);
 
   Sinon.stub(SnodePool, 'getSwarmFor').resolves(swarm);

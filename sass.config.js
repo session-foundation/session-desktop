@@ -8,7 +8,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 module.exports = {
   output: {
-    path: path.resolve(__dirname, 'stylesheets', 'dist'),
+    path: path.resolve(__dirname, 'app', 'stylesheets', 'dist'),
   },
   entry: './stylesheets/manifest.scss',
   mode: 'production',

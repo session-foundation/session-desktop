@@ -26,6 +26,9 @@ export const getAudioAutoplay = (state: StateType): boolean =>
 export const getShowRecoveryPhrasePrompt = (state: StateType): boolean =>
   state.settings.settingsBools[SettingsKey.showRecoveryPhrasePrompt];
 
+export const getDismissedRecoveryPhrasePrompt = (state: StateType): boolean =>
+  state.settings.settingsBools[SettingsKey.dismissedRecoveryPhrasePrompt];
+
 export const getHideMessageRequestBanner = (state: StateType): boolean =>
   state.settings.settingsBools[SettingsKey.hideMessageRequests];
 

@@ -13,8 +13,8 @@ import {
   isNonBlindedKey,
   isUsAnySogsFromCache,
   loadKnownBlindedKeys,
-  TEST_getCachedBlindedKeys,
-  TEST_resetCachedBlindedKeys,
+  getCachedBlindedKeys,
+  resetCachedBlindedKeys,
   tryMatchBlindWithStandardKey,
   writeKnownBlindedKeys,
 } from '../../../../session/apis/open_group_api/sogsv3/knownBlindedkeys';
@@ -44,7 +44,7 @@ describe('knownBlindedKeys', () => {
   beforeEach(async () => {
     getItemById = stubData('getItemById');
     createOrUpdateItem = stubData('createOrUpdateItem');
-    TEST_resetCachedBlindedKeys();
+    resetCachedBlindedKeys();
     stubWindowLog();
     sodium = await getSodiumNode();
   });
@@ -55,31 +55,31 @@ describe('knownBlindedKeys', () => {
     it('loadFromDb with null', async () => {
       getItemById.resolves({ id: '', value: null });
       await loadKnownBlindedKeys();
-      expect(TEST_getCachedBlindedKeys()).to.deep.eq([]);
+      expect(getCachedBlindedKeys()).to.deep.eq([]);
     });
 
     it('loadFromDb with empty string', async () => {
       getItemById.resolves({ id: '', value: '[]' });
       await loadKnownBlindedKeys();
-      expect(TEST_getCachedBlindedKeys()).to.deep.eq([]);
+      expect(getCachedBlindedKeys()).to.deep.eq([]);
     });
 
     it('loadFromDb with valid json', async () => {
       getItemById.resolves({ id: '', value: JSON.stringify([{}, {}]) });
       await loadKnownBlindedKeys();
-      expect(TEST_getCachedBlindedKeys()).to.deep.eq([{}, {}]);
+      expect(getCachedBlindedKeys()).to.deep.eq([{}, {}]);
     });
 
     it('loadFromDb with invalid json', async () => {
       getItemById.resolves({ id: '', value: 'invalid json content' });
       await loadKnownBlindedKeys();
-      expect(TEST_getCachedBlindedKeys()).to.deep.eq([]);
+      expect(getCachedBlindedKeys()).to.deep.eq([]);
     });
 
     it('loadFromDb once or throws if retry', async () => {
       getItemById.resolves({ id: '', value: JSON.stringify([{}, {}]) });
       await loadKnownBlindedKeys();
-      expect(TEST_getCachedBlindedKeys()).to.deep.eq([{}, {}]);
+      expect(getCachedBlindedKeys()).to.deep.eq([{}, {}]);
 
       try {
         await loadKnownBlindedKeys();

@@ -50,7 +50,7 @@ describe('GuardNodes', () => {
 
       Onions.resetSnodeFailureCount();
       OnionPaths.resetPathFailureCount();
-      SnodePool.TEST_resetState();
+      SnodePool.resetState();
     });
 
     afterEach(() => {
@@ -66,7 +66,7 @@ describe('GuardNodes', () => {
       ).callThrough();
       fetchFromSeedWithRetriesAndWriteToDb = Sinon.stub(
         SnodePool,
-        'TEST_fetchFromSeedWithRetriesAndWriteToDb'
+        'fetchFromSeedWithRetriesAndWriteToDb'
       ).resolves();
       const testGuardNode = Sinon.stub(OnionPaths, 'testGuardNode').resolves(true);
 
@@ -99,7 +99,7 @@ describe('GuardNodes', () => {
       ).callThrough();
       fetchFromSeedWithRetriesAndWriteToDb = Sinon.stub(
         SnodePool,
-        'TEST_fetchFromSeedWithRetriesAndWriteToDb'
+        'fetchFromSeedWithRetriesAndWriteToDb'
       ).resolves();
       const testGuardNode = Sinon.stub(OnionPaths, 'testGuardNode').resolves(false);
 

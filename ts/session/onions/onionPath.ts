@@ -49,11 +49,11 @@ export let onionPaths: Array<Array<Snode>> = [];
  * Used for testing only
  * @returns a copy of the onion path currently used by the app.
  */
-export const TEST_getTestOnionPath = () => {
+export const getTestOnionPath = () => {
   return cloneDeep(onionPaths);
 };
 
-export const TEST_getTestguardNodes = () => {
+export const getTestguardNodes = () => {
   return cloneDeep(guardNodes);
 };
 

@@ -6,11 +6,14 @@
  */
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports -- This is the only place we want to import zod directly
 import { z } from 'zod';
+// NOTE: we explicity load the en locale as we want to remove all of the other locales from the bundle
+import { en } from 'zod/locales';
 import { isDebugMode } from '../shared/env_vars';
 
 z.config({
   // NOTE: we need to use zod in a jitless configuration otherwise it violates our CSP
   jitless: true,
+  localeError: en().localeError,
 });
 
 const safeParseOptions = {
@@ -21,4 +24,4 @@ export function zodSafeParse<T>(schema: z.ZodType<T>, data: unknown): z.ZodSafeP
   return schema.safeParse(data, safeParseOptions);
 }
 
-export default z;
+export { z };

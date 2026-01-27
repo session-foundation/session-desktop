@@ -1,5 +1,5 @@
 import { base64_variants, from_hex, to_base64 } from 'libsodium-wrappers-sumo';
-import z from '../../../util/zod';
+import { z } from '../../../util/zod';
 import { ProItemStatus, ProAccessVariant, ProPaymentProvider, ProStatus } from './types';
 import { SessionBackendBaseResponseSchema } from '../session_backend_server';
 

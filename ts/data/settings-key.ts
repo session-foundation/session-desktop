@@ -63,6 +63,7 @@ export const SettingsKey = {
   proBadgesSent,
   audioAutoplay: 'audioAutoplay',
   showRecoveryPhrasePrompt: 'showRecoveryPhrasePrompt',
+  dismissedRecoveryPhrasePrompt: 'dismissedRecoveryPhrasePrompt',
   hideMessageRequests: 'hideMessageRequests',
   identityKey: 'identityKey',
   blocked: 'blocked',
@@ -71,6 +72,7 @@ export const SettingsKey = {
   spellCheckEnabled: 'spell-check',
   settingsTheme: 'settingsTheme',
   urlInteractions: 'urlInteractions',
+  ctaInteractions: 'ctaInteractions',
   proMasterKeyHex: 'proMasterKeyHex',
   proRotatingPrivateKeyHex: 'proRotatingPrivateKeyHex',
   /**

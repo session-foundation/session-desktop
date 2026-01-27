@@ -20,7 +20,7 @@ import { stringify } from '../../../types/sqlSharedTypes';
 
 let randomSnodePool: Array<Snode> = [];
 
-function TEST_resetState(snodePoolForTest: Array<Snode> = []) {
+function resetState(snodePoolForTest: Array<Snode> = []) {
   randomSnodePool = snodePoolForTest;
   swarmCache.clear();
 }
@@ -152,7 +152,7 @@ async function forceRefreshRandomSnodePool(): Promise<Array<Snode>> {
 
     // if that fails to get enough snodes, even after retries, well we just have to retry later.
     try {
-      await SnodePool.TEST_fetchFromSeedWithRetriesAndWriteToDb();
+      await SnodePool.fetchFromSeedWithRetriesAndWriteToDb();
     } catch (err2) {
       window?.log?.warn(
         `${logPrefix} forceRefreshRandomSnodePool: Failed to fetch snode pool from seed. Fetching from seed node instead:`,
@@ -188,7 +188,7 @@ async function getSnodePoolFromDBOrFetchFromSeed(
     );
     // if that fails to get enough snodes, even after retries, well we just have to retry later.
     // this call does not throw
-    await SnodePool.TEST_fetchFromSeedWithRetriesAndWriteToDb();
+    await SnodePool.fetchFromSeedWithRetriesAndWriteToDb();
 
     return randomSnodePool;
   }
@@ -212,7 +212,7 @@ async function getRandomSnodePool(): Promise<Array<Snode>> {
  * This function does not throw.
  */
 
-async function TEST_fetchFromSeedWithRetriesAndWriteToDb() {
+async function fetchFromSeedWithRetriesAndWriteToDb() {
   const seedNodes = window.getSeedNodeList();
 
   if (!seedNodes || !seedNodes.length) {
@@ -472,6 +472,6 @@ export const SnodePool = {
   getCachedSwarmSizeForPubkey,
 
   // tests
-  TEST_resetState,
-  TEST_fetchFromSeedWithRetriesAndWriteToDb,
+  resetState,
+  fetchFromSeedWithRetriesAndWriteToDb,
 };

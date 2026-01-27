@@ -1,10 +1,13 @@
-import * as BetterSqlite3 from '@signalapp/better-sqlite3';
-import { difference, isFinite, isNumber, omit, pick } from 'lodash';
+import { type Database } from '@signalapp/sqlcipher';
+import { difference, isFinite, isNumber, isString, omit, pick } from 'lodash';
+import { isUndefined } from 'lodash/fp';
 import {
   ConversationAttributes,
   ConversationAttributesWithNotSavedOnes,
 } from '../models/conversationAttributes';
 import { CONVERSATION_PRIORITIES } from '../models/types';
+import type { JSONRow, SQLInsertable } from '../types/sqlSharedTypes';
+import { isDevProd } from '../shared/env_vars';
 
 export const CONVERSATIONS_TABLE = 'conversations';
 export const MESSAGES_TABLE = 'messages';
@@ -44,6 +47,10 @@ export function jsonToObject(json: string): Record<string, any> {
   return JSON.parse(json);
 }
 
+export function parseJsonRows(rows: Array<JSONRow>) {
+  return rows.map(row => jsonToObject(row.json));
+}
+
 function jsonToArray(json: string): Array<string> {
   try {
     return JSON.parse(json);
@@ -57,7 +64,7 @@ export function arrayStrToJson(arr: Array<string>): string {
   return JSON.stringify(arr);
 }
 
-export function toSqliteBoolean(val: boolean): number {
+export function toSqliteBoolean(val?: boolean | 0 | 1): number {
   return val ? 1 : 0;
 }
 
@@ -100,7 +107,8 @@ const allowedKeysFormatRowOfConversation = [
 ];
 
 export function formatRowOfConversation(
-  row: Record<string, any>,
+  // TODO: There isnt an easy way to type this while having it mutable in the function, find a solution
+  row: JSONRow<any>,
   from: string,
   unreadCount: number,
   mentionedUs: boolean
@@ -279,7 +287,7 @@ export function assertValidConversationAttributes(
   return pick(data, allowedKeysOfConversationAttributes) as ConversationAttributes;
 }
 
-export function dropFtsAndTriggers(db: BetterSqlite3.Database) {
+export function dropFtsAndTriggers(db: Database) {
   console.info('dropping fts5 table');
 
   db.exec(`
@@ -290,7 +298,7 @@ export function dropFtsAndTriggers(db: BetterSqlite3.Database) {
       `);
 }
 
-export function rebuildFtsTable(db: BetterSqlite3.Database) {
+export function rebuildFtsTable(db: Database) {
   console.info('rebuildFtsTable');
   db.exec(`
           -- Then we create our full-text search table and populate it
@@ -331,7 +339,7 @@ export function rebuildFtsTable(db: BetterSqlite3.Database) {
  * It stores the token for search in the fts table, but the body is only on the messages tables.
  * We need to do a join, to fetch the body, but that has a small impact on performance, saving half of the used storage of the message table.
  */
-export function rebuildFtsTableReferencingMessages(db: BetterSqlite3.Database) {
+export function rebuildFtsTableReferencingMessages(db: Database) {
   const start = Date.now();
   console.info('rebuildFtsTableReferencingMessages');
   db.exec(`
@@ -376,12 +384,7 @@ export function rebuildFtsTableReferencingMessages(db: BetterSqlite3.Database) {
   console.info('rebuildFtsTableReferencingMessages built in ', Date.now() - start, 'ms');
 }
 
-export function analyzeQuery<T>(
-  db: BetterSqlite3.Database,
-  query: string,
-  params: any,
-  executeFunc: () => T
-): T {
+export function analyzeQuery<T>(db: Database, query: string, params: any, executeFunc: () => T): T {
   const prefix = '[QUERY PLAN]: ';
 
   // Run the actual query and grab how long it took
@@ -392,8 +395,12 @@ export function analyzeQuery<T>(
     try {
       const plan = db.prepare(`EXPLAIN QUERY PLAN ${query}`).all(params);
 
-      const hasTableScan = plan.some(row => row.detail && row.detail.includes('SCAN TABLE'));
-      const hasTempBTree = plan.some(row => row.detail && row.detail.includes('TEMP B-TREE'));
+      const hasTableScan = plan.some(
+        row => row.detail && isString(row.detail) && row.detail.includes('SCAN TABLE')
+      );
+      const hasTempBTree = plan.some(
+        row => row.detail && isString(row.detail) && row.detail.includes('TEMP B-TREE')
+      );
 
       if (hasTableScan || hasTempBTree) {
         console.info(
@@ -411,4 +418,21 @@ export function analyzeQuery<T>(
   }
 
   return result;
+}
+
+export function devAssertValidSQLPayload(table: string, payload: SQLInsertable) {
+  if (!isDevProd()) {
+    return;
+  }
+  const undefinedFields: Array<string> = [];
+  Object.entries(payload).forEach(([key, value]) => {
+    if (isUndefined(value)) {
+      undefinedFields.push(key);
+    }
+  });
+  if (undefinedFields.length) {
+    throw new Error(
+      `unexpected type 'undefined' in SQL in payload for '${table}' in param${undefinedFields.length > 1 ? 's:' : ''} ${undefinedFields.join(', ')} `
+    );
+  }
 }

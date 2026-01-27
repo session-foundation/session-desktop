@@ -88,6 +88,7 @@ const HeroImageBgContainer = styled.div`
 const HeroImageBg = styled.div<{ $noColors?: boolean }>`
   padding-top: 55px;
   justify-items: center;
+  text-align: center;
 
   &::before {
     content: '';

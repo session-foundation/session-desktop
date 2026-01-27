@@ -686,7 +686,7 @@ async function removeOtherData(): Promise<void> {
 
 async function getMessagesWithVisualMediaAttachments(
   conversationId: string,
-  limit?: number
+  limit: number
 ): Promise<Array<MessageAttributes>> {
   return channels.getMessagesWithVisualMediaAttachments(conversationId, limit);
 }
