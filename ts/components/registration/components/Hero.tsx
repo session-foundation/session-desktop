@@ -3,7 +3,7 @@ import styled from 'styled-components';
 const StyledHeroContainer = styled.div`
   display: none;
 
-  @media screen and (min-width: 680px) {
+  @media screen and (min-width: 799px) {
     display: block;
     width: 40%;
     height: 100%;

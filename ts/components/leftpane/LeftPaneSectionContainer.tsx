@@ -6,7 +6,7 @@ export const LeftPaneSectionContainer = styled.div`
   justify-content: space-between;
   align-items: center;
 
-  @media screen and (min-width: 680px) {
+  @media screen and (min-width: 799px) {
     width: var(--actions-panel-width);
     flex-direction: column;
     align-items: center;

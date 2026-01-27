@@ -41,7 +41,7 @@ const StyledConversationHeader = styled.div`
   position: relative;
   background: var(--background-primary-color);
   padding: 0px var(--margins-lg) 0px var(--margins-lg);
-  @media screen and (min-width: 680px) {
+  @media screen and (min-width: 799px) {
     padding: 0px var(--margins-lg) 0px var(--margins-sm);
   }
 `;
@@ -93,8 +93,8 @@ export const ConversationHeaderWithDetails = () => {
               onAvatarClick={
                 showConvoSettingsCb
                   ? () => {
-                      showConvoSettingsCb({ settingsModalPage: 'default' });
-                    }
+                    showConvoSettingsCb({ settingsModalPage: 'default' });
+                  }
                   : undefined
               }
               pubkey={selectedConvoKey}

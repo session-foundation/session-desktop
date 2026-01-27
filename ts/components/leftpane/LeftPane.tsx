@@ -12,7 +12,7 @@ export const leftPaneListWidth = 300; // var(--left-panel-width) without the 80p
 
 const StyledLeftPane = styled.div<{ $isRtl: boolean }>`
   width: 100%;
-  @media screen and (min-width: 680px) {
+  @media screen and (min-width: 799px) {
     width: ${() => `${leftPaneListWidth}px`};
     height: 100%;
     border-left: 1px solid var(--border-color);
@@ -46,7 +46,7 @@ const StyledLeftPaneSession = styled.div`
   height: 100%;
   width: 100%;
 
-  @media screen and (min-width: 680px) {
+  @media screen and (min-width: 799px) {
     flex-direction: row;
   }
 `;
