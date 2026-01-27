@@ -25,7 +25,7 @@
   flex-direction: column;
   width: 1px;
   height: 100%;
-  @media screen and (min-width: 680px) {
+  @media screen and (min-width: $mobile-ui-breakpoint) {
     width: var(--main-panel-content-width);
   }
 
@@ -39,7 +39,7 @@
 
 .mobile-close-conversation {
   display: block;
-  @media screen and (min-width: 680px) {
+  @media screen and (min-width: $mobile-ui-breakpoint) {
     display: none;
   }
 }
