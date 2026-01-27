@@ -727,9 +727,8 @@ function getConversationById(id: string, instance?: Database) {
 
 function getAllConversations() {
   const sql = `SELECT * FROM ${CONVERSATIONS_TABLE} ORDER BY id ASC;`;
-  const params = {};
-  const rows = analyzeQuery(assertGlobalInstance(), sql, params, () =>
-    assertGlobalInstance().prepare(sql).all<Pick<ConversationAttributes, 'id'>>(params)
+  const rows = analyzeQuery(assertGlobalInstance(), sql, [], () =>
+    assertGlobalInstance().prepare(sql).all<Pick<ConversationAttributes, 'id'>>([])
   );
 
   const formatted = compact(
@@ -1991,9 +1990,8 @@ function cleanUpUnreadExpiredDaRMessages() {
  */
 function cleanUpInvalidConversationIds() {
   const sql = `DELETE FROM ${CONVERSATIONS_TABLE} WHERE id = '' OR id IS NULL OR typeof(id) != 'text';`;
-  const params = {};
-  const deleteResult = analyzeQuery(assertGlobalInstance(), sql, params, () =>
-    assertGlobalInstance().prepare(sql).run(params)
+  const deleteResult = analyzeQuery(assertGlobalInstance(), sql, [], () =>
+    assertGlobalInstance().prepare(sql).run([])
   );
 
   console.info(`cleanUpInvalidConversationIds removed ${deleteResult.changes} rows`);
@@ -2006,9 +2004,8 @@ function getOutgoingWithoutExpiresAt() {
       expires_at IS NULL AND
       type IS 'outgoing'
     ORDER BY expires_at ASC;`;
-  const params = {};
-  const rows = analyzeQuery(assertGlobalInstance(), sql, params, () =>
-    assertGlobalInstance().prepare(sql).all<JSONRow>(params)
+  const rows = analyzeQuery(assertGlobalInstance(), sql, [], () =>
+    assertGlobalInstance().prepare(sql).all<JSONRow>([])
   );
 
   return parseJsonRows(rows);
@@ -2020,9 +2017,8 @@ function getNextExpiringMessage() {
     ORDER BY expires_at ASC
 
     LIMIT 1;`;
-  const params = {};
-  const rows = analyzeQuery(assertGlobalInstance(), sql, params, () =>
-    assertGlobalInstance().prepare(sql).all<JSONRow>(params)
+  const rows = analyzeQuery(assertGlobalInstance(), sql, [], () =>
+    assertGlobalInstance().prepare(sql).all<JSONRow>([])
   );
 
   return parseJsonRows(rows);
@@ -2085,10 +2081,7 @@ function setAttachmentDownloadJobPending(id: string, pending: 1 | 0) {
 
 function resetAttachmentDownloadPending() {
   const sql = `UPDATE ${ATTACHMENT_DOWNLOADS_TABLE} SET pending = 0 WHERE pending != 0;;`;
-  const params = {};
-  analyzeQuery(assertGlobalInstance(), sql, params, () =>
-    assertGlobalInstance().prepare(sql).run(params)
-  );
+  analyzeQuery(assertGlobalInstance(), sql, [], () => assertGlobalInstance().prepare(sql).run([]));
 }
 
 function removeAttachmentDownloadJob(id: string) {
@@ -2527,9 +2520,8 @@ function cleanUpOldOpengroupsOnStart() {
       type = 'group' AND
       id LIKE 'http%'
      ORDER BY id ASC;`;
-  const params = {};
-  const rows = analyzeQuery(assertGlobalInstance(), sql, params, () =>
-    assertGlobalInstance().prepare(sql).all<SQLConversationAttributes>(params)
+  const rows = analyzeQuery(assertGlobalInstance(), sql, [], () =>
+    assertGlobalInstance().prepare(sql).all<SQLConversationAttributes>([])
   );
 
   const v2ConvosIds = map(rows, row => row.id);
