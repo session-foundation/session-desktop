@@ -50,17 +50,6 @@ const doSearch = createAsyncThunk(
     };
     const processedQuery = query;
 
-    if (query.length <= 2) {
-      // Short queries over a large database are slow as there are too many matches that we need to order.
-      // Allow the user to type a few characters to get a better result.
-      return {
-        query,
-        searchResultContactsAndGroups: [],
-        searchResultMessages: [],
-        searchType,
-      };
-    }
-
     const [searchResultContactsAndGroups, messages] = await Promise.all([
       queryContactsAndGroups(processedQuery, options),
       // we only need to query messages for the global search

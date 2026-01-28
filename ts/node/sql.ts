@@ -30,6 +30,7 @@ import {
 
 import { GroupPubkeyType } from 'libsession_util_nodejs';
 import { ConversationAttributes } from '../models/conversationAttributes';
+import { ConversationTypeEnum } from '../models/types';
 import { redactAll } from '../util/privacy';
 import {
   analyzeQuery,
@@ -2352,13 +2353,19 @@ function seedMessages({
   count,
   minWords,
   maxWords,
+  conversationId,
+  source,
 }: {
   count: number;
   minWords: number;
   maxWords: number;
+  conversationId: string | null;
+  source: string | null;
 }) {
   const now = Date.now();
   console.log(`about to seed ${count} messages`);
+
+  const isOutgoing = Math.random() < 0.5;
 
   const bulkText = generateBulkText(count, minWords, maxWords);
 
@@ -2371,11 +2378,11 @@ function seedMessages({
   const messageAttrsOpts: Array<MessageAttributes> = bulkText.map(body => {
     return {
       id: v4(),
-      source: ourPk,
-      type: 'outgoing',
-      direction: 'outgoing',
+      source: source ?? ourPk,
+      type: isOutgoing ? 'outgoing' : 'incoming',
+      direction: isOutgoing ? 'outgoing' : 'incoming',
       timestamp: Date.now(),
-      conversationId: ourPk,
+      conversationId: conversationId ?? ourPk,
       body,
       received_at: Date.now(),
       serverTimestamp: Date.now(),
@@ -2399,6 +2406,89 @@ function seedMessages({
   });
 
   console.log(`seeded ${count} messages in ${Date.now() - now}ms`);
+}
+
+/**
+ * Generate random hex string for Session public key (66 chars: 05 prefix + 64 hex chars)
+ */
+function generateRandomSessionId(): string {
+  const hexChars = '0123456789abcdef';
+  let result = '05'; // Standard Session pubkey prefix
+  for (let i = 0; i < 64; i++) {
+    result += hexChars[Math.floor(Math.random() * 16)];
+  }
+  return result;
+}
+
+function seedPrivateConversations({
+  conversationCount,
+  messagesPerConversation,
+  minWords,
+  maxWords,
+}: {
+  conversationCount: number;
+  messagesPerConversation: number;
+  minWords: number;
+  maxWords: number;
+}) {
+  const now = Date.now();
+  console.log(
+    `about to seed ${conversationCount} private conversations with ${messagesPerConversation} messages each`
+  );
+
+  const ourPk = getLoggedInUserConvoDuringMigration(assertGlobalInstance())?.ourKeys.publicKeyHex;
+
+  if (!ourPk) {
+    console.warn('Cannot seed private conversations: no logged in user found');
+    return;
+  }
+
+  for (let i = 0; i < conversationCount; i++) {
+    const contactPubkey = generateRandomSessionId();
+    const conversationTimestamp = Date.now();
+
+    // Create the conversation
+    const conversationAttrs: ConversationAttributes = {
+      id: contactPubkey,
+      type: ConversationTypeEnum.PRIVATE,
+      active_at: conversationTimestamp,
+      lastMessage: null,
+      lastMessageStatus: undefined,
+      lastMessageInteractionType: null,
+      lastMessageInteractionStatus: null,
+      left: false,
+      isTrustedForAttachmentDownload: false,
+      lastJoinedTimestamp: 0,
+      expireTimer: 0,
+      expirationMode: 'off',
+      members: [],
+      groupAdmins: [],
+      triggerNotificationsFor: 'all',
+      priority: 0,
+      isApproved: true,
+      didApproveMe: true,
+      markedAsUnread: false,
+      blocksSogsMsgReqsTimestamp: 0,
+    };
+
+    saveConversation(conversationAttrs);
+
+    seedMessages({
+      count: messagesPerConversation,
+      minWords,
+      maxWords,
+      conversationId: contactPubkey,
+      source: ourPk,
+    });
+
+    console.log(
+      `seeded conversation ${i + 1}/${conversationCount} with ${messagesPerConversation} messages`
+    );
+  }
+
+  console.log(
+    `seeded ${conversationCount} private conversations with ${messagesPerConversation} messages each in ${Date.now() - now}ms`
+  );
 }
 
 /**
@@ -2501,7 +2591,7 @@ function printDbStats() {
     'sqlite_stat1',
     'sqlite_stat4',
   ].forEach(i => {
-    console.log(`${i} count`, getEntriesCountInTable(i));
+    console.log(`${i} entries count: ${getEntriesCountInTable(i)}`);
   });
 }
 
@@ -2788,6 +2878,7 @@ export const sqlNode = {
 
   // seeding
   seedMessages,
+  seedPrivateConversations,
 
   // open group v2
   getV2OpenGroupRoom,

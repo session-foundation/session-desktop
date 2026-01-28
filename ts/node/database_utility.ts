@@ -345,7 +345,8 @@ export function rebuildFtsTableReferencingMessages(db: Database) {
         body,
         content=${MESSAGES_TABLE},
         tokenize='porter unicode61',
-        content_rowid=rowid
+        content_rowid=rowid,
+        prefix='1,2' -- generate indexed prefix for short queries matching many messages
       );
 
     -- Populate the FTS index from existing messages
