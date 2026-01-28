@@ -1,7 +1,7 @@
 import { isString } from 'lodash';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { AutoSizer, List } from 'react-virtualized';
+import { AutoSizer, List, type List as ListType } from 'react-virtualized';
 import styled, { CSSProperties } from 'styled-components';
 
 import { ConversationListItem } from '../leftpane/conversation-list-item/ConversationListItem';
@@ -68,6 +68,7 @@ const VirtualizedList = () => {
   const query = useSelector(getQuery);
   const requestedSnippetIds = useSelector(getRequestedSnippetIds);
   const dispatch = getAppDispatch();
+  const listRef = useRef<ListType>(null);
 
   const handleRowsRendered = useCallback(
     ({ startIndex, stopIndex }: { startIndex: number; stopIndex: number }) => {
@@ -98,6 +99,13 @@ const VirtualizedList = () => {
     [searchResultList, requestedSnippetIds, query, dispatch]
   );
 
+  // Scroll to top when query changes
+  useEffect(() => {
+    if (listRef.current) {
+      listRef.current.scrollToRow(0);
+    }
+  }, [query]);
+
   // Load snippets for initially visible items when search results change
   useEffect(() => {
     if (searchResultList.length > 0) {
@@ -126,6 +134,7 @@ const VirtualizedList = () => {
     <AutoSizer>
       {({ height, width }) => (
         <List
+          ref={listRef}
           height={height}
           rowCount={searchResultList.length}
           rowHeight={params =>
