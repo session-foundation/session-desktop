@@ -646,11 +646,14 @@ async function showPasswordWindow() {
 
   passwordWindow = new BrowserWindow(windowOptions);
 
-  await passwordWindow.loadURL(prepareURL([getAppRootPath(), 'password.html']));
+  await passwordWindow.loadURL(prepareURL([getAppRootPath(), 'password.html'])).catch(e => {
+    console.warn('failed to load password window.', e.message);
+    passwordWindow = null;
+  });
 
   captureClicks(passwordWindow);
 
-  passwordWindow.on('close', () => {
+  passwordWindow?.on('close', () => {
     // When the password window is closed, quit the app if we don't have a main window
     // This can happen when the user manually closes the password window,
     // but also when the main window closes the password window after a successful login
@@ -659,7 +662,7 @@ async function showPasswordWindow() {
     }
   });
 
-  passwordWindow.on('closed', () => {
+  passwordWindow?.on('closed', () => {
     passwordWindow = null;
   });
 }
