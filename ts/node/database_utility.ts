@@ -406,7 +406,7 @@ export function analyzeQuery(
           row => row.detail && isString(row.detail) && row.detail.includes('TEMP B-TREE')
         );
 
-        if (forceAnalyze || hasTableScan || hasTempBTree || executionTime > 1000) {
+        if (forceAnalyze || hasTableScan || hasTempBTree || executionTime > 500) {
           console.info(
             `${prefix}⚠️ PERFORMANCE WARNING: Query uses table scan or temp b-tree or was slow and took ${executionTime}ms`
           );

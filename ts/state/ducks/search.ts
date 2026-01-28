@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import { compact } from 'lodash';
+import { compact, uniq } from 'lodash';
 import { Data } from '../../data/data';
 import { SearchOptions } from '../../types/Search';
 import { cleanSearchTerm } from '../../util/cleanSearchTerm';
@@ -23,8 +23,6 @@ export type SearchStateType = {
   // For conversations we store just the id, and pull conversation props in the selector
   searchResultContactsAndGroups: Array<string>;
   searchResultMessages?: Array<MessageResultProps>;
-  // Track which message snippets are currently being loaded
-  loadingSnippetsForIds: Array<string>;
   // Track which message snippets have been requested (for this search)
   requestedSnippetIds: Array<string>;
 };
@@ -154,7 +152,6 @@ export const initialSearchState: SearchStateType = {
   query: '',
   searchResultContactsAndGroups: [],
   searchResultMessages: [],
-  loadingSnippetsForIds: [],
   requestedSnippetIds: [],
 };
 
@@ -171,7 +168,6 @@ const searchSlice = createSlice({
         query: action.payload.query,
         searchType: action.payload.searchType,
         // Clear loading and requested snippets when search term changes
-        loadingSnippetsForIds: [],
         requestedSnippetIds: [],
       };
     },
@@ -199,7 +195,6 @@ const searchSlice = createSlice({
           searchType,
           // Clear requested snippets for new search results
           requestedSnippetIds: [],
-          loadingSnippetsForIds: [],
         };
       }
     );
@@ -207,19 +202,14 @@ const searchSlice = createSlice({
     // Handle snippet loading
     builder.addCase(loadSnippetsForMessages.pending, (state, action) => {
       const { messageIds } = action.meta.arg;
-      // Add message IDs to loading array, ensuring uniqueness
-      const existingLoadingIds = new Set(state.loadingSnippetsForIds);
-      const newIds = messageIds.filter(id => !existingLoadingIds.has(id));
-      state.loadingSnippetsForIds = [...state.loadingSnippetsForIds, ...newIds];
+      // Add message IDs to loading array
 
       // Track that we've requested these snippets
-      const existingRequestedIds = new Set(state.requestedSnippetIds);
-      const newRequestedIds = messageIds.filter(id => !existingRequestedIds.has(id));
-      state.requestedSnippetIds = [...state.requestedSnippetIds, ...newRequestedIds];
+      state.requestedSnippetIds = uniq([...state.requestedSnippetIds, ...messageIds]);
     });
 
     builder.addCase(loadSnippetsForMessages.fulfilled, (state, action) => {
-      const { messageIds, snippets } = action.payload;
+      const { snippets } = action.payload;
 
       // Update messages with their snippets
       if (state.searchResultMessages) {
@@ -230,19 +220,6 @@ const searchSlice = createSlice({
           return msg;
         });
       }
-
-      // Remove message IDs from loading array
-      state.loadingSnippetsForIds = state.loadingSnippetsForIds.filter(
-        id => !messageIds.includes(id)
-      );
-    });
-
-    builder.addCase(loadSnippetsForMessages.rejected, (state, action) => {
-      const { messageIds } = action.meta.arg;
-      // Remove message IDs from loading array even on error
-      state.loadingSnippetsForIds = state.loadingSnippetsForIds.filter(
-        id => !messageIds.includes(id)
-      );
     });
   },
 });

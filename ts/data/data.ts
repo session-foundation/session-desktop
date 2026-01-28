@@ -171,7 +171,7 @@ async function generateSnippetsForMessages(
   query: string,
   messageIds: Array<string>
 ): Promise<Record<string, string>> {
-  return (await channels.generateSnippetsForMessages(query, messageIds)) as Record<string, string>;
+  return channels.generateSnippetsForMessages(query, messageIds);
 }
 
 // Message

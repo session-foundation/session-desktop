@@ -109,9 +109,9 @@ const VirtualizedList = () => {
   // Load snippets for initially visible items when search results change
   useEffect(() => {
     if (searchResultList.length > 0) {
-      // Assume first ~15 items are initially visible (rough estimate)
+      // Assume first ~20 items are initially visible (rough estimate)
       // This will be refined when handleRowsRendered is called
-      const initialRange = Math.min(15, searchResultList.length);
+      const initialRange = Math.min(20, searchResultList.length);
       const requestedSet = new Set(requestedSnippetIds);
       const messagesToLoad: Array<string> = [];
 
