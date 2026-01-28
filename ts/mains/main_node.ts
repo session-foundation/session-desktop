@@ -241,10 +241,10 @@ function handleUrl(event: any, target: string) {
   }
 }
 
-function captureClicks(window: BrowserWindow) {
-  window.webContents.on('will-navigate', handleUrl);
+function captureClicks(window: BrowserWindow | null) {
+  window?.webContents.on('will-navigate', handleUrl);
 
-  window.webContents.setWindowOpenHandler(({ url: urlToOpen }) => {
+  window?.webContents.setWindowOpenHandler(({ url: urlToOpen }) => {
     handleUrl(undefined, urlToOpen);
     return { action: 'deny' };
   });
