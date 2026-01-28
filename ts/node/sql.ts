@@ -2556,8 +2556,12 @@ function removeV2OpenGroupRoom(conversationId: string) {
  */
 
 function getEntriesCountInTable(tbl: string) {
+  if (tbl === 'messages_fts') {
+    throw new Error('Not counting messages_fts table, as it is virtual and slow');
+  }
   try {
-    const row = assertGlobalInstance().prepare(`SELECT count(*) from ${tbl};`).get<CountRow>();
+    const sql = `SELECT count(*) from ${tbl};`;
+    const row = analyzeQuery(assertGlobalInstance(), sql, []).get();
     if (!row) {
       throw new Error('row is undefined in getEntriesCountInTable');
     }
@@ -2579,7 +2583,7 @@ function printDbStats() {
     'lastHashes',
     'loki_schema',
     'messages',
-    'messages_fts',
+    // 'messages_fts', // we don't count this table, as it is virtual and slow
     'messages_fts_config',
     'messages_fts_data',
     'messages_fts_docsize',
