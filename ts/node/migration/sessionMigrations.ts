@@ -2296,10 +2296,6 @@ async function updateToSessionSchemaVersion53(currentVersion: number, db: Databa
     `);
     db.exec(`
       ALTER TABLE ${MESSAGES_TABLE}
-      ADD COLUMN ${MessageColumns.coalesceForSentOnly} INTEGER;
-    `);
-    db.exec(`
-      ALTER TABLE ${MESSAGES_TABLE}
       ADD COLUMN ${MessageColumns.mentionsUs} BOOLEAN;
     `);
 
@@ -2310,8 +2306,7 @@ async function updateToSessionSchemaVersion53(currentVersion: number, db: Databa
     // Populate existing rows
     db.exec(`
       UPDATE ${MESSAGES_TABLE}
-      SET ${MessageColumns.coalesceSentAndReceivedAt} = COALESCE(serverTimestamp, sent_at, received_at),
-      ${MessageColumns.coalesceForSentOnly} = COALESCE(serverTimestamp, sent_at);
+      SET ${MessageColumns.coalesceSentAndReceivedAt} = COALESCE(serverTimestamp, sent_at, received_at);
     `);
 
     // create trigger on update of messages to MessageColumns.coalesceSentAndReceivedAt
@@ -2321,8 +2316,7 @@ async function updateToSessionSchemaVersion53(currentVersion: number, db: Databa
   AFTER INSERT ON ${MESSAGES_TABLE}
   BEGIN
     UPDATE ${MESSAGES_TABLE}
-    SET ${MessageColumns.coalesceSentAndReceivedAt} = COALESCE(NEW.serverTimestamp, NEW.sent_at, NEW.received_at),
-        ${MessageColumns.coalesceForSentOnly} = COALESCE(NEW.serverTimestamp, NEW.sent_at)
+    SET ${MessageColumns.coalesceSentAndReceivedAt} = COALESCE(NEW.serverTimestamp, NEW.sent_at, NEW.received_at)
     WHERE rowid = NEW.rowid;
   END;
 
@@ -2331,8 +2325,7 @@ async function updateToSessionSchemaVersion53(currentVersion: number, db: Databa
   AFTER UPDATE OF serverTimestamp, sent_at, received_at ON ${MESSAGES_TABLE}
   BEGIN
     UPDATE ${MESSAGES_TABLE}
-    SET ${MessageColumns.coalesceSentAndReceivedAt} = COALESCE(NEW.serverTimestamp, NEW.sent_at, NEW.received_at),
-        ${MessageColumns.coalesceForSentOnly} = COALESCE(NEW.serverTimestamp, NEW.sent_at)
+    SET ${MessageColumns.coalesceSentAndReceivedAt} = COALESCE(NEW.serverTimestamp, NEW.sent_at, NEW.received_at)
     WHERE rowid = NEW.rowid;
   END;
 `);
@@ -2341,24 +2334,21 @@ async function updateToSessionSchemaVersion53(currentVersion: number, db: Databa
       `CREATE INDEX ${MessageColumns.coalesceSentAndReceivedAt}_index ON ${MESSAGES_TABLE}(${MessageColumns.coalesceSentAndReceivedAt} DESC);`
     );
 
-    db.exec(
-      `CREATE INDEX ${MessageColumns.coalesceForSentOnly}_index ON ${MESSAGES_TABLE}(${MessageColumns.coalesceForSentOnly} DESC);`
-    );
-
     // also create indexes on the coalesce columns with convo id
     db.exec(
       `CREATE INDEX ${MessageColumns.coalesceSentAndReceivedAt}_conversation_index ON ${MESSAGES_TABLE}(conversationId, ${MessageColumns.coalesceSentAndReceivedAt} DESC);`
-    );
-
-    db.exec(
-      `CREATE INDEX ${MessageColumns.coalesceForSentOnly}_conversation_index ON ${MESSAGES_TABLE}(conversationId, ${MessageColumns.coalesceForSentOnly} DESC);`
     );
 
     // Also, use this migration to create a few indexes on what is called as part of `fetchConvoMemoryDetails`
     // this one is for what is used in `getLastMessageReadInConversation`
     db.exec(`
     CREATE INDEX messages_conversation_unread_sort
-    ON ${MESSAGES_TABLE}(conversationId, unread, ${MessageColumns.coalesceForSentOnly} DESC);
+    ON ${MESSAGES_TABLE}(conversationId, unread, ${MessageColumns.coalesceSentAndReceivedAt} DESC) WHERE unread=${toSqliteBoolean(true)};
+  `);
+
+    db.exec(`
+    CREATE INDEX messages_conversation_read_sort
+    ON ${MESSAGES_TABLE}(conversationId, unread, ${MessageColumns.coalesceSentAndReceivedAt} DESC) WHERE unread=${toSqliteBoolean(false)};
   `);
 
     // this one is for what is used in `getUnreadCountByConversation`
@@ -2375,7 +2365,7 @@ async function updateToSessionSchemaVersion53(currentVersion: number, db: Databa
 
     // Create an index on the mentionsUs column with unread & conversationId. Needed for `getFirstUnreadMessageWithMention`
     db.exec(
-      `CREATE INDEX messages_mentionsUs_index ON ${MESSAGES_TABLE} (conversationId, unread, ${MessageColumns.mentionsUs}, ${MessageColumns.coalesceForSentOnly}, ${MessageColumns.coalesceSentAndReceivedAt});`
+      `CREATE INDEX messages_mentionsUs_index ON ${MESSAGES_TABLE} (conversationId, unread, ${MessageColumns.mentionsUs}, ${MessageColumns.coalesceSentAndReceivedAt});`
     );
 
     // Create an index on the the messageId & hasAttachments. Needed for `removeKnownAttachments`

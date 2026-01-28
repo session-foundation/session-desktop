@@ -27,10 +27,6 @@ export const MessageColumns = {
    * A column that coalesce serverTimestamp & sentTimestamp & receivedAt
    */
   coalesceSentAndReceivedAt: 'sort_timestamp_full' as const,
-  /**
-   * A column that coalesce serverTimestamp & sentTimestamp
-   */
-  coalesceForSentOnly: 'sort_timestamp_sent_only' as const,
 
   /**
    * A column that is true if the message mentions us
@@ -411,7 +407,7 @@ export function analyzeQuery(
 
         if (forceAnalyze || hasTableScan || hasTempBTree || executionTime > 1000) {
           console.info(
-            `${prefix}⚠️ PERFORMANCE WARNING: Query uses table scan or temp b-tree and took ${executionTime}ms`
+            `${prefix}⚠️ PERFORMANCE WARNING: Query uses table scan or temp b-tree or was slow and took ${executionTime}ms`
           );
           console.info(`${prefix}Query: ${query.replace(/\s+/g, ' ').trim()}`);
           console.info(`${prefix}Params: ${JSON.stringify(params)}`);

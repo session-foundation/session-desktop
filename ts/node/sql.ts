@@ -789,7 +789,7 @@ function searchMessages(query: string, limit: number) {
         FROM ${MESSAGES_FTS_TABLE}
         WHERE body MATCH $query
         ORDER BY rank
-        LIMIT 1000
+        LIMIT 300
       )
       SELECT
         ${MESSAGES_TABLE}.rowid,
@@ -804,19 +804,27 @@ function searchMessages(query: string, limit: number) {
   const rowIds = rowsRank.map(row => row.rowid);
   const placeholders = rowIds.map(() => '?').join(',');
 
+  const startSnippet = Date.now();
+
   const snippetStmt = assertGlobalInstance().prepare(
     `SELECT rowid, snippet(${MESSAGES_FTS_TABLE}, -1, '<<left>>', '<<right>>', '...', 5) as snippet
    FROM ${MESSAGES_FTS_TABLE}
    WHERE body MATCH ? AND rowid IN (${placeholders})`
   );
 
-  const snippets = snippetStmt.all([query, ...rowIds]);
-  const snippetMap = new Map(snippets.map((s: any) => [s.rowid, s.snippet]));
+  const snippetsAll = snippetStmt.all([query, ...rowIds]);
+  const snippetMap = new Map(snippetsAll.map((s: any) => [s.rowid, s.snippet]));
 
-  return rowsRank.map((row: any) => ({
+  const snippets = rowsRank.map((row: any) => ({
     ...jsonToObject(row.json),
     snippet: snippetMap.get(row.rowid) || '',
   }));
+
+  console.info(
+    `snippet generation took ${Date.now() - startSnippet}ms for ${rowsRank.length} rows`
+  );
+
+  return snippets;
 }
 
 function getMessageCount() {
@@ -1476,7 +1484,7 @@ function getUnreadByConversation(conversationId: string, sentBeforeTimestamp: nu
   const sql = `SELECT * FROM ${MESSAGES_TABLE} WHERE
       unread = $unread AND
       conversationId = $conversationId AND
-      ${MessageColumns.coalesceForSentOnly} <= $sentBeforeTimestamp
+      ${MessageColumns.coalesceSentAndReceivedAt} <= $sentBeforeTimestamp
      ${orderByClauseASC};`;
   const params = { unread: toSqliteBoolean(true), conversationId, sentBeforeTimestamp };
   const rows = analyzeQuery(assertGlobalInstance(), sql, params).all<JSONRow>();
@@ -1488,7 +1496,7 @@ function getUnreadDisappearingByConversation(conversationId: string, sentBeforeT
   const sql = `SELECT * FROM ${MESSAGES_TABLE} WHERE
       unread = $unread AND expireTimer > 0 AND
       conversationId = $conversationId AND
-      ${MessageColumns.coalesceForSentOnly} <= $sentBeforeTimestamp
+      ${MessageColumns.coalesceSentAndReceivedAt} <= $sentBeforeTimestamp
      ${orderByClauseASC};`;
   const params = { unread: toSqliteBoolean(true), conversationId, sentBeforeTimestamp };
   const rows = analyzeQuery(assertGlobalInstance(), sql, params).all<JSONRow>();
@@ -1791,7 +1799,7 @@ function getFirstUnreadMessageIdInConversation(conversationId: string): undefine
  * Returns the last read message timestamp in the specific conversation (the columns `serverTimestamp` || `sent_at`)
  */
 function getLastMessageReadInConversation(conversationId: string): number | null {
-  const sql = `SELECT MAX(${MessageColumns.coalesceForSentOnly}) AS max_sent_at
+  const sql = `SELECT MAX(${MessageColumns.coalesceSentAndReceivedAt}) AS max_sent_at
        FROM ${MESSAGES_TABLE}
        WHERE conversationId = $conversationId
          AND unread = $unread;`;
