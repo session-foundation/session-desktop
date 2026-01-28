@@ -1,4 +1,4 @@
-import { type Database, type StatementParameters } from '@signalapp/sqlcipher';
+import { type Database, type SqliteValue, type StatementParameters } from '@signalapp/sqlcipher';
 import { difference, isFinite, isNumber, isString, omit, pick } from 'lodash';
 import { isUndefined } from 'lodash/fp';
 import {
@@ -384,45 +384,56 @@ export function rebuildFtsTableReferencingMessages(db: Database) {
   console.info('rebuildFtsTableReferencingMessages built in ', Date.now() - start, 'ms');
 }
 
-export function analyzeQuery<T>(
+export function analyzeQuery(
   db: Database,
   query: string,
-  params: StatementParameters<object> | undefined,
-  executeFunc: () => T
-): T {
+  params?: StatementParameters<object>,
+  forceAnalyze = false
+) {
   const prefix = '[QUERY PLAN]: ';
+  const stmt = db.prepare(query);
 
-  // Run the actual query and grab how long it took
-  const start = Date.now();
-  const result = executeFunc();
-  const end = Date.now();
-  if (process.env.ANALYZE_QUERIES === '1') {
-    try {
-      const plan = db.prepare(`EXPLAIN QUERY PLAN ${query}`).all(params);
+  const executeAndAnalyze = <T>(executor: () => T): T => {
+    const start = Date.now();
+    const result = executor();
+    const executionTime = Date.now() - start;
 
-      const hasTableScan = plan.some(
-        row => row.detail && isString(row.detail) && row.detail.includes('SCAN TABLE')
-      );
-      const hasTempBTree = plan.some(
-        row => row.detail && isString(row.detail) && row.detail.includes('TEMP B-TREE')
-      );
+    if (process.env.ANALYZE_QUERIES === '1') {
+      try {
+        const plan = db.prepare(`EXPLAIN QUERY PLAN ${query}`).all(params);
 
-      if (hasTableScan || hasTempBTree) {
-        console.info(
-          `${prefix}⚠️ PERFORMANCE WARNING: Query uses table scan or temp b-tree and took ${end - start}ms`
+        const hasTableScan = plan.some(
+          row => row.detail && isString(row.detail) && row.detail.includes('SCAN TABLE')
         );
-        console.info(`${prefix}Query: ${query.replace(/\s+/g, ' ').trim()}`);
-        console.info(`${prefix}Params: $${JSON.stringify(params)}`);
-        console.info(`${prefix}Execution plan:`);
-        plan.forEach(row => console.info(`${prefix}\t${row.detail}`));
-        console.info(`${prefix}\t------`);
-      }
-    } catch (err) {
-      console.error('\tFailed to analyze query:', err.message, stringify(err.stack));
-    }
-  }
+        const hasTempBTree = plan.some(
+          row => row.detail && isString(row.detail) && row.detail.includes('TEMP B-TREE')
+        );
 
-  return result;
+        if (forceAnalyze || hasTableScan || hasTempBTree || executionTime > 1000) {
+          console.info(
+            `${prefix}⚠️ PERFORMANCE WARNING: Query uses table scan or temp b-tree and took ${executionTime}ms`
+          );
+          console.info(`${prefix}Query: ${query.replace(/\s+/g, ' ').trim()}`);
+          console.info(`${prefix}Params: ${JSON.stringify(params)}`);
+          console.info(`${prefix}Execution plan:`);
+          plan.forEach(row => console.info(`${prefix}\t${row.detail}`));
+          console.info(`${prefix}\t------`);
+        }
+      } catch (err) {
+        console.error('\tFailed to analyze query:', err.message, stringify(err.stack));
+      }
+    }
+
+    return result;
+  };
+
+  return {
+    all: <T extends Record<string, SqliteValue<object>>>() =>
+      executeAndAnalyze(() => stmt.all<T>(params)),
+    get: <T extends Record<string, SqliteValue<object>>>() =>
+      executeAndAnalyze(() => stmt.get<T>(params)),
+    run: () => executeAndAnalyze(() => stmt.run(params)),
+  };
 }
 
 export function devAssertValidSQLPayload(table: string, payload: SQLInsertable) {

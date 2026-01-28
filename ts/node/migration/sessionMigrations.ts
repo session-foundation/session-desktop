@@ -26,6 +26,7 @@ import {
   objectToJSON,
   rebuildFtsTable,
   rebuildFtsTableReferencingMessages,
+  toSqliteBoolean,
 } from '../database_utility';
 
 import { SettingsKey, SNODE_POOL_ITEM_ID } from '../../data/settings-key';
@@ -2374,7 +2375,12 @@ async function updateToSessionSchemaVersion53(currentVersion: number, db: Databa
 
     // Create an index on the mentionsUs column with unread & conversationId. Needed for `getFirstUnreadMessageWithMention`
     db.exec(
-      `CREATE INDEX messages_mentionsUs_index ON ${MESSAGES_TABLE} (conversationId, unread, ${MessageColumns.mentionsUs}, ${MessageColumns.coalesceForSentOnly});`
+      `CREATE INDEX messages_mentionsUs_index ON ${MESSAGES_TABLE} (conversationId, unread, ${MessageColumns.mentionsUs}, ${MessageColumns.coalesceForSentOnly}, ${MessageColumns.coalesceSentAndReceivedAt});`
+    );
+
+    // Create an index on the the messageId & hasAttachments. Needed for `removeKnownAttachments`
+    db.exec(
+      `CREATE INDEX messages_id_hasAttachments_index ON ${MESSAGES_TABLE} (id, hasAttachments) WHERE hasAttachments = ${toSqliteBoolean(true)};`
     );
 
     writeSessionSchemaVersion(targetVersion, db);
