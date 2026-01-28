@@ -17,6 +17,9 @@ export const getSearch = (state: StateType): SearchStateType => state.search;
 
 export const getQuery = (state: StateType): string => getSearch(state).query;
 
+export const getRequestedSnippetIds = (state: StateType): Array<string> =>
+  getSearch(state).requestedSnippetIds;
+
 const getIsSearching = (state: StateType) => {
   return !!getSearch(state)?.query?.trim();
 };

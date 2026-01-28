@@ -246,11 +246,15 @@ export const MessageSearchResult = (props: MessageSearchResultProps) => {
         </ResultsHeader>
         <ResultBody>
           <FromUserInGroup authorPubkey={source} conversationId={conversationId} />
-          <MessageBodyHighlight
-            text={snippet || ''}
-            isGroup={!convoIsPrivate}
-            isPublic={isPublic}
-          />
+          {snippet === null ? (
+            <span style={{ fontStyle: 'italic', opacity: 0.6 }}>Loading...</span>
+          ) : (
+            <MessageBodyHighlight
+              text={snippet || ''}
+              isGroup={!convoIsPrivate}
+              isPublic={isPublic}
+            />
+          )}
         </ResultBody>
       </StyledResultText>
     </StyledSearchResults>

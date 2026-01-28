@@ -167,6 +167,13 @@ async function searchMessages(query: string, limit: number): Promise<Array<Messa
   });
 }
 
+async function generateSnippetsForMessages(
+  query: string,
+  messageIds: Array<string>
+): Promise<Record<string, string>> {
+  return (await channels.generateSnippetsForMessages(query, messageIds)) as Record<string, string>;
+}
+
 // Message
 
 async function cleanSeenMessages(): Promise<void> {
@@ -822,6 +829,7 @@ export const Data = {
   getAllConversations,
   getPubkeysInPublicConversation,
   searchMessages,
+  generateSnippetsForMessages,
   cleanSeenMessages,
   cleanLastHashes,
   clearLastHashesForConvoId,

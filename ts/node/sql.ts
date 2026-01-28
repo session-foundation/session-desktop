@@ -789,7 +789,7 @@ function searchMessages(query: string, limit: number) {
         FROM ${MESSAGES_FTS_TABLE}
         WHERE body MATCH $query
         ORDER BY rank
-        LIMIT 300
+        LIMIT 1000
       )
       SELECT
         ${MESSAGES_TABLE}.rowid,
@@ -799,32 +799,62 @@ function searchMessages(query: string, limit: number) {
       ORDER BY ${MESSAGES_TABLE}.${MessageColumns.coalesceSentAndReceivedAt} DESC
       LIMIT $limit;`;
 
-  const rowsRank = analyzeQuery(assertGlobalInstance(), sqlRank, params).all<{ rowid: number }>();
+  const rowsRank = analyzeQuery(assertGlobalInstance(), sqlRank, params).all<
+    JSONRow<{ rowid: number }>
+  >();
 
-  const rowIds = rowsRank.map(row => row.rowid);
-  const placeholders = rowIds.map(() => '?').join(',');
+  const snippets = rowsRank.map(row => ({
+    ...jsonToObject(row.json),
+    snippet: null, // null indicates not yet loaded
+  }));
 
-  const startSnippet = Date.now();
+  return snippets;
+}
+
+/**
+ * Generate snippets for specific message IDs.
+ * Used for on-demand snippet loading when scrolling through search results.
+ */
+function generateSnippetsForMessages(query: string, messageIds: Array<string>) {
+  if (!messageIds || messageIds.length === 0) {
+    return {};
+  }
+
+  // Get rowIds for these message IDs
+  const placeholders = messageIds.map(() => '?').join(',');
+
+  const rowIdsStmt = assertGlobalInstance().prepare(
+    `SELECT rowid, id FROM ${MESSAGES_TABLE} WHERE id IN (${placeholders})`
+  );
+  const rowIdResults = rowIdsStmt.all(messageIds) as Array<{ rowid: number; id: string }>;
+  const rowIdMap = new Map(rowIdResults.map(r => [r.id, r.rowid]));
+
+  const rowIds = Array.from(rowIdMap.values());
+
+  if (rowIds.length === 0) {
+    return {};
+  }
+
+  const rowPlaceholders = rowIds.map(() => '?').join(',');
 
   const snippetStmt = assertGlobalInstance().prepare(
     `SELECT rowid, snippet(${MESSAGES_FTS_TABLE}, -1, '<<left>>', '<<right>>', '...', 5) as snippet
-   FROM ${MESSAGES_FTS_TABLE}
-   WHERE body MATCH ? AND rowid IN (${placeholders})`
+     FROM ${MESSAGES_FTS_TABLE}
+     WHERE body MATCH ? AND rowid IN (${rowPlaceholders})`
   );
 
-  const snippetsAll = snippetStmt.all([query, ...rowIds]);
-  const snippetMap = new Map(snippetsAll.map((s: any) => [s.rowid, s.snippet]));
+  const snippets = snippetStmt.all([query, ...rowIds]) as Array<{ rowid: number; snippet: string }>;
 
-  const snippets = rowsRank.map((row: any) => ({
-    ...jsonToObject(row.json),
-    snippet: snippetMap.get(row.rowid) || '',
-  }));
+  // Return map of messageId -> snippet
+  const result: Record<string, string> = {};
+  snippets.forEach(s => {
+    const messageId = Array.from(rowIdMap.entries()).find(([_, rowId]) => rowId === s.rowid)?.[0];
+    if (messageId) {
+      result[messageId] = s.snippet;
+    }
+  });
 
-  console.info(
-    `snippet generation took ${Date.now() - startSnippet}ms for ${rowsRank.length} rows`
-  );
-
-  return snippets;
+  return result;
 }
 
 function getMessageCount() {
@@ -2694,6 +2724,7 @@ export const sqlNode = {
   removeAllConversations,
 
   searchMessages,
+  generateSnippetsForMessages,
 
   getMessageCount,
   saveMessage,

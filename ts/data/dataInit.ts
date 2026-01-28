@@ -33,6 +33,7 @@ const channelsToMake = new Set([
   'getAllConversations',
   'getPubkeysInPublicConversation',
   'searchMessages',
+  'generateSnippetsForMessages',
   'saveMessage',
   'cleanSeenMessages',
   'cleanLastHashes',

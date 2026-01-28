@@ -23,6 +23,10 @@ export type SearchStateType = {
   // For conversations we store just the id, and pull conversation props in the selector
   searchResultContactsAndGroups: Array<string>;
   searchResultMessages?: Array<MessageResultProps>;
+  // Track which message snippets are currently being loaded
+  loadingSnippetsForIds: Array<string>;
+  // Track which message snippets have been requested (for this search)
+  requestedSnippetIds: Array<string>;
 };
 
 type SearchResultsPayloadType = Pick<
@@ -46,6 +50,17 @@ const doSearch = createAsyncThunk(
     };
     const processedQuery = query;
 
+    if (query.length <= 2) {
+      // Short queries over a large database are slow as there are too many matches that we need to order.
+      // Allow the user to type a few characters to get a better result.
+      return {
+        query,
+        searchResultContactsAndGroups: [],
+        searchResultMessages: [],
+        searchType,
+      };
+    }
+
     const [searchResultContactsAndGroups, messages] = await Promise.all([
       queryContactsAndGroups(processedQuery, options),
       // we only need to query messages for the global search
@@ -62,6 +77,17 @@ const doSearch = createAsyncThunk(
   }
 );
 
+const loadSnippetsForMessages = createAsyncThunk(
+  'search/loadSnippets',
+  async ({ query, messageIds }: { query: string; messageIds: Array<string> }) => {
+    // Clean the search term the same way we do for the original search
+    const trimmedQuery = query.trim();
+    const normalized = cleanSearchTerm(trimmedQuery);
+    const snippets = await Data.generateSnippetsForMessages(normalized, messageIds);
+    return { messageIds, snippets };
+  }
+);
+
 async function queryMessages(query: string): Promise<Array<MessageResultProps>> {
   try {
     const trimmedQuery = query.trim();
@@ -69,7 +95,11 @@ async function queryMessages(query: string): Promise<Array<MessageResultProps>> 
     const normalized = cleanSearchTerm(trimmedQuery);
     // 200 on a large database is already pretty slow
     const limit = Math.min((trimmedQuery.length || 2) * 50, 200);
-    return Data.searchMessages(normalized, limit);
+    const start = Date.now();
+    const messages = await Data.searchMessages(normalized, limit);
+    window.log.info(`searchMessages took ${Date.now() - start}ms`);
+
+    return messages;
   } catch (e) {
     window.log.warn('queryMessages failed with', e.message);
     return [];
@@ -135,6 +165,8 @@ export const initialSearchState: SearchStateType = {
   query: '',
   searchResultContactsAndGroups: [],
   searchResultMessages: [],
+  loadingSnippetsForIds: [],
+  requestedSnippetIds: [],
 };
 
 const searchSlice = createSlice({
@@ -149,6 +181,9 @@ const searchSlice = createSlice({
         ...state,
         query: action.payload.query,
         searchType: action.payload.searchType,
+        // Clear loading and requested snippets when search term changes
+        loadingSnippetsForIds: [],
+        requestedSnippetIds: [],
       };
     },
   },
@@ -173,9 +208,53 @@ const searchSlice = createSlice({
           searchResultContactsAndGroups,
           searchResultMessages,
           searchType,
+          // Clear requested snippets for new search results
+          requestedSnippetIds: [],
+          loadingSnippetsForIds: [],
         };
       }
     );
+
+    // Handle snippet loading
+    builder.addCase(loadSnippetsForMessages.pending, (state, action) => {
+      const { messageIds } = action.meta.arg;
+      // Add message IDs to loading array, ensuring uniqueness
+      const existingLoadingIds = new Set(state.loadingSnippetsForIds);
+      const newIds = messageIds.filter(id => !existingLoadingIds.has(id));
+      state.loadingSnippetsForIds = [...state.loadingSnippetsForIds, ...newIds];
+
+      // Track that we've requested these snippets
+      const existingRequestedIds = new Set(state.requestedSnippetIds);
+      const newRequestedIds = messageIds.filter(id => !existingRequestedIds.has(id));
+      state.requestedSnippetIds = [...state.requestedSnippetIds, ...newRequestedIds];
+    });
+
+    builder.addCase(loadSnippetsForMessages.fulfilled, (state, action) => {
+      const { messageIds, snippets } = action.payload;
+
+      // Update messages with their snippets
+      if (state.searchResultMessages) {
+        state.searchResultMessages = state.searchResultMessages.map(msg => {
+          if (snippets[msg.id]) {
+            return { ...msg, snippet: snippets[msg.id] };
+          }
+          return msg;
+        });
+      }
+
+      // Remove message IDs from loading array
+      state.loadingSnippetsForIds = state.loadingSnippetsForIds.filter(
+        id => !messageIds.includes(id)
+      );
+    });
+
+    builder.addCase(loadSnippetsForMessages.rejected, (state, action) => {
+      const { messageIds } = action.meta.arg;
+      // Remove message IDs from loading array even on error
+      state.loadingSnippetsForIds = state.loadingSnippetsForIds.filter(
+        id => !messageIds.includes(id)
+      );
+    });
   },
 });
 
@@ -183,4 +262,5 @@ export const reducer = searchSlice.reducer;
 export const searchActions = {
   ...searchSlice.actions,
   search: doSearch,
+  loadSnippets: loadSnippetsForMessages,
 };
