@@ -177,3 +177,5 @@ fieldset {
   // This hides the outline altogether. We might consider adding a new variable linked to a theme setting to fix this, for all users
   outline: none;
 }
+
+$mobile-ui-breakpoint: 799px;

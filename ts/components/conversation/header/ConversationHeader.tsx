@@ -29,6 +29,9 @@ import { ConversationTypeEnum } from '../../../models/types';
 import { Constants } from '../../../session';
 import { useShowConversationSettingsFor } from '../../menuAndSettingsHooks/useShowConversationSettingsFor';
 import { sectionActions } from '../../../state/ducks/section';
+import { SessionLucideIconButton } from '../../icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
+import { resetConversationExternal } from '../../../state/ducks/conversations';
 
 const StyledConversationHeader = styled.div`
   display: flex;
@@ -36,8 +39,11 @@ const StyledConversationHeader = styled.div`
   align-items: center;
   height: var(--main-view-header-height);
   position: relative;
-  padding: 0px var(--margins-lg) 0px var(--margins-sm);
   background: var(--background-primary-color);
+  padding: 0px var(--margins-lg) 0px var(--margins-lg);
+  @media screen and (min-width: 799px) {
+    padding: 0px var(--margins-lg) 0px var(--margins-sm);
+  }
 `;
 
 export const ConversationHeaderWithDetails = () => {
@@ -62,6 +68,13 @@ export const ConversationHeaderWithDetails = () => {
         width="100%"
         $flexGrow={1}
       >
+        <div className="mobile-close-conversation">
+          <SessionLucideIconButton
+            iconSize={'large'}
+            unicode={LUCIDE_ICONS_UNICODE.X}
+            onClick={() => window?.inboxStore?.dispatch(resetConversationExternal())}
+          />
+        </div>
         <ConversationHeaderTitle
           showSubtitle={!isOutgoingRequest && !isIncomingRequest && !isBlocked}
         />
@@ -80,8 +93,8 @@ export const ConversationHeaderWithDetails = () => {
               onAvatarClick={
                 showConvoSettingsCb
                   ? () => {
-                      showConvoSettingsCb({ settingsModalPage: 'default' });
-                    }
+                    showConvoSettingsCb({ settingsModalPage: 'default' });
+                  }
                   : undefined
               }
               pubkey={selectedConvoKey}

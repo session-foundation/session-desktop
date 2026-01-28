@@ -50,7 +50,7 @@ const TopSplitViewPanel = ({
   topHeight: number | undefined;
   setTopHeight: (value: number) => void;
 }) => {
-  const topRef = useRef<HTMLDivElement>(null);
+  const topRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     if (topRef.current) {
       if (!topHeight) {

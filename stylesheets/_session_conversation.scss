@@ -23,14 +23,24 @@
   flex-grow: 1;
   display: flex;
   flex-direction: column;
-  width: var(--main-panel-content-width);
+  width: 1px;
   height: 100%;
+  @media screen and (min-width: $mobile-ui-breakpoint) {
+    width: var(--main-panel-content-width);
+  }
 
   .selection-mode {
     .messages-container > *:not(.message-selected) {
       animation: toShadow var(--default-duration);
       opacity: 0.3;
     }
+  }
+}
+
+.mobile-close-conversation {
+  display: block;
+  @media screen and (min-width: $mobile-ui-breakpoint) {
+    display: none;
   }
 }
 

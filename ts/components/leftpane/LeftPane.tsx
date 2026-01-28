@@ -11,14 +11,18 @@ import { useIsRtl } from '../../util/i18n/rtlSupport';
 export const leftPaneListWidth = 300; // var(--left-panel-width) without the 80px of the action gutter
 
 const StyledLeftPane = styled.div<{ $isRtl: boolean }>`
-  width: ${() => `${leftPaneListWidth}px`};
-  height: 100%;
+  width: 100%;
+  @media screen and (min-width: 799px) {
+    width: ${() => `${leftPaneListWidth}px`};
+    height: 100%;
+    border-left: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
+  }
+  height: calc(100% - 76px);
   display: inline-flex;
   flex-direction: column;
   position: relative;
   flex-shrink: 0;
-  border-left: 1px solid var(--border-color);
-  border-right: 1px solid var(--border-color);
   direction: ${({ $isRtl }) => ($isRtl ? 'rtl' : 'ltr')};
 `;
 
@@ -38,7 +42,13 @@ const CallContainer = () => {
 
 const StyledLeftPaneSession = styled.div`
   display: flex;
+  flex-direction: column-reverse;
   height: 100%;
+  width: 100%;
+
+  @media screen and (min-width: 799px) {
+    flex-direction: row;
+  }
 `;
 
 export const LeftPane = () => {

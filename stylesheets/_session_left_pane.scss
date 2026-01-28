@@ -16,3 +16,20 @@
   flex-grow: 0;
   padding-inline-end: 5px;
 }
+
+.module-session-inbox-view__styled_gutter {
+  transition: none;
+  width: 100%;
+  @media screen and (min-width: $mobile-ui-breakpoint) {
+    width: var(--left-panel-width);
+  }
+}
+.mobile-active-conversation {
+  width: 1px;
+  margin-left: -1px;
+  @media screen and (min-width: $mobile-ui-breakpoint) {
+    width: 100%;
+    margin-left: 0px;
+    max-width: var(--left-panel-width);
+  }
+}
