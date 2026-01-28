@@ -2283,53 +2283,63 @@ async function updateToSessionSchemaVersion52(currentVersion: number, db: Databa
 }
 
 async function updateToSessionSchemaVersion53(currentVersion: number, db: Database) {
-  const targetVersion = 53;
+  const targetVersion = 54;
   if (currentVersion >= targetVersion) {
     return;
   }
   console.log(`updateToSessionSchemaVersion${targetVersion}: starting...`);
 
   db.transaction(() => {
-    db.exec(`
-      ALTER TABLE ${MESSAGES_TABLE}
-      ADD COLUMN ${MessageColumns.coalesceSentAndReceivedAt} INTEGER;
-    `);
-    db.exec(`
-      ALTER TABLE ${MESSAGES_TABLE}
-      ADD COLUMN ${MessageColumns.mentionsUs} BOOLEAN;
-    `);
-
+    // db.exec(`
+    //       ALTER TABLE ${MESSAGES_TABLE}
+    //       ADD COLUMN ${MessageColumns.coalesceSentAndReceivedAt} INTEGER;
+    //     `);
+    // db.exec(`
+    //       ALTER TABLE ${MESSAGES_TABLE}
+    //       ADD COLUMN ${MessageColumns.mentionsUs} BOOLEAN;
+    //     `);
     dropFtsAndTriggers(db);
     // rebuild the fts table, this time with the referencing messages table logic
     rebuildFtsTableReferencingMessages(db);
-
     // Populate existing rows
     db.exec(`
-      UPDATE ${MESSAGES_TABLE}
-      SET ${MessageColumns.coalesceSentAndReceivedAt} = COALESCE(serverTimestamp, sent_at, received_at);
-    `);
+          UPDATE ${MESSAGES_TABLE}
+          SET ${MessageColumns.coalesceSentAndReceivedAt} = COALESCE(serverTimestamp, sent_at, received_at);
+        `);
+    db.exec(`DROP TRIGGER IF EXISTS messages_insert_sort_timestamp;`);
+    db.exec(`DROP TRIGGER IF EXISTS messages_update_sort_timestamp;`);
+    db.exec(`DROP INDEX IF EXISTS sort_timestamp_sent_only_index;`);
+    db.exec(`DROP INDEX IF EXISTS sort_timestamp_sent_only_conversation_index;`);
+    db.exec(`DROP INDEX IF EXISTS sort_timestamp_full_index;`);
+    db.exec(`DROP INDEX IF EXISTS sort_timestamp_full_conversation_index;`);
+    db.exec(`DROP INDEX IF EXISTS messages_conversation_unread_sort;`);
+    db.exec(`DROP INDEX IF EXISTS messages_conversation_read_sort;`);
+    db.exec(`DROP INDEX IF EXISTS messages_conversation_unread;`);
+    db.exec(`DROP INDEX IF EXISTS messages_expiring_index;`);
+    db.exec(`DROP INDEX IF EXISTS messages_mentionsUs_index;`);
+    db.exec(`DROP INDEX IF EXISTS messages_id_hasAttachments_index;`);
+    db.exec(`DROP INDEX IF EXISTS messages_expiring_timer_outgoing_index;`);
 
     // create trigger on update of messages to MessageColumns.coalesceSentAndReceivedAt
     db.exec(`
-  -- Insert trigger
-  CREATE TRIGGER messages_insert_sort_timestamp
-  AFTER INSERT ON ${MESSAGES_TABLE}
-  BEGIN
-    UPDATE ${MESSAGES_TABLE}
-    SET ${MessageColumns.coalesceSentAndReceivedAt} = COALESCE(NEW.serverTimestamp, NEW.sent_at, NEW.received_at)
-    WHERE rowid = NEW.rowid;
-  END;
+      -- Insert trigger
+      CREATE TRIGGER messages_insert_sort_timestamp
+      AFTER INSERT ON ${MESSAGES_TABLE}
+      BEGIN
+        UPDATE ${MESSAGES_TABLE}
+        SET ${MessageColumns.coalesceSentAndReceivedAt} = COALESCE(NEW.serverTimestamp, NEW.sent_at, NEW.received_at)
+        WHERE rowid = NEW.rowid;
+      END;
 
-  -- Update trigger
-  CREATE TRIGGER messages_update_sort_timestamp
-  AFTER UPDATE OF serverTimestamp, sent_at, received_at ON ${MESSAGES_TABLE}
-  BEGIN
-    UPDATE ${MESSAGES_TABLE}
-    SET ${MessageColumns.coalesceSentAndReceivedAt} = COALESCE(NEW.serverTimestamp, NEW.sent_at, NEW.received_at)
-    WHERE rowid = NEW.rowid;
-  END;
-`);
-
+      -- Update trigger
+      CREATE TRIGGER messages_update_sort_timestamp
+      AFTER UPDATE OF serverTimestamp, sent_at, received_at ON ${MESSAGES_TABLE}
+      BEGIN
+        UPDATE ${MESSAGES_TABLE}
+        SET ${MessageColumns.coalesceSentAndReceivedAt} = COALESCE(NEW.serverTimestamp, NEW.sent_at, NEW.received_at)
+        WHERE rowid = NEW.rowid;
+      END;
+    `);
     db.exec(
       `CREATE INDEX ${MessageColumns.coalesceSentAndReceivedAt}_index ON ${MESSAGES_TABLE}(${MessageColumns.coalesceSentAndReceivedAt} DESC);`
     );
@@ -2342,38 +2352,36 @@ async function updateToSessionSchemaVersion53(currentVersion: number, db: Databa
     // Also, use this migration to create a few indexes on what is called as part of `fetchConvoMemoryDetails`
     // this one is for what is used in `getLastMessageReadInConversation`
     db.exec(`
-    CREATE INDEX messages_conversation_unread_sort
-    ON ${MESSAGES_TABLE}(conversationId, unread, ${MessageColumns.coalesceSentAndReceivedAt} DESC) WHERE unread=${toSqliteBoolean(true)};
-  `);
+        CREATE INDEX messages_conversation_unread_sort
+        ON ${MESSAGES_TABLE}(conversationId, unread, ${MessageColumns.coalesceSentAndReceivedAt} DESC) WHERE unread=${toSqliteBoolean(true)};
+      `);
 
     db.exec(`
-    CREATE INDEX messages_conversation_read_sort
-    ON ${MESSAGES_TABLE}(conversationId, unread, ${MessageColumns.coalesceSentAndReceivedAt} DESC) WHERE unread=${toSqliteBoolean(false)};
-  `);
+        CREATE INDEX messages_conversation_read_sort
+        ON ${MESSAGES_TABLE}(conversationId, unread, ${MessageColumns.coalesceSentAndReceivedAt} DESC) WHERE unread=${toSqliteBoolean(false)};
+      `);
 
     // this one is for what is used in `getUnreadCountByConversation`
     db.exec(`
-    CREATE INDEX messages_conversation_unread
-    ON ${MESSAGES_TABLE}(conversationId, unread);
-  `);
+        CREATE INDEX messages_conversation_unread
+        ON ${MESSAGES_TABLE}(conversationId, unread);
+      `);
 
     // Create indexes for searching expired/expiring messages
     db.exec(`CREATE INDEX messages_expiring_index ON ${MESSAGES_TABLE} (expires_at);`);
+
     db.exec(
       `CREATE INDEX messages_expiring_timer_outgoing_index ON ${MESSAGES_TABLE} (expires_at, expireTimer, type);`
     );
-
     // Create an index on the mentionsUs column with unread & conversationId. Needed for `getFirstUnreadMessageWithMention`
     db.exec(
       `CREATE INDEX messages_mentionsUs_index ON ${MESSAGES_TABLE} (conversationId, unread, ${MessageColumns.mentionsUs}, ${MessageColumns.coalesceSentAndReceivedAt});`
     );
-
     // Create an index on the the messageId & hasAttachments. Needed for `removeKnownAttachments`
     db.exec(
       `CREATE INDEX messages_id_hasAttachments_index ON ${MESSAGES_TABLE} (id, hasAttachments) WHERE hasAttachments = ${toSqliteBoolean(true)};`
     );
-
-    writeSessionSchemaVersion(targetVersion, db);
+    writeSessionSchemaVersion(53, db);
   })();
 
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
