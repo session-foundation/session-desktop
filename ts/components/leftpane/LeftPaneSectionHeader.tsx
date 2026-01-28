@@ -22,6 +22,7 @@ import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { tr } from '../../localization/localeTools';
 import { userSettingsModal } from '../../state/ducks/modalDialog';
 import { SettingsKey } from '../../data/settings-key';
+import { LeftPaneAnnouncements } from './LeftPaneAnnoucements';
 
 const StyledLeftPaneSectionHeader = styled(Flex)`
   height: var(--main-view-header-height);
@@ -108,7 +109,7 @@ function getLeftPaneHeaderLabel(leftOverlayMode: LeftOverlayMode | undefined): s
   return label;
 }
 
-export const LeftPaneBanner = () => {
+const LeftPaneBanner = () => {
   const isDarkTheme = useIsDarkTheme();
   const isSignInWithRecoveryPhrase = isSignWithRecoveryPhrase();
   const hideRecoveryPassword = useHideRecoveryPasswordEnabled();
@@ -162,8 +163,9 @@ export const LeftPaneBanner = () => {
 };
 
 export const LeftPaneSectionHeader = () => {
-  const showRecoveryPhrasePrompt = useSelector(getShowRecoveryPhrasePrompt);
   const leftOverlayMode = useLeftOverlayMode();
+  const noOverlayMode = !leftOverlayMode;
+  const showRecoveryPhrasePrompt = useSelector(getShowRecoveryPhrasePrompt);
 
   const dispatch = getAppDispatch();
   const goBack = () => {
@@ -216,7 +218,9 @@ export const LeftPaneSectionHeader = () => {
         </SectionTitle>
         {!leftOverlayMode && <MenuButton />}
       </StyledLeftPaneSectionHeader>
-      {showRecoveryPhrasePrompt ? <LeftPaneBanner /> : null}
+
+      {noOverlayMode && showRecoveryPhrasePrompt ? <LeftPaneBanner /> : null}
+      {noOverlayMode ? <LeftPaneAnnouncements /> : null}
     </Flex>
   );
 };
