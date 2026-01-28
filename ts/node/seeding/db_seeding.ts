@@ -130,6 +130,11 @@ function generateRandomSessionId(): string {
   return result;
 }
 
+/**
+ * Generate a bunch of random private conversations with messages in them.
+ * Note: if any changes are made, a libsession config sync will be done
+ * and all of those conversations will get removed (slowly)
+ */
 export function seedPrivateConversations({
   conversationCount,
   messagesPerConversation,
