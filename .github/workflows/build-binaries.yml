@@ -210,7 +210,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           pattern: latest-linux-*-${{ github.sha }}.yml
-          path: dist
+          path: release
           merge-multiple: true
 
       - name: Combine release metadata
@@ -340,7 +340,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           pattern: latest-mac-*-${{ github.sha }}.yml
-          path: dist
+          path: release
           merge-multiple: true
 
       - name: Combine release metadata
