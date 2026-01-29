@@ -2239,6 +2239,7 @@ async function deleteAll({
 
   console.log(`deleteAll: deleted ${attachments.length} files`);
 }
+
 function removeKnownAttachments(allAttachments: Array<string>) {
   const foundFiles = new Set<string>();
   const chunkSize = 1000;
