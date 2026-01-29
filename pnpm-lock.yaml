@@ -1150,11 +1150,11 @@ packages:
     resolution: {integrity: sha512-iIBu7mwkq4UQGeMEM8bLwNK962nXdhodeScX4slfQnRhEMMzvYivHhutCIk8uojvmASXXPC2WNEjwxFWk72Oqw==}
 
   '@emoji-mart/data@https://github.com/session-foundation/session-emoji-mart/releases/download/v5.6.0/emoji-mart-data-v1.2.1.tgz':
-    resolution: {integrity: sha512-JR40zY+VXUMdI9itDS8PGJK8ThRpxKb2eL4lHv/uUFVHdqt2GdBNj1mhKg1RiAqq4/MZDQYQyia8kxDX/TsdtA==, tarball: https://github.com/session-foundation/session-emoji-mart/releases/download/v5.6.0/emoji-mart-data-v1.2.1.tgz}
+    resolution: {tarball: https://github.com/session-foundation/session-emoji-mart/releases/download/v5.6.0/emoji-mart-data-v1.2.1.tgz}
     version: 1.2.1
 
   '@emoji-mart/react@https://github.com/session-foundation/session-emoji-mart/releases/download/v5.6.0/emoji-mart-react-v1.1.1.tgz':
-    resolution: {integrity: sha512-yysTeYN2fOaK9e9rgohm7UiDnVaX5DFooQziHKutRL/m44AILqqpbgwzNDsHt5Q+E7kF/tIO09O0OHWbAEWHkg==, tarball: https://github.com/session-foundation/session-emoji-mart/releases/download/v5.6.0/emoji-mart-react-v1.1.1.tgz}
+    resolution: {tarball: https://github.com/session-foundation/session-emoji-mart/releases/download/v5.6.0/emoji-mart-react-v1.1.1.tgz}
     version: 1.1.1
     peerDependencies:
       emoji-mart: ^5.2
@@ -1169,21 +1169,11 @@ packages:
   '@emotion/unitless@0.8.1':
     resolution: {integrity: sha512-KOEGMu6dmJZtpadb476IsZBclKvILjopjUii3V+7MnXIQCYh8W3NgNcgwo21n9LXZX6EDIKvqfjYxXebDwxKmQ==}
 
-  '@eslint-community/eslint-utils@4.9.0':
-    resolution: {integrity: sha512-ayVFHdtZ+hsq1t2Dy24wCmGXGe4q9Gu3smhLYALJrr473ZH27MsnSL+LKUlimp4BWJqMDMLmPpx/Q9R3OAlL4g==}
-    engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
-    peerDependencies:
-      eslint: ^6.0.0 || ^7.0.0 || >=8.0.0
-
   '@eslint-community/eslint-utils@4.9.1':
     resolution: {integrity: sha512-phrYmNiYppR7znFEdqgfWHXR6NCkZEK7hwWDHZUjit/2/U0r6XvkDl0SYnoM51Hq7FhCGdLDT6zxCCOY1hexsQ==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     peerDependencies:
       eslint: ^6.0.0 || ^7.0.0 || >=8.0.0
-
-  '@eslint-community/regexpp@4.12.1':
-    resolution: {integrity: sha512-CCZCDJuduB9OUkFkY2IgppNZMi2lBQgD2qzwXkEia16cge2pijY/aXi96CJMquDMn3nJdlPV1A5KrJEXwfLNzQ==}
-    engines: {node: ^12.0.0 || ^14.0.0 || >=16.0.0}
 
   '@eslint-community/regexpp@4.12.2':
     resolution: {integrity: sha512-EriSTlt5OC9/7SXkRSCAhfSxxoSUgBm33OH+IkwbdpgoqsSsUg7y3uh+IICI/Qg4BBWr3U2i39RpmycbxMq4ew==}
@@ -1728,9 +1718,6 @@ packages:
 
   '@types/jsdom@21.1.7':
     resolution: {integrity: sha512-yOriVnggzrnQ3a9OKOCxaVuSug3w3/SbOj5i7VwXWZEyUNl3bLF9V3MfxGbZKuwqJOQyRfqXyROBB1CoZLFWzA==}
-
-  '@types/jsdom@27.0.0':
-    resolution: {integrity: sha512-NZyFl/PViwKzdEkQg96gtnB8wm+1ljhdDay9ahn4hgb+SfVtPCbm3TlmDUFXTA+MGN3CijicnMhG18SI5H3rFw==}
 
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
@@ -2961,7 +2948,7 @@ packages:
     hasBin: true
 
   emoji-mart@https://github.com/session-foundation/session-emoji-mart/releases/download/v5.6.0/emoji-mart-v5.6.0.tgz:
-    resolution: {integrity: sha512-sonXhghObY+cG5B6m57cUhDsNBsuVFShK0ZareQqBtUNyHeMMMdRVCvcS1RnV9qBrwnGoh2nUa8szFITv93gJQ==, tarball: https://github.com/session-foundation/session-emoji-mart/releases/download/v5.6.0/emoji-mart-v5.6.0.tgz}
+    resolution: {tarball: https://github.com/session-foundation/session-emoji-mart/releases/download/v5.6.0/emoji-mart-v5.6.0.tgz}
     version: 5.6.0
 
   emoji-regex@8.0.0:
@@ -3384,10 +3371,6 @@ packages:
     resolution: {integrity: sha512-Z4XaCL6dUDHfP/jT25jJKMmtxvuwbkrD1vNSMFlo9lNLY2c5FHYSQgHPRZUjAB26TpDEoW9HCOgplrdbaPV/ew==}
     engines: {node: '>=14.14'}
 
-  fs-extra@11.3.2:
-    resolution: {integrity: sha512-Xr9F6z6up6Ws+NjzMCZc6WXg2YFRlrLP9NQDO3VQrWrfiojdhS56TzueT88ze0uBdCTwEIhQ3ptnmKeWGFAe0A==}
-    engines: {node: '>=14.14'}
-
   fs-extra@7.0.1:
     resolution: {integrity: sha512-YJDaCJZEnBmcbw13fvdAM9AwNOJwOzrE4pqMqBq5nFiEqXUqHwlK4B+3pUw6JNvfSPtX05xFHtYy/1ni01eGCw==}
     engines: {node: '>=6 <7 || >=8'}
@@ -3482,10 +3465,6 @@ packages:
 
   glob@10.4.5:
     resolution: {integrity: sha512-7Bv8RF0k6xjo7d4A/PxYLbUCfb6c+Vpd2/mB2yRDlew7Jb5hEXiCD9ibfO7wpk8i4sevK6DFny9h7EYbM3/sHg==}
-    hasBin: true
-
-  glob@10.5.0:
-    resolution: {integrity: sha512-DfXN8DfhJ7NH3Oe7cFmu3NCu1wKbkReJ8TorzSAFbSKrlNaQSKfIzqYqVY8zlbs2NLBbWpRiU52GX2PbaBVNkg==}
     hasBin: true
 
   glob@13.0.0:
@@ -5207,7 +5186,7 @@ packages:
     resolution: {integrity: sha512-y0m1JoUZSlPAjXVtPPW70aZWfIL/dSP7AFkRnniLCrK/8MDKog3TySTBmckD+RObVxH0v4Tox67+F14PdED2oQ==}
 
   sharp@https://github.com/session-foundation/sharp/releases/download/v0.34.5/sharp-0.34.5.tgz:
-    resolution: {integrity: sha512-sW1/dqImBRgiIdVf3ku68Ci6aFA2s1fXzEBDYxuuXZQwwWarAJZOzoFCXhWs5XGepLfrQ+T//jaxYqgPgkHQmA==, tarball: https://github.com/session-foundation/sharp/releases/download/v0.34.5/sharp-0.34.5.tgz}
+    resolution: {tarball: https://github.com/session-foundation/sharp/releases/download/v0.34.5/sharp-0.34.5.tgz}
     version: 0.34.5
     engines: {node: ^18.17.0 || ^20.3.0 || >=21.0.0}
 
@@ -6861,7 +6840,7 @@ snapshots:
       '@malept/cross-spawn-promise': 2.0.0
       debug: 4.4.3(supports-color@8.1.1)
       dir-compare: 4.2.0
-      fs-extra: 11.3.2
+      fs-extra: 11.3.0
       minimatch: 9.0.5
       plist: 3.1.0
     transitivePeerDependencies:
@@ -6909,17 +6888,10 @@ snapshots:
 
   '@emotion/unitless@0.8.1': {}
 
-  '@eslint-community/eslint-utils@4.9.0(eslint@8.57.1)':
-    dependencies:
-      eslint: 8.57.1
-      eslint-visitor-keys: 3.4.3
-
   '@eslint-community/eslint-utils@4.9.1(eslint@8.57.1)':
     dependencies:
       eslint: 8.57.1
       eslint-visitor-keys: 3.4.3
-
-  '@eslint-community/regexpp@4.12.1': {}
 
   '@eslint-community/regexpp@4.12.2': {}
 
@@ -7469,15 +7441,9 @@ snapshots:
 
   '@types/jsdom-global@3.0.7':
     dependencies:
-      '@types/jsdom': 27.0.0
+      '@types/jsdom': 21.1.7
 
   '@types/jsdom@21.1.7':
-    dependencies:
-      '@types/node': 24.10.9
-      '@types/tough-cookie': 4.0.5
-      parse5: 7.1.2
-
-  '@types/jsdom@27.0.0':
     dependencies:
       '@types/node': 24.10.9
       '@types/tough-cookie': 4.0.5
@@ -9211,8 +9177,8 @@ snapshots:
 
   eslint@8.57.1:
     dependencies:
-      '@eslint-community/eslint-utils': 4.9.0(eslint@8.57.1)
-      '@eslint-community/regexpp': 4.12.1
+      '@eslint-community/eslint-utils': 4.9.1(eslint@8.57.1)
+      '@eslint-community/regexpp': 4.12.2
       '@eslint/eslintrc': 2.1.4
       '@eslint/js': 8.57.1
       '@humanwhocodes/config-array': 0.13.0
@@ -9447,12 +9413,6 @@ snapshots:
       jsonfile: 6.1.0
       universalify: 2.0.1
 
-  fs-extra@11.3.2:
-    dependencies:
-      graceful-fs: 4.2.11
-      jsonfile: 6.1.0
-      universalify: 2.0.1
-
   fs-extra@7.0.1:
     dependencies:
       graceful-fs: 4.2.11
@@ -9566,15 +9526,6 @@ snapshots:
   glob-to-regexp@0.4.1: {}
 
   glob@10.4.5:
-    dependencies:
-      foreground-child: 3.1.1
-      jackspeak: 3.4.3
-      minimatch: 9.0.5
-      minipass: 7.1.2
-      package-json-from-dist: 1.0.1
-      path-scurry: 1.11.1
-
-  glob@10.5.0:
     dependencies:
       foreground-child: 3.1.1
       jackspeak: 3.4.3
@@ -10426,7 +10377,7 @@ snapshots:
       diff: 5.2.0
       escape-string-regexp: 4.0.0
       find-up: 5.0.0
-      glob: 10.5.0
+      glob: 10.4.5
       he: 1.2.0
       js-yaml: 4.1.0
       log-symbols: 4.1.0

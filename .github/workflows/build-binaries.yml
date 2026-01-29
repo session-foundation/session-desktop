@@ -1,7 +1,3 @@
-# There is a fair bit of duplication here, but it is the best to save our github free minutes for now.
-# We could save and restore cache to different jobs but that takes roughly 3 minutes to save,
-# so better run them in parrallel instead.
-
 name: Session Desktop
 
 on:
@@ -10,14 +6,14 @@ on:
       - master
       - dev
       - "release/**"
+      - "feature/**"
       - "ci/**"
-      - feat/pro-libsession
   pull_request:
     branches:
       - dev
       - "release/**"
+      - "feature/**"
       - "ci/**"
-      - feat/pro-libsession
   workflow_dispatch:
     inputs:
       target_branch:
@@ -35,7 +31,7 @@ concurrency:
 
 jobs:
   create_draft_release_if_needed:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       # we only want to publish on "push to master" or alpha releases. When we don't want to publish, we want to upload artefacts
@@ -48,7 +44,7 @@ jobs:
       version_tag: ${{ steps.get_version.outputs.VERSION_TAG }}
     steps:
       - name: Checkout git repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
         # We only need a few files in this run, no point cloning everything
         with:
@@ -58,7 +54,6 @@ jobs:
             build/release-notes-alpha.md
           sparse-checkout-cone-mode: false
           ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target_branch || github.ref  }}
-          submodules: 'recursive'
 
       - name: Get version tag from package.json
         # Make sure to skip this step if we do not want to make a release, as the other jobs will otherwise create a release.
@@ -89,7 +84,8 @@ jobs:
     timeout-minutes: 10
 
     steps:
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+    - name: Checkout git repo
+      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
       with:
         ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target_branch || github.ref  }}
         submodules: 'recursive'
@@ -99,21 +95,26 @@ jobs:
       with:
         cache_suffix: "linux_x64"
 
-    - run: pnpm run lint
-
-    - run: git diff --exit-code
-
-    - name: Update cached .eslintcache and tsconfig.tsbuildinfo
-      uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
-      if: github.ref == 'refs/heads/dev'
+    - name: Setup ESLint cache
+      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
       with:
-        path: |
-          .eslintcache
-          tsconfig.tsbuildinfo
-        key: ${{ steps.cache-lint.outputs.cache-primary-key }}
+        path: .eslintcache
+        key: eslint-${{ hashFiles('pnpm-lock.yaml', 'patches/**', '.eslintrc.js', '.eslint/**') }}
+        restore-keys: |
+          eslint-
+
+    - name: Ensure pnpm-lock.yaml has no duplicates
+      run: pnpm dedupe --check
+
+    - name: Format & Lint
+      run: pnpm run lint
+
+    - name: Validate formatting & linting changed no files
+      run: git diff --exit-code
 
   build_linux:
-    needs: [create_draft_release_if_needed, lint]
+    # We want to run the linux builds at the same time as linting for faster dev iteration
+    needs: [create_draft_release_if_needed]
     runs-on: ubuntu-22.04
     timeout-minutes: 20
     strategy:
@@ -123,29 +124,24 @@ jobs:
         include:
           - identifier: deb
             electron_target: deb
-            cache_suffix: linux-deb
             is_qa: false
             generate_release_metadata: true
           - identifier: rpm
             electron_target: rpm
-            cache_suffix: linux-rpm
             is_qa: false
             generate_release_metadata: true
           - identifier: AppImage
             electron_target: AppImage
-            cache_suffix: linux-AppImage
             is_qa: false
             generate_release_metadata: true
           - identifier: freebsd
             electron_target: freebsd
-            cache_suffix: linux-freebsd
             is_qa: false
             generate_release_metadata: false
           # Note: this deb-qa is currently broken. The deb and deb-qa are currently overwriting each others
           # during build-release-publish and maybe the upload-artefact too.
           # - identifier: deb-qa
           #   electron_target: deb
-          #   cache_suffix: linux-deb
           #   is_qa: true
           #   generate_release_metadata: false
     name: "${{ matrix.identifier }}"
@@ -155,7 +151,8 @@ jobs:
       USE_HARD_LINKS: false # see https://github.com/electron-userland/electron-builder/issues/7093
 
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - name: Checkout git repo
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target_branch || github.ref  }}
           submodules: 'recursive'
@@ -163,6 +160,7 @@ jobs:
       - name: Setup
         uses: ./actions/setup
         with:
+          # All the x64 linux build run on the same machine so the setup cache is the same
           cache_suffix: "linux_x64"
 
       - name: Custom build for QA if needed
@@ -202,7 +200,7 @@ jobs:
         if: ${{ needs.create_draft_release_if_needed.outputs.version_tag != '' && matrix.generate_release_metadata == true }}
         shell: bash
         run: |
-          mv dist/latest-linux.yml dist/latest-linux-${{ matrix.electron_target }}-${{ github.sha }}.yml
+          mv release/latest-linux.yml release/latest-linux-${{ matrix.electron_target }}-${{ github.sha }}.yml
 
       - name: Upload release metadata
         # only run this on "push" to "master" or alpha releases
@@ -210,7 +208,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: latest-linux-${{ matrix.electron_target }}-${{ github.sha }}.yml
-          path: dist/latest-linux-${{ matrix.electron_target }}-${{ github.sha }}.yml
+          path: release/latest-linux-${{ matrix.electron_target }}-${{ github.sha }}.yml
 
   post_build_linux:
     needs: [create_draft_release_if_needed, build_linux]
@@ -220,7 +218,7 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout git repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         # We only need a few files in this run, no point cloning everything
         with:
           sparse-checkout: |
@@ -228,13 +226,12 @@ jobs:
             build/setup-release-combine.sh
           sparse-checkout-cone-mode: false
           ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target_branch || github.ref  }}
-          submodules: 'recursive'
 
       - name: Download release metadata
         uses: actions/download-artifact@v4
         with:
           pattern: latest-linux-*-${{ github.sha }}.yml
-          path: dist
+          path: release
           merge-multiple: true
 
       - name: Combine release metadata
@@ -246,7 +243,7 @@ jobs:
         with:
           # the if at the job level checks that version_tag is not empty
           tag: v${{ needs.create_draft_release_if_needed.outputs.version_tag }}
-          artifacts: "dist/latest-linux.yml"
+          artifacts: "release/latest-linux.yml"
           draft: true # important to keep this, so we **NEVER** make a live release through the CI
           allowUpdates: true
           omitNameDuringUpdate: true
@@ -270,7 +267,8 @@ jobs:
         uses: microsoft/setup-msbuild@v2
         if: runner.os == 'Windows'
 
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - name: Checkout git repo
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target_branch || github.ref  }}
           submodules: 'recursive'
@@ -330,7 +328,8 @@ jobs:
     steps:
       - run: git config --global core.autocrlf false
 
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - name: Checkout git repo
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target_branch || github.ref  }}
           submodules: 'recursive'
@@ -361,7 +360,7 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout git repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         # We only need a few files in this run, no point cloning everything
         with:
           sparse-checkout: |
@@ -369,13 +368,12 @@ jobs:
             build/setup-release-combine.sh
           sparse-checkout-cone-mode: false
           ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target_branch || github.ref  }}
-          submodules: 'recursive'
 
       - name: Download release metadata
         uses: actions/download-artifact@v4
         with:
           pattern: latest-mac-*-${{ github.sha }}.yml
-          path: dist
+          path: release
           merge-multiple: true
 
       - name: Combine release metadata
@@ -387,7 +385,7 @@ jobs:
         # the if at the job level checks that version_tag is not empty
         with:
           tag: v${{ needs.create_draft_release_if_needed.outputs.version_tag }}
-          artifacts: "dist/latest-mac.yml"
+          artifacts: "release/latest-mac.yml"
           draft: true # important to keep this, so we **NEVER** make a live release through the CI
           allowUpdates: true
           omitNameDuringUpdate: true

@@ -2,7 +2,7 @@ name: 'Setup'
 description: 'Setup Session Desktop'
 inputs:
   cache_suffix:
-    description: 'the package we are currently building (used as key for the cached node_modules)'
+    description: 'Platform/build identifier for cache isolation (e.g., linux_x64, mac-arm64)'
     required: true
 
 runs:
@@ -28,23 +28,26 @@ runs:
         cache: 'pnpm'
         cache-dependency-path: 'pnpm-lock.yaml'
 
-    - name: Cache .electron-gyp
+    - name: Setup cache for .electron-gyp
       uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
       with:
         path: ~/.electron-gyp
-        key: electron-gyp-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+        key: electron-gyp-${{ runner.os }}-${{ runner.arch }}-${{ inputs.cache_suffix }}-${{ hashFiles('pnpm-lock.yaml') }}
+        restore-keys: |
+          electron-gyp-${{ runner.os }}-${{ runner.arch }}-${{ inputs.cache_suffix }}-
+          electron-gyp-${{ runner.os }}-${{ runner.arch }}-
 
-    - name: Restore cached .eslintcache and tsconfig.tsbuildinfo
-      uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
-      id: cache-lint
+    - name: Setup cache for TypeScript build info
+      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
       with:
-        path: |
-          .eslintcache
-          tsconfig.tsbuildinfo
-        key: lint-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'patches/**', '.eslintrc.js', '.eslint/**', 'tsconfig.json') }}
+        path: tsconfig.tsbuildinfo
+        key: tsbuildinfo-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('pnpm-lock.yaml', 'tsconfig.json') }}
+        restore-keys: |
+          tsbuildinfo-${{ runner.os }}-${{ runner.arch }}-
 
     - name: Install Desktop node_modules
       shell: bash
       run: pnpm install
       env:
         NPM_CONFIG_LOGLEVEL: verbose
+
