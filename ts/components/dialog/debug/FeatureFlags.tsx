@@ -34,6 +34,7 @@ import { proBackendDataActions } from '../../../state/ducks/proBackendData';
 import { Storage } from '../../../util/storage';
 import { SettingsKey } from '../../../data/settings-key';
 import {
+  defaultAvatarPickerColor,
   defaultProBooleanFeatureFlags,
   defaultProDataFeatureFlags,
 } from '../../../state/ducks/types/defaultFeatureFlags';
@@ -549,6 +550,19 @@ export function DebugFeatureFlags({ forceUpdate }: { forceUpdate: () => void }) 
         label="Network Page Node Count"
         min={1}
         max={10}
+      />
+      <FlagEnumDropdownInput
+        label="Fake Avatar Picker Color"
+        flag="fakeAvatarPickerColor"
+        options={[
+          { label: 'blue', value: defaultAvatarPickerColor },
+          { label: 'green', value: '#00ff00' },
+          { label: 'red', value: '#ff0000' },
+          { label: 'black', value: '#000000' },
+          { label: 'white', value: '#fffff' },
+        ]}
+        forceUpdate={forceUpdate}
+        unsetOption={{ label: 'Pick a color', value: null }}
       />
     </DebugMenuSection>
   );
