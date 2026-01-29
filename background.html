@@ -25,7 +25,11 @@
     />
     <title>Session</title>
     <link href="images/session/session_icon.png" rel="shortcut icon" />
-    <!-- Load first to prevent font swapping on start -->
+    <!-- preload fonts first to prevent font swapping on start -->
+    <link rel="preload" href="fonts/Roboto-Regular.ttf" as="font" type="font/ttf" />
+    <link rel="preload" href="fonts/Roboto-Light.ttf" as="font" type="font/ttf" />
+    <link rel="preload" href="fonts/Roboto-Bold.ttf" as="font" type="font/ttf" />
+    <link rel="preload" href="fonts/lucide.ttf" as="font" type="font/ttf" />
     <link href="stylesheets/fonts.css" rel="stylesheet" type="text/css" />
     <link href="stylesheets/dist/manifest.css" rel="stylesheet" type="text/css" />
   </head>

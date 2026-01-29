@@ -29,24 +29,26 @@ If you use other node versions you might have or need a node version manager.
 - Some node version management tools can read from the `.nvmrc` file and automatically make the change. If you use [asdf](https://asdf-vm.com/) you can make a [config change](https://asdf-vm.com/guide/getting-started.html#using-existing-tool-version-files) to support the `.nvmrc` file.
 - We use [Yarn Classic](https://classic.yarnpkg.com) as our package manager. You can install it by running `npm install --global yarn`.
 
+### Strings & Localization
+
+All user-facing strings are localized and managed via our [Localization Platform](https://getsession.org/translate).
+
+If you are working on a planned feature, you may need to get the latest localized strings. An
+automated PR will exist to merge these changes into dev, either merge this PR into dev or merge
+its commit into your branch.
+
+During development you can modify the [`ts/localization/locales.ts`] and ['ts/localization/english.ts']
+files so your changes can be built and tested locally. You **must not** modify and commit
+changes to any files in [`ts/localization/generated/`](ts/localization/generated/) as they are generated. If your
+changes require new strings, they can be requested as part of the PR.
+
 ### Python
 
-You will need a [Python](https://www.python.org) version which matches our current version. You can check [`.tool-versions` in the `dev` branch](https://github.com/session-foundation/session-desktop/blob/dev/.tool-versions) to see what the current version is.
+You will need a [Python](https://www.python.org) version which matches our current version so you can use node-gyp. You can check [`.tool-versions` in the `dev` branch](https://github.com/session-foundation/session-desktop/blob/dev/.tool-versions) to see what the current version is.
 
-If you use other python versions you might have or need a python version manager.
-
-- [asdf](https://asdf-vm.com/) - you can run `asdf install` in the project directory and it will use the python version specified in `.tool-versions`.
-
-> [!WARNING]
-> The package [setuptools](https://pypi.org/project/setuptools/) was removed in Python 3.12, so you'll need to install it manually.
-
-```sh
-python -m pip install --upgrade pip setuptools
-```
+See [node-gyp installation instructions](https://github.com/nodejs/node-gyp#installation) for setting up Python.
 
 ## Linux
-
-- Depending on your distribution, you might need to install [hunspell](https://github.com/hunspell/hunspell) and your specific locale (`hunspell-<lang>`) e.g. `hunspell-en-au`.
 
 - Install the required build tools for your operating system
 
@@ -84,18 +86,6 @@ python -m pip install --upgrade pip setuptools
 
   You can get the current `<version>` from the [`.nvmrc`](.nvmrc).
 
-- Verify your [Python](https://www.python.org/downloads/) version.
-
-  Most modern Linux distributions should come with Python 3 pre-installed.
-
-  It should be equal to or greater than the version specified in the [`.tool-versions`](.tool-versions).
-
-- Install [setuptools](https://pypi.org/project/setuptools/).
-
-  ```sh
-  python -m pip install --upgrade pip setuptools
-  ```
-
 - Install [Yarn Classic](https://classic.yarnpkg.com/en/docs/install/#mac-stable)
 
   ```sh
@@ -128,18 +118,6 @@ python -m pip install --upgrade pip setuptools
 
   You can get the current `<version>` from the [`.nvmrc`](.nvmrc).
 
-- Install [Python](https://www.python.org/downloads/)
-
-  We recommend using [asdf](https://asdf-vm.com/).
-
-  You can get the current `<version>` from the [`.tool-versions`](.tool-versions).
-
-- Install [setuptools](https://pypi.org/project/setuptools/).
-
-  ```sh
-  python -m pip install --upgrade pip setuptools
-  ```
-
 - Install [Yarn Classic](https://classic.yarnpkg.com/en/docs/install/#mac-stable)
 
   ```sh
@@ -157,7 +135,6 @@ The following instructions will install the following:
 - [Visual Studio 2022](https://visualstudio.microsoft.com/downloads/)
 - [Visual Studio C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
 - [Node.js](https://nodejs.org/en/download/)
-- [Python](https://www.python.org/downloads/)
 
 Setup instructions for Windows using Chocolatey:
 
@@ -230,23 +207,6 @@ Setup instructions for Windows using Chocolatey:
   choco install nodejs --version <version>
   ```
 
-- Install [Python](https://www.python.org/downloads/)
-
-  You can get the current `<version>` from the [`.tool-versions`](.tool-versions).
-
-  ```sh
-  choco install python --version <version>
-  ```
-
-> [!WARNING]
-> You may need to restart PowerShell for python to be recognized.
-
-- Install [setuptools](https://pypi.org/project/setuptools/)
-
-  ```sh
-  python -m pip install --upgrade pip setuptools
-  ```
-
 - Install [Yarn Classic](https://classic.yarnpkg.com/en/docs/install/#windows-stable)
 
   ```sh
@@ -266,11 +226,12 @@ Now, run these commands in your preferred terminal in a good directory for devel
 ```sh
 git clone https://github.com/session-foundation/session-desktop.git
 cd session-desktop
-npm install --global yarn      # (only if you don’t already have `yarn`)
-yarn install --frozen-lockfile # Install and build dependencies (this will take a while)
+git submodule update --init --recursive # Initialize and fetch submodules
+npm install --global yarn               # (only if you don’t already have `yarn`)
+yarn install --frozen-lockfile          # Install and build dependencies (this will take a while)
 yarn build
-yarn test                      # A good idea to make sure tests run first
-yarn start-prod                # Start Session!
+yarn test                               # A good idea to make sure tests run first
+yarn start-prod                         # Start Session!
 ```
 
 This will build the project and start the application in production mode.
@@ -285,13 +246,6 @@ This error is caused by the [Electron](https://www.electronjs.org/) sandbox not 
 ```sh
 yarn start-prod --no-sandbox   # Start Session!
 ```
-
-</details>
-
-<details>
-<summary><em>Python was not found; run without arguments to install from the Microsoft Store, or disable this shortcut from Settings > Manage App Execution Aliases.</em></summary>
-
-We use the `python3` command for many of our scripts. If you have installed Python using [Chocolatey](https://chocolatey.org/), you will need to create an alias for `python3` that points to `python`. Alternatively, you can update the scripts to use `python` instead of `python3`.
 
 </details>
 
@@ -398,14 +352,13 @@ So you wanna make a pull request? Please observe the following guidelines.
 
 - First, make sure that your `yarn ready` run passes - it's very similar to what our
   Continuous Integration servers do to test the app.
-- Never use plain strings right in the source code - pull them from `messages.json`!
-  You **only** need to modify the default locale
-  [`_locales/en/messages.json`](_locales/en/messages.json).
-  Other locales are generated automatically based on that file and then periodically
-  uploaded to Crowdin for translation. If you add or change strings in messages.json
-  you will need to run `yarn buid:locales-soft` this command generates updated TypeScript type definitions to ensure you aren't using a localization key which doesn't exist.
+- Never use plain strings right in the source code - all of the user facing strings
+  are managed via our Localization Platform. See [Strings & Localization](#strings-localization).
+  You **must not** modify and commit changes to any files in [`ts/localization/generated/`](ts/localization/generated/)
+  as they are generated. If your changes require new strings, they can be
+  requested as part of the PR.
 - Please do not submit pull requests for pure translation fixes. Anyone can update
-  the translations at [Crowdin](https://getsession.org/translate).
+  the translations via our [Localization Platform](https://getsession.org/translate).
 - [Rebase](https://nathanleclaire.com/blog/2014/09/14/dont-be-scared-of-git-rebase/) your
   changes on the latest `dev` branch, resolving any conflicts.
   This ensures that your changes will merge cleanly when you open your PR.
@@ -452,3 +405,25 @@ The binaries will be placed inside the `release/` folder.
 You can change in [package.json](./package.json) `"target": "deb",` to any of the [electron-builder targets](https://www.electron.build/linux#target) to build for another target.
 
 </details>
+
+
+# Detailed Build Process
+
+The majority of the codebase is transpiled directly by the TypeScript compiler `tsc`. Notable exceptions are the workers and svgs, these are built using tsc via webpack.
+
+1. `tsc` is run to transpile the majority of the code outputting to `dist`
+2. Babel bundles the `dist` JavaScript, compiles the React code with React Compiler and outputs to `app`
+3. A build script copies all js and non-code source to `app`.
+4. Webpack is run to build all the workers outputting to `dist`
+
+Release builds will target `app` as the source and build from that.
+
+## Cached builds
+
+The cache stores hashes of some items to prevent unnecessary copying of unchanged items.
+
+## Build process TODOs
+
+- Minification is unstable and is currently unsupported, there is a WIP script for it `minify.js`
+- Split babel and react compiler outputs to their own directories and combine their outputs into `app`. Better for debugging and watching.
+

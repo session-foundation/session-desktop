@@ -18,6 +18,7 @@ import { privateSet, privateSetKey } from './modelFriends';
 import type { SignalService } from '../protobuf';
 import { getCachedUserConfig } from '../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 import type { SwarmDecodedEnvelope } from '../receiver/types';
+import { stringify } from '../types/sqlSharedTypes';
 
 type SessionProfileArgs = {
   displayName: string;
@@ -266,6 +267,12 @@ abstract class SessionProfileChanges {
     const originalAvatar = this.convo.getAvatarInProfilePath();
     const originalFallbackAvatar = this.convo.getFallbackAvatarInProfilePath();
 
+    if (debugProfileApplyChange) {
+      window.log.debug(
+        `applySetAvatarDownloadedChanges for ${ed25519Str(this.convo.id)} existingAvatarPointer:${existingAvatarPointer} existingProfileKeyHex:${existingProfileKeyHex}\n\t newArgs: ${stringify(args)}`
+      );
+    }
+
     // if no changes are needed, return early
     if (
       isEqual(originalAvatar, args.avatarPath) &&
@@ -273,10 +280,20 @@ abstract class SessionProfileChanges {
       isEqual(existingAvatarPointer, args.avatarPointer) &&
       isEqual(existingProfileKeyHex, newProfileKeyHex)
     ) {
+      if (debugProfileApplyChange) {
+        window.log.debug(
+          `applySetAvatarDownloadedChanges for ${ed25519Str(this.convo.id)} no changes needed`
+        );
+      }
       return { avatarChanged: false };
     }
     // Avatar has changed, but we are only dealing with the downloaded part of it here.
     // Hence why we do not deal with the profileUpdatedAtSeconds here.
+    if (debugProfileApplyChange) {
+      window.log.debug(
+        `applySetAvatarDownloadedChanges for ${ed25519Str(this.convo.id)} changes detected`
+      );
+    }
 
     this.convo[privateSet]({
       avatarPointer: args.avatarPointer,

@@ -49,8 +49,6 @@ export const InteractionNotification = (props: WithMessageId) => {
   let text = '';
 
   switch (interactionType) {
-    case ConversationInteractionType.Hide:
-      return null;
     case ConversationInteractionType.Leave:
       text = isCommunity
         ? tr('communityLeaveError', {

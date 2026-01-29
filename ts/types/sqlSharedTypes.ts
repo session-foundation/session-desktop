@@ -10,10 +10,53 @@ import {
 } from 'libsession_util_nodejs';
 import { from_hex } from 'libsodium-wrappers-sumo';
 import { isArray, isEmpty, isEqual } from 'lodash';
+import { SqliteValue, StatementOptions } from '@signalapp/sqlcipher';
 import { DisappearingMessageConversationModeType } from '../session/disappearing_messages/types';
 import { fromHexToArray, toHex } from '../session/utils/String';
 import { ConfigWrapperObjectTypesMeta } from '../webworker/workers/browser/libsession_worker_functions';
 import { OpenGroupRequestCommonType, OpenGroupV2Room } from '../data/types';
+import { MessageAttributes } from '../models/messageType';
+import { ConversationAttributes } from '../models/conversationAttributes';
+
+// Basic Types
+export type JSONRow<T = object> = Readonly<{ json: string } & T>;
+export type JSONRows = Array<JSONRow>;
+
+export type CountRow = { 'count(*)': number };
+
+export type SQLInsertableValue = SqliteValue<StatementOptions>;
+export type SQLInsertable = Record<string, SQLInsertableValue>;
+
+export type SQLSerialized<T extends Record<string, any>> = {
+  [K in keyof T]: T[K] extends SQLInsertableValue ? T[K] : SerializeValue<T[K]>;
+};
+
+type SerializeValue<T> = T extends string
+  ? string
+  : T extends number
+    ? number
+    : T extends boolean
+      ? number
+      : T extends Date
+        ? number
+        : T extends null
+          ? null
+          : T extends undefined
+            ? null
+            : T extends Array<any>
+              ? string
+              : T extends object
+                ? string
+                : SQLInsertableValue;
+
+export type SQLConversationAttributes = SQLSerialized<ConversationAttributes>;
+export type SQLMessageAttributes = SQLSerialized<MessageAttributes>;
+// NOTE: hash is nullable despite being the primary key because the create table statment doesn't specify "NOT NULL"
+export type SQLSeenMessageAttributes = SQLSerialized<{
+  hash?: string;
+  expiresAt?: number;
+  conversationId?: string;
+}>;
 
 /**
  * This wrapper can be used to make a function type not async, async.

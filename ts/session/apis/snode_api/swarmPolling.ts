@@ -9,7 +9,7 @@ import {
 
 import { compact, concat, flatten, isArray, isEmpty, last, omit, sampleSize, uniqBy } from 'lodash';
 import { v4 } from 'uuid';
-import z from '../../../util/zod';
+import { z } from '../../../util/zod';
 import { Data } from '../../../data/data';
 import * as Receiver from '../../../receiver/receiver';
 import { PubKey } from '../../types';
@@ -634,7 +634,7 @@ export class SwarmPolling {
     if (type === ConversationTypeEnum.GROUPV2 && PubKey.is03Pubkey(pubkey)) {
       const toBump = await MetaGroupWrapperActions.activeHashes(pubkey);
       window.log.debug(
-        `SwarmPolling: configHashesToBump group(${ed25519Str(pubkey)}) count: ${toBump.length}`
+        `SwarmPolling: configHashesToBump ${ed25519Str(pubkey)} count: ${toBump.length}`
       );
       return toBump;
     }

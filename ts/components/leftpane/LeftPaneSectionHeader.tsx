@@ -117,6 +117,7 @@ const LeftPaneBanner = () => {
   const dispatch = getAppDispatch();
 
   const showRecoveryPhraseModal = async () => {
+    await window.setSettingValue(SettingsKey.dismissedRecoveryPhrasePrompt, true);
     await window.setSettingValue(SettingsKey.showRecoveryPhrasePrompt, false);
     dispatch(userSettingsModal({ userSettingsPage: 'recovery-password' }));
   };
@@ -217,8 +218,9 @@ export const LeftPaneSectionHeader = () => {
         </SectionTitle>
         {!leftOverlayMode && <MenuButton />}
       </StyledLeftPaneSectionHeader>
-      {noOverlayMode && showRecoveryPhrasePrompt && <LeftPaneBanner />}
-      {noOverlayMode && <LeftPaneAnnouncements />}
+
+      {noOverlayMode && showRecoveryPhrasePrompt ? <LeftPaneBanner /> : null}
+      {noOverlayMode ? <LeftPaneAnnouncements /> : null}
     </Flex>
   );
 };

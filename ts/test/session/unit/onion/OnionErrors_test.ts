@@ -115,7 +115,7 @@ describe('OnionPathsErrors', () => {
 
     await OnionPaths.getOnionPath({});
 
-    oldOnionPaths = OnionPaths.TEST_getTestOnionPath();
+    oldOnionPaths = OnionPaths.getTestOnionPath();
     Sinon.stub(Onions, 'decodeOnionResult').callsFake(
       (_symmetricKey: ArrayBuffer, plaintext: string) =>
         Promise.resolve({

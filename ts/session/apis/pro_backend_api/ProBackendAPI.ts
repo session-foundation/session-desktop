@@ -58,7 +58,7 @@ export default class ProBackendAPI {
   }
 
   private static async getProDetailsBody(args: WithMasterPrivKeyHex) {
-    const request = ProWrapperActions.proStatusRequestBody({
+    const request = await ProWrapperActions.proStatusRequestBody({
       ...ProBackendAPI.getProSigningArgs(args),
       // NOTE: The latest payment is the only one required for state derivation
       count: 1,

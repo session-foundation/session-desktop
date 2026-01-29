@@ -172,22 +172,6 @@ async function searchMessages(query: string, limit: number): Promise<Array<Messa
   });
 }
 
-/**
- * Returns just json objects not MessageModel
- */
-async function searchMessagesInConversation(
-  query: string,
-  conversationId: string,
-  limit: number
-): Promise<Array<MessageAttributes>> {
-  const messages = (await channels.searchMessagesInConversation(
-    query,
-    conversationId,
-    limit
-  )) as Array<MessageAttributes>;
-  return messages;
-}
-
 // Message
 
 async function cleanSeenMessages(): Promise<void> {
@@ -676,7 +660,7 @@ async function removeOtherData(): Promise<void> {
 
 async function getMessagesWithVisualMediaAttachments(
   conversationId: string,
-  limit?: number
+  limit: number
 ): Promise<Array<MessageAttributes>> {
   return channels.getMessagesWithVisualMediaAttachments(conversationId, limit);
 }
@@ -813,7 +797,6 @@ export const Data = {
   getPubkeysInPublicConversation,
   searchConversations,
   searchMessages,
-  searchMessagesInConversation,
   cleanSeenMessages,
   cleanLastHashes,
   clearLastHashesForConvoId,

@@ -1,5 +1,6 @@
 import 'react';
 import type { ReleaseChannels } from './updater/types';
+import { ThemeStateType } from './themes/constants/colors';
 
 /**
  * WARNING: if you change something here, you will most likely break some integration tests.
@@ -279,6 +280,7 @@ declare module 'react' {
     | `${MenuItems}-menu-item`
     | `${SettingsMenuItems}-settings-menu-item`
     | `${Inputs}-input`
+    | `${ThemeStateType}-themes-settings-menu-item`
 
     // Pro settings
     | `${ProFeatureItems}-pro-settings-menu-item`
@@ -400,7 +402,8 @@ declare module 'react' {
     | 'copy-button-profile-update'
     | 'delete-message-request'
     | 'accept-message-request'
-    | 'mentions-popup-row'
+    | 'mentions-container'
+    | 'mentions-container-row'
     | 'session-id-signup'
     | 'search-contacts-field'
     | 'three-dot-loading-animation'

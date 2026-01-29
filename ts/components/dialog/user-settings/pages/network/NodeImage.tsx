@@ -1,5 +1,4 @@
 import styled from 'styled-components';
-import { Block } from './components';
 import { useSecuringNodesCount } from './sections/network/hooks/useSecuringNodesCount';
 import {
   AnimatedSpinnerIcon,
@@ -19,10 +18,7 @@ import {
 } from '../../../../../svgs/index';
 import { useInfoFakeRefreshing } from '../../../../../state/selectors/networkModal';
 
-const StyledNodeImage = styled(Block)<{ $nodeColor: string; $pathColor: string }>`
-  display: flex;
-  justify-content: center;
-  align-items: center;
+const StyledNodeImage = styled.div<{ $nodeColor: string; $pathColor: string }>`
   --c1: ${({ $nodeColor }) => $nodeColor};
   --c2: ${({ $pathColor }) => $pathColor};
 
@@ -31,10 +27,15 @@ const StyledNodeImage = styled(Block)<{ $nodeColor: string; $pathColor: string }
   }
 `;
 
-type Props = {
-  width: string;
-  height: string;
-};
+const StyledLoaderContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  border: 1px solid var(--primary-color);
+  border-radius: 8px;
+`;
 
 const nodeGraphs: Record<number, React.FC<React.SVGProps<SVGSVGElement>>> = {
   1: NodeGraph1,
@@ -49,7 +50,7 @@ const nodeGraphs: Record<number, React.FC<React.SVGProps<SVGSVGElement>>> = {
   10: NodeGraph10,
 };
 
-export const NodeImage = ({ width, height }: Props) => {
+export const NodeImage = () => {
   const { swarmNodeCount, dataIsStale } = useSecuringNodesCount();
   const isFakeRefreshing = useInfoFakeRefreshing();
   const NodeGraph = nodeGraphs[swarmNodeCount ?? 1];
@@ -58,18 +59,17 @@ export const NodeImage = ({ width, height }: Props) => {
 
   return (
     <StyledNodeImage
-      $flexDirection="column"
-      $justifyContent="center"
-      $alignItems="center"
       $nodeColor="var(--primary-color)"
       $pathColor="var(--text-primary-color)"
-      $borderColor={!loading ? 'transparent' : undefined}
-      width={width}
-      height={height}
-      style={{ position: 'relative', overflow: 'hidden' }}
       data-testid="swarm-image"
     >
-      {!loading ? <NodeGraph /> : <AnimatedSpinnerIcon size="huge2" />}
+      {!loading ? (
+        <NodeGraph />
+      ) : (
+        <StyledLoaderContainer>
+          <AnimatedSpinnerIcon size="huge2" />
+        </StyledLoaderContainer>
+      )}
     </StyledNodeImage>
   );
 };

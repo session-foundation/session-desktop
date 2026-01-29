@@ -2,7 +2,6 @@ import styled from 'styled-components';
 import type { SessionDataTestId } from 'react';
 import { getAppDispatch } from '../../../../../../state/dispatch';
 import { SessionNetworkParagraph, SectionHeading, SessionNetworkButton } from '../components';
-import { LOCALE_DEFAULTS } from '../../../../../../localization/constants';
 import { Localizer } from '../../../../../basic/Localizer';
 import { Flex } from '../../../../../basic/Flex';
 import { SessionButtonColor, SessionButtonShape } from '../../../../../basic/SessionButton';
@@ -20,7 +19,7 @@ import {
   useInfoFakeRefreshing,
   useInfoLoading,
 } from '../../../../../../state/selectors/networkModal';
-import { tr } from '../../../../../../localization/localeTools';
+import { tEnglish, tr } from '../../../../../../localization/localeTools';
 
 const StyledTokenSection = styled(Flex)<{ $loading: boolean }>`
   font-size: var(--font-display-size-lg);
@@ -83,7 +82,7 @@ export function StakeSection() {
           minimumFractionDigits: 0,
           maximumFractionDigits: 0,
           useGrouping: true,
-        })} ${LOCALE_DEFAULTS.token_name_short}`
+        })} ${tr('tokenNameShort')}`
       : infoLoading || isFakeRefreshing
         ? tr('loading')
         : tr('unavailable');
@@ -91,11 +90,11 @@ export function StakeSection() {
   const networkMarketCapValue =
     usdMarketCap && !isFakeRefreshing && !dataIsStale
       ? `$${formatNumber(usdMarketCap, {
-          currency: LOCALE_DEFAULTS.usd_name_short,
+          currency: tEnglish('usdNameShort'),
           minimumFractionDigits: 0,
           maximumFractionDigits: 0,
           useGrouping: true,
-        })} ${LOCALE_DEFAULTS.usd_name_short}`
+        })} ${tr('usdNameShort')}`
       : infoLoading || isFakeRefreshing
         ? tr('loading')
         : tr('unavailable');
@@ -109,15 +108,13 @@ export function StakeSection() {
       $justifyContent={'flex-start'}
       $alignItems={'center'}
     >
-      <SectionHeading $margin={'0 0 var(--margins-xs)'}>
-        {LOCALE_DEFAULTS.token_name_long}
-      </SectionHeading>
+      <SectionHeading $margin={'0 0 var(--margins-xs)'}>{tr('tokenNameLong')}</SectionHeading>
       <SessionNetworkParagraph>
         <Localizer token={'sessionNetworkTokenDescription'} />
       </SessionNetworkParagraph>
       <Flex $container={true} $flexDirection="column" width="100%" $alignItems="center">
         <TokenSection
-          text={LOCALE_DEFAULTS.staking_reward_pool}
+          text={tr('stakingRewardPool')}
           value={stakingRewardPoolValue}
           loading={infoLoading || !stakingRewardPool || isFakeRefreshing || dataIsStale}
           dataTestId={'staking-reward-pool-amount'}

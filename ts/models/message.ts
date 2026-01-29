@@ -329,9 +329,6 @@ export class MessageModel extends Model<MessageAttributes> {
           const isCommunity = convo.isOpenGroupV2();
 
           switch (interactionType) {
-            case ConversationInteractionType.Hide:
-              // there is no text for hiding changes
-              return '';
             case ConversationInteractionType.Leave:
               return isCommunity
                 ? tStripped('communityLeaveError', {

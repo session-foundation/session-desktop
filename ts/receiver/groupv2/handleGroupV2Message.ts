@@ -193,6 +193,7 @@ async function handleGroupUpdateInviteMessage({
   }
 
   await LibSessionUtil.saveDumpsToDb(UserUtils.getOurPubKeyStrFromCache());
+  await LibSessionUtil.saveDumpsToDb(groupPk);
   if (!found.invitePending) {
     // if this group should already be polling based on if that author is pre-approved or we've already approved that group from another device.
     getSwarmPollingInstance().addGroupId(groupPk, async () => {
@@ -610,6 +611,7 @@ async function handleGroupUpdatePromoteMessage({
         groupEd25519Pubkey: toFixedUint8ArrayOfLength(HexString.fromHexStringNoPrefix(groupPk), 32)
           .buffer,
       });
+      await LibSessionUtil.saveDumpsToDb(groupPk);
     }
   } catch (e) {
     window.log.warn(

@@ -8,7 +8,7 @@ import { enableLogRedirect } from '../../../test-utils/utils';
 describe('Updater', () => {
   it('package.json target is correct', () => {
     const content = readFileSync(
-      path.join(__dirname, '..', '..', '..', '..', '..', 'package.json')
+      path.join(__dirname, '..', '..', '..', '..', '..', '..', 'package.json')
     );
 
     // the CI for building release relies on this being set to build the different targets.

@@ -144,9 +144,10 @@ async function mergeUserConfigsWithIncomingUpdates(
       // the GenericWrapperActions
       switch (variant) {
         case 'UserConfig': {
-          const proAccessExpiryBefore = await UserConfigWrapperActions.getProAccessExpiry();
+          // Note: those `?? 0` is here because android sets it to 0 even if it should be unset.
+          const proAccessExpiryBefore = (await UserConfigWrapperActions.getProAccessExpiry()) ?? 0;
           hashesMerged = await UserConfigWrapperActions.merge(toMerge);
-          const proAccessExpiryAfter = await UserConfigWrapperActions.getProAccessExpiry();
+          const proAccessExpiryAfter = (await UserConfigWrapperActions.getProAccessExpiry()) ?? 0;
 
           if (proAccessExpiryBefore !== proAccessExpiryAfter) {
             window.log.debug(
@@ -637,6 +638,7 @@ async function handleSingleGroupUpdate({
       groupEd25519Pubkey: toFixedUint8ArrayOfLength(HexString.fromHexString(groupPk.slice(2)), 32)
         .buffer,
     });
+    await LibSessionUtil.saveDumpsToDb(groupPk);
   } catch (e) {
     window.log.warn(
       `handleSingleGroupUpdate meta wrapper init of "${groupPk}" failed with`,

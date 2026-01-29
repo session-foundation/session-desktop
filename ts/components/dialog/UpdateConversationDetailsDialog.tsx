@@ -6,6 +6,7 @@ import { getAppDispatch } from '../../state/dispatch';
 
 import {
   useAvatarPath,
+  useAvatarPointer,
   useIsClosedGroup,
   useIsMe,
   useIsPublic,
@@ -166,12 +167,14 @@ function useUpdateConversationDetailsDialogInternal(convo: ConversationModel) {
   };
 }
 
+const useAvatarPointerLocal = useAvatarPointer;
+
 export function UpdateConversationDetailsDialog(props: WithConvoId) {
   const dispatch = getAppDispatch();
   const { conversationId } = props;
+  const refreshedAvatarPointer = useAvatarPointerLocal(conversationId);
   const convo = ConvoHub.use().get(conversationId);
 
-  const refreshedAvatarPointer = convo.getAvatarPointer() || '';
   const {
     isNameChangePending,
     newName,
@@ -201,7 +204,7 @@ export function UpdateConversationDetailsDialog(props: WithConvoId) {
 
     // if we click save, but the only change was an avatar change, we can close the dialog right
     // away (as the avatar was updated as part of of the EditProfilePictureModal)
-    if (noChanges && avatarWasUpdated) {
+    if (!nameOrDescriptionWasUpdated && avatarWasUpdated) {
       closeDialog();
       return;
     }
@@ -272,8 +275,13 @@ export function UpdateConversationDetailsDialog(props: WithConvoId) {
     throw new Error('handleEditProfilePicture is only for communities or ourselves for now');
   }
 
-  const noChanges = newName === nameOnOpen && newDescription === descriptionOnOpen;
-  const avatarWasUpdated = avatarPointerOnMount !== refreshedAvatarPointer;
+  const nameOrDescriptionWasUpdated =
+    newName !== nameOnOpen || newDescription !== descriptionOnOpen;
+  const avatarWasUpdated =
+    avatarPointerOnMount !== refreshedAvatarPointer &&
+    !!avatarPointerOnMount !== !!refreshedAvatarPointer;
+
+  const avatarNameOrDescUpdated = nameOrDescriptionWasUpdated || avatarWasUpdated;
 
   const partDetail = isMe ? 'profile' : isPublic ? 'community' : 'group';
   const partDetailCap = (partDetail.charAt(0).toUpperCase() + partDetail.slice(1)) as Capitalize<
@@ -296,10 +304,10 @@ export function UpdateConversationDetailsDialog(props: WithConvoId) {
               !!errorStringDescription ||
               isNameChangePending ||
               !newName?.trim() ||
-              (noChanges && !avatarWasUpdated)
+              !avatarNameOrDescUpdated
             }
           />
-          {!avatarWasUpdated ? (
+          {avatarNameOrDescUpdated ? (
             <SessionButton
               text={tr('cancel')}
               buttonColor={SessionButtonColor.Danger}

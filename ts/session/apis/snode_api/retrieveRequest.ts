@@ -1,7 +1,6 @@
 import { GroupPubkeyType } from 'libsession_util_nodejs';
 import { isArray } from 'lodash';
 import { Snode } from '../../../data/types';
-import { GetNetworkTime } from './getNetworkTime';
 import { SnodeNamespace, SnodeNamespaces, SnodeNamespacesGroup } from './namespaces';
 
 import { UserGroupsWrapperActions } from '../../../webworker/workers/browser/libsession_worker_interface';
@@ -237,11 +236,6 @@ async function retrieveNextMessagesNoRetries(
         );
       }
     }
-
-    // we rely on the code of the first one to check for online status
-    const bodyFirstResult = firstResult.body;
-
-    GetNetworkTime.handleTimestampOffsetFromNetwork('retrieve', bodyFirstResult.t);
 
     // merge results with their corresponding namespaces
     // NOTE: We don't want to sort messages here because the ordering depends on the snode and when it received each message.

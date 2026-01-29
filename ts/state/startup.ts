@@ -1,5 +1,4 @@
-import { ipcRenderer } from 'electron';
-import { fromPairs, map, parseInt } from 'lodash';
+import { fromPairs, map } from 'lodash';
 import { ConvoHub } from '../session/conversations';
 import { UserUtils } from '../session/utils';
 import { createStore } from './createStore';
@@ -43,8 +42,7 @@ import { getDataFeatureFlag } from './ducks/types/releasedFeaturesReduxTypes';
 import { isTestIntegration } from '../shared/env_vars';
 import { sleepFor } from '../session/utils/Promise';
 import { UpdateProRevocationList } from '../session/utils/job_runners/jobs/UpdateProRevocationListJob';
-import { announcementActions, initialAnnouncementState } from './ducks/announcements';
-import { NetworkTime } from '../util/NetworkTime';
+import { initialAnnouncementState } from './ducks/announcements';
 
 function makeLookup<T>(items: Array<T>, key: string): { [key: string]: T } {
   // Yep, we can't index into item without knowing what it is. True. But we want to.
@@ -112,25 +110,6 @@ const triggerSyncIfNeeded = async () => {
   }
 };
 
-async function handleDebNeedsBreakingUpdate() {
-  // FIXME this logic can be removed in Session desktop 1.17.8
-  const nowMs = process.env.FAKE_NOW ? parseInt(process.env.FAKE_NOW) : NetworkTime.now();
-  const firstFebMs = 1769904000000; // 1st february 2026
-  window.log.debug('nowMs', nowMs);
-  window.log.debug('firstFebMs', firstFebMs);
-  if (nowMs < firstFebMs) {
-    return;
-  }
-  const isDebPackaged: boolean = await ipcRenderer.invoke('is-deb-install');
-  window.log.debug('isDebPackaged', isDebPackaged);
-
-  if (!isDebPackaged) {
-    return;
-  }
-
-  window.inboxStore?.dispatch(announcementActions.addDebNeedsBreakingUpdate(true));
-}
-
 /**
  * We only need to regenerate the last message of groups/communities once,
  * and we can remove it in a few months safely
@@ -175,7 +154,11 @@ export const doAppStartUp = async () => {
         true
       ),
       audioAutoplay: Storage.getBoolOr(SettingsKey.audioAutoplay, false),
-      showRecoveryPhrasePrompt: Storage.getBoolOr(SettingsKey.showRecoveryPhrasePrompt, true),
+      showRecoveryPhrasePrompt: Storage.getBoolOr(SettingsKey.showRecoveryPhrasePrompt, false),
+      dismissedRecoveryPhrasePrompt: Storage.getBoolOr(
+        SettingsKey.dismissedRecoveryPhrasePrompt,
+        false
+      ),
       hideMessageRequests: Storage.getBoolOr(SettingsKey.hideMessageRequests, false),
     })
   );
@@ -210,9 +193,6 @@ export const doAppStartUp = async () => {
     // trigger a sync message if needed for our other devices
     void triggerSyncIfNeeded();
     void loadDefaultRooms();
-
-    // show the breaking deb update banner if needed
-    void handleDebNeedsBreakingUpdate();
   }); // refresh our swarm on start to speed up the first message fetching event
 
   window.inboxStore?.dispatch(groupInfoActions.loadMetaDumpsFromDB() as any); // this loads the dumps from DB and fills the 03-groups slice with the corresponding details

@@ -1,11 +1,11 @@
-import * as BetterSqlite3 from '@signalapp/better-sqlite3';
+import { type Database } from '@signalapp/sqlcipher';
 import { CONFIG_DUMP_TABLE, ConfigDumpRow } from '../../../types/sqlSharedTypes';
 import { checkTargetMigration } from '../utils';
 
 const targetVersion = 33;
 
 function fetchUserConfigDump(
-  db: BetterSqlite3.Database,
+  db: Database,
   version: number,
   userPubkeyhex: string
 ): ConfigDumpRow | null {
@@ -25,7 +25,7 @@ function fetchUserConfigDump(
 }
 
 function writeUserConfigDump(
-  db: BetterSqlite3.Database,
+  db: Database,
   version: number,
   userPubkeyhex: string,
   dump: Uint8Array

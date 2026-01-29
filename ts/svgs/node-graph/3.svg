@@ -2,7 +2,7 @@
   <!-- Connector lines -->
   <path stroke="var(--c2)" stroke-width="2.5" fill="none" d="M103.675 57.65 97.05 87.106m-36.96-1.59L82.714 95.59M60.582 72.868 94.555 50.94"/>
   <!-- Border -->
-  <rect stroke="var(--c1)" fill="none" width="159" height="139" x=".5" y=".5" rx="7.55"/>
+  <rect stroke="var(--c1)" fill="none" width="158" height="138" x="1" y="1" rx="7.55"/>
   <!-- Nodes -->
   <g filter="url(#g)" stroke="var(--c1)" fill="var(--c1)">
     <circle cx="94.249" cy="100.202" r="12.74" fill="none" stroke-width="2"/>
