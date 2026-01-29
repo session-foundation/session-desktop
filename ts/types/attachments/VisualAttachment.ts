@@ -9,16 +9,11 @@ import { ToastUtils } from '../../session/utils';
 import { GoogleChrome } from '../../util';
 import { isAudio } from '../MIME';
 import { formatTimeDurationMs } from '../../util/i18n/formatting/generics';
-import { isTestIntegration } from '../../shared/env_vars';
-import {
-  getDataFeatureFlag,
-  getFeatureFlag,
-} from '../../state/ducks/types/releasedFeaturesReduxTypes';
+import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 import { processAvatarData } from '../../util/avatar/processAvatarData';
 import type { ProcessedAvatarDataType } from '../../webworker/workers/node/image_processor/image_processor';
 import { ImageProcessor } from '../../webworker/workers/browser/image_processor_interface';
-import { maxAvatarDetails, maxThumbnailDetails } from '../../util/attachment/attachmentSizes';
-import { defaultAvatarPickerColor } from '../../state/ducks/types/defaultFeatureFlags';
+import { maxThumbnailDetails } from '../../util/attachment/attachmentSizes';
 
 export const THUMBNAIL_CONTENT_TYPE = 'image/webp';
 
@@ -213,43 +208,13 @@ async function pickFileForReal() {
   return file;
 }
 
-function hexToRgb(hex: string) {
-  // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
-  const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
-  const replaced = hex.replace(shorthandRegex, (_m, r, g, b) => {
-    return r + r + g + g + b + b;
-  });
-
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(replaced);
-  if (!result) {
-    return hexToRgb(defaultAvatarPickerColor);
-  }
-  return {
-    r: parseInt(result[1], 16),
-    g: parseInt(result[2], 16),
-    b: parseInt(result[3], 16),
-  };
-}
-
-async function pickFileForTestIntegration() {
-  const fakeAvatarPickerColor = getDataFeatureFlag('fakeAvatarPickerColor');
-  const blueAvatarDetails = await ImageProcessor.testIntegrationFakeAvatar(
-    maxAvatarDetails.maxSidePlanReupload,
-    hexToRgb(fakeAvatarPickerColor ?? defaultAvatarPickerColor)
-  );
-  const file = new File([blueAvatarDetails.outputBuffer], 'testIntegrationFakeAvatar.jpeg', {
-    type: blueAvatarDetails.format,
-  });
-  return file;
-}
-
 /**
  * Shows the system file picker for images, scale the image down for avatar/opengroup measurements and return the blob objectURL on success
  */
 export async function pickFileForAvatar(
   processingCb: (isProcessing: boolean) => void
 ): Promise<ProcessedAvatarDataType | null> {
-  const file = isTestIntegration() ? await pickFileForTestIntegration() : await pickFileForReal();
+  const file = await pickFileForReal();
 
   try {
     processingCb(true);
