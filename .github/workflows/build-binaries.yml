@@ -179,7 +179,7 @@ jobs:
         if: ${{ needs.create_draft_release_if_needed.outputs.version_tag != '' && matrix.generate_release_metadata == true }}
         shell: bash
         run: |
-          mv dist/latest-linux.yml dist/latest-linux-${{ matrix.electron_target }}-${{ github.sha }}.yml
+          mv release/latest-linux.yml release/latest-linux-${{ matrix.electron_target }}-${{ github.sha }}.yml
 
       - name: Upload release metadata
         # only run this on "push" to "master" or alpha releases
@@ -187,7 +187,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: latest-linux-${{ matrix.electron_target }}-${{ github.sha }}.yml
-          path: dist/latest-linux-${{ matrix.electron_target }}-${{ github.sha }}.yml
+          path: release/latest-linux-${{ matrix.electron_target }}-${{ github.sha }}.yml
 
   post_build_linux:
     needs: [create_draft_release_if_needed, build_linux]
@@ -222,7 +222,7 @@ jobs:
         with:
           # the if at the job level checks that version_tag is not empty
           tag: v${{ needs.create_draft_release_if_needed.outputs.version_tag }}
-          artifacts: "dist/latest-linux.yml"
+          artifacts: "release/latest-linux.yml"
           draft: true # important to keep this, so we **NEVER** make a live release through the CI
           allowUpdates: true
           omitNameDuringUpdate: true
@@ -352,7 +352,7 @@ jobs:
         # the if at the job level checks that version_tag is not empty
         with:
           tag: v${{ needs.create_draft_release_if_needed.outputs.version_tag }}
-          artifacts: "dist/latest-mac.yml"
+          artifacts: "release/latest-mac.yml"
           draft: true # important to keep this, so we **NEVER** make a live release through the CI
           allowUpdates: true
           omitNameDuringUpdate: true
