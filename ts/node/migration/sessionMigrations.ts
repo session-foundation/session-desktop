@@ -18,12 +18,15 @@ import {
   ITEMS_TABLE,
   LAST_HASHES_TABLE,
   MESSAGES_TABLE,
+  MessageColumns,
   NODES_FOR_PUBKEY_TABLE,
   OPEN_GROUP_ROOMS_V2_TABLE,
   SEEN_MESSAGE_TABLE,
   dropFtsAndTriggers,
   objectToJSON,
   rebuildFtsTable,
+  rebuildFtsTableReferencingMessages,
+  toSqliteBoolean,
 } from '../database_utility';
 
 import { SettingsKey, SNODE_POOL_ITEM_ID } from '../../data/settings-key';
@@ -123,6 +126,7 @@ const LOKI_SCHEMA_VERSIONS: Array<(currentVersion: number, db: Database) => void
     updateToSessionSchemaVersion50,
     updateToSessionSchemaVersion51,
     updateToSessionSchemaVersion52,
+    updateToSessionSchemaVersion53,
   ];
 
 function updateToSessionSchemaVersion1(currentVersion: number, db: Database) {
@@ -2271,6 +2275,103 @@ async function updateToSessionSchemaVersion52(currentVersion: number, db: Databa
       UPDATE ${MESSAGES_TABLE} SET
       json = json_remove(json, '$.schemaVersion', '$.recipients', '$.decrypted_at', '$.sourceDevice')
     `);
+
+    writeSessionSchemaVersion(targetVersion, db);
+  })();
+
+  console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
+}
+
+async function updateToSessionSchemaVersion53(currentVersion: number, db: Database) {
+  const targetVersion = 53;
+  if (currentVersion >= targetVersion) {
+    return;
+  }
+  console.log(`updateToSessionSchemaVersion${targetVersion}: starting...`);
+
+  db.transaction(() => {
+    db.exec(`
+      ALTER TABLE ${MESSAGES_TABLE}
+      ADD COLUMN ${MessageColumns.coalesceSentAndReceivedAt} INTEGER;
+    `);
+    db.exec(`
+      ALTER TABLE ${MESSAGES_TABLE}
+      ADD COLUMN ${MessageColumns.mentionsUs} BOOLEAN;
+    `);
+
+    dropFtsAndTriggers(db);
+    // rebuild the fts table, this time with the referencing messages table logic
+    rebuildFtsTableReferencingMessages(db);
+
+    // Populate existing rows
+    db.exec(`
+      UPDATE ${MESSAGES_TABLE}
+      SET ${MessageColumns.coalesceSentAndReceivedAt} = COALESCE(serverTimestamp, sent_at, received_at);
+    `);
+
+    // create trigger on update of messages to MessageColumns.coalesceSentAndReceivedAt
+    db.exec(`
+  -- Insert trigger
+  CREATE TRIGGER messages_insert_sort_timestamp
+  AFTER INSERT ON ${MESSAGES_TABLE}
+  BEGIN
+    UPDATE ${MESSAGES_TABLE}
+    SET ${MessageColumns.coalesceSentAndReceivedAt} = COALESCE(NEW.serverTimestamp, NEW.sent_at, NEW.received_at)
+    WHERE rowid = NEW.rowid;
+  END;
+
+  -- Update trigger
+  CREATE TRIGGER messages_update_sort_timestamp
+  AFTER UPDATE OF serverTimestamp, sent_at, received_at ON ${MESSAGES_TABLE}
+  BEGIN
+    UPDATE ${MESSAGES_TABLE}
+    SET ${MessageColumns.coalesceSentAndReceivedAt} = COALESCE(NEW.serverTimestamp, NEW.sent_at, NEW.received_at)
+    WHERE rowid = NEW.rowid;
+  END;
+`);
+
+    db.exec(
+      `CREATE INDEX sort_timestamp_full_index ON ${MESSAGES_TABLE}(${MessageColumns.coalesceSentAndReceivedAt} DESC);`
+    );
+
+    // also create indexes on the coalesce columns with convo id
+    db.exec(
+      `CREATE INDEX sort_timestamp_full_conversation_index ON ${MESSAGES_TABLE}(conversationId, ${MessageColumns.coalesceSentAndReceivedAt} DESC);`
+    );
+
+    // Also, use this migration to create a few indexes on what is called as part of `fetchConvoMemoryDetails`
+    // this one is for what is used in `getLastMessageReadInConversation`
+    db.exec(`
+    CREATE INDEX messages_conversation_unread_sort
+    ON ${MESSAGES_TABLE}(conversationId, unread, ${MessageColumns.coalesceSentAndReceivedAt} DESC) WHERE unread=${toSqliteBoolean(true)};
+  `);
+
+    db.exec(`
+    CREATE INDEX messages_conversation_read_sort
+    ON ${MESSAGES_TABLE}(conversationId, unread, ${MessageColumns.coalesceSentAndReceivedAt} DESC) WHERE unread=${toSqliteBoolean(false)};
+  `);
+
+    // this one is for what is used in `getUnreadCountByConversation`
+    db.exec(`
+    CREATE INDEX messages_conversation_unread
+    ON ${MESSAGES_TABLE}(conversationId, unread);
+  `);
+
+    // Create indexes for searching expired/expiring messages
+    db.exec(`CREATE INDEX messages_expiring_index ON ${MESSAGES_TABLE} (expires_at);`);
+    db.exec(
+      `CREATE INDEX messages_expiring_timer_outgoing_index ON ${MESSAGES_TABLE} (expires_at, expireTimer, type);`
+    );
+
+    // Create an index on the mentionsUs column with unread & conversationId. Needed for `getFirstUnreadMessageWithMention`
+    db.exec(
+      `CREATE INDEX messages_mentionsUs_index ON ${MESSAGES_TABLE} (conversationId, unread, ${MessageColumns.mentionsUs}, ${MessageColumns.coalesceSentAndReceivedAt});`
+    );
+
+    // Create an index on the the messageId & hasAttachments. Needed for `removeKnownAttachments`
+    db.exec(
+      `CREATE INDEX messages_id_hasAttachments_index ON ${MESSAGES_TABLE} (id, hasAttachments) WHERE hasAttachments = ${toSqliteBoolean(true)};`
+    );
 
     writeSessionSchemaVersion(targetVersion, db);
   })();

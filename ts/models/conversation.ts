@@ -2226,11 +2226,9 @@ export class ConversationModel extends Model<ConversationAttributes> {
       const mentions = text?.match(regex) || ([] as Array<string>);
       const mentionMe = mentions && mentions.some(m => isUsAnySogsFromCache(m.slice(1)));
 
-      const quotedMessageAuthor = message.get('quote')?.author;
+      const quotedMessageAuthorIsUs = await message.getQuotedMessageAuthorIsUs();
 
-      const isReplyToOurMessage =
-        quotedMessageAuthor && UserUtils.isUsFromCache(quotedMessageAuthor);
-      if (!mentionMe && !isReplyToOurMessage) {
+      if (!mentionMe && !quotedMessageAuthorIsUs) {
         window?.log?.info(
           'notifications disabled for non mentions or reply for convo',
           conversationId

@@ -61,6 +61,7 @@ import { tStripped } from '../../../localization/localeTools';
 import type { ProcessedLinkPreviewThumbnailType } from '../../../webworker/workers/node/image_processor/image_processor';
 import { CTAVariant } from '../../dialog/cta/types';
 import { selectWeAreProUser } from '../../../hooks/useHasPro';
+import type { MessageAttributes } from '../../../models/messageType';
 
 export interface ReplyingToMessageProps {
   convoId: string;
@@ -83,12 +84,11 @@ export type StagedAttachmentType = AttachmentType & {
   path?: string; // a bit hacky, but this is the only way to make our sending audio message be playable, this must be used only for those message
 };
 
-export type SendMessageType = {
+export type SendMessageType = Pick<MessageAttributes, 'quote'> & {
   conversationId: string;
   body: string;
   attachments: Array<StagedAttachmentImportedType> | undefined;
-  quote: any | undefined;
-  preview: any | undefined;
+  preview: Array<StagedPreviewImportedType> | undefined;
   groupInvitation: { url: string | undefined; name: string } | undefined;
 };
 
@@ -665,13 +665,6 @@ class CompositionBoxInner extends Component<Props, State> {
     }
 
     // Send message
-    const extractedQuotedMessageProps = _.pick(
-      quotedMessageProps,
-      'id',
-      'author',
-      'text',
-      'attachments'
-    );
 
     // we consider that a link preview without a title at least is not a preview
     const linkPreview =
@@ -686,7 +679,9 @@ class CompositionBoxInner extends Component<Props, State> {
         conversationId: selectedConversationKey,
         body: text.trim(),
         attachments: attachments || [],
-        quote: extractedQuotedMessageProps,
+        quote: quotedMessageProps
+          ? { author: quotedMessageProps.author, timestamp: quotedMessageProps.timestamp }
+          : undefined,
         preview: previews,
         groupInvitation: undefined,
       });

@@ -1,6 +1,7 @@
 import { isString } from 'lodash';
+import { useCallback, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { AutoSizer, List } from 'react-virtualized';
+import { AutoSizer, List, type List as ListType } from 'react-virtualized';
 import styled, { CSSProperties } from 'styled-components';
 
 import { ConversationListItem } from '../leftpane/conversation-list-item/ConversationListItem';
@@ -11,10 +12,14 @@ import {
   getSearchResultsList,
   useHasSearchResultsForSearchType,
   useSearchTermForType,
+  getQuery,
+  getRequestedSnippetIds,
 } from '../../state/selectors/search';
 import { calcContactRowHeight } from '../leftpane/overlay/choose-action/ContactsListWithBreaks';
 import { NoResultsForSearch } from './NoResults';
 import { tr } from '../../localization/localeTools';
+import { searchActions } from '../../state/ducks/search';
+import { getAppDispatch } from '../../state/dispatch';
 
 const StyledSeparatorSection = styled.div<{ $isSubtitle: boolean }>`
   height: 36px;
@@ -60,11 +65,76 @@ function isContact(item: SearchResultsMergedListItem): item is { contactConvoId:
 
 const VirtualizedList = () => {
   const searchResultList = useSelector(getSearchResultsList);
+  const query = useSelector(getQuery);
+  const requestedSnippetIds = useSelector(getRequestedSnippetIds);
+  const dispatch = getAppDispatch();
+  const listRef = useRef<ListType>(null);
+
+  const handleRowsRendered = useCallback(
+    ({ startIndex, stopIndex }: { startIndex: number; stopIndex: number }) => {
+      const requestedSet = new Set(requestedSnippetIds);
+
+      // Load visible items + 5 before and after
+      const loadStart = Math.max(0, startIndex - 5);
+      const loadEnd = Math.min(searchResultList.length - 1, stopIndex + 5);
+
+      const messagesToLoad: Array<string> = [];
+
+      // Find message items in the range that don't have snippets
+      for (let i = loadStart; i <= loadEnd; i++) {
+        const item = searchResultList[i];
+        if (item && !isString(item) && !isContact(item)) {
+          // Load if snippet is null and we haven't already requested it
+          if (item.snippet === null && !requestedSet.has(item.id)) {
+            messagesToLoad.push(item.id);
+          }
+        }
+      }
+
+      // If we have messages to load, dispatch them
+      if (messagesToLoad.length > 0) {
+        dispatch(searchActions.loadSnippets({ query, messageIds: messagesToLoad }) as any);
+      }
+    },
+    [searchResultList, requestedSnippetIds, query, dispatch]
+  );
+
+  // Scroll to top when query changes
+  useEffect(() => {
+    if (listRef.current) {
+      listRef.current.scrollToRow(0);
+    }
+  }, [query]);
+
+  // Load snippets for initially visible items when search results change
+  useEffect(() => {
+    if (searchResultList.length > 0) {
+      // Assume first ~20 items are initially visible (rough estimate)
+      // This will be refined when handleRowsRendered is called
+      const initialRange = Math.min(20, searchResultList.length);
+      const requestedSet = new Set(requestedSnippetIds);
+      const messagesToLoad: Array<string> = [];
+
+      for (let i = 0; i < initialRange; i++) {
+        const item = searchResultList[i];
+        if (item && !isString(item) && !isContact(item)) {
+          if (item.snippet === null && !requestedSet.has(item.id)) {
+            messagesToLoad.push(item.id);
+          }
+        }
+      }
+
+      if (messagesToLoad.length > 0) {
+        dispatch(searchActions.loadSnippets({ query, messageIds: messagesToLoad }) as any);
+      }
+    }
+  }, [searchResultList, query, requestedSnippetIds, dispatch]);
 
   return (
     <AutoSizer>
       {({ height, width }) => (
         <List
+          ref={listRef}
           height={height}
           rowCount={searchResultList.length}
           rowHeight={params =>
@@ -94,6 +164,7 @@ const VirtualizedList = () => {
           }}
           width={width}
           autoHeight={false}
+          onRowsRendered={handleRowsRendered}
         />
       )}
     </AutoSizer>

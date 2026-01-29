@@ -252,3 +252,15 @@ export const firstTrue = async (ps: Array<Promise<any>>) => {
   newPs.push(Promise.all(ps).then(() => false));
   return Promise.race(newPs) as Promise<Snode>;
 };
+
+export async function processBatch<T>(
+  items: Array<T>,
+  batchSize: number,
+  processor: (item: T) => Promise<void>
+): Promise<void> {
+  for (let i = 0; i < items.length; i += batchSize) {
+    const batch = items.slice(i, i + batchSize);
+    // eslint-disable-next-line no-await-in-loop
+    await Promise.all(batch.map(processor));
+  }
+}

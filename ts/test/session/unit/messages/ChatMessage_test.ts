@@ -89,7 +89,7 @@ describe('VisibleMessage', () => {
   });
 
   it('can create message with a quote without attachments', () => {
-    const quote: Quote = { id: 1234, author: 'author' };
+    const quote: Quote = { timestamp: 1234, author: 'author' };
     const message = new VisibleMessage({
       createAtNetworkTimestamp: Date.now(),
       quote,

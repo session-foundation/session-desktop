@@ -201,7 +201,7 @@ import { isSessionLocaleSet, getCrowdinLocale, keepFullLocalePart } from '../uti
 import { loadLocalizedDictionary } from '../node/locale';
 import LIBSESSION_CONSTANTS from '../session/utils/libsession/libsession_constants';
 import { isReleaseChannel } from '../updater/types';
-import { canAutoUpdate, checkForUpdates, isLinuxDebInstall } from '../updater/updater';
+import { canAutoUpdate, checkForUpdates } from '../updater/updater';
 import { initializeMainProcessLogger } from '../util/logger/main_process_logging';
 
 import * as log from '../util/logger/log';
@@ -445,10 +445,10 @@ async function createWindow() {
   }
 
   const debouncedCaptureStats = _.debounce(captureAndSaveWindowStats, 500);
-  mainWindow.on('resize', debouncedCaptureStats);
-  mainWindow.on('move', debouncedCaptureStats);
+  mainWindow?.on('resize', debouncedCaptureStats);
+  mainWindow?.on('move', debouncedCaptureStats);
 
-  mainWindow.on('focus', () => {
+  mainWindow?.on('focus', () => {
     if (!mainWindow) {
       return;
     }
@@ -461,21 +461,24 @@ async function createWindow() {
 
   const urlToLoad = prepareURL([getAppRootPath(), 'background.html']);
 
-  await mainWindow.loadURL(urlToLoad);
+  await mainWindow?.loadURL(urlToLoad).catch(err => {
+    console.error('Failed to load background.html:', err);
+    mainWindow = null;
+    app.quit();
+    console.error('Closed app and mainWindow.');
+  });
   if (openDevToolsTestIntegration()) {
     setTimeout(() => {
-      if (mainWindow && mainWindow.webContents) {
-        mainWindow.webContents.openDevTools({
-          mode: 'bottom',
-          activate: false,
-        });
-      }
+      mainWindow?.webContents.openDevTools({
+        mode: 'bottom',
+        activate: false,
+      });
     }, 5000);
   }
 
   if (isDevProd() && !isTestIntegration()) {
     // Open the DevTools.
-    mainWindow.webContents.openDevTools({
+    mainWindow?.webContents.openDevTools({
       mode: 'bottom',
       activate: false,
     });
@@ -486,7 +489,7 @@ async function createWindow() {
   // Emitted when the window is about to be closed.
   // Note: We do most of our shutdown logic here because all windows are closed by
   //   Electron before the app quits.
-  mainWindow.on('close', async e => {
+  mainWindow?.on('close', async e => {
     console.log('close event', {
       readyForShutdown: mainWindow ? readyForShutdown : null,
       shouldQuit: windowShouldQuit(),
@@ -519,7 +522,7 @@ async function createWindow() {
   });
 
   // Emitted when the window is closed.
-  mainWindow.on('closed', () => {
+  mainWindow?.on('closed', () => {
     // Dereference the window object, usually you would store windows
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
@@ -646,6 +649,7 @@ async function showPasswordWindow() {
   await passwordWindow.loadURL(prepareURL([getAppRootPath(), 'password.html'])).catch(e => {
     console.warn('failed to load password window.', e.message);
     passwordWindow = null;
+    app.quit();
   });
 
   captureClicks(passwordWindow);
@@ -700,7 +704,10 @@ async function showAbout() {
 
   captureClicks(aboutWindow);
 
-  await aboutWindow.loadURL(prepareURL([getAppRootPath(), 'about.html'], { theme }));
+  await aboutWindow.loadURL(prepareURL([getAppRootPath(), 'about.html'], { theme })).catch(e => {
+    console.warn('failed to load about window.', e.message);
+    aboutWindow = null;
+  });
 
   aboutWindow.on('closed', () => {
     aboutWindow = null;
@@ -1228,8 +1235,4 @@ ipc.on('media-access', async () => {
 
 ipc.handle('get-storage-profile', async (): Promise<string> => {
   return app.getPath('userData');
-});
-
-ipc.handle('is-deb-install', async (): Promise<boolean> => {
-  return isLinuxDebInstall();
 });

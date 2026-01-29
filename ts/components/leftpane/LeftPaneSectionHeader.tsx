@@ -218,7 +218,6 @@ export const LeftPaneSectionHeader = () => {
         </SectionTitle>
         {!leftOverlayMode && <MenuButton />}
       </StyledLeftPaneSectionHeader>
-
       {noOverlayMode && showRecoveryPhrasePrompt ? <LeftPaneBanner /> : null}
       {noOverlayMode ? <LeftPaneAnnouncements /> : null}
     </Flex>

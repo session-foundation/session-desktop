@@ -367,7 +367,8 @@ export class OpenGroupServerPoller {
                 );
               }
             }
-          }, 5000);
+            // Note: 5s is not nearly enough time to fetch and process all messages currently
+          }, 10000);
         }
       }
     } catch (e) {

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import useKey from 'react-use/lib/useKey';
 import { clone } from 'lodash';
+import styled from 'styled-components';
 
 import { PubkeyType } from 'libsession_util_nodejs';
 import { getAppDispatch } from '../../state/dispatch';
@@ -75,6 +76,10 @@ async function submitForOpenGroup(convoId: string, pubkeys: Array<string>) {
   }
 }
 
+const StyledNoContacts = styled.p`
+  text-align: center;
+`;
+
 function ContactsToInvite({
   validContactsForInvite,
   selectedContacts,
@@ -102,9 +107,9 @@ function ContactsToInvite({
   ) : (
     <>
       <SpacerLG />
-      <p className="no-contacts">
+      <StyledNoContacts>
         <Localizer token="contactNone" />
-      </p>
+      </StyledNoContacts>
       <SpacerLG />
     </>
   );

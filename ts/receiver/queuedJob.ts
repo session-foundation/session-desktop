@@ -4,18 +4,14 @@ import { Data } from '../data/data';
 import { ConversationModel } from '../models/conversation';
 import { MessageModel } from '../models/message';
 import { ConvoHub } from '../session/conversations';
-import { Quote, type BaseDecodedEnvelope, type SwarmDecodedEnvelope } from './types';
+import { type BaseDecodedEnvelope, type SwarmDecodedEnvelope } from './types';
 import { MessageDirection } from '../models/messageType';
 import { ConversationTypeEnum } from '../models/types';
 import { SignalService } from '../protobuf';
 import { DisappearingMessages } from '../session/disappearing_messages';
 import { PubKey } from '../session/types';
 import { UserUtils } from '../session/utils';
-import {
-  MessageModelPropsWithoutConvoProps,
-  lookupQuote,
-  pushQuotedMessageDetails,
-} from '../state/ducks/conversations';
+import { lookupQuoteInStore, pushQuotedMessageDetails } from '../state/ducks/conversations';
 import { selectMemberInviteSentOutsideRedux } from '../state/selectors/groups';
 import { LinkPreviews } from '../util/linkPreviews';
 import { GroupV2Receiver } from './groupv2/handleGroupV2Message';
@@ -24,12 +20,9 @@ import { longOrNumberToNumber } from '../types/long/longOrNumberToNumber';
 import { getHideMessageRequestBannerOutsideRedux } from '../state/selectors/settings';
 import { showMessageRequestBannerOutsideRedux } from '../state/ducks/settings';
 import { getFeatureFlag } from '../state/ducks/types/releasedFeaturesReduxTypes';
-
-function isMessageModel(
-  msg: MessageModel | MessageModelPropsWithoutConvoProps
-): msg is MessageModel {
-  return (msg as MessageModel).get !== undefined;
-}
+import type { StateType } from '../state/reducer';
+import { isUsFromCache } from '../session/utils/User';
+import { isUsAnySogsFromCache } from '../session/apis/open_group_api/sogsv3/knownBlindedkeys';
 
 /**
  * Note: this function does not trigger a write to the db nor trigger redux update.
@@ -44,28 +37,25 @@ async function copyFromQuotedMessage(
   }
   const { id: quoteId, author } = quote;
 
-  const quoteLocal: Quote = {
-    attachments: null,
-    author,
-    id: longOrNumberToNumber(quoteId),
-    text: null,
-    referencedMessageNotFound: false,
+  const quoteLocal = {
+    timestamp: longOrNumberToNumber(quoteId),
+    author:
+      isUsFromCache(author) || isUsAnySogsFromCache(author)
+        ? UserUtils.getOurPubKeyStrFromCache()
+        : author,
   };
 
   const id = longOrNumberToNumber(quoteId);
 
   // First we try to look for the quote in memory
-  const stateConversations = window.inboxStore?.getState().conversations;
-  const { messages, quotes } = stateConversations;
-  let quotedMessage: MessageModelPropsWithoutConvoProps | MessageModel | undefined = lookupQuote(
-    quotes,
-    messages,
-    id,
-    quote.author
-  );
-
+  const { foundProps } = lookupQuoteInStore({
+    timestamp: id,
+    quotedMessagesInStore:
+      (window.inboxStore?.getState() as StateType)?.conversations.quotedMessages || [],
+  });
+  let foundPropsOrLookedUp = foundProps;
   // If the quote is not found in memory, we try to find it in the DB
-  if (!quotedMessage) {
+  if (!foundProps) {
     // We always look for the quote by sentAt timestamp, for opengroups, closed groups and session chats
     // this will return an array of sent messages by id that we have locally.
     const quotedMessagesCollection = await Data.getMessagesBySenderAndSentAt([
@@ -76,25 +66,23 @@ async function copyFromQuotedMessage(
     ]);
 
     if (quotedMessagesCollection?.length) {
-      quotedMessage = quotedMessagesCollection.at(0);
+      const first = quotedMessagesCollection.at(0);
+      if (!first) {
+        throw new Error('just to make tsc happy, this cannot happen');
+      }
+      foundPropsOrLookedUp = first.getMessageModelProps();
     }
   }
 
-  if (!quotedMessage) {
-    window?.log?.warn(`We did not found quoted message ${id} with author ${author}.`);
-    quoteLocal.referencedMessageNotFound = true;
+  if (!foundPropsOrLookedUp) {
+    window?.log?.info(`We did not found quoted message ${id}.`);
     msg.setQuote(quoteLocal);
     return;
   }
 
   window?.log?.info(`Found quoted message id: ${id}`);
-  quoteLocal.referencedMessageNotFound = false;
 
-  if (isMessageModel(quotedMessage)) {
-    window.inboxStore?.dispatch(pushQuotedMessageDetails(quotedMessage.getMessageModelProps()));
-  } else {
-    window.inboxStore?.dispatch(pushQuotedMessageDetails(quotedMessage));
-  }
+  window.inboxStore?.dispatch(pushQuotedMessageDetails(foundPropsOrLookedUp));
 
   msg.setQuote(quoteLocal);
 }
