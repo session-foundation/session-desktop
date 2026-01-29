@@ -555,14 +555,13 @@ export function DebugFeatureFlags({ forceUpdate }: { forceUpdate: () => void }) 
         label="Fake Avatar Picker Color"
         flag="fakeAvatarPickerColor"
         options={[
-          { label: 'blue', value: defaultAvatarPickerColor },
           { label: 'green', value: '#00ff00' },
           { label: 'red', value: '#ff0000' },
           { label: 'black', value: '#000000' },
           { label: 'white', value: '#fffff' },
         ]}
         forceUpdate={forceUpdate}
-        unsetOption={{ label: 'Pick a color', value: null }}
+        unsetOption={{ label: 'blue', value: defaultAvatarPickerColor }}
       />
     </DebugMenuSection>
   );
