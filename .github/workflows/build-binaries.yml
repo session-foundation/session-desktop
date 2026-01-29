@@ -58,7 +58,6 @@ jobs:
             build/release-notes-alpha.md
           sparse-checkout-cone-mode: false
           ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target_branch || github.ref  }}
-          submodules: 'recursive'
 
       - name: Get version tag from package.json
         # Make sure to skip this step if we do not want to make a release, as the other jobs will otherwise create a release.
