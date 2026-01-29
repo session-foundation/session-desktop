@@ -17,6 +17,7 @@ import { ContactName } from '../conversation/ContactName/ContactName';
 import { Timestamp } from '../conversation/Timestamp';
 import { leftPaneListWidth } from '../leftpane/LeftPane';
 import { tr } from '../../localization/localeTools';
+import { Localizer } from '../basic/Localizer';
 
 const StyledConversationTitleResults = styled.div`
   flex-grow: 1;
@@ -54,6 +55,11 @@ const StyledSearchResults = styled.div`
   &:hover {
     background-color: var(--conversation-tab-background-hover-color);
   }
+`;
+
+const StyledLoadingSnippetContainer = styled.span`
+  font-style: 'italic';
+  opacity: 0.6;
 `;
 
 const StyledResultText = styled.div`
@@ -246,11 +252,17 @@ export const MessageSearchResult = (props: MessageSearchResultProps) => {
         </ResultsHeader>
         <ResultBody>
           <FromUserInGroup authorPubkey={source} conversationId={conversationId} />
-          <MessageBodyHighlight
-            text={snippet || ''}
-            isGroup={!convoIsPrivate}
-            isPublic={isPublic}
-          />
+          {snippet === null ? (
+            <StyledLoadingSnippetContainer>
+              <Localizer token="loading" />
+            </StyledLoadingSnippetContainer>
+          ) : (
+            <MessageBodyHighlight
+              text={snippet || ''}
+              isGroup={!convoIsPrivate}
+              isPublic={isPublic}
+            />
+          )}
         </ResultBody>
       </StyledResultText>
     </StyledSearchResults>

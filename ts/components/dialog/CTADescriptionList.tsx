@@ -38,7 +38,7 @@ export function CTADescriptionListItem({
         <LucideIcon
           unicode={LUCIDE_ICONS_UNICODE.CIRCLE_CHECK}
           iconSize={'medium'}
-          iconColor={'var(--primary-color)'}
+          iconColor={'var(--menu-button-border-color)'}
         />
       )}
       {children}

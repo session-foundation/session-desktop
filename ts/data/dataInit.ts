@@ -32,8 +32,8 @@ const channelsToMake = new Set([
   'removeConversation',
   'getAllConversations',
   'getPubkeysInPublicConversation',
-  'searchConversations',
   'searchMessages',
+  'generateSnippetsForMessages',
   'saveMessage',
   'cleanSeenMessages',
   'cleanLastHashes',
@@ -60,6 +60,7 @@ const channelsToMake = new Set([
   'getMessageCount',
   'filterAlreadyFetchedOpengroupMessage',
   'getMessagesBySenderAndSentAt',
+  'getMessagesByConvoIdAndSentAt',
   'getMessageIdsFromServerIds',
   'getMessageById',
   'getMessagesById',
@@ -70,7 +71,7 @@ const channelsToMake = new Set([
   'getNextExpiringMessage',
   'getMessagesByConversation',
   'getLastMessagesByConversation',
-  'getOldestMessageInConversation',
+  'getOldestMessageIdInConversation',
   'getFirstUnreadMessageIdInConversation',
   'getFirstUnreadMessageWithMention',
   'hasConversationOutgoingMessage',
@@ -232,11 +233,6 @@ function updateJob(id: number, data: any) {
 }
 
 function removeJob(id: number) {
-  if (_DEBUG) {
-    jobs[id].complete = true;
-    return;
-  }
-
   if (jobs[id].timer) {
     global.clearTimeout(jobs[id].timer);
     jobs[id].timer = null;

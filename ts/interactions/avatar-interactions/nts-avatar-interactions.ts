@@ -3,7 +3,6 @@ import { randombytes_buf } from 'libsodium-wrappers-sumo';
 import { uploadFileToFsWithOnionV4 } from '../../session/apis/file_server_api/FileServerApi';
 import { processNewAttachment } from '../../types/MessageAttachment';
 import { encryptProfile } from '../../util/crypto/profileEncrypter';
-import type { ConversationModel } from '../../models/conversation';
 import { processAvatarData } from '../../util/avatar/processAvatarData';
 import { MultiEncryptWrapperActions } from '../../webworker/workers/browser/libsession_worker_interface';
 import { UserUtils } from '../../session/utils';
@@ -11,13 +10,12 @@ import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTyp
 import { SessionProfileSetAvatarDownloadedAny } from '../../models/profile';
 import { fromHexToArray } from '../../session/utils/String';
 import { UserConfigWrapperActions } from '../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
+import { ConvoHub } from '../../session/conversations';
 
 export async function uploadAndSetOurAvatarShared({
   decryptedAvatarData,
-  ourConvo,
   context,
 }: {
-  ourConvo: ConversationModel;
   decryptedAvatarData: ArrayBuffer;
   context: 'uploadNewAvatar' | 'reuploadAvatar';
 }) {
@@ -25,6 +23,8 @@ export async function uploadAndSetOurAvatarShared({
     window.log.warn('uploadAndSetOurAvatarShared: avatar content is empty');
     return null;
   }
+  const ourConvo = ConvoHub.use().getOrThrow(UserUtils.getOurPubKeyStrFromCache());
+
   // Note: we want to encrypt & upload the **processed** avatar
   // below (resized & converted), not the original one.
   const { avatarFallback, mainAvatarDetails } = await processAvatarData(decryptedAvatarData, true);

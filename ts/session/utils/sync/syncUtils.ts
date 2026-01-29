@@ -70,7 +70,9 @@ const buildSyncVisibleMessage = (
       digest,
     };
   }) as Array<AttachmentPointerWithUrl>;
-  const quote = (dataMessage.quote as Quote) || undefined;
+  const quote = dataMessage.quote
+    ? ({ author: dataMessage.quote.author, timestamp: dataMessage.quote.id } as Quote)
+    : undefined;
   const preview = (dataMessage.preview as Array<PreviewWithAttachmentUrl>) || [];
 
   return new VisibleMessage({

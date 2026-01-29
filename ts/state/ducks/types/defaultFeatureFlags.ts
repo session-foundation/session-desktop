@@ -67,6 +67,8 @@ function getMockNetworkPageNodeCount() {
   }
 }
 
+export const defaultAvatarPickerColor = '#0000ff'; // defaults to blue
+
 export const defaultProDataFeatureFlags = {
   mockMessageProFeatures: null,
   mockProCurrentStatus: null,
@@ -78,6 +80,7 @@ export const defaultProDataFeatureFlags = {
   mockProBadgesSent: null,
   mockProGroupsUpgraded: null,
   mockNetworkPageNodeCount: getMockNetworkPageNodeCount(),
+  fakeAvatarPickerColor: defaultAvatarPickerColor,
 } as const;
 
 export const defaultDataFeatureFlags = {

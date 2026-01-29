@@ -229,7 +229,6 @@ class AvatarReuploadJob extends PersistedJob<AvatarReuploadPersistedData> {
       // This will pick the correct file server depending on the env variables set.
       const details = await uploadAndSetOurAvatarShared({
         decryptedAvatarData,
-        ourConvo: conversation,
         context: 'reuploadAvatar',
       });
       if (!details?.avatarPointer) {
