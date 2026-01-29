@@ -2331,12 +2331,12 @@ async function updateToSessionSchemaVersion53(currentVersion: number, db: Databa
 `);
 
     db.exec(
-      `CREATE INDEX ${MessageColumns.coalesceSentAndReceivedAt}_index ON ${MESSAGES_TABLE}(${MessageColumns.coalesceSentAndReceivedAt} DESC);`
+      `CREATE INDEX sort_timestamp_full_index ON ${MESSAGES_TABLE}(${MessageColumns.coalesceSentAndReceivedAt} DESC);`
     );
 
     // also create indexes on the coalesce columns with convo id
     db.exec(
-      `CREATE INDEX ${MessageColumns.coalesceSentAndReceivedAt}_conversation_index ON ${MESSAGES_TABLE}(conversationId, ${MessageColumns.coalesceSentAndReceivedAt} DESC);`
+      `CREATE INDEX sort_timestamp_full_conversation_index ON ${MESSAGES_TABLE}(conversationId, ${MessageColumns.coalesceSentAndReceivedAt} DESC);`
     );
 
     // Also, use this migration to create a few indexes on what is called as part of `fetchConvoMemoryDetails`

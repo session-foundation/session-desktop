@@ -649,6 +649,7 @@ async function showPasswordWindow() {
   await passwordWindow.loadURL(prepareURL([getAppRootPath(), 'password.html'])).catch(e => {
     console.warn('failed to load password window.', e.message);
     passwordWindow = null;
+    app.quit();
   });
 
   captureClicks(passwordWindow);
@@ -703,7 +704,10 @@ async function showAbout() {
 
   captureClicks(aboutWindow);
 
-  await aboutWindow.loadURL(prepareURL([getAppRootPath(), 'about.html'], { theme }));
+  await aboutWindow.loadURL(prepareURL([getAppRootPath(), 'about.html'], { theme })).catch(e => {
+    console.warn('failed to load about window.', e.message);
+    aboutWindow = null;
+  });
 
   aboutWindow.on('closed', () => {
     aboutWindow = null;

@@ -57,6 +57,11 @@ const StyledSearchResults = styled.div`
   }
 `;
 
+const StyledLoadingSnippetContainer = styled.span`
+  font-style: 'italic';
+  opacity: 0.6;
+`;
+
 const StyledResultText = styled.div`
   flex-grow: 1;
   margin-inline-start: 12px;
@@ -248,9 +253,9 @@ export const MessageSearchResult = (props: MessageSearchResultProps) => {
         <ResultBody>
           <FromUserInGroup authorPubkey={source} conversationId={conversationId} />
           {snippet === null ? (
-            <span style={{ fontStyle: 'italic', opacity: 0.6 }}>
+            <StyledLoadingSnippetContainer>
               <Localizer token="loading" />
-            </span>
+            </StyledLoadingSnippetContainer>
           ) : (
             <MessageBodyHighlight
               text={snippet || ''}

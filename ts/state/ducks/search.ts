@@ -167,7 +167,7 @@ const searchSlice = createSlice({
         ...state,
         query: action.payload.query,
         searchType: action.payload.searchType,
-        // Clear loading and requested snippets when search term changes
+        // Clear requested snippets when search term changes
         requestedSnippetIds: [],
       };
     },

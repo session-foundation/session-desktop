@@ -381,11 +381,19 @@ export function rebuildFtsTableReferencingMessages(db: Database) {
   console.info('rebuildFtsTableReferencingMessages built in ', Date.now() - start, 'ms');
 }
 
+function analyzeSlowQueries() {
+  return process.env.ANALYZE_QUERIES === '1';
+}
+
+function analyzeAllQueries() {
+  return process.env.FORCE_ANALYZE_ALL_QUERIES === '1';
+}
+
 export function analyzeQuery(
   db: Database,
   query: string,
   params?: StatementParameters<object>,
-  forceAnalyze = false
+  forceAnalyzeThisQuery = false
 ) {
   const prefix = '[QUERY PLAN]: ';
   const stmt = db.prepare(query);
@@ -395,7 +403,7 @@ export function analyzeQuery(
     const result = executor();
     const executionTime = Date.now() - start;
 
-    if (process.env.ANALYZE_QUERIES === '1') {
+    if (analyzeSlowQueries() || analyzeAllQueries()) {
       try {
         const plan = db.prepare(`EXPLAIN QUERY PLAN ${query}`).all(params);
 
@@ -406,7 +414,13 @@ export function analyzeQuery(
           row => row.detail && isString(row.detail) && row.detail.includes('TEMP B-TREE')
         );
 
-        if (forceAnalyze || hasTableScan || hasTempBTree || executionTime > 500) {
+        if (
+          forceAnalyzeThisQuery ||
+          hasTableScan ||
+          hasTempBTree ||
+          executionTime > 500 ||
+          analyzeAllQueries()
+        ) {
           console.info(
             `${prefix}⚠️ PERFORMANCE WARNING: Query uses table scan or temp b-tree or was slow and took ${executionTime}ms`
           );
