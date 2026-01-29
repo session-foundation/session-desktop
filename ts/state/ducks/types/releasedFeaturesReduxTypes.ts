@@ -78,6 +78,7 @@ export type SessionDataFeatureFlags = {
   mockProBadgesSent: number | null;
   mockProGroupsUpgraded: number | null;
   mockNetworkPageNodeCount: number | null;
+  fakeAvatarPickerColor: string | null; // defaults to defaultAvatarPickerColor
 };
 
 export type SessionBooleanFeatureFlagKeys = keyof SessionBooleanFeatureFlags;
