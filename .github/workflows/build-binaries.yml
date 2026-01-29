@@ -205,7 +205,6 @@ jobs:
             build/setup-release-combine.sh
           sparse-checkout-cone-mode: false
           ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target_branch || github.ref  }}
-          submodules: 'recursive'
 
       - name: Download release metadata
         uses: actions/download-artifact@v4
@@ -336,7 +335,6 @@ jobs:
             build/setup-release-combine.sh
           sparse-checkout-cone-mode: false
           ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target_branch || github.ref  }}
-          submodules: 'recursive'
 
       - name: Download release metadata
         uses: actions/download-artifact@v4
