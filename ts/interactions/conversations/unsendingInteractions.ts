@@ -22,7 +22,6 @@ import { NetworkTime } from '../../util/NetworkTime';
 import { MessageQueue } from '../../session/sending';
 import { WithLocalMessageDeletionType } from '../../session/types/with';
 import { tr, type TrArgs } from '../../localization/localeTools';
-import { sectionActions } from '../../state/ducks/section';
 
 async function unsendMessagesForEveryone1o1AndLegacy(
   conversation: ConversationModel,
@@ -565,7 +564,6 @@ export async function deleteMessagesById(messageIds: Array<string>, conversation
         });
         window.inboxStore?.dispatch(updateConfirmModal(null));
         window.inboxStore?.dispatch(closeRightPanel());
-        window.inboxStore?.dispatch(sectionActions.resetRightOverlayMode());
       },
       onClickClose: closeDialog,
     })

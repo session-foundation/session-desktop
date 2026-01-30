@@ -219,6 +219,10 @@ function CopyMessageBodyButton({ messageId }: WithMessageIdOpt) {
   );
 }
 
+function closePanel(dispatch: AppDispatch) {
+  dispatch(closeRightPanel());
+}
+
 function ReplyToMessageButton({ messageId }: WithMessageIdOpt) {
   const dispatch = getAppDispatch();
   if (!messageId) {
@@ -232,19 +236,13 @@ function ReplyToMessageButton({ messageId }: WithMessageIdOpt) {
         // eslint-disable-next-line more/no-then
         void replyToMessage(messageId).then(foundIt => {
           if (foundIt) {
-            dispatch(closeRightPanel());
-            dispatch(sectionActions.resetRightOverlayMode());
+            closePanel(dispatch);
           }
         });
       }}
       dataTestId="reply-to-msg-from-details"
     />
   );
-}
-
-function closePanel(dispatch: AppDispatch) {
-  dispatch(closeRightPanel());
-  dispatch(sectionActions.resetRightOverlayMode());
 }
 
 function useMessageId() {
@@ -399,7 +397,6 @@ export const OverlayMessageInfo = () => {
                 onClick={() => {
                   void resendMessage(messageId);
                   dispatch(closeRightPanel());
-                  dispatch(sectionActions.resetRightOverlayMode());
                 }}
                 dataTestId="resend-msg-from-details"
               />

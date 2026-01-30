@@ -52,7 +52,7 @@ import { isAudio } from '../../types/MIME';
 import { NoticeBanner } from '../NoticeBanner';
 import { SessionSpinner } from '../loading';
 import { ConversationMessageRequestButtons } from './MessageRequestButtons';
-import { RightPanel, StyledRightPanelContainer } from './right-panel/RightPanel';
+import { RightPanel } from './right-panel/RightPanel';
 import { HTMLDirection } from '../../util/i18n/rtlSupport';
 import { showLinkVisitWarningDialog } from '../dialog/OpenUrlModal';
 import { InvitedToGroup, NoMessageInConversation } from './SubtleNotification';
@@ -310,9 +310,7 @@ export class SessionConversation extends Component<Props, State> {
                 htmlDirection={this.props.htmlDirection}
               />
             </div>
-            <StyledRightPanelContainer className={clsx(isRightPanelShowing && 'show')}>
-              <RightPanel />
-            </StyledRightPanelContainer>
+            <RightPanel open={isRightPanelShowing} />
           </>
         )}
       </>
