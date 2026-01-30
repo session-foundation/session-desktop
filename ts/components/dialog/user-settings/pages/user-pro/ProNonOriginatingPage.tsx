@@ -176,7 +176,7 @@ function ProInfoBlockDeviceLinked() {
           <strong>{tr('onLinkedDevice')}</strong>
           <Localizer
             token={hasNeverHadPro ? 'proUpgradeDesktopLinked' : 'proRenewDesktopLinked'}
-            platform_store={data.providerConstants.store}
+            platform_store={data.providerConstants.store} // this one is always store
             platform_store_other={data.providerConstants.store_other}
           />
         </ProInfoBlockText>
@@ -253,7 +253,7 @@ function ProInfoBlockUpgrade() {
       descriptionElement={
         <Localizer
           token="proAccessUpgradeDesktop"
-          platform_store={data.providerConstants.store}
+          platform_store={data.providerConstants.store} // this one is always store
           platform_store_other={data.providerConstants.store_other}
           icon={LUCIDE_ICONS_UNICODE.EXTERNAL_LINK_ICON}
         />
@@ -315,6 +315,8 @@ function ProInfoBlockUpdate() {
 function ProInfoBlockRenew() {
   const dispatch = getAppDispatch();
   const { data } = useProBackendProDetailsLocal();
+  const storeOrPlatform = useStoreOrPlatformFromProvider(data);
+
   return (
     <ProInfoBlockLayout
       titleElement={tr('renewingPro')}
@@ -341,7 +343,7 @@ function ProInfoBlockRenew() {
             textElement={
               <Localizer
                 token="proAccessRenewPlatformStoreWebsite"
-                platform_store={data.providerConstants.platform}
+                platform_store={storeOrPlatform}
                 platform_account={data.providerConstants.platform_account}
               />
             }
@@ -541,6 +543,7 @@ function ProPageButtonUpdate() {
 function ProPageButtonCancel() {
   const dispatch = getAppDispatch();
   const { data } = useProBackendProDetailsLocal();
+  const storeOrPlatform = useStoreOrPlatformFromProvider(data);
   return (
     <SessionButton
       {...proButtonProps}
@@ -550,7 +553,7 @@ function ProPageButtonCancel() {
       }}
       dataTestId="pro-open-platform-website-button"
     >
-      <Localizer token="openPlatformWebsite" platform={data.providerConstants.platform} />
+      <Localizer token="openPlatformWebsite" platform={storeOrPlatform} />
     </SessionButton>
   );
 }
@@ -558,6 +561,7 @@ function ProPageButtonCancel() {
 function ProPageButtonRefund() {
   const dispatch = getAppDispatch();
   const { data } = useProBackendProDetailsLocal();
+  const storeOrPlatform = useStoreOrPlatformFromProvider(data);
   return (
     <SessionButton
       {...proButtonProps}
@@ -573,7 +577,7 @@ function ProPageButtonRefund() {
       dataTestId="pro-open-platform-website-button"
     >
       {data.isPlatformRefundAvailable ? (
-        <Localizer token="openPlatformWebsite" platform={data.providerConstants.platform} />
+        <Localizer token="openPlatformWebsite" platform={storeOrPlatform} />
       ) : (
         <Localizer token="requestRefund" />
       )}

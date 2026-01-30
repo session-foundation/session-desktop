@@ -21,6 +21,7 @@ import {
   UserConfigWrapperActions,
 } from '../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 import { ConvoHub } from '../../session/conversations';
+import { handleTriggeredCTAs } from '../../components/dialog/SessionCTA';
 
 type RequestState<D = unknown> = {
   isFetching: boolean;
@@ -252,6 +253,7 @@ async function handleExpiryCTAs(
   }
 }
 
+let firstFetchProDetailsHappened = false;
 let lastKnownProofExpiryTimestamp: number | null = null;
 let scheduledProofExpiryTaskTimestamp: number | null = null;
 let scheduledProofExpiryTaskId: ReturnType<typeof setTimeout> | null = null;
@@ -390,6 +392,11 @@ const fetchGetProDetailsFromProBackend = createAsyncThunk(
             state.data.auto_renewing,
             state.data.status
           );
+          // on the first fetch of our pro details after a restart, we want to show the CTAs if needed
+          if (window.inboxStore?.dispatch && !firstFetchProDetailsHappened) {
+            void handleTriggeredCTAs(window.inboxStore?.dispatch, false);
+          }
+          firstFetchProDetailsHappened = true;
         }
 
         if (state.data) {

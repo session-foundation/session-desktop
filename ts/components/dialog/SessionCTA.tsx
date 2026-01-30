@@ -431,7 +431,8 @@ export async function handleTriggeredCTAs(dispatch: Dispatch<any>, fromAppStart:
   const proAvailable = getFeatureFlag('proAvailable');
 
   if (Storage.get(SettingsKey.proExpiringSoonCTA)) {
-    if (!proAvailable) {
+    // Note: postpone showing the pro CTAs as we need to make sure we've fetched our latest pro status from the backend
+    if (!proAvailable || fromAppStart) {
       return;
     }
     dispatch(
@@ -441,7 +442,9 @@ export async function handleTriggeredCTAs(dispatch: Dispatch<any>, fromAppStart:
     );
     await Storage.put(SettingsKey.proExpiringSoonCTA, false);
   } else if (Storage.get(SettingsKey.proExpiredCTA)) {
-    if (!proAvailable) {
+    // Note: postpone showing the pro CTAs as we need to make sure we've fetched our latest pro status from the backend
+
+    if (!proAvailable || fromAppStart) {
       return;
     }
     dispatch(
