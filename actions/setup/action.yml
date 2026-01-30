@@ -8,6 +8,13 @@ inputs:
 runs:
   using: 'composite'
   steps:
+    - name: Setup ccache
+      uses: hendrikmuhs/ccache-action@5ebbd400eff9e74630f759d94ddd7b6c26299639 # v1.2
+      with:
+        key: ${{ runner.os }}-ccache-${{ inputs.cache_suffix }}-${{ github.head_ref || github.ref_name }}
+        # if the exact key is not found, fallback to one matching our cache_suffix
+        restore-keys: ${{ runner.os }}-ccache-${{ inputs.cache_suffix }}-
+
     - name: Setup pnpm
       uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4
 
