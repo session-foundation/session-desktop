@@ -103,6 +103,10 @@ export function useDebugMenuModal() {
   return useSelector((state: StateType) => getModal(state).debugMenuModal);
 }
 
+export function useKeyboardShortcutsModal() {
+  return useSelector((state: StateType) => getModal(state).keyboardShortcutsModal);
+}
+
 export function useConversationSettingsModal() {
   return useSelector((state: StateType) => getModal(state).conversationSettingsModal);
 }
@@ -123,4 +127,20 @@ export function useModalStack() {
 export function useIsTopModal(modalId: ModalId) {
   const modalStack = useModalStack();
   return !modalStack?.length || modalStack[modalStack.length - 1] === modalId;
+}
+
+export type FocusScope = 'global' | 'conversationList' | ModalId;
+
+export function useIsInScope(scope: FocusScope) {
+  const modalStack = useModalStack();
+
+  if (scope === 'global') {
+    return true;
+  }
+
+  if (scope === 'conversationList') {
+    return !modalStack?.length;
+  }
+
+  return modalStack[modalStack.length - 1] === scope;
 }

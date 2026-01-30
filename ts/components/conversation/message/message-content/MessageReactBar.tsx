@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { isEmpty } from 'lodash';
 import useInterval from 'react-use/lib/useInterval';
 import useUpdate from 'react-use/lib/useUpdate';
+import { RefObject } from 'react';
 import { useMessageExpirationPropsById } from '../../../../hooks/useParamSelector';
 import { DURATION } from '../../../../session/constants';
 import { nativeEmojiData } from '../../../../util/emoji';
@@ -15,9 +16,11 @@ import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 import { tr } from '../../../../localization/localeTools';
 
 type Props = {
+  ref?: RefObject<HTMLDivElement>;
   action: (...args: Array<any>) => void;
   additionalAction: (...args: Array<any>) => void;
   messageId: string;
+  emojiPanelTriggerRef: RefObject<HTMLElement>;
 };
 
 const StyledMessageReactBar = styled.div`
@@ -29,14 +32,11 @@ const StyledMessageReactBar = styled.div`
 
   padding: 4px 8px;
   white-space: nowrap;
-  width: 302px;
 
   display: flex;
   align-items: center;
 
   .session-icon-button {
-    margin: 0 4px;
-
     &:hover svg {
       background-color: var(--chat-buttons-background-hover-color);
     }
@@ -60,8 +60,6 @@ const ReactButton = styled.span`
 `;
 
 const StyledContainer = styled.div<{ $expirationTimestamp: number | null }>`
-  position: absolute;
-  top: ${props => (props.$expirationTimestamp ? '-106px' : '-56px')};
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -149,12 +147,18 @@ const ExpiresInItem = ({ expirationTimestamp }: { expirationTimestamp?: number |
   );
 };
 
-export const MessageReactBar = ({ action, additionalAction, messageId }: Props) => {
+export const MessageReactBar = ({
+  ref,
+  action,
+  additionalAction,
+  messageId,
+  emojiPanelTriggerRef,
+}: Props) => {
   const recentReactions = getRecentReactions();
   const expirationTimestamp = useIsRenderedExpiresInItem(messageId);
 
   return (
-    <StyledContainer $expirationTimestamp={expirationTimestamp}>
+    <StyledContainer ref={ref} $expirationTimestamp={expirationTimestamp}>
       <StyledMessageReactBar>
         {recentReactions &&
           recentReactions.map(emoji => (
@@ -172,11 +176,15 @@ export const MessageReactBar = ({ action, additionalAction, messageId }: Props) 
             </ReactButton>
           ))}
         <SessionLucideIconButton
+          ref={emojiPanelTriggerRef as RefObject<HTMLButtonElement>}
           iconColor={'var(--emoji-reaction-bar-icon-color)'}
           iconSize={'large'}
           unicode={LUCIDE_ICONS_UNICODE.PLUS}
           onClick={additionalAction}
           backgroundColor="var(--emoji-reaction-bar-icon-background-color)"
+          // NOTE: these magic numbers align the plus icon with the emoji buttons
+          padding="3px"
+          margin="4px"
         />
       </StyledMessageReactBar>
       <ExpiresInItem expirationTimestamp={expirationTimestamp} />

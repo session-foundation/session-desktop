@@ -135,7 +135,8 @@ export const StyledPanelButton = styled.button<{
   padding-block: var(--margins-sm);
   min-height: var(--panel-button-container-min-height);
 
-  &:hover {
+  &:hover,
+  &:focus {
     background-color: ${props => {
       if (props.disabled) {
         return 'transparent'; // let the PanelButtonGroup background be visible

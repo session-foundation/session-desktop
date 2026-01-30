@@ -147,7 +147,7 @@ importers:
         specifier: 19.2.1
         version: 19.2.1
       react-contexify:
-        specifier: 6.0.0
+        specifier: ^6.0.0
         version: 6.0.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       react-dom:
         specifier: 19.2.1

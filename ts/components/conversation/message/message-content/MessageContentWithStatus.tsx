@@ -44,7 +44,6 @@ const StyledMessageContentContainer = styled.div<{ $isIncoming: boolean; $isDeta
   padding-left: ${props => (props.$isDetailView || props.$isIncoming ? 0 : '25%')};
   padding-right: ${props => (props.$isDetailView || !props.$isIncoming ? 0 : '25%')};
   width: 100%;
-  max-width: '100%';
 `;
 
 const StyledMessageWithAuthor = styled.div`

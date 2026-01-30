@@ -1,6 +1,5 @@
 import { type ReactNode, type RefObject, type SessionDataTestId, useRef, useState } from 'react';
 import styled, { type CSSProperties } from 'styled-components';
-import useMouse from 'react-use/lib/useMouse';
 import useDebounce from 'react-use/lib/useDebounce';
 import {
   type HorizontalAlignment,
@@ -29,9 +28,37 @@ export type TooltipProps = {
   debounceTimeout?: number;
 };
 
-export const useTriggerPosition = (ref: RefObject<Element>) => {
-  const { posX: triggerX, posY: triggerY, elH: triggerHeight, elW: triggerWidth } = useMouse(ref);
-  return { triggerX, triggerY, triggerWidth, triggerHeight };
+export type PopoverTriggerPosition = {
+  triggerX: number;
+  triggerY: number;
+  triggerWidth: number;
+  triggerHeight: number;
+};
+
+export const defaultTriggerPos = { triggerX: 0, triggerY: 0, triggerWidth: 0, triggerHeight: 0 };
+
+function getTriggerPositionFromBoundingClientRect(rect: DOMRect) {
+  return {
+    triggerX: rect.left,
+    triggerY: rect.top,
+    triggerWidth: rect.width,
+    triggerHeight: rect.height,
+  };
+}
+
+export const getTriggerPositionFromId = (id: string) => {
+  const el = document.getElementById(id);
+  if (!el) {
+    return defaultTriggerPos;
+  }
+  return getTriggerPositionFromBoundingClientRect(el.getBoundingClientRect());
+};
+
+export const useTriggerPosition = (ref: RefObject<HTMLElement | null>) => {
+  if (!ref.current) {
+    return defaultTriggerPos;
+  }
+  return getTriggerPositionFromBoundingClientRect(ref.current.getBoundingClientRect());
 };
 
 export const SessionTooltip = ({
@@ -52,9 +79,7 @@ export const SessionTooltip = ({
   const [debouncedHover, setDebouncedHover] = useState(false);
 
   const ref = useRef<HTMLDivElement>(null);
-
-  // FIXME: remove this as cast
-  const triggerPos = useTriggerPosition(ref as RefObject<Element>);
+  const triggerPos = useTriggerPosition(ref);
 
   useDebounce(
     () => {

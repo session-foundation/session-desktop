@@ -33,7 +33,7 @@ export const defaultBooleanFeatureFlags = {
   useTestNet: isTestNet() || isTestIntegration(),
   debugInputCommands: !isEmpty(process.env.SESSION_DEBUG),
   alwaysShowRemainingChars: false,
-  showPopoverAnchors: false,
+  showPopoverAnchors: !isEmpty(process.env.SESSION_SHOW_POPOVER_ANCHORS),
   // Note: some stuff are init when the app starts, so fsTTL30s should only be set from the env itself (before app starts)
   fsTTL30s: !isEmpty(process.env.FILE_SERVER_TTL_30S),
   debugLogging: !isEmpty(process.env.SESSION_DEBUG),
@@ -48,6 +48,7 @@ export const defaultBooleanFeatureFlags = {
   debugInsecureNodeFetch: !isEmpty(process.env.SESSION_DEBUG_INSECURE_NODE_FETCH),
   debugOnlineState: !isEmpty(process.env.SESSION_DEBUG_ONLINE_STATE),
   debugForceSeedNodeFailure: !isEmpty(process.env.SESSION_DEBUG_FORCE_SEED_NODE_FAILURE),
+  debugKeyboardShortcuts: !isEmpty(process.env.SESSION_DEBUG_KEYBOARD_SHORTCUTS),
 } satisfies SessionBooleanFeatureFlags;
 
 function getMockNetworkPageNodeCount() {

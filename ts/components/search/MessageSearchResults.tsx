@@ -1,4 +1,4 @@
-import styled, { CSSProperties } from 'styled-components';
+import styled, { type CSSProperties } from 'styled-components';
 
 import {
   useConversationUsernameWithFallback,
@@ -17,6 +17,7 @@ import { ContactName } from '../conversation/ContactName/ContactName';
 import { Timestamp } from '../conversation/Timestamp';
 import { leftPaneListWidth } from '../leftpane/LeftPane';
 import { tr } from '../../localization/localeTools';
+import { createButtonOnKeyDownForClickEventHandler } from '../../util/keyboardShortcuts';
 
 const StyledConversationTitleResults = styled.div`
   flex-grow: 1;
@@ -51,7 +52,8 @@ const StyledSearchResults = styled.div`
 
   cursor: pointer;
 
-  &:hover {
+  &:hover,
+  &:focus {
     background-color: var(--conversation-tab-background-hover-color);
   }
 `;
@@ -216,6 +218,15 @@ export const MessageSearchResult = (props: MessageSearchResultProps) => {
   const destination =
     direction === 'incoming' ? conversationId : convoIsPrivate ? me : conversationId;
 
+  const onClick = () =>
+    void openConversationToSpecificMessage({
+      conversationKey: conversationId,
+      messageIdToNavigateTo: id,
+      shouldHighlightMessage: true,
+    });
+
+  const onKeyDown = createButtonOnKeyDownForClickEventHandler(onClick);
+
   if (!source && !destination) {
     return null;
   }
@@ -224,14 +235,10 @@ export const MessageSearchResult = (props: MessageSearchResultProps) => {
     <StyledSearchResults
       key={`div-msg-searchresult-${id}`}
       style={style}
+      tabIndex={0}
       role="button"
-      onClick={() => {
-        void openConversationToSpecificMessage({
-          conversationKey: conversationId,
-          messageIdToNavigateTo: id,
-          shouldHighlightMessage: true,
-        });
-      }}
+      onKeyDown={onKeyDown}
+      onClick={onClick}
     >
       <AvatarItem source={conversationId} />
       <StyledResultText>

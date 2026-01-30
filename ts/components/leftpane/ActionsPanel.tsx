@@ -23,6 +23,7 @@ import { DURATION } from '../../session/constants';
 import {
   onionPathModal,
   updateDebugMenuModal,
+  updateKeyboardShortcutsMenuModal,
   userSettingsModal,
 } from '../../state/ducks/modalDialog';
 
@@ -46,17 +47,25 @@ import { GearAvatarButton } from '../buttons/avatar/GearAvatarButton';
 import { useZoomShortcuts } from '../../hooks/useZoomingShortcut';
 import { OnionStatusLight } from '../dialog/OnionStatusPathDialog';
 import { AvatarReupload } from '../../session/utils/job_runners/jobs/AvatarReuploadJob';
-import { useDebugMenuModal } from '../../state/selectors/modal';
+import {
+  useDebugMenuModal,
+  useKeyboardShortcutsModal,
+  useUserSettingsModal,
+} from '../../state/selectors/modal';
 import { getFeatureFlagMemo } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 import { useDebugKey } from '../../hooks/useDebugKey';
 import { UpdateProRevocationList } from '../../session/utils/job_runners/jobs/UpdateProRevocationListJob';
 import { getIsProAvailableMemo } from '../../hooks/useIsProAvailable';
 import { SettingsKey } from '../../data/settings-key';
+import { useKeyboardShortcut } from '../../hooks/useKeyboardShortcut';
+import { KbdShortcut } from '../../util/keyboardShortcuts';
+import { useNewConversationCallback } from '../buttons/MenuButton';
 
-const StyledContainerAvatar = styled.div`
+const StyledContainerAvatar = styled.button`
   padding: var(--margins-lg);
   position: relative;
   cursor: pointer;
+  border-radius: 50%;
 `;
 
 function handleThemeSwitch() {
@@ -109,6 +118,27 @@ function usePeriodicFetchRevocationList() {
     },
     isDevProd() ? 10 * DURATION.SECONDS : 1 * DURATION.MINUTES
   );
+}
+
+function useKeyboardShortcutsModalKeyboardShortcut() {
+  const dispatch = getAppDispatch();
+  const modalState = useKeyboardShortcutsModal();
+  return useKeyboardShortcut(KbdShortcut.keyboardShortcutModal, () =>
+    dispatch(updateKeyboardShortcutsMenuModal(modalState ? null : {}))
+  );
+}
+
+function useUserSettingsModalKeyboardShortcut() {
+  const dispatch = getAppDispatch();
+  const modalState = useUserSettingsModal();
+  return useKeyboardShortcut(KbdShortcut.userSettingsModal, () =>
+    dispatch(userSettingsModal(modalState ? null : { userSettingsPage: 'default' }))
+  );
+}
+
+function useNewConversationKeyboardShortcut() {
+  const callback = useNewConversationCallback();
+  return useKeyboardShortcut(KbdShortcut.newConversation, callback);
 }
 
 function useDebugThemeSwitch() {
@@ -189,6 +219,9 @@ export const ActionsPanel = () => {
   useDebugThemeSwitch();
   useUpdateBadgeCount();
   usePeriodicFetchRevocationList();
+  useKeyboardShortcutsModalKeyboardShortcut();
+  useUserSettingsModalKeyboardShortcut();
+  useNewConversationKeyboardShortcut();
 
   useInterval(() => {
     if (!ourPrimaryConversation) {

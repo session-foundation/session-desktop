@@ -90,6 +90,11 @@ export type PopoverProps = {
   horizontalPosition?: HorizontalAlignment;
   verticalPosition?: VerticalPosition;
   isTooltip?: boolean;
+  // Fallbacks for when the content height and width are known, this
+  // allows popovers to pre-calculate an initial position before the
+  // content is rendered. FIXME: maybe we dont need this?
+  fallbackContentHeight?: number;
+  fallbackContentWidth?: number;
 };
 
 export const SessionPopoverContent = (props: PopoverProps) => {
@@ -107,22 +112,21 @@ export const SessionPopoverContent = (props: PopoverProps) => {
     isTooltip,
     horizontalPosition = 'center',
     verticalPosition = 'top',
+    fallbackContentHeight,
+    fallbackContentWidth,
   } = props;
-
   const showPopoverAnchors = getFeatureFlagMemo('showPopoverAnchors');
 
   const ref = useRef<HTMLDivElement | null>(null);
 
-  const contentW = ref.current?.offsetWidth;
-  const contentH = ref.current?.offsetHeight;
+  const contentWidth = ref.current?.offsetWidth;
+  const contentHeight = ref.current?.offsetHeight;
 
   const viewportWidth = window.innerWidth;
   const viewportHeight = window.innerHeight;
 
-  const readyToShow = !!(!loading && contentW && contentH && open);
-
   const { x, y, pointerOffset, anchorX } = useMemo(() => {
-    if (!readyToShow) {
+    if (!open || loading) {
       return {
         x: 0,
         y: 0,
@@ -130,6 +134,9 @@ export const SessionPopoverContent = (props: PopoverProps) => {
         anchorX: 0,
       };
     }
+
+    const contentW = contentWidth || (fallbackContentWidth ?? 0);
+    const contentH = contentHeight || (fallbackContentHeight ?? 0);
 
     const coreContentWidth = contentW - (isTooltip ? CONTENT_BORDER_RADIUS : 0);
 
@@ -167,10 +174,11 @@ export const SessionPopoverContent = (props: PopoverProps) => {
     /**
      * If `y + contentHeight` is above the viewport, position the tooltip content below the trigger.
      */
-    if (newY < VIEWPORT_MARGIN) {
-      newY = triggerY + triggerHeight + VIEWPORT_MARGIN;
+    if (newY - contentH < VIEWPORT_MARGIN) {
+      newY = triggerY + triggerHeight + VIEWPORT_MARGIN + contentH;
     }
 
+    // FIXME: this assumes top, doesnt work for bottom
     if (newY + contentH + VIEWPORT_MARGIN > viewportHeight) {
       newY = viewportHeight - contentH - VIEWPORT_MARGIN;
     }
@@ -184,25 +192,28 @@ export const SessionPopoverContent = (props: PopoverProps) => {
       anchorX: newAnchorX,
     };
   }, [
-    readyToShow,
-    contentW,
+    open,
+    loading,
+    contentWidth,
     isTooltip,
     triggerX,
     triggerWidth,
     horizontalPosition,
     viewportWidth,
     verticalPosition,
-    contentH,
+    contentHeight,
     viewportHeight,
     triggerY,
     triggerHeight,
+    fallbackContentWidth,
+    fallbackContentHeight,
   ]);
 
   return (
     <>
       <StyledPopover
         ref={ref}
-        $readyToShow={readyToShow}
+        $readyToShow={open && !loading}
         onClick={onClick}
         x={x}
         y={y}
@@ -216,11 +227,12 @@ export const SessionPopoverContent = (props: PopoverProps) => {
         {children}
       </StyledPopover>
       {showPopoverAnchors ? (
+        // NOTE: these are only rendered when the debug option is enabled
         <>
           <StyledCoordinateMarker x={x} y={y} title="x,y" />
           <StyledCoordinateMarker
             x={x + pointerOffset}
-            y={y + (contentH ?? 0) * (verticalPosition === 'top' ? 1 : -1) - TIP_LENGTH / 2}
+            y={y + (contentHeight ?? 0) * (verticalPosition === 'top' ? 1 : -1) - TIP_LENGTH / 2}
             title="offset"
             color="green"
           />
@@ -228,7 +240,7 @@ export const SessionPopoverContent = (props: PopoverProps) => {
             x={x + pointerOffset + TIP_LENGTH / 2}
             y={
               y +
-              (contentH ?? 0) * (verticalPosition === 'top' ? 1 : -1) +
+              (contentHeight ?? 0) * (verticalPosition === 'top' ? 1 : -1) +
               (verticalPosition === 'bottom' ? triggerHeight : 0)
             }
             title="offset-center"

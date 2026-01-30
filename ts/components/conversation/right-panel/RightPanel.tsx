@@ -10,7 +10,7 @@ import { sectionActions } from '../../../state/ducks/section';
 import { getAppDispatch } from '../../../state/dispatch';
 import { removeMessageInfoId } from '../../../state/ducks/conversations';
 
-export const StyledRightPanelContainer = styled(motion.div)`
+const StyledRightPanelContainer = styled(motion.div)`
   position: absolute;
   height: var(--right-panel-height);
   width: var(--right-panel-width);

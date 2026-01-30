@@ -100,35 +100,37 @@ export const SessionMessagesList = (props: {
 
   return (
     <IsDetailMessageViewContext.Provider value={false}>
-      {messagesProps.map(messageProps => {
-        const { messageId } = messageProps;
+      {messagesProps
+        .map(messageProps => {
+          const { messageId } = messageProps;
 
-        const ComponentToRender = componentForMessageType[messageProps.message.messageType];
+          const ComponentToRender = componentForMessageType[messageProps.message.messageType];
 
-        const unreadIndicator = messageProps.showUnreadIndicator ? (
-          <SessionLastSeenIndicator
-            key={'unread-indicator'}
-            messageId={messageId}
-            didScroll={didScroll}
-            setDidScroll={setDidScroll}
-          />
-        ) : null;
-
-        const dateBreak =
-          messageProps.showDateBreak !== undefined ? (
-            <MessageDateBreak
-              key={`date-break-${messageId}`}
-              timestamp={messageProps.showDateBreak}
+          const unreadIndicator = messageProps.showUnreadIndicator ? (
+            <SessionLastSeenIndicator
+              key={'unread-indicator'}
               messageId={messageId}
+              didScroll={didScroll}
+              setDidScroll={setDidScroll}
             />
           ) : null;
 
-        return [
-          <ComponentToRender key={messageId} messageId={messageId} />,
-          unreadIndicator,
-          dateBreak,
-        ];
-      })}
+          const dateBreak =
+            messageProps.showDateBreak !== undefined ? (
+              <MessageDateBreak
+                key={`date-break-${messageId}`}
+                timestamp={messageProps.showDateBreak}
+                messageId={messageId}
+              />
+            ) : null;
+
+          return [
+            dateBreak,
+            unreadIndicator,
+            <ComponentToRender key={messageId} messageId={messageId} />,
+          ];
+        })
+        .toReversed()}
     </IsDetailMessageViewContext.Provider>
   );
 };

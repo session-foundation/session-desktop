@@ -26,34 +26,37 @@ const StyledMenuButton = styled.button`
 
   color: var(--menu-button-icon-color);
 
-  &:hover {
+  &:hover,
+  &:focus {
     background: var(--menu-button-background-hover-color);
     border-color: var(--menu-button-border-hover-color);
     color: var(--menu-button-icon-hover-color);
   }
 `;
 
+export function useNewConversationCallback() {
+  const leftOverlayMode = useLeftOverlayMode();
+  const dispatch = getAppDispatch();
+
+  return () => {
+    dispatch(searchActions.clearSearch());
+    dispatch(
+      leftOverlayMode
+        ? sectionActions.resetLeftOverlayMode()
+        : sectionActions.setLeftOverlayMode('choose-action')
+    );
+  };
+}
+
 /**
  * This is the Session Menu Button. i.e. the button on top of the conversation list to start a new conversation.
  * It has two state: selected or not and so we use an checkbox input to keep the state in sync.
  */
 export const MenuButton = () => {
-  const leftOverlayMode = useLeftOverlayMode();
-  const dispatch = getAppDispatch();
-
-  const isToggled = Boolean(leftOverlayMode);
-
-  const onClickFn = () => {
-    dispatch(searchActions.clearSearch());
-    dispatch(
-      isToggled
-        ? sectionActions.resetLeftOverlayMode()
-        : sectionActions.setLeftOverlayMode('choose-action')
-    );
-  };
+  const onClick = useNewConversationCallback();
 
   return (
-    <StyledMenuButton data-testid="new-conversation-button" onClick={onClickFn}>
+    <StyledMenuButton data-testid="new-conversation-button" onClick={onClick}>
       <LucideIcon
         unicode={LUCIDE_ICONS_UNICODE.PLUS}
         iconSize="large"

@@ -58,7 +58,6 @@ export const DraggableCallContainer = () => {
   const ongoingCallProps = useSelector(getHasOngoingCallWith);
   const selectedConversationKey = useSelectedConversationKey();
   const hasOngoingCall = useSelector(getHasOngoingCall);
-
   // the draggable container has a width of 12vw, so we just set it's X to a bit more than this
   const [positionX, setPositionX] = useState(window.innerWidth - (window.innerWidth * 1) / 6);
   // 90 px is a bit below the conversation header height

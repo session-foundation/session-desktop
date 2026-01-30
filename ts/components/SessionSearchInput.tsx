@@ -12,6 +12,8 @@ import { tr } from '../localization/localeTools';
 import { SessionLucideIconButton } from './icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from './icon/lucide';
 import { LucideIcon } from './icon/LucideIcon';
+import { useKeyboardShortcut } from '../hooks/useKeyboardShortcut';
+import { KbdShortcut } from '../util/keyboardShortcuts';
 
 const StyledSearchInput = styled.div`
   height: var(--search-input-height);
@@ -78,6 +80,19 @@ export const SessionSearchInput = ({ searchType }: { searchType: SearchType }) =
     }
   });
 
+  const isDisabled = () =>
+    !(inputRef.current !== null && inputRef.current !== document.activeElement);
+
+  useKeyboardShortcut(
+    KbdShortcut.conversationListSearch,
+    () => {
+      if (!isDisabled() && inputRef.current) {
+        inputRef.current.focus();
+      }
+    },
+    isDisabled
+  );
+
   // just after onboard we only have a conversation with ourself
   if (convoCount <= 1) {
     return null;
@@ -120,6 +135,9 @@ export const SessionSearchInput = ({ searchType }: { searchType: SearchType }) =
           iconColor="var(--search-bar-icon-color)"
           iconSize={iconSize}
           unicode={LUCIDE_ICONS_UNICODE.X}
+          // NOTE: we dont want the clear button in the tab index list
+          // as we want the next tab after search to be the first result
+          tabIndex={-1}
           onClick={() => {
             setCurrentSearchTerm('');
             dispatch(searchActions.clearSearch());

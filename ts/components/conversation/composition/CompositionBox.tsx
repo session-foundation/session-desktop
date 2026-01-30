@@ -61,6 +61,7 @@ import { tStripped } from '../../../localization/localeTools';
 import type { ProcessedLinkPreviewThumbnailType } from '../../../webworker/workers/node/image_processor/image_processor';
 import { CTAVariant } from '../../dialog/cta/types';
 import { selectWeAreProUser } from '../../../hooks/useHasPro';
+import { closeContextMenus } from '../../../util/contextMenu';
 
 export interface ReplyingToMessageProps {
   convoId: string;
@@ -343,6 +344,7 @@ class CompositionBoxInner extends Component<Props, State> {
     document.addEventListener('mousedown', this.handleClick, false);
     this.setState({ lastSelectedLength: window.getSelection()?.toString().length ?? 0 });
 
+    closeContextMenus();
     this.setState({
       showEmojiPanel: true,
     });

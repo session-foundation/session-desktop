@@ -1,8 +1,13 @@
-import { isNil, isString, toNumber } from 'lodash';
-import { MouseEvent, useCallback, useEffect, useState } from 'react';
+import {
+  type MouseEvent,
+  type KeyboardEvent,
+  useCallback,
+  useEffect,
+  useState,
+  useRef,
+} from 'react';
 import clsx from 'clsx';
 
-import { contextMenu } from 'react-contexify';
 import { useSelector } from 'react-redux';
 import styled, { keyframes } from 'styled-components';
 import { useIsDetailMessageView } from '../../../../contexts/isDetailViewContext';
@@ -17,6 +22,8 @@ import {
   useIsMessageSelectionMode,
   useSelectedIsBlocked,
 } from '../../../../state/selectors/selectedConversation';
+import { isButtonClickKey } from '../../../../util/keyboardShortcuts';
+import { showMessageContextMenu } from '../message-content/MessageContextMenu';
 
 export type GenericReadableMessageSelectorProps = Pick<
   MessageRenderingProps,
@@ -41,7 +48,6 @@ const highlightedMessageAnimation = keyframes`
 const StyledReadableMessage = styled.div<{
   selected: boolean;
   $isDetailView: boolean;
-  $isRightClicked: boolean;
 }>`
   display: flex;
   align-items: center;
@@ -57,10 +63,9 @@ const StyledReadableMessage = styled.div<{
     margin-top: var(--margins-xs);
   }
 
-  ${props =>
-    !props.selected &&
-    props.$isRightClicked &&
-    `background-color: var(--conversation-tab-background-selected-color);`}
+  &:focus {
+    background-color: var(--conversation-tab-background-selected-color);
+  }
 `;
 
 export const GenericReadableMessage = (props: Props) => {
@@ -79,41 +84,29 @@ export const GenericReadableMessage = (props: Props) => {
 
   const multiSelectMode = useIsMessageSelectionMode();
 
-  const [isRightClicked, setIsRightClicked] = useState(false);
-  const onMessageLoseFocus = useCallback(() => {
-    if (isRightClicked) {
-      setIsRightClicked(false);
-    }
-  }, [isRightClicked]);
+  const ref = useRef<HTMLDivElement>(null);
 
   const handleContextMenu = useCallback(
-    (e: MouseEvent<HTMLElement>) => {
-      // this is quite dirty but considering that we want the context menu of the message to show on click on the attachment
-      // and the context menu save attachment item to save the right attachment I did not find a better way for now.
-
-      // Note: If you change this, also make sure to update the `saveAttachment()` in MessageContextMenu.tsx
-      const enableContextMenu =
-        !selectedIsBlocked && !multiSelectMode && !msgProps?.isKickedFromGroup;
-      const attachmentIndexStr = (e?.target as any)?.parentElement?.getAttribute?.(
-        'data-attachmentindex'
-      );
-      const attachmentIndex =
-        isString(attachmentIndexStr) && !isNil(toNumber(attachmentIndexStr))
-          ? toNumber(attachmentIndexStr)
-          : 0;
-      if (enableContextMenu) {
-        contextMenu.hideAll();
-        contextMenu.show({
+    (
+      e: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>,
+      triggerPosition?: { x: number; y: number }
+    ) => {
+      if (!selectedIsBlocked && !multiSelectMode && !msgProps?.isKickedFromGroup) {
+        showMessageContextMenu({
           id: ctxMenuID,
           event: e,
-          props: {
-            dataAttachmentIndex: attachmentIndex,
-          },
+          triggerPosition,
         });
       }
-      setIsRightClicked(enableContextMenu);
     },
     [selectedIsBlocked, ctxMenuID, multiSelectMode, msgProps?.isKickedFromGroup]
+  );
+
+  const onContextMenu = useCallback(
+    (e: MouseEvent<HTMLElement>) => {
+      return handleContextMenu(e);
+    },
+    [handleContextMenu]
   );
 
   useEffect(() => {
@@ -125,13 +118,21 @@ export const GenericReadableMessage = (props: Props) => {
     }
   }, [msgProps?.convoId]);
 
-  useEffect(() => {
-    document.addEventListener('click', onMessageLoseFocus);
+  const onKeyDown = useCallback(
+    (e: KeyboardEvent<HTMLDivElement>) => {
+      if (isButtonClickKey(e) && ref.current) {
+        const rect = ref.current.getBoundingClientRect();
+        const parent = ref.current.parentElement?.getBoundingClientRect();
 
-    return () => {
-      document.removeEventListener('click', onMessageLoseFocus);
-    };
-  }, [onMessageLoseFocus]);
+        handleContextMenu(e, {
+          x: rect.right,
+          // NOTE: y needs to be clamped to the parent otherwise it can overflow the container
+          y: Math.max(rect.top, parent?.top ?? 0),
+        });
+      }
+    },
+    [handleContextMenu]
+  );
 
   if (!msgProps) {
     return null;
@@ -141,12 +142,14 @@ export const GenericReadableMessage = (props: Props) => {
 
   return (
     <StyledReadableMessage
+      ref={ref}
       selected={selected}
       $isDetailView={isDetailView}
-      $isRightClicked={isRightClicked}
       className={clsx(selected ? 'message-selected' : undefined)}
-      onContextMenu={handleContextMenu}
+      onContextMenu={onContextMenu}
       key={`readable-message-${messageId}`}
+      onKeyDown={onKeyDown}
+      tabIndex={0}
     >
       <MessageContentWithStatuses
         ctxMenuID={ctxMenuID}

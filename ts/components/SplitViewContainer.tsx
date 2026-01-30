@@ -13,6 +13,7 @@ const StyledSplitView = styled.div`
   display: flex;
   flex-grow: 1;
   flex-direction: column;
+  justify-content: end;
 `;
 
 const Divider = styled.div`

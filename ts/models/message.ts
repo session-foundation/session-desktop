@@ -118,10 +118,6 @@ export class MessageModel extends Model<MessageAttributes> {
     }
     autoBind(this);
 
-    if (window) {
-      window.contextMenuShown = false;
-    }
-
     this.getMessageModelProps();
   }
 

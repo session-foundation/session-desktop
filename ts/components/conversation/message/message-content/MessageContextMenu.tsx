@@ -1,11 +1,20 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
-import { Dispatch, RefObject, useCallback, useEffect, useRef, useState } from 'react';
+import {
+  Dispatch,
+  type KeyboardEvent,
+  type MouseEvent,
+  useCallback,
+  useRef,
+  useState,
+  RefObject,
+} from 'react';
 
-import { isNumber } from 'lodash';
-import { ItemParams, Menu, useContextMenu } from 'react-contexify';
-import useClickAway from 'react-use/lib/useClickAway';
-import useMouse from 'react-use/lib/useMouse';
+import { isNil, isNumber, isString } from 'lodash';
+import { ItemParams, Menu } from 'react-contexify';
 import styled from 'styled-components';
+import { toNumber } from 'lodash/fp';
+import useClickAway from 'react-use/lib/useClickAway';
+import useUpdate from 'react-use/lib/useUpdate';
 import { getAppDispatch } from '../../../../state/dispatch';
 import { Data } from '../../../../data/data';
 
@@ -37,7 +46,6 @@ import {
 import { saveAttachmentToDisk } from '../../../../util/attachment/attachmentsUtil';
 import { Reactions } from '../../../../util/reactions';
 import { SessionContextMenuContainer } from '../../../SessionContextMenuContainer';
-import { SessionEmojiPanel, StyledEmojiPanel } from '../../SessionEmojiPanel';
 import { MessageReactBar } from './MessageReactBar';
 import { CopyAccountIdMenuItem } from '../../../menu/items/CopyAccountId/CopyAccountIdMenuItem';
 import { Localizer } from '../../../basic/Localizer';
@@ -52,6 +60,11 @@ import { tr } from '../../../../localization/localeTools';
 import { sectionActions } from '../../../../state/ducks/section';
 import { useRemoveSenderFromCommunityAdmin } from '../../../menuAndSettingsHooks/useRemoveSenderFromCommunityAdmin';
 import { useAddSenderAsCommunityAdmin } from '../../../menuAndSettingsHooks/useAddSenderAsCommunityAdmin';
+import { closeContextMenus, showContextMenu } from '../../../../util/contextMenu';
+import { clampNumber } from '../../../../util/maths';
+import { SessionEmojiPanelPopover } from '../../SessionEmojiPanelPopover';
+import { SessionPopoverContent } from '../../../SessionPopover';
+import { useTriggerPosition } from '../../../SessionTooltip';
 
 export type MessageContextMenuSelectorProps = Pick<
   MessageRenderingProps,
@@ -67,15 +80,66 @@ export type MessageContextMenuSelectorProps = Pick<
 
 type Props = { messageId: string; contextMenuId: string; enableReactions: boolean };
 
+const CONTEXTIFY_MENU_WIDTH_PX = 200;
+const SCREEN_RIGHT_MARGIN_PX = 104;
+
+export type ShowMessageContextMenuParams = {
+  id: string;
+  event: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>;
+  triggerPosition?: { x: number; y: number };
+};
+
+export function showMessageContextMenu({
+  id,
+  event,
+  triggerPosition,
+}: ShowMessageContextMenuParams) {
+  // this is quite dirty but considering that we want the context menu of the message to show on click on the attachment
+  // and the context menu save attachment item to save the right attachment I did not find a better way for now.
+  // NOTE: If you change this, also make sure to update the `saveAttachment()`
+  const attachmentIndexStr = (event?.target as any)?.parentElement?.getAttribute?.(
+    'data-attachmentindex'
+  );
+  const attachmentIndex =
+    isString(attachmentIndexStr) && !isNil(toNumber(attachmentIndexStr))
+      ? toNumber(attachmentIndexStr)
+      : 0;
+
+  const MAX_TRIGGER_X = window.innerWidth - CONTEXTIFY_MENU_WIDTH_PX - SCREEN_RIGHT_MARGIN_PX;
+  let _triggerPosition = triggerPosition;
+  if (!_triggerPosition) {
+    if (
+      'clientX' in event &&
+      'clientY' in event &&
+      isNumber(event.clientX) &&
+      isNumber(event.clientY)
+    ) {
+      _triggerPosition = { x: event.clientX, y: event.clientY };
+    } else {
+      throw new Error(
+        '[showMessageContextMenu] when called without a MouseEvent and triggerPosition must be provided'
+      );
+    }
+  }
+
+  // NOTE: contextify seems to have window y overflow avoidance but not window x
+  const position = { x: clampNumber(_triggerPosition.x, 0, MAX_TRIGGER_X), y: _triggerPosition.y };
+
+  showContextMenu({
+    id,
+    event,
+    position,
+    props: {
+      dataAttachmentIndex: attachmentIndex,
+    },
+  });
+}
+
 const StyledMessageContextMenu = styled.div`
   position: relative;
-
-  .contexify {
-    margin-left: -104px;
-  }
 `;
 
-const StyledEmojiPanelContainer = styled.div<{ x: number; y: number }>`
+/** const StyledEmojiPanelContainer = styled.div<{ x: number; y: number }>`
   position: fixed;
   top: 0;
   right: 0;
@@ -88,7 +152,7 @@ const StyledEmojiPanelContainer = styled.div<{ x: number; y: number }>`
     left: ${props => `${props.x}px`};
     top: ${props => `${props.y}px`};
   }
-`;
+`; */
 
 const CommunityAdminActionItems = ({ messageId }: WithMessageId) => {
   const convoId = useSelectedConversationKey();
@@ -159,7 +223,8 @@ export const showMessageInfoOverlay = async ({
 export const MessageContextMenu = (props: Props) => {
   const { messageId, contextMenuId, enableReactions } = props;
   const dispatch = getAppDispatch();
-  const { hideAll } = useContextMenu();
+
+  const forceUpdate = useUpdate();
   const isLegacyGroup = useSelectedIsLegacyGroup();
 
   const isSelectedBlocked = useSelectedIsBlocked();
@@ -178,35 +243,29 @@ export const MessageContextMenu = (props: Props) => {
   const isSent = status === 'sent' || status === 'read'; // a read message should be replyable
 
   const emojiPanelRef = useRef<HTMLDivElement>(null);
-  const [showEmojiPanel, setShowEmojiPanel] = useState(false);
-  // emoji-mart v5.2.2 default dimensions
-  const emojiPanelWidth = 354;
-  const emojiPanelHeight = 435;
+  const emojiPanelTriggerRef = useRef<HTMLElement>(null);
+  const emojiReactionBarRef = useRef<HTMLDivElement>(null);
 
-  const contextMenuRef = useRef<HTMLDivElement | null>(null);
-  // FIXME: remove as cast
-  const { docX, docY } = useMouse(contextMenuRef as RefObject<Element>);
-  const [mouseX, setMouseX] = useState(0);
-  const [mouseY, setMouseY] = useState(0);
+  const [showEmojiPanel, setShowEmojiPanel] = useState<boolean>(false);
+  const [showEmojiBar, setShowEmojiBar] = useState<boolean>(false);
 
-  const onVisibilityChange = useCallback(
-    (isVisible: boolean) => {
-      if (isVisible) {
-        if (showEmojiPanel) {
-          setShowEmojiPanel(false);
-        }
-        window.contextMenuShown = true;
-        return;
-      }
-      // This function will called before the click event
-      // on the message would trigger (and I was unable to
-      // prevent propagation in this case), so use a short timeout
-      setTimeout(() => {
-        window.contextMenuShown = false;
-      }, 100);
-    },
-    [showEmojiPanel]
-  );
+  const contextMenuInternalRef = useRef<HTMLDivElement | null>(null);
+
+  const triggerPos = useTriggerPosition(contextMenuInternalRef);
+
+  const [contextMenuVisible, setContextMenuVisible] = useState<boolean>(false);
+
+  const emojiBarVisible = enableReactions && (contextMenuVisible || showEmojiBar);
+
+  const onShow = (fromHidden: boolean) => {
+    window.log.warn('goblin show');
+    setContextMenuVisible(true);
+  };
+
+  const onHide = () => {
+    window.log.warn('goblin hide');
+    setContextMenuVisible(false);
+  };
 
   const onReply = useCallback(() => {
     if (isSelectedBlocked) {
@@ -227,26 +286,19 @@ export const MessageContextMenu = (props: Props) => {
     dispatch(toggleSelectedMessageId(messageId));
   }, [dispatch, messageId]);
 
-  const onShowEmoji = () => {
-    hideAll();
-    setMouseX(docX);
-    setMouseY(docY);
-    setShowEmojiPanel(true);
-  };
-
-  const onCloseEmoji = () => {
+  const closeEmojiPanel = () => {
+    closeContextMenus();
     setShowEmojiPanel(false);
-    hideAll();
   };
 
-  const onEmojiLoseFocus = () => {
-    window.log.debug('closed due to lost focus');
-    onCloseEmoji();
+  const openEmojiPanel = () => {
+    closeContextMenus();
+    setShowEmojiPanel(true);
   };
 
   const onEmojiClick = async (args: any) => {
     const emoji = args.native ?? args;
-    onCloseEmoji();
+    closeEmojiPanel();
     await Reactions.sendMessageReaction(messageId, emoji);
   };
 
@@ -276,33 +328,16 @@ export const MessageContextMenu = (props: Props) => {
   };
 
   useClickAway(emojiPanelRef, () => {
-    onEmojiLoseFocus();
+    if (showEmojiPanel) {
+      closeEmojiPanel();
+    }
   });
 
-  useEffect(() => {
-    if (emojiPanelRef.current) {
-      const { innerWidth: windowWidth, innerHeight: windowHeight } = window;
-
-      if (mouseX + emojiPanelWidth > windowWidth) {
-        let x = mouseX;
-        x = (mouseX + emojiPanelWidth - windowWidth) * 2;
-
-        if (x === mouseX) {
-          return;
-        }
-        setMouseX(mouseX - x);
-      }
-
-      if (mouseY + emojiPanelHeight > windowHeight) {
-        const y = mouseY + emojiPanelHeight * 1.25 - windowHeight;
-
-        if (y === mouseY) {
-          return;
-        }
-        setMouseY(mouseY - y);
-      }
+  useClickAway(emojiReactionBarRef, () => {
+    if (emojiBarVisible) {
+      forceUpdate();
     }
-  }, [emojiPanelWidth, emojiPanelHeight, mouseX, mouseY]);
+  });
 
   if (!convoId) {
     return null;
@@ -310,13 +345,9 @@ export const MessageContextMenu = (props: Props) => {
 
   if (isLegacyGroup) {
     return (
-      <StyledMessageContextMenu ref={contextMenuRef}>
+      <StyledMessageContextMenu>
         <SessionContextMenuContainer>
-          <Menu
-            id={contextMenuId}
-            onVisibilityChange={onVisibilityChange}
-            animation={getMenuAnimation()}
-          >
+          <Menu id={contextMenuId} animation={getMenuAnimation()}>
             {attachments?.length && attachments.every(m => !m.pending && m.path) ? (
               <ItemWithDataTestId onClick={saveAttachment}>{tr('save')}</ItemWithDataTestId>
             ) : null}
@@ -336,58 +367,77 @@ export const MessageContextMenu = (props: Props) => {
   }
 
   return (
-    <StyledMessageContextMenu ref={contextMenuRef}>
-      {enableReactions && showEmojiPanel && (
-        <StyledEmojiPanelContainer role="button" x={mouseX} y={mouseY}>
-          <SessionEmojiPanel
-            ref={emojiPanelRef}
+    <>
+      {enableReactions ? (
+        <SessionEmojiPanelPopover
+          emojiPanelRef={emojiPanelRef as RefObject<HTMLDivElement>}
+          triggerRef={emojiPanelTriggerRef as RefObject<HTMLElement>}
+          // eslint-disable-next-line @typescript-eslint/no-misused-promises
+          onEmojiClicked={onEmojiClick}
+          open={showEmojiPanel}
+          onClose={closeEmojiPanel}
+        />
+      ) : null}
+      <SessionPopoverContent
+        triggerX={triggerPos.triggerX}
+        triggerY={triggerPos.triggerY}
+        triggerHeight={triggerPos.triggerHeight}
+        // NOTE: Setting triggerWidth to 0 means the trigger center is 0/2=0, so
+        // the popover will anchor from the far left of the trigger
+        triggerWidth={0}
+        open={emojiBarVisible}
+        isTooltip={false}
+        verticalPosition="top"
+        horizontalPosition="right"
+        fallbackContentHeight={48}
+        fallbackContentWidth={295}
+      >
+        {emojiBarVisible ? (
+          <MessageReactBar
+            ref={emojiReactionBarRef as RefObject<HTMLDivElement>}
             // eslint-disable-next-line @typescript-eslint/no-misused-promises
-            onEmojiClicked={onEmojiClick}
-            show={showEmojiPanel}
-            isModal={true}
-            onClose={onCloseEmoji}
+            action={onEmojiClick}
+            additionalAction={openEmojiPanel}
+            messageId={messageId}
+            emojiPanelTriggerRef={emojiPanelTriggerRef as RefObject<HTMLElement>}
           />
-        </StyledEmojiPanelContainer>
-      )}
-      <SessionContextMenuContainer>
-        <Menu
-          id={contextMenuId}
-          onVisibilityChange={onVisibilityChange}
-          animation={getMenuAnimation()}
-        >
-          {enableReactions && (
-            // eslint-disable-next-line @typescript-eslint/no-misused-promises
-            <MessageReactBar
-              action={onEmojiClick}
-              additionalAction={onShowEmoji}
-              messageId={messageId}
-            />
-          )}
-          {attachments?.length && attachments.every(m => !m.pending && m.path) ? (
-            <ItemWithDataTestId onClick={saveAttachment}>{tr('save')}</ItemWithDataTestId>
-          ) : null}
-          <ItemWithDataTestId onClick={copyText}>{tr('copy')}</ItemWithDataTestId>
-          {(isSent || !isOutgoing) && (
-            <ItemWithDataTestId onClick={onReply}>{tr('reply')}</ItemWithDataTestId>
-          )}
-          <ItemWithDataTestId
-            onClick={() => {
-              void showMessageInfoOverlay({ messageId, dispatch });
-            }}
+        ) : null}
+      </SessionPopoverContent>
+      <StyledMessageContextMenu>
+        <SessionContextMenuContainer>
+          <Menu
+            ref={contextMenuInternalRef}
+            id={contextMenuId}
+            animation={getMenuAnimation()}
+            onShow={onShow}
+            onHide={onHide}
           >
-            <Localizer token="info" />
-          </ItemWithDataTestId>
-          {sender ? <CopyAccountIdMenuItem pubkey={sender} /> : null}
-          <RetryItem messageId={messageId} />
-          {isDeletable ? (
-            <ItemWithDataTestId onClick={onSelect}>
-              <Localizer token="select" />
+            {attachments?.length && attachments.every(m => !m.pending && m.path) ? (
+              <ItemWithDataTestId onClick={saveAttachment}>{tr('save')}</ItemWithDataTestId>
+            ) : null}
+            <ItemWithDataTestId onClick={copyText}>{tr('copy')}</ItemWithDataTestId>
+            {(isSent || !isOutgoing) && (
+              <ItemWithDataTestId onClick={onReply}>{tr('reply')}</ItemWithDataTestId>
+            )}
+            <ItemWithDataTestId
+              onClick={() => {
+                void showMessageInfoOverlay({ messageId, dispatch });
+              }}
+            >
+              <Localizer token="info" />
             </ItemWithDataTestId>
-          ) : null}
-          <DeleteItem messageId={messageId} />
-          <CommunityAdminActionItems messageId={messageId} />
-        </Menu>
-      </SessionContextMenuContainer>
-    </StyledMessageContextMenu>
+            {sender ? <CopyAccountIdMenuItem pubkey={sender} /> : null}
+            <RetryItem messageId={messageId} />
+            {isDeletable ? (
+              <ItemWithDataTestId onClick={onSelect}>
+                <Localizer token="select" />
+              </ItemWithDataTestId>
+            ) : null}
+            <DeleteItem messageId={messageId} />
+            <CommunityAdminActionItems messageId={messageId} />
+          </Menu>
+        </SessionContextMenuContainer>
+      </StyledMessageContextMenu>
+    </>
   );
 };

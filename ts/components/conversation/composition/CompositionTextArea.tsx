@@ -48,6 +48,8 @@ import { SessionPopoverContent } from '../../SessionPopover';
 import LIBSESSION_CONSTANTS from '../../../session/utils/libsession/libsession_constants';
 import { Mention } from '../AddMentions';
 import { useDebugInputCommands } from '../../dialog/debug/hooks/useDebugInputCommands';
+import { useKeyboardShortcut } from '../../../hooks/useKeyboardShortcut';
+import { KbdShortcut } from '../../../util/keyboardShortcuts';
 
 type Props = {
   initialDraft: string;
@@ -372,7 +374,7 @@ function useHandleKeyDown({
         const dirModifier = htmlDirection === 'ltr' ? 1 : -1;
         const delta = (e.key === 'ArrowRight' ? 1 : -1) * dirModifier;
         handleMentionCheck(draft, pos + delta);
-      } else if (e.key === 'Enter') {
+      } else if (e.key === 'Enter' || e.key === 'Tab') {
         /**
          *  Exit mention mode and hand off control to the parent onKeyDown if there are no mention results.
          *  We can't use `mention.content` to define this behaviour because for user mentions we count
@@ -383,7 +385,8 @@ function useHandleKeyDown({
           handleMentionCleanup();
           onKeyDown(e);
         } else {
-          // The Enter key can insert new lines and/or send a message, we want to prevent then when selecting a mention.
+          // The Enter key can insert new lines and/or send a message, and the tab key will increment
+          // the tab index, focusing a new element. We want to prevent this when selecting a mention.
           e.preventDefault();
           handleSelect();
         }
@@ -562,6 +565,12 @@ export function CompositionTextArea(props: Props) {
     },
     [handleMentionCheck, selectedConversationKey, setDraft]
   );
+
+  useKeyboardShortcut(KbdShortcut.conversationFocusTextArea, () => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  });
 
   if (!selectedConversationKey) {
     return null;

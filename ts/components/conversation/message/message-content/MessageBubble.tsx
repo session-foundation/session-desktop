@@ -2,7 +2,6 @@ import { useState, useRef, type ReactNode, useLayoutEffect } from 'react';
 import styled, { css } from 'styled-components';
 import { Constants } from '../../../../session';
 import { tr } from '../../../../localization/localeTools';
-import { useMessagesContainerRef } from '../../../../contexts/MessagesContainerRefContext';
 
 export const StyledMessageBubble = styled.div<{ $expanded: boolean }>`
   position: relative;
@@ -33,7 +32,8 @@ const ReadMoreButton = styled.button`
   background: none;
   cursor: pointer;
   padding: 0;
-  &:hover {
+  &:hover,
+  &:focus {
     text-decoration: underline;
   }
 `;
@@ -43,48 +43,7 @@ export function MessageBubble({ children }: { children: ReactNode }) {
   const [showReadMore, setShowReadMore] = useState(false);
   const msgBubbleRef = useRef<HTMLDivElement>(null);
 
-  const messagesContainerRef = useMessagesContainerRef();
-
-  const scrollBefore = useRef<{ scrollTop: number; scrollHeight: number }>({
-    scrollTop: 0,
-    scrollHeight: 0,
-  });
-
-  useLayoutEffect(() => {
-    if (expanded) {
-      const msgContainerAfter = messagesContainerRef.current;
-      if (!msgBubbleRef.current || !msgContainerAfter) {
-        return;
-      }
-      const { scrollTop: scrollTopAfter, scrollHeight: scrollHeightAfter } = msgContainerAfter;
-
-      const { scrollTop: scrollTopBefore, scrollHeight: scrollHeightBefore } = scrollBefore.current;
-
-      const topDidChange = scrollTopAfter !== scrollTopBefore;
-      const heightDiff = scrollHeightAfter - scrollHeightBefore;
-      const scrollTo = topDidChange ? scrollTopBefore - heightDiff : scrollTopAfter - heightDiff;
-
-      msgContainerAfter.scrollTo({
-        top: scrollTo,
-        behavior: 'instant',
-      });
-    }
-  }, [expanded, messagesContainerRef]);
-
-  const onShowMore = () => {
-    const el = msgBubbleRef.current;
-    if (!el) {
-      return;
-    }
-
-    const msgContainerBefore = messagesContainerRef.current;
-
-    if (msgContainerBefore) {
-      const { scrollTop: scrollTopBefore, scrollHeight: scrollHeightBefore } = msgContainerBefore;
-
-      scrollBefore.current = { scrollTop: scrollTopBefore, scrollHeight: scrollHeightBefore };
-    }
-
+  const onClick = () => {
     // we cannot "show less", only show more
     setExpanded(true);
   };
@@ -92,6 +51,8 @@ export function MessageBubble({ children }: { children: ReactNode }) {
   /**
    * Used to re-trigger the "Read More" layout effect when the message content changes scroll height.
    * This is required to handle window resizing, zooming, and font size changes.
+   * NOTE: this doesnt seem to always catch the resize/zoom change case well, we may need
+   * to consider listening to a resize or zoom event or something.
    */
   const scrollHeight = msgBubbleRef.current?.firstElementChild?.scrollHeight;
 
@@ -138,7 +99,7 @@ export function MessageBubble({ children }: { children: ReactNode }) {
         {children}
       </StyledMessageBubble>
       {showReadMore && !expanded ? (
-        <ReadMoreButton onClick={onShowMore}>{tr('messageBubbleReadMore')}</ReadMoreButton>
+        <ReadMoreButton onClick={onClick}>{tr('messageBubbleReadMore')}</ReadMoreButton>
       ) : null}
     </>
   );

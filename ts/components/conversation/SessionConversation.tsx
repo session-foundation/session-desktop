@@ -67,6 +67,7 @@ import {
   useSelectedWeAreAdmin,
 } from '../../state/selectors/selectedConversation';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
+import { sleepFor } from '../../session/utils/Promise';
 
 interface State {
   isDraggingFile: boolean;
@@ -216,7 +217,7 @@ export class SessionConversation extends Component<Props, State> {
       // this needs to be awaited otherwise, the scrollToNow won't find the new message in the db.
       // and this make the showScrollButton to be visible (even if we just scrolled to now)
       await conversationModel.sendMessage(msg);
-      await this.scrollToNow();
+      await this.scrollToNowWithRetries(5);
     };
 
     const recoveryPhrase = getCurrentRecoveryPhrase();
@@ -317,26 +318,52 @@ export class SessionConversation extends Component<Props, State> {
     );
   }
 
-  private async scrollToNow() {
+  /** There is a race condition after sending a message where the most recent
+   * message from the db exists but that message has not been rendered in the DOM
+   * yet. This function will scroll even if the message is not in the DOM yet as
+   * it could also not be in the DOM because the virtualised message list is
+   * scrolled up too high.
+   * Returns a duration in milliseconds to wait before re-attempting the function.
+   * 0 means don't retry.
+   */
+  private async scrollToNow(): Promise<number> {
     const conversationKey = this.props.selectedConversationKey;
     if (!conversationKey) {
-      return;
+      return 0;
     }
 
     await markAllReadByConvoId(conversationKey);
     const mostRecentMessage = await Data.getLastMessageInConversation(conversationKey);
 
     if (mostRecentMessage) {
-      await openConversationToSpecificMessage({
-        conversationKey,
-        messageIdToNavigateTo: mostRecentMessage.id,
-        shouldHighlightMessage: false,
-      });
       const messageContainer = this.messageContainerRef.current;
       if (!messageContainer) {
-        return;
+        return 100;
       }
       messageContainer.scrollTop = messageContainer.scrollHeight - messageContainer.clientHeight;
+      const targetElement = document.getElementById(`msg-${mostRecentMessage.id}`);
+      if (!targetElement) {
+        await openConversationToSpecificMessage({
+          conversationKey,
+          messageIdToNavigateTo: mostRecentMessage.id,
+          shouldHighlightMessage: false,
+        });
+        return 100;
+      }
+    }
+    return 0;
+  }
+
+  private async scrollToNowWithRetries(maxRetries = 5) {
+    for (let retryCount = 0, retryTimeMs = 0; retryCount < maxRetries; retryCount++) {
+      // eslint-disable-next-line no-await-in-loop
+      retryTimeMs = await this.scrollToNow();
+      if (retryTimeMs) {
+        // eslint-disable-next-line no-await-in-loop
+        await sleepFor(retryTimeMs);
+      } else {
+        break;
+      }
     }
   }
 

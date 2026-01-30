@@ -17,7 +17,7 @@ export const StyledEmojiPanel = styled.div<{
   $panelBackgroundRGB: string;
   $panelTextRGB: string;
 }>`
-  padding: var(--margins-lg);
+  ${props => (!props.$isModal ? 'padding: var(--margins-lg);' : '')}
   z-index: 5;
   opacity: 0;
   visibility: hidden;

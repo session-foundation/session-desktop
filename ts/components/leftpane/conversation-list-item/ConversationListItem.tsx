@@ -1,11 +1,11 @@
 import { isNil } from 'lodash';
-import { MouseEvent, ReactNode, useCallback } from 'react';
+import { type MouseEvent, type ReactNode, useCallback } from 'react';
 import clsx from 'clsx';
 
 import { contextMenu } from 'react-contexify';
 import { createPortal } from 'react-dom';
 
-import { CSSProperties } from 'styled-components';
+import type { CSSProperties } from 'styled-components';
 import { Avatar, AvatarSize } from '../../avatar/Avatar';
 
 import {
@@ -20,6 +20,7 @@ import { ConversationListItemHeaderItem } from './HeaderItem';
 import { MessageItem } from './MessageItem';
 import { openConversationWithMessages } from '../../../state/ducks/conversations';
 import { useShowUserDetailsCbFromConversation } from '../../menuAndSettingsHooks/useShowUserDetailsCb';
+import { createButtonOnKeyDownForClickEventHandler } from '../../../util/keyboardShortcuts';
 
 const Portal = ({ children }: { children: ReactNode }) => {
   return createPortal(children, document.querySelector('.inbox.index') as Element);
@@ -65,14 +66,21 @@ export const ConversationListItem = (props: Props) => {
   const triggerId = `${key}-ctxmenu`;
 
   const openConvo = useCallback(
+    () => void openConversationWithMessages({ conversationKey: conversationId, messageId: null }),
+    [conversationId]
+  );
+
+  const onMouseDown = useCallback(
     (e: MouseEvent<HTMLDivElement>) => {
       // mousedown is invoked sooner than onClick, but for both right and left click
       if (e.button === 0) {
-        void openConversationWithMessages({ conversationKey: conversationId, messageId: null });
+        openConvo();
       }
     },
-    [conversationId]
+    [openConvo]
   );
+
+  const onKeyDown = createButtonOnKeyDownForClickEventHandler(openConvo);
 
   const extraStyle: CSSProperties = {};
   if (hasUnread) {
@@ -96,7 +104,9 @@ export const ConversationListItem = (props: Props) => {
       <div key={key}>
         <div
           role="button"
-          onMouseDown={openConvo}
+          tabIndex={0}
+          onMouseDown={onMouseDown}
+          onKeyDown={onKeyDown}
           onMouseUp={e => {
             e.stopPropagation();
             e.preventDefault();
