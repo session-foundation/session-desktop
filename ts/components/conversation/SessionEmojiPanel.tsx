@@ -78,8 +78,7 @@ type Props = {
   onEmojiClicked: (emoji: FixedBaseEmoji) => void;
   show: boolean;
   isModal?: boolean;
-  // NOTE Currently this doesn't work but we have a PR waiting to be merged to resolve this
-  onKeyDown?: (event: any) => void;
+  onClose?: () => void;
 };
 
 const pickerProps = {
@@ -91,7 +90,7 @@ const pickerProps = {
 
 // eslint-disable-next-line react/display-name
 export const SessionEmojiPanel = forwardRef<HTMLDivElement, Props>((props: Props, ref) => {
-  const { onEmojiClicked, show, isModal = false, onKeyDown } = props;
+  const { onEmojiClicked, show, isModal = false, onClose } = props;
   const _primaryColor = usePrimaryColor();
   const theme = useTheme();
   const isDarkTheme = useIsDarkTheme();
@@ -140,7 +139,7 @@ export const SessionEmojiPanel = forwardRef<HTMLDivElement, Props>((props: Props
         theme={isDarkTheme ? 'dark' : 'light'}
         i18n={i18nEmojiData}
         onEmojiSelect={onEmojiClicked}
-        onKeyDown={onKeyDown}
+        onClose={onClose}
         {...pickerProps}
       />
     </StyledEmojiPanel>

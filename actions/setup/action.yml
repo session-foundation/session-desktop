@@ -1,0 +1,53 @@
+name: 'Setup'
+description: 'Setup Session Desktop'
+inputs:
+  cache_suffix:
+    description: 'Platform/build identifier for cache isolation (e.g., linux_x64, mac-arm64)'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup pnpm
+      uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4
+
+    - name: Enable long paths (Windows Only)
+      if: runner.os == 'Windows'
+      shell: bash
+      run: git config --system core.longpaths true
+
+    - name: Setup pnpm hoisted node-linker (Windows Only)
+      if: runner.os == 'Windows'
+      shell: bash
+      run: pnpm config set node-linker hoisted
+
+    - name: Setup node.js
+      uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
+      with:
+        node-version-file: '.nvmrc'
+        cache: 'pnpm'
+        cache-dependency-path: 'pnpm-lock.yaml'
+
+    - name: Setup cache for .electron-gyp
+      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+      with:
+        path: ~/.electron-gyp
+        key: electron-gyp-${{ runner.os }}-${{ runner.arch }}-${{ inputs.cache_suffix }}-${{ hashFiles('pnpm-lock.yaml') }}
+        restore-keys: |
+          electron-gyp-${{ runner.os }}-${{ runner.arch }}-${{ inputs.cache_suffix }}-
+          electron-gyp-${{ runner.os }}-${{ runner.arch }}-
+
+    - name: Setup cache for TypeScript build info
+      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+      with:
+        path: tsconfig.tsbuildinfo
+        key: tsbuildinfo-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('pnpm-lock.yaml', 'tsconfig.json') }}
+        restore-keys: |
+          tsbuildinfo-${{ runner.os }}-${{ runner.arch }}-
+
+    - name: Install Desktop node_modules
+      shell: bash
+      run: pnpm install
+      env:
+        NPM_CONFIG_LOGLEVEL: verbose
+

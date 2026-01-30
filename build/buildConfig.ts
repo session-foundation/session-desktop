@@ -23,7 +23,7 @@ const BUILD_CONFIG: BuildConfig = {
     'password.html',
     'password_preload.js',
     'preload.js',
-    'yarn.lock',
+    'pnpm-lock.yaml',
     'stylesheets/fonts.css',
     'dynamic_assets/GeoLite2-Country.mmdb',
     'dynamic_assets/service-nodes-cache.json',
