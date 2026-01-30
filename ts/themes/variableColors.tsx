@@ -17,12 +17,6 @@ export type ThemeColorVariables = {
   /* Borders */
   '--border-color': string;
 
-  /* Text Box */
-  '--text-box-background-color': string;
-  '--text-box-text-control-color': string;
-  '--text-box-text-user-color': string;
-  '--text-box-border-color': string;
-
   /* Message Bubbles */
   '--message-bubbles-sent-background-color': string;
   '--message-bubbles-received-background-color': string;
@@ -44,12 +38,6 @@ export type ThemeColorVariables = {
   '--chat-buttons-background-color': string;
   '--chat-buttons-background-hover-color': string;
   '--chat-buttons-icon-color': string;
-
-  /* Settings Tabs */
-  '--settings-tab-background-color': string;
-  '--settings-tab-background-hover-color': string;
-  '--settings-tab-background-selected-color': string;
-  '--settings-tab-text-color': string;
 
   /* Buttons */
   /* Outline (Default) */
@@ -89,9 +77,6 @@ export type ThemeColorVariables = {
   '--conversation-tab-text-color': string;
   '--conversation-tab-text-selected-color': string;
   '--conversation-tab-text-unread-color': string;
-  '--conversation-tab-text-secondary-color': string;
-  '--conversation-tab-bubble-background-color': string;
-  '--conversation-tab-bubble-text-color': string;
   '--conversation-tab-color-strip-color': string;
 
   /* Search Bar */
@@ -99,7 +84,6 @@ export type ThemeColorVariables = {
   '--search-bar-text-control-color': string;
   '--search-bar-text-user-color': string;
   '--search-bar-icon-color': string;
-  '--search-bar-icon-hover-color': string;
 
   /* Scroll Bars */
   '--scroll-bar-track-color': string;
@@ -107,10 +91,6 @@ export type ThemeColorVariables = {
   '--scroll-bar-thumb-color': string;
   '--scroll-bar-thumb-hover-color': string;
 
-  /* Zoom Bar */
-  '--zoom-bar-track-color': string;
-  '--zoom-bar-thumb-color': string;
-  '--zoom-bar-interval-color': string;
 
   /* Toggle Switch */
   '--toggle-switch-ball-color': string;
@@ -153,7 +133,6 @@ export type ThemeColorVariables = {
   /* Session Text Logo */
   /* Loads SVG as IMG and uses a filter to change color */
   '--session-logo-text-light-filter': string;
-  '--session-logo-text-dark-filter': string;
   '--session-logo-text-current-filter': string;
 
   /* Right Click / Context Menu) */
@@ -170,8 +149,6 @@ export type ThemeColorVariables = {
 
   /* Inputs */
   /* Also used for some TextAreas */
-  '--input-background-color': string;
-  '--input-background-hover-color': string;
   '--input-text-placeholder-color': string;
   '--input-text-color': string;
   '--input-border-color': string;

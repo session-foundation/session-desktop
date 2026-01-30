@@ -17,11 +17,6 @@ export const classicDark: ThemeColorVariables = {
 
   '--border-color': THEMES.CLASSIC_DARK.COLOR3,
 
-  '--text-box-background-color': 'var(--background-secondary-color)',
-  '--text-box-text-control-color': 'var(--text-secondary-color)',
-  '--text-box-text-user-color': 'var(--text-primary-color)',
-  '--text-box-border-color': 'var(--border-color)',
-
   '--message-bubbles-sent-background-color': 'var(--primary-color)',
   '--message-bubbles-received-background-color': THEMES.CLASSIC_DARK.COLOR2,
   '--message-bubbles-sent-text-color': 'var(--background-primary-color)',
@@ -38,10 +33,6 @@ export const classicDark: ThemeColorVariables = {
   '--chat-buttons-background-hover-color': THEMES.CLASSIC_DARK.COLOR3,
   '--chat-buttons-icon-color': 'var(--text-primary-color)',
 
-  '--settings-tab-background-color': 'var(--background-primary-color)',
-  '--settings-tab-background-hover-color': THEMES.CLASSIC_DARK.COLOR2,
-  '--settings-tab-background-selected-color': THEMES.CLASSIC_DARK.COLOR3,
-  '--settings-tab-text-color': 'var(--text-primary-color)',
 
   '--button-outline-background-color': 'var(--transparent-color)',
   '--button-outline-background-hover-color': 'var(--text-primary-color)',
@@ -71,25 +62,18 @@ export const classicDark: ThemeColorVariables = {
   '--conversation-tab-text-color': 'var(--text-secondary-color)',
   '--conversation-tab-text-selected-color': 'var(--text-primary-color)',
   '--conversation-tab-text-unread-color': 'var(--text-primary-color)',
-  '--conversation-tab-text-secondary-color': 'var(--text-secondary-color)',
-  '--conversation-tab-bubble-background-color': THEMES.CLASSIC_DARK.COLOR3,
-  '--conversation-tab-bubble-text-color': 'var(--text-primary-color)',
   '--conversation-tab-color-strip-color': 'var(--primary-color)',
 
   '--search-bar-background-color': 'var(--background-secondary-color)',
   '--search-bar-text-control-color': 'var(--text-secondary-color)',
   '--search-bar-text-user-color': 'var(--text-primary-color)',
   '--search-bar-icon-color': 'var(--text-secondary-color)',
-  '--search-bar-icon-hover-color': 'var(--text-primary-color)',
 
   '--scroll-bar-track-color': `rgba(${hexColorToRGB(THEMES.CLASSIC_DARK.COLOR5)}, 0.10)`,
   '--scroll-bar-track-hover-color': `rgba(${hexColorToRGB(THEMES.CLASSIC_DARK.COLOR5)}, 0.20)`,
   '--scroll-bar-thumb-color': `rgba(${hexColorToRGB(THEMES.CLASSIC_DARK.COLOR5)}, 0.20)`,
   '--scroll-bar-thumb-hover-color': `rgba(${hexColorToRGB(THEMES.CLASSIC_DARK.COLOR5)}, 1.0)`,
 
-  '--zoom-bar-track-color': THEMES.CLASSIC_DARK.COLOR3,
-  '--zoom-bar-thumb-color': 'var(--primary-color)',
-  '--zoom-bar-interval-color': 'var(--primary-color)',
 
   '--toggle-switch-ball-color': 'var(--white-color)',
   '--toggle-switch-ball-shadow-color': `rgba(${hexColorToRGB(COLORS.BLACK)}, 0.15)`,
@@ -122,7 +106,6 @@ export const classicDark: ThemeColorVariables = {
   '--toast-progress-color': `rgba(${hexColorToRGB(COLORS.BLACK)}, 0.1)`,
 
   '--session-logo-text-light-filter': 'none',
-  '--session-logo-text-dark-filter': 'none',
   '--session-logo-text-current-filter': 'var(--session-logo-text-light-filter)',
 
   '--context-menu-background-color': 'var(--background-primary-color)',
@@ -135,8 +118,6 @@ export const classicDark: ThemeColorVariables = {
   '--suggestions-text-color': 'var(--text-primary-color)',
   '--suggestions-shadow': `rgba(${hexColorToRGB(COLORS.BLACK)}, 0.24) 0px 3px 8px`,
 
-  '--input-background-color': 'var(--transparent-color)',
-  '--input-background-hover-color': 'var(--background-primary-color)',
   '--input-text-placeholder-color': 'var(--text-secondary-color)',
   '--input-text-color': 'var(--text-primary-color)',
   '--input-border-color': 'var(--border-color)',
