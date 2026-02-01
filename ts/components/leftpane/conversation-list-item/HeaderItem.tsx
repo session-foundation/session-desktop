@@ -92,8 +92,8 @@ const ListItemIcons = ({ conversationId }: WithConvoId) => {
 };
 
 const MentionAtSymbol = styled.span`
-  background: var(--unread-messages-alert-background-color);
-  color: var(--unread-messages-alert-text-color);
+  background: var(--unread-bubble-background-color);
+  color: var(--unread-bubble-text-color);
   text-align: center;
   margin-top: 0px;
   margin-bottom: 0px;
@@ -157,7 +157,7 @@ const AtSymbol = ({ conversationId }: WithConvoId) => {
 };
 
 const StyledUnreadCount = styled.p`
-  background-color: var(--unread-messages-alert-background-color);
+  background-color: var(--unread-bubble-background-color);
   text-align: center;
   padding-top: 1px;
   font-size: var(--font-size-xs);
@@ -166,7 +166,7 @@ const StyledUnreadCount = styled.p`
   min-width: 16px;
   line-height: 16px;
   border-radius: 8px;
-  color: var(--unread-messages-alert-text-color);
+  color: var(--unread-bubble-text-color);
   font-weight: 700;
   margin: 0px;
   padding-inline: 3px;

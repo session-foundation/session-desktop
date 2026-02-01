@@ -38,7 +38,7 @@ const StyledProgressBarContainer = styled.div`
   width: 100%;
   height: 5px;
   flex-direction: row;
-  background: var(--border-color);
+  background: var(--borders-color);
 `;
 
 const StyledProgressBarInner = styled.div`
@@ -79,7 +79,7 @@ const StyledLeftPaneBanner = styled.div`
   background: var(--background-secondary-color);
   display: flex;
   flex-direction: column;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--borders-color);
 `;
 
 function getLeftPaneHeaderLabel(leftOverlayMode: LeftOverlayMode | undefined): string {

@@ -107,7 +107,7 @@ export const Block = styled(Flex)<{ $backgroundColor?: string; $borderColor?: st
   position: relative;
   ${props => props.$backgroundColor && `background-color: ${props.$backgroundColor};`};
   border-radius: 8px;
-  border: 1px solid ${props => props.$borderColor ?? 'var(--border-color)'};
+  border: 1px solid ${props => props.$borderColor ?? 'var(--borders-color)'};
   font-size: var(--font-display-size-lg);
   line-height: var(--font-line-height);
 `;

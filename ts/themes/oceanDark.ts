@@ -15,13 +15,12 @@ export const oceanDark: ThemeColorVariables = {
   '--text-secondary-color': THEMES.OCEAN_DARK.COLOR5,
   '--text-selection-color': `rgba(${hexColorToRGB(THEMES.OCEAN_DARK.COLOR7!)}, 0.5)`,
 
-  '--border-color': THEMES.OCEAN_DARK.COLOR4,
+  '--borders-color': THEMES.OCEAN_DARK.COLOR4,
 
-
-  '--message-bubbles-sent-background-color': 'var(--primary-color)',
-  '--message-bubbles-received-background-color': THEMES.OCEAN_DARK.COLOR4,
-  '--message-bubbles-sent-text-color': THEMES.OCEAN_DARK.COLOR0,
-  '--message-bubbles-received-text-color': 'var(--text-primary-color)',
+  '--message-bubble-outgoing-background-color': 'var(--primary-color)',
+  '--message-bubble-incoming-background-color': THEMES.OCEAN_DARK.COLOR4,
+  '--message-bubble-outgoing-text-color': THEMES.OCEAN_DARK.COLOR0,
+  '--message-bubble-incoming-text-color': 'var(--text-primary-color)',
 
   '--menu-button-background-color': 'transparent',
   '--menu-button-background-hover-color': 'var(--primary-color)',
@@ -74,7 +73,6 @@ export const oceanDark: ThemeColorVariables = {
   '--scroll-bar-thumb-color': `rgba(${hexColorToRGB(THEMES.OCEAN_DARK.COLOR5)}, 0.20)`,
   '--scroll-bar-thumb-hover-color': `rgba(${hexColorToRGB(THEMES.OCEAN_DARK.COLOR5)}, 1.0)`,
 
-
   '--toggle-switch-ball-color': 'var(--white-color)',
   '--toggle-switch-ball-shadow-color': `rgba(${hexColorToRGB(COLORS.BLACK)}, 0.15)`,
   '--toggle-switch-off-background-color': 'var(--transparent-color)',
@@ -82,8 +80,8 @@ export const oceanDark: ThemeColorVariables = {
   '--toggle-switch-on-background-color': 'var(--primary-color)',
   '--toggle-switch-on-border-color': 'var(--transparent-color)',
 
-  '--unread-messages-alert-background-color': 'var(--primary-color)',
-  '--unread-messages-alert-text-color': THEMES.OCEAN_DARK.COLOR0,
+  '--unread-bubble-background-color': 'var(--primary-color)',
+  '--unread-bubble-text-color': THEMES.OCEAN_DARK.COLOR0,
 
   '--button-color-mode-stroke-color': 'var(--text-secondary-color)',
   '--button-color-mode-hover-color': 'var(--text-secondary-color)',
@@ -120,7 +118,7 @@ export const oceanDark: ThemeColorVariables = {
 
   '--input-text-placeholder-color': 'var(--text-secondary-color)',
   '--input-text-color': 'var(--text-primary-color)',
-  '--input-border-color': 'var(--border-color)',
+  '--input-border-color': 'var(--borders-color)',
 
   '--in-call-container-background-color': 'var(--background-primary-color)',
   '--in-call-container-text-color': 'var(--text-primary-color)',

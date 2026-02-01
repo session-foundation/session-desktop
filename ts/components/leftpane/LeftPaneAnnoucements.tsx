@@ -11,7 +11,7 @@ import { getAppDispatch } from '../../state/dispatch';
 
 const StyledAnnouncementRow = styled.div<{ $canClick: boolean }>`
   padding: var(--margins-sm);
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--borders-color);
   background-color: var(--background-secondary-color);
   color: var(--text-primary-color);
   display: flex;

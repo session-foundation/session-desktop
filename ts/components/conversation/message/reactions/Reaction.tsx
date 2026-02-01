@@ -20,7 +20,7 @@ const StyledReaction = styled.button<{
   justify-content: ${props => (props.$showCount ? 'flex-start' : 'center')};
   align-items: center;
 
-  background-color: var(--message-bubbles-received-background-color);
+  background-color: var(--message-bubble-incoming-background-color);
   box-shadow: 0 0 0 1px
     ${props => (props.selected ? 'var(--primary-color)' : 'var(--transparent-color)')};
   border-radius: var(--border-radius-message-box);

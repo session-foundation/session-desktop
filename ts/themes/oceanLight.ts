@@ -15,12 +15,12 @@ export const oceanLight: ThemeColorVariables = {
   '--text-secondary-color': THEMES.OCEAN_LIGHT.COLOR2,
   '--text-selection-color': `rgba(${hexColorToRGB(THEMES.OCEAN_LIGHT.COLOR1)}, 0.5)`,
 
-  '--border-color': THEMES.OCEAN_LIGHT.COLOR3,
+  '--borders-color': THEMES.OCEAN_LIGHT.COLOR3,
 
-  '--message-bubbles-sent-background-color': 'var(--primary-color)',
-  '--message-bubbles-received-background-color': THEMES.OCEAN_LIGHT.COLOR4,
-  '--message-bubbles-sent-text-color': 'var(--text-primary-color)',
-  '--message-bubbles-received-text-color': 'var(--text-primary-color)',
+  '--message-bubble-outgoing-background-color': 'var(--primary-color)',
+  '--message-bubble-incoming-background-color': THEMES.OCEAN_LIGHT.COLOR4,
+  '--message-bubble-outgoing-text-color': 'var(--text-primary-color)',
+  '--message-bubble-incoming-text-color': 'var(--text-primary-color)',
 
   '--menu-button-background-color': 'transparent',
   '--menu-button-background-hover-color': 'var(--text-primary-color)',
@@ -76,12 +76,12 @@ export const oceanLight: ThemeColorVariables = {
   '--toggle-switch-ball-color': 'var(--white-color)',
   '--toggle-switch-ball-shadow-color': `rgba(${hexColorToRGB(COLORS.BLACK)}, 0.15)`,
   '--toggle-switch-off-background-color': 'var(--transparent-color)',
-  '--toggle-switch-off-border-color': 'var(--border-color)',
+  '--toggle-switch-off-border-color': 'var(--borders-color)',
   '--toggle-switch-on-background-color': 'var(--primary-color)',
   '--toggle-switch-on-border-color': 'var(--transparent-color)',
 
-  '--unread-messages-alert-background-color': 'var(--primary-color)',
-  '--unread-messages-alert-text-color': THEMES.OCEAN_LIGHT.COLOR0,
+  '--unread-bubble-background-color': 'var(--primary-color)',
+  '--unread-bubble-text-color': THEMES.OCEAN_LIGHT.COLOR0,
 
   '--button-color-mode-stroke-color': 'var(--text-secondary-color)',
   '--button-color-mode-hover-color': 'var(--text-primary-color)',
@@ -118,7 +118,7 @@ export const oceanLight: ThemeColorVariables = {
 
   '--input-text-placeholder-color': 'var(--text-secondary-color)',
   '--input-text-color': 'var(--text-primary-color)',
-  '--input-border-color': 'var(--border-color)',
+  '--input-border-color': 'var(--borders-color)',
 
   '--in-call-container-background-color': 'var(--background-primary-color)',
   '--in-call-container-text-color': 'var(--text-primary-color)',

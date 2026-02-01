@@ -15,13 +15,13 @@ export type ThemeColorVariables = {
   '--text-selection-color': string;
 
   /* Borders */
-  '--border-color': string;
+  '--borders-color': string;
 
   /* Message Bubbles */
-  '--message-bubbles-sent-background-color': string;
-  '--message-bubbles-received-background-color': string;
-  '--message-bubbles-sent-text-color': string;
-  '--message-bubbles-received-text-color': string;
+  '--message-bubble-outgoing-background-color': string;
+  '--message-bubble-incoming-background-color': string;
+  '--message-bubble-outgoing-text-color': string;
+  '--message-bubble-incoming-text-color': string;
 
   /* Menu Button */
   '--menu-button-background-color': string;
@@ -91,7 +91,6 @@ export type ThemeColorVariables = {
   '--scroll-bar-thumb-color': string;
   '--scroll-bar-thumb-hover-color': string;
 
-
   /* Toggle Switch */
   '--toggle-switch-ball-color': string;
   '--toggle-switch-ball-shadow-color': string;
@@ -102,8 +101,8 @@ export type ThemeColorVariables = {
 
   /* Unread Messages Alert */
   /* Also used for MentionAtSymbol */
-  '--unread-messages-alert-background-color': string;
-  '--unread-messages-alert-text-color': string;
+  '--unread-bubble-background-color': string;
+  '--unread-bubble-text-color': string;
 
   /* Color Mode Button */
   '--button-color-mode-stroke-color': string;

@@ -32,15 +32,15 @@ const StyledIcon = styled.div`
 const StyledHR = styled.hr`
   height: 0px;
   width: 100%;
-  border: 0.5px solid var(--border-color);
+  border: 0.5px solid var(--borders-color);
   padding: 0;
   margin: 0;
 `;
 
 export const StyledActionRowContainer = styled(Flex)`
   width: 100%;
-  border-top: 1px solid var(--border-color);
-  border-bottom: 1px solid var(--border-color);
+  border-top: 1px solid var(--borders-color);
+  border-bottom: 1px solid var(--borders-color);
 
   ${StyledActionRow}:last-child ${StyledHR} {
     border-color: transparent;

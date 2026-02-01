@@ -50,8 +50,8 @@ export function MessageGenericAttachment({
             unicode={LUCIDE_ICONS_UNICODE.FILE}
             iconColor={
               direction === 'incoming'
-                ? 'var(--message-bubbles-received-text-color)'
-                : 'var(--message-bubbles-sent-text-color)'
+                ? 'var(--message-bubble-incoming-text-color)'
+                : 'var(--message-bubble-outgoing-text-color)'
             }
           />
         )}

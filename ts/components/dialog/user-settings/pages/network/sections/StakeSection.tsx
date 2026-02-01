@@ -33,7 +33,7 @@ const StyledTokenSection = styled(Flex)<{ $loading: boolean }>`
   }
 
   &:not(:last-child) {
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--borders-color);
   }
 `;
 

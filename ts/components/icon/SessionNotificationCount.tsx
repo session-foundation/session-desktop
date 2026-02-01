@@ -8,8 +8,8 @@ type Props = {
 };
 
 const StyledCountContainer = styled.div<{ $centeredOnTop: boolean }>`
-  background: var(--unread-messages-alert-background-color);
-  color: var(--unread-messages-alert-text-color);
+  background: var(--unread-bubble-background-color);
+  color: var(--unread-bubble-text-color);
   text-align: center;
 
   padding: ${props => (props.$centeredOnTop ? '1px 3px 0' : '1px 4px')};

@@ -17,8 +17,8 @@ const StyledLeftPane = styled.div<{ $isRtl: boolean }>`
   flex-direction: column;
   position: relative;
   flex-shrink: 0;
-  border-left: 1px solid var(--border-color);
-  border-right: 1px solid var(--border-color);
+  border-left: 1px solid var(--borders-color);
+  border-right: 1px solid var(--borders-color);
   direction: ${({ $isRtl }) => ($isRtl ? 'rtl' : 'ltr')};
 `;
 
