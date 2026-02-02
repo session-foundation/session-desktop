@@ -217,8 +217,6 @@ module.exports = function styledComponentsDataComponent({ types: t }) {
     // Arrow function with object return
     if (t.isArrowFunctionExpression(firstArg) && t.isObjectExpression(firstArg.body)) {
       firstArg.body.properties.unshift(createDataComponentProperty(componentName));
-
-      return;
     }
 
     // For other cases (function with block body, etc.), we can't easily modify
@@ -263,6 +261,7 @@ module.exports = function styledComponentsDataComponent({ types: t }) {
         } else {
           // Create new .attrs() call
           const newTag = createAttrsCall(tag, componentName);
+          // eslint-disable-next-line no-param-reassign
           path.node.tag = newTag;
         }
       },

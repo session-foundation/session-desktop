@@ -33,4 +33,5 @@ stylesheets/dist/**
 ts/localization/generated/
 
 
-
+dynamic_assets/**/*.js
+dynamic_assets/**/*.js.map
