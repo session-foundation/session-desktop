@@ -49,7 +49,7 @@ export function PanelLabelWithDescription({
   description?: TrArgs;
 }) {
   return (
-    <StyledPanelLabelWithDescription data-component="styled-panel-label-with-description">
+    <StyledPanelLabelWithDescription>
       {/* less space between the label and the description */}
       <StyledPanelLabel>
         <Localizer {...title} />
@@ -112,7 +112,6 @@ export const PanelButtonGroup = (
       $isSidePanel={isSidePanel}
       $withBorder={withBorder}
       $isDarkTheme={isDarkTheme}
-      data-component="styled-rounded-panel-button-group"
     >
       <PanelButtonContainer style={containerStyle}>{children}</PanelButtonContainer>
     </StyledRoundedPanelButtonGroup>
@@ -178,7 +177,6 @@ export const PanelButton = (props: PanelButtonProps) => {
       data-testid={dataTestId}
       $color={color}
       $isDarkTheme={isDarkTheme}
-      data-component="styled-panel-button"
     >
       {children}
     </StyledPanelButton>
@@ -258,7 +256,6 @@ export const PanelButtonTextWithSubText = (
       <StyledSubtitle
         color={props.subTextColorOverride || props.color}
         data-testid={props.subTextDataTestId}
-        data-component="styled-subtitle"
       >
         <Localizer {...props.subText} />
         {props.extraSubTextNode}
