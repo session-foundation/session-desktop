@@ -4,7 +4,11 @@ import { ConvoHub } from '../../session/conversations';
 import { SyncUtils, UserUtils } from '../../session/utils';
 import { uploadAndSetOurAvatarShared } from '../../interactions/avatar-interactions/nts-avatar-interactions';
 import { ed25519Str } from '../../session/utils/String';
-import { userSettingsModal, updateEditProfilePictureModal } from './modalDialog';
+import {
+  userSettingsModal,
+  updateEditProfilePictureModal,
+  updateConversationDetailsModal,
+} from './modalDialog';
 import { NetworkTime } from '../../util/NetworkTime';
 import { UserConfigWrapperActions } from '../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 import { SessionProfileResetAvatarPrivate } from '../../models/profile';
@@ -45,6 +49,7 @@ const updateOurAvatar = createAsyncThunk(
 
     if (res) {
       window.inboxStore?.dispatch(updateEditProfilePictureModal(null));
+      window.inboxStore?.dispatch(updateConversationDetailsModal(null));
       window.inboxStore?.dispatch(userSettingsModal({ userSettingsPage: 'default' }));
     }
     return res;
@@ -93,6 +98,7 @@ const clearOurAvatar = createAsyncThunk('user/clearOurAvatar', async () => {
 
   await SyncUtils.forceSyncConfigurationNowIfNeeded(true);
   window.inboxStore?.dispatch(updateEditProfilePictureModal(null));
+  window.inboxStore?.dispatch(updateConversationDetailsModal(null));
 });
 
 /**

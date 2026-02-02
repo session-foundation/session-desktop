@@ -148,6 +148,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
   const ourAvatarUploadFailed = useOurAvatarUploadFailed();
   const sogsAvatarIsUploading = useAvatarOfRoomIsUploading(conversationId);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
 
   const [newAvatarObjectUrl, setNewAvatarObjectUrl] = useState<string | null>(avatarPath);
   const [isNewAvatarAnimated, setIsNewAvatarAnimated] = useState<boolean>(false);
@@ -252,8 +253,13 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
     if (isCommunity) {
       throw new Error('community do not support removing avatars, only changing them');
     }
-    await triggerRemovalProfileAvatar(conversationId);
-    resetState();
+    setIsRemoving(true);
+    try {
+      await triggerRemovalProfileAvatar(conversationId);
+      resetState();
+    } catch (e) {
+      setIsRemoving(false);
+    }
   };
 
   const handleClear = async () => {
@@ -329,7 +335,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
       <div role="button" data-testid={'image-upload-click'}>
         <SpacerLG />
         <StyledAvatarContainer>
-          {newAvatarObjectUrl || avatarPath ? (
+          {newAvatarObjectUrl || avatarPath || isRemoving ? (
             <ProfileAvatar
               newAvatarObjectUrl={newAvatarObjectUrl}
               avatarPath={avatarPath}
