@@ -60,6 +60,8 @@ export type ThemeColorVariables = {
   '--button-icon-stroke-hover-color': string;
   '--button-icon-stroke-selected-color': string;
 
+  '--icon-fill-color': string;
+
   /* Conversation Tab */
   /* This is also user for Overlay Tabs, Contact Rows, Conversation List Items,
    Message Search Results, Message Requests Banner, Member List Item,

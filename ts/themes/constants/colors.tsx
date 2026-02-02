@@ -130,132 +130,62 @@ export function convertThemeStateToName(themeState: string): ThemeNames {
   return themeState.replace('-', '_').toUpperCase() as ThemeNames;
 }
 
-type ThemeColors = {
-  PRIMARY: string;
-  DANGER: string;
-  WARNING: string;
-  DISABLED: string;
-  COLOR0: string;
-  COLOR1: string;
-  COLOR2: string;
-  COLOR3: string;
-  COLOR4: string;
-  COLOR5: string;
-  COLOR6: string;
-  COLOR7?: string; // Only used with Ocean Themes
-};
-type Themes = Record<ThemeNames, ThemeColors>;
-
-// Classic Light
-const classicLightPrimary = primaryGreen;
-const classicLightDanger = dangerLight;
-const classicLightWarning = warningLight;
-const classicLightDisabled = disabledLight;
-const classicLight0 = '#000000';
-const classicLight1 = '#6D6D6D';
-const classicLight2 = '#A1A2A1';
-const classicLight3 = '#DFDFDF';
-const classicLight4 = '#F0F0F0';
-const classicLight5 = '#F9F9F9';
-const classicLight6 = '#FFFFFF';
-
-// Classic Dark
-const classicDarkPrimary = primaryGreen;
-const classicDarkDanger = dangerDark;
-const classicDarkWarning = warningDark;
-const classicDarkDisabled = disabledDark;
-const classicDark0 = '#000000';
-const classicDark1 = '#1B1B1B';
-const classicDark2 = '#2D2D2D';
-const classicDark3 = '#414141';
-const classicDark4 = '#767676';
-const classicDark5 = '#A1A2A1';
-const classicDark6 = '#FFFFFF';
-
-// Ocean Light
-const oceanLightPrimary = primaryBlue;
-const oceanLightDanger = dangerLight;
-const oceanLightWarning = warningLight;
-const oceanLightDisabled = disabledLight;
-const oceanLight0 = '#000000';
-const oceanLight1 = '#19345D';
-const oceanLight2 = '#6A6E90';
-const oceanLight3 = '#5CAACC';
-const oceanLight4 = '#B3EDF2';
-const oceanLight5 = '#E7F3F4';
-const oceanLight6 = '#ECFAFB';
-const oceanLight7 = '#FCFFFF';
-
-// Ocean Dark
-const oceanDarkPrimary = primaryBlue;
-const oceanDarkDanger = dangerDark;
-const oceanDarkWarning = warningDark;
-const oceanDarkDisabled = disabledDark;
-const oceanDark0 = '#000000';
-const oceanDark1 = '#1A1C28';
-const oceanDark2 = '#252735';
-const oceanDark3 = '#2B2D40';
-const oceanDark4 = '#3D4A5D';
-const oceanDark5 = '#A6A9CE';
-const oceanDark6 = '#5CAACC';
-const oceanDark7 = '#FFFFFF';
-
-const THEMES: Themes = {
+const THEMES = {
   CLASSIC_LIGHT: {
-    PRIMARY: classicLightPrimary,
-    DANGER: classicLightDanger,
-    WARNING: classicLightWarning,
-    DISABLED: classicLightDisabled,
-    COLOR0: classicLight0,
-    COLOR1: classicLight1,
-    COLOR2: classicLight2,
-    COLOR3: classicLight3,
-    COLOR4: classicLight4,
-    COLOR5: classicLight5,
-    COLOR6: classicLight6,
+    PRIMARY: primaryGreen,
+    DANGER: dangerLight,
+    WARNING: warningLight,
+    DISABLED: disabledLight,
+    COLOR0: '#000000',
+    COLOR1: '#6D6D6D',
+    COLOR2: '#A1A2A1',
+    COLOR3: '#DFDFDF',
+    COLOR4: '#F0F0F0',
+    COLOR5: '#F9F9F9',
+    COLOR6: '#FFFFFF',
   },
   CLASSIC_DARK: {
-    PRIMARY: classicDarkPrimary,
-    WARNING: classicDarkWarning,
-    DANGER: classicDarkDanger,
-    DISABLED: classicDarkDisabled,
-    COLOR0: classicDark0,
-    COLOR1: classicDark1,
-    COLOR2: classicDark2,
-    COLOR3: classicDark3,
-    COLOR4: classicDark4,
-    COLOR5: classicDark5,
-    COLOR6: classicDark6,
+    PRIMARY: primaryGreen,
+    DANGER: dangerDark,
+    WARNING: warningDark,
+    DISABLED: disabledDark,
+    COLOR0: '#000000',
+    COLOR1: '#1B1B1B',
+    COLOR2: '#2D2D2D',
+    COLOR3: '#414141',
+    COLOR4: '#767676',
+    COLOR5: '#A1A2A1',
+    COLOR6: '#FFFFFF',
   },
   OCEAN_LIGHT: {
-    PRIMARY: oceanLightPrimary,
-    WARNING: oceanLightWarning,
-    DANGER: oceanLightDanger,
-    DISABLED: oceanLightDisabled,
-    COLOR0: oceanLight0,
-    COLOR1: oceanLight1,
-    COLOR2: oceanLight2,
-    COLOR3: oceanLight3,
-    COLOR4: oceanLight4,
-    COLOR5: oceanLight5,
-    COLOR6: oceanLight6,
-    COLOR7: oceanLight7,
+    PRIMARY: primaryBlue,
+    DANGER: dangerLight,
+    WARNING: warningLight,
+    DISABLED: disabledLight,
+    COLOR0: '#000000',
+    COLOR1: '#19345D',
+    COLOR2: '#6A6E90',
+    COLOR3: '#5CAACC',
+    COLOR4: '#B3EDF2',
+    COLOR5: '#E7F3F4',
+    COLOR6: '#ECFAFB',
+    COLOR7: '#FCFFFF',
   },
   OCEAN_DARK: {
-    PRIMARY: oceanDarkPrimary,
-    WARNING: oceanDarkWarning,
-    DANGER: oceanDarkDanger,
-    DISABLED: oceanDarkDisabled,
-    COLOR0: oceanDark0,
-    COLOR1: oceanDark1,
-    COLOR2: oceanDark2,
-    COLOR3: oceanDark3,
-    COLOR4: oceanDark4,
-    COLOR5: oceanDark5,
-    COLOR6: oceanDark6,
-    COLOR7: oceanDark7,
+    PRIMARY: primaryBlue,
+    DANGER: dangerDark,
+    WARNING: warningDark,
+    DISABLED: disabledDark,
+    COLOR0: '#000000',
+    COLOR1: '#1A1C28',
+    COLOR2: '#252735',
+    COLOR3: '#2B2D40',
+    COLOR4: '#3D4A5D',
+    COLOR5: '#A6A9CE',
+    COLOR6: '#5CAACC',
+    COLOR7: '#FFFFFF',
   },
-};
+} as const;
 
 type ThemeType = {
   id: ThemeStateType;

@@ -1,10 +1,10 @@
 import { Dispatch } from '@reduxjs/toolkit';
-import { classicDark, classicLight, oceanDark, oceanLight } from '.';
 import { updateTheme } from '../state/theme/ducks/theme';
 import { THEMES, ThemeStateType, convertThemeStateToName } from './constants/colors';
 import { setThemeValues } from './globals';
 import { findPrimaryColorId, switchPrimaryColorTo } from './switchPrimaryColor';
 import { SettingsKey } from '../data/settings-key';
+import { buildThemeColors } from './allThemes';
 
 type SwitchThemeProps = {
   theme: ThemeStateType;
@@ -19,19 +19,19 @@ export async function switchThemeTo(props: SwitchThemeProps) {
 
   switch (theme) {
     case 'classic-dark':
-      setThemeValues(classicDark);
+      setThemeValues(buildThemeColors(theme));
       newTheme = 'classic-dark';
       break;
     case 'classic-light':
-      setThemeValues(classicLight);
+      setThemeValues(buildThemeColors(theme));
       newTheme = 'classic-light';
       break;
     case 'ocean-dark':
-      setThemeValues(oceanDark);
+      setThemeValues(buildThemeColors(theme));
       newTheme = 'ocean-dark';
       break;
     case 'ocean-light':
-      setThemeValues(oceanLight);
+      setThemeValues(buildThemeColors(theme));
       newTheme = 'ocean-light';
       break;
     default:
