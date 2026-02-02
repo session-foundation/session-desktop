@@ -53,7 +53,7 @@ export const StyledTextAreaContainer = styled(motion.div)<{
     }
 
     &::placeholder {
-      color: var(--input-text-placeholder-color);
+      color: var(--text-secondary-color);
     }
   }
 `;

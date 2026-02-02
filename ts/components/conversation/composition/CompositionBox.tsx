@@ -157,7 +157,7 @@ const StyledSendMessageInput = styled.div<{ dir?: HTMLDirection }>`
 
   .mention-container {
     border-radius: var(--border-radius);
-    box-shadow: var(--suggestions-shadow);
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
     background-color: var(--suggestions-background-color);
     z-index: 3;
     min-width: 100px;
@@ -180,7 +180,7 @@ const StyledSendMessageInput = styled.div<{ dir?: HTMLDirection }>`
         padding-top: var(--margins-xs);
         padding-bottom: var(--margins-xs);
         background-color: var(--suggestions-background-color);
-        color: var(--suggestions-text-color);
+        color: var(--text-primary-color);
         transition: var(--default-duration);
 
         &:hover,

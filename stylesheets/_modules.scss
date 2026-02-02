@@ -209,7 +209,7 @@
   flex-direction: row;
   align-items: center;
 
-  color: var(--conversation-tab-text-color);
+  color: var(--text-secondary-color);
 }
 
 .module-contact-list-item--with-click-handler {
@@ -485,7 +485,7 @@ $rhap_font-family: inherit !default;
   }
 
   .rhap_progress-bar {
-    background-color: var(--button-icon-stroke-color);
+    background-color: var(--text-secondary-color);
   }
 
   .rhap_progress-filled {
@@ -522,7 +522,7 @@ $rhap_font-family: inherit !default;
   }
 
   .rhap_progress-bar {
-    background-color: var(--button-icon-stroke-color);
+    background-color: var(--text-secondary-color);
   }
 
   .rhap_progress-filled {

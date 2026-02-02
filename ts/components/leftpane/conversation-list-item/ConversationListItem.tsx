@@ -77,11 +77,11 @@ export const ConversationListItem = (props: Props) => {
   const extraStyle: CSSProperties = {};
   if (hasUnread) {
     extraStyle.background = 'var(--conversation-tab-background-unread-color)';
-    extraStyle.borderLeft = '4px solid var(--conversation-tab-color-strip-color)';
+    extraStyle.borderLeft = '4px solid var(--primary-color)';
   }
 
   if (hasUnreadMentionedUs) {
-    extraStyle.borderLeft = '4px solid var(--conversation-tab-color-strip-color) !important';
+    extraStyle.borderLeft = '4px solid var(--primary-color) !important';
   }
 
   if (isBlocked) {

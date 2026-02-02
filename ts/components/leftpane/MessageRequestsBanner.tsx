@@ -35,7 +35,7 @@ const StyledUnreadCounter = styled.div`
   font-weight: bold;
   border-radius: var(--margins-sm);
   color: var(--unread-bubble-text-color);
-  background-color: var(--unread-bubble-background-color);
+  background-color: var(--primary-color);
   margin-left: var(--margins-xs);
   min-width: 20px;
   height: 20px;

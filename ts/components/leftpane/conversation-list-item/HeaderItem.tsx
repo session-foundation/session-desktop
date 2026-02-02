@@ -34,7 +34,7 @@ const NotificationSettingIcon = () => {
       return (
         <SessionIcon
           iconType="mute"
-          iconColor={'var(--conversation-tab-text-color)'}
+          iconColor={'var(--text-secondary-color)'}
           iconSize="small"
           style={{ flexShrink: 0 }}
         />
@@ -43,7 +43,7 @@ const NotificationSettingIcon = () => {
       return (
         <SessionIcon
           iconType="bell"
-          iconColor={'var(--conversation-tab-text-color)'}
+          iconColor={'var(--text-secondary-color)'}
           iconSize="small"
           style={{ flexShrink: 0 }}
         />
@@ -67,7 +67,7 @@ const PinIcon = () => {
   return isPinned ? (
     <SessionIcon
       iconType="pin"
-      iconColor={'var(--conversation-tab-text-color)'}
+      iconColor={'var(--text-secondary-color)'}
       iconSize="small"
       style={{ flexShrink: 0 }}
     />
@@ -92,7 +92,7 @@ const ListItemIcons = ({ conversationId }: WithConvoId) => {
 };
 
 const MentionAtSymbol = styled.span`
-  background: var(--unread-bubble-background-color);
+  background: var(--primary-color);
   color: var(--unread-bubble-text-color);
   text-align: center;
   margin-top: 0px;
@@ -157,7 +157,7 @@ const AtSymbol = ({ conversationId }: WithConvoId) => {
 };
 
 const StyledUnreadCount = styled.p`
-  background-color: var(--unread-bubble-background-color);
+  background-color: var(--primary-color);
   text-align: center;
   padding-top: 1px;
   font-size: var(--font-size-xs);

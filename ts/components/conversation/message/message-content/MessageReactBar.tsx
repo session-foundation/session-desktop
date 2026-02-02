@@ -75,7 +75,7 @@ const StyledExpiresIn = styled.div`
   white-space: nowrap;
   color: var(--text-primary-color);
   size: var(--font-size-sm);
-  background-color: var(--context-menu-background-color);
+  background-color: var(--background-primary-color);
   box-shadow: 0px 0px 9px 0px var(--context-menu-shadow-color);
   margin-top: 7px;
   display: flex;
@@ -172,7 +172,7 @@ export const MessageReactBar = ({ action, additionalAction, messageId }: Props) 
             </ReactButton>
           ))}
         <SessionLucideIconButton
-          iconColor={'var(--emoji-reaction-bar-icon-color)'}
+          iconColor={'var(--text-primary-color)'}
           iconSize={'large'}
           unicode={LUCIDE_ICONS_UNICODE.PLUS}
           onClick={additionalAction}

@@ -24,7 +24,6 @@ export type ThemeColorVariables = {
   '--message-bubble-incoming-text-color': string;
 
   /* Menu Button */
-  '--menu-button-background-color': string;
   '--menu-button-background-hover-color': string;
   '--menu-button-icon-color': string;
   '--menu-button-icon-hover-color': string;
@@ -41,28 +40,22 @@ export type ThemeColorVariables = {
 
   /* Buttons */
   /* Outline (Default) */
-  '--button-outline-background-color': string;
   '--button-outline-background-hover-color': string;
   '--button-outline-text-color': string;
   '--button-outline-text-hover-color': string;
   '--button-outline-border-color': string;
   '--button-outline-border-hover-color': string;
-  '--button-outline-disabled-color': string;
 
   /* Solid */
   /* Also used for Pills */
   '--button-solid-background-hover-color': string;
   '--button-solid-text-hover-color': string;
-  '--button-solid-disabled-color': string;
 
   /* Simple */
   '--button-simple-text-color': string;
-  '--button-simple-disabled-color': string;
-  '--button-simple-text-hover-color': string;
 
   /* Icons */
   '--button-icon-background-color': string;
-  '--button-icon-stroke-color': string;
   '--button-icon-stroke-hover-color': string;
   '--button-icon-stroke-selected-color': string;
 
@@ -74,16 +67,11 @@ export type ThemeColorVariables = {
   '--conversation-tab-background-hover-color': string;
   '--conversation-tab-background-selected-color': string;
   '--conversation-tab-background-unread-color': string;
-  '--conversation-tab-text-color': string;
   '--conversation-tab-text-selected-color': string;
   '--conversation-tab-text-unread-color': string;
-  '--conversation-tab-color-strip-color': string;
 
   /* Search Bar */
   '--search-bar-background-color': string;
-  '--search-bar-text-control-color': string;
-  '--search-bar-text-user-color': string;
-  '--search-bar-icon-color': string;
 
   /* Scroll Bars */
   '--scroll-bar-track-color': string;
@@ -92,16 +80,11 @@ export type ThemeColorVariables = {
   '--scroll-bar-thumb-hover-color': string;
 
   /* Toggle Switch */
-  '--toggle-switch-ball-color': string;
   '--toggle-switch-ball-shadow-color': string;
-  '--toggle-switch-off-background-color': string;
   '--toggle-switch-off-border-color': string;
-  '--toggle-switch-on-background-color': string;
-  '--toggle-switch-on-border-color': string;
 
   /* Unread Messages Alert */
   /* Also used for MentionAtSymbol */
-  '--unread-bubble-background-color': string;
   '--unread-bubble-text-color': string;
 
   /* Color Mode Button */
@@ -113,48 +96,28 @@ export type ThemeColorVariables = {
   '--emoji-reaction-bar-background-color': string;
   /* NOTE only used for + icon */
   '--emoji-reaction-bar-icon-background-color': string;
-  '--emoji-reaction-bar-icon-color': string;
 
   /* Modals */
   '--modal-background-color': string;
   '--modal-background-content-color': string;
-  '--modal-text-color': string;
-  '--modal-text-danger-color': string;
   '--modal-shadow-color': string;
   '--modal-drop-shadow': string;
 
   /* Toasts */
   '--toast-background-color': string;
-  '--toast-text-color': string;
-  '--toast-color-strip-color': string;
-  '--toast-progress-color': string;
 
   /* Session Text Logo */
   /* Loads SVG as IMG and uses a filter to change color */
   '--session-logo-text-light-filter': string;
   '--session-logo-text-current-filter': string;
 
-  /* Right Click / Context Menu) */
-  '--context-menu-background-color': string;
-  '--context-menu-background-hover-color': string;
-  '--context-menu-text-color': string;
-  '--context-menu-text-hover-color': string;
-
   /* Suggestions i.e. Mentions and Emojis */
   '--suggestions-background-color': string;
   '--suggestions-background-hover-color': string;
-  '--suggestions-text-color': string;
-  '--suggestions-shadow': string;
 
   /* Inputs */
   /* Also used for some TextAreas */
-  '--input-text-placeholder-color': string;
   '--input-text-color': string;
-  '--input-border-color': string;
-
-  /* In Call Container */
-  '--in-call-container-background-color': string;
-  '--in-call-container-text-color': string;
 
   /* Call Buttons */
   '--call-buttons-background-color': string;
@@ -162,14 +125,10 @@ export type ThemeColorVariables = {
   '--call-buttons-background-disabled-color': string;
   '--call-buttons-action-background-color': string;
   '--call-buttons-action-background-hover-color': string;
-  '--call-buttons-action-icon-color': string;
   '--call-buttons-icon-color': string;
   '--call-buttons-icon-disabled-color': string;
-  '--call-buttons-dropdown-color': string;
-  '--call-buttons-dropdown-shadow': string;
 
   /* File Dropzone */
-  '--file-dropzone-background-color': string;
   '--file-dropzone-border-color': string;
 
   /* Session Recording */

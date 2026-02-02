@@ -94,7 +94,7 @@ const StyledModal = styled.div<{
   box-sizing: border-box;
   font-family: var(--font-default);
   background-color: var(--modal-background-content-color);
-  color: var(--modal-text-color);
+  color: var(--text-primary-color);
   border: 1px solid var(--borders-color);
   border-radius: 13px;
   box-shadow: var(--modal-drop-shadow);

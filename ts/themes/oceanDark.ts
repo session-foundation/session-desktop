@@ -22,7 +22,6 @@ export const oceanDark: ThemeColorVariables = {
   '--message-bubble-outgoing-text-color': THEMES.OCEAN_DARK.COLOR0,
   '--message-bubble-incoming-text-color': 'var(--text-primary-color)',
 
-  '--menu-button-background-color': 'transparent',
   '--menu-button-background-hover-color': 'var(--primary-color)',
   '--menu-button-icon-color': 'var(--primary-color)',
   '--menu-button-icon-hover-color': 'var(--text-primary-color)',
@@ -39,18 +38,13 @@ export const oceanDark: ThemeColorVariables = {
   '--button-outline-text-hover-color': THEMES.OCEAN_DARK.COLOR1,
   '--button-outline-border-color': 'var(--text-primary-color)',
   '--button-outline-border-hover-color': 'var(--text-primary-color)',
-  '--button-outline-disabled-color': 'var(--disabled-color)',
 
   '--button-solid-background-hover-color': 'var(--transparent-color)',
   '--button-solid-text-hover-color': 'var(--text-primary-color)',
-  '--button-solid-disabled-color': 'var(--disabled-color)',
 
   '--button-simple-text-color': 'var(--text-primary-color)',
-  '--button-simple-disabled-color': 'var(--disabled-color)',
-  '--button-simple-text-hover-color': 'var(--disabled-color)',
 
   '--button-icon-background-color': 'var(--transparent-color)',
-  '--button-icon-stroke-color': 'var(--text-secondary-color)',
   '--button-icon-stroke-hover-color': 'var(--text-primary-color)',
   '--button-icon-stroke-selected-color': 'var(--text-primary-color)',
 
@@ -58,29 +52,19 @@ export const oceanDark: ThemeColorVariables = {
   '--conversation-tab-background-hover-color': THEMES.OCEAN_DARK.COLOR3,
   '--conversation-tab-background-selected-color': THEMES.OCEAN_DARK.COLOR3,
   '--conversation-tab-background-unread-color': THEMES.OCEAN_DARK.COLOR2,
-  '--conversation-tab-text-color': 'var(--text-secondary-color)',
   '--conversation-tab-text-selected-color': 'var(--text-primary-color)',
   '--conversation-tab-text-unread-color': 'var(--text-primary-color)',
-  '--conversation-tab-color-strip-color': 'var(--primary-color)',
 
   '--search-bar-background-color': THEMES.OCEAN_DARK.COLOR3,
-  '--search-bar-text-control-color': 'var(--text-secondary-color)',
-  '--search-bar-text-user-color': 'var(--text-primary-color)',
-  '--search-bar-icon-color': 'var(--text-secondary-color)',
 
   '--scroll-bar-track-color': `rgba(${hexColorToRGB(THEMES.OCEAN_DARK.COLOR5)}, 0.10)`,
   '--scroll-bar-track-hover-color': `rgba(${hexColorToRGB(THEMES.OCEAN_DARK.COLOR5)}, 0.20)`,
   '--scroll-bar-thumb-color': `rgba(${hexColorToRGB(THEMES.OCEAN_DARK.COLOR5)}, 0.20)`,
   '--scroll-bar-thumb-hover-color': `rgba(${hexColorToRGB(THEMES.OCEAN_DARK.COLOR5)}, 1.0)`,
 
-  '--toggle-switch-ball-color': 'var(--white-color)',
   '--toggle-switch-ball-shadow-color': `rgba(${hexColorToRGB(COLORS.BLACK)}, 0.15)`,
-  '--toggle-switch-off-background-color': 'var(--transparent-color)',
   '--toggle-switch-off-border-color': 'var(--white-color)',
-  '--toggle-switch-on-background-color': 'var(--primary-color)',
-  '--toggle-switch-on-border-color': 'var(--transparent-color)',
 
-  '--unread-bubble-background-color': 'var(--primary-color)',
   '--unread-bubble-text-color': THEMES.OCEAN_DARK.COLOR0,
 
   '--button-color-mode-stroke-color': 'var(--text-secondary-color)',
@@ -89,52 +73,30 @@ export const oceanDark: ThemeColorVariables = {
 
   '--emoji-reaction-bar-background-color': 'var(--background-secondary-color)',
   '--emoji-reaction-bar-icon-background-color': 'var(--background-primary-color)',
-  '--emoji-reaction-bar-icon-color': 'var(--text-primary-color)',
 
   '--modal-background-color': `rgba(${hexColorToRGB(COLORS.BLACK)}, 0.5)`,
   '--modal-background-content-color': 'var(--background-secondary-color)',
-  '--modal-text-color': 'var(--text-primary-color)',
-  '--modal-text-danger-color': 'var(--danger-color)',
   '--modal-shadow-color': `rgba(${hexColorToRGB(COLORS.BLACK)}, 1.0)`,
   '--modal-drop-shadow': `0px 0px 34px 0px var(--modal-shadow-color)`,
 
   '--toast-background-color': 'var(--background-secondary-color)',
-  '--toast-text-color': 'var(--text-primary-color)',
-  '--toast-color-strip-color': 'var(--primary-color)',
-  '--toast-progress-color': `rgba(${hexColorToRGB(COLORS.BLACK)}, 0.1)`,
 
   '--session-logo-text-light-filter': 'none',
   '--session-logo-text-current-filter': 'var(--session-logo-text-light-filter)',
 
-  '--context-menu-background-color': 'var(--background-primary-color)',
-  '--context-menu-background-hover-color': 'var(--primary-color)',
-  '--context-menu-text-color': 'var(--text-primary-color)',
-  '--context-menu-text-hover-color': 'var(--black-color)',
-
   '--suggestions-background-color': 'var(--background-secondary-color)',
   '--suggestions-background-hover-color': THEMES.OCEAN_DARK.COLOR4,
-  '--suggestions-text-color': 'var(--text-primary-color)',
-  '--suggestions-shadow': `rgba(${hexColorToRGB(COLORS.BLACK)}, 0.24) 0px 3px 8px`,
 
-  '--input-text-placeholder-color': 'var(--text-secondary-color)',
   '--input-text-color': 'var(--text-primary-color)',
-  '--input-border-color': 'var(--borders-color)',
-
-  '--in-call-container-background-color': 'var(--background-primary-color)',
-  '--in-call-container-text-color': 'var(--text-primary-color)',
 
   '--call-buttons-background-color': THEMES.OCEAN_DARK.COLOR4,
   '--call-buttons-background-hover-color': THEMES.OCEAN_DARK.COLOR4,
   '--call-buttons-background-disabled-color': THEMES.OCEAN_DARK.COLOR3,
   '--call-buttons-action-background-color': 'var(--white-color)',
   '--call-buttons-action-background-hover-color': `rgba(${hexColorToRGB(COLORS.WHITE)}, 0.87)`,
-  '--call-buttons-action-icon-color': 'var(--black-color)',
   '--call-buttons-icon-color': THEMES.OCEAN_DARK.COLOR7!,
   '--call-buttons-icon-disabled-color': THEMES.OCEAN_DARK.COLOR7!,
-  '--call-buttons-dropdown-color': 'var(--text-primary-color)',
-  '--call-buttons-dropdown-shadow': '0 0 4px 0 var(grey-color)',
 
-  '--file-dropzone-background-color': 'var(--message-link-preview-background-color)',
   '--file-dropzone-border-color': 'var(--primary-color)',
 
   '--session-recording-pulse-color': hexColorToRGB(THEMES.OCEAN_DARK.DANGER),

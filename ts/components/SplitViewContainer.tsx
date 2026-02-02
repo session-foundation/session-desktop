@@ -19,7 +19,7 @@ const Divider = styled.div`
   width: 100%;
   cursor: row-resize;
   height: 5px;
-  background-color: var(--in-call-container-background-color);
+  background-color: var(--background-primary-color);
   padding-top: 2px;
 `;
 

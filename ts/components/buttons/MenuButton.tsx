@@ -14,7 +14,7 @@ const StyledMenuButton = styled.button`
   display: flex;
   justify-content: center;
   align-items: center;
-  background: var(--menu-button-background-color);
+  background: var(--transparent-color);
 
   border: 1.5px solid var(--menu-button-border-color);
   border-radius: 7px;
