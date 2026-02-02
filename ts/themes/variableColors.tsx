@@ -45,6 +45,7 @@ export type ThemeColorVariables = {
   '--button-outline-text-hover-color': string;
   '--button-outline-border-color': string;
   '--button-outline-border-hover-color': string;
+  '--button-outline-background-color': string;
 
   /* Solid */
   /* Also used for Pills */
@@ -82,15 +83,6 @@ export type ThemeColorVariables = {
   /* Toggle Switch */
   '--toggle-switch-ball-shadow-color': string;
   '--toggle-switch-off-border-color': string;
-
-  /* Unread Messages Alert */
-  /* Also used for MentionAtSymbol */
-  '--unread-bubble-text-color': string;
-
-  /* Color Mode Button */
-  '--button-color-mode-stroke-color': string;
-  '--button-color-mode-hover-color': string;
-  '--button-color-mode-fill-color': string;
 
   /* Emoji Reaction Bar */
   '--emoji-reaction-bar-background-color': string;

@@ -19,7 +19,7 @@ export const oceanDark: ThemeColorVariables = {
 
   '--message-bubble-outgoing-background-color': 'var(--primary-color)',
   '--message-bubble-incoming-background-color': THEMES.OCEAN_DARK.COLOR4,
-  '--message-bubble-outgoing-text-color': THEMES.OCEAN_DARK.COLOR0,
+  '--message-bubble-outgoing-text-color': 'var(--black-color)',
   '--message-bubble-incoming-text-color': 'var(--text-primary-color)',
 
   '--menu-button-background-hover-color': 'var(--primary-color)',
@@ -65,12 +65,6 @@ export const oceanDark: ThemeColorVariables = {
   '--toggle-switch-ball-shadow-color': `rgba(${hexColorToRGB(COLORS.BLACK)}, 0.15)`,
   '--toggle-switch-off-border-color': 'var(--white-color)',
 
-  '--unread-bubble-text-color': THEMES.OCEAN_DARK.COLOR0,
-
-  '--button-color-mode-stroke-color': 'var(--text-secondary-color)',
-  '--button-color-mode-hover-color': 'var(--text-secondary-color)',
-  '--button-color-mode-fill-color': 'var(--transparent-color)',
-
   '--emoji-reaction-bar-background-color': 'var(--background-secondary-color)',
   '--emoji-reaction-bar-icon-background-color': 'var(--background-primary-color)',
 
@@ -95,7 +89,7 @@ export const oceanDark: ThemeColorVariables = {
   '--call-buttons-action-background-color': 'var(--white-color)',
   '--call-buttons-action-background-hover-color': `rgba(${hexColorToRGB(COLORS.WHITE)}, 0.87)`,
   '--call-buttons-icon-color': THEMES.OCEAN_DARK.COLOR7!,
-  '--call-buttons-icon-disabled-color': THEMES.OCEAN_DARK.COLOR7!,
+  '--call-buttons-icon-disabled-color': 'var(--white-color)',
 
   '--file-dropzone-border-color': 'var(--primary-color)',
 

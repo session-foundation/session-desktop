@@ -65,12 +65,6 @@ export const oceanLight: ThemeColorVariables = {
   '--toggle-switch-ball-shadow-color': `rgba(${hexColorToRGB(COLORS.BLACK)}, 0.15)`,
   '--toggle-switch-off-border-color': 'var(--borders-color)',
 
-  '--unread-bubble-text-color': THEMES.OCEAN_LIGHT.COLOR0,
-
-  '--button-color-mode-stroke-color': 'var(--text-secondary-color)',
-  '--button-color-mode-hover-color': 'var(--text-primary-color)',
-  '--button-color-mode-fill-color': 'var(--transparent-color)',
-
   '--emoji-reaction-bar-background-color': 'var(--background-primary-color)',
   '--emoji-reaction-bar-icon-background-color': 'var(--background-secondary-color)',
 

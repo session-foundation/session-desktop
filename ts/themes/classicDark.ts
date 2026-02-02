@@ -35,7 +35,7 @@ export const classicDark: ThemeColorVariables = {
   '--button-outline-background-color': 'var(--transparent-color)',
   '--button-outline-background-hover-color': 'var(--text-primary-color)',
   '--button-outline-text-color': 'var(--text-primary-color)',
-  '--button-outline-text-hover-color': THEMES.CLASSIC_DARK.COLOR0,
+  '--button-outline-text-hover-color': 'var(--black-color)',
   '--button-outline-border-color': 'var(--text-primary-color)',
   '--button-outline-border-hover-color': 'var(--text-primary-color)',
 
@@ -64,12 +64,6 @@ export const classicDark: ThemeColorVariables = {
 
   '--toggle-switch-ball-shadow-color': `rgba(${hexColorToRGB(COLORS.BLACK)}, 0.15)`,
   '--toggle-switch-off-border-color': 'var(--white-color)',
-
-  '--unread-bubble-text-color': THEMES.CLASSIC_DARK.COLOR0,
-
-  '--button-color-mode-stroke-color': 'var(--text-primary-color)',
-  '--button-color-mode-hover-color': 'var(--text-primary-color)',
-  '--button-color-mode-fill-color': 'var(--text-primary-color)',
 
   '--emoji-reaction-bar-background-color': THEMES.CLASSIC_DARK.COLOR2,
   '--emoji-reaction-bar-icon-background-color': 'var(--background-secondary-color)',

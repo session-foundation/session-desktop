@@ -34,7 +34,7 @@ const StyledMessageRequestBannerHeader = styled.span`
 const StyledUnreadCounter = styled.div`
   font-weight: bold;
   border-radius: var(--margins-sm);
-  color: var(--unread-bubble-text-color);
+  color: var(--black-color);
   background-color: var(--primary-color);
   margin-left: var(--margins-xs);
   min-width: 20px;

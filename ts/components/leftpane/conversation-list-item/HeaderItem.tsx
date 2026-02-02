@@ -93,7 +93,7 @@ const ListItemIcons = ({ conversationId }: WithConvoId) => {
 
 const MentionAtSymbol = styled.span`
   background: var(--primary-color);
-  color: var(--unread-bubble-text-color);
+  color: var(--black-color);
   text-align: center;
   margin-top: 0px;
   margin-bottom: 0px;
@@ -166,7 +166,7 @@ const StyledUnreadCount = styled.p`
   min-width: 16px;
   line-height: 16px;
   border-radius: 8px;
-  color: var(--unread-bubble-text-color);
+  color: var(--black-color);
   font-weight: 700;
   margin: 0px;
   padding-inline: 3px;

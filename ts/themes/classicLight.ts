@@ -24,7 +24,7 @@ export const classicLight: ThemeColorVariables = {
 
   '--menu-button-background-hover-color': 'var(--text-primary-color)',
   '--menu-button-icon-color': 'var(--text-primary-color)',
-  '--menu-button-icon-hover-color': THEMES.CLASSIC_LIGHT.COLOR6,
+  '--menu-button-icon-hover-color': 'var(--white-color)',
   '--menu-button-border-color': 'var(--text-primary-color)',
   '--menu-button-border-hover-color': 'var(--text-primary-color)',
 
@@ -48,7 +48,7 @@ export const classicLight: ThemeColorVariables = {
   '--button-icon-stroke-hover-color': 'var(--text-primary-color)',
   '--button-icon-stroke-selected-color': 'var(--text-primary-color)',
 
-  '--conversation-tab-background-color': THEMES.CLASSIC_LIGHT.COLOR6,
+  '--conversation-tab-background-color': 'var(--white-color)',
   '--conversation-tab-background-hover-color': THEMES.CLASSIC_LIGHT.COLOR4,
   '--conversation-tab-background-selected-color': THEMES.CLASSIC_LIGHT.COLOR4,
   '--conversation-tab-background-unread-color': 'var(--background-primary-color)',
@@ -64,12 +64,6 @@ export const classicLight: ThemeColorVariables = {
 
   '--toggle-switch-ball-shadow-color': `rgba(${hexColorToRGB(COLORS.BLACK)}, 0.15)`,
   '--toggle-switch-off-border-color': 'var(--borders-color)',
-
-  '--unread-bubble-text-color': THEMES.CLASSIC_LIGHT.COLOR0,
-
-  '--button-color-mode-stroke-color': 'var(--text-secondary-color)',
-  '--button-color-mode-hover-color': 'var(--text-primary-color)',
-  '--button-color-mode-fill-color': 'var(--transparent-color)',
 
   '--emoji-reaction-bar-background-color': THEMES.CLASSIC_LIGHT.COLOR4,
   '--emoji-reaction-bar-icon-background-color': 'var(--background-primary-color)',
