@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useDispatch } from 'react-redux';
 import { compact } from 'lodash';
+import { getAppDispatch } from '../../state/dispatch';
 
 import { sogsV3AddAdmin } from '../../session/apis/open_group_api/sogsv3/sogsV3AddRemoveMods';
 import { PubKey } from '../../session/types';
@@ -29,7 +29,7 @@ type Props = {
 export const AddModeratorsDialog = (props: Props) => {
   const { conversationId } = props;
 
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const convo = ConvoHub.use().get(conversationId);
 
   const [inputBoxValue, setInputBoxValue] = useState('');
@@ -139,7 +139,7 @@ export const AddModeratorsDialog = (props: Props) => {
           }
         />
 
-        <SessionSpinner loading={addingInProgress} />
+        <SessionSpinner $loading={addingInProgress} />
       </ModalFlexContainer>
     </SessionWrapperModal>
   );

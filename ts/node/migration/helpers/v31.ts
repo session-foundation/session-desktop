@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-expressions */
-import * as BetterSqlite3 from '@signalapp/better-sqlite3';
+import { type Database } from '@signalapp/sqlcipher';
 import {
   ContactInfoSet,
   ContactsConfigWrapperNode,
@@ -77,7 +77,7 @@ function insertContactIntoContactWrapper(
   blockedNumbers: Array<string>,
   contactsConfigWrapper: ContactsConfigWrapperNode | null, // set this to null to only insert into the convo volatile wrapper (i.e. for ourConvo case)
   volatileConfigWrapper: ConvoInfoVolatileWrapperNode,
-  db: BetterSqlite3.Database,
+  db: Database,
   version: number
 ) {
   checkTargetMigration(version, targetVersion);
@@ -153,7 +153,12 @@ function insertContactIntoContactWrapper(
     const lastRead = isNumber(maxRead) && isFinite(maxRead) ? maxRead : 0;
     hasDebugEnvVariable &&
       console.info(`Inserting contact into volatile wrapper max read: ${contact.id} :${lastRead}`);
-    volatileConfigWrapper.set1o1(contact.id, lastRead, false);
+    volatileConfigWrapper.set1o1(contact.id, {
+      lastReadTsMs: lastRead,
+      forcedUnread: false,
+      proGenIndexHashB64: null,
+      proExpiryTsMs: null,
+    });
   } catch (e) {
     console.error(
       `volatileConfigWrapper.set1o1 during migration failed with ${e.message} for id: ${contact.id}. skipping`
@@ -184,7 +189,7 @@ function insertCommunityIntoWrapper(
   community: { id: string; priority: number },
   userGroupConfigWrapper: UserGroupsWrapperNode,
   volatileConfigWrapper: ConvoInfoVolatileWrapperNode,
-  db: BetterSqlite3.Database,
+  db: Database,
   version: number
 ) {
   checkTargetMigration(version, targetVersion);
@@ -247,7 +252,10 @@ function insertCommunityIntoWrapper(
       console.info(
         `Inserting community into volatile wrapper: ${wrapperComm.fullUrl} :${lastRead}`
       );
-    volatileConfigWrapper.setCommunityByFullUrl(wrapperComm.fullUrl, lastRead, false);
+    volatileConfigWrapper.setCommunityByFullUrl(wrapperComm.fullUrl, {
+      lastReadTsMs: lastRead,
+      forcedUnread: false,
+    });
   } catch (e) {
     console.error(
       `userGroupConfigWrapper.set during migration failed with ${e.message} for fullUrl: "${wrapperComm.fullUrl}". Skipping community entirely`
@@ -302,7 +310,7 @@ function insertLegacyGroupIntoWrapper(
   > & { members: string; groupAdmins: string }, // members and groupAdmins are still stringified here
   userGroupConfigWrapper: UserGroupsWrapperNode,
   volatileInfoConfigWrapper: ConvoInfoVolatileWrapperNode,
-  db: BetterSqlite3.Database,
+  db: Database,
   version: number
 ) {
   checkTargetMigration(version, targetVersion);
@@ -343,8 +351,8 @@ function insertLegacyGroupIntoWrapper(
     const maxRead = rows?.max_sent_at;
     const lastRead = isNumber(maxRead) && isFinite(maxRead) ? maxRead : 0;
     hasDebugEnvVariable &&
-      console.info(`Inserting legacy group into volatile wrapper max read: ${id} :${lastRead}`);
-    volatileInfoConfigWrapper.setLegacyGroup(id, lastRead, false);
+      console.info(`Inserting for legacy group into volatile wrapper max read: ${id} :${lastRead}`);
+    volatileInfoConfigWrapper.setLegacyGroup(id, { lastReadTsMs: lastRead, forcedUnread: false });
   } catch (e) {
     console.error(
       `userGroupConfigWrapper.set during migration failed with ${e.message} for legacyGroup.id: "${legacyGroup.id}". Skipping that legacy group entirely`

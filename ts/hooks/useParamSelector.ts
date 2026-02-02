@@ -17,13 +17,17 @@ import {
   getMessagePropsByMessageId,
   getMessageReactsProps,
 } from '../state/selectors/conversations';
-import { useLibGroupAdmins, useLibGroupMembers, useLibGroupName } from '../state/selectors/groups';
-import { isPrivateAndFriend } from '../state/selectors/selectedConversation';
-import { useOurPkStr } from '../state/selectors/user';
 import {
+  selectLibAdminsPubkeys,
+  selectLibGroupName,
+  useLibGroupMembers,
+} from '../state/selectors/groups';
+import { isPrivateAndFriend } from '../state/selectors/selectedConversation';
+import { getOurNumber } from '../state/selectors/user';
+import {
+  getGroupById,
+  getLibGroupKicked,
   useLibGroupDestroyed,
-  useLibGroupInvitePending,
-  useLibGroupKicked,
 } from '../state/selectors/userGroups';
 import { ConversationInteractionStatus, ConversationInteractionType } from '../interactions/types';
 import { tr } from '../localization/localeTools';
@@ -32,19 +36,19 @@ export function useAvatarPath(convoId: string | undefined) {
   const convoProps = useConversationPropsById(convoId);
   return convoProps?.avatarPath || null;
 }
+
+export function useAvatarPointer(convoId: string | undefined) {
+  const convoProps = useConversationPropsById(convoId);
+  return convoProps?.avatarPointer || null;
+}
+
 export function useOurAvatarPath() {
   return useAvatarPath(UserUtils.getOurPubKeyStrFromCache());
 }
 
-export function useIsProUser(convoId: string | undefined) {
-  const convoProps = useConversationPropsById(convoId);
-  return convoProps?.isProUser || false;
-}
-
-export function selectWeAreProUser(state: StateType) {
-  return (
-    state.conversations.conversationLookup[UserUtils.getOurPubKeyStrFromCache()]?.isProUser || false
-  );
+// NOTE: [react-compiler] this has to live here for the hook to be identified as static
+function useLibGroupName(convoId?: string): string | undefined {
+  return useSelector((state: StateType) => selectLibGroupName(state, convoId));
 }
 
 /**
@@ -227,9 +231,14 @@ export function useIsActive(convoId?: string) {
   return !!useActiveAt(convoId);
 }
 
+// NOTE: [react-compiler] this has to live here for the hook to be identified as static
+function useLibGroupKickedInternal(convoId?: string) {
+  return useSelector((state: StateType) => getLibGroupKicked(state, convoId));
+}
+
 export function useIsKickedFromGroup(convoId?: string) {
   const convoProps = useConversationPropsById(convoId);
-  const libIsKicked = useLibGroupKicked(convoId);
+  const libIsKicked = useLibGroupKickedInternal(convoId);
   if (convoId && PubKey.is03Pubkey(convoId)) {
     return libIsKicked ?? false;
   }
@@ -244,10 +253,27 @@ export function useIsGroupDestroyed(convoId?: string) {
   return false;
 }
 
-export function useWeAreAdmin(convoId?: string) {
+// NOTE: [react-compiler] this has to live here for the hook to be identified as static
+function useIsAdmin(convoId?: string, pk?: string) {
   const groupAdmins = useGroupAdmins(convoId);
-  const us = useOurPkStr();
-  return Boolean(groupAdmins.includes(us));
+  const isAdmin = Boolean(pk && groupAdmins.includes(pk));
+  return isAdmin;
+}
+
+// NOTE: [react-compiler] this has to live here for the hook to be identified as static
+function useOurPkStrInternal() {
+  return useSelector((state: StateType) => getOurNumber(state));
+}
+
+export function useWeAreAdmin(convoId?: string) {
+  const us = useOurPkStrInternal();
+  const isAdmin = useIsAdmin(convoId, us);
+  return isAdmin;
+}
+
+// NOTE: [react-compiler] this has to live here for the hook to be identified as static
+function useLibGroupAdmins(convoId?: string): Array<string> {
+  return useSelector((state: StateType) => selectLibAdminsPubkeys(state, convoId));
 }
 
 export function useGroupAdmins(convoId?: string) {
@@ -256,7 +282,8 @@ export function useGroupAdmins(convoId?: string) {
   const libMembers = useLibGroupAdmins(convoId);
 
   if (convoId && PubKey.is03Pubkey(convoId)) {
-    return compact(libMembers?.slice()?.sort()) || [];
+    const members = libMembers?.slice()?.sort() ?? [];
+    return compact(members);
   }
 
   return convoProps?.groupAdmins || [];
@@ -292,12 +319,19 @@ export function useIsApproved(convoId?: string) {
   return Boolean(convoProps && convoProps.isApproved);
 }
 
+// NOTE: [react-compiler] this has to live here for the hook to be identified as static
+function useLibGroupInvitePendingInternal(convoId?: string) {
+  return useSelector((state: StateType) => getGroupById(state, convoId)?.invitePending ?? false);
+}
+
 export function useIsIncomingRequest(convoId?: string) {
   const convoProps = useConversationPropsById(convoId);
-  const invitePending = useLibGroupInvitePending(convoId) || false;
+  const invitePending = useLibGroupInvitePendingInternal(convoId);
+
   if (!convoProps) {
     return false;
   }
+
   return Boolean(
     convoProps &&
       hasValidIncomingRequestValues({
@@ -461,6 +495,11 @@ export function use05GroupMembers(convoId: string | undefined): Array<PubkeyType
   throw new Error('use05GroupMembers: some members not 05 prefixed. That cannot be possible.');
 }
 
+function useLibGroupMembersWrapped(convoId: string | undefined) {
+  const libMembers = useLibGroupMembers(convoId);
+  return libMembers;
+}
+
 /**
  * Get the list of members of a closed group or []
  * @param convoId the closed group id to extract members from
@@ -469,7 +508,7 @@ export function useSortedGroupMembers(convoId: string | undefined): Array<Pubkey
   const members = use05GroupMembers(convoId);
   const isPublic = useIsPublic(convoId);
   const isPrivate = useIsPrivate(convoId);
-  const libMembers = useLibGroupMembers(convoId);
+  const libMembers = useLibGroupMembersWrapped(convoId);
   if (isPrivate || isPublic) {
     return [];
   }

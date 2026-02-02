@@ -16,7 +16,6 @@ export const defaultProBooleanFeatureFlags = {
   mockCurrentUserHasProInGracePeriod: !isEmpty(process.env.SESSION_USER_HAS_PRO_IN_GRACE),
   mockProRecoverButtonAlwaysSucceed: !isEmpty(process.env.SESSION_PRO_RECOVER_ALWAYS_SUCCEED),
   mockProRecoverButtonAlwaysFail: !isEmpty(process.env.SESSION_PRO_RECOVER_ALWAYS_FAIL),
-  mockOthersHavePro: !isEmpty(process.env.SESSION_OTHERS_HAVE_PRO),
   mockProBackendLoading: !isEmpty(process.env.SESSION_PRO_BACKEND_LOADING),
   mockProBackendError: !isEmpty(process.env.SESSION_PRO_BACKEND_ERROR),
 } as const;
@@ -28,6 +27,9 @@ export const defaultBooleanFeatureFlags = {
   useDeterministicEncryption: !isEmpty(process.env.SESSION_ATTACH_DETERMINISTIC_ENCRYPTION),
   disableOnionRequests: false,
   disableImageProcessor: !isEmpty(process.env.SESSION_DISABLE_IMAGE_PROCESSOR),
+  disableLocalAttachmentEncryption: !isEmpty(
+    process.env.SESSION_DISABLE_LOCAL_ATTACHMENT_ENCRYPTION
+  ),
   useTestNet: isTestNet() || isTestIntegration(),
   debugInputCommands: !isEmpty(process.env.SESSION_DEBUG),
   alwaysShowRemainingChars: false,
@@ -39,13 +41,33 @@ export const defaultBooleanFeatureFlags = {
   debugBuiltSnodeRequests: !isEmpty(process.env.SESSION_DEBUG_BUILT_SNODE_REQUEST),
   debugSwarmPolling: !isEmpty(process.env.SESSION_DEBUG_SWARM_POLLING),
   debugServerRequests: !isEmpty(process.env.SESSION_DEBUG_SERVER_REQUESTS),
-  debugNonSnodeRequests: false,
+  debugNonSnodeRequests: !isEmpty(process.env.SESSION_DEBUG_NON_SNODE_REQUESTS),
   debugOnionRequests: false,
   debugOnionPaths: !isEmpty(process.env.SESSION_DEBUG_ONION_PATHS),
   debugSnodePool: !isEmpty(process.env.SESSION_DEBUG_SNODE_POOL),
   debugInsecureNodeFetch: !isEmpty(process.env.SESSION_DEBUG_INSECURE_NODE_FETCH),
   debugOnlineState: !isEmpty(process.env.SESSION_DEBUG_ONLINE_STATE),
+  debugForceSeedNodeFailure: !isEmpty(process.env.SESSION_DEBUG_FORCE_SEED_NODE_FAILURE),
 } satisfies SessionBooleanFeatureFlags;
+
+function getMockNetworkPageNodeCount() {
+  try {
+    const envVar = process.env.SESSION_MOCK_NETWORK_PAGE_NODE_COUNT;
+    if (!envVar) {
+      return null;
+    }
+    const num = Number.parseInt(envVar, 10);
+    if (Number.isFinite(num) && num > 0 && num < 11) {
+      return num;
+    }
+    throw new Error(`Value is invalid for mock node count: ${num}`);
+  } catch (e) {
+    window.log.error('getMockNetworkPageNodeCount:', e);
+    return null;
+  }
+}
+
+export const defaultAvatarPickerColor = '#0000ff'; // defaults to blue
 
 export const defaultProDataFeatureFlags = {
   mockMessageProFeatures: null,
@@ -57,6 +79,8 @@ export const defaultProDataFeatureFlags = {
   mockProPinnedConversations: null,
   mockProBadgesSent: null,
   mockProGroupsUpgraded: null,
+  mockNetworkPageNodeCount: getMockNetworkPageNodeCount(),
+  fakeAvatarPickerColor: defaultAvatarPickerColor,
 } as const;
 
 export const defaultDataFeatureFlags = {

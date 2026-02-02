@@ -19,13 +19,13 @@ import {
   reducer as stagedAttachments,
   StagedAttachmentsStateType,
 } from './ducks/stagedAttachments';
-import { userConfigReducer as userConfig, UserConfigState } from './ducks/userConfig';
 import { userGroupReducer, UserGroupState } from './ducks/userGroups';
 import releasedFeaturesReducer, { type ReleasedFeaturesState } from './ducks/releasedFeatures';
 import { debugReducer, type DebugState } from './ducks/debug';
 import networkModalReducer, { type NetworkModalState } from './ducks/networkModal';
 import networkDataReducer, { type NetworkDataState } from './ducks/networkData';
 import proBackendDataReducer, { ProBackendDataState } from './ducks/proBackendData';
+import announcementsReducer, { AnnouncementsState } from './ducks/announcements';
 
 export type StateType = {
   search: SearchStateType;
@@ -37,7 +37,6 @@ export type StateType = {
   defaultRooms: DefaultRoomsState;
   onionPaths: OnionState;
   modals: ModalState;
-  userConfig: UserConfigState;
   stagedAttachments: StagedAttachmentsStateType;
   call: CallStateType;
   sogsRoomInfo: SogsRoomInfoState;
@@ -49,6 +48,7 @@ export type StateType = {
   networkModal: NetworkModalState;
   networkData: NetworkDataState;
   proBackendData: ProBackendDataState;
+  announcements: AnnouncementsState;
 };
 
 const reducers = {
@@ -61,7 +61,6 @@ const reducers = {
   defaultRooms,
   onionPaths,
   modals,
-  userConfig,
   stagedAttachments,
   call,
   sogsRoomInfo: ReduxSogsRoomInfos.sogsRoomInfoReducer,
@@ -73,8 +72,11 @@ const reducers = {
   networkModal: networkModalReducer,
   networkData: networkDataReducer,
   proBackendData: proBackendDataReducer,
+  announcements: announcementsReducer,
 };
 
 // Making this work would require that our reducer signature supported AnyAction, not
 //   our restricted actions
 export const rootReducer = combineReducers(reducers);
+
+export type RootState = ReturnType<typeof rootReducer>;

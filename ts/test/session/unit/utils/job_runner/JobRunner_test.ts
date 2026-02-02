@@ -10,7 +10,10 @@ import {
 } from '../../../../../session/utils/job_runners/PersistedJob';
 import { TestUtils } from '../../../../test-utils';
 import { stubData } from '../../../../test-utils/utils';
-import { FakeSleepForJob, FakeSleepForMultiJob } from './FakeSleepForJob';
+import {
+  FakeSleepForJob,
+  FakeSleepForMultiJob,
+} from '../../../../../session/utils/job_runners/jobs/FakeSleepForJob';
 
 function getFakeSleepForJob(timestamp: number): FakeSleepForJob {
   const job = new FakeSleepForJob({

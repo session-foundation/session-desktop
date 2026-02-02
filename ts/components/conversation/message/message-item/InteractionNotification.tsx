@@ -49,8 +49,6 @@ export const InteractionNotification = (props: WithMessageId) => {
   let text = '';
 
   switch (interactionType) {
-    case ConversationInteractionType.Hide:
-      return null;
     case ConversationInteractionType.Leave:
       text = isCommunity
         ? tr('communityLeaveError', {
@@ -86,7 +84,7 @@ export const InteractionNotification = (props: WithMessageId) => {
         $flexDirection="row"
         $alignItems="center"
         $justifyContent="center"
-        margin={'var(--margins-md) var(--margins-sm)'}
+        $margin={'var(--margins-md) var(--margins-sm)'}
         data-testid="control-message"
       >
         <StyledFailText>{text}</StyledFailText>

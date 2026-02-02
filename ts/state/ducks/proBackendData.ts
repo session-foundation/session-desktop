@@ -11,12 +11,16 @@ import { showLinkVisitWarningDialog } from '../../components/dialog/OpenUrlModal
 import { ProStatus } from '../../session/apis/pro_backend_api/types';
 import { SettingsKey } from '../../data/settings-key';
 import { ProDetailsResultType } from '../../session/apis/pro_backend_api/schemas';
-import { UserConfigWrapperActions } from '../../webworker/workers/browser/libsession_worker_interface';
 import { Storage } from '../../util/storage';
 import { NetworkTime } from '../../util/NetworkTime';
 import { assertUnreachable } from '../../types/sqlSharedTypes';
 import { DURATION } from '../../session/constants';
 import { SessionBackendBaseResponseType } from '../../session/apis/session_backend_server';
+import {
+  getCachedUserConfig,
+  UserConfigWrapperActions,
+} from '../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
+import { ConvoHub } from '../../session/conversations';
 
 type RequestState<D = unknown> = {
   isFetching: boolean;
@@ -182,12 +186,18 @@ async function handleNewProProof(rotatingPrivKeyHex: string): Promise<ProProof |
   if (response?.status_code === 200) {
     const proProof = {
       expiryMs: response.result.expiry_unix_ts_ms,
-      genIndexHashB64: response.result.gen_index_hash,
-      rotatingPubkeyHex: response.result.rotating_pkey,
+      genIndexHashB64: response.result.gen_index_hash_b64,
+      rotatingPubkeyHex: response.result.rotating_pkey_hex,
       version: response.result.version,
-      signatureHex: response.result.sig,
+      signatureHex: response.result.sig_hex,
     } satisfies ProProof;
+    const { proConfig, proAccessExpiry, proProfileBitset } = getCachedUserConfig();
+    // If we have a new proof but it seems that we never had one before, set the pro badge feature as enabled
+    if (!proConfig && !proAccessExpiry && !proProfileBitset) {
+      await UserConfigWrapperActions.setProBadge(true);
+    }
     await UserConfigWrapperActions.setProConfig({ proProof, rotatingPrivKeyHex });
+
     return proProof;
   }
   window?.log?.error('failed to get new pro proof: ', response);
@@ -196,7 +206,7 @@ async function handleNewProProof(rotatingPrivKeyHex: string): Promise<ProProof |
 
 async function handleClearProProof() {
   await UserConfigWrapperActions.removeProConfig();
-  // TODO: remove access expiry timestamp from synced user config
+  await UserConfigWrapperActions.setProAccessExpiry(null);
 }
 
 async function handleExpiryCTAs(
@@ -258,43 +268,55 @@ function scheduleRefresh(timestampMs: number) {
   }, delay);
 }
 
+async function fetchNewProof(rotatingPrivKeyHex: string) {
+  try {
+    const newProof = await handleNewProProof(rotatingPrivKeyHex);
+    if (newProof) {
+      return newProof.expiryMs;
+    }
+  } catch (e) {
+    window?.log?.error(e);
+  }
+  return null;
+}
+
 async function handleProProof(accessExpiryTsMs: number, autoRenewing: boolean, status: ProStatus) {
   if (status !== ProStatus.Active) {
     return;
   }
 
-  const proConfig = await UserConfigWrapperActions.getProConfig();
+  const proConfig = getCachedUserConfig().proConfig;
 
-  // TODO: if the user config access expiry timestamp is different, set it and sync the user config
+  const rotatingPrivKeyHex =
+    proConfig?.rotatingPrivKeyHex ?? (await UserUtils.getProRotatingPrivateKeyHex());
 
-  let proofExpiry: number | null = null;
+  const cachedProofExpiry = proConfig?.proProof.expiryMs;
 
-  if (!proConfig || !proConfig.proProof) {
-    try {
-      const rotatingPrivKeyHex = await UserUtils.getProRotatingPrivateKeyHex();
-      const newProof = await handleNewProProof(rotatingPrivKeyHex);
-      if (newProof) {
-        proofExpiry = newProof.expiryMs;
-      }
-    } catch (e) {
-      window?.log?.error(e);
+  // We want to fetch a new pro proof when:
+  // 1. we don't have one yet
+  // 2. we have one that has already expired
+  // 3. we have one that is expiring soon (within the next 60 minutes)
+  const now = NetworkTime.now();
+  let refreshedProofExpiry: number | null = null;
+
+  const shouldRefreshNoProProof = !proConfig || !proConfig.proProof; // case 1: we don't have a pro proof yet
+  const shouldRefreshProofExpired = proConfig && proConfig.proProof.expiryMs < now; // case 2: we have a pro proof that has expired
+  const shouldRefreshProofExpiresSoon = // case 3: we have a pro proof that is expiring soon
+    proConfig &&
+    proConfig.proProof.expiryMs < now + DURATION.HOURS && // the cached proof expires in the next 60 minutes
+    accessExpiryTsMs > now + DURATION.HOURS && // the access expiry expires in more than 60 minutes
+    autoRenewing;
+
+  if (shouldRefreshNoProProof || shouldRefreshProofExpired || shouldRefreshProofExpiresSoon) {
+    refreshedProofExpiry = await fetchNewProof(rotatingPrivKeyHex);
+    if (refreshedProofExpiry) {
+      await UserConfigWrapperActions.setProAccessExpiry(refreshedProofExpiry);
     }
-  } else {
-    proofExpiry = proConfig.proProof.expiryMs;
-    const sixtyMinutesBeforeAccessExpiry = accessExpiryTsMs - DURATION.HOURS;
-    const sixtyMinutesBeforeProofExpiry = proConfig.proProof.expiryMs - DURATION.HOURS;
-    const now = NetworkTime.now();
-    if (
-      sixtyMinutesBeforeProofExpiry < now &&
-      now < sixtyMinutesBeforeAccessExpiry &&
-      autoRenewing
-    ) {
-      const rotatingPrivKeyHex = proConfig.rotatingPrivKeyHex;
-      const newProof = await handleNewProProof(rotatingPrivKeyHex);
-      if (newProof) {
-        proofExpiry = newProof.expiryMs;
-      }
-    }
+  }
+
+  // fallback to the cached expiry if we didn't get a new one
+  if (!refreshedProofExpiry) {
+    refreshedProofExpiry = cachedProofExpiry ?? null;
   }
 
   const accessExpiryRefreshTimestamp = accessExpiryTsMs + 30 * DURATION.SECONDS;
@@ -307,16 +329,16 @@ async function handleProProof(accessExpiryTsMs: number, autoRenewing: boolean, s
   }
 
   if (
-    proofExpiry &&
-    (!scheduledProofExpiryTaskTimestamp || proofExpiry !== lastKnownProofExpiryTimestamp)
+    refreshedProofExpiry &&
+    (!scheduledProofExpiryTaskTimestamp || refreshedProofExpiry !== lastKnownProofExpiryTimestamp)
   ) {
     if (scheduledProofExpiryTaskId) {
       clearTimeout(scheduledProofExpiryTaskId);
     }
     // Random number of minutes between 10 and 60
     const minutes = Math.floor(Math.random() * 51) + 10;
-    lastKnownProofExpiryTimestamp = proofExpiry;
-    scheduledProofExpiryTaskTimestamp = proofExpiry - minutes * DURATION.MINUTES;
+    lastKnownProofExpiryTimestamp = refreshedProofExpiry;
+    scheduledProofExpiryTaskTimestamp = refreshedProofExpiry - minutes * DURATION.MINUTES;
     scheduledProofExpiryTaskId = scheduleRefresh(scheduledProofExpiryTaskTimestamp);
   }
 }
@@ -340,6 +362,7 @@ const fetchGetProDetailsFromProBackend = createAsyncThunk(
           }
           switch (state.data.status) {
             case ProStatus.Active:
+              window.log.debug(`[handleBackendProStatusChange] ProStatus.Active`);
               await handleProProof(
                 state.data.expiry_unix_ts_ms,
                 state.data.auto_renewing,
@@ -348,10 +371,13 @@ const fetchGetProDetailsFromProBackend = createAsyncThunk(
               break;
 
             case ProStatus.NeverBeenPro:
+              window.log.debug(`[handleBackendProStatusChange] ProStatus.NeverBeenPro`);
               await handleClearProProof();
               break;
 
             case ProStatus.Expired:
+              window.log.debug(`[handleBackendProStatusChange] ProStatus.Expired`);
+
               await handleClearProProof();
               break;
 
@@ -369,6 +395,8 @@ const fetchGetProDetailsFromProBackend = createAsyncThunk(
         if (state.data) {
           await putProDetailsInStorage(state.data);
         }
+        // trigger a UI refresh so our state and Pro rights are up to date without a restart (animated image should stop animating)
+        ConvoHub.use().get(UserUtils.getOurPubKeyStrFromCache())?.triggerUIRefresh();
         return state;
       },
       contextHandler: async state => {

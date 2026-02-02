@@ -40,14 +40,14 @@ const highlightedMessageAnimation = keyframes`
 
 const StyledReadableMessage = styled.div<{
   selected: boolean;
-  isDetailView: boolean;
-  isRightClicked: boolean;
+  $isDetailView: boolean;
+  $isRightClicked: boolean;
 }>`
   display: flex;
   align-items: center;
   width: 100%;
   letter-spacing: 0.03rem;
-  padding: ${props => (props.isDetailView ? '0' : 'var(--margins-xs) var(--margins-lg) 0')};
+  padding: ${props => (props.$isDetailView ? '0' : 'var(--margins-xs) var(--margins-lg) 0')};
 
   &.message-highlighted {
     animation: ${highlightedMessageAnimation} var(--duration-message-highlight) ease-in-out;
@@ -59,7 +59,7 @@ const StyledReadableMessage = styled.div<{
 
   ${props =>
     !props.selected &&
-    props.isRightClicked &&
+    props.$isRightClicked &&
     `background-color: var(--conversation-tab-background-selected-color);`}
 `;
 
@@ -142,8 +142,8 @@ export const GenericReadableMessage = (props: Props) => {
   return (
     <StyledReadableMessage
       selected={selected}
-      isDetailView={isDetailView}
-      isRightClicked={isRightClicked}
+      $isDetailView={isDetailView}
+      $isRightClicked={isRightClicked}
       className={clsx(selected ? 'message-selected' : undefined)}
       onContextMenu={handleContextMenu}
       key={`readable-message-${messageId}`}

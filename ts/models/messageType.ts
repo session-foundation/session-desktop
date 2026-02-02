@@ -15,6 +15,7 @@ import {
   InteractionNotificationType,
 } from '../state/ducks/types';
 import type { SignalService } from '../protobuf';
+import type { Quote } from '../session/messages/outgoing/visibleMessage/VisibleMessage';
 
 export type MessageModelType = 'incoming' | 'outgoing';
 
@@ -27,9 +28,13 @@ type SharedMessageAttributes = {
    */
   source: string;
   /**
-   * the quoted details
+   * The quoted message. We only need a timestamp to find the corresponding message in the DB.
+   * - We already know it is in the current conversation
+   * - We assume there are no two messages timestamps to the millisecond from the same (or different) author in the same conversation.
+   *
+   * But because, a quoted reference not found should still display the author, we also need keep the author here. We just don't use it for lookup
    */
-  quote?: any;
+  quote?: Quote;
   received_at?: number;
   sent_at?: number;
   /**
@@ -119,9 +124,9 @@ type NotSharedMessageAttributes = {
   expirationStartTimestamp: number;
   read_by: Array<string>; // we actually only care about the length of this. values are not used for anything
 
-  hasAttachments: 1 | 0;
-  hasFileAttachments: 1 | 0;
-  hasVisualMediaAttachments: 1 | 0;
+  hasAttachments?: 1 | 0;
+  hasFileAttachments?: 1 | 0;
+  hasVisualMediaAttachments?: 1 | 0;
   /**
    * 1 means unread, 0 or anything else is read.
    * You can use the values from READ_MESSAGE_STATE.unread and READ_MESSAGE_STATE.read

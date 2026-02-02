@@ -17,14 +17,12 @@ import {
   PubkeyType,
   Uint8ArrayLen100,
   Uint8ArrayLen64,
-  UserConfigWrapperActionsCalls,
   UserGroupsGet,
   UserGroupsSet,
   UserGroupsWrapperActionsCalls,
   EncryptionDomain,
   type ConfirmPush,
   type UtilitiesWrapperActionsCalls,
-  type ProConfig,
   type ProActionsCalls,
 } from 'libsession_util_nodejs';
 // eslint-disable-next-line import/order
@@ -35,6 +33,7 @@ import { userGroupsActions } from '../../../state/ducks/userGroups';
 import { WorkerInterface } from '../../worker_interface';
 import { ConfigWrapperUser, LibSessionWorkerFunctions } from './libsession_worker_functions';
 import { makeUserGroupGetRedux } from '../../../state/ducks/types/groupReduxTypes';
+import { createUserBaseActionsFor } from './libsession/user_base_actions';
 
 let libsessionWorkerInterface: WorkerInterface | undefined;
 
@@ -126,133 +125,9 @@ export const UserGenericWrapperActions: UserGenericWrapperActionsCalls = {
     >,
 };
 
-function createBaseActionsFor(wrapperType: ConfigWrapperUser) {
-  return {
-    /* Reuse the UserConfigWrapperActions with the UserConfig argument */
-    init: async (ed25519Key: Uint8Array, dump: Uint8Array | null) =>
-      UserGenericWrapperActions.init(wrapperType, ed25519Key, dump),
-    free: async () => UserGenericWrapperActions.free(wrapperType),
-    confirmPushed: async (pushed: ConfirmPush) =>
-      UserGenericWrapperActions.confirmPushed(wrapperType, pushed),
-    dump: async () => UserGenericWrapperActions.dump(wrapperType),
-    makeDump: async () => UserGenericWrapperActions.makeDump(wrapperType),
-    needsDump: async () => UserGenericWrapperActions.needsDump(wrapperType),
-    needsPush: async () => UserGenericWrapperActions.needsPush(wrapperType),
-    push: async () => UserGenericWrapperActions.push(wrapperType),
-    activeHashes: async () => UserGenericWrapperActions.activeHashes(wrapperType),
-    merge: async (toMerge: Array<MergeSingle>) =>
-      UserGenericWrapperActions.merge(wrapperType, toMerge),
-    storageNamespace: async () => UserGenericWrapperActions.storageNamespace(wrapperType),
-  };
-}
-
-export const UserConfigWrapperActions: UserConfigWrapperActionsCalls = {
-  /* Reuse the UserConfigWrapperActions with the UserConfig argument */
-  ...createBaseActionsFor('UserConfig'),
-
-  /** UserConfig wrapper specific actions */
-  getPriority: async () =>
-    callLibSessionWorker(['UserConfig', 'getPriority']) as Promise<
-      ReturnType<UserConfigWrapperActionsCalls['getPriority']>
-    >,
-  getName: async () =>
-    callLibSessionWorker(['UserConfig', 'getName']) as Promise<
-      ReturnType<UserConfigWrapperActionsCalls['getName']>
-    >,
-  getProfilePic: async () =>
-    callLibSessionWorker(['UserConfig', 'getProfilePic']) as Promise<
-      ReturnType<UserConfigWrapperActionsCalls['getProfilePic']>
-    >,
-  setPriority: async (priority: number) =>
-    callLibSessionWorker(['UserConfig', 'setPriority', priority]) as Promise<
-      ReturnType<UserConfigWrapperActionsCalls['setPriority']>
-    >,
-  setName: async (name: string) =>
-    callLibSessionWorker(['UserConfig', 'setName', name]) as Promise<
-      ReturnType<UserConfigWrapperActionsCalls['setName']>
-    >,
-  setNameTruncated: async (name: string) =>
-    callLibSessionWorker(['UserConfig', 'setNameTruncated', name]) as Promise<
-      ReturnType<UserConfigWrapperActionsCalls['setNameTruncated']>
-    >,
-  setNewProfilePic: async (profilePic: ProfilePicture) =>
-    callLibSessionWorker(['UserConfig', 'setNewProfilePic', profilePic]) as Promise<
-      ReturnType<UserConfigWrapperActionsCalls['setNewProfilePic']>
-    >,
-  setReuploadProfilePic: async (profilePic: ProfilePicture) =>
-    callLibSessionWorker(['UserConfig', 'setReuploadProfilePic', profilePic]) as Promise<
-      ReturnType<UserConfigWrapperActionsCalls['setReuploadProfilePic']>
-    >,
-  getProfileUpdatedSeconds: async () =>
-    callLibSessionWorker(['UserConfig', 'getProfileUpdatedSeconds']) as Promise<
-      ReturnType<UserConfigWrapperActionsCalls['getProfileUpdatedSeconds']>
-    >,
-  getEnableBlindedMsgRequest: async () =>
-    callLibSessionWorker(['UserConfig', 'getEnableBlindedMsgRequest']) as Promise<
-      ReturnType<UserConfigWrapperActionsCalls['getEnableBlindedMsgRequest']>
-    >,
-  setEnableBlindedMsgRequest: async (blindedMsgRequests: boolean) =>
-    callLibSessionWorker([
-      'UserConfig',
-      'setEnableBlindedMsgRequest',
-      blindedMsgRequests,
-    ]) as Promise<ReturnType<UserConfigWrapperActionsCalls['setEnableBlindedMsgRequest']>>,
-  getNoteToSelfExpiry: async () =>
-    callLibSessionWorker(['UserConfig', 'getNoteToSelfExpiry']) as Promise<
-      ReturnType<UserConfigWrapperActionsCalls['getNoteToSelfExpiry']>
-    >,
-  setNoteToSelfExpiry: async (expirySeconds: number) =>
-    callLibSessionWorker(['UserConfig', 'setNoteToSelfExpiry', expirySeconds]) as Promise<
-      ReturnType<UserConfigWrapperActionsCalls['setNoteToSelfExpiry']>
-    >,
-
-  getProConfig: async () =>
-    callLibSessionWorker(['UserConfig', 'getProConfig']) as Promise<
-      ReturnType<UserConfigWrapperActionsCalls['getProConfig']>
-    >,
-  setProConfig: async (proConfig: ProConfig) =>
-    callLibSessionWorker(['UserConfig', 'setProConfig', proConfig]) as Promise<
-      ReturnType<UserConfigWrapperActionsCalls['setProConfig']>
-    >,
-  removeProConfig: async () =>
-    callLibSessionWorker(['UserConfig', 'removeProConfig']) as Promise<
-      ReturnType<UserConfigWrapperActionsCalls['removeProConfig']>
-    >,
-
-  getProProfileBitset: async (
-    ...args: Parameters<UserConfigWrapperActionsCalls['getProProfileBitset']>
-  ) =>
-    callLibSessionWorker(['UserConfig', 'getProProfileBitset', ...args]) as Promise<
-      ReturnType<UserConfigWrapperActionsCalls['getProProfileBitset']>
-    >,
-  setProBadge: async (...args: Parameters<UserConfigWrapperActionsCalls['setProBadge']>) =>
-    callLibSessionWorker(['UserConfig', 'setProBadge', ...args]) as Promise<
-      ReturnType<UserConfigWrapperActionsCalls['setProBadge']>
-    >,
-  setAnimatedAvatar: async (
-    ...args: Parameters<UserConfigWrapperActionsCalls['setAnimatedAvatar']>
-  ) =>
-    callLibSessionWorker(['UserConfig', 'setAnimatedAvatar', ...args]) as Promise<
-      ReturnType<UserConfigWrapperActionsCalls['setAnimatedAvatar']>
-    >,
-
-  generateProMasterKey: async (
-    ...args: Parameters<UserConfigWrapperActionsCalls['generateProMasterKey']>
-  ) =>
-    callLibSessionWorker(['UserConfig', 'generateProMasterKey', ...args]) as Promise<
-      ReturnType<UserConfigWrapperActionsCalls['generateProMasterKey']>
-    >,
-  generateRotatingPrivKeyHex: async (
-    ...args: Parameters<UserConfigWrapperActionsCalls['generateRotatingPrivKeyHex']>
-  ) =>
-    callLibSessionWorker(['UserConfig', 'generateRotatingPrivKeyHex', ...args]) as Promise<
-      ReturnType<UserConfigWrapperActionsCalls['generateRotatingPrivKeyHex']>
-    >,
-};
-
 export const ContactsWrapperActions: ContactsWrapperActionsCalls = {
   /* Reuse the UserConfigWrapperActions with the ContactConfig argument */
-  ...createBaseActionsFor('ContactsConfig'),
+  ...createUserBaseActionsFor('ContactsConfig', null),
 
   /** ContactsConfig wrapper specific actions */
   get: async (pubkeyHex: string) =>
@@ -309,7 +184,7 @@ export const UserGroupsWrapperActions: UserGroupsWrapperActionsCalls & {
   getCachedGroup: (pubkeyHex: GroupPubkeyType) => UserGroupsGet | undefined;
 } = {
   /* Reuse the UserConfigWrapperActions with the UserGroupsConfig argument */
-  ...createBaseActionsFor('UserGroupsConfig'),
+  ...createUserBaseActionsFor('UserGroupsConfig', null),
   // override the merge() as we need to refresh the cached groups
   merge: async (toMerge: Array<MergeSingle>) => {
     const mergeRet = await UserGenericWrapperActions.merge('UserGroupsConfig', toMerge);
@@ -482,7 +357,7 @@ export const UserGroupsWrapperActions: UserGroupsWrapperActionsCalls & {
 
 export const ConvoInfoVolatileWrapperActions: ConvoInfoVolatileWrapperActionsCalls = {
   /* Reuse the UserConfigWrapperActions with the ConvoInfoVolatileConfig argument */
-  ...createBaseActionsFor('ConvoInfoVolatileConfig'),
+  ...createUserBaseActionsFor('ConvoInfoVolatileConfig', null),
 
   /** ConvoInfoVolatile wrapper specific actions */
   // 1o1
@@ -496,14 +371,10 @@ export const ConvoInfoVolatileWrapperActions: ConvoInfoVolatileWrapperActionsCal
       ReturnType<ConvoInfoVolatileWrapperActionsCalls['getAll1o1']>
     >,
 
-  set1o1: async (pubkeyHex: string, lastRead: number, unread: boolean) =>
-    callLibSessionWorker([
-      'ConvoInfoVolatileConfig',
-      'set1o1',
-      pubkeyHex,
-      lastRead,
-      unread,
-    ]) as Promise<ReturnType<ConvoInfoVolatileWrapperActionsCalls['set1o1']>>,
+  set1o1: async (...args: Parameters<ConvoInfoVolatileWrapperActionsCalls['set1o1']>) =>
+    callLibSessionWorker(['ConvoInfoVolatileConfig', 'set1o1', ...args]) as Promise<
+      ReturnType<ConvoInfoVolatileWrapperActionsCalls['set1o1']>
+    >,
 
   erase1o1: async (pubkeyHex: string) =>
     callLibSessionWorker(['ConvoInfoVolatileConfig', 'erase1o1', pubkeyHex]) as Promise<
@@ -521,14 +392,12 @@ export const ConvoInfoVolatileWrapperActions: ConvoInfoVolatileWrapperActionsCal
       ReturnType<ConvoInfoVolatileWrapperActionsCalls['getAllLegacyGroups']>
     >,
 
-  setLegacyGroup: async (pubkeyHex: string, lastRead: number, unread: boolean) =>
-    callLibSessionWorker([
-      'ConvoInfoVolatileConfig',
-      'setLegacyGroup',
-      pubkeyHex,
-      lastRead,
-      unread,
-    ]) as Promise<ReturnType<ConvoInfoVolatileWrapperActionsCalls['setLegacyGroup']>>,
+  setLegacyGroup: async (
+    ...args: Parameters<ConvoInfoVolatileWrapperActionsCalls['setLegacyGroup']>
+  ) =>
+    callLibSessionWorker(['ConvoInfoVolatileConfig', 'setLegacyGroup', ...args]) as Promise<
+      ReturnType<ConvoInfoVolatileWrapperActionsCalls['setLegacyGroup']>
+    >,
 
   eraseLegacyGroup: async (pubkeyHex: string) =>
     callLibSessionWorker(['ConvoInfoVolatileConfig', 'eraseLegacyGroup', pubkeyHex]) as Promise<
@@ -545,14 +414,10 @@ export const ConvoInfoVolatileWrapperActions: ConvoInfoVolatileWrapperActionsCal
       ReturnType<ConvoInfoVolatileWrapperActionsCalls['getAllGroups']>
     >,
 
-  setGroup: async (pubkeyHex: GroupPubkeyType, lastRead: number, unread: boolean) =>
-    callLibSessionWorker([
-      'ConvoInfoVolatileConfig',
-      'setGroup',
-      pubkeyHex,
-      lastRead,
-      unread,
-    ]) as Promise<ReturnType<ConvoInfoVolatileWrapperActionsCalls['setGroup']>>,
+  setGroup: async (...args: Parameters<ConvoInfoVolatileWrapperActionsCalls['setGroup']>) =>
+    callLibSessionWorker(['ConvoInfoVolatileConfig', 'setGroup', ...args]) as Promise<
+      ReturnType<ConvoInfoVolatileWrapperActionsCalls['setGroup']>
+    >,
 
   eraseGroup: async (pubkeyHex: GroupPubkeyType) =>
     callLibSessionWorker(['ConvoInfoVolatileConfig', 'eraseGroup', pubkeyHex]) as Promise<
@@ -570,14 +435,12 @@ export const ConvoInfoVolatileWrapperActions: ConvoInfoVolatileWrapperActionsCal
       ReturnType<ConvoInfoVolatileWrapperActionsCalls['getAllCommunities']>
     >,
 
-  setCommunityByFullUrl: async (fullUrlWithPubkey: string, lastRead: number, unread: boolean) =>
-    callLibSessionWorker([
-      'ConvoInfoVolatileConfig',
-      'setCommunityByFullUrl',
-      fullUrlWithPubkey,
-      lastRead,
-      unread,
-    ]) as Promise<ReturnType<ConvoInfoVolatileWrapperActionsCalls['setCommunityByFullUrl']>>,
+  setCommunityByFullUrl: async (
+    ...args: Parameters<ConvoInfoVolatileWrapperActionsCalls['setCommunityByFullUrl']>
+  ) =>
+    callLibSessionWorker(['ConvoInfoVolatileConfig', 'setCommunityByFullUrl', ...args]) as Promise<
+      ReturnType<ConvoInfoVolatileWrapperActionsCalls['setCommunityByFullUrl']>
+    >,
 
   eraseCommunityByFullUrl: async (fullUrlWithOrWithoutPubkey: string) =>
     callLibSessionWorker([

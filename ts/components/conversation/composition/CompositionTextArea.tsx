@@ -1,3 +1,7 @@
+// NOTE: [react-compiler] we are telling the compiler to not attempt to compile this
+// file in the babel config as it is highly complex and has a lot of very fine tuned
+// callbacks, its probably not worth trying to refactor at this stage
+
 import {
   type KeyboardEventHandler,
   type KeyboardEvent,
@@ -49,8 +53,8 @@ type Props = {
   initialDraft: string;
   draft: string;
   setDraft: (draft: string) => void;
-  container: RefObject<HTMLDivElement>;
-  inputRef: RefObject<CompositionInputRef>;
+  container: RefObject<HTMLDivElement | null>;
+  inputRef: RefObject<CompositionInputRef | null>;
   typingEnabled: boolean;
   onKeyDown: KeyboardEventHandler<HTMLDivElement>;
 };
@@ -84,12 +88,12 @@ function useMembersInThisChat(): Array<SearchableSuggestion> {
     const model = convo.get(id);
     const searchable: Array<string> = [id];
 
-    const nickname = model.getNicknameOrRealUsernameOrPlaceholder();
+    const nickname = model?.getNicknameOrRealUsernameOrPlaceholder();
     if (nickname) {
       searchable.push(nickname.toLowerCase());
     }
 
-    const username = model.getRealSessionUsername();
+    const username = model?.getRealSessionUsername();
     if (username && username !== nickname) {
       searchable.push(username.toLowerCase());
     }
@@ -142,6 +146,7 @@ function findValidMention(val: string, cursorPosition: number, prefix: PREFIX) {
   return {
     content,
     prefix,
+    pos,
   };
 }
 
@@ -164,6 +169,11 @@ function getMentionDetails(
 
   const emojiMention = findValidMention(searchableVal, cursorPosition, PREFIX.EMOJI);
   if (emojiMention) {
+    // NOTE: this prevents the emoji list from appearing if the user is typing a url
+    const potentialUrlProtocol = val.slice(Math.max(0, emojiMention.pos - 5), emojiMention.pos);
+    if (potentialUrlProtocol === 'https' || potentialUrlProtocol.endsWith('http')) {
+      return null;
+    }
     return emojiMention;
   }
 
@@ -218,7 +228,7 @@ function useHandleSelect({
 }: {
   focusedItem: SearchableSuggestion;
   handleMentionCleanup: () => void;
-  inputRef: RefObject<CompositionInputRef>;
+  inputRef: RefObject<CompositionInputRef | null>;
   mention: MentionDetails | null;
   results: Array<SearchableSuggestion>;
   setDraft: Dispatch<string>;
@@ -263,13 +273,14 @@ function usePopoverContent({
       return null;
     }
     return (
-      <ul role="listbox">
+      <ul role="listbox" data-testid="mentions-container">
         {results.map(item => {
           const { id, display } = item;
           const selected = focusedItem.id === id;
           return (
             <li
               role="option"
+              data-testid="mentions-container-row"
               id={id}
               key={id}
               value={id}
@@ -326,7 +337,7 @@ function useHandleKeyDown({
   handleMentionCheck: (content: string, htmlIndex?: number | null) => void;
   handleMentionCleanup: () => void;
   handleSelect: (item?: SessionSuggestionDataItem) => void;
-  inputRef: RefObject<CompositionInputRef>;
+  inputRef: RefObject<CompositionInputRef | null>;
   mention: MentionDetails | null;
   onKeyDown: KeyboardEventHandler<HTMLDivElement>;
   results: Array<SearchableSuggestion>;
@@ -432,7 +443,7 @@ function useHandleKeyUp({
   }, [draft, lastBumpTypingMessageLength, selectedConversationKey, setLastBumpTypingMessageLength]);
 }
 
-export const CompositionTextArea = (props: Props) => {
+export function CompositionTextArea(props: Props) {
   const { draft, initialDraft, setDraft, inputRef, typingEnabled, onKeyDown } = props;
 
   const [lastBumpTypingMessageLength, setLastBumpTypingMessageLength] = useState(0);
@@ -577,12 +588,14 @@ export const CompositionTextArea = (props: Props) => {
         disabled={!typingEnabled}
         autoFocus={true}
         ref={inputRef}
-        scrollbarPadding={140}
+        $scrollbarPadding={140}
         autoCorrect="off"
         aria-haspopup="listbox"
         aria-autocomplete="list"
         aria-label={messagePlaceHolder}
         data-testid="message-input-text-area"
+        // NOTE: we want to close any mentions when clicking within the input as clicking will invalidate the cursor position
+        onClick={handleMentionCleanup}
       />
       {showPopover ? (
         <SessionPopoverContent
@@ -599,4 +612,4 @@ export const CompositionTextArea = (props: Props) => {
       ) : null}
     </>
   );
-};
+}

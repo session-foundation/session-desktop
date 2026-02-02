@@ -12,7 +12,7 @@ import React, {
 } from 'react';
 import styled from 'styled-components';
 import { isUndefined } from 'lodash';
-import { useDebouncedSpellcheck } from '../../../hooks/useDebuncedSpellcheck';
+import { useDebouncedSpellcheck } from '../../../hooks/useDebouncedSpellcheck';
 import { useDebouncedSelectAllOnTripleClickHandler } from '../../../hooks/useDebouncedSelectAllOnTripleClickHandler';
 import { useHistory } from '../../../hooks/useHistory';
 
@@ -904,7 +904,7 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
 
 const CompositionInput = styled(UnstyledCompositionInput)<{
   placeholder?: string;
-  scrollbarPadding?: number;
+  $scrollbarPadding?: number;
 }>`
   height: 100%;
   width: 100%;
@@ -920,7 +920,7 @@ const CompositionInput = styled(UnstyledCompositionInput)<{
   max-height: 50vh;
   min-height: 28px;
   padding-top: 0;
-  padding-inline-end: ${props => props.scrollbarPadding ?? 0}px;
+  padding-inline-end: ${props => props.$scrollbarPadding ?? 0}px;
   padding-inline-start: 0.375em;
   padding-bottom: 0.25em;
   overflow-y: auto;

@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 140">
+  <!-- Connector lines -->
+  <path stroke="var(--c2)" stroke-width="2.5" fill="none" d="m124.51 49.99 2.19 44.75m-11.5-47.09-14.85 24.72M70.84 40.06l-25.25-4.67m34.99 43.9L61.54 74.1m11.43-25.3L58.22 63.99m-10.18 15.3L40.1 95.74m69.7-58.02-20.65 3.14m-49.91 3.79 8.8 18.03m40.35 8.41-5.64-19.64m34.64 48.95-12.93-9.33m-57.92 10.07 34.71-13.22"/>
+  <!-- Border -->
+  <rect stroke="var(--c1)" fill="none" width="158" height="138" x="1" y="1" rx="7.55"/>
+  <!-- Nodes -->
+  <g filter="url(#g)" stroke="var(--c1)" fill="var(--c1)">
+    <circle cx="93.55" cy="83.37" r="12.74" fill="none" stroke-width="2"/>
+    <circle cx="93.55" cy="83.37" r="10.45" stroke="none"/>
+
+    <circle cx="123.82" cy="35.35" r="14.51" fill="none" stroke-width="2"/>
+    <circle cx="123.82" cy="35.35" r="11.8" stroke="none"/>
+
+    <circle cx="52.39" cy="71.09" r="9.16" fill="none" stroke-width="1.5"/>
+    <circle cx="52.39" cy="71.09" r="7.38" stroke="none"/>
+
+    <circle cx="79.99" cy="42.3" r="9.16" fill="none" stroke-width="1.5"/>
+    <circle cx="79.99" cy="42.3" r="7.38" stroke="none"/>
+
+    <circle cx="33.06" cy="33.06" r="12.9" fill="none" stroke-width="1.5"/>
+    <circle cx="33.06" cy="33.06" r="10.87" stroke="none"/>
+
+    <circle cx="127.33" cy="105.47" r="10.86" fill="none" stroke-width="1.5"/>
+    <circle cx="127.33" cy="105.47" r="8.65" stroke="none"/>
+
+    <circle cx="35.94" cy="105.47" r="10.86" fill="none" stroke-width="1.5"/>
+    <circle cx="35.94" cy="105.47" r="8.65" stroke="none"/>
+  </g>
+  <defs>
+    <filter id="g" x="-100%" y="-100%" width="300%" height="300%" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="bg"/>
+      <feColorMatrix in="SourceAlpha" result="a" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"/>
+      <feMorphology in="SourceAlpha" operator="dilate" radius="3"/>
+      <feGaussianBlur stdDeviation="8.2"/>
+      <feComposite in2="a" operator="out"/>
+      <feColorMatrix values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.35 0"/>
+      <feBlend in2="bg" result="glow"/>
+      <feBlend in="SourceGraphic" in2="glow"/>
+    </filter>
+  </defs>
+</svg>

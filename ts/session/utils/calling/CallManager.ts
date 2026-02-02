@@ -547,7 +547,7 @@ export async function USER_callRecipient(recipient: string) {
 
   // Note: we do the sending of the preoffer manually as the sendTo1o1NonDurably rely on having a message saved to the db for MessageSentSuccess
   // which is not the case for a pre offer message (the message only exists in memory)
-  const rawPreOffer = await MessageUtils.toRawMessage(
+  const rawPreOffer = MessageUtils.toRawMessage(
     PubKey.cast(recipient),
     preOfferMsg,
     SnodeNamespaces.Default

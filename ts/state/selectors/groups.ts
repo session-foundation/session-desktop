@@ -16,29 +16,32 @@ import {
 
 const selectLibGroupsState = (state: StateType): GroupState => state.groups;
 
-const selectMembersOfGroup = createSelector(
-  [(state: StateType) => state, (_state: StateType, convo?: string) => convo],
-  (state: StateType, convo?: string) => {
-    if (!convo) {
-      return [];
-    }
-    if (!PubKey.is03Pubkey(convo)) {
-      return [];
-    }
+// NOTE: Stable empty array references are for redux reselect to memoize selectors
+const EMPTY_PUBKEYS_ARRAY: Array<PubkeyType> = [];
+const EMPTY_MEMBERS_ARRAY: Array<GroupMemberGetRedux> = [];
 
-    const members = selectLibGroupsState(state).members[convo];
-    return members || [];
+const selectMembersOfGroup = createSelector(
+  [(state: StateType) => state.groups.members, (_state: StateType, convo?: string) => convo],
+  (groupMembers, convo) => {
+    if (!convo || !PubKey.is03Pubkey(convo)) {
+      return EMPTY_MEMBERS_ARRAY;
+    }
+    return groupMembers[convo] || EMPTY_MEMBERS_ARRAY;
+  }
+);
+
+export const selectLibMembersPubkeys = createSelector(
+  [selectMembersOfGroup],
+  (members): Array<PubkeyType> => {
+    if (members.length === 0) {
+      return EMPTY_PUBKEYS_ARRAY;
+    }
+    return members.map(m => m.pubkeyHex);
   }
 );
 
 function findMemberInMembers(members: Array<GroupMemberGetRedux>, memberPk: string) {
   return members.find(m => m.pubkeyHex === memberPk);
-}
-
-export function selectLibMembersPubkeys(state: StateType, convo?: string): Array<PubkeyType> {
-  const members = selectMembersOfGroup(state, convo);
-
-  return members.map(m => m.pubkeyHex);
 }
 
 function selectIsCreatingGroupFromUI(state: StateType): boolean {
@@ -57,10 +60,16 @@ function selectGroupAvatarChangeFromUIPending(state: StateType): boolean {
   return selectLibGroupsState(state).avatarChangeFromUIPending;
 }
 
-export function selectLibAdminsPubkeys(state: StateType, convo?: string): Array<string> {
-  const members = selectMembersOfGroup(state, convo);
-  return members.filter(m => m.nominatedAdmin).map(m => m.pubkeyHex);
-}
+const EMPTY_ADMINS_ARRAY: Array<string> = [];
+export const selectLibAdminsPubkeys = createSelector(
+  [selectMembersOfGroup],
+  (members): Array<string> => {
+    if (members.length === 0) {
+      return EMPTY_ADMINS_ARRAY;
+    }
+    return members.filter(m => m.nominatedAdmin).map(m => m.pubkeyHex);
+  }
+);
 
 function selectMemberInviteFailed(state: StateType, pubkey: PubkeyType, convo?: GroupPubkeyType) {
   const members = selectMembersOfGroup(state, convo);
@@ -147,7 +156,7 @@ export function selectLibMembersCount(state: StateType, convo?: GroupPubkeyType)
   return selectLibMembersPubkeys(state, convo);
 }
 
-function selectLibGroupName(state: StateType, convo?: string): string | undefined {
+export function selectLibGroupName(state: StateType, convo?: string): string | undefined {
   if (!convo) {
     return undefined;
   }

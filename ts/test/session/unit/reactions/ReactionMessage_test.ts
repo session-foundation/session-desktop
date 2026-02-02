@@ -28,7 +28,7 @@ describe('ReactionMessage', () => {
   beforeEach(() => {
     Sinon.stub(originalMessage, 'getConversation').returns({
       hasReactions: () => true,
-      isPublic: () => false,
+      isOpenGroupV2: () => false,
       sendReaction: noop,
     } as any);
 

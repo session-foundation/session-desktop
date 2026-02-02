@@ -4,8 +4,8 @@ import styled from 'styled-components';
 
 import { motion } from 'framer-motion';
 import { isEmpty } from 'lodash';
-import { useDispatch } from 'react-redux';
 import { toASCII } from 'punycode';
+import { getAppDispatch } from '../../../state/dispatch';
 
 import { ConvoHub } from '../../../session/conversations';
 
@@ -23,7 +23,7 @@ import { SpacerLG, SpacerMD } from '../../basic/Text';
 import { HelpDeskButton } from '../../buttons';
 import { ConversationTypeEnum } from '../../../models/types';
 import { Localizer } from '../../basic/Localizer';
-import { SimpleSessionTextarea } from '../../inputs/SessionInput';
+import { SimpleSessionTextarea } from '../../inputs/SimpleSessionTextarea';
 import { tr } from '../../../localization/localeTools';
 
 const StyledDescriptionContainer = styled(motion.div)`
@@ -63,7 +63,7 @@ export const StyledLeftPaneOverlay = styled(Flex)`
 `;
 
 export const OverlayMessage = () => {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   function closeOverlay() {
     dispatch(sectionActions.resetLeftOverlayMode());
@@ -158,7 +158,7 @@ export const OverlayMessage = () => {
       $flexDirection={'column'}
       $flexGrow={1}
       $alignItems={'center'}
-      padding={'var(--margins-md)'}
+      $padding={'var(--margins-md)'}
     >
       <SimpleSessionTextarea
         ariaLabel="New conversation input"
@@ -176,7 +176,7 @@ export const OverlayMessage = () => {
         onEnterPressed={handleMessageButtonClick}
       />
       <SpacerMD />
-      <SessionSpinner loading={loading} />
+      <SessionSpinner $loading={loading} />
 
       {!pubkeyOrOnsError && !loading ? (
         <>

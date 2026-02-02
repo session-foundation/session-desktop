@@ -16,13 +16,10 @@ function formatInteractionNotification(
 
     if (convo) {
       const isGroup = !convo.isPrivate();
-      const isCommunity = convo.isPublic();
+      const isCommunity = convo.isOpenGroupV2();
       const conversationName = convo?.getRealSessionUsername() || tr('unknown');
 
       switch (interactionType) {
-        case ConversationInteractionType.Hide:
-          // there is no text for hiding changes
-          return '';
         case ConversationInteractionType.Leave:
           return isCommunity
             ? tr('communityLeaveError', { community_name: conversationName })

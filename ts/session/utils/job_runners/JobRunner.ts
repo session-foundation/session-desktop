@@ -335,7 +335,7 @@ export class PersistedJobRunner<T extends TypeOfPersistedData> {
           window.log.info(
             `${jobToLogId(this.jobRunnerType, nextJob)}:${
               nextJob.persistedData.currentRetry
-            } permament failure for job`
+            } permanent failure for job`
           );
         } else {
           window.log.info(

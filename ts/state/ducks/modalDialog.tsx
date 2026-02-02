@@ -14,7 +14,8 @@ import type {
 import { WithConvoId } from '../../session/types/with';
 import type { TrArgs } from '../../localization/localeTools';
 import { SessionButtonType } from '../../components/basic/SessionButton';
-import type { CTAVariant } from '../../components/dialog/cta/types';
+import { CTAVariant } from '../../components/dialog/cta/types';
+import { CTAInteraction, registerCtaInteraction } from '../../util/ctaHistory';
 
 export type BanType = 'ban' | 'unban';
 
@@ -350,6 +351,9 @@ const ModalSlice = createSlice({
       return pushOrPopModal(state, 'localizedPopupDialog', action.payload);
     },
     updateSessionCTA(state, action: PayloadAction<SessionCTAState>) {
+      if (action.payload?.variant) {
+        void registerCtaInteraction(action.payload.variant, CTAInteraction.OPEN);
+      }
       return pushOrPopModal(state, 'sessionProInfoModal', action.payload);
     },
     updateLightBoxOptions(state, action: PayloadAction<LightBoxOptions>) {

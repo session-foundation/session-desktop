@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
-import { useDispatch } from 'react-redux';
 import type { AnyAction, Dispatch } from 'redux';
 import styled from 'styled-components';
+import { getAppDispatch } from '../../state/dispatch';
 import { ToastUtils, UserUtils } from '../../session/utils';
 import {
   userSettingsModal,
@@ -29,12 +29,11 @@ import {
   ModalBasicHeader,
   SessionWrapperModal,
 } from '../SessionWrapperModal';
-import { useIsProAvailable } from '../../hooks/useIsProAvailable';
+import { getIsProAvailableMemo } from '../../hooks/useIsProAvailable';
 import { SpacerLG, SpacerSM } from '../basic/Text';
 import { AvatarSize } from '../avatar/Avatar';
 import { ProIconButton } from '../buttons/ProButton';
 import { useProBadgeOnClickCb } from '../menuAndSettingsHooks/useProBadgeOnClickCb';
-import { useUserHasPro } from '../../hooks/useHasPro';
 import { Localizer } from '../basic/Localizer';
 import { UploadFirstImageButton } from '../buttons/avatar/UploadFirstImageButton';
 import { Flex } from '../basic/Flex';
@@ -45,20 +44,21 @@ import {
   useUpdateConversationDetailsModal,
 } from '../../state/selectors/modal';
 import { CTAVariant } from './cta/types';
+import { useCurrentUserHasPro } from '../../hooks/useHasPro';
 
 const StyledAvatarContainer = styled.div`
   cursor: pointer;
   position: relative;
 `;
 
-const StyledCTADescription = styled.span<{ reverseDirection: boolean }>`
+const StyledCTADescription = styled.span<{ $reverseDirection: boolean }>`
   text-align: center;
   cursor: pointer;
   font-size: var(--font-size-lg);
   color: var(--text-secondary-color);
   line-height: normal;
   display: inline-flex;
-  flex-direction: ${props => (props.reverseDirection ? 'row-reverse' : 'row')};
+  flex-direction: ${props => (props.$reverseDirection ? 'row-reverse' : 'row')};
   align-items: center;
   gap: var(--margins-xs);
   padding: 3px;
@@ -134,12 +134,12 @@ const triggerRemovalProfileAvatar = async (conversationId: string) => {
 };
 
 export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureModalProps) => {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   const isMe = useIsMe(conversationId);
   const isCommunity = useIsPublic(conversationId);
-  const userHasPro = useUserHasPro(conversationId);
-  const isProAvailable = useIsProAvailable();
+  const weHavePro = useCurrentUserHasPro() && isMe;
+  const isProAvailable = getIsProAvailableMemo();
 
   const avatarPath = useAvatarPath(conversationId) || '';
 
@@ -177,7 +177,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
     context: 'edit-profile-pic',
     args: {
       cta: {
-        variant: userHasPro
+        variant: weHavePro
           ? CTAVariant.PRO_ANIMATED_DISPLAY_PICTURE_ACTIVATED
           : CTAVariant.PRO_ANIMATED_DISPLAY_PICTURE,
         afterActionButtonCallback,
@@ -228,7 +228,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
      * C. Community admin uploading a community profile picture
      * All of those are taken care of as part of the `isProUser` check in the conversation model
      */
-    if (isProAvailable && !userHasPro && isNewAvatarAnimated && !isCommunity) {
+    if (isProAvailable && !weHavePro && isNewAvatarAnimated && !isCommunity) {
       dispatch(
         updateSessionCTA({
           variant: CTAVariant.PRO_ANIMATED_DISPLAY_PICTURE,
@@ -312,9 +312,9 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
       $flexGap="var(--margins-sm)"
     >
       {isMe && proBadgeCb.cb ? (
-        <StyledCTADescription reverseDirection={userHasPro} onClick={proBadgeCb.cb}>
+        <StyledCTADescription $reverseDirection={weHavePro} onClick={proBadgeCb.cb}>
           {tr(
-            userHasPro
+            weHavePro
               ? 'proAnimatedDisplayPictureModalDescription'
               : 'proAnimatedDisplayPicturesNonProModalDescription'
           )}
@@ -363,7 +363,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
         <>
           <SpacerSM />
           {isMe && !isProcessing ? <Localizer token="updating" /> : null}
-          <SessionSpinner loading={loading} height="30px" />
+          <SessionSpinner $loading={loading} $height="30px" />
         </>
       ) : (
         <SpacerLG />

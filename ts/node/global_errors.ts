@@ -4,6 +4,7 @@ import { reallyJsonStringify } from '../util/reallyJsonStringify';
 import { Errors } from '../types/Errors';
 import { redactAll } from '../util/privacy';
 import { logCrash } from './crash/log_crash';
+import { sleepFor } from '../session/utils/Promise';
 
 // TODO: use localised strings
 const quitText = 'Quit';
@@ -38,7 +39,14 @@ function handleError(prefix: string, error: Error): void {
     dialog.showErrorBox(prefix, formattedError);
   }
 
-  app.exit(1);
+  // allow 1s for graceful exit, then kill the app.
+  // eslint-disable-next-line more/no-then
+  void Promise.any([() => sleepFor(1000), app.quit()])
+    .then(() => app.exit(1))
+    .catch(e => {
+      console.error('app.quit failed', e.message);
+      app.exit(1);
+    });
 }
 
 function _getError(reason: unknown): Error {
@@ -54,14 +62,22 @@ export const addHandler = (): void => {
   // Note: we could maybe add a handler for when the renderer process died here?
   // (but also ignore the valid death like on restart/quit)
   process.on('uncaughtException', (reason: unknown) => {
-    logCrash('main', { reason: 'uncaughtException', error: reason });
+    try {
+      logCrash('main', { reason: 'uncaughtException', error: reason });
 
-    handleError('Unhandled Error', _getError(reason));
+      handleError('Unhandled Error', _getError(reason));
+    } catch (e) {
+      // ignore (do not log as it just loops the error)
+    }
   });
 
   process.on('unhandledRejection', (reason: unknown) => {
-    logCrash('main', { reason: 'unhandledRejection', error: reason });
+    try {
+      logCrash('main', { reason: 'unhandledRejection', error: reason });
 
-    handleError('Unhandled Promise Rejection', _getError(reason));
+      handleError('Unhandled Promise Rejection', _getError(reason));
+    } catch (e) {
+      // ignore (do not log as it just loops the error)
+    }
   });
 };

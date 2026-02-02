@@ -1,4 +1,5 @@
 import { Submenu } from 'react-contexify';
+import type { JSX } from 'react';
 import { useConvoIdFromContext } from '../../contexts/ConvoIdContext';
 import {
   useIsBlinded,

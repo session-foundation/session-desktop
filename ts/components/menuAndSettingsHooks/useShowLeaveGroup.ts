@@ -37,12 +37,23 @@ export function useShowLeaveGroupCb(conversationId?: string) {
   };
 }
 
-export function useShowDeleteGroupCb(conversationId?: string) {
-  // Note: useShowLeaveGroupCb and useShowDeleteGroupCb are dependent on each other
-  // so I kept them in the same file
+// NOTE: [react-compiler] this convinces the compiler the hook is static
+function useShowDeleteGroupInternal(conversationId?: string) {
   const isClosedGroup = useIsClosedGroup(conversationId);
   const isMessageRequestShown = useIsMessageRequestOverlayShown();
   const username = useConversationUsernameWithFallback(true, conversationId);
+  return {
+    isClosedGroup,
+    isMessageRequestShown,
+    username,
+  };
+}
+
+export function useShowDeleteGroupCb(conversationId?: string) {
+  // Note: useShowLeaveGroupCb and useShowDeleteGroupCb are dependent on each other
+  // so I kept them in the same file
+  const { isClosedGroup, isMessageRequestShown, username } =
+    useShowDeleteGroupInternal(conversationId);
   const showLeaveIsOn = useShowLeaveGroupCb(conversationId);
 
   if (!isClosedGroup || isMessageRequestShown || showLeaveIsOn || !conversationId) {

@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import useKey from 'react-use/lib/useKey';
 import { clone } from 'lodash';
+import styled from 'styled-components';
 
 import { PubkeyType } from 'libsession_util_nodejs';
-import { useDispatch } from 'react-redux';
+import { getAppDispatch } from '../../state/dispatch';
 import { ConvoHub } from '../../session/conversations';
 import { updateGroupMembersModal, updateInviteContactModal } from '../../state/ducks/modalDialog';
 import { SpacerLG } from '../basic/Text';
@@ -39,7 +40,7 @@ type Props = {
 
 async function submitForOpenGroup(convoId: string, pubkeys: Array<string>) {
   const convo = ConvoHub.use().get(convoId);
-  if (!convo || !convo.isPublic()) {
+  if (!convo || !convo.isOpenGroupV2()) {
     throw new Error('submitForOpenGroup group not found');
   }
   try {
@@ -75,6 +76,10 @@ async function submitForOpenGroup(convoId: string, pubkeys: Array<string>) {
   }
 }
 
+const StyledNoContacts = styled.p`
+  text-align: center;
+`;
+
 function ContactsToInvite({
   validContactsForInvite,
   selectedContacts,
@@ -102,9 +107,9 @@ function ContactsToInvite({
   ) : (
     <>
       <SpacerLG />
-      <p className="no-contacts">
+      <StyledNoContacts>
         <Localizer token="contactNone" />
-      </p>
+      </StyledNoContacts>
       <SpacerLG />
     </>
   );
@@ -112,7 +117,7 @@ function ContactsToInvite({
 
 const InviteContactsDialogInner = (props: Props) => {
   const { conversationId } = props;
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   const { contactsToInvite, isSearch, searchTerm, hasSearchResults } = useContactsToInviteTo(
     'invite-contact-to',

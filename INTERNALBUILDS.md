@@ -86,9 +86,9 @@ export SIGNING_TEAM_ID=<your team id if applicable>
 Once your development environment is set up, here are the steps to build the application:
 
 ```sh
-yarn install --frozen-lockfile # install all dependencies of this project
-yarn build # transpile and assemble files
-yarn build-release
+pnpm install # install all dependencies of this project
+pnpm build # transpile and assemble files
+pnpm build-release
 ```
 
 The binaries will be placed inside the `release/` folder.

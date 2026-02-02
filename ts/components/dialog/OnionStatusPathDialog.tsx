@@ -1,7 +1,7 @@
 import { ipcRenderer } from 'electron';
-import { useState, SessionDataTestId } from 'react';
+import { useState, SessionDataTestId, type JSX } from 'react';
 
-import { useDispatch } from 'react-redux';
+import useUpdate from 'react-use/lib/useUpdate';
 import useHover from 'react-use/lib/useHover';
 import styled from 'styled-components';
 import useInterval from 'react-use/lib/useInterval';
@@ -9,12 +9,14 @@ import useInterval from 'react-use/lib/useInterval';
 import { isEmpty, isTypedArray } from 'lodash';
 import { CityResponse, Reader } from 'maxmind';
 import useMount from 'react-use/lib/useMount';
+import { useSelector } from 'react-redux';
+import { getAppDispatch } from '../../state/dispatch';
 import { onionPathModal, updateOpenUrlModal } from '../../state/ducks/modalDialog';
 import {
+  getFirstOnionPathLength,
+  getIsOnline,
+  getOnionPathsCount,
   useFirstOnionPath,
-  useFirstOnionPathLength,
-  useIsOnline,
-  useOnionPathsCount,
 } from '../../state/selectors/onions';
 import { Flex } from '../basic/Flex';
 
@@ -30,7 +32,8 @@ import {
 import { SessionButton, SessionButtonType } from '../basic/SessionButton';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
 import { ModalFlexContainer } from './shared/ModalFlexContainer';
-import { useDataFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
+import { getDataFeatureFlagMemo } from '../../state/ducks/types/releasedFeaturesReduxTypes';
+import { DURATION } from '../../session/constants';
 
 type StatusLightType = {
   glowing?: boolean;
@@ -73,7 +76,7 @@ const StyledGrowingIcon = styled.div`
 
 function useOnionPathWithUsAndNetwork() {
   const onionPath = useFirstOnionPath();
-  const localDevnet = useDataFeatureFlag('useLocalDevNet');
+  const localDevnet = getDataFeatureFlagMemo('useLocalDevNet');
 
   if (onionPath.length === 0) {
     return [];
@@ -86,7 +89,6 @@ function useOnionPathWithUsAndNetwork() {
     ...onionPath.map((node, index) => {
       return {
         ...node,
-
         label: localDevnet ? `SeshNet ${index + 1}` : undefined,
       };
     }),
@@ -96,16 +98,22 @@ function useOnionPathWithUsAndNetwork() {
   ];
 }
 
+function useGlowingIndex() {
+  const [glowingIndex, setGlowingIndex] = useState(0);
+  return { glowingIndex, setGlowingIndex };
+}
+
 function GlowingNodes() {
   const onionPath = useOnionPathWithUsAndNetwork();
-  const countDotsTotal = onionPath.length;
+  const { glowingIndex, setGlowingIndex } = useGlowingIndex();
 
-  const [glowingIndex, setGlowingIndex] = useState(0);
-  useInterval(() => {
-    setGlowingIndex((glowingIndex + 1) % countDotsTotal);
-  }, 1000);
+  const increment = () => {
+    setGlowingIndex(prev => (prev + 1) % onionPath.length);
+  };
 
-  return onionPath.map((_snode: Snode | any, index: number) => {
+  useInterval(increment, 1 * DURATION.SECONDS);
+
+  return onionPath.map((_, index) => {
     return <OnionNodeStatusLight glowing={index === glowingIndex} key={`light-${index}`} />;
   });
 }
@@ -119,28 +127,43 @@ const OnionCountryDisplay = ({ labelText, snodeIp }: { snodeIp?: string; labelTe
 
 let reader: Reader<CityResponse> | null;
 
-const OnionPathModalInner = () => {
-  const nodes = useOnionPathWithUsAndNetwork();
+function loadCityData(forceUpdate: () => void) {
+  ipcRenderer.once('load-maxmind-data-complete', (_event, content) => {
+    const asArrayBuffer = content as Uint8Array;
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [_dataLoaded, setDataLoaded] = useState(false);
+    if (asArrayBuffer && isTypedArray(asArrayBuffer) && !isEmpty(asArrayBuffer)) {
+      reader = new Reader<CityResponse>(Buffer.from(asArrayBuffer.buffer));
+      forceUpdate();
+    }
+  });
+  ipcRenderer.send('load-maxmind-data');
+}
+
+// NOTE: [react-compiler] this has to live here for the hook to be identified as static
+function useIsOnline() {
+  return useSelector(getIsOnline);
+}
+
+const OnionPathModalInner = () => {
+  const forceUpdate = useUpdate();
+  const nodes = useOnionPathWithUsAndNetwork();
   const isOnline = useIsOnline();
 
   useMount(() => {
-    ipcRenderer.once('load-maxmind-data-complete', (_event, content) => {
-      const asArrayBuffer = content as Uint8Array;
-      if (asArrayBuffer && isTypedArray(asArrayBuffer) && !isEmpty(asArrayBuffer)) {
-        reader = new Reader<CityResponse>(Buffer.from(asArrayBuffer.buffer));
-        setDataLoaded(true); // retrigger a rerender
-      }
-    });
-    ipcRenderer.send('load-maxmind-data');
+    if (!reader) {
+      loadCityData(forceUpdate);
+    }
   });
 
-  if (!isOnline || !nodes || nodes.length <= 0) {
-    return <SessionSpinner loading={true} />;
+  if (!isOnline || !nodes || nodes.length <= 0 || !reader) {
+    return <SessionSpinner $loading={true} />;
   }
 
+  return <OnionPathModalLoaded />;
+};
+
+const OnionPathModalLoaded = () => {
+  const nodes = useOnionPathWithUsAndNetwork();
   return (
     <ModalFlexContainer>
       <ModalDescription
@@ -173,7 +196,7 @@ const OnionPathModalInner = () => {
                 <OnionCountryDisplay
                   labelText={countryName}
                   snodeIp={snode.ip}
-                  key={`country-${snode.ip}`}
+                  key={snode.ip ? `country-${snode.ip}` : countryName}
                 />
               );
             })}
@@ -231,8 +254,8 @@ function OnionPathDot({
       width="12"
       height="12"
       viewBox="0 0 100 100"
-      clip-rule="nonzero"
-      fill-rule="nonzero"
+      clipRule="nonzero"
+      fillRule="nonzero"
       data-testid={dataTestId}
       style={{
         transition: 'all var(--default-duration) ease-in-out',
@@ -249,7 +272,7 @@ function OnionPathDot({
 }
 
 export const OnionPathModal = () => {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   return (
     <SessionWrapperModal
       modalId="onionPathModal"
@@ -286,6 +309,16 @@ const StyledStatusLightContainer = styled.div<{ $inActionPanel: boolean }>`
   cursor: ${props => (props.$inActionPanel ? 'pointer' : 'inherit')};
   padding: ${props => (props.$inActionPanel ? 'var(--margins-md)' : '0')};
 `;
+
+// NOTE: [react-compiler] this has to live here for the hook to be identified as static
+function useOnionPathsCount() {
+  return useSelector(getOnionPathsCount);
+}
+
+// NOTE: [react-compiler] this has to live here for the hook to be identified as static
+function useFirstOnionPathLength() {
+  return useSelector(getFirstOnionPathLength);
+}
 
 /**
  * A status light specifically for the action panel. Color is based on aggregate node states instead of individual onion node state

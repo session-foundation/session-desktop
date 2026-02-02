@@ -1,0 +1,8 @@
+onlyBuiltDependencies:
+  - '@parcel/watcher'
+  - '@signalapp/sqlcipher'
+  - electron
+  - electron-winstaller
+  - libsession_util_nodejs
+  - protobufjs
+  - sharp

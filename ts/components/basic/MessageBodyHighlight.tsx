@@ -1,6 +1,7 @@
 import styled from 'styled-components';
-import { RenderTextCallbackType } from '../../types/Util';
-import { SizeClassType } from '../../util/emoji';
+import type { ReactNode } from 'react';
+import type { RenderTextCallbackType } from '../../types/Util';
+import type { SizeClassType } from '../../util/emoji';
 import { AddNewLines } from '../conversation/AddNewLines';
 import { Emojify } from '../conversation/Emojify';
 import {
@@ -54,7 +55,7 @@ export const MessageBodyHighlight = (props: {
   isPublic: boolean;
 }) => {
   const { text, isGroup, isPublic } = props;
-  const results: Array<JSX.Element> = [];
+  const results: Array<ReactNode> = [];
   // this is matching what sqlite fts5 is giving us back
   const FIND_BEGIN_END = /<<left>>(.+?)<<right>>/g;
 

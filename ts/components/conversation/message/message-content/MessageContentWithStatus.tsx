@@ -1,7 +1,8 @@
 import { SessionDataTestId, MouseEvent, useCallback } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { clsx } from 'clsx';
 import styled from 'styled-components';
+import { getAppDispatch } from '../../../../state/dispatch';
 import { useIsDetailMessageView } from '../../../../contexts/isDetailViewContext';
 import { replyToMessage } from '../../../../interactions/conversationInteractions';
 import { MessageRenderingProps } from '../../../../models/messageType';
@@ -35,13 +36,13 @@ type Props = {
   enableReactions: boolean;
 };
 
-const StyledMessageContentContainer = styled.div<{ isIncoming: boolean; isDetailView: boolean }>`
+const StyledMessageContentContainer = styled.div<{ $isIncoming: boolean; $isDetailView: boolean }>`
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  align-items: ${props => (props.isIncoming ? 'flex-start' : 'flex-end')};
-  padding-left: ${props => (props.isDetailView || props.isIncoming ? 0 : '25%')};
-  padding-right: ${props => (props.isDetailView || !props.isIncoming ? 0 : '25%')};
+  align-items: ${props => (props.$isIncoming ? 'flex-start' : 'flex-end')};
+  padding-left: ${props => (props.$isDetailView || props.$isIncoming ? 0 : '25%')};
+  padding-right: ${props => (props.$isDetailView || !props.$isIncoming ? 0 : '25%')};
   width: 100%;
   max-width: '100%';
 `;
@@ -60,7 +61,7 @@ export const MessageContentWithStatuses = (props: Props) => {
   const contentProps = useSelector((state: StateType) =>
     getMessageContentWithStatusesSelectorProps(state, props.messageId)
   );
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const hideAvatar = useHideAvatarInMsgList(props.messageId);
 
   const multiSelectMode = useIsMessageSelectionMode();
@@ -124,7 +125,7 @@ export const MessageContentWithStatuses = (props: Props) => {
   };
 
   return (
-    <StyledMessageContentContainer isIncoming={isIncoming} isDetailView={isDetailView}>
+    <StyledMessageContentContainer $isIncoming={isIncoming} $isDetailView={isDetailView}>
       <ExpirableReadableMessage
         messageId={messageId}
         className={clsx('module-message', `module-message--${direction}`)}
@@ -139,7 +140,7 @@ export const MessageContentWithStatuses = (props: Props) => {
           $flexShrink={0}
           // we need this to prevent short messages from being misaligned (incoming)
           $alignItems={isIncoming ? 'flex-start' : 'flex-end'}
-          maxWidth="100%"
+          $maxWidth="100%"
         >
           <StyledMessageWithAuthor>
             {!isDetailView && <MessageAuthorText messageId={messageId} />}

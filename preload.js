@@ -178,7 +178,7 @@ window.readyForUpdates = () => {
 };
 
 ipc.on('get-theme-setting', () => {
-  const theme = window.Events.getThemeSetting();
+  const theme = window.getSettingValue('theme');
   ipc.send('get-success-theme-setting', theme);
 });
 

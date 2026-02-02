@@ -1,4 +1,4 @@
-import { useDispatch } from 'react-redux';
+import { getAppDispatch } from '../../state/dispatch';
 import { useConversationUsernameWithFallback, useIsPublic } from '../../hooks/useParamSelector';
 import { tr } from '../../localization/localeTools';
 import { ConvoHub } from '../../session/conversations';
@@ -9,7 +9,7 @@ import { leaveGroupOrCommunityByConvoId } from '../../interactions/conversationI
 export function useShowLeaveCommunityCb(conversationId?: string) {
   const isPublic = useIsPublic(conversationId);
   const username = useConversationUsernameWithFallback(true, conversationId) || conversationId;
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   if (!isPublic || !conversationId) {
     return null;
@@ -18,7 +18,7 @@ export function useShowLeaveCommunityCb(conversationId?: string) {
   return () => {
     const conversation = ConvoHub.use().get(conversationId);
 
-    if (!conversation.isPublic()) {
+    if (!conversation.isOpenGroupV2()) {
       throw new Error('showLeaveCommunityByConvoId() called with a non public convo.');
     }
 

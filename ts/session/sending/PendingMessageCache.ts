@@ -49,7 +49,7 @@ export class PendingMessageCache {
     sentCb?: (message: any) => Promise<void>
   ): Promise<OutgoingRawMessage> {
     await this.loadFromDBIfNeeded();
-    const rawMessage = await MessageUtils.toRawMessage(destinationPubKey, message, namespace);
+    const rawMessage = MessageUtils.toRawMessage(destinationPubKey, message, namespace);
 
     // Does it exist in cache already?
     if (this.find(rawMessage)) {

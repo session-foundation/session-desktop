@@ -1,3 +1,4 @@
+import type { JSX } from 'react';
 import { Localizer } from '../../../basic/Localizer';
 import { useShowCopyAccountIdCb } from '../../../menuAndSettingsHooks/useCopyAccountId';
 import { ItemWithDataTestId } from '../MenuItemWithDataTestId';

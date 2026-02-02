@@ -6,10 +6,9 @@ import { getAppRootPath } from '../node/getRootPath';
 import { isDevProd } from '../shared/env_vars';
 
 const APP_ROOT_PATH = getAppRootPath();
-const SESSION_ID_PATTERN = /\b((05)?[0-9a-f]{64})\b/gi;
+const SESSION_ID_PATTERN = /\b((05|03|15|25)+[0-9a-f]{64})\b/gi;
 const SNODE_PATTERN =
   /(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)/g;
-const GROUP_ID_PATTERN = /(group\()([^)]+)(\))/g;
 const SERVER_URL_PATTERN =
   /https?:\/\/[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)/g;
 const REDACTION_PLACEHOLDER = '[REDACTED]';
@@ -83,20 +82,6 @@ const redactServerUrl = (text: string) => {
   return text.replaceAll(SERVER_URL_PATTERN, REDACTION_PLACEHOLDER);
 };
 
-//      redactGroupIds :: String -> String
-const redactGroupIds = (text: string) => {
-  if (!isString(text)) {
-    throw new TypeError("'text' must be a string");
-  }
-
-  return text.replaceAll(
-    GROUP_ID_PATTERN,
-    (_match, before, id, after) =>
-      `${before}${REDACTION_PLACEHOLDER}${removeNewlines(id).slice(-3)}${after}`
-  );
-};
-const removeNewlines = (text: string) => text.replace(/\r?\n|\r/g, '');
-
 //      redactSensitivePaths :: String -> String
 const redactSensitivePaths = redactPath(APP_ROOT_PATH);
 
@@ -107,5 +92,5 @@ function shouldNotRedactLogs() {
 
 //      redactAll :: String -> String
 export const redactAll = !shouldNotRedactLogs()
-  ? compose(redactSensitivePaths, redactGroupIds, redactSessionID, redactSnodeIP, redactServerUrl)
+  ? compose(redactSensitivePaths, redactSessionID, redactSnodeIP, redactServerUrl)
   : (text: string) => text;

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { getAppDispatch } from '../../state/dispatch';
 
 import { ConvoHub } from '../../session/conversations';
 import { changeNickNameModal } from '../../state/ducks/modalDialog';
@@ -64,7 +64,7 @@ export const SessionNicknameDialog = (props: Props) => {
   const { conversationId } = props;
   // this resolves to the real user name, and not the nickname (if set) like we do usually
   const displayName = useConversationRealName(conversationId);
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const currentNickname = useNickname(conversationId);
   const [nickname, setStateNickname] = useState(currentNickname || '');
 

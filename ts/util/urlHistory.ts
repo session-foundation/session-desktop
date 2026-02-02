@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { zodSafeParse, z } from './zod';
 import { SettingsKey } from '../data/settings-key';
 import { Storage } from './storage';
 import { tr } from '../localization/localeTools';
@@ -27,7 +27,7 @@ export enum URLInteraction {
 const UrlInteractionSchema = z.object({
   url: z.string(),
   lastUpdated: z.number(),
-  interactions: z.array(z.nativeEnum(URLInteraction)),
+  interactions: z.array(z.enum(URLInteraction)),
 });
 
 const UrlInteractionsSchema = z.array(UrlInteractionSchema);
@@ -37,7 +37,7 @@ export type UrlInteractionsType = z.infer<typeof UrlInteractionsSchema>;
 export function getUrlInteractions() {
   let interactions: UrlInteractionsType = [];
   const rawInteractions = Storage.get(SettingsKey.urlInteractions) ?? [];
-  const result = UrlInteractionsSchema.safeParse(rawInteractions);
+  const result = zodSafeParse(UrlInteractionsSchema, rawInteractions);
   if (result.error) {
     window?.log?.error(`failed to parse ${SettingsKey.urlInteractions}`, result.error);
   } else {
@@ -56,6 +56,7 @@ export async function registerUrlInteraction(url: string, interaction: URLIntera
   if (idx !== -1) {
     if (!interactions[idx].interactions.includes(interaction)) {
       interactions[idx].interactions.push(interaction);
+      interactions[idx].lastUpdated = Date.now();
     }
   } else {
     interactions.push({
@@ -85,10 +86,9 @@ export async function removeUrlInteractionHistory(url: string) {
   const interactions = getUrlInteractions();
   const idx = interactions.findIndex(item => item.url === url);
   if (idx !== -1) {
-    interactions.splice(idx);
+    interactions.splice(idx, 1);
+    await Storage.put(SettingsKey.urlInteractions, interactions);
   }
-
-  await Storage.put(SettingsKey.urlInteractions, interactions);
 }
 
 export function urlInteractionToString(interaction: URLInteraction) {

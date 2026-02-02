@@ -51,9 +51,10 @@ export const SessionTooltip = ({
   const [hovered, setHovered] = useState(false);
   const [debouncedHover, setDebouncedHover] = useState(false);
 
-  const ref = useRef<HTMLDivElement | null>(null);
+  const ref = useRef<HTMLDivElement>(null);
 
-  const triggerPos = useTriggerPosition(ref);
+  // FIXME: remove this as cast
+  const triggerPos = useTriggerPosition(ref as RefObject<Element>);
 
   useDebounce(
     () => {

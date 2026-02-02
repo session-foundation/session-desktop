@@ -17,10 +17,10 @@ type Props = {
   messageId: string;
 };
 
-const StyledAuthorContainer = styled(Flex)<{ hideAvatar: boolean }>`
+const StyledAuthorContainer = styled(Flex)<{ $hideAvatar: boolean }>`
   color: var(--text-primary-color);
   text-overflow: ellipsis;
-  margin-inline-start: ${props => (props.hideAvatar ? 0 : 'var(--width-avatar-group-msg-list)')};
+  margin-inline-start: ${props => (props.$hideAvatar ? 0 : 'var(--width-avatar-group-msg-list)')};
 `;
 
 export const MessageAuthorText = ({ messageId }: Props) => {
@@ -43,7 +43,7 @@ export const MessageAuthorText = ({ messageId }: Props) => {
   return (
     <StyledAuthorContainer
       $container={true}
-      hideAvatar={hideAvatar}
+      $hideAvatar={hideAvatar}
       onClick={() => {
         void showUserDetailsCb({ messageId });
       }}

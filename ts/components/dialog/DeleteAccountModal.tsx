@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { getAppDispatch } from '../../state/dispatch';
 
 import { updateDeleteAccountModal } from '../../state/ducks/modalDialog';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
@@ -87,7 +87,7 @@ export const DeleteAccountModal = () => {
   const [askingConfirmation, setAskingConfirmation] = useState(false);
   const [deleteMode, setDeleteMode] = useState<DeleteModes>(DEVICE_ONLY);
 
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   const onDeleteEverythingLocallyOnly = async () => {
     if (!isLoading) {
@@ -172,7 +172,7 @@ export const DeleteAccountModal = () => {
             setDeleteMode={setDeleteMode}
           />
         )}
-        <SessionSpinner loading={isLoading} />
+        <SessionSpinner $loading={isLoading} />
       </ModalFlexContainer>
     </SessionWrapperModal>
   );

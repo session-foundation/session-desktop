@@ -3,9 +3,9 @@ import { useSelectedConversationKey } from '../../../../../state/selectors/selec
 import { ContactName } from '../../../ContactName/ContactName';
 import { QuoteProps } from './Quote';
 
-const StyledQuoteAuthor = styled.div<{ isIncoming: boolean }>`
+const StyledQuoteAuthor = styled.div<{ $isIncoming: boolean }>`
   color: ${props =>
-    props.isIncoming
+    props.$isIncoming
       ? 'var(--message-bubbles-received-text-color)'
       : 'var(--message-bubbles-sent-text-color)'};
   font-size: var(--font-size-md);
@@ -33,7 +33,7 @@ export const QuoteAuthor = (props: QuoteAuthorProps) => {
   }
 
   return (
-    <StyledQuoteAuthor isIncoming={isIncoming}>
+    <StyledQuoteAuthor $isIncoming={isIncoming}>
       <ContactName
         pubkey={author}
         contactNameContext="quote-author"

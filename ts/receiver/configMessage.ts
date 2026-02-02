@@ -44,15 +44,24 @@ import { Data } from '../data/data';
 // eslint-disable-next-line import/no-unresolved
 import {
   ContactsWrapperActions,
-  ConvoInfoVolatileWrapperActions,
   UserGenericWrapperActions,
   MetaGroupWrapperActions,
-  UserConfigWrapperActions,
   UserGroupsWrapperActions,
+  ConvoInfoVolatileWrapperActions,
 } from '../webworker/workers/browser/libsession_worker_interface';
 import { CONVERSATION } from '../session/constants';
 import { CONVERSATION_PRIORITIES, ConversationTypeEnum } from '../models/types';
 import { getFeatureFlag } from '../state/ducks/types/releasedFeaturesReduxTypes';
+import {
+  buildPrivateProfileChangeFromContactUpdate,
+  buildPrivateProfileChangeFromUserProfileUpdate,
+  type SessionProfilePrivateChange,
+} from '../models/profile';
+import {
+  getCachedUserConfig,
+  UserConfigWrapperActions,
+} from '../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
+import { proBackendDataActions } from '../state/ducks/proBackendData';
 
 type IncomingUserResult = {
   needsPush: boolean;
@@ -130,7 +139,39 @@ async function mergeUserConfigsWithIncomingUpdates(
           variant
         );
       }
-      const hashesMerged = await UserGenericWrapperActions.merge(variant, toMerge);
+      let hashesMerged: Array<string>;
+      // Note: we cache the UserConfig fields, so on merge/init we need to call the methods directly, and not through
+      // the GenericWrapperActions
+      switch (variant) {
+        case 'UserConfig': {
+          // Note: those `?? 0` is here because android sets it to 0 even if it should be unset.
+          const proAccessExpiryBefore = (await UserConfigWrapperActions.getProAccessExpiry()) ?? 0;
+          hashesMerged = await UserConfigWrapperActions.merge(toMerge);
+          const proAccessExpiryAfter = (await UserConfigWrapperActions.getProAccessExpiry()) ?? 0;
+
+          if (proAccessExpiryBefore !== proAccessExpiryAfter) {
+            window.log.debug(
+              `[mergeConfigsWithInboxUpdates] proAccessExpiry changed from ${proAccessExpiryBefore} to ${proAccessExpiryAfter}. Refreshing our pro details.`
+            );
+            window.inboxStore?.dispatch(
+              proBackendDataActions.refreshGetProDetailsFromProBackend({}) as any
+            );
+          }
+
+          break;
+        }
+        case 'ContactsConfig':
+          hashesMerged = await ContactsWrapperActions.merge(toMerge);
+          break;
+        case 'UserGroupsConfig':
+          hashesMerged = await UserGroupsWrapperActions.merge(toMerge);
+          break;
+        case 'ConvoInfoVolatileConfig':
+          hashesMerged = await ConvoInfoVolatileWrapperActions.merge(toMerge);
+          break;
+        default:
+          assertUnreachable(variant, `mergeConfigsWithInboxUpdates unhandled case "${variant}"`);
+      }
 
       const needsDump = await UserGenericWrapperActions.needsDump(variant);
       const needsPush = await UserGenericWrapperActions.needsPush(variant);
@@ -212,57 +253,33 @@ async function updateLibsessionLatestProcessedUserTimestamp(
   }
 }
 
-/**
- * NOTE When adding new properties to the wrapper, don't update the conversation model here because the merge has not been done yet.
- * Instead you will need to updateOurProfileLegacyOrViaLibSession() to support them
- */
 async function handleUserProfileUpdate(result: IncomingUserResult): Promise<void> {
-  const profilePic = await UserConfigWrapperActions.getProfilePic();
-  const displayName = await UserConfigWrapperActions.getName();
-  const priority = await UserConfigWrapperActions.getPriority();
-  const profileUpdatedAtSeconds = await UserConfigWrapperActions.getProfileUpdatedSeconds();
-  if (!profilePic || isEmpty(profilePic)) {
-    return;
-  }
+  const ourConvo = ConvoHub.use().get(UserUtils.getOurPubKeyStrFromCache());
+  const profile = await buildPrivateProfileChangeFromUserProfileUpdate(ourConvo);
+  const priority = getCachedUserConfig().priority;
 
   const currentBlindedMsgRequest = Storage.get(SettingsKey.hasBlindedMsgRequestsEnabled);
-  const newBlindedMsgRequest = await UserConfigWrapperActions.getEnableBlindedMsgRequest();
+  const newBlindedMsgRequest = getCachedUserConfig().enableBlindedMsgRequest;
   if (!isNil(newBlindedMsgRequest) && newBlindedMsgRequest !== currentBlindedMsgRequest) {
     await window.setSettingValue(SettingsKey.hasBlindedMsgRequestsEnabled, newBlindedMsgRequest); // this does the dispatch to redux
   }
-
-  const picUpdate =
-    profilePic.key &&
-    !isEmpty(profilePic.key) &&
-    !isEmpty(profilePic.url) &&
-    profilePic.key.length === 32;
-
   // NOTE: if you do any changes to the user's settings which are synced, it should be done above the `updateOurProfileViaLibSession` call
-  await updateOurProfileFromLibSession({
-    displayName: displayName || '',
-    profileUrl: picUpdate ? profilePic.url : null,
-    profileKey: picUpdate ? profilePic.key : null,
-    priority,
-    profileUpdatedAtSeconds,
-  });
+
+  await updateOurProfileFromLibSession({ profile, priority });
 
   // NOTE: If we want to update the conversation in memory with changes from the updated user profile we need to wait until the profile has been updated to prevent multiple merge conflicts
-  const ourConvo = ConvoHub.use().get(UserUtils.getOurPubKeyStrFromCache());
-
   if (ourConvo) {
     let changes = false;
 
     const expireTimer = ourConvo.getExpireTimer();
 
-    const wrapperNoteToSelfExpirySeconds = await UserConfigWrapperActions.getNoteToSelfExpiry();
+    const { noteToSelfExpirySeconds } = getCachedUserConfig();
 
-    if (wrapperNoteToSelfExpirySeconds !== expireTimer) {
+    if (noteToSelfExpirySeconds !== expireTimer) {
       const success = await ourConvo.updateExpireTimer({
         providedDisappearingMode:
-          wrapperNoteToSelfExpirySeconds && wrapperNoteToSelfExpirySeconds > 0
-            ? 'deleteAfterSend'
-            : 'off',
-        providedExpireTimer: wrapperNoteToSelfExpirySeconds,
+          noteToSelfExpirySeconds && noteToSelfExpirySeconds > 0 ? 'deleteAfterSend' : 'off',
+        providedExpireTimer: noteToSelfExpirySeconds,
         providedSource: ourConvo.id,
         sentAt: result.latestEnvelopeTimestamp,
         fromSync: true,
@@ -274,7 +291,7 @@ async function handleUserProfileUpdate(result: IncomingUserResult): Promise<void
       changes = success;
     }
 
-    // make sure to write the changes to the database now as the `AvatarDownloadJob` triggered by updateOurProfileLegacyOrViaLibSession might take some time before getting run
+    // make sure to write the changes to the database now as the `AvatarDownloadJob` triggered by updateOurProfileFromLibSession might take some time before getting run
     if (changes) {
       await ourConvo.commit();
     }
@@ -434,15 +451,15 @@ async function handleContactsUpdate(result: IncomingUserResult) {
       if (changes) {
         await contactConvo.commit();
       }
+      const convoVolatileDetails = await ConvoInfoVolatileWrapperActions.get1o1(wrapperConvo.id);
+      const profile = buildPrivateProfileChangeFromContactUpdate({
+        convo: contactConvo,
+        contact: wrapperConvo,
+        convoVolatileDetails,
+      });
 
       // we still need to handle the `name` (synchronous) and the `profilePicture` (asynchronous)
-      await ProfileManager.updateProfileOfContact({
-        pubkey: contactConvo.id,
-        displayName: wrapperConvo.name,
-        profileUrl: wrapperConvo.profilePicture?.url || null,
-        profileKey: wrapperConvo.profilePicture?.key || null,
-        profileUpdatedAtSeconds: wrapperConvo.profileUpdatedSeconds,
-      });
+      await ProfileManager.updateProfileOfContact(profile);
     }
   }
 }
@@ -621,6 +638,7 @@ async function handleSingleGroupUpdate({
       groupEd25519Pubkey: toFixedUint8ArrayOfLength(HexString.fromHexString(groupPk.slice(2)), 32)
         .buffer,
     });
+    await LibSessionUtil.saveDumpsToDb(groupPk);
   } catch (e) {
     window.log.warn(
       `handleSingleGroupUpdate meta wrapper init of "${groupPk}" failed with`,
@@ -800,8 +818,8 @@ async function handleConvoInfoVolatileUpdate() {
 
             await applyConvoVolatileUpdateFromWrapper(
               fromWrapper.pubkeyHex,
-              fromWrapper.unread,
-              fromWrapper.lastRead
+              fromWrapper.forcedUnread,
+              fromWrapper.lastReadTsMs
             );
           }
         } catch (e) {
@@ -822,8 +840,8 @@ async function handleConvoInfoVolatileUpdate() {
 
             await applyConvoVolatileUpdateFromWrapper(
               convoId,
-              fromWrapper.unread,
-              fromWrapper.lastRead
+              fromWrapper.forcedUnread,
+              fromWrapper.lastReadTsMs
             );
           }
         } catch (e) {
@@ -842,8 +860,8 @@ async function handleConvoInfoVolatileUpdate() {
 
             await applyConvoVolatileUpdateFromWrapper(
               fromWrapper.pubkeyHex,
-              fromWrapper.unread,
-              fromWrapper.lastRead
+              fromWrapper.forcedUnread,
+              fromWrapper.lastReadTsMs
             );
           }
         } catch (e) {
@@ -863,8 +881,8 @@ async function handleConvoInfoVolatileUpdate() {
             try {
               await applyConvoVolatileUpdateFromWrapper(
                 fromWrapper.pubkeyHex,
-                fromWrapper.unread,
-                fromWrapper.lastRead
+                fromWrapper.forcedUnread,
+                fromWrapper.lastReadTsMs
               );
             } catch (e) {
               window.log.warn(
@@ -969,31 +987,18 @@ async function handleUserConfigMessagesViaLibSession(
   await processUserMergingResults(incomingMergeResult);
 }
 
-async function updateOurProfileFromLibSession(
-  {
-    displayName,
-    priority,
-    profileKey,
-    profileUrl,
-    profileUpdatedAtSeconds,
-  }: {
-    displayName: string;
-    profileUrl: string | null;
-    profileKey: Uint8Array | null;
-    priority: number | null;
-    profileUpdatedAtSeconds: number;
-  } // passing null means to not update the priority at all (used for legacy config message for now)
-) {
-  await ProfileManager.updateOurProfileSync({
-    displayName,
-    profileUrl,
-    profileKey,
-    priority,
-    profileUpdatedAtSeconds,
-  });
+async function updateOurProfileFromLibSession({
+  priority,
+  profile,
+}: {
+  profile: SessionProfilePrivateChange;
+  priority: number | null;
+}) {
+  await ProfileManager.updateOurProfileSync(profile, priority);
 
   // do not trigger a sign in by linking if the display name is empty
-  if (!isEmpty(displayName)) {
+  const displayName = profile.getDisplayName();
+  if (displayName) {
     window.Whisper.events.trigger(configurationMessageReceived, displayName);
   } else {
     window?.log?.warn('Got a configuration message but the display name is empty');

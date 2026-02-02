@@ -20,6 +20,18 @@ const getHideRecoveryPassword = (state: StateType) =>
 const getShowOnboardingAccountJustCreated = (state: StateType) =>
   state.settings.settingsBools[SettingsKey.showOnboardingAccountJustCreated];
 
+export const getAudioAutoplay = (state: StateType): boolean =>
+  state.settings.settingsBools[SettingsKey.audioAutoplay];
+
+export const getShowRecoveryPhrasePrompt = (state: StateType): boolean =>
+  state.settings.settingsBools[SettingsKey.showRecoveryPhrasePrompt];
+
+export const getDismissedRecoveryPhrasePrompt = (state: StateType): boolean =>
+  state.settings.settingsBools[SettingsKey.dismissedRecoveryPhrasePrompt];
+
+export const getHideMessageRequestBanner = (state: StateType): boolean =>
+  state.settings.settingsBools[SettingsKey.hideMessageRequests];
+
 export const useHasLinkPreviewEnabled = () => {
   const value = useSelector(getLinkPreviewEnabled);
   return Boolean(value);
@@ -51,4 +63,9 @@ export const useShowOnboardingAccountJustCreated = () => {
   const value = useSelector(getShowOnboardingAccountJustCreated);
 
   return Boolean(value);
+};
+
+export const getHideMessageRequestBannerOutsideRedux = (): boolean => {
+  const state = window.inboxStore?.getState();
+  return state ? getHideMessageRequestBanner(state) : true;
 };

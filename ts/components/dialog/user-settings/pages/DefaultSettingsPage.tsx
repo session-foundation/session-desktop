@@ -1,7 +1,7 @@
 import { type RefObject, useRef, useState } from 'react';
-import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
 import useMount from 'react-use/lib/useMount';
+import { getAppDispatch } from '../../../../state/dispatch';
 import { useHotkey } from '../../../../hooks/useHotkey';
 import { useOurConversationUsername, useOurAvatarPath } from '../../../../hooks/useParamSelector';
 import { UserUtils, ToastUtils } from '../../../../session/utils';
@@ -31,20 +31,20 @@ import { ModalPencilIcon } from '../../shared/ModalPencilButton';
 import { ProfileHeader, ProfileName } from '../components';
 import type { ProfileDialogModes } from '../ProfileDialogModes';
 import { tr } from '../../../../localization/localeTools';
-import { useIsProAvailable } from '../../../../hooks/useIsProAvailable';
+import { getIsProAvailableMemo } from '../../../../hooks/useIsProAvailable';
 import { setDebugMode } from '../../../../state/ducks/debug';
 import { useHideRecoveryPasswordEnabled } from '../../../../state/selectors/settings';
 import { OnionStatusLight } from '../../OnionStatusPathDialog';
 import { UserSettingsModalContainer } from '../components/UserSettingsModalContainer';
-import {
-  useCurrentUserHasExpiredPro,
-  useCurrentUserHasPro,
-  useProAccessDetails,
-} from '../../../../hooks/useHasPro';
+import { useCurrentUserHasExpiredPro, useCurrentUserHasPro } from '../../../../hooks/useHasPro';
 import { NetworkTime } from '../../../../util/NetworkTime';
 import { APP_URL, DURATION_SECONDS } from '../../../../session/constants';
 import { getFeatureFlag } from '../../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { useUserSettingsCloseAction } from './userSettingsHooks';
+import {
+  useProBackendProDetails,
+  useProBackendRefetch,
+} from '../../../../state/selectors/proBackendData';
 
 const handleKeyQRMode = (mode: ProfileDialogModes, setMode: (mode: ProfileDialogModes) => void) => {
   switch (mode) {
@@ -61,7 +61,7 @@ const handleKeyQRMode = (mode: ProfileDialogModes, setMode: (mode: ProfileDialog
 const handleKeyCancel = (
   mode: ProfileDialogModes,
   setMode: (mode: ProfileDialogModes) => void,
-  inputRef: RefObject<HTMLInputElement>
+  inputRef: RefObject<HTMLInputElement | null>
 ) => {
   switch (mode) {
     case 'qr':
@@ -98,9 +98,9 @@ function LucideIconForSettings(props: Omit<LucideIconProps, 'iconSize' | 'style'
 }
 
 function SessionProSection() {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
-  const isProAvailable = useIsProAvailable();
+  const isProAvailable = getIsProAvailableMemo();
   const userHasPro = useCurrentUserHasPro();
   const currentUserHasExpiredPro = useCurrentUserHasExpiredPro();
 
@@ -134,7 +134,7 @@ function SessionProSection() {
 }
 
 function MiscSection() {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   return (
     <PanelButtonGroup>
       <PanelIconButton
@@ -177,7 +177,7 @@ function MiscSection() {
 }
 
 function SettingsSection() {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   return (
     <PanelButtonGroup>
@@ -238,7 +238,7 @@ function SettingsSection() {
 }
 
 function AdminSection() {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const recoveryPasswordHidden = useHideRecoveryPasswordEnabled();
 
   return (
@@ -302,7 +302,7 @@ const StyledSpanSessionInfo = styled.span<{ opacity?: number }>`
 const SessionInfo = () => {
   const [clickCount, setClickCount] = useState(0);
 
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   return (
     <StyledVersionInfo>
@@ -348,9 +348,10 @@ const SessionInfo = () => {
 };
 
 export const DefaultSettingPage = (modalState: UserSettingsModalState) => {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const closeAction = useUserSettingsCloseAction(modalState);
-  const { refetch, t } = useProAccessDetails();
+  const { t } = useProBackendProDetails();
+  const refetch = useProBackendRefetch();
 
   const profileName = useOurConversationUsername() || '';
   const [enlargedImage, setEnlargedImage] = useState(false);
@@ -397,7 +398,7 @@ export const DefaultSettingPage = (modalState: UserSettingsModalState) => {
         $container={true}
         $flexDirection="column"
         $alignItems="center"
-        paddingBlock="var(--margins-md)"
+        $paddingBlock="var(--margins-md)"
         $flexGap="var(--margins-md)"
         width="100%"
       >

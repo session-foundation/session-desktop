@@ -1,6 +1,7 @@
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import useKey from 'react-use/lib/useKey';
 import styled from 'styled-components';
+import { getAppDispatch } from '../../../state/dispatch';
 import { declineConversationWithoutConfirm } from '../../../interactions/conversationInteractions';
 import { updateConfirmModal } from '../../../state/ducks/modalDialog';
 import { getConversationRequestsIds } from '../../../state/selectors/conversations';
@@ -51,7 +52,7 @@ const StyledLeftPaneOverlay = styled.div`
 
 export const OverlayMessageRequest = () => {
   useKey('Escape', closeOverlay);
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   function closeOverlay() {
     dispatch(sectionActions.resetLeftOverlayMode());

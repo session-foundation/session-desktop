@@ -29,7 +29,7 @@ module.exports = {
     'plugin:import/typescript',
   ],
 
-  plugins: ['mocha', 'more', '@typescript-eslint'],
+  plugins: ['mocha', 'more', '@typescript-eslint', 'local-rules'],
   parser: '@typescript-eslint/parser',
   parserOptions: { project: ['tsconfig.json'] },
 
@@ -122,7 +122,7 @@ module.exports = {
         ignoreRegExpLiterals: true,
       },
     ],
-    'no-restricted-imports': [
+    '@typescript-eslint/no-restricted-imports': [
       'error',
       {
         paths: [
@@ -132,7 +132,20 @@ module.exports = {
             message:
               "Don't import from 'react-use' directly. Please use a default import for each hook from 'react-use/lib' instead.",
           },
+          {
+            name: 'zod',
+            allowTypeImports: true,
+            message:
+              "Don't import from 'zod' directly. Please use a default import from 'ts/utils/zod' instead.",
+          },
         ],
+      },
+    ],
+    'local-rules/styled-components-transient-props': [
+      'error',
+      {
+        additionalValidProps: ['as', 'forwardedAs', 'theme'],
+        ignoreComponentPatterns: ['^Motion', '^Animated'],
       },
     ],
   },
@@ -154,7 +167,7 @@ module.exports = {
       rules: { 'no-console': 'off', 'import/no-extraneous-dependencies': 'off' },
     },
     {
-      files: ['ts/localization/*.ts', 'ts/localization/**/*.ts'], // anything in ts/localization has to only reference the files in that folder (this makes it reusable)
+      files: ['ts/localization/*.ts', 'ts/localization/generated/*.ts'], // anything in ts/localization has to only reference the files in that folder (this makes it reusable)
       rules: {
         'no-restricted-imports': [
           'error',
@@ -197,6 +210,7 @@ module.exports = {
               '8*',
               '9*',
               '!./*',
+              '!./generated/*',
             ], // Disallow everything except ts/localization, this is the worst,
             // but regexes are broken on our eslint8, and upgrading it means
             // we need to bump node, which needs to bump electron.... and having '*' makes the other rules droped..

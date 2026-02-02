@@ -1,25 +1,24 @@
 import { Menu } from 'react-contexify';
-import { useDispatch } from 'react-redux';
+import type { JSX } from 'react';
 
 import { SessionContextMenuContainer } from '../SessionContextMenuContainer';
 
-import { hideMessageRequestBanner } from '../../state/ducks/userConfig';
 import { ItemWithDataTestId } from './items/MenuItemWithDataTestId';
 import { getMenuAnimation } from './MenuAnimation';
 import { tr } from '../../localization/localeTools';
+import { SettingsKey } from '../../data/settings-key';
 
 export type PropsContextConversationItem = {
   triggerId: string;
 };
 
+async function hideMessageRequestsBanner() {
+  await window.setSettingValue(SettingsKey.hideMessageRequests, true);
+}
+
 const HideBannerMenuItem = (): JSX.Element => {
-  const dispatch = useDispatch();
   return (
-    <ItemWithDataTestId
-      onClick={() => {
-        dispatch(hideMessageRequestBanner());
-      }}
-    >
+    <ItemWithDataTestId onClick={() => void hideMessageRequestsBanner()}>
       {tr('hide')}
     </ItemWithDataTestId>
   );

@@ -1,6 +1,6 @@
 import { isEmpty } from 'lodash';
 import { useCallback, useEffect } from 'react';
-import { useDispatch } from 'react-redux';
+import { getAppDispatch } from '../../../state/dispatch';
 import { ONBOARDING_TIMES } from '../../../session/constants';
 import {
   AccountRestoration,
@@ -25,7 +25,7 @@ export const useRecoveryProgressEffect = () => {
   const ourPubkey = useOnboardHexGeneratedPubKey();
   const displayName = useDisplayName();
   const progress = useProgress();
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   const recoveryComplete = useCallback(async () => {
     await finishRestore(ourPubkey, displayName);

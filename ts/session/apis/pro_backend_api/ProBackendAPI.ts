@@ -58,11 +58,12 @@ export default class ProBackendAPI {
   }
 
   private static async getProDetailsBody(args: WithMasterPrivKeyHex) {
-    return ProWrapperActions.proStatusRequestBody({
+    const request = await ProWrapperActions.proStatusRequestBody({
       ...ProBackendAPI.getProSigningArgs(args),
       // NOTE: The latest payment is the only one required for state derivation
       count: 1,
     });
+    return request;
   }
 
   private static async getRevocationListBody(args: WithTicket) {

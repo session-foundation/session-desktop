@@ -1,38 +1,28 @@
 import _, { isEmpty, isNumber, toNumber } from 'lodash';
 import { queueAttachmentDownloads } from './attachments';
-
 import { Data } from '../data/data';
 import { ConversationModel } from '../models/conversation';
 import { MessageModel } from '../models/message';
 import { ConvoHub } from '../session/conversations';
-import { Quote, type BaseDecodedEnvelope, type SwarmDecodedEnvelope } from './types';
-
+import { type BaseDecodedEnvelope, type SwarmDecodedEnvelope } from './types';
 import { MessageDirection } from '../models/messageType';
 import { ConversationTypeEnum } from '../models/types';
 import { SignalService } from '../protobuf';
 import { DisappearingMessages } from '../session/disappearing_messages';
-import { ProfileManager } from '../session/profile_manager/ProfileManager';
 import { PubKey } from '../session/types';
 import { UserUtils } from '../session/utils';
-import {
-  MessageModelPropsWithoutConvoProps,
-  lookupQuote,
-  pushQuotedMessageDetails,
-} from '../state/ducks/conversations';
-import { showMessageRequestBannerOutsideRedux } from '../state/ducks/userConfig';
+import { lookupQuoteInStore, pushQuotedMessageDetails } from '../state/ducks/conversations';
 import { selectMemberInviteSentOutsideRedux } from '../state/selectors/groups';
-import { getHideMessageRequestBannerOutsideRedux } from '../state/selectors/userConfig';
 import { LinkPreviews } from '../util/linkPreviews';
 import { GroupV2Receiver } from './groupv2/handleGroupV2Message';
 import { Constants } from '../session';
-import { Timestamp } from '../types/timestamp/timestamp';
 import { longOrNumberToNumber } from '../types/long/longOrNumberToNumber';
-
-function isMessageModel(
-  msg: MessageModel | MessageModelPropsWithoutConvoProps
-): msg is MessageModel {
-  return (msg as MessageModel).get !== undefined;
-}
+import { getHideMessageRequestBannerOutsideRedux } from '../state/selectors/settings';
+import { showMessageRequestBannerOutsideRedux } from '../state/ducks/settings';
+import { getFeatureFlag } from '../state/ducks/types/releasedFeaturesReduxTypes';
+import type { StateType } from '../state/reducer';
+import { isUsFromCache } from '../session/utils/User';
+import { isUsAnySogsFromCache } from '../session/apis/open_group_api/sogsv3/knownBlindedkeys';
 
 /**
  * Note: this function does not trigger a write to the db nor trigger redux update.
@@ -47,28 +37,25 @@ async function copyFromQuotedMessage(
   }
   const { id: quoteId, author } = quote;
 
-  const quoteLocal: Quote = {
-    attachments: null,
-    author,
-    id: longOrNumberToNumber(quoteId),
-    text: null,
-    referencedMessageNotFound: false,
+  const quoteLocal = {
+    timestamp: longOrNumberToNumber(quoteId),
+    author:
+      isUsFromCache(author) || isUsAnySogsFromCache(author)
+        ? UserUtils.getOurPubKeyStrFromCache()
+        : author,
   };
 
   const id = longOrNumberToNumber(quoteId);
 
   // First we try to look for the quote in memory
-  const stateConversations = window.inboxStore?.getState().conversations;
-  const { messages, quotes } = stateConversations;
-  let quotedMessage: MessageModelPropsWithoutConvoProps | MessageModel | undefined = lookupQuote(
-    quotes,
-    messages,
-    id,
-    quote.author
-  );
-
+  const { foundProps } = lookupQuoteInStore({
+    timestamp: id,
+    quotedMessagesInStore:
+      (window.inboxStore?.getState() as StateType)?.conversations.quotedMessages || [],
+  });
+  let foundPropsOrLookedUp = foundProps;
   // If the quote is not found in memory, we try to find it in the DB
-  if (!quotedMessage) {
+  if (!foundProps) {
     // We always look for the quote by sentAt timestamp, for opengroups, closed groups and session chats
     // this will return an array of sent messages by id that we have locally.
     const quotedMessagesCollection = await Data.getMessagesBySenderAndSentAt([
@@ -79,25 +66,23 @@ async function copyFromQuotedMessage(
     ]);
 
     if (quotedMessagesCollection?.length) {
-      quotedMessage = quotedMessagesCollection.at(0);
+      const first = quotedMessagesCollection.at(0);
+      if (!first) {
+        throw new Error('just to make tsc happy, this cannot happen');
+      }
+      foundPropsOrLookedUp = first.getMessageModelProps();
     }
   }
 
-  if (!quotedMessage) {
-    window?.log?.warn(`We did not found quoted message ${id} with author ${author}.`);
-    quoteLocal.referencedMessageNotFound = true;
+  if (!foundPropsOrLookedUp) {
+    window?.log?.info(`We did not found quoted message ${id}.`);
     msg.setQuote(quoteLocal);
     return;
   }
 
   window?.log?.info(`Found quoted message id: ${id}`);
-  quoteLocal.referencedMessageNotFound = false;
 
-  if (isMessageModel(quotedMessage)) {
-    window.inboxStore?.dispatch(pushQuotedMessageDetails(quotedMessage.getMessageModelProps()));
-  } else {
-    window.inboxStore?.dispatch(pushQuotedMessageDetails(quotedMessage));
-  }
+  window.inboxStore?.dispatch(pushQuotedMessageDetails(foundPropsOrLookedUp));
 
   msg.setQuote(quoteLocal);
 }
@@ -179,7 +164,7 @@ async function toggleMsgRequestBannerIfNeeded(
     isFirstRequestMessage &&
     getHideMessageRequestBannerOutsideRedux()
   ) {
-    showMessageRequestBannerOutsideRedux();
+    await showMessageRequestBannerOutsideRedux();
   }
 
   // For edge case when messaging a client that's unable to explicitly send request approvals
@@ -237,12 +222,11 @@ async function handleRegularMessage(
 
   handleLinkPreviews(rawDataMessage.body, rawDataMessage.preview, message);
 
-  // TODO: Once pro proof validation is available make this dynamic
-  // const maxChars = isSenderPro
-  //   ? Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_PRO
-  //   : Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_STANDARD;
   // NOTE: The truncation value must be the Pro count so when Pro is released older clients wont truncate pro messages.
-  const maxChars = Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_PRO;
+  const maxChars =
+    !getFeatureFlag('proAvailable') || sendingDeviceConversation.hasValidCurrentProProof()
+      ? Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_PRO
+      : Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_STANDARD;
 
   const body =
     rawDataMessage.body.length > maxChars
@@ -263,7 +247,7 @@ async function handleRegularMessage(
 
   const serverTimestamp = message.get('serverTimestamp');
   if (
-    conversation.isPublic() &&
+    conversation.isOpenGroupV2() &&
     PubKey.isBlinded(sendingDeviceConversation.id) &&
     isNumber(serverTimestamp)
   ) {
@@ -436,7 +420,7 @@ export async function handleMessageJob(
       );
     }
 
-    await processProDetails({ sendingDeviceConversation, messageModel, decodedEnvelope });
+    await processProDetailsForMsg({ sendingDeviceConversation, messageModel, decodedEnvelope });
 
     // save the message model to the db and then save the messageId generated to our in-memory copy
     const id = await messageModel.commit();
@@ -458,20 +442,6 @@ export async function handleMessageJob(
     }
 
     void queueAttachmentDownloads(messageModel, conversation);
-    // Check if we need to update any profile names
-    // the only profile we don't update with what is coming here is ours,
-    // as our profile is shared across our devices with libsession
-    if (messageModel.isIncoming() && regularDataMessage.profile) {
-      await ProfileManager.updateProfileOfContact({
-        pubkey: sendingDeviceConversation.id,
-        displayName: regularDataMessage.profile.displayName,
-        profileUrl: regularDataMessage.profile.profilePicture,
-        profileKey: regularDataMessage.profileKey,
-        profileUpdatedAtSeconds: new Timestamp({
-          value: regularDataMessage.profile.lastProfileUpdateSeconds ?? 0,
-        }).seconds(),
-      });
-    }
 
     await markConvoAsReadIfOutgoingMessage(conversation, messageModel);
     if (messageModel.get('unread')) {
@@ -483,7 +453,7 @@ export async function handleMessageJob(
   }
 }
 
-async function processProDetails({
+async function processProDetailsForMsg({
   decodedEnvelope,
   messageModel,
 }: {
@@ -491,15 +461,23 @@ async function processProDetails({
   messageModel: MessageModel;
   decodedEnvelope: SwarmDecodedEnvelope;
 }) {
-  // if there are no pro proof, or the pro proof is not valid at the time the message was sent, do nothing
-  if (!decodedEnvelope.validPro || !decodedEnvelope.isProProofValidAtMs(decodedEnvelope.sentAtMs)) {
+  // - if there are no pro proof, or
+  // - the pro proof is not valid (validOrExpired) at the time the message was sent, or
+  // - the pro proof is expired at the time the message was sent, or
+  // - the pro proof is revoked at the time the message was sent
+  // do not save the pro features associated with that message
+  if (
+    !decodedEnvelope.validPro ||
+    !decodedEnvelope.isProProofValidOrExpired() ||
+    decodedEnvelope.isProProofExpiredAtMs(decodedEnvelope.sentAtMs) ||
+    decodedEnvelope.isProProofRevoked()
+  ) {
     return;
   }
+
   // otherwise, we have a valid pro proof, save the bitset of pro features used in the message
   if (decodedEnvelope.validPro.proMessageBitset || decodedEnvelope.validPro.proProfileBitset) {
     // Note: msgModel.commit() is always called when receiving a message.
     messageModel.setProFeaturesUsed(decodedEnvelope.validPro);
   }
-
-  // FIXME process pro changes at the contact level too.
 }

@@ -1,4 +1,4 @@
-import { useDispatch } from 'react-redux';
+import { getAppDispatch } from '../../state/dispatch';
 import { showLinkVisitWarningDialog } from '../dialog/OpenUrlModal';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
@@ -9,7 +9,7 @@ export const HelpDeskButton = ({
   iconSize,
   iconColor,
 }: { style?: React.CSSProperties } & WithIconSize & WithIconColor) => {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   return (
     <SessionLucideIconButton

@@ -29,14 +29,14 @@ let cachedKnownMapping: Array<BlindedIdMapping> | null = null;
 /**
  * This function must only be used for testing
  */
-export function TEST_resetCachedBlindedKeys() {
+export function resetCachedBlindedKeys() {
   cachedKnownMapping = null;
 }
 
 /**
  * This function must only be used for testing
  */
-export function TEST_getCachedBlindedKeys() {
+export function getCachedBlindedKeys() {
   return cloneDeep(cachedKnownMapping);
 }
 

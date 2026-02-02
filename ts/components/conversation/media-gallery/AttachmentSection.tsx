@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import type { JSX } from 'react';
 import { missingCaseError } from '../../../util/missingCaseError';
 import { MediaItemType } from '../../lightbox/LightboxGallery';
 import { DocumentListItem } from './DocumentListItem';

@@ -38,13 +38,6 @@ export interface RawQuoteAttachment {
   thumbnail?: Attachment;
 }
 
-export interface RawQuote {
-  id: number;
-  author: string;
-  text?: string;
-  attachments?: Array<RawQuoteAttachment>;
-}
-
 async function uploadToFileServer(params: UploadParams): Promise<AttachmentPointerWithUrl> {
   const { attachment, shouldPad = false } = params;
   if (typeof attachment !== 'object' || attachment == null) {

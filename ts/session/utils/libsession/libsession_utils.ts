@@ -7,7 +7,7 @@ import { compact, difference, flatten, isEmpty, isNil, isString, omit } from 'lo
 import Long from 'long';
 import { UserUtils } from '..';
 import { ConfigDumpData } from '../../../data/configDump/configDump';
-import { assertUnreachable } from '../../../types/sqlSharedTypes';
+import { assertUnreachable, toFixedUint8ArrayOfLength } from '../../../types/sqlSharedTypes';
 import {
   ConfigWrapperUser,
   isUserConfigWrapperType,
@@ -16,6 +16,9 @@ import {
   UserGenericWrapperActions,
   MetaGroupWrapperActions,
   UtilitiesActions,
+  UserGroupsWrapperActions,
+  ContactsWrapperActions,
+  ConvoInfoVolatileWrapperActions,
 } from '../../../webworker/workers/browser/libsession_worker_interface';
 import {
   SnodeNamespace,
@@ -29,6 +32,10 @@ import {
 import { PubKey } from '../../types';
 import { ed25519Str } from '../String';
 import type { WithMessageHash } from '../../types/with';
+import { UserConfigWrapperActions } from '../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
+import { HexString } from '../../../node/hexStrings';
+import { ConvoHub } from '../../conversations';
+import { getSwarmPollingInstance } from '../../apis/snode_api';
 
 const requiredUserVariants: Array<ConfigWrapperUser> = [
   'UserConfig',
@@ -68,11 +75,31 @@ async function initializeLibSessionUtilWrappers() {
       `initializeLibSessionUtilWrappers init from dump "${variant}", length: ${dump.data.length}: ${to_hex(dump.data)}`
     );
     try {
-      await UserGenericWrapperActions.init(
-        variant,
-        privateKeyEd25519,
-        dump.data.length ? dump.data : null
-      );
+      switch (variant) {
+        case 'UserConfig':
+          await UserConfigWrapperActions.init(
+            privateKeyEd25519,
+            dump.data.length ? dump.data : null
+          );
+          break;
+        case 'ContactsConfig':
+          await ContactsWrapperActions.init(privateKeyEd25519, dump.data.length ? dump.data : null);
+          break;
+        case 'UserGroupsConfig':
+          await UserGroupsWrapperActions.init(
+            privateKeyEd25519,
+            dump.data.length ? dump.data : null
+          );
+          break;
+        case 'ConvoInfoVolatileConfig':
+          await ConvoInfoVolatileWrapperActions.init(
+            privateKeyEd25519,
+            dump.data.length ? dump.data : null
+          );
+          break;
+        default:
+          throw new Error(`initializeLibSessionUtilWrappers failed with ${variant}`);
+      }
 
       userVariantsBuildWithoutErrors.add(variant);
     } catch (e) {
@@ -91,10 +118,26 @@ async function initializeLibSessionUtilWrappers() {
     window.log.warn(
       `initializeLibSessionUtilWrappers: missingRequiredVariants "${missingVariant}"`
     );
-    await UserGenericWrapperActions.init(missingVariant, privateKeyEd25519, null);
+    switch (missingVariant) {
+      case 'UserConfig':
+        await UserConfigWrapperActions.init(privateKeyEd25519, null);
+        break;
+      case 'ContactsConfig':
+        await ContactsWrapperActions.init(privateKeyEd25519, null);
+        break;
+      case 'UserGroupsConfig':
+        await UserGroupsWrapperActions.init(privateKeyEd25519, null);
+        break;
+      case 'ConvoInfoVolatileConfig':
+        await ConvoInfoVolatileWrapperActions.init(privateKeyEd25519, null);
+        break;
+      default:
+        throw new Error(`initializeLibSessionUtilWrappers failed with ${missingVariant}`);
+    }
     // save the newly created dump to the database even if it is empty, just so we do not need to recreate one next run
 
     const dump = await UserGenericWrapperActions.dump(missingVariant);
+
     await ConfigDumpData.saveConfigDump({
       data: dump,
       publicKey: UserUtils.getOurPubKeyStrFromCache(),
@@ -166,6 +209,7 @@ async function pendingChangesForUs(): Promise<UserDestinationChanges> {
     const variant = userVariants[index];
 
     const needsPush = await UserGenericWrapperActions.needsPush(variant);
+
     if (!needsPush) {
       continue;
     }
@@ -549,14 +593,16 @@ function batchResultsToUserSuccessfulChange(
 /**
  * Check if the wrappers related to that pubkeys need to be dumped to the DB, and if yes, do it.
  */
-async function saveDumpsToDb(pubkey: PubkeyType | GroupPubkeyType) {
+async function saveDumpsToDb(pubkey: PubkeyType | GroupPubkeyType, forceSaveDump = false) {
   // first check if this is relating a group
   if (PubKey.is03Pubkey(pubkey)) {
     try {
       const metaNeedsDump = await MetaGroupWrapperActions.needsDump(pubkey);
       // save the concatenated dumps as a single entry in the DB if any of the dumps had a need for dump
-      if (metaNeedsDump) {
-        window.log.debug(`About to make and save dumps for metagroup ${ed25519Str(pubkey)}`);
+      if (metaNeedsDump || forceSaveDump) {
+        window.log.debug(
+          `About to make and save dumps for metagroup ${ed25519Str(pubkey)} (forceSaveDump: ${forceSaveDump})`
+        );
 
         const dump = await MetaGroupWrapperActions.metaDump(pubkey);
         await ConfigDumpData.saveConfigDump({
@@ -590,15 +636,14 @@ async function saveDumpsToDb(pubkey: PubkeyType | GroupPubkeyType) {
     const variant = LibSessionUtil.requiredUserVariants[i];
     const needsDump = await UserGenericWrapperActions.needsDump(variant);
 
-    if (!needsDump) {
-      continue;
+    if (needsDump || forceSaveDump) {
+      const dump = await UserGenericWrapperActions.dump(variant);
+      await ConfigDumpData.saveConfigDump({
+        data: dump,
+        publicKey: pubkey,
+        variant,
+      });
     }
-    const dump = await UserGenericWrapperActions.dump(variant);
-    await ConfigDumpData.saveConfigDump({
-      data: dump,
-      publicKey: pubkey,
-      variant,
-    });
   }
 }
 
@@ -636,6 +681,64 @@ async function createMemberAndSetDetails({
   await MetaGroupWrapperActions.memberSetProfileDetails(groupPk, memberPubkey, details);
 }
 
+/**
+ * This function is called to make sure that all of the groups in the wrapper have a dump in the DB, even if empty.
+ */
+async function createInitialDumpsMissingForGroups() {
+  const variantsWithData = await ConfigDumpData.getAllDumpsWithData();
+  const allUserGroupsWithKeys = (await UserGroupsWrapperActions.getAllGroups()).filter(
+    m => m.authData?.length || m.secretKey?.length
+  );
+  const allIdsInUserGroupsWithKeys = allUserGroupsWithKeys.map(m => m.pubkeyHex);
+  const allIdsWithDump = variantsWithData
+    .filter(m => m.data.length)
+    .map(m => m.variant.substring(m.variant.indexOf('-03') + 1));
+  const inUserGroupsWithKeysWithoutDumps = allIdsInUserGroupsWithKeys.filter(
+    groupPk => !allIdsWithDump.includes(`MetaGroupConfig-${groupPk}`)
+  );
+
+  const userEd25519Secretkey = (await UserUtils.getUserED25519KeyPairBytes()).privKeyBytes;
+  window.log.info(
+    `createInitialDumpsMissingForGroups: creating ${inUserGroupsWithKeysWithoutDumps.length} groups from user config that does not have a dump`
+  );
+  window.log.debug(
+    `createInitialDumpsMissingForGroups: creating: [${inUserGroupsWithKeysWithoutDumps.map(ed25519Str)}] groups from user config that does not have a dump`
+  );
+
+  // All of the groups for which we have authData or secretKey should have a dump.
+  // Here, we iterate over all of those that don't and force create a dump for them
+  for (let index = 0; index < inUserGroupsWithKeysWithoutDumps.length; index++) {
+    const groupPk = inUserGroupsWithKeysWithoutDumps[index];
+    const groupDetails = allUserGroupsWithKeys.find(m => m.pubkeyHex === groupPk);
+    if (!groupDetails) {
+      continue;
+    }
+
+    await MetaGroupWrapperActions.init(groupPk, {
+      groupEd25519Pubkey: toFixedUint8ArrayOfLength(HexString.fromHexStringNoPrefix(groupPk), 32)
+        .buffer,
+
+      groupEd25519Secretkey: groupDetails?.secretKey || null,
+      userEd25519Secretkey: toFixedUint8ArrayOfLength(userEd25519Secretkey, 64).buffer,
+      metaDumped: null,
+    });
+    await LibSessionUtil.saveDumpsToDb(groupPk, true);
+    if (!groupDetails.invitePending) {
+      window.log.debug(
+        `createInitialDumpsMissingForGroups: creating: ${ed25519Str(groupPk)} should be polled. Resetting last hashes and starting polling`
+      );
+      // if that group should already be polled, reset the last hashes and start polling
+      // yes, we really want to refetch the whole history of messages from that group...
+      await ConvoHub.use().resetLastHashesForConversation(groupPk);
+      getSwarmPollingInstance().addGroupId(groupPk);
+    } else {
+      window.log.debug(
+        `createInitialDumpsMissingForGroups: creating: ${ed25519Str(groupPk)} should not be polled.`
+      );
+    }
+  }
+}
+
 export const LibSessionUtil = {
   initializeLibSessionUtilWrappers,
   userNamespaceToVariant,
@@ -643,6 +746,7 @@ export const LibSessionUtil = {
   pendingChangesForUs,
   pendingChangesForGroup,
   saveDumpsToDb,
+  createInitialDumpsMissingForGroups,
   batchResultsToGroupSuccessfulChange,
   batchResultsToUserSuccessfulChange,
   createMemberAndSetDetails,

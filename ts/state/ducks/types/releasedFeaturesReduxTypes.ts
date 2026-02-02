@@ -10,6 +10,7 @@ type SessionBaseBooleanFeatureFlags = {
   replaceLocalizedStringsWithKeys: boolean;
   disableOnionRequests: boolean;
   disableImageProcessor: boolean;
+  disableLocalAttachmentEncryption: boolean;
   useDeterministicEncryption: boolean;
   useTestNet: boolean;
   useTestProBackend: boolean;
@@ -24,10 +25,10 @@ type SessionBaseBooleanFeatureFlags = {
   mockCurrentUserHasProInGracePeriod: boolean;
   mockProRecoverButtonAlwaysSucceed: boolean;
   mockProRecoverButtonAlwaysFail: boolean;
-  mockOthersHavePro: boolean;
   mockProBackendLoading: boolean;
   mockProBackendError: boolean;
   fsTTL30s: boolean;
+  debugForceSeedNodeFailure: boolean;
 };
 
 export type SessionDebugBooleanFeatureFlags = {
@@ -76,6 +77,8 @@ export type SessionDataFeatureFlags = {
   mockProPinnedConversations: number | null;
   mockProBadgesSent: number | null;
   mockProGroupsUpgraded: number | null;
+  mockNetworkPageNodeCount: number | null;
+  fakeAvatarPickerColor: string | null; // defaults to defaultAvatarPickerColor
 };
 
 export type SessionBooleanFeatureFlagKeys = keyof SessionBooleanFeatureFlags;
@@ -96,7 +99,11 @@ export const isSessionFeatureFlag = (flag: unknown): flag is SessionBooleanFeatu
 export const getFeatureFlag = <T extends SessionBooleanFeatureFlagKeys>(flag: T) =>
   !!window?.sessionBooleanFeatureFlags?.[flag];
 
-export const useFeatureFlag = <T extends SessionBooleanFeatureFlagKeys>(flag: T) =>
+/**
+ * NOTE: this is the same as getFeatureFlag but should only be used in react in a hook-safe context.
+ * This is so if we move feature flags into redux we can update this hook's behaviour
+ */
+export const getFeatureFlagMemo = <T extends SessionBooleanFeatureFlagKeys>(flag: T) =>
   getFeatureFlag<T>(flag);
 
 export const setFeatureFlag = <T extends SessionBooleanFeatureFlagKeys>(
@@ -119,10 +126,16 @@ export const isSessionDataFeatureFlag = (flag: unknown): flag is SessionDataFeat
     !strFlag.startsWith('debug') && Object.keys(window.sessionDataFeatureFlags).includes(strFlag)
   );
 };
+
 export const getDataFeatureFlag = <T extends SessionDataFeatureFlagKeys>(
   flag: T
 ): SessionDataFeatureFlags[T] | null => window?.sessionDataFeatureFlags?.[flag] ?? null;
-export const useDataFeatureFlag = <T extends SessionDataFeatureFlagKeys>(
+
+/**
+ * NOTE: this is the same as getFeatureFlag but should only be used in react in a hook-safe context.
+ * This is so if we move feature flags into redux we can update this hook's behaviour
+ */
+export const getDataFeatureFlagMemo = <T extends SessionDataFeatureFlagKeys>(
   flag: T
 ): SessionDataFeatureFlags[T] | null => getDataFeatureFlag<T>(flag);
 

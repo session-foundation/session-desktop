@@ -49,7 +49,7 @@ describe('OnionPaths', () => {
 
       Onions.resetSnodeFailureCount();
       OnionPaths.resetPathFailureCount();
-      SnodePool.TEST_resetState();
+      SnodePool.resetState();
     });
 
     afterEach(() => {
@@ -59,7 +59,7 @@ describe('OnionPaths', () => {
       getSnodePoolFromDb = stubData('getSnodePoolFromDb').resolves(fakeSnodePool);
       fetchFromSeedWithRetriesAndWriteToDb = Sinon.stub(
         SnodePool,
-        'TEST_fetchFromSeedWithRetriesAndWriteToDb'
+        'fetchFromSeedWithRetriesAndWriteToDb'
       );
 
       const fetched = await SnodePool.getSnodePoolFromDBOrFetchFromSeed();
@@ -77,7 +77,7 @@ describe('OnionPaths', () => {
       stubData('updateSnodePoolOnDb').resolves();
       fetchFromSeedWithRetriesAndWriteToDb = Sinon.stub(
         SnodePool,
-        'TEST_fetchFromSeedWithRetriesAndWriteToDb'
+        'fetchFromSeedWithRetriesAndWriteToDb'
       ).callThrough();
       fetchSnodePoolFromSeedNodeWithRetries = Sinon.stub(
         SeedNodeAPI,

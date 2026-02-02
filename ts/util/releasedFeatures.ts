@@ -1,4 +1,4 @@
-import { LOCALE_DEFAULTS } from '../localization/constants';
+import { tEnglish } from '../localization/localeTools';
 import {
   FEATURE_RELEASE_CHECK_INTERVAL,
   type SessionBooleanFeatureFlagKeys,
@@ -64,7 +64,7 @@ export const handleReleaseNotification = ({
     Notifications.addReleaseNotification(featureName, {
       conversationId: `release-notification-${featureName}`,
       message,
-      title: LOCALE_DEFAULTS.app_name,
+      title: tEnglish('appName'),
     });
   }
 

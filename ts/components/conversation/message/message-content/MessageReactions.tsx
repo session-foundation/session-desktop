@@ -1,12 +1,10 @@
-import { isEmpty, isEqual } from 'lodash';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import styled from 'styled-components';
 import { useIsDetailMessageView } from '../../../../contexts/isDetailViewContext';
 import { useMessageReactsPropsById } from '../../../../hooks/useParamSelector';
 import { MessageRenderingProps } from '../../../../models/messageType';
 import { REACT_LIMIT } from '../../../../session/constants';
 import { useSelectedIsGroupOrCommunity } from '../../../../state/selectors/selectedConversation';
-import { SortedReactionList } from '../../../../types/Reaction';
 import { nativeEmojiData } from '../../../../util/emoji';
 import { Flex } from '../../../basic/Flex';
 import { Reaction, ReactionProps } from '../reactions/Reaction';
@@ -15,13 +13,13 @@ import { LucideIcon } from '../../../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 
 export const StyledMessageReactionsContainer = styled(Flex)<{
-  noAvatar: boolean;
+  $noAvatar: boolean;
 }>`
-  ${props => !props.noAvatar && 'margin-inline-start: var(--width-avatar-group-msg-list);'}
+  ${props => !props.$noAvatar && 'margin-inline-start: var(--width-avatar-group-msg-list);'}
 `;
 
-export const StyledMessageReactions = styled(Flex)<{ fullWidth: boolean }>`
-  ${props => (props.fullWidth ? '' : 'max-width: 640px;')}
+export const StyledMessageReactions = styled(Flex)<{ $fullWidth: boolean }>`
+  ${props => (props.$fullWidth ? '' : 'max-width: 640px;')}
 `;
 
 const StyledReactionOverflow = styled.button`
@@ -59,7 +57,7 @@ const Reactions = (props: ReactionsProps) => {
       $container={true}
       $flexWrap={inModal ? 'nowrap' : 'wrap'}
       $alignItems={'center'}
-      fullWidth={inModal}
+      $fullWidth={inModal}
     >
       {reactions.map(([emoji]) => (
         <Reaction key={`${messageId}-${emoji}`} emoji={emoji} {...props} />
@@ -79,7 +77,7 @@ const CompressedReactions = (props: ExpandReactionsProps) => {
       $container={true}
       $flexWrap={inModal ? 'nowrap' : 'wrap'}
       $alignItems={'center'}
-      fullWidth={true}
+      $fullWidth={true}
     >
       {reactions.slice(0, 4).map(([emoji]) => (
         <Reaction key={`${messageId}-${emoji}`} emoji={emoji} {...props} />
@@ -109,7 +107,7 @@ const CompressedReactions = (props: ExpandReactionsProps) => {
 const ExpandedReactions = (props: ExpandReactionsProps) => {
   const { handleExpand } = props;
   return (
-    <Flex $container={true} $flexDirection={'column'} $alignItems={'center'} margin="4px 0 0">
+    <Flex $container={true} $flexDirection={'column'} $alignItems={'center'} $margin="4px 0 0">
       <Reactions {...props} />
       <StyledReadLess onClick={handleExpand}>
         <LucideIcon
@@ -150,7 +148,6 @@ export const MessageReactions = (props: Props) => {
     onSelected,
     noAvatar,
   } = props;
-  const [reactions, setReactions] = useState<SortedReactionList>([]);
 
   const [isExpanded, setIsExpanded] = useState(false);
   const handleExpand = () => {
@@ -161,29 +158,13 @@ export const MessageReactions = (props: Props) => {
 
   const inGroup = useSelectedIsGroupOrCommunity();
 
-  useEffect(() => {
-    if (msgProps?.sortedReacts && !isEqual(reactions, msgProps?.sortedReacts)) {
-      setReactions(msgProps?.sortedReacts);
-    }
-
-    if (!isEmpty(reactions) && isEmpty(msgProps?.sortedReacts)) {
-      setReactions([]);
-    }
-  }, [msgProps?.sortedReacts, reactions]);
-
   if (!msgProps) {
-    return null;
-  }
-
-  const { sortedReacts } = msgProps;
-
-  if (!sortedReacts || !sortedReacts.length) {
     return null;
   }
 
   const reactionsProps = {
     messageId,
-    reactions,
+    reactions: msgProps.sortedReacts ?? [],
     inModal,
     inGroup,
     onClick: !isDetailView ? onClick : undefined,
@@ -199,15 +180,15 @@ export const MessageReactions = (props: Props) => {
       $flexDirection={'column'}
       $justifyContent={'center'}
       $alignItems={inModal ? 'flex-start' : 'center'}
-      noAvatar={noAvatar}
+      $noAvatar={noAvatar}
     >
-      {sortedReacts &&
-        sortedReacts?.length !== 0 &&
-        (!hasReactLimit || sortedReacts.length <= REACT_LIMIT ? (
+      {reactionsProps.reactions.length ? (
+        !hasReactLimit || reactionsProps.reactions.length <= REACT_LIMIT ? (
           <Reactions {...reactionsProps} />
         ) : (
           <ExtendedReactions handleExpand={handleExpand} {...reactionsProps} />
-        ))}
+        )
+      ) : null}
     </StyledMessageReactionsContainer>
   );
 };

@@ -1,5 +1,6 @@
 import AbortController from 'abort-controller';
-import { z, ZodError } from 'zod';
+import type { ZodError } from 'zod';
+import { zodSafeParse, z } from '../../util/zod';
 import { BlindingActions } from '../../webworker/workers/browser/libsession_worker_interface';
 import { isOnionV4JSONSnodeResponse, OnionSending } from '../onions/onionSend';
 import { fromUInt8ArrayToBase64 } from '../utils/String';
@@ -29,10 +30,6 @@ export type SessionBackendServerApiOptions = Omit<
 > & {
   requestTimeoutMs?: number;
   abortControllerTimeoutMs?: number;
-};
-
-type WithZodSchemaValidation<S = typeof SessionBackendBaseResponseSchema> = {
-  withZodSchema: S;
 };
 
 type HTTPMethod = 'GET' | 'POST';
@@ -198,16 +195,16 @@ export default class SessionBackendServerApi {
     };
   }
 
-  private parseSchema<R extends typeof SessionBackendBaseResponseSchema>({
+  private parseSchema<T>({
     path,
     response,
     schema,
   }: {
     path: string;
     response: SessionBackendServerApiResponse;
-    schema: R;
-  }): z.infer<R> | null {
-    const result = schema.safeParse(response);
+    schema: z.ZodType<T>;
+  }): T | null {
+    const result = zodSafeParse(schema, response);
     if (result.success) {
       return result.data;
     }
@@ -237,11 +234,12 @@ export default class SessionBackendServerApi {
     return response;
   }
 
-  public async makeRequestWithSchema<R extends typeof SessionBackendBaseResponseSchema>({
+  public async makeRequestWithSchema<T extends SessionBackendBaseResponseType>({
     withZodSchema,
     ...requestParams
-  }: SessionBackendServerMakeRequestParams &
-    WithZodSchemaValidation<R>): Promise<z.infer<R> | null> {
+  }: SessionBackendServerMakeRequestParams & {
+    withZodSchema: z.ZodType<T>;
+  }): Promise<T | null> {
     const response = await this.makeRequest(requestParams);
     if (getFeatureFlag('debugServerRequests')) {
       this.logInfo(
@@ -255,7 +253,7 @@ export default class SessionBackendServerApi {
         path: requestParams.path,
         response,
         schema: SessionBackendBaseResponseSchema,
-      });
+      }) as T | null;
     }
 
     return this.parseSchema({ path: requestParams.path, response, schema: withZodSchema });

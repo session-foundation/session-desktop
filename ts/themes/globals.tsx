@@ -3,8 +3,12 @@ import { hexColorToRGB } from '../util/hexColorToRGB';
 import { COLORS } from './constants/colors';
 import { ThemeColorVariables } from './variableColors';
 
-function setDuration(duration: number | string) {
-  return `${!isTestIntegration() ? duration : typeof duration === 'string' ? '0s' : '0'}`;
+function setDurationStr(duration: string): string {
+  return !isTestIntegration() ? duration : '0s';
+}
+
+function setDurationNum(duration: number): number {
+  return !isTestIntegration() ? duration : 0;
 }
 
 export function pxValueToNumber(value: string) {
@@ -88,18 +92,18 @@ type ThemeGlobals = {
 
   /* Durations */
   '--default-duration': string;
-  '--default-duration-seconds': string;
+  '--default-duration-seconds': number;
   '--duration-message-highlight': string;
-  '--duration-message-highlight-seconds': string;
+  '--duration-message-highlight-seconds': number;
   '--duration-typing-animation': string;
   '--duration-session-spinner': string;
   '--duration-spinner': string;
   '--duration-pulse': string;
   '--duration-right-panel': string;
-  '--duration-progress-bar': string;
-  '--duration-fadein': string;
+  '--duration-progress-bar': number;
+  '--duration-fadein': number;
   '--duration-modal-error-faded': string;
-  '--duration-modal-error-shown': string;
+  '--duration-modal-error-shown': number;
   '--duration-modal-to-inbox': string;
   '--duration-session-logo-text': string;
 
@@ -173,7 +177,10 @@ export function getThemeValue(key: ThemeKeys) {
 export function setThemeValues(variables: Theme) {
   // eslint-disable-next-line no-restricted-syntax
   for (const [key, value] of Object.entries(variables)) {
-    document.documentElement.style.setProperty(key, value);
+    document.documentElement.style.setProperty(
+      key,
+      typeof value === 'string' ? value : value.toString()
+    );
   }
 }
 
@@ -235,21 +242,21 @@ export const THEME_GLOBALS: ThemeGlobals = {
   '--panel-button-container-min-height': '70px',
   '--user-settings-icon-min-width': '50px',
 
-  '--default-duration': setDuration('0.25s'),
-  '--default-duration-seconds': setDuration(0.25), // framer-motion requires a number
-  '--duration-message-highlight': setDuration('1s'),
-  '--duration-message-highlight-seconds': setDuration(1),
-  '--duration-typing-animation': setDuration('1600ms'),
-  '--duration-session-spinner': setDuration('0.6s'),
-  '--duration-spinner': setDuration('3000ms'),
-  '--duration-pulse': setDuration('1s'),
-  '--duration-right-panel': setDuration('0.3s'),
-  '--duration-progress-bar': setDuration(0.5),
-  '--duration-fadein': setDuration(1),
-  '--duration-modal-error-faded': setDuration('100ms'),
-  '--duration-modal-error-shown': setDuration(0.25),
-  '--duration-modal-to-inbox': setDuration('0.1s'),
-  '--duration-session-logo-text': setDuration('0s'),
+  '--default-duration': setDurationStr('0.25s'),
+  '--default-duration-seconds': setDurationNum(0.25), // framer-motion requires a number
+  '--duration-message-highlight': setDurationStr('1s'),
+  '--duration-message-highlight-seconds': setDurationNum(1),
+  '--duration-typing-animation': setDurationStr('1600ms'),
+  '--duration-session-spinner': setDurationStr('0.6s'),
+  '--duration-spinner': setDurationStr('3000ms'),
+  '--duration-pulse': setDurationStr('1s'),
+  '--duration-right-panel': setDurationStr('0.3s'),
+  '--duration-progress-bar': setDurationNum(0.5),
+  '--duration-fadein': setDurationNum(1),
+  '--duration-modal-error-faded': setDurationStr('100ms'),
+  '--duration-modal-error-shown': setDurationNum(0.25),
+  '--duration-modal-to-inbox': setDurationStr('0.1s'),
+  '--duration-session-logo-text': setDurationStr('0s'),
 
   '--green-color': COLORS.PRIMARY.GREEN,
   '--blue-color': COLORS.PRIMARY.BLUE,

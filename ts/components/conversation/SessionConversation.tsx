@@ -5,7 +5,7 @@ import autoBind from 'auto-bind';
 import { blobToArrayBuffer } from 'blob-util';
 import { Component, RefObject, createRef } from 'react';
 import styled from 'styled-components';
-import { useDispatch } from 'react-redux';
+import { getAppDispatch } from '../../state/dispatch';
 import {
   CompositionBox,
   SendMessageType,
@@ -97,7 +97,7 @@ const StyledSpinnerContainer = styled.div`
 const ConvoLoadingSpinner = () => {
   return (
     <StyledSpinnerContainer>
-      <SessionSpinner loading={true} />
+      <SessionSpinner $loading={true} />
     </StyledSpinnerContainer>
   );
 };
@@ -117,7 +117,7 @@ const GroupMarkedAsExpired = () => {
 };
 
 export class SessionConversation extends Component<Props, State> {
-  private readonly messageContainerRef: RefObject<HTMLDivElement>;
+  private readonly messageContainerRef: RefObject<HTMLDivElement | null>;
   private dragCounter: number;
   private publicMembersRefreshTimeout?: NodeJS.Timeout;
   private readonly updateMemberList: () => any;
@@ -261,7 +261,7 @@ export class SessionConversation extends Component<Props, State> {
     if (!selectedConversation || !messagesProps) {
       return <EmptyMessageView />;
     }
-    // TODOLATER break selectionMode into it's own container component so we can use hooks to fetch relevant state from the store
+    // TODO break selectionMode into it's own container component so we can use hooks to fetch relevant state from the store
     const selectionMode = selectedMessages.length > 0;
 
     return (
@@ -513,7 +513,11 @@ export class SessionConversation extends Component<Props, State> {
     e.preventDefault();
     e.stopPropagation();
     this.dragCounter++;
-    if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+    if (
+      e.dataTransfer.items &&
+      e.dataTransfer.items.length > 0 &&
+      e.dataTransfer.items[0]?.kind === 'file'
+    ) {
       this.setState({ isDraggingFile: true });
     }
   }
@@ -535,9 +539,9 @@ export class SessionConversation extends Component<Props, State> {
     if (e?.dataTransfer?.files && e.dataTransfer.files.length > 0) {
       void this.onChoseAttachments(Array.from(e.dataTransfer.files));
       e.dataTransfer.clearData();
-      this.dragCounter = 0;
-      this.setState({ isDraggingFile: false });
     }
+    this.dragCounter = 0;
+    this.setState({ isDraggingFile: false });
   }
 
   private async updateMemberListBouncy() {
@@ -647,7 +651,7 @@ const renderImagePreview = async (contentType: string, file: File, fileName: str
 };
 
 function OutdatedLegacyGroupBanner() {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   const weAreAdmin = useSelectedWeAreAdmin();
   const selectedConversationKey = useSelectedConversationKey();

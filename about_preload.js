@@ -26,5 +26,3 @@ window.getEnvironment = () => config.environment;
 window.getVersion = () => config.version;
 window.getCommitHash = () => config.commitHash;
 window.getAppInstance = () => config.appInstance;
-
-require('./ts/util/logging');

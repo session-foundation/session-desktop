@@ -10,10 +10,53 @@ import {
 } from 'libsession_util_nodejs';
 import { from_hex } from 'libsodium-wrappers-sumo';
 import { isArray, isEmpty, isEqual } from 'lodash';
+import { SqliteValue, StatementOptions } from '@signalapp/sqlcipher';
 import { DisappearingMessageConversationModeType } from '../session/disappearing_messages/types';
 import { fromHexToArray, toHex } from '../session/utils/String';
 import { ConfigWrapperObjectTypesMeta } from '../webworker/workers/browser/libsession_worker_functions';
 import { OpenGroupRequestCommonType, OpenGroupV2Room } from '../data/types';
+import { MessageAttributes } from '../models/messageType';
+import { ConversationAttributes } from '../models/conversationAttributes';
+
+// Basic Types
+export type JSONRow<T = object> = Readonly<{ json: string } & T>;
+export type JSONRows = Array<JSONRow>;
+
+export type CountRow = { 'count(*)': number };
+
+export type SQLInsertableValue = SqliteValue<StatementOptions>;
+export type SQLInsertable = Record<string, SQLInsertableValue>;
+
+export type SQLSerialized<T extends Record<string, any>> = {
+  [K in keyof T]: T[K] extends SQLInsertableValue ? T[K] : SerializeValue<T[K]>;
+};
+
+type SerializeValue<T> = T extends string
+  ? string
+  : T extends number
+    ? number
+    : T extends boolean
+      ? number
+      : T extends Date
+        ? number
+        : T extends null
+          ? null
+          : T extends undefined
+            ? null
+            : T extends Array<any>
+              ? string
+              : T extends object
+                ? string
+                : SQLInsertableValue;
+
+export type SQLConversationAttributes = SQLSerialized<ConversationAttributes>;
+export type SQLMessageAttributes = SQLSerialized<MessageAttributes>;
+// NOTE: hash is nullable despite being the primary key because the create table statment doesn't specify "NOT NULL"
+export type SQLSeenMessageAttributes = SQLSerialized<{
+  hash?: string;
+  expiresAt?: number;
+  conversationId?: string;
+}>;
 
 /**
  * This wrapper can be used to make a function type not async, async.
@@ -75,7 +118,7 @@ export type ConfigDumpDataNode = {
 
 export type AttachmentDownloadMessageDetails = {
   messageId: string;
-  type: 'preview' | 'quote' | 'attachment';
+  type: 'preview' | 'attachment';
   index: number;
   isOpenGroupV2: boolean;
   openGroupV2Details: OpenGroupRequestCommonType | undefined;
@@ -107,6 +150,7 @@ export function getContactInfoFromDBValues({
   expirationMode,
   expireTimer,
   dbProfileUpdatedAtSeconds,
+  bitsetProFeatures,
 }: {
   id: string;
   dbApproved: boolean;
@@ -121,6 +165,7 @@ export function getContactInfoFromDBValues({
   expirationMode: DisappearingMessageConversationModeType | undefined;
   expireTimer: number | undefined;
   dbProfileUpdatedAtSeconds: number;
+  bitsetProFeatures: bigint | undefined;
 }): ContactInfoSet {
   const wrapperContact: ContactInfoSet = {
     id,
@@ -134,6 +179,7 @@ export function getContactInfoFromDBValues({
     expirationMode,
     expirationTimerSeconds: !!expireTimer && expireTimer > 0 ? expireTimer : 0,
     profileUpdatedSeconds: dbProfileUpdatedAtSeconds,
+    proProfileBitset: bitsetProFeatures,
   };
 
   if (
@@ -290,7 +336,9 @@ export function stringify(obj: unknown) {
         ? `Uint8Array(${value.length}): ${toHex(value)}`
         : value?.type === 'Buffer' && value?.data
           ? `Buffer: ${toHex(value.data)}`
-          : value;
+          : typeof value === 'bigint'
+            ? { $bigint: value.toString() }
+            : value;
     },
     2
   );

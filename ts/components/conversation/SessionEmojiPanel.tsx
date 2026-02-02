@@ -11,11 +11,11 @@ import { i18nEmojiData } from '../../util/emoji';
 import { hexColorToRGB } from '../../util/hexColorToRGB';
 
 export const StyledEmojiPanel = styled.div<{
-  isModal: boolean;
-  primaryColor: string;
-  theme: ThemeStateType;
-  panelBackgroundRGB: string;
-  panelTextRGB: string;
+  $isModal: boolean;
+  $primaryColor: string;
+  $theme: ThemeStateType;
+  $panelBackgroundRGB: string;
+  $panelTextRGB: string;
 }>`
   padding: var(--margins-lg);
   z-index: 5;
@@ -34,7 +34,7 @@ export const StyledEmojiPanel = styled.div<{
   }
 
   em-emoji-picker {
-    ${props => props.panelBackgroundRGB && `background-color: rgb(${props.panelBackgroundRGB})`};
+    ${props => props.$panelBackgroundRGB && `background-color: rgb(${props.$panelBackgroundRGB})`};
     border: 1px solid var(--border-color);
     padding-bottom: var(--margins-sm);
     --font-family: var(--font-default);
@@ -43,14 +43,14 @@ export const StyledEmojiPanel = styled.div<{
     --border-radius: 8px;
     --color-border: var(--border-color);
     --color-border-over: var(--border-color);
-    --background-rgb: ${props => props.panelBackgroundRGB};
-    --rgb-background: ${props => props.panelBackgroundRGB};
-    --rgb-color: ${props => props.panelTextRGB};
-    --rgb-input: ${props => props.panelBackgroundRGB};
-    --rgb-accent: ${props => props.primaryColor};
+    --background-rgb: ${props => props.$panelBackgroundRGB};
+    --rgb-background: ${props => props.$panelBackgroundRGB};
+    --rgb-color: ${props => props.$panelTextRGB};
+    --rgb-input: ${props => props.$panelBackgroundRGB};
+    --rgb-accent: ${props => props.$primaryColor};
 
     ${props =>
-      !props.isModal &&
+      !props.$isModal &&
       `
       &:after {
         content: '';
@@ -64,7 +64,7 @@ export const StyledEmojiPanel = styled.div<{
         transform: scaleY(1.4) rotate(45deg);
         border: 0.7px solid var(--border-color);
         clip-path: polygon(100% 100%, 7.2px 100%, 100% 7.2px);
-        ${props.panelBackgroundRGB && `background-color: rgb(${props.panelBackgroundRGB})`};
+        ${props.$panelBackgroundRGB && `background-color: rgb(${props.$panelBackgroundRGB})`};
 
         [dir='rtl'] & {
           left: 75px;
@@ -78,8 +78,7 @@ type Props = {
   onEmojiClicked: (emoji: FixedBaseEmoji) => void;
   show: boolean;
   isModal?: boolean;
-  // NOTE Currently this doesn't work but we have a PR waiting to be merged to resolve this
-  onKeyDown?: (event: any) => void;
+  onClose?: () => void;
 };
 
 const pickerProps = {
@@ -91,7 +90,7 @@ const pickerProps = {
 
 // eslint-disable-next-line react/display-name
 export const SessionEmojiPanel = forwardRef<HTMLDivElement, Props>((props: Props, ref) => {
-  const { onEmojiClicked, show, isModal = false, onKeyDown } = props;
+  const { onEmojiClicked, show, isModal = false, onClose } = props;
   const _primaryColor = usePrimaryColor();
   const theme = useTheme();
   const isDarkTheme = useIsDarkTheme();
@@ -128,11 +127,11 @@ export const SessionEmojiPanel = forwardRef<HTMLDivElement, Props>((props: Props
 
   return (
     <StyledEmojiPanel
-      isModal={isModal}
-      primaryColor={primaryColor}
-      theme={theme}
-      panelBackgroundRGB={panelBackgroundRGB}
-      panelTextRGB={panelTextRGB}
+      $isModal={isModal}
+      $primaryColor={primaryColor}
+      $theme={theme}
+      $panelBackgroundRGB={panelBackgroundRGB}
+      $panelTextRGB={panelTextRGB}
       className={clsx(show && 'show')}
       ref={ref}
     >
@@ -140,7 +139,7 @@ export const SessionEmojiPanel = forwardRef<HTMLDivElement, Props>((props: Props
         theme={isDarkTheme ? 'dark' : 'light'}
         i18n={i18nEmojiData}
         onEmojiSelect={onEmojiClicked}
-        onKeyDown={onKeyDown}
+        onClose={onClose}
         {...pickerProps}
       />
     </StyledEmojiPanel>

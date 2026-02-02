@@ -27,8 +27,8 @@ import { Reactions } from '../util/reactions';
 import { GroupV2Receiver } from './groupv2/handleGroupV2Message';
 import { ConversationTypeEnum } from '../models/types';
 import { ed25519Str } from '../session/utils/String';
-import { Timestamp } from '../types/timestamp/timestamp';
 import { longOrNumberToNumber } from '../types/long/longOrNumberToNumber';
+import { buildPrivateProfileChangeFromSwarmDataMessage } from '../models/profile';
 
 function cleanAttachment(attachment: SignalService.IAttachmentPointer) {
   return {
@@ -204,21 +204,15 @@ export async function handleSwarmDataMessage({
   );
 
   // Check if we need to update any profile names
-  if (
-    !isMe &&
-    senderConversationModel &&
-    cleanDataMessage.profile &&
-    cleanDataMessage.profileKey?.length
-  ) {
-    await ProfileManager.updateProfileOfContact({
-      pubkey: senderConversationModel.id,
-      displayName: cleanDataMessage.profile.displayName,
-      profileUrl: cleanDataMessage.profile.profilePicture,
-      profileKey: cleanDataMessage.profileKey,
-      profileUpdatedAtSeconds: new Timestamp({
-        value: cleanDataMessage.profile.lastProfileUpdateSeconds ?? 0,
-      }).seconds(),
+  if (!isMe && senderConversationModel) {
+    const profile = buildPrivateProfileChangeFromSwarmDataMessage({
+      convo: senderConversationModel,
+      dataMessage: cleanDataMessage,
+      decodedPro: decodedEnvelope.validPro,
     });
+    if (profile) {
+      await ProfileManager.updateProfileOfContact(profile);
+    }
   }
 
   if (!messageHasVisibleContent(cleanDataMessage)) {
@@ -303,7 +297,7 @@ async function handleSwarmMessage(
   void convoToAddMessageTo.queueJob(async () => {
     // this call has to be made inside the queueJob!
     // We handle reaction DataMessages separately
-    if (!convoToAddMessageTo.isPublic() && rawDataMessage.reaction) {
+    if (!convoToAddMessageTo.isOpenGroupV2() && rawDataMessage.reaction) {
       await Reactions.handleMessageReaction({
         reaction: rawDataMessage.reaction,
         sender: msgModel.get('source'),

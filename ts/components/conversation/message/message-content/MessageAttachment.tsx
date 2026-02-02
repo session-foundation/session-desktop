@@ -1,7 +1,8 @@
 import { clone } from 'lodash';
 import { useCallback } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import styled from 'styled-components';
+import { getAppDispatch } from '../../../../state/dispatch';
 import { Data } from '../../../../data/data';
 import { MessageModelType, MessageRenderingProps } from '../../../../models/messageType';
 import { PropsForAttachment, toggleSelectedMessageId } from '../../../../state/ducks/conversations';
@@ -46,20 +47,20 @@ type Props = {
 };
 
 const StyledImageGridContainer = styled.div<{
-  messageDirection: MessageModelType;
+  $messageDirection: MessageModelType;
 }>`
   text-align: center;
   position: relative;
   overflow: hidden;
   display: flex;
-  justify-content: ${props => (props.messageDirection === 'incoming' ? 'flex-start' : 'flex-end')};
+  justify-content: ${props => (props.$messageDirection === 'incoming' ? 'flex-start' : 'flex-end')};
 `;
 
 export const MessageAttachment = (props: Props) => {
   const { messageId, imageBroken, handleImageError, highlight = false } = props;
   const isDetailView = useIsDetailMessageView();
 
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const attachmentProps = useSelector((state: StateType) =>
     getMessageAttachmentProps(state, messageId)
   );
@@ -131,8 +132,8 @@ export const MessageAttachment = (props: Props) => {
     }
 
     return (
-      <MessageHighlighter highlight={highlight}>
-        <StyledImageGridContainer messageDirection={direction}>
+      <MessageHighlighter $highlight={highlight}>
+        <StyledImageGridContainer $messageDirection={direction}>
           <ImageGrid
             attachments={attachments}
             imageBroken={imageBroken}
@@ -148,8 +149,7 @@ export const MessageAttachment = (props: Props) => {
   if (!firstAttachment.pending && !firstAttachment.error && isAudio(attachments)) {
     return (
       <MessageHighlighter
-        highlight={highlight}
-        role="main"
+        $highlight={highlight}
         onClick={(e: any) => {
           if (multiSelectMode) {
             dispatch(toggleSelectedMessageId(messageId));

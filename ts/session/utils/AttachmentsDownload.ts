@@ -27,8 +27,6 @@ let timeout: any;
 let logger: any;
 const _activeAttachmentDownloadJobs: Record<string, Promise<void>> = {};
 
-// TODOLATER type those `any` properties
-
 export async function start(options: any = {}) {
   ({ logger } = options);
   if (!logger) {
@@ -320,20 +318,6 @@ function _addAttachmentToMessage(
 
   // for quote and previews, if the attachment cannot be downloaded we just erase it from the message itself, so just the title or body is rendered
   const wasDownloaded = !isEmpty(attachment.path);
-
-  if (type === 'quote') {
-    const quote = message.get('quote');
-    if (!quote) {
-      throw new Error("_addAttachmentToMessage: quote didn't exist");
-    }
-
-    // Note: we generate previews based on the quoted message now, so no need to keep this field
-    if (!wasDownloaded) {
-      message.deleteAttributes('quote_attachments');
-    }
-
-    return;
-  }
 
   if (type === 'preview') {
     const preview = message.get('preview');

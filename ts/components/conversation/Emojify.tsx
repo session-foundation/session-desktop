@@ -1,5 +1,4 @@
 import { SizeClassType } from '../../util/emoji';
-
 import { RenderTextCallbackType } from '../../types/Util';
 
 type Props = {
@@ -14,7 +13,7 @@ type Props = {
 
 const defaultRenderNonEmoji = (text: string | undefined) => <>{text || ''}</>;
 
-export const Emojify = (props: Props): JSX.Element => {
+export const Emojify = (props: Props) => {
   const { text, renderNonEmoji, sizeClass, isGroup, isPublic = false } = props;
   if (!renderNonEmoji) {
     return <>{defaultRenderNonEmoji(text)}</>;

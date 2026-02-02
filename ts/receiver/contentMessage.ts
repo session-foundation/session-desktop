@@ -33,8 +33,8 @@ import { handleCallMessage } from './callMessage';
 import { sentAtMoreRecentThanWrapper } from './sentAtMoreRecent';
 import { CONVERSATION_PRIORITIES, ConversationTypeEnum } from '../models/types';
 import { shouldProcessContentMessage } from './common';
-import { Timestamp } from '../types/timestamp/timestamp';
 import { longOrNumberToNumber } from '../types/long/longOrNumberToNumber';
+import { buildPrivateProfileChangeFromMsgRequestResponse } from '../models/profile';
 
 async function shouldDropIncomingPrivateMessage(
   envelope: BaseDecodedEnvelope,
@@ -523,6 +523,9 @@ async function handleMessageRequestResponse(
 
   const convosToMerge = findCachedBlindedMatchOrLookupOnAllServers(envelope.source, sodium);
   const unblindedConvoId = envelope.source;
+  window?.log?.debug(
+    `handleMessageRequestResponse: src:${ed25519Str(envelope.source)}, unblindedConvo: ${ed25519Str(unblindedConvoId)}`
+  );
 
   if (!PubKey.is05Pubkey(unblindedConvoId)) {
     window?.log?.warn(
@@ -547,33 +550,18 @@ async function handleMessageRequestResponse(
   await conversationToApprove.unhideIfNeeded(false);
   await conversationToApprove.commit();
 
+  // grab the profile details from the msg request response
+  const profile = buildPrivateProfileChangeFromMsgRequestResponse({
+    convo: conversationToApprove,
+    messageRequestResponse,
+    decodedEnvelope: envelope,
+  });
+
+  if (profile) {
+    await ProfileManager.updateProfileOfContact(profile);
+  }
+
   if (convosToMerge.length) {
-    // merge fields we care by hand
-    const srcConvo = convosToMerge[0];
-
-    const srcProfileDetails = srcConvo.getPrivateProfileDetails();
-    const srcAvatarPath = srcConvo.getAvatarInProfilePath();
-    const srcFallbackAvatarPath = srcConvo.getFallbackAvatarInProfilePath();
-    const srcProfilePic = srcProfileDetails.toHexProfilePicture();
-
-    const avatarChanges =
-      srcAvatarPath && srcFallbackAvatarPath && srcProfilePic.url && srcProfilePic.key
-        ? {
-            type: 'setAvatarDownloadedPrivate' as const,
-            avatarPath: srcAvatarPath,
-            fallbackAvatarPath: srcFallbackAvatarPath,
-            avatarPointer: srcProfilePic.url,
-            profileKey: srcProfilePic.key,
-            profileUpdatedAtSeconds: srcProfileDetails.getUpdatedAtSeconds(),
-          }
-        : {
-            type: 'resetAvatarPrivate' as const,
-            profileUpdatedAtSeconds: srcProfileDetails.getUpdatedAtSeconds(),
-          };
-    await conversationToApprove.setSessionProfile({
-      displayName: srcConvo.getRealSessionUsername(),
-      ...avatarChanges,
-    });
     await conversationToApprove.setIsApproved(convosToMerge[0].isApproved(), false);
     // nickname might be set already in conversationToApprove, so don't overwrite it
 
@@ -611,19 +599,6 @@ async function handleMessageRequestResponse(
       await ConvoHub.use().deleteBlindedContact(element.id);
     }
   }
-
-  if (messageRequestResponse.profile && !isEmpty(messageRequestResponse.profile)) {
-    await ProfileManager.updateProfileOfContact({
-      pubkey: conversationToApprove.id,
-      displayName: messageRequestResponse.profile.displayName,
-      profileUrl: messageRequestResponse.profile.profilePicture,
-      profileKey: messageRequestResponse.profileKey,
-      profileUpdatedAtSeconds: new Timestamp({
-        value: longOrNumberToNumber(messageRequestResponse.profile.lastProfileUpdateSeconds ?? 0),
-      }).seconds(),
-    });
-  }
-
   if (previousApprovedMe) {
     await conversationToApprove.commit();
 

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { getAppDispatch } from '../../state/dispatch';
 import { useMessageReactsPropsById } from '../../hooks/useParamSelector';
 import { clearSogsReactionByServerId } from '../../session/apis/open_group_api/sogsv3/sogsV3ClearReaction';
 import { ConvoHub } from '../../session/conversations';
@@ -25,7 +25,7 @@ export const ReactClearAllModal = (props: Props) => {
 
   const [clearingInProgress, setClearingInProgress] = useState(false);
 
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const msgProps = useMessageReactsPropsById(messageId);
 
   if (!msgProps) {
@@ -79,7 +79,7 @@ export const ReactClearAllModal = (props: Props) => {
           localizerProps={{ token: 'emojiReactsClearAll', emoji: reaction }}
         />
 
-        <SessionSpinner loading={clearingInProgress} />
+        <SessionSpinner $loading={clearingInProgress} />
       </ModalFlexContainer>
     </SessionWrapperModal>
   );

@@ -1,5 +1,5 @@
-import { useDispatch } from 'react-redux';
 import { useState } from 'react';
+import { getAppDispatch } from '../../state/dispatch';
 
 import { updateEnterPasswordModal } from '../../state/ducks/modalDialog';
 import { SpacerSM } from '../basic/Text';
@@ -36,7 +36,7 @@ export const EnterPasswordModal = (props: EnterPasswordModalProps) => {
 
   const [password, setPassword] = useState('');
   const [providedError, setProvidedError] = useState<string | undefined>(undefined);
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   const verifyPassword = async () => {
     try {

@@ -1,6 +1,10 @@
 /* eslint-disable no-param-reassign */
 import _ from 'lodash';
 
+function isFile(v: unknown) {
+  return _.isObject(v) && 'name' in v && 'path' in v && 'size' in v && 'type' in v;
+}
+
 /**
  * When IPC arguments are prepared for the cross-process send, they are JSON.stringified.
  * We can't send ArrayBuffers or BigNumbers (what we get from proto library for dates).
@@ -31,7 +35,7 @@ export function cleanData(data: any): any {
       delete data[key];
     } else if (Array.isArray(value)) {
       data[key] = value.map(cleanData);
-    } else if (_.isObject(value) && value instanceof File) {
+    } else if (isFile(value)) {
       data[key] = { name: value.name, path: value.path, size: value.size, type: value.type };
     } else if (_.isObject(value) && value instanceof ArrayBuffer) {
       window.log.error(

@@ -7,7 +7,7 @@ import { clone, groupBy, isEqual, uniqBy } from 'lodash';
 import { OpenGroupData } from '../../../../data/opengroups';
 import { ConversationModel } from '../../../../models/conversation';
 import { ConvoHub } from '../../../conversations';
-import { allowOnlyOneAtATime } from '../../../utils/Promise';
+import { allowOnlyOneAtATime, sleepFor } from '../../../utils/Promise';
 import {
   getAllValidOpenGroupV2ConversationRoomInfos,
   getOpenGroupV2ConversationId,
@@ -176,52 +176,64 @@ export class OpenGroupManagerV2 {
         serverPublicKey,
       };
       const updatedRoom = clone(room);
-      // save the pubkey to the db right now, the request for room Info
-      // will need it and access it from the db
-      await OpenGroupData.saveV2OpenGroupRoom(room);
 
-      // TODOLATER make the requests made here retry a few times (can fail when trying to join a group too soon after a restart)
-      const roomInfos = await openGroupV2GetRoomInfoViaOnionV4({
-        serverPubkey: serverPublicKey,
-        serverUrl,
-        roomId,
-      });
+      for (let index = 0; index < 3; index++) {
+        /**
+         * Note: sometime after the app starts, the sogs poller are started.
+         * When they do so, they cleanup the current rooms based on what is in the wrapper.
+         * This creates a race condition where:
+         *  - a regression test or incoming config messages tells us to join a room
+         *  - the cleanup above removes the room from the wrapper
+         * To deal with this issue, we retry a few times to join the room (and save it to the DB each times)
+         */
+        // save the pubkey to the db right now, the request for room Info
+        // will need it and access it from the db
+        await OpenGroupData.saveV2OpenGroupRoom(room);
 
-      if (!roomInfos || !roomInfos.id) {
-        throw new Error('Invalid open group roomInfo result');
+        // TODO make the requests made here retry a few times (can fail when trying to join a group too soon after a restart)
+        const roomInfos = await openGroupV2GetRoomInfoViaOnionV4({
+          serverPubkey: serverPublicKey,
+          serverUrl,
+          roomId,
+        });
+
+        if (roomInfos && roomInfos.id) {
+          updatedRoom.roomId = roomInfos.id;
+          conversationId = getOpenGroupV2ConversationId(serverUrl, roomInfos.id);
+          updatedRoom.conversationId = conversationId;
+          if (!isEqual(room, updatedRoom)) {
+            await OpenGroupData.removeV2OpenGroupRoom(conversationId);
+            await OpenGroupData.saveV2OpenGroupRoom(updatedRoom);
+          }
+
+          const conversation = await ConvoHub.use().getOrCreateAndWait(
+            conversationId,
+            ConversationTypeEnum.GROUP
+          );
+          updatedRoom.imageID = roomInfos.imageId || undefined;
+          updatedRoom.roomName = roomInfos.name || undefined;
+          updatedRoom.capabilities = roomInfos.capabilities;
+          await OpenGroupData.saveV2OpenGroupRoom(updatedRoom);
+
+          // mark active so it's not in the contacts list but in the conversation list
+          // mark isApproved as this is a public chat
+          conversation.setActiveAt(Date.now());
+          conversation.setNonPrivateNameNoCommit(updatedRoom.roomName);
+          await conversation.setIsApproved(true, false);
+          await conversation.setDidApproveMe(true, false);
+          await conversation.setPriorityFromWrapper(CONVERSATION_PRIORITIES.default, false);
+          conversation.setIsTrustedForAttachmentDownload(true); // we always trust attachments when sent to an opengroup
+
+          await conversation.commit();
+
+          // start polling this room
+          this.addRoomToPolledRooms([updatedRoom]);
+          return conversation;
+        }
+        // else we continue & retry
+        await sleepFor(1000);
       }
-      updatedRoom.roomId = roomInfos.id;
-      conversationId = getOpenGroupV2ConversationId(serverUrl, roomInfos.id);
-      updatedRoom.conversationId = conversationId;
-      if (!isEqual(room, updatedRoom)) {
-        await OpenGroupData.removeV2OpenGroupRoom(conversationId);
-        await OpenGroupData.saveV2OpenGroupRoom(updatedRoom);
-      }
-
-      const conversation = await ConvoHub.use().getOrCreateAndWait(
-        conversationId,
-        ConversationTypeEnum.GROUP
-      );
-      updatedRoom.imageID = roomInfos.imageId || undefined;
-      updatedRoom.roomName = roomInfos.name || undefined;
-      updatedRoom.capabilities = roomInfos.capabilities;
-      await OpenGroupData.saveV2OpenGroupRoom(updatedRoom);
-
-      // mark active so it's not in the contacts list but in the conversation list
-      // mark isApproved as this is a public chat
-      conversation.setActiveAt(Date.now());
-      conversation.setNonPrivateNameNoCommit(updatedRoom.roomName);
-      await conversation.setIsApproved(true, false);
-      await conversation.setDidApproveMe(true, false);
-      await conversation.setPriorityFromWrapper(CONVERSATION_PRIORITIES.default, false);
-      conversation.setIsTrustedForAttachmentDownload(true); // we always trust attachments when sent to an opengroup
-
-      await conversation.commit();
-
-      // start polling this room
-      this.addRoomToPolledRooms([updatedRoom]);
-
-      return conversation;
+      throw new Error("Couldn't join open group v2 after multiple attempts");
     } catch (e) {
       window?.log?.warn('Failed to join open group v2', e.message);
       await OpenGroupData.removeV2OpenGroupRoom(conversationId);

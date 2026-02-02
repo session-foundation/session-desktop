@@ -6,7 +6,9 @@ import { uploadAndSetOurAvatarShared } from '../../interactions/avatar-interacti
 import { ed25519Str } from '../../session/utils/String';
 import { userSettingsModal, updateEditProfilePictureModal } from './modalDialog';
 import { NetworkTime } from '../../util/NetworkTime';
-import { UserConfigWrapperActions } from '../../webworker/workers/browser/libsession_worker_interface';
+import { UserConfigWrapperActions } from '../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
+import { SessionProfileResetAvatarPrivate } from '../../models/profile';
+import { stringify } from '../../types/sqlSharedTypes';
 
 export type UserStateType = {
   ourDisplayNameInProfile: string;
@@ -38,7 +40,6 @@ const updateOurAvatar = createAsyncThunk(
 
     const res = await uploadAndSetOurAvatarShared({
       decryptedAvatarData: mainAvatarDecrypted,
-      ourConvo,
       context: 'uploadNewAvatar',
     });
 
@@ -74,15 +75,21 @@ const clearOurAvatar = createAsyncThunk('user/clearOurAvatar', async () => {
     return;
   }
 
-  await convo.setSessionProfile({
-    type: 'resetAvatarPrivate',
+  const profile = new SessionProfileResetAvatarPrivate({
+    convo,
     displayName: null,
     profileUpdatedAtSeconds: NetworkTime.nowSeconds(),
+    // NTS case, we don't care about those
+    proDetails: { bitsetProFeatures: null, proExpiryTsMs: null, proGenIndexHashB64: null },
   });
+
+  await profile.applyChangesIfNeeded();
+
   await UserConfigWrapperActions.setNewProfilePic({
     url: null,
     key: null,
   });
+  await UserConfigWrapperActions.setAnimatedAvatar(false);
 
   await SyncUtils.forceSyncConfigurationNowIfNeeded(true);
   window.inboxStore?.dispatch(updateEditProfilePictureModal(null));
@@ -111,14 +118,15 @@ const userSlice = createSlice({
   },
   extraReducers: builder => {
     builder.addCase(updateOurAvatar.fulfilled, (state, action) => {
-      window.log.info('a updateOurAvatar was fulfilled with:', action.payload);
+      window.log.info('a updateOurAvatar was fulfilled');
+      window.log.debug(`a updateOurAvatar was fulfilled with: ${stringify(action.payload)}`);
 
       state.uploadingNewAvatarCurrentUser = false;
       state.uploadingNewAvatarCurrentUserFailed = !action.payload;
       return state;
     });
     builder.addCase(updateOurAvatar.rejected, (state, action) => {
-      window.log.error('a updateOurAvatar was rejected', action.error);
+      window.log.error('a updateOurAvatar was rejected', JSON.stringify(action.error));
       state.uploadingNewAvatarCurrentUser = false;
       state.uploadingNewAvatarCurrentUserFailed = true;
       return state;

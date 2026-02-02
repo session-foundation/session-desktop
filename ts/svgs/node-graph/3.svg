@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 140">
+  <!-- Connector lines -->
+  <path stroke="var(--c2)" stroke-width="2.5" fill="none" d="M103.675 57.65 97.05 87.106m-36.96-1.59L82.714 95.59M60.582 72.868 94.555 50.94"/>
+  <!-- Border -->
+  <rect stroke="var(--c1)" fill="none" width="158" height="138" x="1" y="1" rx="7.55"/>
+  <!-- Nodes -->
+  <g filter="url(#g)" stroke="var(--c1)" fill="var(--c1)">
+    <circle cx="94.249" cy="100.202" r="12.74" fill="none" stroke-width="2"/>
+    <circle cx="94.249" cy="100.202" r="10.453" stroke="none"/>
+
+    <circle cx="107.122" cy="42.743" r="14.86" fill="none" stroke-width="2"/>
+    <circle cx="107.122" cy="42.743" r="12.167" stroke="none"/>
+
+    <circle cx="49.888" cy="79.868" r="11.674" fill="none" stroke-width="2"/>
+    <circle cx="49.888" cy="79.868" r="9.02" stroke="none"/>
+  </g>
+  <defs>
+    <filter id="g" x="-100%" y="-100%" width="300%" height="300%" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="bg"/>
+      <feColorMatrix in="SourceAlpha" result="a" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"/>
+      <feMorphology in="SourceAlpha" operator="dilate" radius="3"/>
+      <feGaussianBlur stdDeviation="8.2"/>
+      <feComposite in2="a" operator="out"/>
+      <feColorMatrix values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.35 0"/>
+      <feBlend in2="bg" result="glow"/>
+      <feBlend in="SourceGraphic" in2="glow"/>
+    </filter>
+  </defs>
+</svg>

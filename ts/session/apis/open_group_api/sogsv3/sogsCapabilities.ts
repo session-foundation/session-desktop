@@ -43,8 +43,6 @@ export const handleCapabilities = async (
   }
 
   // get all v2OpenGroup rooms with the matching serverUrl and set the capabilities.
-  // TODOLATER: capabilities are shared across a server, not a room. We should probably move this to the server but we do not a server level currently, just rooms
-
   const rooms = OpenGroupData.getV2OpenGroupRoomsByServerUrl(serverUrl);
 
   if (!rooms || !rooms.length) {

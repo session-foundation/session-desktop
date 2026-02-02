@@ -1,11 +1,14 @@
-// NOTE: Dont import the whole package because we would need to setup the providers which we dont need
-import { z } from 'zod';
+import { z } from '../../../util/zod';
 import { SessionBackendBaseResponseSchema } from '../session_backend_server';
 
 // NOTE: this is only needed here for schema validation, but we should move this elsewhere if we use it for other things
 const ethereumAddressRegex = /^0x[a-fA-F0-9]{40}$/;
 export type EthereumAddress = `0x${string}`;
 const isEthereumAddress = (v: string): v is EthereumAddress => ethereumAddressRegex.test(v);
+const EthereumAddressSchema = z
+  .string()
+  .refine(isEthereumAddress, { message: 'Invalid Ethereum address' })
+  .transform(v => v as EthereumAddress);
 
 /**
  * Token price info object
@@ -30,7 +33,7 @@ const PriceSchema = z.object({
 const TokenSchema = z.object({
   staking_requirement: z.number(),
   staking_reward_pool: z.number(),
-  contract_address: z.string().refine(isEthereumAddress),
+  contract_address: EthereumAddressSchema,
 });
 
 /** Network info object

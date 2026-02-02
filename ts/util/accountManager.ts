@@ -23,8 +23,8 @@ import { Storage, saveRecoveryPhrase, setLocalPubKey, setSignInByLinking } from 
 import { PromiseUtils } from '../session/utils';
 import { SnodeAPI } from '../session/apis/snode_api/SNodeAPI';
 import { tr } from '../localization/localeTools';
-import { NetworkTime } from './NetworkTime';
-import { UserConfigWrapperActions } from '../webworker/workers/browser/libsession_worker_interface';
+import { SessionDisplayNameOnlyPrivate } from '../models/profile';
+import { UserConfigWrapperActions } from '../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 
 /**
  * Might throw
@@ -230,11 +230,15 @@ export async function registrationDone(ourPubkey: string, displayName: string) {
   );
   await UserConfigWrapperActions.setNameTruncated(displayName ?? 'Anonymous');
 
-  await conversation.setSessionProfile({
-    type: 'displayNameChangeOnlyPrivate',
+  const profile = new SessionDisplayNameOnlyPrivate({
+    convo: conversation,
     displayName,
-    profileUpdatedAtSeconds: NetworkTime.nowSeconds(),
+    /* Note: fake the `profileUpdatedAtSeconds` to 1 to make sure that the full user profile are updated on the next sync.
+     * This is needed because we only apply the display name change here and don't download the avatar if one is set.
+     */
+    profileUpdatedAtSeconds: 1,
   });
+  await profile.applyChangesIfNeeded();
 
   await conversation.setIsApproved(true, false);
   await conversation.setDidApproveMe(true, false);
@@ -255,8 +259,6 @@ export async function registrationDone(ourPubkey: string, displayName: string) {
 
 export const deleteDbLocally = async () => {
   window?.log?.info('last message sent successfully. Deleting everything');
-  await window.persistStore?.purge();
-  window?.log?.info('store purged');
 
   await deleteAllLogs();
   window?.log?.info('deleteAllLogs: done');

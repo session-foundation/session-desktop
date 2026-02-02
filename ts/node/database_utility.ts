@@ -1,10 +1,13 @@
-import * as BetterSqlite3 from '@signalapp/better-sqlite3';
-import { difference, isFinite, isNumber, omit, pick } from 'lodash';
+import { type Database, type SqliteValue, type StatementParameters } from '@signalapp/sqlcipher';
+import { difference, isFinite, isNumber, isString, omit, pick } from 'lodash';
+import { isUndefined } from 'lodash/fp';
 import {
   ConversationAttributes,
   ConversationAttributesWithNotSavedOnes,
 } from '../models/conversationAttributes';
 import { CONVERSATION_PRIORITIES } from '../models/types';
+import { stringify, type JSONRow, type SQLInsertable } from '../types/sqlSharedTypes';
+import { isDevProd } from '../shared/env_vars';
 
 export const CONVERSATIONS_TABLE = 'conversations';
 export const MESSAGES_TABLE = 'messages';
@@ -19,6 +22,18 @@ export const CLOSED_GROUP_V2_KEY_PAIRS_TABLE = 'encryptionKeyPairsForClosedGroup
 export const LAST_HASHES_TABLE = 'lastHashes';
 export const SEEN_MESSAGE_TABLE = 'seenMessages';
 
+export const MessageColumns = {
+  /**
+   * A column that coalesce serverTimestamp & sentTimestamp & receivedAt
+   */
+  coalesceSentAndReceivedAt: 'sort_timestamp_full' as const,
+
+  /**
+   * A column that is true if the message mentions us
+   */
+  mentionsUs: 'mentions_us' as const,
+};
+
 export const HEX_KEY = /[^0-9A-Fa-f]/;
 
 export function objectToJSON(data: Record<any, any>) {
@@ -26,6 +41,10 @@ export function objectToJSON(data: Record<any, any>) {
 }
 export function jsonToObject(json: string): Record<string, any> {
   return JSON.parse(json);
+}
+
+export function parseJsonRows(rows: Array<JSONRow>) {
+  return rows.map(row => jsonToObject(row.json));
 }
 
 function jsonToArray(json: string): Array<string> {
@@ -41,7 +60,7 @@ export function arrayStrToJson(arr: Array<string>): string {
   return JSON.stringify(arr);
 }
 
-export function toSqliteBoolean(val: boolean): number {
+export function toSqliteBoolean(val?: boolean | 0 | 1): number {
   return val ? 1 : 0;
 }
 
@@ -84,7 +103,8 @@ const allowedKeysFormatRowOfConversation = [
 ];
 
 export function formatRowOfConversation(
-  row: Record<string, any>,
+  // TODO: There isnt an easy way to type this while having it mutable in the function, find a solution
+  row: JSONRow<any>,
   from: string,
   unreadCount: number,
   mentionedUs: boolean
@@ -263,7 +283,7 @@ export function assertValidConversationAttributes(
   return pick(data, allowedKeysOfConversationAttributes) as ConversationAttributes;
 }
 
-export function dropFtsAndTriggers(db: BetterSqlite3.Database) {
+export function dropFtsAndTriggers(db: Database) {
   console.info('dropping fts5 table');
 
   db.exec(`
@@ -274,7 +294,7 @@ export function dropFtsAndTriggers(db: BetterSqlite3.Database) {
       `);
 }
 
-export function rebuildFtsTable(db: BetterSqlite3.Database) {
+export function rebuildFtsTable(db: Database) {
   console.info('rebuildFtsTable');
   db.exec(`
           -- Then we create our full-text search table and populate it
@@ -307,4 +327,139 @@ export function rebuildFtsTable(db: BetterSqlite3.Database) {
           END;
           `);
   console.info('rebuildFtsTable built');
+}
+
+/**
+ *
+ * This new version of the fts table saves storage space by referencing the message table.
+ * It stores the token for search in the fts table, but the body is only on the messages tables.
+ * We need to do a join, to fetch the body, but that has a small impact on performance, saving half of the used storage of the message table.
+ */
+export function rebuildFtsTableReferencingMessages(db: Database) {
+  const start = Date.now();
+  console.info('rebuildFtsTableReferencingMessages');
+  db.exec(`
+    -- Create FTS5 table that references the messages table
+    CREATE VIRTUAL TABLE ${MESSAGES_FTS_TABLE}
+        USING fts5(
+        body,
+        content=${MESSAGES_TABLE},
+        tokenize='porter unicode61',
+        content_rowid=rowid,
+        prefix='1,2' -- generate indexed prefix for short queries matching many messages
+      );
+
+    -- Populate the FTS index from existing messages
+    INSERT INTO ${MESSAGES_FTS_TABLE}(rowid, body)
+      SELECT rowid, body FROM ${MESSAGES_TABLE};
+
+    CREATE TRIGGER messages_on_insert AFTER INSERT ON ${MESSAGES_TABLE}
+    WHEN new.body IS NOT NULL
+    BEGIN
+
+      INSERT INTO ${MESSAGES_FTS_TABLE}(rowid, body)
+      VALUES (new.rowid, new.body);
+    END;
+
+    CREATE TRIGGER messages_on_delete AFTER DELETE ON ${MESSAGES_TABLE} BEGIN
+      DELETE FROM ${MESSAGES_FTS_TABLE} WHERE rowid = old.rowid;
+    END;
+
+    CREATE TRIGGER messages_on_update AFTER UPDATE ON ${MESSAGES_TABLE}
+    WHEN new.body <> old.body
+    BEGIN
+      -- Delete old entry if it existed (old.body was not NULL)
+      DELETE FROM ${MESSAGES_FTS_TABLE} WHERE rowid = old.rowid;
+
+      -- Insert new entry if new.body is not NULL
+      INSERT INTO ${MESSAGES_FTS_TABLE}(rowid, body)
+      SELECT new.rowid, new.body;
+    END;
+
+
+  `);
+  console.info('rebuildFtsTableReferencingMessages built in ', Date.now() - start, 'ms');
+}
+
+function analyzeSlowQueries() {
+  return process.env.ANALYZE_QUERIES === '1';
+}
+
+function analyzeAllQueries() {
+  return process.env.FORCE_ANALYZE_ALL_QUERIES === '1';
+}
+
+export function analyzeQuery(
+  db: Database,
+  query: string,
+  params?: StatementParameters<object>,
+  forceAnalyzeThisQuery = false
+) {
+  const prefix = '[QUERY PLAN]: ';
+  const stmt = db.prepare(query);
+
+  const executeAndAnalyze = <T>(executor: () => T): T => {
+    const start = Date.now();
+    const result = executor();
+    const executionTime = Date.now() - start;
+
+    if (analyzeSlowQueries() || analyzeAllQueries()) {
+      try {
+        const plan = db.prepare(`EXPLAIN QUERY PLAN ${query}`).all(params);
+
+        const hasTableScan = plan.some(
+          row => row.detail && isString(row.detail) && row.detail.includes('SCAN TABLE')
+        );
+        const hasTempBTree = plan.some(
+          row => row.detail && isString(row.detail) && row.detail.includes('TEMP B-TREE')
+        );
+
+        if (
+          forceAnalyzeThisQuery ||
+          hasTableScan ||
+          hasTempBTree ||
+          executionTime > 500 ||
+          analyzeAllQueries()
+        ) {
+          console.info(
+            `${prefix}⚠️ PERFORMANCE WARNING: Query uses table scan or temp b-tree or was slow and took ${executionTime}ms`
+          );
+          console.info(`${prefix}Query: ${query.replace(/\s+/g, ' ').trim()}`);
+          console.info(`${prefix}Params: ${JSON.stringify(params)}`);
+          console.info(`${prefix}Execution plan:`);
+          plan.forEach(row => console.info(`${prefix}\t${row.detail}`));
+          console.info(`${prefix}\t------`);
+        }
+      } catch (err) {
+        console.error('\tFailed to analyze query:', err.message, stringify(err.stack));
+      }
+    }
+
+    return result;
+  };
+
+  return {
+    all: <T extends Record<string, SqliteValue<object>>>() =>
+      executeAndAnalyze(() => stmt.all<T>(params)),
+    get: <T extends Record<string, SqliteValue<object>>>() =>
+      executeAndAnalyze(() => stmt.get<T>(params)),
+    run: () => executeAndAnalyze(() => stmt.run(params)),
+  };
+}
+
+export function devAssertValidSQLPayload(table: string, payload: SQLInsertable) {
+  if (!isDevProd()) {
+    return;
+  }
+  const undefinedFields: Array<string> = [];
+  Object.entries(payload).forEach(([key, value]) => {
+    if (isUndefined(value)) {
+      undefinedFields.push(key);
+    }
+  });
+  if (undefinedFields.length) {
+    throw new Error(
+      `unexpected type 'undefined' in SQL in payload for '${table}' in param${undefinedFields.length > 1 ? 's:' : ''} ${undefinedFields.join(', ')} `
+    );
+  }
 }

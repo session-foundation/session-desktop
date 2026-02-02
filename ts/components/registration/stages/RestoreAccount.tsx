@@ -1,7 +1,7 @@
 import { Dispatch } from '@reduxjs/toolkit';
 import { isEmpty } from 'lodash';
-import { useDispatch } from 'react-redux';
 import { useState } from 'react';
+import { getAppDispatch } from '../../../state/dispatch';
 import { ONBOARDING_TIMES } from '../../../session/constants';
 import { InvalidWordsError, NotEnoughWordsError } from '../../../session/crypto/mnemonic';
 import { ProfileManager } from '../../../session/profile_manager/ProfileManager';
@@ -47,6 +47,7 @@ import { useRecoveryProgressEffect } from '../hooks';
 import { tr } from '../../../localization/localeTools';
 import { sanitizeDisplayNameOrToast } from '../utils';
 import { ShowHideSessionInput, SimpleSessionInput } from '../../inputs/SessionInput';
+import { configurationMessageReceived } from '../../../shims/events';
 
 type AccountRestoreDetails = {
   recoveryPassword: string;
@@ -75,9 +76,9 @@ async function signInAndFetchDisplayName({
     const promiseLink = signInByLinkingDevice(recoveryPassword, 'english', abortSignal);
     const promiseWait = PromiseUtils.waitForTask(done => {
       window.Whisper.events.on(
-        'configurationMessageReceived',
+        configurationMessageReceived,
         async (ourPubkey: string, displayName: string) => {
-          window.Whisper.events.off('configurationMessageReceived');
+          window.Whisper.events.off(configurationMessageReceived);
           await setSignInByLinking(false);
           dispatch(setHexGeneratedPubKey(ourPubkey));
           dispatch(setDisplayName(displayName));
@@ -130,7 +131,7 @@ const showHideButtonDataTestIds = {
 } as const;
 
 const RecoveryPhraseInput = ({ onEnterPressed }: { onEnterPressed: () => Promise<void> }) => {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const recoveryPassword = useRecoveryPassword();
   const recoveryPasswordError = useRecoveryPasswordError();
 
@@ -161,7 +162,7 @@ export const RestoreAccount = () => {
   const displayNameError = useDisplayNameError();
   const progress = useProgress();
 
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   const [cannotContinue, setCannotContinue] = useState(true);
 
@@ -284,7 +285,7 @@ export const RestoreAccount = () => {
         $flexDirection="column"
         $justifyContent="flex-start"
         $alignItems="flex-start"
-        margin={
+        $margin={
           step === AccountRestoration.RecoveryPassword || step === AccountRestoration.DisplayName
             ? '0 0 0 8px'
             : '0px'

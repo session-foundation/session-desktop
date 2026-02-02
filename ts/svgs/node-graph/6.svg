@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 140">
+  <!-- Connector lines -->
+  <path stroke="var(--c2)" stroke-width="2.5" fill="none" d="m76.49 35.76 32.93 4.65M48.88 97.1l19.79-9.71m-15.26-45.8L37.7 56.2m-6 16.2 3.6 19.52m57.66-4.53 25.62 13.42m7.89-6.74-6.7-43.33M90.04 71.9l24.52-21.72m-75.09 15.7 29.2 9.9"/>
+  <!-- Border -->
+  <rect stroke="var(--c1)" fill="none" width="158" height="138" x="1" y="1" rx="7.55"/>
+  <!-- Nodes -->
+  <g filter="url(#g)" stroke="var(--c1)" fill="var(--c1)">
+    <circle cx="63.52" cy="33.14" r="12.74" fill="none" stroke-width="2"/>
+    <circle cx="63.52" cy="33.14" r="10.45" stroke="none"/>
+    <circle cx="80.56" cy="81.1" r="12.74" fill="none" stroke-width="2"/>
+    <circle cx="80.56" cy="81.1" r="10.45" stroke="none"/>
+    <circle cx="118.58" cy="41.59" r="9.16" fill="none" stroke-width="1.5"/>
+    <circle cx="118.58" cy="41.59" r="7.38" stroke="none"/>
+    <circle cx="30.31" cy="62.75" r="9.16" fill="none" stroke-width="1.5"/>
+    <circle cx="30.31" cy="62.75" r="7.38" stroke="none"/>
+    <circle cx="128.22" cy="104.31" r="9.8" fill="none" stroke-width="2"/>
+    <circle cx="128.22" cy="104.31" r="7.78" stroke="none"/>
+    <circle cx="37.69" cy="103.11" r="11.67" fill="none" stroke-width="2"/>
+    <circle cx="37.69" cy="103.11" r="9.02" stroke="none"/>
+  </g>
+  <defs>
+    <filter id="g" x="-100%" y="-100%" width="300%" height="300%" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="bg"/>
+      <feColorMatrix in="SourceAlpha" result="a" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"/>
+      <feMorphology in="SourceAlpha" operator="dilate" radius="3"/>
+      <feGaussianBlur stdDeviation="8.2"/>
+      <feComposite in2="a" operator="out"/>
+      <feColorMatrix values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.35 0"/>
+      <feBlend in2="bg" result="glow"/>
+      <feBlend in="SourceGraphic" in2="glow"/>
+    </filter>
+  </defs>
+</svg>

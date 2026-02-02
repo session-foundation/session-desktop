@@ -23,11 +23,11 @@ export const DraggableCallWindow = styled.div`
   border-radius: var(--border-radius);
 `;
 
-export const StyledVideoElement = styled.video<{ isVideoMuted: boolean }>`
+export const StyledVideoElement = styled.video<{ $isVideoMuted: boolean }>`
   padding: 0 1rem;
   height: 100%;
   width: 100%;
-  opacity: ${props => (props.isVideoMuted ? 0 : 1)};
+  opacity: ${props => (props.$isVideoMuted ? 0 : 1)};
 `;
 
 const StyledDraggableVideoElement = styled(StyledVideoElement)`
@@ -58,7 +58,6 @@ export const DraggableCallContainer = () => {
   const ongoingCallProps = useSelector(getHasOngoingCallWith);
   const selectedConversationKey = useSelectedConversationKey();
   const hasOngoingCall = useSelector(getHasOngoingCall);
-
   // the draggable container has a width of 12vw, so we just set it's X to a bit more than this
   const [positionX, setPositionX] = useState(window.innerWidth - (window.innerWidth * 1) / 6);
   // 90 px is a bit below the conversation header height
@@ -71,6 +70,7 @@ export const DraggableCallContainer = () => {
     'DraggableCallContainer',
     false
   );
+  const draggableRef = useRef<HTMLDivElement>(null);
   const videoRefRemote = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -105,6 +105,7 @@ export const DraggableCallContainer = () => {
 
   return (
     <Draggable
+      nodeRef={draggableRef}
       handle=".dragHandle"
       position={{ x: positionX, y: positionY }}
       onStart={(_e: DraggableEvent, data: DraggableData) => {
@@ -121,13 +122,13 @@ export const DraggableCallContainer = () => {
         setPositionY(data.y);
       }}
     >
-      <DraggableCallWindow className="dragHandle">
+      <DraggableCallWindow ref={draggableRef} className="dragHandle">
         <DraggableCallWindowInner>
           <VideoLoadingSpinner fullWidth={true} />
           <StyledDraggableVideoElement
             ref={videoRefRemote}
             autoPlay={true}
-            isVideoMuted={remoteStreamVideoIsMuted}
+            $isVideoMuted={remoteStreamVideoIsMuted}
           />
           {remoteStreamVideoIsMuted && ongoingCallPubkey && (
             <CenteredAvatarInDraggable>

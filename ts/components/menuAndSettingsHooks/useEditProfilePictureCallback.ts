@@ -1,4 +1,4 @@
-import { useDispatch } from 'react-redux';
+import { getAppDispatch } from '../../state/dispatch';
 import { useIsGroupV2, useIsMe, useIsPublic, useWeAreAdmin } from '../../hooks/useParamSelector';
 import { updateEditProfilePictureModal } from '../../state/ducks/modalDialog';
 import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
@@ -23,7 +23,7 @@ function useEditProfilePicture({ conversationId }: { conversationId: string }) {
 
 export function useEditProfilePictureCallback({ conversationId }: { conversationId: string }) {
   const canEdit = useEditProfilePicture({ conversationId });
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   if (!canEdit) {
     return undefined;

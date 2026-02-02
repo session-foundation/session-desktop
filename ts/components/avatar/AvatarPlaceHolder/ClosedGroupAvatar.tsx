@@ -47,9 +47,9 @@ function useGroupMembersAvatars(convoId: string | undefined) {
   return sortAndSlice(sortedMembers, us);
 }
 
-const StyledAvatarClosedContainer = styled.div<{ containerSize: number }>`
-  width: ${({ containerSize }) => containerSize}px;
-  height: ${({ containerSize }) => containerSize}px;
+const StyledAvatarClosedContainer = styled.div<{ $containerSize: number }>`
+  width: ${({ $containerSize }) => $containerSize}px;
+  height: ${({ $containerSize }) => $containerSize}px;
   mask-image: url(images/avatar-svg-mask.svg);
 
   ${StyledAvatar}:last-child {
@@ -58,6 +58,9 @@ const StyledAvatarClosedContainer = styled.div<{ containerSize: number }>`
     bottom: 0px;
   }
 `;
+
+// NOTE: [react-compiler] this has to live here for the hook to be identified as static
+const useAvatarBgColorInternal = useAvatarBgColor;
 
 export const ClosedGroupAvatar = ({
   convoId,
@@ -78,11 +81,11 @@ export const ClosedGroupAvatar = ({
     throw new Error(`Invalid avatar size ${containerSize}`);
   }
 
-  const { bgColor } = useAvatarBgColor(secondMemberID || convoId);
+  const { bgColor } = useAvatarBgColorInternal(secondMemberID || convoId);
 
   if (firstMemberId && secondMemberID) {
     return (
-      <StyledAvatarClosedContainer containerSize={containerSize}>
+      <StyledAvatarClosedContainer $containerSize={containerSize}>
         <Avatar size={avatarSize} pubkey={firstMemberId} onAvatarClick={onAvatarClick} />
         <Avatar size={avatarSize} pubkey={secondMemberID} onAvatarClick={onAvatarClick} />
       </StyledAvatarClosedContainer>
@@ -92,7 +95,7 @@ export const ClosedGroupAvatar = ({
   const isClickable = !!onAvatarClick;
 
   return (
-    <StyledAvatarClosedContainer containerSize={containerSize}>
+    <StyledAvatarClosedContainer $containerSize={containerSize}>
       <Avatar
         size={avatarSize}
         pubkey={UserUtils.getOurPubKeyStrFromCache()}

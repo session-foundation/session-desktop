@@ -1,7 +1,7 @@
 import { isEmpty } from 'lodash';
 import { Dispatch } from 'react';
-import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
+import { getAppDispatch } from '../../state/dispatch';
 import {
   type LocalizedPopupDialogState,
   updateLocalizedPopupDialog,
@@ -23,7 +23,7 @@ const StyledScrollDescriptionContainer = styled.div`
 `;
 
 export function LocalizedPopupDialog(props: LocalizedPopupDialogState) {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   function onClose() {
     dispatch(updateLocalizedPopupDialog(null));

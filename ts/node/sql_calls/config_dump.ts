@@ -25,7 +25,7 @@ function parseRow(
 }
 
 function parseRowNoData(
-  row: Pick<ConfigDumpRow, 'data' | 'publicKey' | 'variant'>
+  row: Pick<ConfigDumpRow, 'publicKey' | 'variant'>
 ): ConfigDumpRowWithoutData | null {
   const toRet: ConfigDumpRowWithoutData = {
     publicKey: row.publicKey,
@@ -48,7 +48,7 @@ export const configDumpData: ConfigDumpDataNode = {
       .prepare(
         `SELECT publicKey, variant, data FROM ${CONFIG_DUMP_TABLE} WHERE variant = $variant AND publicKey = $publicKey;`
       )
-      .all({
+      .all<ConfigDumpRow>({
         publicKey,
         variant,
       });
@@ -63,7 +63,7 @@ export const configDumpData: ConfigDumpDataNode = {
   getAllDumpsWithData: () => {
     const rows = assertGlobalInstance()
       .prepare(`SELECT variant, publicKey, data from ${CONFIG_DUMP_TABLE};`)
-      .all();
+      .all<ConfigDumpRow>();
 
     if (!rows) {
       return [];
@@ -75,7 +75,7 @@ export const configDumpData: ConfigDumpDataNode = {
   getAllDumpsWithoutData: () => {
     const rows = assertGlobalInstance()
       .prepare(`SELECT variant, publicKey from ${CONFIG_DUMP_TABLE};`)
-      .all();
+      .all<Pick<ConfigDumpRow, 'variant' | 'publicKey'>>();
 
     if (!rows) {
       return [];
@@ -87,7 +87,7 @@ export const configDumpData: ConfigDumpDataNode = {
   getAllDumpsWithoutDataFor: (publicKey: string) => {
     const rows = assertGlobalInstance()
       .prepare(`SELECT variant, publicKey from ${CONFIG_DUMP_TABLE} WHERE publicKey=$publicKey;`)
-      .all({ publicKey });
+      .all<Pick<ConfigDumpRow, 'variant' | 'publicKey'>>({ publicKey });
 
     if (!rows) {
       return [];

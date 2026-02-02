@@ -1,15 +1,8 @@
 import { isNumber } from 'lodash';
-import {
-  MouseEventHandler,
-  SessionDataTestId,
-  useCallback,
-  useMemo,
-  useState,
-  type ReactNode,
-} from 'react';
-import useMount from 'react-use/lib/useMount';
+import { MouseEventHandler, SessionDataTestId, useCallback, useMemo, type ReactNode } from 'react';
+import useUpdate from 'react-use/lib/useUpdate';
 import styled from 'styled-components';
-import { useDispatch } from 'react-redux';
+import { getAppDispatch } from '../../../../../state/dispatch';
 import { ModalBasicHeader } from '../../../../SessionWrapperModal';
 import { useUserSettingsBackAction, useUserSettingsCloseAction } from '../userSettingsHooks';
 import {
@@ -37,7 +30,6 @@ import { tr, type TrArgs } from '../../../../../localization/localeTools';
 import { LucideIcon } from '../../../../icon/LucideIcon';
 import { Storage } from '../../../../../util/storage';
 import { SettingsKey } from '../../../../../data/settings-key';
-import { getBrowserLocale } from '../../../../../util/i18n/shared';
 import { SessionIcon } from '../../../../icon';
 import { ProIconButton } from '../../../../buttons/ProButton';
 import { useIsDarkTheme } from '../../../../../state/theme/selectors/theme';
@@ -47,20 +39,28 @@ import {
   useCurrentUserHasPro,
   useCurrentUserHasExpiredPro,
   useCurrentNeverHadPro,
-  useProAccessDetails,
 } from '../../../../../hooks/useHasPro';
 import { SessionButton, SessionButtonColor } from '../../../../basic/SessionButton';
 import { proButtonProps } from '../../../SessionCTA';
-import { useIsProGroupsAvailable } from '../../../../../hooks/useIsProAvailable';
+import { getIsProGroupsAvailableMemo } from '../../../../../hooks/useIsProAvailable';
 import { SpacerMD } from '../../../../basic/Text';
 import LIBSESSION_CONSTANTS from '../../../../../session/utils/libsession/libsession_constants';
-import { useDataFeatureFlag } from '../../../../../state/ducks/types/releasedFeaturesReduxTypes';
+import { getDataFeatureFlagMemo } from '../../../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { AnimatedSpinnerIcon } from '../../../../loading/spinner/AnimatedSpinnerIcon';
-import { UserConfigWrapperActions } from '../../../../../webworker/workers/browser/libsession_worker_interface';
+import {
+  getCachedUserConfig,
+  UserConfigWrapperActions,
+} from '../../../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 import {
   ProFeatures as ProFeaturesFinder,
   ProMessageFeature,
 } from '../../../../../models/proMessageFeature';
+import { usePinnedConversationsCount } from '../../../../../state/selectors/conversations';
+import {
+  useProBackendProDetails,
+  useProBackendRefetch,
+} from '../../../../../state/selectors/proBackendData';
+import { formatNumber } from '../../../../../util/i18n/formatting/generics';
 
 type ProSettingsModalState = {
   fromCTA?: boolean;
@@ -85,9 +85,10 @@ const HeroImageBgContainer = styled.div`
   align-items: center;
 `;
 
-const HeroImageBg = styled.div<{ noColors?: boolean }>`
+const HeroImageBg = styled.div<{ $noColors?: boolean }>`
   padding-top: 55px;
   justify-items: center;
+  text-align: center;
 
   &::before {
     content: '';
@@ -100,7 +101,7 @@ const HeroImageBg = styled.div<{ noColors?: boolean }>`
       circle,
       color-mix(
           in srgb,
-          ${props => (props.noColors ? 'var(--disabled-color) 35%' : 'var(--primary-color) 25%')},
+          ${props => (props.$noColors ? 'var(--disabled-color) 35%' : 'var(--primary-color) 25%')},
           transparent
         )
         0%,
@@ -126,11 +127,11 @@ const HeroImageLabelContainer = styled.div`
   }
 `;
 
-export const StyledProStatusText = styled.div<{ isError?: boolean }>`
+export const StyledProStatusText = styled.div<{ $isError?: boolean }>`
   text-align: center;
   line-height: var(--font-size-sm);
   font-size: var(--font-size-sm);
-  ${props => (props.isError ? 'color: var(--warning-color);' : '')}
+  ${props => (props.$isError ? 'color: var(--warning-color);' : '')}
 `;
 
 export const StyledProHeroText = styled.div`
@@ -158,7 +159,7 @@ export function ProHeroImage({
     <SectionFlexContainer onClick={onClick}>
       <SectionFlexContainer style={{ position: 'relative' }}>
         <HeroImageBgContainer>
-          <HeroImageBg noColors={noColors}>
+          <HeroImageBg $noColors={noColors}>
             <SessionIcon
               iconType="brand"
               iconColor={noColors ? 'var(--disabled-color)' : 'var(--primary-color)'}
@@ -177,7 +178,7 @@ export function ProHeroImage({
         </HeroImageBgContainer>
       </SectionFlexContainer>
       {heroStatusText ? (
-        <StyledProStatusText isError={isError}>{heroStatusText}</StyledProStatusText>
+        <StyledProStatusText $isError={isError}>{heroStatusText}</StyledProStatusText>
       ) : null}
       {heroStatusText && heroText ? <SpacerMD /> : null}
       {heroText ? <StyledProHeroText>{heroText}</StyledProHeroText> : null}
@@ -186,8 +187,8 @@ export function ProHeroImage({
 }
 
 function useBackendErrorDialogButtons() {
-  const dispatch = useDispatch();
-  const { refetch } = useProAccessDetails();
+  const dispatch = getAppDispatch();
+  const refetch = useProBackendRefetch();
 
   const buttons = useMemo(() => {
     return [
@@ -214,15 +215,23 @@ function useBackendErrorDialogButtons() {
   return buttons;
 }
 
+// NOTE: [react-compiler] this convinces the compiler the hook is static
+const useProBackendProDetailsInternal = useProBackendProDetails;
+const useCurrentUserHasProInternal = useCurrentUserHasPro;
+const useCurrentUserHasExpiredProInternal = useCurrentUserHasExpiredPro;
+const useCurrentNeverHadProInternal = useCurrentNeverHadPro;
+const useIsDarkThemeInternal = useIsDarkTheme;
+const usePinnedConversationsCountInternal = usePinnedConversationsCount;
+
 function ProNonProContinueButton({ state }: SectionProps) {
   const { returnToThisModalAction, centerAlign, afterCloseAction } = state;
-  const dispatch = useDispatch();
-  const neverHadPro = useCurrentNeverHadPro();
-  const { isLoading, isError } = useProAccessDetails();
+  const dispatch = getAppDispatch();
+  const neverHadPro = useCurrentNeverHadProInternal();
+  const { isLoading, isError } = useProBackendProDetailsInternal();
 
   const backendErrorButtons = useBackendErrorDialogButtons();
 
-  const handleClick = useCallback(() => {
+  const handleClick = () => {
     dispatch(
       isError
         ? updateLocalizedPopupDialog({
@@ -243,16 +252,7 @@ function ProNonProContinueButton({ state }: SectionProps) {
               centerAlign,
             })
     );
-  }, [
-    dispatch,
-    isLoading,
-    isError,
-    backendErrorButtons,
-    centerAlign,
-    neverHadPro,
-    returnToThisModalAction,
-    afterCloseAction,
-  ]);
+  };
 
   return (
     <SessionButton
@@ -293,34 +293,33 @@ const StatsLabel = styled.div<{ disabled?: boolean }>`
 const proBoxShadow = '0 4px 4px 0 rgba(0, 0, 0, 0.25)';
 const proBoxShadowSmall = '0 4px 4px 0 rgba(0, 0, 0, 0.15)';
 
+function formatProStats(v: number) {
+  return formatNumber(v, {
+    notation: 'compact',
+    compactDisplay: 'short', // Uses 'K', 'M', 'B' etc.
+  }).toLocaleLowerCase();
+}
+
 function ProStats() {
-  const mockProLongerMessagesSent = useDataFeatureFlag('mockProLongerMessagesSent');
-  const mockProPinnedConversations = useDataFeatureFlag('mockProPinnedConversations');
-  const mockProBadgesSent = useDataFeatureFlag('mockProBadgesSent');
-  const mockProGroupsUpgraded = useDataFeatureFlag('mockProGroupsUpgraded');
+  const mockProLongerMessagesSent = getDataFeatureFlagMemo('mockProLongerMessagesSent');
+  const mockProPinnedConversations = getDataFeatureFlagMemo('mockProPinnedConversations');
+  const mockProBadgesSent = getDataFeatureFlagMemo('mockProBadgesSent');
+  const mockProGroupsUpgraded = getDataFeatureFlagMemo('mockProGroupsUpgraded');
+
+  const pinnedConversations = usePinnedConversationsCountInternal();
 
   const proLongerMessagesSent =
     mockProLongerMessagesSent ?? (Storage.get(SettingsKey.proLongerMessagesSent) || 0);
-  const proPinnedConversations =
-    mockProPinnedConversations ?? (Storage.get(SettingsKey.proPinnedConversations) || 0);
   const proBadgesSent = mockProBadgesSent ?? (Storage.get(SettingsKey.proBadgesSent) || 0);
-  const proGroupsUpgraded =
-    mockProGroupsUpgraded ?? (Storage.get(SettingsKey.proGroupsUpgraded) || 0);
+  // those 2 are not a counter, but live based on what is stored libsession/db
+  const proPinnedConversations = mockProPinnedConversations ?? (pinnedConversations || 0);
+  const proGroupsUpgraded = mockProGroupsUpgraded || 0;
 
-  const isDarkTheme = useIsDarkTheme();
+  const isDarkTheme = useIsDarkThemeInternal();
 
-  const formatter = useMemo(
-    () =>
-      new Intl.NumberFormat(getBrowserLocale(), {
-        notation: 'compact',
-        compactDisplay: 'short', // Uses 'K', 'M', 'B' etc.
-      }),
-    []
-  );
+  const proGroupsAvailable = getIsProGroupsAvailableMemo();
 
-  const proGroupsAvailable = useIsProGroupsAvailable();
-
-  const userHasPro = useCurrentUserHasPro();
+  const userHasPro = useCurrentUserHasProInternal();
   if (!userHasPro) {
     return null;
   }
@@ -339,7 +338,11 @@ function ProStats() {
       <PanelLabelWithDescription
         title={{ token: 'proStats' }}
         extraInlineNode={
-          <SessionTooltip content={tr('proStatsTooltip')} maxContentWidth={'300px'}>
+          <SessionTooltip
+            content={tr('proStatsTooltip')}
+            maxContentWidth={'300px'}
+            style={{ textAlign: 'center' }}
+          >
             <LucideIcon iconSize="small" unicode={LUCIDE_ICONS_UNICODE.CIRCLE_HELP} />
           </SessionTooltip>
         }
@@ -364,7 +367,7 @@ function ProStats() {
               <StatsLabel>
                 {tr('proLongerMessagesSent', {
                   count: proLongerMessagesSent,
-                  total: formatter.format(proLongerMessagesSent).toLocaleLowerCase(),
+                  total: formatProStats(proLongerMessagesSent),
                 })}
               </StatsLabel>
             </StatsItemContainer>
@@ -377,7 +380,7 @@ function ProStats() {
               <StatsLabel>
                 {tr('proPinnedConversations', {
                   count: proPinnedConversations,
-                  total: formatter.format(proPinnedConversations).toLocaleLowerCase(),
+                  total: formatProStats(proPinnedConversations),
                 })}
               </StatsLabel>
             </StatsItemContainer>
@@ -392,7 +395,7 @@ function ProStats() {
               <StatsLabel>
                 {tr('proBadgesSent', {
                   count: proBadgesSent,
-                  total: formatter.format(proBadgesSent).toLocaleLowerCase(),
+                  total: formatProStats(proBadgesSent),
                 })}
               </StatsLabel>
             </StatsItemContainer>
@@ -405,13 +408,14 @@ function ProStats() {
               <StatsLabel disabled={!proGroupsAvailable}>
                 {tr('proGroupsUpgraded', {
                   count: proGroupsUpgraded,
-                  total: formatter.format(proGroupsUpgraded).toLocaleLowerCase(),
+                  total: formatProStats(proGroupsUpgraded),
                 })}
               </StatsLabel>
               <SessionTooltip
                 content={tr('proLargerGroupsTooltip')}
                 horizontalPosition="left"
                 maxContentWidth={'300px'}
+                style={{ textAlign: 'center' }}
               >
                 <LucideIcon
                   iconSize="small"
@@ -428,32 +432,26 @@ function ProStats() {
 }
 
 function ProSettings({ state }: SectionProps) {
-  const dispatch = useDispatch();
-  const userHasPro = useCurrentUserHasPro();
-  const userHasExpiredPro = useCurrentUserHasExpiredPro();
-  const userNeverHadPro = useCurrentNeverHadPro();
-  const { data, isLoading, isError } = useProAccessDetails();
+  const dispatch = getAppDispatch();
+  const userHasPro = useCurrentUserHasProInternal();
+  const userHasExpiredPro = useCurrentUserHasExpiredProInternal();
+  const userNeverHadPro = useCurrentNeverHadProInternal();
+  const { data, isLoading, isError } = useProBackendProDetailsInternal();
   const backendErrorButtons = useBackendErrorDialogButtons();
 
-  const [proBadgeEnabled, setProBadgeEnabled] = useState(false);
+  const forceRefresh = useUpdate();
+
+  const { proProfileBitset } = getCachedUserConfig();
+
+  const proBadgeEnabled = ProFeaturesFinder.hasProFeature(
+    proProfileBitset,
+    ProMessageFeature.PRO_BADGE,
+    'proProfile'
+  );
 
   const { returnToThisModalAction, centerAlign } = state;
 
-  const refreshProBadge = useCallback(async () => {
-    const proProfileBitset = await UserConfigWrapperActions.getProProfileBitset();
-    const refreshed = ProFeaturesFinder.hasProFeature(
-      proProfileBitset,
-      ProMessageFeature.PRO_BADGE,
-      'proProfile'
-    );
-    setProBadgeEnabled(refreshed);
-  }, []);
-
-  useMount(() => {
-    void refreshProBadge();
-  });
-
-  const handleUpdateAccessClick = useCallback(() => {
+  const handleUpdateAccessClick = () => {
     dispatch(
       isError
         ? updateLocalizedPopupDialog({
@@ -473,7 +471,7 @@ function ProSettings({ state }: SectionProps) {
               centerAlign,
             })
     );
-  }, [dispatch, isLoading, isError, backendErrorButtons, centerAlign, returnToThisModalAction]);
+  };
 
   if (state.fromCTA ? !userHasPro : userNeverHadPro) {
     return <ProNonProContinueButton state={state} />;
@@ -511,9 +509,8 @@ function ProSettings({ state }: SectionProps) {
           text={{ token: 'proBadge' }}
           subText={{ token: 'proBadgeVisible' }}
           onClick={async () => {
-            const newProBadgeEnabled = !proBadgeEnabled;
-            await UserConfigWrapperActions.setProBadge(newProBadgeEnabled);
-            void refreshProBadge();
+            await UserConfigWrapperActions.setProBadge(!proBadgeEnabled);
+            forceRefresh();
           }}
           active={proBadgeEnabled}
         />
@@ -533,7 +530,7 @@ function ProFeatureItem({
   dataTestId: SessionDataTestId;
   onClick?: () => Promise<void>;
 }) {
-  const isDarkTheme = useIsDarkTheme();
+  const isDarkTheme = useIsDarkThemeInternal();
   return (
     <>
       <StyledPanelButton
@@ -541,8 +538,8 @@ function ProFeatureItem({
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onClick={onClick}
         data-testid={dataTestId}
-        isDarkTheme={isDarkTheme}
-        defaultCursorWhenDisabled
+        $isDarkTheme={isDarkTheme}
+        $defaultCursorWhenDisabled
       >
         <StyledContent style={{ gap: 'var(--margins-md)' }}>
           {iconElement}
@@ -592,7 +589,7 @@ function ProFeatureIconElement({
   position,
   noColor,
 }: WithLucideUnicode & WithProFeaturePosition & { noColor?: boolean }) {
-  const isDarkTheme = useIsDarkTheme();
+  const isDarkTheme = useIsDarkThemeInternal();
   const bgStyle =
     position === 0
       ? 'linear-gradient(135deg, #57C9FA 0%, #C993FF 100%)'
@@ -689,10 +686,10 @@ function getProFeatures(userHasPro: boolean): Array<
 }
 
 function ProFeatures({ state }: SectionProps) {
-  const dispatch = useDispatch();
-  const userHasPro = useCurrentUserHasPro();
-  const expiredPro = useCurrentUserHasExpiredPro();
-  const proFeatures = useMemo(() => getProFeatures(userHasPro), [userHasPro]);
+  const dispatch = getAppDispatch();
+  const userHasPro = useCurrentUserHasProInternal();
+  const expiredPro = useCurrentUserHasExpiredProInternal();
+  const proFeatures = getProFeatures(userHasPro);
 
   return (
     <SectionFlexContainer>
@@ -747,9 +744,9 @@ function ProFeatures({ state }: SectionProps) {
 }
 
 function ManageProCurrentAccess({ state }: SectionProps) {
-  const dispatch = useDispatch();
-  const { data } = useProAccessDetails();
-  const userHasPro = useCurrentUserHasPro();
+  const dispatch = getAppDispatch();
+  const { data } = useProBackendProDetailsInternal();
+  const userHasPro = useCurrentUserHasProInternal();
   if (!userHasPro) {
     return null;
   }
@@ -799,17 +796,17 @@ function ManageProCurrentAccess({ state }: SectionProps) {
 }
 
 function ManageProAccess({ state }: SectionProps) {
-  const dispatch = useDispatch();
-  const isDarkTheme = useIsDarkTheme();
-  const userHasExpiredPro = useCurrentUserHasExpiredPro();
+  const dispatch = getAppDispatch();
+  const isDarkTheme = useIsDarkThemeInternal();
+  const userHasExpiredPro = useCurrentUserHasExpiredProInternal();
 
   const { returnToThisModalAction, centerAlign } = state;
 
-  const { isLoading, isError } = useProAccessDetails();
+  const { isLoading, isError } = useProBackendProDetailsInternal();
 
   const backendErrorButtons = useBackendErrorDialogButtons();
 
-  const handleClickRenew = useCallback(() => {
+  const handleClickRenew = () => {
     dispatch(
       isError
         ? updateLocalizedPopupDialog({
@@ -829,13 +826,7 @@ function ManageProAccess({ state }: SectionProps) {
               centerAlign,
             })
     );
-  }, [dispatch, isLoading, isError, backendErrorButtons, centerAlign, returnToThisModalAction]);
-
-  /** const handleClickRecover = useCallback(async () => {
-    // isLoading state needs to be reset to true as we are hard reloading and need to show that in the UI
-    setProBackendIsLoading({ key: 'details', result: true });
-    refetch({ callerContext: 'recover' });
-  }, [refetch, setProBackendIsLoading]); */
+  };
 
   return (
     <SectionFlexContainer>
@@ -873,41 +864,19 @@ function ManageProAccess({ state }: SectionProps) {
               : {})}
           />
         ) : null}
-        {/** NOTE: this is being removed but we'll keep the code for now in case we need it back again
-        <PanelIconButton
-          text={{ token: 'proAccessRecover' }}
-          dataTestId="recover-pro-button"
-          onClick={() => void handleClickRecover()}
-          iconElement={
-            isLoading ? (
-              <AnimatedArrowSpinnerIcon size="huge" />
-            ) : (
-              <PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.REFRESH_CW} />
-            )
-          }
-          rowReverse
-        /> */}
       </PanelButtonGroup>
     </SectionFlexContainer>
   );
 }
 
 function ManageProPreviousAccess(props: SectionProps) {
-  const userHasExpiredPro = useCurrentUserHasExpiredPro();
+  const userHasExpiredPro = useCurrentUserHasExpiredProInternal();
 
   return userHasExpiredPro ? <ManageProAccess {...props} /> : null;
 }
 
-function ManageProRecoverAccess(_props: SectionProps) {
-  return null;
-  /** NOTE: keep this for now, if we want to re-add the never had pro revcover button we need this, otherwise we can delete on launch
-   * const neverHadPro = useCurrentNeverHadPro();
-   * return neverHadPro ? <ManageProAccess {...props} /> : null;
-   */
-}
-
 function ProHelp() {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   return (
     <SectionFlexContainer>
       <PanelLabelWithDescription title={{ token: 'sessionHelp' }} />
@@ -936,15 +905,48 @@ function ProHelp() {
   );
 }
 
+function HeroStatusText({
+  isError,
+  isLoading,
+  isPro,
+}: {
+  isError?: boolean;
+  isLoading?: boolean;
+  isPro?: boolean;
+}) {
+  if (isError) {
+    return (
+      <div style={{ display: 'inline-flex', alignItems: 'center' }}>
+        <Localizer token={isPro ? 'proErrorRefreshingStatus' : 'errorCheckingProStatus'} />
+        <LucideIcon
+          unicode={LUCIDE_ICONS_UNICODE.TRIANGLE_ALERT}
+          iconColor="var(--warning-color)"
+          iconSize="small"
+          style={{ paddingBottom: '2px', paddingInline: '2px' }}
+        />
+      </div>
+    );
+  }
+  if (isLoading) {
+    return (
+      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--margins-xs)' }}>
+        <Localizer token={isPro ? 'proStatusLoadingSubtitle' : 'checkingProStatus'} />
+        <AnimatedSpinnerIcon size="small" />
+      </div>
+    );
+  }
+  return null;
+}
+
 function PageHero({ state }: SectionProps) {
-  const dispatch = useDispatch();
-  const isPro = useCurrentUserHasPro();
-  const proExpired = useCurrentUserHasExpiredPro();
-  const { isLoading, isError } = useProAccessDetails();
+  const dispatch = getAppDispatch();
+  const isPro = useCurrentUserHasProInternal();
+  const proExpired = useCurrentUserHasExpiredProInternal();
+  const { isLoading, isError } = useProBackendProDetailsInternal();
 
   const backendErrorButtons = useBackendErrorDialogButtons();
 
-  const handleClick = useCallback(() => {
+  const handleClick = () => {
     if (isError) {
       dispatch(
         updateLocalizedPopupDialog({
@@ -981,38 +983,12 @@ function PageHero({ state }: SectionProps) {
         )
       );
     }
-    // Do nothing if not error or loading
-  }, [dispatch, isPro, proExpired, isLoading, isError, backendErrorButtons, state.fromCTA]);
-
-  const heroStatusText = useMemo(() => {
-    if (isError) {
-      return (
-        <div style={{ display: 'inline-flex', alignItems: 'center' }}>
-          <Localizer token={isPro ? 'proErrorRefreshingStatus' : 'errorCheckingProStatus'} />
-          <LucideIcon
-            unicode={LUCIDE_ICONS_UNICODE.TRIANGLE_ALERT}
-            iconColor="var(--warning-color)"
-            iconSize="small"
-            style={{ paddingBottom: '2px', paddingInline: '2px' }}
-          />
-        </div>
-      );
-    }
-    if (isLoading) {
-      return (
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--margins-xs)' }}>
-          <Localizer token={isPro ? 'proStatusLoading' : 'checkingProStatus'} />
-          <AnimatedSpinnerIcon size="small" />
-        </div>
-      );
-    }
-    return null;
-  }, [isLoading, isError, isPro]);
+  };
 
   return (
     <ProHeroImage
       onClick={handleClick}
-      heroStatusText={heroStatusText}
+      heroStatusText={<HeroStatusText isError={isError} isLoading={isLoading} isPro={isPro} />}
       heroText={
         isPro || (proExpired && !state.fromCTA) ? null : (
           <Localizer token={proExpired ? 'proAccessRenewStart' : 'proFullestPotential'} />
@@ -1031,7 +1007,7 @@ export function ProSettingsPage(modalState: {
   centerAlign?: boolean;
   afterCloseAction?: () => void;
 }) {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const backAction = useUserSettingsBackAction(modalState);
   const closeAction = useUserSettingsCloseAction(modalState);
 
@@ -1070,7 +1046,6 @@ export function ProSettingsPage(modalState: {
         {!modalState.fromCTA ? <ManageProPreviousAccess state={proSettingsModalState} /> : null}
         <ProSettings state={proSettingsModalState} />
         <ProFeatures state={proSettingsModalState} />
-        {!modalState.fromCTA ? <ManageProRecoverAccess state={proSettingsModalState} /> : null}
         {!modalState.fromCTA ? <ManageProCurrentAccess state={proSettingsModalState} /> : null}
         {!modalState.fromCTA ? <ProHelp /> : null}
       </ModalFlexContainer>

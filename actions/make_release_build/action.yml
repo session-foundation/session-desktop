@@ -18,7 +18,7 @@ runs:
       shell: bash
       run: |
         source ./build/setup-mac-certificate.sh
-        yarn build-release --config.mac.bundleVersion=${{ github.ref }}
+        pnpm run build-release --config.mac.bundleVersion=${{ github.ref }}
 
     - name: Upload artefacts
       # always run this, except on "push" to "master" or alpha releases
@@ -33,7 +33,7 @@ runs:
       shell: bash
       run: |
         source ./build/setup-mac-certificate.sh
-        yarn build-release-publish --config.mac.bundleVersion=${{ github.ref }}
+        pnpm run build-release-publish --config.mac.bundleVersion=${{ github.ref }}
 
       # Note: We need to backup the latest.yml file because other jobs can overwrite it when they are complete e.g. macOS arm64 and x64
     - name: Backup release metadata
@@ -42,7 +42,7 @@ runs:
       shell: bash
       run: |
         echo "Backup release metadata for ${{ inputs.architecture }}"
-        mv dist/latest-mac.yml dist/latest-mac-${{ inputs.architecture }}-${{ github.sha }}.yml
+        mv release/latest-mac.yml release/latest-mac-${{ inputs.architecture }}-${{ github.sha }}.yml
 
     - name: Upload release metadata
       # only run this on "push" to "master" or alpha releases
@@ -50,4 +50,4 @@ runs:
       uses: actions/upload-artifact@v4
       with:
         name: latest-mac-${{ inputs.architecture }}-${{ github.sha }}.yml
-        path: dist/latest-mac-${{ inputs.architecture }}-${{ github.sha }}.yml
+        path: release/latest-mac-${{ inputs.architecture }}-${{ github.sha }}.yml

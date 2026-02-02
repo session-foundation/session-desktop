@@ -2,10 +2,10 @@ import useUpdate from 'react-use/lib/useUpdate';
 import useInterval from 'react-use/lib/useInterval';
 
 import styled from 'styled-components';
-import { useDispatch } from 'react-redux';
 import { isFinite, isNumber, range } from 'lodash';
 import { contextMenu, Menu } from 'react-contexify';
 import { useRef } from 'react';
+import { getAppDispatch } from '../../../../state/dispatch';
 
 import { type UserSettingsModalState } from '../../../../state/ducks/modalDialog';
 import {
@@ -61,7 +61,7 @@ const StyledPrimaryColorSwitcherContainer = styled.div`
 
 function PrimaryColorSwitcher() {
   const selectedPrimaryColor = usePrimaryColor();
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   const diameterRadioBorder = 35;
 
   return (
@@ -124,14 +124,14 @@ const StyledThemeName = styled.div`
 const Themes = () => {
   const themes = getThemeColors();
   const selectedTheme = useTheme();
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   return (
     <>
       {themes.map(theme => (
         <>
           <PanelButton
-            dataTestId="invalid-data-testid"
+            dataTestId={`${theme.id}-themes-settings-menu-item`}
             key={theme.id}
             onClick={() => {
               void switchThemeTo({

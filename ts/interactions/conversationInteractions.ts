@@ -83,7 +83,7 @@ export const handleAcceptConversationRequest = async ({
 }) => {
   const convo = ConvoHub.use().get(convoId);
   if (!convo || convo.isApproved() || (!convo.isPrivate() && !convo.isClosedGroupV2())) {
-    window?.log?.info('Conversation is already approved or not private/03group');
+    window?.log?.debug('Conversation is already approved or not private/03group');
 
     return null;
   }
@@ -97,8 +97,8 @@ export const handleAcceptConversationRequest = async ({
   if (convo.isPrivate()) {
     // we only need the approval message (and sending a reply) when we are accepting a message request. i.e. someone sent us a message already and we didn't accept it yet.
     if (!previousIsApproved && previousDidApprovedMe) {
-      await convo.addOutgoingApprovalMessage(approvalMessageTimestamp);
-      await convo.sendMessageRequestResponse();
+      const msg = await convo.addOutgoingApprovalMessage(approvalMessageTimestamp);
+      await convo.sendMessageRequestResponse(msg);
     }
 
     return null;
@@ -426,7 +426,7 @@ export async function showLeaveGroupByConvoId(conversationId: string, name: stri
 export async function showDeleteGroupByConvoId(conversationId: string, name: string | undefined) {
   const conversation = ConvoHub.use().get(conversationId);
 
-  const isPublic = conversation.isPublic();
+  const isPublic = conversation.isOpenGroupV2();
 
   const weAreAdmin = conversation.weAreAdminUnblinded();
 
@@ -588,11 +588,9 @@ export async function resendMessage(messageId: string) {
 
 /**
  * Check if what is pasted is a URL and prompt confirmation for a setting change
- * @param e paste event
  */
-export async function showLinkSharingConfirmationModalDialog(e: any) {
-  const pastedText = e.clipboardData.getData('text');
-  if (isURL(pastedText) && !window.getSettingValue(SettingsKey.settingsLinkPreview, false)) {
+export async function showLinkSharingConfirmationModalDialog(link: string) {
+  if (isURL(link) && !window.getSettingValue(SettingsKey.settingsLinkPreview, false)) {
     const alreadyDisplayedPopup =
       (await Data.getItemById(SettingsKey.hasLinkPreviewPopupBeenDisplayed))?.value || false;
     if (!alreadyDisplayedPopup) {
@@ -716,7 +714,7 @@ async function saveConversationInteractionErrorAsMessage({
   });
 
   // NOTE at this time we don't have visible control messages in communities
-  if (conversation.isPublic()) {
+  if (conversation.isOpenGroupV2()) {
     return;
   }
 

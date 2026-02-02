@@ -208,15 +208,13 @@ export function areAllAttachmentsVisual(
   return true;
 }
 
-export function getAlt(attachment: AttachmentType): string {
-  // TODO: make those localized through crowdin
+export function getAlt(attachment: Pick<AttachmentType, 'contentType'>): string {
   return isVideoAttachment(attachment)
     ? AriaLabels.screenshotVideoInMsg
     : AriaLabels.imageAttachmentAlt;
 }
 
 // Migration-related attachment stuff
-
 export type Attachment = {
   fileName?: string;
   caption?: string;

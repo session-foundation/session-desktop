@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-expressions */
-import * as BetterSqlite3 from '@signalapp/better-sqlite3';
+import { type Database } from '@signalapp/sqlcipher';
 import {
   ContactInfoSet,
   ContactsConfigWrapperNode,
@@ -22,7 +22,7 @@ import { CONVERSATION_PRIORITIES } from '../../../models/types';
 const targetVersion = 34;
 
 function fetchConfigDumps(
-  db: BetterSqlite3.Database,
+  db: Database,
   version: number,
   userPubkeyHex: string,
   variant: 'UserConfig' | 'ContactsConfig' | 'UserGroupsConfig' | 'ConvoInfoVolatileConfig'
@@ -44,7 +44,7 @@ function fetchConfigDumps(
 }
 
 function writeConfigDumps(
-  db: BetterSqlite3.Database,
+  db: Database,
   version: number,
   userPubkeyHex: string,
   variant: 'UserConfig' | 'ContactsConfig' | 'UserGroupsConfig' | 'ConvoInfoVolatileConfig',
@@ -245,7 +245,7 @@ function getLegacyGroupInfoFromDBValues({
 function updateLegacyGroupInWrapper(
   legacyGroup: any,
   userGroupConfigWrapper: UserGroupsWrapperNode,
-  _db: BetterSqlite3.Database,
+  _db: Database,
   version: number
 ) {
   checkTargetMigration(version, targetVersion);

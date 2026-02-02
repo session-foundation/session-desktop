@@ -75,7 +75,7 @@ export function prefixify(server: string): string {
  * @returns `${openGroupPrefix}${roomId}@${serverUrl}`
  */
 export function getOpenGroupV2ConversationId(serverUrl: string, roomId: string) {
-  // TODOLATER we should probably make this force the serverURL to be our sogs with https when it matches pubkey or domain name
+  // TODO we should probably make this force the serverURL to be our sogs with https when it matches pubkey or domain name
   if (!roomId.match(`^${roomIdV2Regex}$`)) {
     throw new Error('getOpenGroupV2ConversationId: Invalid roomId');
   }

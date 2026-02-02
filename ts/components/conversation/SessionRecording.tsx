@@ -36,7 +36,7 @@ function getTimestamp() {
 }
 
 interface StyledFlexWrapperProps {
-  marginHorizontal: string;
+  $marginHorizontal: string;
 }
 
 const sharedButtonProps = {
@@ -82,7 +82,7 @@ const StyledFlexWrapper = styled.div<StyledFlexWrapperProps>`
   gap: var(--margins-xs);
 
   .session-button {
-    margin: ${props => props.marginHorizontal};
+    margin: ${props => props.$marginHorizontal};
   }
 `;
 
@@ -181,7 +181,7 @@ export class SessionRecording extends Component<Props, State> {
     return (
       <div role="main" className="session-recording" tabIndex={0} onKeyDown={this.onKeyDown}>
         <div className="session-recording--actions">
-          <StyledFlexWrapper marginHorizontal="5px">
+          <StyledFlexWrapper $marginHorizontal="5px">
             {isRecording && (
               <SessionLucideIconButton
                 iconColor={'var(--danger-color)'}

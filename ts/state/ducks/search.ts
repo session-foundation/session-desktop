@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import { compact } from 'lodash';
+import { compact, uniq } from 'lodash';
 import { Data } from '../../data/data';
 import { SearchOptions } from '../../types/Search';
 import { cleanSearchTerm } from '../../util/cleanSearchTerm';
@@ -9,6 +9,7 @@ import { MessageResultProps } from '../../types/message';
 import { ReduxConversationType } from './conversations';
 import { tEnglish, tr } from '../../localization/localeTools';
 import { BlockedNumberController } from '../../util';
+import { toSearchableString } from '../../session/searchableString';
 
 export type SearchType = 'global' | 'create-group' | 'invite-contact-to' | 'manage-group-members';
 
@@ -20,13 +21,15 @@ export type SearchStateType = {
   searchType: SearchType | null;
   query: string;
   // For conversations we store just the id, and pull conversation props in the selector
-  contactsAndGroups: Array<string>;
-  messages?: Array<MessageResultProps>;
+  searchResultContactsAndGroups: Array<string>;
+  searchResultMessages?: Array<MessageResultProps>;
+  // Track which message snippets have been requested (for this search)
+  requestedSnippetIds: Array<string>;
 };
 
 type SearchResultsPayloadType = Pick<
   SearchStateType,
-  'searchType' | 'query' | 'contactsAndGroups' | 'messages'
+  'searchType' | 'query' | 'searchResultContactsAndGroups' | 'searchResultMessages'
 >;
 
 export type DoSearchActionType = {
@@ -45,7 +48,7 @@ const doSearch = createAsyncThunk(
     };
     const processedQuery = query;
 
-    const [contactsAndGroups, messages] = await Promise.all([
+    const [searchResultContactsAndGroups, messages] = await Promise.all([
       queryContactsAndGroups(processedQuery, options),
       // we only need to query messages for the global search
       searchType === 'global' ? queryMessages(processedQuery) : Promise.resolve([]),
@@ -54,10 +57,21 @@ const doSearch = createAsyncThunk(
 
     return {
       query,
-      contactsAndGroups,
-      messages: filteredMessages,
+      searchResultContactsAndGroups,
+      searchResultMessages: filteredMessages,
       searchType,
     };
+  }
+);
+
+const loadSnippetsForMessages = createAsyncThunk(
+  'search/loadSnippets',
+  async ({ query, messageIds }: { query: string; messageIds: Array<string> }) => {
+    // Clean the search term the same way we do for the original search
+    const trimmedQuery = query.trim();
+    const normalized = cleanSearchTerm(trimmedQuery);
+    const snippets = await Data.generateSnippetsForMessages(normalized, messageIds);
+    return { messageIds, snippets };
   }
 );
 
@@ -68,38 +82,67 @@ async function queryMessages(query: string): Promise<Array<MessageResultProps>> 
     const normalized = cleanSearchTerm(trimmedQuery);
     // 200 on a large database is already pretty slow
     const limit = Math.min((trimmedQuery.length || 2) * 50, 200);
-    return Data.searchMessages(normalized, limit);
+    const start = Date.now();
+    const messages = await Data.searchMessages(normalized, limit);
+    window.log.info(`searchMessages took ${Date.now() - start}ms`);
+
+    return messages;
   } catch (e) {
     window.log.warn('queryMessages failed with', e.message);
     return [];
   }
 }
 
-async function queryContactsAndGroups(providedQuery: string, options: SearchOptions) {
-  const { ourNumber, noteToSelf, savedMessages } = options;
-  // we don't need to use cleanSearchTerm here because the query is wrapped as a wild card and is not referenced in the SQL query directly
-  const query = providedQuery.replace(/[+-.()]*/g, '');
-
-  const searchResults: Array<ReduxConversationType> = await Data.searchConversations(query);
-
-  const filteredResults = options.excludeBlocked
-    ? searchResults.filter(c => !BlockedNumberController.isBlocked(c.id))
-    : searchResults;
-
-  let contactsAndGroups: Array<string> = filteredResults.map(conversation => conversation.id);
-
-  const queryLowered = query.toLowerCase();
-  if (
-    noteToSelf.some(str => str.includes(query) || str.includes(queryLowered)) ||
-    savedMessages.includes(query) ||
-    savedMessages.includes(queryLowered)
-  ) {
-    // Ensure that we don't have duplicates in our results
-    contactsAndGroups = contactsAndGroups.filter(id => id !== ourNumber);
-    contactsAndGroups.unshift(ourNumber);
+function convoMatchesSearch(convo: ReduxConversationType, searchTermLower: string): boolean {
+  if (!convo) {
+    return false;
   }
 
-  return contactsAndGroups;
+  return !!(
+    toSearchableString(convo.id).includes(searchTermLower) ||
+    toSearchableString(convo.nickname).includes(searchTermLower) ||
+    toSearchableString(convo.displayNameInProfile).includes(searchTermLower)
+  );
+}
+
+export async function queryContactsAndGroups(providedQuery: string, options: SearchOptions) {
+  const { ourNumber, noteToSelf, savedMessages } = options;
+
+  // Remove formatting characters from the query
+  const query = providedQuery.replace(/[+-.()]*/g, '');
+  const queryLower = toSearchableString(query);
+
+  // Using memory cache avoids slow DB queries and ICU/case-sensitivity issues.
+  const state = window.inboxStore?.getState() as any;
+  const conversationLookup = (state?.conversations?.conversationLookup || {}) as Record<
+    string,
+    ReduxConversationType
+  >;
+
+  const searchResults = Object.values(conversationLookup).filter(convo => {
+    if (options.excludeBlocked && BlockedNumberController.isBlocked(convo.id)) {
+      return false;
+    }
+    return convoMatchesSearch(convo, queryLower);
+  });
+
+  let searchResultContactsAndGroups: Array<string> = searchResults.map(
+    conversation => conversation.id
+  );
+
+  const isSavedMessagesMatch =
+    typeof savedMessages === 'string' ? savedMessages.includes(query) : false;
+
+  if (
+    noteToSelf.some(str => str.includes(query) || toSearchableString(str).includes(queryLower)) ||
+    isSavedMessagesMatch
+  ) {
+    // Ensure that we don't have duplicates in our results
+    searchResultContactsAndGroups = searchResultContactsAndGroups.filter(id => id !== ourNumber);
+    searchResultContactsAndGroups.unshift(ourNumber);
+  }
+
+  return searchResultContactsAndGroups;
 }
 
 // Reducer
@@ -107,8 +150,9 @@ async function queryContactsAndGroups(providedQuery: string, options: SearchOpti
 export const initialSearchState: SearchStateType = {
   searchType: null, // by default the search is off
   query: '',
-  contactsAndGroups: [],
-  messages: [],
+  searchResultContactsAndGroups: [],
+  searchResultMessages: [],
+  requestedSnippetIds: [],
 };
 
 const searchSlice = createSlice({
@@ -123,6 +167,8 @@ const searchSlice = createSlice({
         ...state,
         query: action.payload.query,
         searchType: action.payload.searchType,
+        // Clear requested snippets when search term changes
+        requestedSnippetIds: [],
       };
     },
   },
@@ -130,7 +176,8 @@ const searchSlice = createSlice({
     builder.addCase(
       doSearch.fulfilled,
       (state, action: PayloadAction<SearchResultsPayloadType>) => {
-        const { query, contactsAndGroups, messages, searchType } = action.payload;
+        const { query, searchResultContactsAndGroups, searchResultMessages, searchType } =
+          action.payload;
         // Reject if the associated query is not the most recent user-provided query
         if (state.query !== query) {
           return state;
@@ -143,12 +190,37 @@ const searchSlice = createSlice({
         return {
           ...state,
           query,
-          contactsAndGroups,
-          messages,
+          searchResultContactsAndGroups,
+          searchResultMessages,
           searchType,
+          // Clear requested snippets for new search results
+          requestedSnippetIds: [],
         };
       }
     );
+
+    // Handle snippet loading
+    builder.addCase(loadSnippetsForMessages.pending, (state, action) => {
+      const { messageIds } = action.meta.arg;
+      // Add message IDs to loading array
+
+      // Track that we've requested these snippets
+      state.requestedSnippetIds = uniq([...state.requestedSnippetIds, ...messageIds]);
+    });
+
+    builder.addCase(loadSnippetsForMessages.fulfilled, (state, action) => {
+      const { snippets } = action.payload;
+
+      // Update messages with their snippets
+      if (state.searchResultMessages) {
+        state.searchResultMessages = state.searchResultMessages.map(msg => {
+          if (snippets[msg.id]) {
+            return { ...msg, snippet: snippets[msg.id] };
+          }
+          return msg;
+        });
+      }
+    });
   },
 });
 
@@ -156,4 +228,5 @@ export const reducer = searchSlice.reducer;
 export const searchActions = {
   ...searchSlice.actions,
   search: doSearch,
+  loadSnippets: loadSnippetsForMessages,
 };

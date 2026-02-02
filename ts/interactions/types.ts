@@ -6,6 +6,5 @@ export enum ConversationInteractionStatus {
 }
 
 export enum ConversationInteractionType {
-  Hide = 'hide',
   Leave = 'leave',
 }

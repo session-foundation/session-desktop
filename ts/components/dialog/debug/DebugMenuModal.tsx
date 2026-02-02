@@ -1,13 +1,14 @@
 import styled from 'styled-components';
-import { useDispatch } from 'react-redux';
 import useUpdate from 'react-use/lib/useUpdate';
 import { type Dispatch, useState, ReactNode } from 'react';
+import { getAppDispatch } from '../../../state/dispatch';
 import { Flex } from '../../basic/Flex';
 import { updateDebugMenuModal } from '../../../state/ducks/modalDialog';
 import {
   AboutInfo,
   DataGenerationActions,
   DebugActions,
+  DebugCtaInteractionsSection,
   DebugUrlInteractionsSection,
   ExperimentalActions,
   LoggingDebugSection,
@@ -139,6 +140,7 @@ function MainPage({ setPage }: DebugMenuPageProps) {
       <Playgrounds setPage={setPage} />
       {isDebug ? <DataGenerationActions /> : null}
       {isDebug ? <DebugUrlInteractionsSection /> : null}
+      {isDebug ? <DebugCtaInteractionsSection /> : null}
       <ReleaseChannel />
       <div>
         <AboutInfo />
@@ -161,7 +163,7 @@ function getPage(page: DEBUG_MENU_PAGE, setPage: Dispatch<DEBUG_MENU_PAGE>) {
 }
 
 export function DebugMenuModal() {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   const [page, setPage] = useState<DEBUG_MENU_PAGE>(DEBUG_MENU_PAGE.MAIN);
 
@@ -215,7 +217,7 @@ export function DebugMenuModal() {
         $container={true}
         $flexDirection="column"
         $alignItems="flex-start"
-        padding="var(--margins-sm) 0 var(--margins-xl)"
+        $padding="var(--margins-sm) 0 var(--margins-xl)"
       >
         {getPage(page, setPage)}
       </StyledContent>

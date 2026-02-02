@@ -1,0 +1,10 @@
+export { default as NodeGraph1 } from './node-graph/1.svg';
+export { default as NodeGraph2 } from './node-graph/2.svg';
+export { default as NodeGraph3 } from './node-graph/3.svg';
+export { default as NodeGraph4 } from './node-graph/4.svg';
+export { default as NodeGraph5 } from './node-graph/5.svg';
+export { default as NodeGraph6 } from './node-graph/6.svg';
+export { default as NodeGraph7 } from './node-graph/7.svg';
+export { default as NodeGraph8 } from './node-graph/8.svg';
+export { default as NodeGraph9 } from './node-graph/9.svg';
+export { default as NodeGraph10 } from './node-graph/10.svg';

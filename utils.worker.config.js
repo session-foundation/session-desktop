@@ -23,7 +23,7 @@ module.exports = {
   },
   output: {
     filename: 'util.worker.compiled.js',
-    path: path.resolve(__dirname, 'ts', 'webworker', 'workers', 'node', 'util'),
+    path: path.resolve(__dirname, 'app', 'ts', 'webworker', 'workers', 'node', 'util'),
   },
   target: 'node',
   optimization: {

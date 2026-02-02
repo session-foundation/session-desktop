@@ -1,5 +1,5 @@
-import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
+import { getAppDispatch } from '../../state/dispatch';
 import { updateTermsOfServicePrivacyModal } from '../../state/onboarding/ducks/modals';
 import { Localizer } from '../basic/Localizer';
 
@@ -17,7 +17,7 @@ const StyledTermsAndConditions = styled.div`
 `;
 
 export const TermsAndConditions = () => {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   return (
     <StyledTermsAndConditions

@@ -17,9 +17,7 @@ const hideRecoveryPassword = 'hideRecoveryPassword';
 
 // Pro stats counters
 const proLongerMessagesSent = 'proLongerMessagesSent';
-const proPinnedConversations = 'proPinnedConversations';
 const proBadgesSent = 'proBadgesSent';
-const proGroupsUpgraded = 'proGroupsUpgraded';
 
 // user config tracking timestamps (to discard incoming messages which would make a change we reverted in the last config message we merged)
 const latestUserProfileEnvelopeTimestamp = 'latestUserProfileEnvelopeTimestamp';
@@ -38,6 +36,7 @@ const lastMessageGroupsRegenerated = 'lastMessageGroupsRegenerated';
 const localAttachmentEncryptionKey = 'local_attachment_encrypted_key';
 
 export const SettingsKey = {
+  lastShutdownWasGraceful: 'lastShutdownWasGraceful',
   settingsReadReceipt,
   settingsTypingIndicator,
   settingsAutoUpdate,
@@ -61,23 +60,29 @@ export const SettingsKey = {
   showOnboardingAccountJustCreated,
   lastMessageGroupsRegenerated,
   proLongerMessagesSent,
-  proPinnedConversations,
   proBadgesSent,
-  proGroupsUpgraded,
+  audioAutoplay: 'audioAutoplay',
+  showRecoveryPhrasePrompt: 'showRecoveryPhrasePrompt',
+  dismissedRecoveryPhrasePrompt: 'dismissedRecoveryPhrasePrompt',
+  hideMessageRequests: 'hideMessageRequests',
   identityKey: 'identityKey',
   blocked: 'blocked',
   numberId: 'number_id',
   localAttachmentEncryptionKey,
   spellCheckEnabled: 'spell-check',
+  settingsTheme: 'settingsTheme',
   urlInteractions: 'urlInteractions',
+  ctaInteractions: 'ctaInteractions',
   proMasterKeyHex: 'proMasterKeyHex',
   proRotatingPrivateKeyHex: 'proRotatingPrivateKeyHex',
   /**
    * The ticket of the last fetched revocations list, number | undefined
+   * Note: changes to this have to be done through the ProRevocationCache
    */
   proRevocationListTicket: 'proRevocationListTicket',
   /**
    * The items of the last fetched revocations list, Array of items validating ProRevocationItemSchema (or undefined)
+   * Note: changes to this have to be done through the ProRevocationCache
    */
   proRevocationListItems: 'proRevocationListItems',
   proDetails: 'proDetails',

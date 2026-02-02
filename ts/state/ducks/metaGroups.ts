@@ -60,6 +60,10 @@ import type { StoreGroupMessageSubRequest } from '../../session/apis/snode_api/S
 import { sectionActions } from './section';
 import { processAvatarData } from '../../util/avatar/processAvatarData';
 import { getFeatureFlag } from './types/releasedFeaturesReduxTypes';
+import {
+  SessionProfileResetAvatarGroupCommunity,
+  SessionProfileSetAvatarDownloadedAny,
+} from '../../models/profile';
 
 export type GroupState = {
   infos: Record<GroupPubkeyType, GroupInfoGet>;
@@ -160,6 +164,7 @@ const initNewGroupInWrapper = createAsyncThunk(
         groupEd25519Secretkey: newGroup.secretKey,
         groupEd25519Pubkey: toFixedUint8ArrayOfLength(groupEd2519Pk, 32).buffer,
       });
+      await LibSessionUtil.saveDumpsToDb(groupPk);
 
       const infos = await MetaGroupWrapperActions.infoGet(groupPk);
       if (!infos) {
@@ -331,6 +336,7 @@ const handleUserGroupUpdate = createAsyncThunk(
         groupEd25519Secretkey: userGroup.secretKey,
         groupEd25519Pubkey: toFixedUint8ArrayOfLength(groupEd2519Pk, 32).buffer,
       });
+      await LibSessionUtil.saveDumpsToDb(groupPk);
     } catch (e) {
       window.log.warn(`failed to init meta wrapper ${groupPk}`);
     }
@@ -371,6 +377,8 @@ const loadMetaDumpsFromDB = createAsyncThunk(
       throw new Error('user has no ed25519KeyPairBytes.');
     }
 
+    // Make sure all of the groups that should have a dump in DB, actually have one before we load them
+    await LibSessionUtil.createInitialDumpsMissingForGroups();
     const variantsWithData = await ConfigDumpData.getAllDumpsWithData();
     const allUserGroups = await UserGroupsWrapperActions.getAllGroups();
     const toReturn: Array<GroupDetailsUpdate> = [];
@@ -1038,14 +1046,16 @@ async function handleAvatarChangeFromUI({
       })
     : undefined;
 
-  await convo.setSessionProfile({
+  const profile = new SessionProfileSetAvatarDownloadedAny({
+    convo,
     displayName: null, // null so we don't overwrite it
-    type: 'setAvatarDownloadedGroup',
     profileKey,
     avatarPath: upgradedMainAvatar.path,
     fallbackAvatarPath: upgradedFallbackAvatar?.path || upgradedMainAvatar.path,
     avatarPointer: fileUrl,
   });
+  await profile.applyChangesIfNeeded();
+
   infos.profilePicture = { url: fileUrl, key: profileKey };
   await MetaGroupWrapperActions.infoSet(groupPk, infos);
   const createAtNetworkTimestamp = NetworkTime.now();
@@ -1143,10 +1153,11 @@ async function handleClearAvatarFromUI({ groupPk }: WithGroupPubkey) {
   }
 
   await checkWeAreAdminOrThrow(groupPk, 'handleAvatarChangeFromUI');
-  await convo.setSessionProfile({
-    type: 'resetAvatarGroup',
+  const profile = new SessionProfileResetAvatarGroupCommunity({
+    convo,
     displayName: null,
   });
+  await profile.applyChangesIfNeeded();
 
   const createAtNetworkTimestamp = NetworkTime.now();
   // we want to add an update message even if the change was done remotely

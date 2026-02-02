@@ -1,5 +1,5 @@
 import AbortController from 'abort-controller';
-import { isEmpty, isFinite, isNumber, isString, toNumber } from 'lodash';
+import { isEmpty, isFinite, isNumber, isString, omit, toNumber } from 'lodash';
 
 import { BlindingActions } from '../../../webworker/workers/browser/libsession_worker_interface';
 import { OnionSending } from '../../onions/onionSend';
@@ -17,6 +17,7 @@ import { FileFromFileServerDetails } from './types';
 import { queryParamDeterministicEncryption, queryParamServerEd25519Pubkey } from '../../url';
 import { FS, type FILE_SERVER_TARGET_TYPE } from './FileServerTarget';
 import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
+import { stringify } from '../../../types/sqlSharedTypes';
 
 const RELEASE_VERSION_ENDPOINT = '/session_version';
 const FILE_ENDPOINT = '/file';
@@ -114,7 +115,10 @@ export const downloadFileFromFileServer = async (
     timeoutMs: 30 * DURATION.SECONDS, // longer time for file download
   });
   if (getFeatureFlag('debugServerRequests')) {
-    window.log.info(`download fsv2: "${toDownload.fullUrl} got result:`, JSON.stringify(result));
+    window.log.info(
+      `download fsv2: "${toDownload.fullUrl} got result:`,
+      stringify(omit(result, 'bodyBinary'))
+    );
   }
   if (!result) {
     return null;

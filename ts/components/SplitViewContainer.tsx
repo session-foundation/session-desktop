@@ -2,8 +2,8 @@ import { ReactElement, ReactNode, useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 
 type SplitViewProps = {
-  top: ReactElement;
-  bottom: ReactElement;
+  top: ReactElement<any>;
+  bottom: ReactElement<any>;
   disableTop: boolean;
 };
 

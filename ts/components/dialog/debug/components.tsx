@@ -1,7 +1,5 @@
-import { base64_variants, from_hex, to_base64 } from 'libsodium-wrappers-sumo';
 import useAsync from 'react-use/lib/useAsync';
 import { ipcRenderer, shell } from 'electron';
-import { useDispatch } from 'react-redux';
 import { useCallback, useState } from 'react';
 import useAsyncFn from 'react-use/lib/useAsyncFn';
 import useInterval from 'react-use/lib/useInterval';
@@ -10,6 +8,7 @@ import styled from 'styled-components';
 
 import type { ProProof, PubkeyType } from 'libsession_util_nodejs';
 import { chunk, toNumber } from 'lodash';
+import { getAppDispatch } from '../../../state/dispatch';
 import { Flex } from '../../basic/Flex';
 import { SpacerXS } from '../../basic/Text';
 import { tr } from '../../../localization/localeTools';
@@ -35,10 +34,7 @@ import { Errors } from '../../../types/Errors';
 import { PubKey } from '../../../session/types';
 import { ConvoHub } from '../../../session/conversations';
 import { ConversationTypeEnum } from '../../../models/types';
-import {
-  ContactsWrapperActions,
-  UserConfigWrapperActions,
-} from '../../../webworker/workers/browser/libsession_worker_interface';
+import { ContactsWrapperActions } from '../../../webworker/workers/browser/libsession_worker_interface';
 import { usePolling } from '../../../hooks/usePolling';
 import { releasedFeaturesActions } from '../../../state/ducks/releasedFeatures';
 import { networkDataActions } from '../../../state/ducks/networkData';
@@ -50,6 +46,7 @@ import ProBackendAPI from '../../../session/apis/pro_backend_api/ProBackendAPI';
 import { getProMasterKeyHex } from '../../../session/utils/User';
 import { FlagToggle } from './FeatureFlags';
 import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
+import { SessionDisplayNameOnlyPrivate } from '../../../models/profile';
 import {
   clearAllUrlInteractions,
   getUrlInteractions,
@@ -59,7 +56,14 @@ import {
 import { formatRoundedUpTimeUntilTimestamp } from '../../../util/i18n/formatting/generics';
 import { LucideIcon } from '../../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
-import { useIsProAvailable } from '../../../hooks/useIsProAvailable';
+import { getIsProAvailableMemo } from '../../../hooks/useIsProAvailable';
+import { UserConfigWrapperActions } from '../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
+import {
+  clearAllCtaInteractions,
+  getCtaInteractions,
+  removeCtaInteractionHistory,
+} from '../../../util/ctaHistory';
+import { CTAVariant } from '../cta/types';
 
 type DebugButtonProps = SessionButtonProps & { shiny?: boolean; hide?: boolean };
 
@@ -107,11 +111,12 @@ async function generateOneRandomContact() {
   // for it to be inserted in the config
   created.setActiveAt(Date.now());
   await created.setIsApproved(true, false);
-  await created.setSessionProfile({
-    type: 'displayNameChangeOnlyPrivate',
+  const profile = new SessionDisplayNameOnlyPrivate({
+    convo: created,
     displayName: id.slice(2, 8),
     profileUpdatedAtSeconds: NetworkTime.nowSeconds(),
   });
+  await profile.applyChangesIfNeeded();
 
   await created.commit();
   return created;
@@ -178,7 +183,7 @@ const CheckVersionButton = ({ channelToCheck }: { channelToCheck: ReleaseChannel
         );
       }}
     >
-      <SessionSpinner loading={loading || state.loading} color={'var(--text-primary-color)'} />
+      <SessionSpinner $loading={loading || state.loading} $color={'var(--text-primary-color)'} />
       {!loading && !state.loading ? `Check ${channelToCheck} version` : null}
     </DebugButton>
   );
@@ -221,7 +226,7 @@ const CheckForUpdatesButton = () => {
         void handleCheckForUpdates();
       }}
     >
-      <SessionSpinner loading={state.loading} color={'var(--text-primary-color)'} />
+      <SessionSpinner $loading={state.loading} $color={'var(--text-primary-color)'} />
       {!state.loading ? 'Check for updates' : null}
     </DebugButton>
   );
@@ -315,7 +320,7 @@ export const LoggingDebugSection = ({ forceUpdate }: { forceUpdate: () => void }
 };
 
 export const Playgrounds = ({ setPage }: DebugMenuPageProps) => {
-  const proAvailable = useIsProAvailable();
+  const proAvailable = getIsProAvailableMemo();
 
   if (!proAvailable) {
     return null;
@@ -330,8 +335,8 @@ export const Playgrounds = ({ setPage }: DebugMenuPageProps) => {
 };
 
 export const DebugActions = () => {
-  const dispatch = useDispatch();
-  const proAvailable = useIsProAvailable();
+  const dispatch = getAppDispatch();
+  const proAvailable = getIsProAvailableMemo();
 
   return (
     <DebugMenuSection title="Actions" rowWrap={true}>
@@ -391,13 +396,10 @@ export const DebugActions = () => {
           if (response?.status_code === 200) {
             const proProof: ProProof = {
               expiryMs: response.result.expiry_unix_ts_ms,
-              genIndexHashB64: to_base64(
-                from_hex(response.result.gen_index_hash),
-                base64_variants.ORIGINAL
-              ),
-              rotatingPubkeyHex: response.result.rotating_pkey,
+              genIndexHashB64: response.result.gen_index_hash_b64,
+              rotatingPubkeyHex: response.result.rotating_pkey_hex,
               version: response.result.version,
-              signatureHex: response.result.sig,
+              signatureHex: response.result.sig_hex,
             };
             await UserConfigWrapperActions.setProConfig({ proProof, rotatingPrivKeyHex });
           }
@@ -482,8 +484,61 @@ export const DebugUrlInteractionsSection = () => {
   );
 };
 
+export const DebugCtaInteractionsSection = () => {
+  const [ctaInteractions, setCtaInteractions] = useState(getCtaInteractions());
+
+  const refresh = useCallback(() => setCtaInteractions(getCtaInteractions()), []);
+  const removeCta = useCallback(
+    async (variant: CTAVariant) => {
+      await removeCtaInteractionHistory(variant);
+      refresh();
+    },
+    [refresh]
+  );
+  const clearAll = useCallback(async () => {
+    await clearAllCtaInteractions();
+    refresh();
+  }, [refresh]);
+
+  return (
+    <DebugMenuSection title="CTA Interactions">
+      <DebugButton onClick={clearAll} buttonColor={SessionButtonColor.Danger}>
+        Clear All
+      </DebugButton>
+      <DebugButton onClick={refresh}>Refresh</DebugButton>
+      <table>
+        <tr>
+          <th>CTA</th>
+          <th>Open</th>
+          <th>Close</th>
+          <th>Action</th>
+          <th>Cancel</th>
+          <th>Last Updated</th>
+        </tr>
+        {ctaInteractions.map(({ variant, lastUpdated, open, action, cancel, close }) => {
+          const updatedStr = formatRoundedUpTimeUntilTimestamp(lastUpdated);
+          return (
+            <tr key={variant}>
+              <td>{variant}</td> <td>{open ?? 0}</td> <td>{close ?? 0}</td> <td>{action ?? 0}</td>{' '}
+              <td>{cancel ?? 0}</td> <td>{updatedStr}</td>{' '}
+              <td>
+                <DebugButton
+                  buttonColor={SessionButtonColor.Danger}
+                  onClick={async () => removeCta(variant)}
+                >
+                  <LucideIcon unicode={LUCIDE_ICONS_UNICODE.TRASH2} iconSize="small" />
+                </DebugButton>
+              </td>
+            </tr>
+          );
+        })}
+      </table>
+    </DebugMenuSection>
+  );
+};
+
 export const ExperimentalActions = ({ forceUpdate }: { forceUpdate: () => void }) => {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
   // const refreshedAt = useReleasedFeaturesRefreshedAt();
   // const sesh101NotificationAt = useSesh101NotificationAt();
 

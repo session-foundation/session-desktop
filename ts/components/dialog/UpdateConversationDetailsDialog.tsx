@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import { useState } from 'react';
-import { useDispatch } from 'react-redux';
 import useMount from 'react-use/lib/useMount';
 import { isEmpty } from 'lodash';
+import { getAppDispatch } from '../../state/dispatch';
 
 import {
   useAvatarPath,
+  useAvatarPointer,
   useIsClosedGroup,
   useIsMe,
   useIsPublic,
@@ -26,7 +27,7 @@ import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/S
 import { SpacerMD, SpacerSM } from '../basic/Text';
 import { SessionSpinner } from '../loading';
 import { tr } from '../../localization/localeTools';
-import { SimpleSessionInput, SimpleSessionTextarea } from '../inputs/SessionInput';
+import { SimpleSessionInput } from '../inputs/SessionInput';
 import {
   ModalBasicHeader,
   ModalActionsContainer,
@@ -45,6 +46,8 @@ import { UploadFirstImageButton } from '../buttons/avatar/UploadFirstImageButton
 import { sanitizeDisplayNameOrToast } from '../registration/utils';
 import { ProfileManager } from '../../session/profile_manager/ProfileManager';
 import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
+import { SimpleSessionTextarea } from '../inputs/SimpleSessionTextarea';
+import { ConversationModel } from '../../models/conversation';
 
 /**
  * We want the description to be at most 200 visible characters, in addition
@@ -121,41 +124,74 @@ function useDescriptionErrorString({
     : tr('updateGroupInformationEnterShorterDescription');
 }
 
-export function UpdateConversationDetailsDialog(props: WithConvoId) {
-  const dispatch = useDispatch();
-  const { conversationId } = props;
-  const isClosedGroup = useIsClosedGroup(conversationId);
-  const isPublic = useIsPublic(conversationId);
-  const convo = ConvoHub.use().get(conversationId);
-  const isGroupChangePending = useGroupNameChangeFromUIPending();
-  const isCommunityChangePending = useChangeDetailsOfRoomPending(conversationId);
-  const isNameChangePending = isPublic ? isCommunityChangePending : isGroupChangePending;
-  const isMe = useIsMe(conversationId);
-
+// NOTE: [react-compiler] this has to live here for the hook to be identified as static
+function useUpdateConversationDetailsDialogInternal(convo: ConversationModel) {
+  const conversationId = convo.id;
+  const nameOnOpen = convo.getRealSessionUsername();
   const [avatarPointerOnMount, setAvatarPointerOnMount] = useState<string>('');
-  const refreshedAvatarPointer = convo.getAvatarPointer() || '';
+  const [newName, setNewName] = useState(nameOnOpen);
+  const originalGroupDescription = useLibGroupDescription(conversationId);
+  const originalCommunityDescription = useRoomDescription(conversationId);
+  const isPublic = useIsPublic(conversationId);
+  const descriptionOnOpen = isPublic ? originalCommunityDescription : originalGroupDescription;
+  const [newDescription, setNewDescription] = useState(descriptionOnOpen);
+  const avatarPath = useAvatarPath(conversationId) || '';
+  const isMe = useIsMe(conversationId);
+  const isCommunityChangePending = useChangeDetailsOfRoomPending(conversationId);
+  const isGroupChangePending = useGroupNameChangeFromUIPending();
+  const isClosedGroup = useIsClosedGroup(conversationId);
+  const isNameChangePending = isPublic ? isCommunityChangePending : isGroupChangePending;
 
   useMount(() => {
     setAvatarPointerOnMount(convo?.getAvatarPointer() || '');
   });
-
-  if (!convo) {
-    throw new Error('UpdateGroupOrCommunityDetailsDialog corresponding convo not found');
-  }
 
   if (!isClosedGroup && !isPublic && !isMe) {
     throw new Error(
       'UpdateGroupOrCommunityDetailsDialog dialog only works groups/communities or ourselves'
     );
   }
-  const nameOnOpen = convo.getRealSessionUsername();
-  const originalGroupDescription = useLibGroupDescription(conversationId);
-  const originalCommunityDescription = useRoomDescription(conversationId);
-  const descriptionOnOpen = isPublic ? originalCommunityDescription : originalGroupDescription;
 
-  const [newName, setNewName] = useState(nameOnOpen);
-  const [newDescription, setNewDescription] = useState(descriptionOnOpen);
-  const avatarPath = useAvatarPath(conversationId) || '';
+  return {
+    isNameChangePending,
+    newName,
+    newDescription,
+    isMe,
+    nameOnOpen,
+    descriptionOnOpen,
+    isPublic,
+    avatarPointerOnMount,
+    avatarPath,
+    setNewName,
+    setNewDescription,
+  };
+}
+
+const useAvatarPointerLocal = useAvatarPointer;
+
+export function UpdateConversationDetailsDialog(props: WithConvoId) {
+  const dispatch = getAppDispatch();
+  const { conversationId } = props;
+  const refreshedAvatarPointer = useAvatarPointerLocal(conversationId);
+  const convo = ConvoHub.use().get(conversationId);
+
+  const {
+    isNameChangePending,
+    newName,
+    newDescription,
+    isMe,
+    nameOnOpen,
+    descriptionOnOpen,
+    isPublic,
+    avatarPointerOnMount,
+    avatarPath,
+    setNewName,
+    setNewDescription,
+  } = useUpdateConversationDetailsDialogInternal(convo);
+
+  if (!convo) {
+    throw new Error('UpdateGroupOrCommunityDetailsDialog corresponding convo not found');
+  }
 
   function closeDialog() {
     dispatch(updateConversationDetailsModal(null));
@@ -168,7 +204,7 @@ export function UpdateConversationDetailsDialog(props: WithConvoId) {
 
     // if we click save, but the only change was an avatar change, we can close the dialog right
     // away (as the avatar was updated as part of of the EditProfilePictureModal)
-    if (noChanges && avatarWasUpdated) {
+    if (!nameOrDescriptionWasUpdated && avatarWasUpdated) {
       closeDialog();
       return;
     }
@@ -239,8 +275,13 @@ export function UpdateConversationDetailsDialog(props: WithConvoId) {
     throw new Error('handleEditProfilePicture is only for communities or ourselves for now');
   }
 
-  const noChanges = newName === nameOnOpen && newDescription === descriptionOnOpen;
-  const avatarWasUpdated = avatarPointerOnMount !== refreshedAvatarPointer;
+  const nameOrDescriptionWasUpdated =
+    newName !== nameOnOpen || newDescription !== descriptionOnOpen;
+  const avatarWasUpdated =
+    avatarPointerOnMount !== refreshedAvatarPointer &&
+    !!avatarPointerOnMount !== !!refreshedAvatarPointer;
+
+  const avatarNameOrDescUpdated = nameOrDescriptionWasUpdated || avatarWasUpdated;
 
   const partDetail = isMe ? 'profile' : isPublic ? 'community' : 'group';
   const partDetailCap = (partDetail.charAt(0).toUpperCase() + partDetail.slice(1)) as Capitalize<
@@ -263,10 +304,10 @@ export function UpdateConversationDetailsDialog(props: WithConvoId) {
               !!errorStringDescription ||
               isNameChangePending ||
               !newName?.trim() ||
-              (noChanges && !avatarWasUpdated)
+              !avatarNameOrDescUpdated
             }
           />
-          {!avatarWasUpdated ? (
+          {avatarNameOrDescUpdated ? (
             <SessionButton
               text={tr('cancel')}
               buttonColor={SessionButtonColor.Danger}
@@ -343,7 +384,7 @@ export function UpdateConversationDetailsDialog(props: WithConvoId) {
           }
         />
       )}
-      <SessionSpinner loading={isNameChangePending} />
+      <SessionSpinner $loading={isNameChangePending} />
       <SpacerSM />
     </SessionWrapperModal>
   );

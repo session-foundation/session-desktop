@@ -1,5 +1,5 @@
 import autoBind from 'auto-bind';
-import { from_hex, to_hex } from 'libsodium-wrappers-sumo';
+import { from_hex } from 'libsodium-wrappers-sumo';
 import {
   debounce,
   includes,
@@ -99,11 +99,6 @@ import {
   isOpenOrClosedGroup,
   READ_MESSAGE_STATE,
   type ConversationNotificationSettingType,
-  type WithAvatarPathAndFallback,
-  type WithAvatarPointer,
-  type WithAvatarPointerProfileKey,
-  type WithProfileKey,
-  type WithProfileUpdatedAtSeconds,
 } from './conversationAttributes';
 
 import { ReadReceiptMessage } from '../session/messages/outgoing/controlMessage/receipt/ReadReceiptMessage';
@@ -132,7 +127,6 @@ import { getLibGroupKickedOutsideRedux } from '../state/selectors/userGroups';
 import {
   MetaGroupWrapperActions,
   MultiEncryptWrapperActions,
-  UserConfigWrapperActions,
   UserGroupsWrapperActions,
 } from '../webworker/workers/browser/libsession_worker_interface';
 import { markAttributesAsReadIfNeeded } from './messageFactory';
@@ -146,83 +140,25 @@ import { Model } from './models';
 import LIBSESSION_CONSTANTS from '../session/utils/libsession/libsession_constants';
 import { ReduxOnionSelectors } from '../state/selectors/onions';
 import { tr, tStripped } from '../localization/localeTools';
-import {
-  getDataFeatureFlag,
-  getFeatureFlag,
-} from '../state/ducks/types/releasedFeaturesReduxTypes';
+import { getFeatureFlag } from '../state/ducks/types/releasedFeaturesReduxTypes';
 import type {
   ConversationInteractionStatus,
   ConversationInteractionType,
 } from '../interactions/types';
 import type { LastMessageStatusType } from '../state/ducks/types';
 import { OutgoingUserProfile } from '../types/message';
-import { Timestamp } from '../types/timestamp/timestamp';
-import { getProDetailsFromStorage } from '../state/selectors/proBackendData';
-import { ProStatus } from '../session/apis/pro_backend_api/types';
+import { privateSet, privateSetKey } from './modelFriends';
+import { ProFeatures, ProMessageFeature } from './proMessageFeature';
+import {
+  getCachedUserConfig,
+  UserConfigWrapperActions,
+} from '../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
+import { ProRevocationCache } from '../session/revocation_list/pro_revocation_list';
 
 type InMemoryConvoInfos = {
   mentionedUs: boolean;
   unreadCount: number;
 };
-
-type WithSetSessionProfileType<
-  T extends
-    | 'displayNameChangeOnlyPrivate'
-    | 'resetAvatarPrivate'
-    | 'resetAvatarGroup'
-    | 'resetAvatarCommunity'
-    | 'setAvatarBeforeDownloadPrivate'
-    | 'setAvatarBeforeDownloadGroup'
-    | 'setAvatarDownloadedPrivate'
-    | 'setAvatarDownloadedCommunity'
-    | 'setAvatarDownloadedGroup',
-> = {
-  type: T;
-};
-
-type WithDisplayNameChange = { displayName?: string | null };
-
-type SetSessionProfileDetails = WithDisplayNameChange &
-  (
-    | (WithSetSessionProfileType<'displayNameChangeOnlyPrivate'> & WithProfileUpdatedAtSeconds)
-    | (WithSetSessionProfileType<'resetAvatarPrivate'> & WithProfileUpdatedAtSeconds)
-    // no need for profileUpdatedAtSeconds for groups/communities
-    | WithSetSessionProfileType<'resetAvatarGroup' | 'resetAvatarCommunity'>
-    // Note: for communities, we set & download the avatar as a single step
-    | (WithSetSessionProfileType<'setAvatarBeforeDownloadPrivate'> &
-        WithProfileUpdatedAtSeconds &
-        WithAvatarPointerProfileKey)
-    // no need for profileUpdatedAtSeconds for groups
-    | (WithSetSessionProfileType<'setAvatarBeforeDownloadGroup'> &
-        WithProfileKey &
-        WithAvatarPointer) // no need for profileUpdatedAtSeconds for groups
-    // Note: for communities, we set & download the avatar as a single step
-    | (WithSetSessionProfileType<'setAvatarDownloadedPrivate'> &
-        WithAvatarPointerProfileKey &
-        WithAvatarPathAndFallback)
-
-    // no need for profileUpdatedAtSeconds for groups/communities
-    | (WithSetSessionProfileType<'setAvatarDownloadedCommunity' | 'setAvatarDownloadedGroup'> &
-        WithAvatarPointerProfileKey &
-        WithAvatarPathAndFallback)
-  );
-
-type SetSessionProfileReturn = {
-  nameChanged: boolean;
-  avatarChanged: boolean;
-  avatarNeedsDownload: boolean;
-};
-
-/**
- *
- * Type guard for the set profile action that is private.
- * We need to do some extra processing for private actions, as they have a updatedAtSeconds field.
- */
-function isSetProfileWithUpdatedAtSeconds<T extends SetSessionProfileDetails>(
-  action: T
-): action is Extract<T, { profileUpdatedAtSeconds: number }> {
-  return 'profileUpdatedAtSeconds' in action;
-}
 
 /**
  * Some fields are not stored in the database, but are kept in memory.
@@ -283,7 +219,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
       case ConversationTypeEnum.GROUPV2:
         return `group:${ed25519Str(this.id)}`;
       case ConversationTypeEnum.GROUP: {
-        if (this.isPublic()) {
+        if (this.isOpenGroupV2()) {
           return `comm:${this.id}`;
         }
         return `group_legacy:${ed25519Str(this.id)}`;
@@ -299,18 +235,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
   }
 
   /**
-   * Same as this.isOpenGroupV2().
-   *
-   * // TODOLATER merge them together
-   */
-  public isPublic(): boolean {
-    return this.isOpenGroupV2();
-  }
-
-  /**
-   * Same as this.isPublic().
-   *
-   * // TODOLATER merge them together
+   * Returns true if this conversation's id matches a sogs/community format
    */
   public isOpenGroupV2(): boolean {
     return OpenGroupUtils.isOpenGroupV2(this.id);
@@ -341,7 +266,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     if (this.isPrivate()) {
       return ConvoTypeNarrow.contact;
     }
-    if (this.isPublic()) {
+    if (this.isOpenGroupV2()) {
       return ConvoTypeNarrow.community;
     }
     if (this.isClosedGroup() && !this.isClosedGroupV2()) {
@@ -429,14 +354,14 @@ export class ConversationModel extends Model<ConversationAttributes> {
   }
 
   public setNotificationsFor(notificationsFor: ConversationNotificationSettingType) {
-    this.setKey('triggerNotificationsFor', notificationsFor);
+    this[privateSetKey]('triggerNotificationsFor', notificationsFor);
   }
 
   public setLastJoinedTimestamp(timestamp: number) {
     if (timestamp === this.getLastJoinedTimestamp()) {
       return;
     }
-    this.setKey('lastJoinedTimestamp', timestamp);
+    this[privateSetKey]('lastJoinedTimestamp', timestamp);
   }
 
   public setExpirationArgs({
@@ -449,8 +374,8 @@ export class ConversationModel extends Model<ConversationAttributes> {
     if (mode === this.getExpirationMode() && expireTimer === this.getExpireTimer()) {
       return;
     }
-    this.setKey('expirationMode', mode);
-    this.setKey('expireTimer', expireTimer);
+    this[privateSetKey]('expirationMode', mode);
+    this[privateSetKey]('expireTimer', expireTimer);
   }
 
   public setIsExpired03Group(isExpired: boolean) {
@@ -460,7 +385,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     if (isExpired === this.getIsExpired03Group()) {
       return;
     }
-    this.setKey('isExpired03Group', isExpired);
+    this[privateSetKey]('isExpired03Group', isExpired);
   }
 
   public getConversationModelProps(): ReduxConversationType {
@@ -511,7 +436,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
       toRet.weAreAdmin = true;
     }
 
-    if (this.isPublic()) {
+    if (this.isOpenGroupV2()) {
       toRet.isPublic = true;
     }
 
@@ -519,6 +444,11 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
     if (proOrNotAvatarPath) {
       toRet.avatarPath = proOrNotAvatarPath;
+    }
+
+    const avatarPointer = this.getAvatarPointer();
+    if (avatarPointer) {
+      toRet.avatarPointer = avatarPointer;
     }
 
     if (this.getExpirationMode()) {
@@ -554,8 +484,9 @@ export class ConversationModel extends Model<ConversationAttributes> {
     if (this.getExpireTimer()) {
       toRet.expireTimer = this.getExpireTimer();
     }
-    if (this.isProUser()) {
-      toRet.isProUser = true;
+
+    if (this.showProBadgeFor()) {
+      toRet.showProBadgeOthers = true;
     }
     // those are values coming only from both the DB or the wrapper. Currently we display the data from the DB
     if (this.isClosedGroup()) {
@@ -563,7 +494,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     }
 
     // those are values coming only from both the DB or the wrapper. Currently we display the data from the DB
-    if (this.isClosedGroup() || this.isPublic()) {
+    if (this.isClosedGroup() || this.isOpenGroupV2()) {
       // for public, this value always comes from the DB
       toRet.groupAdmins = this.getGroupAdmins();
     }
@@ -629,7 +560,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     if (!xor(this.getGroupAdmins(), groupAdmins).length) {
       return false;
     }
-    this.set({ groupAdmins: sortedNewAdmins });
+    this[privateSet]({ groupAdmins: sortedNewAdmins });
     if (shouldCommit) {
       await this.commit();
     }
@@ -706,7 +637,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
       return null;
     }
     let msgSource = quotedMessage.getSource();
-    if (this.isPublic()) {
+    if (this.isOpenGroupV2()) {
       const room = OpenGroupData.getV2OpenGroupRoom(this.id);
       if (room && roomHasBlindEnabled(room) && msgSource === UserUtils.getOurPubKeyStrFromCache()) {
         // this room should send message with blinded pubkey, so we need to make the quote with them too.
@@ -886,13 +817,14 @@ export class ConversationModel extends Model<ConversationAttributes> {
    * Note: you shouldn't need to use this directly. Instead use `handleAcceptConversationRequest()`
    */
   public async addOutgoingApprovalMessage(timestamp: number) {
-    await this.addSingleOutgoingMessage({
+    const msg = await this.addSingleOutgoingMessage({
       sent_at: timestamp,
       messageRequestResponse: {},
       expireTimer: 0,
     });
 
     this.updateLastMessage();
+    return msg;
   }
 
   /**
@@ -916,18 +848,21 @@ export class ConversationModel extends Model<ConversationAttributes> {
    * Currently, we never send anything for denied message requests.
    * Note: you shouldn't need to use this directly. Instead use `handleAcceptConversationRequest()`
    */
-  public async sendMessageRequestResponse() {
+  public async sendMessageRequestResponse(msg: MessageModel) {
     if (!this.isPrivate()) {
       return;
     }
 
+    const outgoingProMessageDetails = await UserUtils.getOutgoingProMessageDetails({
+      utf16: undefined,
+    });
     const messageRequestResponseParams: MessageRequestResponseParams = {
       createAtNetworkTimestamp: NetworkTime.now(),
       userProfile: await UserUtils.getOurProfile(),
-      outgoingProMessageDetails: await UserUtils.getOutgoingProMessageDetails({
-        utf16: undefined,
-      }),
+      outgoingProMessageDetails,
     };
+
+    await msg.applyProFeatures(outgoingProMessageDetails);
 
     const messageRequestResponse = new MessageRequestResponse(messageRequestResponseParams);
     const pubkeyForSending = new PubKey(this.id);
@@ -937,8 +872,61 @@ export class ConversationModel extends Model<ConversationAttributes> {
       .catch(window?.log?.error);
   }
 
-  private isProUser(): boolean {
-    if (this.isPublic()) {
+  /**
+   * Returns true if this user has a valid current pro proof.
+   * Running this on
+   * - an opengroup always returns false
+   * - a closed group always returns false (might change in the future)
+   * - a private chat returns true if the user has a valid, unexpired and unrevoked pro proof
+   */
+  public hasValidCurrentProProof(): boolean {
+    if (this.isOpenGroupV2()) {
+      // Note: communities are considered pro users (they can have animated avatars)
+      // but this function is too generic to return true
+      return false;
+    }
+    if (this.isClosedGroupV2()) {
+      if (!getFeatureFlag('proGroupsAvailable')) {
+        return false;
+      }
+      const admins = this.getGroupAdmins();
+      return admins.some(m => {
+        // the is05Pubkey is only here to make sure we never have a infinite recursion
+        return PubKey.is05Pubkey(m) && ConvoHub.use().get(m)?.hasValidCurrentProProof();
+      });
+    }
+
+    if (this.isMe()) {
+      // The logic for the pro proof for ourselves is coming from libsession.
+      const proProof = getCachedUserConfig().proConfig?.proProof;
+      if (!proProof) {
+        return false;
+      }
+      if (ProRevocationCache.isB64HashRevoked(proProof.genIndexHashB64)) {
+        // `false` because the proof is not valid (revoked)
+        return false;
+      }
+      // if now() is before the proof's expiry, it is not expired yet
+      return NetworkTime.nowTs().isBeforeMs({ ms: proProof.expiryMs });
+    }
+
+    const proDetails = this.dbContactProDetails();
+    if (!proDetails || !proDetails.proExpiryTsMs || !proDetails.proGenIndexHashB64) {
+      return false;
+    }
+
+    // make sure that genIndexHash was not revoked first
+    if (ProRevocationCache.isB64HashRevoked(proDetails.proGenIndexHashB64)) {
+      // `false` because the proof is not valid (revoked)
+      return false;
+    }
+    // We verify a pro proof before saving it, so if the pro proof is not expired yet it is valid.
+    // if now() is before the proof's expiry, it is not expired yet
+    return NetworkTime.nowTs().isBeforeMs({ ms: proDetails.proExpiryTsMs });
+  }
+
+  private showProBadgeFor(): boolean {
+    if (this.isOpenGroupV2()) {
       // Note: communities are considered pro users (they can have animated avatars)
       // but this function is too generic to return true
       return false;
@@ -951,18 +939,19 @@ export class ConversationModel extends Model<ConversationAttributes> {
       const admins = this.getGroupAdmins();
       return admins.some(m => {
         // the is05Pubkey is only here to make sure we never have a infinite recursion
-        return PubKey.is05Pubkey(m) && ConvoHub.use().get(m)?.isProUser();
+        return PubKey.is05Pubkey(m) && ConvoHub.use().get(m)?.hasValidCurrentProProof();
       });
     }
 
-    if (this.isMe()) {
-      return (
-        (getDataFeatureFlag('mockProCurrentStatus') ?? getProDetailsFromStorage()?.status) ===
-        ProStatus.Active
-      );
-    }
+    const proFeaturesStr = this.get('bitsetProFeatures');
+    const hasProBadgeOn =
+      proFeaturesStr && isString(proFeaturesStr)
+        ? ProFeatures.hasProFeature(proFeaturesStr, ProMessageFeature.PRO_BADGE, 'proProfile')
+        : false;
 
-    return getFeatureFlag('mockOthersHavePro');
+    const hasValidProProof = this.hasValidCurrentProProof();
+
+    return hasValidProProof && hasProBadgeOn;
   }
 
   public async sendMessage(msg: SendMessageType) {
@@ -995,7 +984,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
         this.getExpirationMode()
       ),
       expireTimer: this.getExpireTimer(),
-      serverTimestamp: this.isPublic() ? networkTimestamp : undefined,
+      serverTimestamp: this.isOpenGroupV2() ? networkTimestamp : undefined,
       groupInvitation,
     });
 
@@ -1334,7 +1323,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     >
   ) {
     let sender: string = UserUtils.getOurPubKeyStrFromCache();
-    if (this.isPublic()) {
+    if (this.isOpenGroupV2()) {
       const openGroup = OpenGroupData.getV2OpenGroupRoom(this.id);
       if (openGroup && openGroup.serverPublicKey && roomHasBlindEnabled(openGroup)) {
         const signingKeys = await UserUtils.getUserED25519KeyPairBytes();
@@ -1472,7 +1461,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
       return;
     }
 
-    this.set({
+    this[privateSet]({
       nickname: truncatedNickname || undefined,
       displayNameInProfile: this.getRealSessionUsername(),
     });
@@ -1480,173 +1469,6 @@ export class ConversationModel extends Model<ConversationAttributes> {
     if (shouldCommit) {
       await this.commit();
     }
-  }
-
-  private shouldApplyPrivateProfileUpdate<T extends SetSessionProfileDetails>(
-    newProfile: SetSessionProfileDetails
-  ): newProfile is Extract<T, { profileUpdatedAtSeconds: number }> {
-    if (isSetProfileWithUpdatedAtSeconds(newProfile)) {
-      // For the transition period, we need to allow an incoming profile to be applied when
-      // the timestamp is not set (defaults to 0).
-      if (newProfile.profileUpdatedAtSeconds === 0 && this.getProfileUpdatedSeconds() === 0) {
-        window.log.debug(
-          `shouldApplyPrivateProfileUpdate for ${ed25519Str(this.id)} incomingSeconds:0 currentSeconds:0. Allowing overwrite`
-        );
-        return true;
-      }
-      const ts = new Timestamp({ value: newProfile.profileUpdatedAtSeconds });
-      window.log.debug(
-        `shouldApplyPrivateProfileUpdate for ${ed25519Str(this.id)} incomingSeconds:${ts.seconds()} currentSeconds:${this.getProfileUpdatedSeconds()} -> ${this.getProfileUpdatedSeconds() < ts.seconds()}`
-      );
-
-      return this.getProfileUpdatedSeconds() < ts.seconds();
-    }
-    // for non private setProfile calls, we do not need to check the updatedAtSeconds
-    return true;
-  }
-
-  /**
-   * Updates this conversation with the provided displayName, avatarPath, staticAvatarPath and avatarPointer.
-   * - displayName can be set to null to not update the display name.
-   * - if any of the avatar fields is set, they all need to be set.
-   *
-   * This function does commit to the DB if any changes are detected.
-   */
-  public async setSessionProfile(
-    newProfile: SetSessionProfileDetails
-  ): Promise<SetSessionProfileReturn> {
-    let nameChanged = false;
-
-    const existingSessionName = this.getRealSessionUsername();
-    if (
-      this.shouldApplyPrivateProfileUpdate(newProfile) &&
-      newProfile.displayName !== existingSessionName &&
-      newProfile.displayName
-    ) {
-      this.set({
-        displayNameInProfile: newProfile.displayName,
-      });
-      // name has changed, also apply the new profileUpdatedAtSeconds timestamp
-      if (isSetProfileWithUpdatedAtSeconds(newProfile)) {
-        this.set({ profileUpdatedSeconds: newProfile.profileUpdatedAtSeconds });
-      }
-      nameChanged = true;
-    }
-    const type = newProfile.type;
-
-    switch (type) {
-      case 'displayNameChangeOnlyPrivate': {
-        if (nameChanged) {
-          await this.commit();
-        }
-        return { nameChanged, avatarNeedsDownload: false, avatarChanged: false };
-      }
-      case 'resetAvatarPrivate':
-      case 'resetAvatarGroup':
-      case 'resetAvatarCommunity': {
-        let avatarChanged = false;
-        if (
-          // When the avatar update is about a private one, we need to check
-          // if the profile has been updated more recently that what we have already
-          this.shouldApplyPrivateProfileUpdate(newProfile)
-        ) {
-          if (
-            this.getAvatarInProfilePath() ||
-            this.getFallbackAvatarInProfilePath() ||
-            this.getAvatarPointer() ||
-            this.getProfileKeyHex()
-          ) {
-            this.set({
-              avatarInProfile: undefined,
-              avatarPointer: undefined,
-              profileKey: undefined,
-              fallbackAvatarInProfile: undefined,
-            });
-            avatarChanged = true;
-            // avatar has changed, also apply the new profileUpdatedAtSeconds timestamp
-            if (isSetProfileWithUpdatedAtSeconds(newProfile)) {
-              this.set({ profileUpdatedSeconds: newProfile.profileUpdatedAtSeconds });
-            }
-          }
-        }
-        if (avatarChanged || nameChanged) {
-          await this.commit();
-        }
-        return { nameChanged, avatarNeedsDownload: false, avatarChanged };
-      }
-
-      case 'setAvatarBeforeDownloadPrivate':
-      case 'setAvatarBeforeDownloadGroup': {
-        const newProfileKeyHex = isString(newProfile.profileKey)
-          ? newProfile.profileKey
-          : to_hex(newProfile.profileKey);
-
-        const existingAvatarPointer = this.getAvatarPointer();
-        const existingProfileKeyHex = this.getProfileKeyHex();
-        const hasAvatarInNewProfile = !!newProfile.avatarPointer || !!newProfileKeyHex;
-        // if no changes are needed, return early
-        if (
-          isEqual(existingAvatarPointer, newProfile.avatarPointer) &&
-          isEqual(existingProfileKeyHex, newProfileKeyHex)
-        ) {
-          if (nameChanged) {
-            await this.commit();
-          }
-          return { nameChanged, avatarNeedsDownload: false, avatarChanged: false };
-        }
-        this.set({ avatarPointer: newProfile.avatarPointer, profileKey: newProfileKeyHex });
-
-        // avatar has changed, also apply the new profileUpdatedAtSeconds timestamp
-        if (isSetProfileWithUpdatedAtSeconds(newProfile)) {
-          this.set({ profileUpdatedSeconds: newProfile.profileUpdatedAtSeconds });
-        }
-        await this.commit();
-
-        return { nameChanged, avatarNeedsDownload: hasAvatarInNewProfile, avatarChanged: true };
-      }
-      case 'setAvatarDownloadedPrivate':
-      case 'setAvatarDownloadedGroup':
-      case 'setAvatarDownloadedCommunity': {
-        const newProfileKeyHex = isString(newProfile.profileKey)
-          ? newProfile.profileKey
-          : to_hex(newProfile.profileKey);
-
-        const existingAvatarPointer = this.getAvatarPointer();
-        const existingProfileKeyHex = this.getProfileKeyHex();
-        const originalAvatar = this.getAvatarInProfilePath();
-        const originalFallbackAvatar = this.getFallbackAvatarInProfilePath();
-
-        // if no changes are needed, return early
-        if (
-          isEqual(originalAvatar, newProfile.avatarPath) &&
-          isEqual(originalFallbackAvatar, newProfile.fallbackAvatarPath) &&
-          isEqual(existingAvatarPointer, newProfile.avatarPointer) &&
-          isEqual(existingProfileKeyHex, newProfileKeyHex)
-        ) {
-          if (nameChanged) {
-            await this.commit();
-          }
-          return { nameChanged, avatarChanged: false, avatarNeedsDownload: false };
-        }
-
-        // avatar has changed, but we are only dealing with the downloaded part of it here
-        // so this actually is not a profile update change. Nothing to do, as the newProfile type suggests
-
-        this.set({
-          avatarPointer: newProfile.avatarPointer,
-          avatarInProfile: newProfile.avatarPath,
-          fallbackAvatarInProfile: newProfile.fallbackAvatarPath,
-          profileKey: newProfileKeyHex,
-        });
-
-        await this.commit();
-        return { nameChanged, avatarNeedsDownload: false, avatarChanged: true };
-      }
-      default:
-        assertUnreachable(type, `handlePrivateProfileUpdate: unhandled case "${type}"`);
-    }
-
-    throw new Error('Should have returned earlier');
   }
 
   public getIsTrustedForAttachmentDownload() {
@@ -1657,21 +1479,21 @@ export class ConversationModel extends Model<ConversationAttributes> {
     if (isTrusted === this.getIsTrustedForAttachmentDownload()) {
       return;
     }
-    this.setKey('isTrustedForAttachmentDownload', isTrusted);
+    this[privateSetKey]('isTrustedForAttachmentDownload', isTrusted);
   }
 
   public setLastMessage(lastMessage: string | null) {
     if (lastMessage === this.getLastMessage()) {
       return;
     }
-    this.set({ lastMessage });
+    this[privateSet]({ lastMessage });
   }
 
   public setLastMessageStatus(lastMessageStatus: LastMessageStatusType | undefined) {
     if (lastMessageStatus === this.getLastMessageStatus()) {
       return;
     }
-    this.set({ lastMessageStatus });
+    this[privateSet]({ lastMessageStatus });
   }
 
   public getLastMessageStatus() {
@@ -1697,13 +1519,13 @@ export class ConversationModel extends Model<ConversationAttributes> {
       if (opts.type === current.type && opts.status === current.status) {
         return;
       }
-      this.set({ lastMessageInteractionType: opts.type });
-      this.set({ lastMessageInteractionStatus: opts.status });
+      this[privateSet]({ lastMessageInteractionType: opts.type });
+      this[privateSet]({ lastMessageInteractionStatus: opts.status });
     }
     if (current === null) {
       return;
     }
-    this.set({ lastMessageInteractionType: null, lastMessageInteractionStatus: null });
+    this[privateSet]({ lastMessageInteractionType: null, lastMessageInteractionStatus: null });
   }
 
   /**
@@ -1717,7 +1539,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     }
     const existingSessionName = this.getRealSessionUsername();
     if (newDisplayName !== existingSessionName && newDisplayName) {
-      this.set({ displayNameInProfile: newDisplayName });
+      this[privateSet]({ displayNameInProfile: newDisplayName });
     }
   }
 
@@ -1791,7 +1613,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     if (avatarPointer === this.getAvatarPointer()) {
       return;
     }
-    this.set({ avatarPointer });
+    this[privateSet]({ avatarPointer });
   }
 
   /**
@@ -1810,14 +1632,14 @@ export class ConversationModel extends Model<ConversationAttributes> {
     if (this.isPrivate()) {
       return PubKey.shorten(this.id);
     }
-    if (this.isPublic()) {
+    if (this.isOpenGroupV2()) {
       return tr('communityUnknown');
     }
     return tr('unknown');
   }
 
   public isAdmin(pubKey?: string) {
-    if (!this.isPublic() && !this.isGroup()) {
+    if (!this.isOpenGroupV2() && !this.isGroup()) {
       return false;
     }
     if (!pubKey) {
@@ -1843,7 +1665,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     if (!pubKey) {
       throw new Error('isModerator() pubKey is falsy');
     }
-    if (!this.isPublic()) {
+    if (!this.isOpenGroupV2()) {
       return false;
     }
 
@@ -1861,7 +1683,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     shouldCommit: boolean = true
   ): Promise<boolean> {
     if (priority !== this.getPriority()) {
-      this.set({
+      this[privateSet]({
         priority,
       });
 
@@ -1887,7 +1709,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     const newPriority = pinnedBefore
       ? CONVERSATION_PRIORITIES.default
       : CONVERSATION_PRIORITIES.pinned;
-    this.set({
+    this[privateSet]({
       priority: newPriority,
     });
     if (shouldCommit) {
@@ -1944,7 +1766,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     }
     const priority = this.getPriority();
     if (priority >= CONVERSATION_PRIORITIES.default) {
-      this.set({ priority: CONVERSATION_PRIORITIES.hidden });
+      this[privateSet]({ priority: CONVERSATION_PRIORITIES.hidden });
       if (shouldCommit) {
         await this.commit();
       }
@@ -1959,7 +1781,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     if (left === this.getLeft()) {
       return;
     }
-    this.set({ left });
+    this[privateSet]({ left });
   }
 
   /**
@@ -1976,7 +1798,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
   public async markAsUnread(forcedValue: boolean, shouldCommit: boolean = true) {
     if (!!forcedValue !== this.isMarkedUnread()) {
-      this.set({
+      this[privateSet]({
         markedAsUnread: !!forcedValue,
       });
       if (shouldCommit) {
@@ -1987,6 +1809,32 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
   public isMarkedUnread(): boolean {
     return !!this.get('markedAsUnread');
+  }
+
+  /**
+   * Return the pro details of this contact as they are stored in the database.
+   */
+  public dbContactProDetails() {
+    /**
+     * We only want to return the stored pro details if this is a contact.
+     * A contact is a private, non NTS, non blinded, and approved at least on one side.
+     */
+    if (
+      this.getConvoType() !== ConvoTypeNarrow.privateAcquaintance &&
+      this.getConvoType() !== ConvoTypeNarrow.contact &&
+      this.getConvoType() !== ConvoTypeNarrow.blindedContact &&
+      this.getConvoType() !== ConvoTypeNarrow.blindedAcquaintance
+    ) {
+      return null;
+    }
+    const proGenIndexHashB64 = this.get('proGenIndexHashB64');
+    const proExpiryTsMs = this.get('proExpiryTsMs');
+    const bitsetProFeatures = this.get('bitsetProFeatures');
+    return {
+      proGenIndexHashB64,
+      proExpiryTsMs,
+      bitsetProFeatures,
+    };
   }
 
   public async updateBlocksSogsMsgReqsTimestamp(
@@ -2002,7 +1850,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
       (blocksSogsMsgReqsTimestamp === 0 && this.get('blocksSogsMsgReqsTimestamp') !== 0) ||
       blocksSogsMsgReqsTimestamp > this.get('blocksSogsMsgReqsTimestamp')
     ) {
-      this.set({
+      this[privateSet]({
         blocksSogsMsgReqsTimestamp,
       });
       if (shouldCommit) {
@@ -2019,7 +1867,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
   }
 
   public setActiveAt(activeAt: number | undefined) {
-    this.set({ active_at: activeAt });
+    this[privateSet]({ active_at: activeAt });
   }
 
   /**
@@ -2035,7 +1883,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
     if (valueForced !== Boolean(this.isApproved())) {
       window?.log?.debug(`Setting ${ed25519Str(this.id)} isApproved to: ${value}`);
-      this.set({
+      this[privateSet]({
         isApproved: valueForced,
       });
 
@@ -2056,7 +1904,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     const valueForced = Boolean(value);
     if (valueForced !== Boolean(this.didApproveMe())) {
       window?.log?.debug(`Setting ${ed25519Str(this.id)} didApproveMe to: ${value}`);
-      this.set({
+      this[privateSet]({
         didApproveMe: valueForced,
       });
 
@@ -2082,7 +1930,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
       );
       throw new Error('tried to setOriginConversationID with invalid parameter ');
     }
-    this.set({
+    this[privateSet]({
       conversationIdOrigin,
     });
 
@@ -2122,7 +1970,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
       description?: string;
     };
   }) {
-    if (!this.isPublic()) {
+    if (!this.isOpenGroupV2()) {
       return;
     }
     if (!infos || isEmpty(infos)) {
@@ -2164,7 +2012,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
       hasChange = hasChange || true;
     }
 
-    if (this.isPublic() && details.image_id && isNumber(details.image_id)) {
+    if (this.isOpenGroupV2() && details.image_id && isNumber(details.image_id)) {
       const roomInfos = OpenGroupData.getV2OpenGroupRoom(this.id);
       if (roomInfos) {
         void sogsV3FetchPreviewAndSaveIt({
@@ -2288,9 +2136,23 @@ export class ConversationModel extends Model<ConversationAttributes> {
    */
   public getProOrNotAvatarPath() {
     const proAvailable = getFeatureFlag('proAvailable');
-    return !proAvailable || this.isProUser()
-      ? this.getAvatarInProfilePath()
-      : this.getFallbackAvatarInProfilePath();
+    const avatarPicked =
+      proAvailable && !this.hasValidCurrentProProof()
+        ? this.getFallbackAvatarInProfilePath()
+        : this.getAvatarInProfilePath();
+
+    // window.log.debug(
+    //   `getProOrNotAvatarPath for ${ed25519Str(this.id)}: `,
+    //   JSON.stringify({
+    //     proAvailable,
+    //     validCurrentProof: this.hasValidCurrentProProof(),
+    //     avatarInProfilePath: this.getAvatarInProfilePath(),
+    //     fallbackAvatarInProfilePath: this.getFallbackAvatarInProfilePath(),
+    //     avatarPicked,
+    //   })
+    // );
+
+    return avatarPicked;
   }
 
   /**
@@ -2364,11 +2226,9 @@ export class ConversationModel extends Model<ConversationAttributes> {
       const mentions = text?.match(regex) || ([] as Array<string>);
       const mentionMe = mentions && mentions.some(m => isUsAnySogsFromCache(m.slice(1)));
 
-      const quotedMessageAuthor = message.get('quote')?.author;
+      const quotedMessageAuthorIsUs = await message.getQuotedMessageAuthorIsUs();
 
-      const isReplyToOurMessage =
-        quotedMessageAuthor && UserUtils.isUsFromCache(quotedMessageAuthor);
-      if (!mentionMe && !isReplyToOurMessage) {
+      if (!mentionMe && !quotedMessageAuthorIsUs) {
         window?.log?.info(
           'notifications disabled for non mentions or reply for convo',
           conversationId
@@ -2476,7 +2336,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     if (isEqual(members, this.getMembers())) {
       return;
     }
-    this.set({ members });
+    this[privateSet]({ members });
   }
 
   public isKickedFromGroup(): boolean {
@@ -2524,6 +2384,10 @@ export class ConversationModel extends Model<ConversationAttributes> {
       // we are trying to send a message to someone. Make sure this convo is not hidden
       await this.unhideIfNeeded(true);
 
+      const outgoingProMessageDetails = await UserUtils.getOutgoingProMessageDetails({
+        utf16: body,
+      });
+
       // TODO break down those functions  (sendMessage and retrySend into smaller functions and narrow the VisibleMessageParams to preview, etc. with checks of types)
       // an OpenGroupV2 message is just a visible message
       const chatMessageParams: VisibleMessageParams = {
@@ -2536,10 +2400,10 @@ export class ConversationModel extends Model<ConversationAttributes> {
         preview: preview ? [preview] : [],
         quote,
         userProfile: await UserUtils.getOurProfile(),
-        outgoingProMessageDetails: await UserUtils.getOutgoingProMessageDetails({
-          utf16: body,
-        }),
+        outgoingProMessageDetails,
       };
+
+      await message.applyProFeatures(outgoingProMessageDetails);
 
       if (PubKey.isBlinded(this.id)) {
         window.log.info('Sending a blinded message to this user: ', this.id);
@@ -2743,7 +2607,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
         this.get('lastMessageInteractionType') ||
         this.get('lastMessageInteractionStatus')
       ) {
-        this.set({
+        this[privateSet]({
           lastMessage: '',
           lastMessageStatus: undefined,
           lastMessageInteractionType: undefined,
@@ -2797,7 +2661,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
         // we only store the first 60 chars in the db for the lastMessage attributes (see sql.ts)
         return;
       }
-      this.set({
+      this[privateSet]({
         ...lastMessageUpdate,
       });
       await this.commit();
@@ -3274,18 +3138,22 @@ export function hasValidIncomingRequestValues({
   priority: number | undefined;
 }): boolean {
   // if a convo is not active, it means we didn't get any messages nor sent any.
-  const isActive = activeAt && isFinite(activeAt) && activeAt > 0;
+  const isActive = Boolean(activeAt && isFinite(activeAt) && activeAt > 0);
   const priorityWithDefault = priority ?? CONVERSATION_PRIORITIES.default;
   const isHidden = priorityWithDefault < 0;
-  return Boolean(
-    (isPrivate || (PubKey.is03Pubkey(id) && invitePending)) &&
-      !isMe &&
-      !isApproved &&
-      !isBlocked &&
-      isActive &&
-      didApproveMe &&
-      !isHidden
-  );
+
+  /**
+   * For 03 groups, an incoming request is one that has the invitePending flag set to true.
+   * We do not care about the database flags (invitePending comes from the user group wrapper)
+   */
+  const validFor03Groups = PubKey.is03Pubkey(id) && invitePending;
+
+  /**
+   * For contacts, an incoming request is one that approved us but that we did not approve ourselves yet.
+   */
+  const validForContact = isPrivate && !isMe && !isApproved && didApproveMe;
+
+  return isActive && !isHidden && !isBlocked && (validFor03Groups || validForContact);
 }
 
 async function cleanUpExpireHistoryFromConvo(conversationId: string, isPrivate: boolean) {

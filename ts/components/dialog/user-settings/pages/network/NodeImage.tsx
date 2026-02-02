@@ -1,52 +1,43 @@
-import { type SVGProps, type JSX } from 'react';
 import styled from 'styled-components';
-import { Block } from './components';
-import { NodeGraph1 } from './nodes/NodeGraph1';
-import { NodeGraph10 } from './nodes/NodeGraph10';
-import { NodeGraph2 } from './nodes/NodeGraph2';
-import { NodeGraph3 } from './nodes/NodeGraph3';
-import { NodeGraph4 } from './nodes/NodeGraph4';
-import { NodeGraph5 } from './nodes/NodeGraph5';
-import { NodeGraph6 } from './nodes/NodeGraph6';
-import { NodeGraph7 } from './nodes/NodeGraph7';
-import { NodeGraph8 } from './nodes/NodeGraph8';
-import { NodeGraph9 } from './nodes/NodeGraph9';
 import { useSecuringNodesCount } from './sections/network/hooks/useSecuringNodesCount';
 import {
   AnimatedSpinnerIcon,
   AnimatedSpinnerIconWrapper,
 } from '../../../../loading/spinner/AnimatedSpinnerIcon';
+import {
+  NodeGraph1,
+  NodeGraph10,
+  NodeGraph2,
+  NodeGraph3,
+  NodeGraph4,
+  NodeGraph5,
+  NodeGraph6,
+  NodeGraph7,
+  NodeGraph8,
+  NodeGraph9,
+} from '../../../../../svgs/index';
+import { useInfoFakeRefreshing } from '../../../../../state/selectors/networkModal';
 
-const StyledNodeImage = styled(Block)`
-  display: flex;
-  justify-content: center;
-  align-items: center;
+const StyledNodeImage = styled.div<{ $nodeColor: string; $pathColor: string }>`
+  --c1: ${({ $nodeColor }) => $nodeColor};
+  --c2: ${({ $pathColor }) => $pathColor};
 
   ${AnimatedSpinnerIconWrapper} {
     margin: auto;
   }
-
-  svg,
-  ${AnimatedSpinnerIconWrapper} {
-    position: absolute;
-    inset: 0;
-  }
-
-  svg:nth-child(2) {
-    transform: translateY((-100%));
-  }
 `;
 
-export type NodeGraphProps = SVGProps<SVGSVGElement> & { nodeColor: string; pathColor: string };
+const StyledLoaderContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  border: 1px solid var(--primary-color);
+  border-radius: 8px;
+`;
 
-type Props = {
-  count: number;
-  width: string;
-  height: string;
-  loading?: boolean;
-};
-
-const nodeComps: Record<number, (props: NodeGraphProps) => JSX.Element> = {
+const nodeGraphs: Record<number, React.FC<React.SVGProps<SVGSVGElement>>> = {
   1: NodeGraph1,
   2: NodeGraph2,
   3: NodeGraph3,
@@ -59,31 +50,26 @@ const nodeComps: Record<number, (props: NodeGraphProps) => JSX.Element> = {
   10: NodeGraph10,
 };
 
-export const NodeImage = ({ width, height, loading }: Props) => {
-  const { swarmNodeCount } = useSecuringNodesCount();
+export const NodeImage = () => {
+  const { swarmNodeCount, dataIsStale } = useSecuringNodesCount();
+  const isFakeRefreshing = useInfoFakeRefreshing();
+  const NodeGraph = nodeGraphs[swarmNodeCount ?? 1];
 
-  const NodeComp = nodeComps[swarmNodeCount ?? 0];
-  const sharedNodeProps = {
-    nodeColor: 'var(--primary-color)',
-    pathColor: 'var(--text-primary-color)',
-    width,
-    height,
-  };
-
-  const ready = !loading && NodeComp;
+  const loading = !swarmNodeCount || !NodeGraph || dataIsStale || isFakeRefreshing;
 
   return (
     <StyledNodeImage
-      $flexDirection="column"
-      $justifyContent="center"
-      $alignItems="center"
-      borderColor="var(--primary-color)"
-      width={width}
-      height={height}
-      style={{ position: 'relative', overflow: 'hidden' }}
+      $nodeColor="var(--primary-color)"
+      $pathColor="var(--text-primary-color)"
       data-testid="swarm-image"
     >
-      {ready ? <NodeComp {...sharedNodeProps} /> : <AnimatedSpinnerIcon size="huge2" />}
+      {!loading ? (
+        <NodeGraph />
+      ) : (
+        <StyledLoaderContainer>
+          <AnimatedSpinnerIcon size="huge2" />
+        </StyledLoaderContainer>
+      )}
     </StyledNodeImage>
   );
 };

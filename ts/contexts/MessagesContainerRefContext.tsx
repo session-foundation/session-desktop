@@ -1,6 +1,6 @@
 import { createContext, RefObject, useContext } from 'react';
 
-export const MessagesContainerRefContext = createContext<RefObject<HTMLDivElement>>({
+export const MessagesContainerRefContext = createContext<RefObject<HTMLDivElement | null>>({
   current: null,
 });
 

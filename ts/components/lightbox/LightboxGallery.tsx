@@ -1,8 +1,8 @@
 import { useCallback, useState } from 'react';
-import { useDispatch } from 'react-redux';
 import useKey from 'react-use/lib/useKey';
 
 import useMount from 'react-use/lib/useMount';
+import { getAppDispatch } from '../../state/dispatch';
 import { Lightbox } from './Lightbox';
 
 import { updateLightBoxOptions } from '../../state/ducks/modalDialog';
@@ -34,7 +34,7 @@ export const LightboxGallery = (props: Props) => {
   const [currentIndex, setCurrentIndex] = useState(selectedIndex);
   const selectedConversation = useSelectedConversationKey();
 
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   // just run once, when the component is mounted. It's to show the lightbox on the specified index at start.
   useMount(() => {

@@ -2,7 +2,7 @@ import useKey from 'react-use/lib/useKey';
 import styled from 'styled-components';
 
 import { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { getAppDispatch } from '../../../state/dispatch';
 import { UserUtils } from '../../../session/utils';
 import { Flex } from '../../basic/Flex';
 import { SpacerLG, SpacerMD, SpacerSM } from '../../basic/Text';
@@ -61,7 +61,7 @@ export const OverlayInvite = () => {
 
   const [idCopied, setIdCopied] = useState(false);
 
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   function closeOverlay() {
     dispatch(sectionActions.resetLeftOverlayMode());
@@ -75,7 +75,7 @@ export const OverlayInvite = () => {
       $flexDirection={'column'}
       $flexGrow={1}
       $alignItems={'center'}
-      padding={'var(--margins-md)'}
+      $padding={'var(--margins-md)'}
     >
       {!idCopied ? (
         <>
@@ -108,7 +108,7 @@ export const OverlayInvite = () => {
           <LucideIcon
             unicode={LUCIDE_ICONS_UNICODE.CIRCLE_CHECK}
             iconSize={'huge2'}
-            iconColor={'var(--primary-color)'}
+            iconColor={'var(--menu-button-border-color)'}
           />
           <SpacerMD />
           <StyledHeadingContainer $container={true} $justifyContent="center" $alignItems="center">

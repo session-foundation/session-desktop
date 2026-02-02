@@ -1,10 +1,10 @@
-import { useDispatch } from 'react-redux';
+import { getAppDispatch } from '../../state/dispatch';
 import { updateConversationSettingsModal } from '../../state/ducks/modalDialog';
 import { useIsKickedFromGroup } from '../../hooks/useParamSelector';
 import { openRightPanel } from '../../state/ducks/conversations';
 
 export function useShowAttachments({ conversationId }: { conversationId: string }) {
-  const dispatch = useDispatch();
+  const dispatch = getAppDispatch();
 
   const isKickedFromGroup = useIsKickedFromGroup(conversationId);
 

@@ -33,17 +33,12 @@ import {
   StagedAttachmentImportedType,
   StagedPreviewImportedType,
 } from '../../../util/attachment/attachmentsUtil';
-import { LinkPreviews } from '../../../util/linkPreviews';
 import { CaptionEditor } from '../../CaptionEditor';
 import { Flex } from '../../basic/Flex';
 import { getMediaPermissionsSettings } from '../../settings/SessionSettings';
 import { getDraftForConversation, updateDraftForConversation } from '../SessionConversationDrafts';
 import { SessionQuotedMessageComposition } from '../SessionQuotedMessageComposition';
-import {
-  getPreview,
-  LINK_PREVIEW_TIMEOUT,
-  SessionStagedLinkPreview,
-} from '../SessionStagedLinkPreview';
+import { SessionStagedLinkPreview } from '../SessionStagedLinkPreview';
 import { StagedAttachmentList } from '../StagedAttachmentList';
 import {
   AddStagedAttachmentButton,
@@ -64,8 +59,9 @@ import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesRedux
 import { showSessionCTA } from '../../dialog/SessionCTA';
 import { tStripped } from '../../../localization/localeTools';
 import type { ProcessedLinkPreviewThumbnailType } from '../../../webworker/workers/node/image_processor/image_processor';
-import { selectWeAreProUser } from '../../../hooks/useParamSelector';
 import { CTAVariant } from '../../dialog/cta/types';
+import { selectWeAreProUser } from '../../../hooks/useHasPro';
+import type { MessageAttributes } from '../../../models/messageType';
 
 export interface ReplyingToMessageProps {
   convoId: string;
@@ -76,25 +72,23 @@ export interface ReplyingToMessageProps {
   attachments?: Array<any>;
 }
 
-export interface StagedLinkPreviewData {
-  isLoaded: boolean;
+export type StagedLinkPreviewData = {
   title: string | null;
   url: string | null;
   domain: string | null;
   scaledDown: ProcessedLinkPreviewThumbnailType | null;
-}
+};
 
 export type StagedAttachmentType = AttachmentType & {
   file: File;
   path?: string; // a bit hacky, but this is the only way to make our sending audio message be playable, this must be used only for those message
 };
 
-export type SendMessageType = {
+export type SendMessageType = Pick<MessageAttributes, 'quote'> & {
   conversationId: string;
   body: string;
   attachments: Array<StagedAttachmentImportedType> | undefined;
-  quote: any | undefined;
-  preview: any | undefined;
+  preview: Array<StagedPreviewImportedType> | undefined;
   groupInvitation: { url: string | undefined; name: string } | undefined;
 };
 
@@ -217,10 +211,10 @@ const StyledCompositionBoxContainer = styled(Flex)`
 `;
 
 class CompositionBoxInner extends Component<Props, State> {
-  private readonly inputRef: RefObject<CompositionInputRef>;
-  private readonly fileInput: RefObject<HTMLInputElement>;
-  private container: RefObject<HTMLDivElement>;
-  private readonly emojiPanel: RefObject<HTMLDivElement>;
+  private readonly inputRef: RefObject<CompositionInputRef | null>;
+  private readonly fileInput: RefObject<HTMLInputElement | null>;
+  private container: RefObject<HTMLDivElement | null>;
+  private readonly emojiPanel: RefObject<HTMLDivElement | null>;
   private readonly emojiPanelButton: any;
   private linkPreviewAbortController?: AbortController;
 
@@ -270,8 +264,8 @@ class CompositionBoxInner extends Component<Props, State> {
   }
 
   public render() {
-    const { showRecordingView } = this.state;
-    const { typingEnabled, isBlocked } = this.props;
+    const { showRecordingView, draft } = this.state;
+    const { typingEnabled, isBlocked, stagedAttachments, quotedMessageProps } = this.props;
 
     // we completely hide the composition box when typing is not enabled now.
     // Actually not anymore. We want the above, except when we can't write because that user is blocked.
@@ -283,7 +277,15 @@ class CompositionBoxInner extends Component<Props, State> {
     return (
       <Flex $flexDirection="column">
         <SessionQuotedMessageComposition />
-        {this.renderStagedLinkPreview()}
+        {
+          // Don't render link previews if quoted message or attachments are already added
+          stagedAttachments.length !== 0 || quotedMessageProps?.id ? null : (
+            <SessionStagedLinkPreview
+              draft={draft}
+              setStagedLinkPreview={this.setStagedLinkPreview}
+            />
+          )
+        }
         {this.renderAttachmentsStaged()}
         <div className="composition-container">
           {showRecordingView ? this.renderRecordingView() : this.renderCompositionView()}
@@ -322,7 +324,7 @@ class CompositionBoxInner extends Component<Props, State> {
           imgBlob = item.getAsFile();
           break;
         case 'text':
-          void showLinkSharingConfirmationModalDialog(e);
+          void showLinkSharingConfirmationModalDialog(e.clipboardData.getData('text'));
           break;
         default:
       }
@@ -359,6 +361,10 @@ class CompositionBoxInner extends Component<Props, State> {
 
   private setDraft(draft: string) {
     this.setState({ draft, characterCount: this.getSendableText().length });
+  }
+
+  private setStagedLinkPreview(linkPreview: StagedLinkPreviewData) {
+    this.setState({ stagedLinkPreview: linkPreview });
   }
 
   private toggleEmojiPanel() {
@@ -447,140 +453,13 @@ class CompositionBoxInner extends Component<Props, State> {
               ref={this.emojiPanel}
               show={showEmojiPanel}
               onEmojiClicked={this.onEmojiClick}
-              onKeyDown={this.onKeyDown}
+              onClose={this.hideEmojiPanel}
             />
           </StyledEmojiPanelContainer>
         ) : null}
         {!isUndefined(characterCount) ? <CharacterCount count={characterCount} /> : null}
       </StyledCompositionBoxContainer>
     );
-  }
-  private renderStagedLinkPreview(): JSX.Element | null {
-    // Don't generate link previews if user has turned them off
-    if (!(window.getSettingValue(SettingsKey.settingsLinkPreview) || false)) {
-      return null;
-    }
-
-    const { stagedAttachments, quotedMessageProps } = this.props;
-    const { ignoredLink } = this.state;
-
-    // Don't render link previews if quoted message or attachments are already added
-    if (stagedAttachments.length !== 0 || quotedMessageProps?.id) {
-      return null;
-    }
-    // we try to match the first link found in the current message
-    const links = LinkPreviews.findLinks(this.state.draft, undefined);
-    if (!links || links.length === 0 || ignoredLink === links[0]) {
-      if (this.state.stagedLinkPreview) {
-        this.setState({
-          stagedLinkPreview: undefined,
-        });
-      }
-      return null;
-    }
-    const firstLink = links[0];
-    // if the first link changed, reset the ignored link so that the preview is generated
-    if (ignoredLink && ignoredLink !== firstLink) {
-      this.setState({ ignoredLink: undefined });
-    }
-    if (firstLink !== this.state.stagedLinkPreview?.url) {
-      // trigger fetching of link preview data and image
-      this.fetchLinkPreview(firstLink);
-    }
-
-    // if the fetch did not start yet, just don't show anything
-    if (!this.state.stagedLinkPreview) {
-      return null;
-    }
-
-    const { isLoaded, title, domain, scaledDown } = this.state.stagedLinkPreview;
-
-    return (
-      <SessionStagedLinkPreview
-        isLoaded={isLoaded}
-        title={title}
-        domain={domain}
-        scaledDown={scaledDown}
-        url={firstLink}
-        onClose={url => {
-          this.setState({ ignoredLink: url });
-        }}
-      />
-    );
-  }
-
-  private fetchLinkPreview(firstLink: string) {
-    // mark the link preview as loading, no data are set yet
-    this.setState({
-      stagedLinkPreview: {
-        isLoaded: false,
-        url: firstLink,
-        domain: null,
-        title: null,
-        scaledDown: null,
-      },
-    });
-    const abortController = new AbortController();
-    this.linkPreviewAbortController?.abort();
-    this.linkPreviewAbortController = abortController;
-    setTimeout(() => {
-      abortController.abort();
-    }, LINK_PREVIEW_TIMEOUT);
-
-    // eslint-disable-next-line more/no-then
-    getPreview(firstLink, abortController.signal)
-      .then(ret => {
-        // we finished loading the preview, and checking the abortController, we are still not aborted.
-        // => update the staged preview
-        if (this.linkPreviewAbortController && !this.linkPreviewAbortController.signal.aborted) {
-          this.setState({
-            stagedLinkPreview: {
-              isLoaded: true,
-              title: ret?.title || null,
-              url: ret?.url || null,
-              domain: (ret?.url && LinkPreviews.getDomain(ret.url)) || '',
-              scaledDown: ret?.scaledDown,
-            },
-          });
-        } else if (this.linkPreviewAbortController) {
-          this.setState({
-            stagedLinkPreview: {
-              isLoaded: false,
-              title: null,
-              url: null,
-              domain: null,
-              scaledDown: null,
-            },
-          });
-          this.linkPreviewAbortController = undefined;
-        }
-      })
-      .catch(err => {
-        window?.log?.warn('fetch link preview: ', err);
-        const aborted = this.linkPreviewAbortController?.signal.aborted;
-        this.linkPreviewAbortController = undefined;
-        // if we were aborted, it either means the UI was unmount, or more probably,
-        // than the message was sent without the link preview.
-        // So be sure to reset the staged link preview so it is not sent with the next message.
-
-        // if we were not aborted, it's probably just an error on the fetch. Nothing to do except mark the fetch as done (with errors)
-
-        if (aborted) {
-          this.setState({
-            stagedLinkPreview: undefined,
-          });
-        } else {
-          this.setState({
-            stagedLinkPreview: {
-              isLoaded: true,
-              title: null,
-              url: firstLink,
-              domain: null,
-              scaledDown: null,
-            },
-          });
-        }
-      });
   }
 
   private onClickAttachment(attachment: AttachmentType) {
@@ -669,6 +548,10 @@ class CompositionBoxInner extends Component<Props, State> {
    * @param event - Keyboard event.
    */
   private async onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.key === 'Escape' && this.state.showEmojiPanel) {
+      this.hideEmojiPanel();
+      return;
+    }
     const isShiftSendEnabled = !!window.getSettingValue(SettingsKey.hasShiftSendEnabled);
     if (
       !event.nativeEvent.isComposing &&
@@ -679,7 +562,6 @@ class CompositionBoxInner extends Component<Props, State> {
       event.stopPropagation();
       await this.onSendMessage();
     }
-    // TODO: Add support for closing the emoji panel, probably should pass an onClose function to it
 
     // TODO: fix the bug with the pageup/down keys popping out the right panel when the box has text in it.
     if (this.state.draft.length && (event.key === 'PageUp' || event.key === 'PageDown')) {
@@ -786,17 +668,10 @@ class CompositionBoxInner extends Component<Props, State> {
     }
 
     // Send message
-    const extractedQuotedMessageProps = _.pick(
-      quotedMessageProps,
-      'id',
-      'author',
-      'text',
-      'attachments'
-    );
 
     // we consider that a link preview without a title at least is not a preview
     const linkPreview =
-      stagedLinkPreview?.isLoaded && stagedLinkPreview.title?.length
+      stagedLinkPreview && stagedLinkPreview.title?.length
         ? _.pick(stagedLinkPreview, 'url', 'scaledDown', 'title')
         : undefined;
 
@@ -807,7 +682,9 @@ class CompositionBoxInner extends Component<Props, State> {
         conversationId: selectedConversationKey,
         body: text.trim(),
         attachments: attachments || [],
-        quote: extractedQuotedMessageProps,
+        quote: quotedMessageProps
+          ? { author: quotedMessageProps.author, timestamp: quotedMessageProps.timestamp }
+          : undefined,
         preview: previews,
         groupInvitation: undefined,
       });
