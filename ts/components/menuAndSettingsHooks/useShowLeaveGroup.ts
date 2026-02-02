@@ -4,6 +4,7 @@ import {
   useIsGroupDestroyed,
   useConversationUsernameWithFallback,
   useWeAreAdmin,
+  useWeAreLastAdmin,
 } from '../../hooks/useParamSelector';
 import {
   showDeleteGroupByConvoId,
@@ -18,6 +19,7 @@ export function useShowLeaveGroupCb(conversationId?: string) {
   const isMessageRequestShown = useIsMessageRequestOverlayShown();
   const username = useConversationUsernameWithFallback(true, conversationId);
   const weAreAdmin = useWeAreAdmin(conversationId);
+  const weAreLastAdmin = useWeAreLastAdmin(conversationId);
 
   // Note: if we are the only admin, leaving it will warn that it will actually delete it for everyone.
 
@@ -27,7 +29,8 @@ export function useShowLeaveGroupCb(conversationId?: string) {
     isGroupDestroyed ||
     isKickedFromGroup ||
     !conversationId ||
-    weAreAdmin
+    // if we are admin and we are the last admin, we can't leave the group (we have to delete it for everyone)
+    (weAreAdmin && weAreLastAdmin)
   ) {
     return null;
   }
