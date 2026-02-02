@@ -239,7 +239,7 @@
 }
 
 .module-document-list-item--with-separator {
-  border-bottom: 1px solid var(--borders-color);
+  border-bottom: var(--default-borders);
 }
 
 .module-document-list-item__content {

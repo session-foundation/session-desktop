@@ -60,7 +60,9 @@ export type ThemeColorVariables = {
   '--button-icon-stroke-hover-color': string;
   '--button-icon-stroke-selected-color': string;
 
-  '--icon-fill-color': string;
+  /** Accent Icons */
+  '--accent-icon-background-color': string;
+  '--accent-icon-fill-color': string;
 
   /* Conversation Tab */
   /* This is also user for Overlay Tabs, Contact Rows, Conversation List Items,
@@ -96,6 +98,7 @@ export type ThemeColorVariables = {
   '--modal-background-content-color': string;
   '--modal-shadow-color': string;
   '--modal-drop-shadow': string;
+  '--button-drop-shadow': string;
 
   /* Toasts */
   '--toast-background-color': string;

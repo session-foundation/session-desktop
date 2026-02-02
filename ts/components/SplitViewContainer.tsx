@@ -38,7 +38,7 @@ const StyledTop = styled.div`
   display: flex;
   flex-direction: column;
   flex-grow: 1;
-  border-bottom: 1px solid var(--borders-color);
+  border-bottom: var(--default-borders);
 `;
 
 const TopSplitViewPanel = ({

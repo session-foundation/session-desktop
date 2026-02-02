@@ -16,7 +16,7 @@ export const StyledRightPanelContainer = styled.div`
   z-index: 3;
 
   background-color: var(--background-primary-color);
-  border-left: 1px solid var(--borders-color);
+  border-left: var(--default-borders);
 
   &.show {
     transform: translateX(0);

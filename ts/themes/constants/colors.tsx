@@ -21,16 +21,12 @@ export type ColorsType = {
     CONNECTING: string;
     ERROR: string;
   };
-  SESSION: string;
   TRANSPARENT: string;
   WHITE: string;
   BLACK: string;
   NEARBLACK: string;
   GREY: string;
 };
-
-// Session Brand Color
-const sessionGreen = '#00f782';
 
 // Primary (can override theme default)
 const primaryGreen = '#31F196';
@@ -86,7 +82,6 @@ const COLORS: ColorsType = {
     CONNECTING: pathConnecting,
     ERROR: pathError,
   },
-  SESSION: sessionGreen,
   TRANSPARENT: transparent,
   WHITE: white,
   BLACK: black,

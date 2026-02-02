@@ -79,6 +79,10 @@ type ThemeGlobals = {
   /* Border Radius */
   '--border-radius': string;
   '--border-radius-message-box': string;
+  /**
+   * 1px solid var(--borders-color)
+   */
+  '--default-borders': string;
 
   /* Sizes */
   '--main-view-header-height': string;
@@ -235,6 +239,7 @@ export const THEME_GLOBALS: ThemeGlobals = {
 
   '--border-radius': '5px',
   '--border-radius-message-box': '16px',
+  '--default-borders': '1px solid var(--borders-color)',
 
   '--main-view-header-height': '68px',
   '--composition-container-height': '60px',

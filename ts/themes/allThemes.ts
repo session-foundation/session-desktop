@@ -67,6 +67,31 @@ const isDark = (theme: InternalThemeKey): boolean =>
 const isClassic = (theme: InternalThemeKey): boolean =>
   theme === 'classicDark' || theme === 'classicLight';
 
+/**
+ * Validates a CSS value and returns any issues found.
+ * Returns null if valid, or an error message if invalid.
+ */
+function validateCssValue(value: string, cssVarName: string): string | null {
+  // Check for unbalanced parentheses
+  const openParens = (value.match(/\(/g) || []).length;
+  const closeParens = (value.match(/\)/g) || []).length;
+  if (openParens !== closeParens) {
+    return `Unbalanced parentheses (${openParens} open, ${closeParens} close) in ${cssVarName}: "${value}"`;
+  }
+
+  // Check for unbalanced quotes
+  const singleQuotes = (value.match(/'/g) || []).length;
+  const doubleQuotes = (value.match(/"/g) || []).length;
+  if (singleQuotes % 2 !== 0) {
+    return `Unbalanced single quotes in ${cssVarName}: "${value}"`;
+  }
+  if (doubleQuotes % 2 !== 0) {
+    return `Unbalanced double quotes in ${cssVarName}: "${value}"`;
+  }
+
+  return null;
+}
+
 function resolveThemeValue(entry: ThemeEntry, theme: InternalThemeKey): string {
   // All themes share the same value
   if ('all' in entry) {
@@ -140,7 +165,15 @@ function resolveThemeValue(entry: ThemeEntry, theme: InternalThemeKey): string {
 export function buildThemeColors(theme: ThemeStateType): ThemeColorVariables {
   const themeKey = themeStateToKey[theme];
   return Object.entries(allThemes).reduce((acc, [key, entry]) => {
-    acc[key as keyof ThemeColorVariables] = resolveThemeValue(entry, themeKey);
+    const resolved = resolveThemeValue(entry, themeKey);
+
+    // Validate CSS value and warn if there are issues
+    const validationError = validateCssValue(resolved, key);
+    if (validationError) {
+      throw new Error(`[Theme] CSS validation error: ${validationError}`);
+    }
+
+    acc[key as keyof ThemeColorVariables] = resolved;
     return acc;
   }, {} as ThemeColorVariables);
 }
@@ -169,7 +202,7 @@ export const allThemes: Record<keyof ThemeColorVariables, ThemeEntry> = {
     classicDark: THEMES.CLASSIC_DARK.COLOR1,
     classicLight: THEMES.CLASSIC_LIGHT.COLOR6,
     oceanDark: THEMES.OCEAN_DARK.COLOR1,
-    oceanLight: THEMES.OCEAN_LIGHT.COLOR7!,
+    oceanLight: THEMES.OCEAN_LIGHT.COLOR7,
   },
   '--background-secondary-color': {
     classicDark: THEMES.CLASSIC_DARK.COLOR0,
@@ -187,7 +220,7 @@ export const allThemes: Record<keyof ThemeColorVariables, ThemeEntry> = {
   '--text-primary-color': {
     classicDark: THEMES.CLASSIC_DARK.COLOR6,
     classicLight: THEMES.CLASSIC_LIGHT.COLOR0,
-    oceanDark: THEMES.OCEAN_DARK.COLOR7!,
+    oceanDark: THEMES.OCEAN_DARK.COLOR7,
     oceanLight: THEMES.OCEAN_LIGHT.COLOR1,
   },
   '--text-secondary-color': {
@@ -199,7 +232,7 @@ export const allThemes: Record<keyof ThemeColorVariables, ThemeEntry> = {
   '--text-selection-color': {
     classicDark: `rgba(${hexColorToRGB(THEMES.CLASSIC_DARK.COLOR6)}, 0.5)`,
     classicLight: `rgba(${hexColorToRGB(THEMES.CLASSIC_LIGHT.COLOR0)}, 0.5)`,
-    oceanDark: `rgba(${hexColorToRGB(THEMES.OCEAN_DARK.COLOR7!)}, 0.5)`,
+    oceanDark: `rgba(${hexColorToRGB(THEMES.OCEAN_DARK.COLOR7)}, 0.5)`,
     oceanLight: `rgba(${hexColorToRGB(THEMES.OCEAN_LIGHT.COLOR1)}, 0.5)`,
   },
 
@@ -259,7 +292,7 @@ export const allThemes: Record<keyof ThemeColorVariables, ThemeEntry> = {
     oceanLight: THEMES.OCEAN_LIGHT.COLOR3,
   },
   '--chat-buttons-icon-color': {
-    oceanDark: THEMES.OCEAN_DARK.COLOR7!,
+    oceanDark: THEMES.OCEAN_DARK.COLOR7,
     others: 'var(--text-primary-color)',
   },
 
@@ -270,7 +303,7 @@ export const allThemes: Record<keyof ThemeColorVariables, ThemeEntry> = {
     classicDark: 'var(--black-color)',
     classicLight: THEMES.CLASSIC_LIGHT.COLOR6,
     oceanDark: THEMES.OCEAN_DARK.COLOR1,
-    oceanLight: THEMES.OCEAN_LIGHT.COLOR7!,
+    oceanLight: THEMES.OCEAN_LIGHT.COLOR7,
   },
   '--button-outline-border-color': { all: 'var(--text-primary-color)' },
   '--button-outline-border-hover-color': { all: 'var(--text-primary-color)' },
@@ -283,9 +316,15 @@ export const allThemes: Record<keyof ThemeColorVariables, ThemeEntry> = {
   '--button-icon-background-color': { all: 'var(--transparent-color)' },
   '--button-icon-stroke-hover-color': { all: 'var(--text-primary-color)' },
   '--button-icon-stroke-selected-color': { all: 'var(--text-primary-color)' },
-  '--icon-fill-color': {
+
+  '--accent-icon-background-color': {
     classicLight: 'var(--white-color)',
-    others: 'var(--primary-color)',
+    others: 'color-mix(in srgb, var(--primary-color) 10%, transparent)',
+  },
+
+  '--accent-icon-fill-color': {
+    dark: 'var(--primary-color)',
+    light: 'var(--text-primary-color)',
   },
 
   '--conversation-tab-background-color': {
@@ -381,6 +420,10 @@ export const allThemes: Record<keyof ThemeColorVariables, ThemeEntry> = {
     dark: '0px 0px 34px 0px var(--modal-shadow-color)',
     light: '0px 0px 40px 0px var(--modal-shadow-color)',
   },
+  '--button-drop-shadow': {
+    dark: 'none', // no drop shadow for buttons on dark themes
+    light: '0px 1px 12px 0px var(--modal-shadow-color)',
+  },
 
   '--toast-background-color': {
     oceanDark: 'var(--background-secondary-color)',
@@ -436,7 +479,7 @@ export const allThemes: Record<keyof ThemeColorVariables, ThemeEntry> = {
     oceanLight: THEMES.OCEAN_LIGHT.COLOR5,
   },
   '--call-buttons-icon-color': {
-    oceanDark: THEMES.OCEAN_DARK.COLOR7!,
+    oceanDark: THEMES.OCEAN_DARK.COLOR7,
     others: 'var(--text-primary-color)',
   },
   '--call-buttons-icon-disabled-color': {

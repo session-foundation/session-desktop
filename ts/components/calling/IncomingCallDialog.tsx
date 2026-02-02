@@ -26,7 +26,7 @@ export const CallWindow = styled.div`
   display: flex;
   flex-direction: column;
   background-color: var(--modal-background-content-color);
-  border: 1px solid var(--borders-color);
+  border: var(--default-borders);
 `;
 
 const IncomingCallAvatarContainer = styled.div`

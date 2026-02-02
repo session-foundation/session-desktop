@@ -79,7 +79,7 @@ const StyledLeftPaneBanner = styled.div`
   background: var(--background-secondary-color);
   display: flex;
   flex-direction: column;
-  border-bottom: 1px solid var(--borders-color);
+  border-bottom: var(--default-borders);
 `;
 
 function getLeftPaneHeaderLabel(leftOverlayMode: LeftOverlayMode | undefined): string {

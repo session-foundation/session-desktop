@@ -73,7 +73,7 @@ export const StyledSessionInput = styled(Flex)<{
 
 const StyledBorder = styled(AnimatedFlex)<{ $shape: 'round' | 'square' | 'none' }>`
   position: relative;
-  border: 1px solid var(--borders-color);
+  border: var(--default-borders);
   border-radius: ${props =>
     props.$shape === 'none' ? '0px' : props.$shape === 'square' ? '7px' : '13px'};
 `;

@@ -104,6 +104,7 @@ function ProInfoBlockItem({
         padding: 'var(--margins-md)',
         background: 'var(--background-tertiary-color)',
       }}
+      withBorder={true}
     >
       <StyledContent style={{ gap: 'var(--margins-md)', alignItems: 'flex-start' }}>
         {iconElement}

@@ -22,7 +22,7 @@ import { QuoteText } from './message/message-content/quote/QuoteText';
 import { useSelectedConversationKey } from '../../state/selectors/selectedConversation';
 
 const QuotedMessageComposition = styled(Flex)`
-  border-top: 1px solid var(--borders-color);
+  border-top: var(--default-borders);
 `;
 
 const QuotedMessageCompositionReply = styled(Flex)<{ $hasAttachments: boolean }>`

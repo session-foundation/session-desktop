@@ -39,8 +39,8 @@ const StyledHR = styled.hr`
 
 export const StyledActionRowContainer = styled(Flex)`
   width: 100%;
-  border-top: 1px solid var(--borders-color);
-  border-bottom: 1px solid var(--borders-color);
+  border-top: var(--default-borders);
+  border-bottom: var(--default-borders);
 
   ${StyledActionRow}:last-child ${StyledHR} {
     border-color: transparent;

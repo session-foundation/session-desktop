@@ -49,7 +49,7 @@ export function PanelLabelWithDescription({
   description?: TrArgs;
 }) {
   return (
-    <StyledPanelLabelWithDescription>
+    <StyledPanelLabelWithDescription data-component="styled-panel-label-with-description">
       {/* less space between the label and the description */}
       <StyledPanelLabel>
         <Localizer {...title} />
@@ -67,6 +67,7 @@ export function PanelLabelWithDescription({
 const StyledRoundedPanelButtonGroup = styled.div<{
   $isSidePanel?: boolean;
   $isDarkTheme?: boolean;
+  $withBorder?: boolean;
 }>`
   display: flex;
   flex-direction: column;
@@ -82,6 +83,7 @@ const StyledRoundedPanelButtonGroup = styled.div<{
   // Note: we need no padding here so we can change the bg color on hover
   padding: 0;
   width: -webkit-fill-available;
+  border: ${props => (props.$withBorder ? 'var(--default-borders)' : 'none')};
 `;
 
 const PanelButtonContainer = styled.div`
@@ -96,18 +98,21 @@ type PanelButtonGroupProps = {
   children: ReactNode;
   style?: CSSProperties;
   isSidePanel?: boolean;
+  withBorder?: boolean;
 };
 
 export const PanelButtonGroup = (
   props: PanelButtonGroupProps & { containerStyle?: CSSProperties }
 ) => {
-  const { children, style, containerStyle, isSidePanel } = props;
+  const { children, style, containerStyle, isSidePanel, withBorder } = props;
   const isDarkTheme = useIsDarkTheme();
   return (
     <StyledRoundedPanelButtonGroup
       style={style}
       $isSidePanel={isSidePanel}
+      $withBorder={withBorder}
       $isDarkTheme={isDarkTheme}
+      data-component="styled-rounded-panel-button-group"
     >
       <PanelButtonContainer style={containerStyle}>{children}</PanelButtonContainer>
     </StyledRoundedPanelButtonGroup>
@@ -173,6 +178,7 @@ export const PanelButton = (props: PanelButtonProps) => {
       data-testid={dataTestId}
       $color={color}
       $isDarkTheme={isDarkTheme}
+      data-component="styled-panel-button"
     >
       {children}
     </StyledPanelButton>
@@ -252,6 +258,7 @@ export const PanelButtonTextWithSubText = (
       <StyledSubtitle
         color={props.subTextColorOverride || props.color}
         data-testid={props.subTextDataTestId}
+        data-component="styled-subtitle"
       >
         <Localizer {...props.subText} />
         {props.extraSubTextNode}

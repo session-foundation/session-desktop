@@ -48,7 +48,7 @@ const StyledAttachmentHeader = styled.div`
 `;
 
 const StyledAttachmentsContainer = styled.div`
-  border-top: 1px solid var(--borders-color);
+  border-top: var(--default-borders);
 `;
 
 export const StagedAttachmentList = (props: Props) => {

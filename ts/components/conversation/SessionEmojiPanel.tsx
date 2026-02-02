@@ -35,7 +35,7 @@ export const StyledEmojiPanel = styled.div<{
 
   em-emoji-picker {
     ${props => props.$panelBackgroundRGB && `background-color: rgb(${props.$panelBackgroundRGB})`};
-    border: 1px solid var(--borders-color);
+    border: var(--default-borders);
     padding-bottom: var(--margins-sm);
     --font-family: var(--font-default);
     --font-size: var(--font-size-sm);
