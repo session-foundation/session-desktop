@@ -123,6 +123,7 @@ const StyledBlockItemIcon = styled.div`
   padding: 0;
   border-radius: var(--margins-xs);
   color: var(--primary-color);
+  box-shadow: var(--button-drop-shadow);
 `;
 
 function ProInfoBlockIconElement({ unicode }: WithLucideUnicode) {
@@ -133,10 +134,12 @@ function ProInfoBlockIconElement({ unicode }: WithLucideUnicode) {
       $justifyContent={'center'}
       $flexGap="var(--margins-sm)"
     >
-      <StyledBlockItemIcon
-        style={{ background: 'color-mix(in srgb, var(--primary-color) 10%, transparent)' }}
-      >
-        <LucideIcon unicode={unicode} iconSize={'large'} />
+      <StyledBlockItemIcon style={{ background: 'var(--accent-icon-background-color)' }}>
+        <LucideIcon
+          unicode={unicode}
+          iconSize={'large'}
+          iconColor={'var(--accent-icon-fill-color)'}
+        />
       </StyledBlockItemIcon>
     </Flex>
   );
