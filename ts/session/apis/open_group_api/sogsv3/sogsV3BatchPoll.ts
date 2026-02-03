@@ -22,6 +22,13 @@ import type {
   WithSessionIds,
 } from './sogsWith';
 import { FetchDestination } from '../../../utils/InsecureNodeFetch';
+import {
+  isBan,
+  isServerBanUnban,
+  type BanUnbanRoomWideOnly,
+  type BanUnbanServerWideOnly,
+} from '../../../../state/ducks/modalDialog';
+import { ed25519Str } from '../../../utils/String';
 
 type BatchFetchRequestOptions = {
   method: 'POST' | 'PUT' | 'GET' | 'DELETE';
@@ -133,6 +140,10 @@ export function batchFirstSubIsSuccess(response?: BatchSogsResponse | null): boo
   return Boolean(status && isNumber(status) && status >= 200 && status <= 300);
 }
 
+export function batchEverySubIsSuccess(response?: BatchSogsResponse | null): boolean {
+  return response?.body?.every(m => isNumber(m.code) && m?.code >= 200 && m?.code <= 300) ?? false;
+}
+
 export type SubRequestCapabilitiesType = { type: 'capabilities' };
 
 export type SubRequestMessagesObjectType =
@@ -192,12 +203,21 @@ export type SubRequestAddRemoveModeratorType = {
 export type SubRequestBanUnbanUserType = {
   type: 'banUnbanUser';
   banUnbanUser: {
-    type: 'ban' | 'unban';
     sessionId: string; // can be blinded id or not
-    roomId: string;
-    isGlobal: boolean;
-  };
+  } & (
+    | {
+        roomId: string;
+        type: BanUnbanRoomWideOnly;
+      }
+    | { type: BanUnbanServerWideOnly }
+  );
 };
+
+export function isServerBanUnbanAction(
+  action: SubRequestBanUnbanUserType['banUnbanUser']
+): action is Extract<SubRequestBanUnbanUserType['banUnbanUser'], { type: BanUnbanServerWideOnly }> {
+  return isServerBanUnban(action.type);
+}
 
 export type SubRequestDeleteAllUserPostsType = {
   type: 'deleteAllPosts';
@@ -274,20 +294,9 @@ export type OpenGroupBatchRow =
   | SubRequestUpdateUserRoomPermissionsType
   | SubRequestUpdateRoomPermsType;
 
-type OpenGroupPermissionSelection<Prefix extends string = ''> = {
-  [permission in `${Prefix}${OpenGroupPermissionType}`]?: boolean;
-};
-
-function makePermissionSelection<const Prefix extends string>(
-  permissions: Array<OpenGroupPermissionType> | undefined,
-  choice: boolean,
-  prefix: Prefix
-): OpenGroupPermissionSelection<typeof prefix>;
-
-function makePermissionSelection(
-  permissions: Array<OpenGroupPermissionType> | undefined,
-  choice: boolean
-): OpenGroupPermissionSelection;
+type OpenGroupPermissionSelection<Prefix extends string = ''> = Partial<
+  Record<`${Prefix}${OpenGroupPermissionType}`, boolean>
+>;
 
 function makePermissionSelection(
   permissions: Array<OpenGroupPermissionType> | undefined,
@@ -387,32 +396,31 @@ const makeBatchRequestPayload = (
         },
       }));
     case 'banUnbanUser':
-      const isBan = Boolean(options.banUnbanUser.type === 'ban');
-      const isGlobal = options.banUnbanUser.isGlobal;
+      const details = options.banUnbanUser;
+      const isBanAction = isBan(details.type);
+      const isServerWideAction = isServerBanUnbanAction(details);
       window?.log?.info(
-        `BAN: ${options.banUnbanUser.sessionId}, global: ${options.banUnbanUser.isGlobal}`
+        `banUnbanUser: ${ed25519Str(details.sessionId)}, server-wide: ${isServerWideAction}`
       );
-      if (isGlobal) {
+      const path = `/user/${details.sessionId}/${isBanAction ? 'ban' : 'unban'}`;
+      if (isServerWideAction) {
         // Issue server-wide (un)ban.
         return {
           method: 'POST',
-          path: `/user/${options.banUnbanUser.sessionId}/${isBan ? 'ban' : 'unban'}`,
+          path,
           json: {
             global: true,
-            // timeout: null, // for now we do not support the timeout argument
           },
         };
       }
+
       // Issue room-wide (un)ban.
       return {
         method: 'POST',
-        path: `/user/${options.banUnbanUser.sessionId}/${isBan ? 'ban' : 'unban'}`,
+        path,
         json: {
-          rooms: [options.banUnbanUser.roomId],
-
+          rooms: [details.roomId],
           // watch out ban and unban user do not allow the same args
-          // global: false, // for now we do not support the global argument, rooms cannot be set if we use it
-          // timeout: null, // for now we do not support the timeout argument
         },
       };
     case 'deleteAllPosts':

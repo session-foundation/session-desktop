@@ -5,16 +5,16 @@
 
 import AbortController from 'abort-controller';
 import { OpenGroupRequestCommonType } from '../../../../data/types';
-import { sogsBatchSend } from './sogsV3BatchPoll';
+import { batchEverySubIsSuccess, sogsBatchSend } from './sogsV3BatchPoll';
 import { DURATION } from '../../../constants';
 
-export type OpenGroupRoomPermissionType =
+export type CommunityRoomPermissionType =
   | 'default_read'
   | 'default_write'
   | 'default_accessible'
   | 'default_upload';
 
-export type OpenGroupRoomPermissionSetType = Record<OpenGroupRoomPermissionType, boolean>;
+export type OpenGroupRoomPermissionSetType = Record<CommunityRoomPermissionType, boolean>;
 
 type PermsToSet = Partial<OpenGroupRoomPermissionSetType>;
 
@@ -24,7 +24,7 @@ export const sogsV3SetRoomPermissions = async (
 ): Promise<boolean> => {
   const permsToSet: PermsToSet = {};
   Object.entries(permissions).forEach(([permission, value]) => {
-    permsToSet[permission as OpenGroupRoomPermissionType] = value;
+    permsToSet[permission as CommunityRoomPermissionType] = value;
   });
   const batchSendResponse = await sogsBatchSend(
     roomInfos.serverUrl,
@@ -42,7 +42,7 @@ export const sogsV3SetRoomPermissions = async (
     'batch',
     10 * DURATION.SECONDS
   );
-  const isSuccess = batchSendResponse?.body?.every(m => m?.code === 200) || false;
+  const isSuccess = batchEverySubIsSuccess(batchSendResponse);
   if (!isSuccess) {
     window.log.warn('set permissions failed with body', batchSendResponse?.body);
   }

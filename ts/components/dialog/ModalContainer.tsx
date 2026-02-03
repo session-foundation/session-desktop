@@ -1,6 +1,5 @@
 import {
-  useServerBanOrUnbanUserModalState,
-  useUpdateGroupPermissionsModalState,
+  useUpdateCommunityPermissionsModalState,
   useConfirmModal,
   useInviteContactModal,
   useAddModeratorsModal,
@@ -27,7 +26,7 @@ import {
   useConversationSettingsModal,
 } from '../../state/selectors/modal';
 import { LightboxGallery } from '../lightbox/LightboxGallery';
-import { BanOrUnBanUserDialog, ServerBanOrUnBanUserDialog } from './BanOrUnbanUserDialog';
+import { BanOrUnBanUserDialog } from './BanOrUnbanUserDialog';
 import { DeleteAccountModal } from './DeleteAccountModal';
 import { EditProfilePictureModal } from './EditProfilePictureModal';
 import { EnterPasswordModal } from './EnterPasswordModal';
@@ -44,7 +43,7 @@ import { UpdateConversationDetailsDialog } from './UpdateConversationDetailsDial
 import { UserProfileModal } from './UserProfileModal';
 import { OpenUrlModal } from './OpenUrlModal';
 import { BlockOrUnblockDialog } from './blockOrUnblock/BlockOrUnblockDialog';
-import { UpdateGroupPermissionsDialog } from './UpdateGroupPermissionsDialog';
+import { UpdateCommunityPermissionsDialog } from './UpdateCommunityPermissionsDialog';
 import { DebugMenuModal } from './debug/DebugMenuModal';
 import { ConversationSettingsDialog } from './conversationSettings/conversationSettingsDialog';
 import { SessionConfirm } from './SessionConfirm';
@@ -58,7 +57,7 @@ export const ModalContainer = () => {
   const addModeratorsModalState = useAddModeratorsModal();
   const removeModeratorsModalState = useRemoveModeratorsModal();
   const updateGroupMembersModalState = useUpdateGroupMembersModal();
-  const updateGroupPermissionsModalState = useUpdateGroupPermissionsModalState();
+  const updateCommunityPermissionsModalState = useUpdateCommunityPermissionsModalState();
   const updateConversationDetailsModalState = useUpdateConversationDetailsModal();
   const userProfileModalState = useUserProfileModal();
   const changeNicknameModal = useChangeNickNameDialog();
@@ -67,7 +66,6 @@ export const ModalContainer = () => {
   const enterPasswordModalState = useEnterPasswordModal();
   const deleteAccountModalState = useDeleteAccountModal();
   const banOrUnbanUserModalState = useBanOrUnbanUserModal();
-  const serverBanOrUnbanUserModalState = useServerBanOrUnbanUserModalState();
   const blockOrUnblockModalState = useBlockOrUnblockUserModal();
   const reactListModalState = useReactListDialog();
   const reactClearAllModalState = useReactClearAllDialog();
@@ -95,9 +93,6 @@ export const ModalContainer = () => {
       {debugMenuModalState && <DebugMenuModal {...debugMenuModalState} />}
       {/* Actions */}
       {banOrUnbanUserModalState && <BanOrUnBanUserDialog {...banOrUnbanUserModalState} />}
-      {serverBanOrUnbanUserModalState && (
-        <ServerBanOrUnBanUserDialog {...serverBanOrUnbanUserModalState} />
-      )}
       {blockOrUnblockModalState && <BlockOrUnblockDialog {...blockOrUnblockModalState} />}
       {inviteModalState && <InviteContactsDialog {...inviteModalState} />}
       {addModeratorsModalState && <AddModeratorsDialog {...addModeratorsModalState} />}
@@ -105,8 +100,8 @@ export const ModalContainer = () => {
       {updateGroupMembersModalState && (
         <UpdateGroupMembersDialog {...updateGroupMembersModalState} />
       )}
-      {updateGroupPermissionsModalState && (
-        <UpdateGroupPermissionsDialog {...updateGroupPermissionsModalState} />
+      {updateCommunityPermissionsModalState && (
+        <UpdateCommunityPermissionsDialog {...updateCommunityPermissionsModalState} />
       )}
       {updateConversationDetailsModalState && (
         <UpdateConversationDetailsDialog {...updateConversationDetailsModalState} />

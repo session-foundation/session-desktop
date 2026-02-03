@@ -28,7 +28,6 @@ import { useShowInviteContactToGroupCb } from '../../menuAndSettingsHooks/useSho
 import { useShowCopyAccountIdCb } from '../../menuAndSettingsHooks/useCopyAccountId';
 import { useShowCopyCommunityUrlCb } from '../../menuAndSettingsHooks/useCopyCommunityUrl';
 import { useBanUserCb } from '../../menuAndSettingsHooks/useBanUser';
-import { useUnbanUserCb } from '../../menuAndSettingsHooks/useUnbanUser';
 import { useAddModeratorsCb } from '../../menuAndSettingsHooks/useAddModerators';
 import { useRemoveModeratorsCb } from '../../menuAndSettingsHooks/useRemoveModerators';
 import { useShowLeaveCommunityCb } from '../../menuAndSettingsHooks/useShowLeaveCommunity';
@@ -285,12 +284,10 @@ export function ChangeCommunityPermissionsButton({ conversationId }: WithConvoId
   }
   return (
     <PanelIconButton
-      iconElement={
-        <PanelIconSessionLegacyIcon iconType={'padlock'} iconColor="var(--text-primary-color" />
-      }
-      text={{ token: 'groupChangePermissions' }}
+      iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.LOCK_KEYHOLE} />}
+      text={{ token: 'communityChangePermissions' }}
       onClick={cb}
-      dataTestId="edit-group-name"
+      dataTestId="edit-community-permissions"
     />
   );
 }
@@ -337,7 +334,7 @@ export function RemoveAdminCommunityButton({ conversationId }: WithConvoId) {
 }
 
 export function BanFromCommunityButton({ conversationId }: WithConvoId) {
-  const showBanUserCb = useBanUserCb(conversationId);
+  const showBanUserCb = useBanUserCb({ banType: 'ban', conversationId });
 
   if (!showBanUserCb) {
     return null;
@@ -353,7 +350,7 @@ export function BanFromCommunityButton({ conversationId }: WithConvoId) {
 }
 
 export function UnbanFromCommunityButton({ conversationId }: WithConvoId) {
-  const showUnbanUserCb = useUnbanUserCb(conversationId);
+  const showUnbanUserCb = useBanUserCb({ banType: 'unban', conversationId });
 
   if (!showUnbanUserCb) {
     return null;

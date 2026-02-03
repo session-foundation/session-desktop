@@ -24,15 +24,9 @@ import {
   resetConversationExternal,
 } from '../state/ducks/conversations';
 import {
-  updateAddModeratorsModal,
-  updateBanOrUnbanUserModal,
   updateConfirmModal,
   updateConversationSettingsModal,
   updateGroupMembersModal,
-  updateGroupPermissionsModal,
-  updateInviteContactModal,
-  updateRemoveModeratorsModal,
-  updateServerBanOrUnbanUserModal,
   updateConversationDetailsModal,
 } from '../state/ducks/modalDialog';
 import { Storage } from '../util/storage';
@@ -285,13 +279,6 @@ export async function showUpdateGroupOrCommunityDetailsByConvoId(conversationId:
   window.inboxStore?.dispatch(updateConversationDetailsModal({ conversationId }));
 }
 
-export async function showUpdateGroupPermissionsByConvoId(conversationId: string) {
-  const conversation = ConvoHub.use().get(conversationId);
-  if (conversation.isOpenGroupV2()) {
-    window.inboxStore?.dispatch(updateGroupPermissionsModal({ conversationId }));
-  }
-}
-
 export async function showUpdateGroupMembersByConvoId(conversationId: string) {
   const conversation = ConvoHub.use().get(conversationId);
   if (conversation.isClosedGroup()) {
@@ -461,42 +448,6 @@ export async function showDeleteGroupByConvoId(conversationId: string, name: str
       onClickClose,
       conversationId,
     })
-  );
-}
-
-export function showInviteContactByConvoId(conversationId: string) {
-  window.inboxStore?.dispatch(updateInviteContactModal({ conversationId }));
-}
-
-export function showAddModeratorsByConvoId(conversationId: string) {
-  window.inboxStore?.dispatch(updateAddModeratorsModal({ conversationId }));
-}
-
-export function showRemoveModeratorsByConvoId(conversationId: string) {
-  window.inboxStore?.dispatch(updateRemoveModeratorsModal({ conversationId }));
-}
-
-export function showBanUserByConvoId(conversationId: string, pubkey?: string) {
-  window.inboxStore?.dispatch(
-    updateBanOrUnbanUserModal({ banType: 'ban', conversationId, pubkey })
-  );
-}
-
-export function showUnbanUserByConvoId(conversationId: string, pubkey?: string) {
-  window.inboxStore?.dispatch(
-    updateBanOrUnbanUserModal({ banType: 'unban', conversationId, pubkey })
-  );
-}
-
-export function showServerBanUserByConvoId(conversationId: string, pubkey?: string) {
-  window.inboxStore?.dispatch(
-    updateServerBanOrUnbanUserModal({ banType: 'ban', conversationId, pubkey })
-  );
-}
-
-export function showServerUnbanUserByConvoId(conversationId: string, pubkey?: string) {
-  window.inboxStore?.dispatch(
-    updateServerBanOrUnbanUserModal({ banType: 'unban', conversationId, pubkey })
   );
 }
 

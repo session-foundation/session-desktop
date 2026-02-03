@@ -36,10 +36,6 @@ export function useUpdateConversationDetailsModal() {
   return useSelector((state: StateType) => getModal(state).updateConversationDetailsModal);
 }
 
-export function useServerBanOrUnbanUserModalState() {
-  return useSelector((state: StateType) => getModal(state).serverBanOrUnbanUserModal);
-}
-
 export const getBlockOrUnblockUserModalState = (state: StateType) =>
   getModal(state).blockOrUnblockModal;
 
@@ -55,8 +51,8 @@ export function useChangeNickNameDialog() {
   return useSelector((state: StateType) => getModal(state).nickNameModal);
 }
 
-export function useUpdateGroupPermissionsModalState() {
-  return useSelector((state: StateType) => getModal(state).groupPermissionsModal);
+export function useUpdateCommunityPermissionsModalState() {
+  return useSelector((state: StateType) => getModal(state).communityPermissionsModal);
 }
 
 export function useUserSettingsModal() {

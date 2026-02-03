@@ -2,22 +2,16 @@ import { Submenu } from 'react-contexify';
 import type { JSX } from 'react';
 import { useConvoIdFromContext } from '../../contexts/ConvoIdContext';
 import {
-  useIsBlinded,
   useIsGroupV2,
   useIsIncomingRequest,
   useIsPrivate,
   useIsPrivateAndFriend,
-  useIsPublic,
   useNotificationSetting,
-  useWeAreAdmin,
 } from '../../hooks/useParamSelector';
 import {
-  copyPublicKeyByConvoId,
   declineConversationWithConfirm,
   handleAcceptConversationRequest,
   markAllReadByConvoId,
-  showServerBanUserByConvoId,
-  showServerUnbanUserByConvoId,
 } from '../../interactions/conversationInteractions';
 import { ConvoHub } from '../../session/conversations';
 import { PubKey } from '../../session/types';
@@ -37,7 +31,6 @@ import { useShowDeletePrivateConversationCb } from '../menuAndSettingsHooks/useS
 import { useShowInviteContactToCommunity } from '../menuAndSettingsHooks/useShowInviteContactToCommunity';
 import { useAddModeratorsCb } from '../menuAndSettingsHooks/useAddModerators';
 import { useRemoveModeratorsCb } from '../menuAndSettingsHooks/useRemoveModerators';
-import { useUnbanUserCb } from '../menuAndSettingsHooks/useUnbanUser';
 import { useBanUserCb } from '../menuAndSettingsHooks/useBanUser';
 import { useSetNotificationsFor } from '../menuAndSettingsHooks/useSetNotificationsFor';
 import { Localizer } from '../basic/Localizer';
@@ -140,7 +133,10 @@ export const AddModeratorsMenuItem = (): JSX.Element | null => {
 
 export const UnbanMenuItem = (): JSX.Element | null => {
   const convoId = useConvoIdFromContext();
-  const showUnbanUserCb = useUnbanUserCb(convoId);
+  const showUnbanUserCb = useBanUserCb({
+    conversationId: convoId,
+    banType: 'unban',
+  });
 
   if (!showUnbanUserCb) {
     return null;
@@ -151,7 +147,10 @@ export const UnbanMenuItem = (): JSX.Element | null => {
 export const BanMenuItem = (): JSX.Element | null => {
   const convoId = useConvoIdFromContext();
 
-  const showBanUserCb = useBanUserCb(convoId);
+  const showBanUserCb = useBanUserCb({
+    conversationId: convoId,
+    banType: 'ban',
+  });
 
   if (!showBanUserCb) {
     return null;
@@ -161,17 +160,15 @@ export const BanMenuItem = (): JSX.Element | null => {
 
 export const ServerUnbanMenuItem = (): JSX.Element | null => {
   const convoId = useConvoIdFromContext();
-  const isPublic = useIsPublic(convoId);
-  const weAreAdmin = useWeAreAdmin(convoId);
+  const showUnbanUserCb = useBanUserCb({
+    conversationId: convoId,
+    banType: 'server-unban',
+  });
 
-  if (weAreAdmin && isPublic) {
+  if (showUnbanUserCb) {
     return (
-      <ItemWithDataTestId
-        onClick={() => {
-          showServerUnbanUserByConvoId(convoId);
-        }}
-      >
-        {tr('serverUnbanUser')}
+      <ItemWithDataTestId onClick={showUnbanUserCb}>
+        <Localizer token="serverUnbanUser" />
       </ItemWithDataTestId>
     );
   }
@@ -180,40 +177,15 @@ export const ServerUnbanMenuItem = (): JSX.Element | null => {
 
 export const ServerBanMenuItem = (): JSX.Element | null => {
   const convoId = useConvoIdFromContext();
-  const isPublic = useIsPublic(convoId);
-  const weAreAdmin = useWeAreAdmin(convoId);
+  const showUnbanUserCb = useBanUserCb({
+    conversationId: convoId,
+    banType: 'server-ban',
+  });
 
-  if (weAreAdmin && isPublic) {
+  if (showUnbanUserCb) {
     return (
-      <ItemWithDataTestId
-        onClick={() => {
-          showServerBanUserByConvoId(convoId);
-        }}
-      >
-        {tr('serverBanUser')}
-      </ItemWithDataTestId>
-    );
-  }
-  return null;
-};
-
-export const CopyMenuItem = (): JSX.Element | null => {
-  const convoId = useConvoIdFromContext();
-  const isPublic = useIsPublic(convoId);
-  const isPrivate = useIsPrivate(convoId);
-  const isBlinded = useIsBlinded(convoId);
-
-  // we want to show the copyId for open groups and private chats only
-
-  if ((isPrivate && !isBlinded) || isPublic) {
-    const copyIdLabel = isPublic ? tr('communityUrlCopy') : tr('accountIDCopy');
-    return (
-      <ItemWithDataTestId
-        onClick={() => {
-          void copyPublicKeyByConvoId(convoId);
-        }}
-      >
-        {copyIdLabel}
+      <ItemWithDataTestId onClick={showUnbanUserCb}>
+        <Localizer token="serverUnbanUser" />
       </ItemWithDataTestId>
     );
   }

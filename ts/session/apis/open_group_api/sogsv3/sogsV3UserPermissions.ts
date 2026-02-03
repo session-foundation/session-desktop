@@ -6,7 +6,7 @@
 import AbortController from 'abort-controller';
 import { PubKey } from '../../../types';
 import { OpenGroupRequestCommonType } from '../../../../data/types';
-import { sogsBatchSend } from './sogsV3BatchPoll';
+import { batchEverySubIsSuccess, sogsBatchSend } from './sogsV3BatchPoll';
 import { DURATION } from '../../../constants';
 
 export type OpenGroupPermissionType = 'access' | 'read' | 'upload' | 'write';
@@ -31,7 +31,7 @@ export const sogsV3AddPermissions = async (
     'batch',
     10 * DURATION.SECONDS
   );
-  const isSuccess = batchSendResponse?.body?.every(m => m?.code === 200) || false;
+  const isSuccess = batchEverySubIsSuccess(batchSendResponse);
   if (!isSuccess) {
     window.log.warn('add permissions failed with body', batchSendResponse?.body);
   }
@@ -58,7 +58,7 @@ export const sogsV3ClearPermissions = async (
     'batch',
     10 * DURATION.SECONDS
   );
-  const isSuccess = batchSendResponse?.body?.every(m => m?.code === 200) || false;
+  const isSuccess = batchEverySubIsSuccess(batchSendResponse);
   if (!isSuccess) {
     window.log.warn('add permissions failed with body', batchSendResponse?.body);
   }
