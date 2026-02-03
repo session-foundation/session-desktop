@@ -8,6 +8,14 @@ import {
   encryptAttachmentBufferRenderer,
 } from './local_attachments_encrypter';
 
+import { promises as fs } from 'fs';
+
+async function ensureFile(filePath: string) {
+  await fs.mkdir(path.dirname(filePath), { recursive: true });
+  const handle = await fs.open(filePath, 'a');
+  await handle.close();
+}
+
 export const createReader = (root: string) => {
   if (!isString(root)) {
     throw new TypeError("'root' must be a path");
@@ -78,7 +86,7 @@ const createWriterForExisting = (root: string) => {
       throw new Error('Invalid relative path');
     }
 
-    await fse.ensureFile(normalized);
+    await ensureFile(normalized);
     if (!isArrayBuffer(arrayBuffer)) {
       throw new TypeError("'bufferIn' must be an array buffer");
     }
