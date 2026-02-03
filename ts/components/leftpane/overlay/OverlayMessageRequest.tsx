@@ -15,7 +15,7 @@ import { sectionActions } from '../../../state/ducks/section';
 import { tr } from '../../../localization/localeTools';
 
 const MessageRequestListPlaceholder = styled.div`
-  color: var(--conversation-tab-text-color);
+  color: var(--text-secondary-color);
   margin-bottom: auto;
 `;
 

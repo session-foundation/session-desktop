@@ -34,8 +34,8 @@ const StyledPopover = styled.div<{
   $borderRadius?: number;
   $verticalPosition?: VerticalPosition;
 }>`
-  background-color: var(--message-bubbles-received-background-color);
-  color: var(--message-bubbles-received-text-color);
+  background-color: var(--message-bubble-incoming-background-color);
+  color: var(--message-bubble-incoming-text-color);
   box-shadow: 0px 0px 13px rgba(0, 0, 0, 0.51);
   font-size: var(--font-size-sm);
   overflow-wrap: break-word;
@@ -63,7 +63,7 @@ const StyledPopover = styled.div<{
     content: '';
     width: ${TIP_LENGTH}px;
     height: ${TIP_LENGTH}px;
-    background-color: var(--message-bubbles-received-background-color);
+    background-color: var(--message-bubble-incoming-background-color);
     transform: rotate(45deg);
     border-radius: 5px;
     transform: scaleY(1.4) rotate(45deg);

@@ -32,13 +32,13 @@
   border-radius: var(--border-radius-message-box);
 
   .module-message__container--outgoing & {
-    color: var(--message-bubbles-sent-text-color);
-    background: var(--message-bubbles-sent-background-color);
+    color: var(--message-bubble-outgoing-text-color);
+    background: var(--message-bubble-outgoing-background-color);
   }
 
   .module-message__container--incoming & {
-    color: var(--message-bubbles-received-text-color);
-    background: var(--message-bubbles-received-background-color);
+    color: var(--message-bubble-incoming-text-color);
+    background: var(--message-bubble-incoming-background-color);
   }
 }
 
@@ -85,13 +85,13 @@
 .module-message__generic-attachment__file-name--incoming,
 .module-message__generic-attachment__file-size--incoming,
 .module-message__link-preview--incoming {
-  color: var(--message-bubbles-received-text-color);
+  color: var(--message-bubble-incoming-text-color);
 }
 
 .module-message__generic-attachment__file-name--outgoing,
 .module-message__generic-attachment__file-size--outgoing,
 .module-message__link-preview--outgoing {
-  color: var(--message-bubbles-sent-text-color);
+  color: var(--message-bubble-outgoing-text-color);
 }
 
 .module-message__link-preview {
@@ -209,7 +209,7 @@
   flex-direction: row;
   align-items: center;
 
-  color: var(--conversation-tab-text-color);
+  color: var(--text-secondary-color);
 }
 
 .module-contact-list-item--with-click-handler {
@@ -239,7 +239,7 @@
 }
 
 .module-document-list-item--with-separator {
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: var(--default-borders);
 }
 
 .module-document-list-item__content {
@@ -466,26 +466,26 @@ $rhap_font-family: inherit !default;
 
 .module-message__container--outgoing {
   .rhap_container {
-    background-color: var(--message-bubbles-sent-background-color);
+    background-color: var(--message-bubble-outgoing-background-color);
     .rhap_play-pause-button,
     .session-button {
-      color: var(--message-bubbles-sent-text-color);
+      color: var(--message-bubble-outgoing-text-color);
       &:hover {
-        color: var(--message-bubbles-sent-text-color);
+        color: var(--message-bubble-outgoing-text-color);
       }
     }
   }
 
   .rhap_volume-button {
-    color: var(--message-bubbles-sent-text-color);
+    color: var(--message-bubble-outgoing-text-color);
   }
 
   .rhap_time {
-    color: var(--message-bubbles-sent-text-color);
+    color: var(--message-bubble-outgoing-text-color);
   }
 
   .rhap_progress-bar {
-    background-color: var(--button-icon-stroke-color);
+    background-color: var(--text-secondary-color);
   }
 
   .rhap_progress-filled {
@@ -503,26 +503,26 @@ $rhap_font-family: inherit !default;
 
 .module-message__container--incoming {
   .rhap_container {
-    background-color: var(--message-bubbles-received-background-color);
+    background-color: var(--message-bubble-incoming-background-color);
     .rhap_play-pause-button,
     .session-button {
-      color: var(--message-bubbles-received-text-color);
+      color: var(--message-bubble-incoming-text-color);
       &:hover {
-        color: var(--message-bubbles-received-text-color);
+        color: var(--message-bubble-incoming-text-color);
       }
     }
   }
 
   .rhap_volume-button {
-    color: var(--message-bubbles-received-text-color);
+    color: var(--message-bubble-incoming-text-color);
   }
 
   .rhap_time {
-    color: var(--message-bubbles-received-text-color);
+    color: var(--message-bubble-incoming-text-color);
   }
 
   .rhap_progress-bar {
-    background-color: var(--button-icon-stroke-color);
+    background-color: var(--text-secondary-color);
   }
 
   .rhap_progress-filled {

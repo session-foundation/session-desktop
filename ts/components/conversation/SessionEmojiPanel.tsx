@@ -35,14 +35,14 @@ export const StyledEmojiPanel = styled.div<{
 
   em-emoji-picker {
     ${props => props.$panelBackgroundRGB && `background-color: rgb(${props.$panelBackgroundRGB})`};
-    border: 1px solid var(--border-color);
+    border: var(--default-borders);
     padding-bottom: var(--margins-sm);
     --font-family: var(--font-default);
     --font-size: var(--font-size-sm);
     --shadow: none;
     --border-radius: 8px;
-    --color-border: var(--border-color);
-    --color-border-over: var(--border-color);
+    --color-border: var(--borders-color);
+    --color-border-over: var(--borders-color);
     --background-rgb: ${props => props.$panelBackgroundRGB};
     --rgb-background: ${props => props.$panelBackgroundRGB};
     --rgb-color: ${props => props.$panelTextRGB};
@@ -62,7 +62,7 @@ export const StyledEmojiPanel = styled.div<{
         transform: rotate(45deg);
         border-radius: 3px;
         transform: scaleY(1.4) rotate(45deg);
-        border: 0.7px solid var(--border-color);
+        border: 0.7px solid var(--borders-color);
         clip-path: polygon(100% 100%, 7.2px 100%, 100% 7.2px);
         ${props.$panelBackgroundRGB && `background-color: rgb(${props.$panelBackgroundRGB})`};
 

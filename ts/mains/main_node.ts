@@ -195,7 +195,6 @@ import { readFile } from 'fs-extra';
 import { getAppRootPath } from '../node/getRootPath';
 import { setLatestRelease } from '../node/latest_desktop_release';
 import { isDevProd, isTestIntegration } from '../shared/env_vars';
-import { classicDark } from '../themes';
 
 import { isSessionLocaleSet, getCrowdinLocale, keepFullLocalePart } from '../util/i18n/shared';
 import { loadLocalizedDictionary } from '../node/locale';
@@ -209,6 +208,7 @@ import { DURATION } from '../session/constants';
 import { getSimpleStringNoArgs, tr } from '../localization/localeTools';
 
 import { logCrash } from '../node/crash/log_crash';
+import { THEMES } from '../themes/constants/colors';
 
 function prepareURL(pathSegments: Array<string>, moreKeys?: { theme: any }) {
   const urlObject: url.UrlObject = {
@@ -328,7 +328,7 @@ async function createWindow() {
     minHeight,
     fullscreen: false as boolean | undefined,
     // Default theme is Classic Dark
-    backgroundColor: classicDark['--background-primary-color'],
+    backgroundColor: THEMES.CLASSIC_DARK.COLOR1,
     webPreferences: {
       nodeIntegration: true,
       enableRemoteModule: true,
@@ -630,7 +630,7 @@ async function showPasswordWindow() {
     minHeight,
     autoHideMenuBar: false,
     // Default theme is Classic Dark
-    backgroundColor: classicDark['--background-primary-color'],
+    backgroundColor: THEMES.CLASSIC_DARK.COLOR1,
     webPreferences: {
       nodeIntegration: true,
       enableRemoteModule: true,
@@ -688,7 +688,7 @@ async function showAbout() {
     resizeable: true,
     title: tr('about'),
     autoHideMenuBar: true,
-    backgroundColor: classicDark['--background-primary-color'],
+    backgroundColor: THEMES.CLASSIC_DARK.COLOR1,
     show: false,
     webPreferences: {
       nodeIntegration: true,
@@ -714,7 +714,7 @@ async function showAbout() {
   });
 
   aboutWindow.once('ready-to-show', () => {
-    aboutWindow?.setBackgroundColor(classicDark['--background-primary-color']);
+    aboutWindow?.setBackgroundColor(THEMES.CLASSIC_DARK.COLOR1);
   });
 
   // looks like sometimes ready-to-show is not fired by electron.

@@ -45,7 +45,7 @@ export function SessionProgressBar(props: Props) {
     initialValue,
     progress,
     width = '100%',
-    backgroundColor = 'var(--border-color)',
+    backgroundColor = 'var(--borders-color)',
     color = 'var(--primary-color)',
     margin,
     title,

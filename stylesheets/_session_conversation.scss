@@ -57,12 +57,12 @@
     outline: none;
     position: relative;
     background-color: var(--background-secondary-color);
-    border-top: 1px solid var(--border-color);
+    border-top: var(--default-borders);
   }
 }
 
 .composition-container {
-  border-top: 1px solid var(--border-color);
+  border-top: var(--default-borders);
   z-index: 1;
 }
 

@@ -27,7 +27,7 @@ const StyledConversationTitleResults = styled.div`
   overflow-x: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  color: var(--conversation-tab-text-color);
+  color: var(--text-secondary-color);
   /* We don't want this to overflow horizontally past the timestamp */
   width: 90px;
 `;
@@ -38,7 +38,7 @@ const StyledConversationFromUserInGroup = styled(StyledConversationTitleResults)
   line-height: 14px;
   overflow-x: hidden;
   font-weight: 700;
-  color: var(--conversation-tab-text-color);
+  color: var(--text-secondary-color);
 `;
 
 const StyledSearchResults = styled.div`
@@ -161,7 +161,7 @@ const ResultBody = styled.div`
 
   font-size: var(--font-size-sm);
 
-  color: var(--conversation-tab-text-color);
+  color: var(--text-secondary-color);
 
   max-height: 3.6em;
 
@@ -185,7 +185,7 @@ const StyledTimestampContainer = styled.div`
 
   text-transform: uppercase;
 
-  color: var(--conversation-tab-text-color);
+  color: var(--text-secondary-color);
 `;
 
 type MessageSearchResultProps = MessageResultProps & { style: CSSProperties };

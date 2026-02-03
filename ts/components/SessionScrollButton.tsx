@@ -25,7 +25,7 @@ export const SessionScrollButton = (props: { onClickScrollBottom: () => void }) 
           iconSize={'large'}
           onClick={props.onClickScrollBottom}
           dataTestId="scroll-to-bottom-button"
-          backgroundColor="var(--message-bubbles-received-background-color)"
+          backgroundColor="var(--message-bubble-incoming-background-color)"
           padding="var(--margins-xs)"
           style={{
             boxShadow: 'var(--scroll-button-shadow)',

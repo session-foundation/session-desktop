@@ -70,10 +70,10 @@ export const StyledH5AudioPlayer = styled(H5AudioPlayer)<{ dropShadow?: boolean 
 
   .rhap_volume-button {
     .module-message__container--incoming & {
-      color: var(--message-bubbles-received-text-color);
+      color: var(--message-bubble-incoming-text-color);
     }
     .module-message__container--outgoing & {
-      color: var(--message-bubbles-sent-text-color);
+      color: var(--message-bubble-outgoing-text-color);
     }
   }
 
@@ -83,10 +83,10 @@ export const StyledH5AudioPlayer = styled(H5AudioPlayer)<{ dropShadow?: boolean 
 
   .rhap_time {
     .module-message__container--incoming & {
-      color: var(--message-bubbles-received-text-color);
+      color: var(--message-bubble-incoming-text-color);
     }
     .module-message__container--outgoing & {
-      color: var(--message-bubbles-sent-text-color);
+      color: var(--message-bubble-outgoing-text-color);
     }
 
     font-size: 12px;
@@ -170,8 +170,8 @@ export const AudioPlayerWithEncryptedFile = (props: {
   const direction = useMessageDirection(messageId);
   const iconColor =
     direction === 'incoming'
-      ? 'var(--message-bubbles-received-text-color)'
-      : 'var(--message-bubbles-sent-text-color)';
+      ? 'var(--message-bubble-incoming-text-color)'
+      : 'var(--message-bubble-outgoing-text-color)';
   const dataTestId: SessionDataTestId = 'audio-player';
 
   const triggerPlayNextMessageIfNeeded = (endedMessageId: string) => {

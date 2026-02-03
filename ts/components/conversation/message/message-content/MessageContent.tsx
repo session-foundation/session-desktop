@@ -51,8 +51,8 @@ const StyledMessageOpaqueContent = styled.div<{
 }>`
   background: ${props =>
     props.$isIncoming
-      ? 'var(--message-bubbles-received-background-color)'
-      : 'var(--message-bubbles-sent-background-color)'};
+      ? 'var(--message-bubble-incoming-background-color)'
+      : 'var(--message-bubble-outgoing-background-color)'};
   align-self: ${props => (props.$isIncoming ? 'flex-start' : 'flex-end')};
   padding: var(--padding-message-content);
   border-radius: var(--border-radius-message-box);

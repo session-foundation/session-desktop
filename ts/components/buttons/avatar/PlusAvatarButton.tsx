@@ -96,7 +96,7 @@ export const PlusAvatarButton = ({
       padding={hasImage ? 'var(--margins-xs)' : 'var(--margins-xxs)'}
       style={{
         ...hardcodedPosition,
-        boxShadow: '0px 0px 3px 2px var(--border-color)',
+        boxShadow: '0px 0px 3px 2px var(--borders-color)',
       }}
     />
   );

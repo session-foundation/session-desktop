@@ -27,8 +27,8 @@ const StyledQuote = styled.div<{
   ${props => !props.$hasAttachment && 'border-left: 4px solid;'}
   border-color: ${props =>
     props.$isIncoming
-      ? 'var(--message-bubbles-received-text-color)'
-      : 'var(--message-bubbles-sent-text-color)'};
+      ? 'var(--message-bubble-incoming-text-color)'
+      : 'var(--message-bubble-outgoing-text-color)'};
   cursor: ${props => (props.onClick ? 'pointer' : 'auto')};
 `;
 
