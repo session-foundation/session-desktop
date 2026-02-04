@@ -44,6 +44,7 @@ export type SessionDebugBooleanFeatureFlags = {
   debugInsecureNodeFetch: boolean;
   debugOnlineState: boolean;
   debugKeyboardShortcuts: boolean;
+  debugFocusScope: boolean;
 };
 
 export type SessionBooleanFeatureFlags = SessionBaseBooleanFeatureFlags &

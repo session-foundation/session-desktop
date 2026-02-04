@@ -86,6 +86,7 @@ function Shortcut({ keys, title }: { keys: Array<string>; title: string }) {
 const categoryKeyToString: Record<keyof typeof KbdShortcutInformation, string> = {
   general: 'General',
   conversation: 'Conversation',
+  message: 'Message',
   view: 'View',
 };
 

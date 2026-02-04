@@ -1,6 +1,5 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import useClickAway from 'react-use/lib/useClickAway';
-import useUpdate from 'react-use/lib/useUpdate';
 import { PopoverTriggerPosition } from '../SessionTooltip';
 import { SessionPopoverContent } from '../SessionPopover';
 import { MessageReactBar } from './message/message-content/MessageReactBar';
@@ -8,23 +7,26 @@ import { THEME_GLOBALS } from '../../themes/globals';
 import { SessionEmojiPanelPopover } from './SessionEmojiPanelPopover';
 import { closeContextMenus } from '../../util/contextMenu';
 import { useMessageInteractions } from '../../hooks/useMessageInteractions';
+import { useFocusedMessageId } from '../../state/selectors/modal';
 
 export function SessionEmojiReactBarPopover({
   messageId,
   open,
   triggerPos,
+  onClickAwayFromReactionBar,
 }: {
   messageId: string;
   // this can be null as we want the emoji panel to stay when the reaction bar closes
   triggerPos: PopoverTriggerPosition | null;
   open: boolean;
+  onClickAwayFromReactionBar: () => void;
 }) {
-  const forceUpdate = useUpdate();
   const emojiPanelTriggerRef = useRef<HTMLButtonElement>(null);
   const emojiPanelRef = useRef<HTMLDivElement>(null);
   const emojiReactionBarRef = useRef<HTMLDivElement>(null);
   const [showEmojiPanel, setShowEmojiPanel] = useState<boolean>(false);
   const { reactToMessage } = useMessageInteractions(messageId);
+  const focusedMessageId = useFocusedMessageId();
 
   const closeEmojiPanel = () => {
     closeContextMenus();
@@ -50,9 +52,15 @@ export function SessionEmojiReactBarPopover({
 
   useClickAway(emojiReactionBarRef, () => {
     if (open) {
-      forceUpdate();
+      onClickAwayFromReactionBar();
     }
   });
+
+  useEffect(() => {
+    if (focusedMessageId && messageId && focusedMessageId !== messageId) {
+      onClickAwayFromReactionBar();
+    }
+  }, [focusedMessageId, messageId, onClickAwayFromReactionBar]);
 
   return (
     <>

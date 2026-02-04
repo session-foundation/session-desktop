@@ -63,8 +63,8 @@ export const SessionMessagesList = (props: {
   const focusedMessageId = useFocusedMessageId();
   const { reply, copyText } = useMessageInteractions(focusedMessageId);
 
-  useKeyboardShortcut({ shortcut: KbdShortcut.messageToggleReply, handler: reply });
-  useKeyboardShortcut({ shortcut: KbdShortcut.messageCopyText, handler: copyText });
+  useKeyboardShortcut({ shortcut: KbdShortcut.messageToggleReply, handler: reply, scopeId: 'all' });
+  useKeyboardShortcut({ shortcut: KbdShortcut.messageCopyText, handler: copyText, scopeId: 'all' });
 
   useLayoutEffect(() => {
     const newTopMessageId = messagesProps.length
@@ -139,6 +139,7 @@ export const SessionMessagesList = (props: {
             <ComponentToRender key={messageId} messageId={messageId} />,
           ];
         })
+        // TODO: check if we reverse this upstream, we might be reversing twice
         .toReversed()}
     </IsDetailMessageViewContext.Provider>
   );

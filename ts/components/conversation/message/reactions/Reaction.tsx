@@ -12,6 +12,9 @@ import { nativeEmojiData } from '../../../../util/emoji';
 import { ReactionPopup } from './ReactionPopup';
 import { SessionTooltip } from '../../../SessionTooltip';
 import { THEME_GLOBALS } from '../../../../themes/globals';
+import { createButtonOnKeyDownForClickEventHandler } from '../../../../util/keyboardShortcuts';
+
+export const EMOJI_REACTION_HEIGHT = 24;
 
 const StyledReaction = styled.button<{
   selected: boolean;
@@ -28,8 +31,8 @@ const StyledReaction = styled.button<{
   box-sizing: border-box;
   padding: 0 7px;
   margin: 0 4px var(--margins-sm);
-  height: 24px;
-  min-width: ${props => (props.$showCount ? '48px' : '24px')};
+  height: ${EMOJI_REACTION_HEIGHT}px;
+  min-width: ${props => (props.$showCount ? 2 * EMOJI_REACTION_HEIGHT : EMOJI_REACTION_HEIGHT)}px;
 
   span {
     width: 100%;
@@ -104,6 +107,8 @@ export const Reaction = (props: ReactionProps) => {
     }
   };
 
+  const handleReactionOnKeyDown = createButtonOnKeyDownForClickEventHandler(handleReactionClick);
+
   const renderTooltip = inGroup && !inModal;
 
   const content = useMemo(
@@ -144,6 +149,7 @@ export const Reaction = (props: ReactionProps) => {
         $showCount={showCount}
         selected={selected()}
         onClick={handleReactionClick}
+        onKeyDown={handleReactionOnKeyDown}
         onMouseEnter={() => handlePopupReaction?.(emoji)}
       >
         <span

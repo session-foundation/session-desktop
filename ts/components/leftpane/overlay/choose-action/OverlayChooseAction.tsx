@@ -1,7 +1,8 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 
 import { isEmpty, isString } from 'lodash';
 import useKey from 'react-use/lib/useKey';
+import useMount from 'react-use/lib/useMount';
 import { getAppDispatch } from '../../../../state/dispatch';
 import { SpacerSM } from '../../../basic/Text';
 import { StyledLeftPaneOverlay } from '../OverlayMessage';
@@ -12,13 +13,8 @@ import { sectionActions } from '../../../../state/ducks/section';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 import { tr } from '../../../../localization/localeTools';
 
-export const OverlayChooseAction = () => {
+export function useOverlayChooseAction() {
   const dispatch = getAppDispatch();
-
-  function closeOverlay() {
-    dispatch(sectionActions.resetLeftOverlayMode());
-  }
-
   const openNewMessage = useCallback(() => {
     dispatch(sectionActions.setLeftOverlayMode('message'));
   }, [dispatch]);
@@ -37,9 +33,17 @@ export const OverlayChooseAction = () => {
     dispatch(sectionActions.setLeftOverlayMode('invite-a-friend'));
   }, [dispatch]);
 
-  useKey('Escape', closeOverlay);
+  return {
+    openNewMessage,
+    openCreateGroup,
+    openJoinCommunity,
+    inviteAFriend,
+  };
+}
 
-  useEffect(() => {
+function useChooseActionOnPaste() {
+  const { openNewMessage, openJoinCommunity } = useOverlayChooseAction();
+  useMount(() => {
     function handlePaste(event: ClipboardEvent) {
       const pasted = event.clipboardData?.getData('text');
 
@@ -58,7 +62,20 @@ export const OverlayChooseAction = () => {
     return () => {
       document?.removeEventListener('paste', handlePaste);
     };
-  }, [openJoinCommunity, openNewMessage]);
+  });
+}
+
+export const OverlayChooseAction = () => {
+  const dispatch = getAppDispatch();
+  const { openNewMessage, openCreateGroup, openJoinCommunity, inviteAFriend } =
+    useOverlayChooseAction();
+  useChooseActionOnPaste();
+
+  function closeOverlay() {
+    dispatch(sectionActions.resetLeftOverlayMode());
+  }
+
+  useKey('Escape', closeOverlay);
 
   return (
     <StyledLeftPaneOverlay

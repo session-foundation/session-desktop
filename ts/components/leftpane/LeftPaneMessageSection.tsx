@@ -26,6 +26,7 @@ import { sectionActions } from '../../state/ducks/section';
 import { openConversationWithMessages } from '../../state/ducks/conversations';
 import { useKeyboardShortcut } from '../../hooks/useKeyboardShortcut';
 import { KbdShortcut } from '../../util/keyboardShortcuts';
+import { UserUtils } from '../../session/utils';
 
 const StyledLeftPaneContent = styled.div`
   display: flex;
@@ -93,6 +94,12 @@ function openConversation(id: string) {
 }
 
 function useConversationListKeyboardShortcuts(conversationIds: Array<string>) {
+  const openNoteToSelf = () => {
+    const id = UserUtils.getOurPubKeyStrFromCache();
+    void openConversationWithMessages({ conversationKey: id, messageId: null });
+  };
+
+  useKeyboardShortcut({ shortcut: KbdShortcut.openNoteToSelf, handler: openNoteToSelf });
   useKeyboardShortcut({
     shortcut: KbdShortcut.conversationNavigation1,
     handler: () => void openConversation(conversationIds[0]),

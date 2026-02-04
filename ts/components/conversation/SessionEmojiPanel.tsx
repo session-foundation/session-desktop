@@ -88,7 +88,6 @@ const pickerProps = {
   skinTonePosition: 'preview',
 };
 
-// eslint-disable-next-line react/display-name
 export const SessionEmojiPanel = forwardRef<HTMLDivElement, Props>((props: Props, ref) => {
   const { onEmojiClicked, show, isModal = false, onClose } = props;
   const _primaryColor = usePrimaryColor();

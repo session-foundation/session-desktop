@@ -40,6 +40,15 @@ export function useKeyboardShortcut({ shortcut, handler, disabled, scopeId }: Sh
     if (isDisabled(handler)) {
       return false;
     }
+
+    if (
+      (e.altKey && !shortcut.withAlt) ||
+      (e[ctrlKey] && !shortcut.withCtrl) ||
+      (e.shiftKey && !shortcut.withShift)
+    ) {
+      return false;
+    }
+
     if (
       (shortcut.withAlt && !e.altKey) ||
       (shortcut.withShift && !e.shiftKey) ||
@@ -48,7 +57,7 @@ export function useKeyboardShortcut({ shortcut, handler, disabled, scopeId }: Sh
       return false;
     }
 
-    if (shortcut.keys[0] === e.key) {
+    if (shortcut.keys[0] === e.key.toLowerCase()) {
       e.preventDefault();
       e.stopPropagation();
       return true;

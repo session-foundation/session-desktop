@@ -1,4 +1,4 @@
-import { type MouseEvent, type KeyboardEvent, useCallback, useRef, useMemo } from 'react';
+import { type MouseEvent, type KeyboardEvent, useCallback, useRef, useMemo, useState } from 'react';
 import clsx from 'clsx';
 
 import { useSelector } from 'react-redux';
@@ -15,10 +15,12 @@ import {
   useIsMessageSelectionMode,
   useSelectedIsBlocked,
 } from '../../../../state/selectors/selectedConversation';
-import { isButtonClickKey } from '../../../../util/keyboardShortcuts';
+import { isButtonClickKey, KbdShortcut } from '../../../../util/keyboardShortcuts';
 import { showMessageContextMenu } from '../message-content/MessageContextMenu';
 import { getAppDispatch } from '../../../../state/dispatch';
 import { setFocusedMessageId } from '../../../../state/ducks/conversations';
+import { PopoverTriggerPosition } from '../../../SessionTooltip';
+import { useKeyboardShortcut } from '../../../../hooks/useKeyboardShortcut';
 
 export type GenericReadableMessageSelectorProps = Pick<
   MessageRenderingProps,
@@ -78,28 +80,38 @@ export const GenericReadableMessage = (props: Props) => {
   const multiSelectMode = useIsMessageSelectionMode();
 
   const ref = useRef<HTMLDivElement>(null);
+  const [triggerPosition, setTriggerPosition] = useState<PopoverTriggerPosition | null>(null);
+
+  const getMessageContainerTriggerPosition = (): PopoverTriggerPosition | null => {
+    if (!ref.current) {
+      return null;
+    }
+    const rect = ref.current.getBoundingClientRect();
+    const halfWidth = rect.width / 2;
+    return {
+      x: rect.left,
+      // NOTE: y needs to be clamped to the parent otherwise it can overflow the container
+      y: rect.top,
+      height: rect.height,
+      width: rect.width,
+      offsetX: msgProps?.direction === 'incoming' ? -halfWidth : halfWidth,
+    };
+  };
 
   const handleContextMenu = useCallback(
     (
       e: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>,
-      triggerPosition?: { x: number; y: number }
+      overridePosition?: { x: number; y: number }
     ) => {
       if (!selectedIsBlocked && !multiSelectMode && !msgProps?.isKickedFromGroup) {
         showMessageContextMenu({
           id: ctxMenuID,
           event: e,
-          triggerPosition,
+          triggerPosition: overridePosition,
         });
       }
     },
     [selectedIsBlocked, ctxMenuID, multiSelectMode, msgProps?.isKickedFromGroup]
-  );
-
-  const onContextMenu = useCallback(
-    (e: MouseEvent<HTMLElement>) => {
-      return handleContextMenu(e);
-    },
-    [handleContextMenu]
   );
 
   const convoReactionsEnabled = useMemo(() => {
@@ -112,21 +124,14 @@ export const GenericReadableMessage = (props: Props) => {
     return true;
   }, [msgProps?.convoId]);
 
-  const onKeyDown = useCallback(
-    (e: KeyboardEvent<HTMLDivElement>) => {
-      if (isButtonClickKey(e) && ref.current) {
-        const rect = ref.current.getBoundingClientRect();
-        const parent = ref.current.parentElement?.getBoundingClientRect();
-
-        handleContextMenu(e, {
-          x: rect.right,
-          // NOTE: y needs to be clamped to the parent otherwise it can overflow the container
-          y: Math.max(rect.top, parent?.top ?? 0),
-        });
+  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (isButtonClickKey(e)) {
+      const overrideTriggerPosition = getMessageContainerTriggerPosition();
+      if (overrideTriggerPosition) {
+        handleContextMenu(e, overrideTriggerPosition);
       }
-    },
-    [handleContextMenu]
-  );
+    }
+  };
 
   const onFocus = () => {
     dispatch(setFocusedMessageId(messageId));
@@ -135,6 +140,23 @@ export const GenericReadableMessage = (props: Props) => {
   const onBlur = () => {
     dispatch(setFocusedMessageId(null));
   };
+
+  const toggleEmojiReactionBarWithKeyboard = () => {
+    if (triggerPosition) {
+      setTriggerPosition(null);
+    } else {
+      const pos = getMessageContainerTriggerPosition();
+      if (pos) {
+        setTriggerPosition(pos);
+      }
+    }
+  };
+
+  useKeyboardShortcut({
+    shortcut: KbdShortcut.messageToggleReactionBar,
+    handler: toggleEmojiReactionBarWithKeyboard,
+    scopeId: messageId,
+  });
 
   if (!msgProps) {
     return null;
@@ -148,7 +170,7 @@ export const GenericReadableMessage = (props: Props) => {
       selected={selected}
       $isDetailView={isDetailView}
       className={clsx(selected ? 'message-selected' : undefined)}
-      onContextMenu={onContextMenu}
+      onContextMenu={handleContextMenu}
       key={`readable-message-${messageId}`}
       onKeyDown={onKeyDown}
       tabIndex={0}
@@ -160,6 +182,8 @@ export const GenericReadableMessage = (props: Props) => {
         messageId={messageId}
         dataTestId={'message-content'}
         convoReactionsEnabled={convoReactionsEnabled}
+        triggerPosition={triggerPosition}
+        setTriggerPosition={setTriggerPosition}
       />
     </StyledReadableMessage>
   );

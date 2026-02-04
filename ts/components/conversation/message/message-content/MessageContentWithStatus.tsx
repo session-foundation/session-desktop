@@ -1,4 +1,4 @@
-import { SessionDataTestId, MouseEvent, useCallback, useState } from 'react';
+import { SessionDataTestId, MouseEvent, useCallback, Dispatch } from 'react';
 import { useSelector } from 'react-redux';
 import { clsx } from 'clsx';
 import styled from 'styled-components';
@@ -35,6 +35,8 @@ type Props = {
   ctxMenuID: string;
   dataTestId: SessionDataTestId;
   convoReactionsEnabled: boolean;
+  triggerPosition: PopoverTriggerPosition | null;
+  setTriggerPosition: Dispatch<PopoverTriggerPosition | null>;
 };
 
 const StyledMessageContentContainer = styled.div<{ $isIncoming: boolean; $isDetailView: boolean }>`
@@ -56,7 +58,14 @@ const StyledMessageWithAuthor = styled.div`
 `;
 
 export const MessageContentWithStatuses = (props: Props) => {
-  const { messageId, ctxMenuID, dataTestId, convoReactionsEnabled } = props;
+  const {
+    messageId,
+    ctxMenuID,
+    dataTestId,
+    convoReactionsEnabled,
+    triggerPosition,
+    setTriggerPosition,
+  } = props;
   const dispatch = getAppDispatch();
   const contentProps = useSelector((state: StateType) =>
     getMessageContentWithStatusesSelectorProps(state, messageId)
@@ -68,8 +77,6 @@ export const MessageContentWithStatuses = (props: Props) => {
   const isLegacyGroup = useSelectedIsLegacyGroup();
   const status = useMessageStatus(props.messageId);
   const isSent = status === 'sent' || status === 'read'; // a read message should be reactable
-
-  const [triggerPos, setTriggerPos] = useState<PopoverTriggerPosition | null>(null);
 
   const onClickOnMessageOuterContainer = useCallback(
     (event: MouseEvent<HTMLDivElement>) => {
@@ -125,6 +132,10 @@ export const MessageContentWithStatuses = (props: Props) => {
     );
   };
 
+  const closeReactionBar = () => {
+    setTriggerPosition(null);
+  };
+
   return (
     <StyledMessageContentContainer $isIncoming={isIncoming} $isDetailView={isDetailView}>
       <ExpirableReadableMessage
@@ -152,15 +163,16 @@ export const MessageContentWithStatuses = (props: Props) => {
         {enableReactions ? (
           <SessionEmojiReactBarPopover
             messageId={messageId}
-            open={!!triggerPos}
-            triggerPos={triggerPos}
+            open={!!triggerPosition}
+            triggerPos={triggerPosition}
+            onClickAwayFromReactionBar={closeReactionBar}
           />
         ) : null}
         {enableContextMenu ? (
           <MessageContextMenu
             messageId={messageId}
             contextMenuId={ctxMenuID}
-            setTriggerPosition={setTriggerPos}
+            setTriggerPosition={setTriggerPosition}
           />
         ) : null}
       </ExpirableReadableMessage>

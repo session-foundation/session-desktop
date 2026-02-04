@@ -139,20 +139,31 @@ export type ScopeWithoutId = Exclude<FocusScope, ScopeWithId>;
 
 type ScopeArgs =
   | { scope: ScopeWithoutId; scopeId?: never }
-  | { scope: ScopeWithId; scopeId: string };
+  | { scope: ScopeWithId; scopeId: string | 'all' };
 
-export function useIsInScope({ scope, scopeId }: ScopeArgs) {
+export function useFocusScope() {
   const modalStack = useModalStack();
   const focusedMessageId = useFocusedMessageId();
 
+  return {
+    focusedMessageId,
+    modalId: modalStack?.length ? modalStack[modalStack.length - 1] : null,
+  };
+}
+
+export function useIsInScope({ scope, scopeId }: ScopeArgs) {
+  const { modalId, focusedMessageId } = useFocusScope();
   if (scope === 'global') {
     return true;
   }
   if (scope === 'message') {
+    if (scopeId === 'all') {
+      return !!focusedMessageId;
+    }
     return scopeId && scopeId === focusedMessageId;
   }
   if (scope === 'conversationList') {
-    return !modalStack?.length;
+    return !modalId && !focusedMessageId;
   }
-  return modalStack[modalStack.length - 1] === scope;
+  return modalId === scope;
 }

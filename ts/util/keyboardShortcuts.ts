@@ -63,6 +63,7 @@ const conversationNavigation = Object.fromEntries(
 // in the database and its an often overlocked feature with little lift and massive UX gains.
 
 export const KbdShortcut = {
+  ...conversationNavigation,
   keyboardShortcutModal: {
     name: 'Keyboard Shortcuts',
     scope: 'global',
@@ -73,19 +74,48 @@ export const KbdShortcut = {
   zoomOut: { name: 'Zoom Out', scope: 'global', withCtrl: true, keys: ['-'] },
   userSettingsModal: { name: 'User Settings', scope: 'global', withCtrl: true, keys: [','] },
   newConversation: { name: 'New Conversation', scope: 'global', withCtrl: true, keys: ['n'] },
+  newMessage: {
+    name: 'New Message',
+    scope: 'global',
+    withCtrl: true,
+    withShift: true,
+    keys: ['m'],
+  },
+  createGroup: {
+    name: 'Create Group',
+    scope: 'global',
+    withCtrl: true,
+    withShift: true,
+    keys: ['g'],
+  },
+  joinCommunity: {
+    name: 'Join Community',
+    scope: 'global',
+    withCtrl: true,
+    withShift: true,
+    keys: ['c'],
+  },
+  openNoteToSelf: {
+    name: 'Open Note To Self',
+    scope: 'global',
+    withCtrl: true,
+    withShift: true,
+    keys: ['n'],
+  },
   conversationListSearch: {
     name: 'Search',
     scope: 'conversationList',
     withCtrl: true,
     keys: ['f'],
   },
+  // Conversation Shortcuts
   conversationFocusTextArea: {
     name: 'Focus Text Area',
     scope: 'conversationList',
     keys: ['Escape'],
   },
   conversationUploadAttachment: {
-    name: 'Upload Attachment',
+    name: 'Add Attachment',
     scope: 'conversationList',
     withCtrl: true,
     keys: ['u'],
@@ -102,6 +132,7 @@ export const KbdShortcut = {
     withCtrl: true,
     keys: ['.'],
   },
+  // Message Shortcuts
   messageToggleReactionBar: {
     name: 'Toggle Reaction Bar for message',
     scope: 'message',
@@ -109,12 +140,12 @@ export const KbdShortcut = {
   },
   messageToggleReply: {
     name: 'Toggle Reply for message',
-    scope: 'conversationList',
+    scope: 'message',
     keys: ['r'],
   },
   messageCopyText: {
     name: 'Copy message text',
-    scope: 'conversationList',
+    scope: 'message',
     withCtrl: true,
     keys: ['c'],
   },
@@ -124,12 +155,21 @@ export const KbdShortcut = {
     withCtrl: true,
     keys: ['s'],
   },
-  ...conversationNavigation,
+  // NOTE: these are currently dummy shortcuts, they are native or implmeneted differently
+  messageOpenContextMenu: {
+    name: 'Open message context menu',
+    scope: 'message',
+    keys: ['Enter'],
+  },
 } as const satisfies Record<string, KbdShortcutOptions>;
 
 export const KbdShortcutInformation: Record<string, Array<KbdShortcutOptions>> = {
   general: [
     KbdShortcut.newConversation,
+    KbdShortcut.newMessage,
+    KbdShortcut.createGroup,
+    KbdShortcut.joinCommunity,
+    KbdShortcut.openNoteToSelf,
     KbdShortcut.conversationListSearch,
     KbdShortcut.keyboardShortcutModal,
     baseConversationNavigation,
@@ -140,6 +180,12 @@ export const KbdShortcutInformation: Record<string, Array<KbdShortcutOptions>> =
     KbdShortcut.conversationToggleEmojiPicker,
     KbdShortcut.conversationSettingsModal,
   ],
-  message: [KbdShortcut.messageCopyText, KbdShortcut.messageToggleReply],
+  message: [
+    KbdShortcut.messageCopyText,
+    KbdShortcut.messageToggleReply,
+    KbdShortcut.messageToggleReactionBar,
+    KbdShortcut.messageSaveAttachment,
+    KbdShortcut.messageOpenContextMenu,
+  ],
   view: [KbdShortcut.zoomIn, KbdShortcut.zoomOut],
 };

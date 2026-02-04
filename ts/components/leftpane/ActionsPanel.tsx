@@ -1,5 +1,5 @@
 import { ipcRenderer } from 'electron';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 import useInterval from 'react-use/lib/useInterval';
@@ -49,6 +49,7 @@ import { OnionStatusLight } from '../dialog/OnionStatusPathDialog';
 import { AvatarReupload } from '../../session/utils/job_runners/jobs/AvatarReuploadJob';
 import {
   useDebugMenuModal,
+  useFocusScope,
   useKeyboardShortcutsModal,
   useUserSettingsModal,
 } from '../../state/selectors/modal';
@@ -60,6 +61,7 @@ import { SettingsKey } from '../../data/settings-key';
 import { useKeyboardShortcut } from '../../hooks/useKeyboardShortcut';
 import { KbdShortcut } from '../../util/keyboardShortcuts';
 import { useNewConversationCallback } from '../buttons/MenuButton';
+import { useOverlayChooseAction } from './overlay/choose-action/OverlayChooseAction';
 
 const StyledContainerAvatar = styled.button`
   padding: var(--margins-lg);
@@ -139,8 +141,13 @@ function useUserSettingsModalKeyboardShortcut() {
 }
 
 function useNewConversationKeyboardShortcut() {
-  const handler = useNewConversationCallback();
-  return useKeyboardShortcut({ shortcut: KbdShortcut.newConversation, handler });
+  const { openNewMessage, openCreateGroup, openJoinCommunity } = useOverlayChooseAction();
+  const newConversation = useNewConversationCallback();
+
+  useKeyboardShortcut({ shortcut: KbdShortcut.newConversation, handler: newConversation });
+  useKeyboardShortcut({ shortcut: KbdShortcut.newMessage, handler: openNewMessage });
+  useKeyboardShortcut({ shortcut: KbdShortcut.createGroup, handler: openCreateGroup });
+  useKeyboardShortcut({ shortcut: KbdShortcut.joinCommunity, handler: openJoinCommunity });
 }
 
 function useDebugThemeSwitch() {
@@ -149,6 +156,21 @@ function useDebugThemeSwitch() {
     key: 't',
     callback: handleThemeSwitch,
   });
+}
+
+function useDebugFocusScope() {
+  const debugFocusScope = getFeatureFlagMemo('debugFocusScope');
+  const focusScope = useFocusScope();
+
+  useEffect(() => {
+    if (debugFocusScope) {
+      const isMessage = !!focusScope.focusedMessageId;
+      const isModal = !!focusScope.modalId;
+      window.log.debug(
+        `[debugFocusScope] focus scope changed to ${isModal ? `Modal ${focusScope.modalId}` : isMessage ? `Message ${focusScope.focusedMessageId}` : '??'}`
+      );
+    }
+  }, [debugFocusScope, focusScope]);
 }
 
 function DebugMenuModalButton() {
@@ -219,6 +241,7 @@ export const ActionsPanel = () => {
 
   const fsTTL30sEnabled = getFeatureFlagMemo('fsTTL30s');
   useDebugThemeSwitch();
+  useDebugFocusScope();
   useUpdateBadgeCount();
   usePeriodicFetchRevocationList();
   useKeyboardShortcutsModalKeyboardShortcut();
