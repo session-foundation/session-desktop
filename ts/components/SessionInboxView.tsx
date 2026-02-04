@@ -3,7 +3,6 @@ import { AnimatePresence } from 'framer-motion';
 import { LeftPane } from './leftpane/LeftPane';
 import { SessionMainPanel } from './SessionMainPanel';
 import { SessionTheme } from '../themes/SessionTheme';
-import { Flex } from './basic/Flex';
 import { useSelectedConversationKey } from '../state/selectors/selectedConversation';
 import styled, { css } from 'styled-components';
 import { ReactiveFlex } from './basic/ReactiveFlex';
