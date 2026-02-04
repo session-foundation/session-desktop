@@ -37,6 +37,7 @@ import {
   AddAdminCommunityButton,
   RemoveAdminCommunityButton,
   ShowNoteToSelfButton,
+  DeleteDestroyedOrKickedGroupButton,
 } from '../../conversationSettingsItems';
 import { useCloseActionFromPage, useTitleFromPage } from '../conversationSettingsHooks';
 import type { ConversationSettingsModalState } from '../../../../../state/ducks/modalDialog';
@@ -108,6 +109,7 @@ function DestructiveActions({ conversationId }: WithConvoId) {
         <>
           <LeaveGroupPanelButton conversationId={conversationId} />
           <DeleteGroupPanelButton conversationId={conversationId} />
+          <DeleteDestroyedOrKickedGroupButton conversationId={conversationId} />
           <LeaveCommunityPanelButton conversationId={conversationId} />
         </>
       )}

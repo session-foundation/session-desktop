@@ -32,6 +32,7 @@ import { LeaveCommunityMenuItem } from './items/LeaveCommunity/LeaveCommunityMen
 import { LeaveGroupMenuItem } from './items/LeaveAndDeleteGroup/LeaveGroupMenuItem';
 import {
   DeleteDeprecatedLegacyGroupMenuItem,
+  DeleteDestroyedOrKickedGroupMenuItem,
   DeleteGroupMenuItem,
 } from './items/LeaveAndDeleteGroup/DeleteGroupMenuItem';
 import { tr } from '../../localization/localeTools';
@@ -69,6 +70,7 @@ const ConversationListItemContextMenu = (props: PropsContextConversationItem) =>
       <SessionContextMenuContainer>
         <Menu id={triggerId} animation={getMenuAnimation()}>
           <DeleteDeprecatedLegacyGroupMenuItem />
+          <DeleteDestroyedOrKickedGroupMenuItem />
           <PinConversationMenuItem />
           <BlockMenuItem />
           <CopyCommunityUrlMenuItem convoId={convoIdFromContext} />
@@ -114,6 +116,7 @@ const ConversationListItemContextMenu = (props: PropsContextConversationItem) =>
         <LeaveCommunityMenuItem />
         <LeaveGroupMenuItem />
         <DeleteGroupMenuItem />
+        <DeleteDestroyedOrKickedGroupMenuItem />
         <ShowUserProfileMenuItem />
       </Menu>
     </SessionContextMenuContainer>

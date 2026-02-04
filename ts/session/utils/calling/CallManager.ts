@@ -22,7 +22,7 @@ import { PubKey } from '../../types';
 
 import { getCallMediaPermissionsSettings } from '../../../components/settings/SessionSettings';
 import { Data } from '../../../data/data';
-import { handleAcceptConversationRequest } from '../../../interactions/conversationInteractions';
+import { handleAcceptConversationRequestWithoutConfirm } from '../../../interactions/conversationInteractions';
 import { READ_MESSAGE_STATE } from '../../../models/conversationAttributes';
 import { SnodeNamespaces } from '../../apis/snode_api/namespaces';
 import { DURATION } from '../../constants';
@@ -540,7 +540,7 @@ export async function USER_callRecipient(recipient: string) {
   await sleepFor(2);
 
   // initiating a call is analogous to sending a message request
-  await handleAcceptConversationRequest({
+  await handleAcceptConversationRequestWithoutConfirm({
     convoId: recipient,
     approvalMessageTimestamp: NetworkTime.now() - 100,
   });
@@ -942,7 +942,7 @@ export async function USER_acceptIncomingCallRequest(fromSender: string) {
   await buildAnswerAndSendIt(fromSender, msgIdentifier);
 
   // consider the conversation completely approved
-  await handleAcceptConversationRequest({
+  await handleAcceptConversationRequestWithoutConfirm({
     convoId: fromSender,
     approvalMessageTimestamp: NetworkTime.now() - 100,
   });
