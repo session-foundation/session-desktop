@@ -50,7 +50,7 @@ const StyledGenericAttachment = styled.div`
   position: relative;
   border-radius: 4px;
   gap: var(--margins-sm);
-  box-shadow: inset 0px 0px 0px 1px var(--border-color);
+  box-shadow: inset 0px 0px 0px 1px var(--borders-color);
   background-color: var(--message-link-preview-background-color);
   text-align: center;
 `;

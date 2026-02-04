@@ -79,7 +79,7 @@ export const MessageReactBar = ({ ref, action, additionalAction, emojiPanelTrigg
         })}
         <SessionLucideIconButton
           ref={emojiPanelTriggerRef}
-          iconColor={'var(--emoji-reaction-bar-icon-color)'}
+          iconColor={'var(--text-primary-color)'}
           iconSize={'large'}
           unicode={LUCIDE_ICONS_UNICODE.PLUS}
           onClick={additionalAction}

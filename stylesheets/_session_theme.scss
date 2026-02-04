@@ -53,29 +53,29 @@
   }
 
   &__container--incoming {
-    color: var(--message-bubbles-received-text-color);
+    color: var(--message-bubble-incoming-text-color);
 
     .module-message__text {
-      color: var(--message-bubbles-received-text-color);
+      color: var(--message-bubble-incoming-text-color);
       display: flex;
       flex-direction: column;
       align-items: flex-start;
 
       a {
         text-decoration: underline;
-        color: var(--message-bubbles-received-text-color);
+        color: var(--message-bubble-incoming-text-color);
       }
     }
   }
 
   &__container--outgoing {
-    color: var(--message-bubbles-sent-text-color);
+    color: var(--message-bubble-outgoing-text-color);
     .module-message__text {
-      color: var(--message-bubbles-sent-text-color);
+      color: var(--message-bubble-outgoing-text-color);
 
       a {
         text-decoration: underline;
-        color: var(--message-bubbles-sent-text-color);
+        color: var(--message-bubble-outgoing-text-color);
       }
     }
   }

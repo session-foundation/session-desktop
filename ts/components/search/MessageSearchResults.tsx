@@ -18,6 +18,7 @@ import { Timestamp } from '../conversation/Timestamp';
 import { leftPaneListWidth } from '../leftpane/LeftPane';
 import { tr } from '../../localization/localeTools';
 import { createButtonOnKeyDownForClickEventHandler } from '../../util/keyboardShortcuts';
+import { Localizer } from '../basic/Localizer';
 
 const StyledConversationTitleResults = styled.div`
   flex-grow: 1;
@@ -27,7 +28,7 @@ const StyledConversationTitleResults = styled.div`
   overflow-x: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  color: var(--conversation-tab-text-color);
+  color: var(--text-secondary-color);
   /* We don't want this to overflow horizontally past the timestamp */
   width: 90px;
 `;
@@ -38,7 +39,7 @@ const StyledConversationFromUserInGroup = styled(StyledConversationTitleResults)
   line-height: 14px;
   overflow-x: hidden;
   font-weight: 700;
-  color: var(--conversation-tab-text-color);
+  color: var(--text-secondary-color);
 `;
 
 const StyledSearchResults = styled.div`
@@ -56,6 +57,11 @@ const StyledSearchResults = styled.div`
   &:focus {
     background-color: var(--conversation-tab-background-hover-color);
   }
+`;
+
+const StyledLoadingSnippetContainer = styled.span`
+  font-style: 'italic';
+  opacity: 0.6;
 `;
 
 const StyledResultText = styled.div`
@@ -157,7 +163,7 @@ const ResultBody = styled.div`
 
   font-size: var(--font-size-sm);
 
-  color: var(--conversation-tab-text-color);
+  color: var(--text-secondary-color);
 
   max-height: 3.6em;
 
@@ -181,7 +187,7 @@ const StyledTimestampContainer = styled.div`
 
   text-transform: uppercase;
 
-  color: var(--conversation-tab-text-color);
+  color: var(--text-secondary-color);
 `;
 
 type MessageSearchResultProps = MessageResultProps & { style: CSSProperties };
@@ -253,11 +259,17 @@ export const MessageSearchResult = (props: MessageSearchResultProps) => {
         </ResultsHeader>
         <ResultBody>
           <FromUserInGroup authorPubkey={source} conversationId={conversationId} />
-          <MessageBodyHighlight
-            text={snippet || ''}
-            isGroup={!convoIsPrivate}
-            isPublic={isPublic}
-          />
+          {snippet === null ? (
+            <StyledLoadingSnippetContainer>
+              <Localizer token="loading" />
+            </StyledLoadingSnippetContainer>
+          ) : (
+            <MessageBodyHighlight
+              text={snippet || ''}
+              isGroup={!convoIsPrivate}
+              isPublic={isPublic}
+            />
+          )}
         </ResultBody>
       </StyledResultText>
     </StyledSearchResults>

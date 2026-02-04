@@ -57,7 +57,7 @@ const StyledOnionNodeList = styled.div`
 `;
 
 const StyledVerticalLine = styled.div`
-  background: var(--border-color);
+  background: var(--borders-color);
   position: absolute;
   height: calc(100% - 2 * 15px);
   margin: 15px calc(100% / 2 - 1px);

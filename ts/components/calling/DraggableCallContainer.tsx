@@ -19,7 +19,7 @@ export const DraggableCallWindow = styled.div`
   display: flex;
   flex-direction: column;
   background-color: var(--modal-background-content-color);
-  border: 1px solid var(--border-color);
+  border: var(--default-borders);
   border-radius: var(--border-radius);
 `;
 
@@ -70,6 +70,7 @@ export const DraggableCallContainer = () => {
     'DraggableCallContainer',
     false
   );
+  const draggableRef = useRef<HTMLDivElement>(null);
   const videoRefRemote = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -104,6 +105,7 @@ export const DraggableCallContainer = () => {
 
   return (
     <Draggable
+      nodeRef={draggableRef}
       handle=".dragHandle"
       position={{ x: positionX, y: positionY }}
       onStart={(_e: DraggableEvent, data: DraggableData) => {
@@ -120,7 +122,7 @@ export const DraggableCallContainer = () => {
         setPositionY(data.y);
       }}
     >
-      <DraggableCallWindow className="dragHandle">
+      <DraggableCallWindow ref={draggableRef} className="dragHandle">
         <DraggableCallWindowInner>
           <VideoLoadingSpinner fullWidth={true} />
           <StyledDraggableVideoElement

@@ -20,7 +20,7 @@ const CarouselButton = (props: WithLucideUnicode & { visible: boolean; onClick: 
       unicode={props.unicode}
       onClick={props.onClick}
       padding={'var(--margins-xs)'}
-      iconColor={'var(--button-icon-stroke-color)'}
+      iconColor={'var(--text-secondary-color)'}
       style={{
         visibility: props.visible ? 'visible' : 'hidden',
       }}

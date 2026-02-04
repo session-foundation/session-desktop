@@ -149,6 +149,7 @@ function findValidMention(val: string, cursorPosition: number, prefix: PREFIX) {
   return {
     content,
     prefix,
+    pos,
   };
 }
 
@@ -171,6 +172,11 @@ function getMentionDetails(
 
   const emojiMention = findValidMention(searchableVal, cursorPosition, PREFIX.EMOJI);
   if (emojiMention) {
+    // NOTE: this prevents the emoji list from appearing if the user is typing a url
+    const potentialUrlProtocol = val.slice(Math.max(0, emojiMention.pos - 5), emojiMention.pos);
+    if (potentialUrlProtocol === 'https' || potentialUrlProtocol.endsWith('http')) {
+      return null;
+    }
     return emojiMention;
   }
 
@@ -270,13 +276,14 @@ function usePopoverContent({
       return null;
     }
     return (
-      <ul role="listbox">
+      <ul role="listbox" data-testid="mentions-container">
         {results.map(item => {
           const { id, display } = item;
           const selected = focusedItem.id === id;
           return (
             <li
               role="option"
+              data-testid="mentions-container-row"
               id={id}
               key={id}
               value={id}
@@ -598,6 +605,8 @@ export function CompositionTextArea(props: Props) {
         aria-autocomplete="list"
         aria-label={messagePlaceHolder}
         data-testid="message-input-text-area"
+        // NOTE: we want to close any mentions when clicking within the input as clicking will invalidate the cursor position
+        onClick={handleMentionCleanup}
       />
       {showPopover ? (
         <SessionPopoverContent

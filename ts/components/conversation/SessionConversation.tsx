@@ -538,7 +538,11 @@ export class SessionConversation extends Component<Props, State> {
     e.preventDefault();
     e.stopPropagation();
     this.dragCounter++;
-    if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+    if (
+      e.dataTransfer.items &&
+      e.dataTransfer.items.length > 0 &&
+      e.dataTransfer.items[0]?.kind === 'file'
+    ) {
       this.setState({ isDraggingFile: true });
     }
   }
@@ -560,9 +564,9 @@ export class SessionConversation extends Component<Props, State> {
     if (e?.dataTransfer?.files && e.dataTransfer.files.length > 0) {
       void this.onChoseAttachments(Array.from(e.dataTransfer.files));
       e.dataTransfer.clearData();
-      this.dragCounter = 0;
-      this.setState({ isDraggingFile: false });
     }
+    this.dragCounter = 0;
+    this.setState({ isDraggingFile: false });
   }
 
   private async updateMemberListBouncy() {

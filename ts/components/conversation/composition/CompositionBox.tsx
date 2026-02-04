@@ -62,6 +62,7 @@ import type { ProcessedLinkPreviewThumbnailType } from '../../../webworker/worke
 import { CTAVariant } from '../../dialog/cta/types';
 import { selectWeAreProUser } from '../../../hooks/useHasPro';
 import { closeContextMenus } from '../../../util/contextMenu';
+import type { MessageAttributes } from '../../../models/messageType';
 
 export interface ReplyingToMessageProps {
   convoId: string;
@@ -84,12 +85,11 @@ export type StagedAttachmentType = AttachmentType & {
   path?: string; // a bit hacky, but this is the only way to make our sending audio message be playable, this must be used only for those message
 };
 
-export type SendMessageType = {
+export type SendMessageType = Pick<MessageAttributes, 'quote'> & {
   conversationId: string;
   body: string;
   attachments: Array<StagedAttachmentImportedType> | undefined;
-  quote: any | undefined;
-  preview: any | undefined;
+  preview: Array<StagedPreviewImportedType> | undefined;
   groupInvitation: { url: string | undefined; name: string } | undefined;
 };
 
@@ -158,7 +158,7 @@ const StyledSendMessageInput = styled.div<{ dir?: HTMLDirection }>`
 
   .mention-container {
     border-radius: var(--border-radius);
-    box-shadow: var(--suggestions-shadow);
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
     background-color: var(--suggestions-background-color);
     z-index: 3;
     min-width: 100px;
@@ -181,7 +181,7 @@ const StyledSendMessageInput = styled.div<{ dir?: HTMLDirection }>`
         padding-top: var(--margins-xs);
         padding-bottom: var(--margins-xs);
         background-color: var(--suggestions-background-color);
-        color: var(--suggestions-text-color);
+        color: var(--text-primary-color);
         transition: var(--default-duration);
 
         &:hover,
@@ -670,13 +670,6 @@ class CompositionBoxInner extends Component<Props, State> {
     }
 
     // Send message
-    const extractedQuotedMessageProps = _.pick(
-      quotedMessageProps,
-      'id',
-      'author',
-      'text',
-      'attachments'
-    );
 
     // we consider that a link preview without a title at least is not a preview
     const linkPreview =
@@ -691,7 +684,9 @@ class CompositionBoxInner extends Component<Props, State> {
         conversationId: selectedConversationKey,
         body: text.trim(),
         attachments: attachments || [],
-        quote: extractedQuotedMessageProps,
+        quote: quotedMessageProps
+          ? { author: quotedMessageProps.author, timestamp: quotedMessageProps.timestamp }
+          : undefined,
         preview: previews,
         groupInvitation: undefined,
       });

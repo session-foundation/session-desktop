@@ -185,7 +185,7 @@ function ChatBubblePreview() {
         height="74"
         x="15.74"
         y="15"
-        fill="var(--message-bubbles-received-background-color)"
+        fill="var(--message-bubble-incoming-background-color)"
         rx="16"
       />
       <mask id="a" fill="var(--text-primary-color)">
@@ -197,11 +197,11 @@ function ChatBubblePreview() {
         height="39"
         x="140.74"
         y="104"
-        fill="var(--message-bubbles-sent-background-color)"
+        fill="var(--message-bubble-outgoing-background-color)"
         rx="16"
       />
       <text
-        fill="var(--message-bubbles-received-text-color)"
+        fill="var(--message-bubble-incoming-text-color)"
         x="40px"
         y="37px"
         style={{ letterSpacing: '0.43', fontWeight: 'bold' }}
@@ -209,7 +209,7 @@ function ChatBubblePreview() {
         You
       </text>
       <text
-        fill="var(--message-bubbles-received-text-color)"
+        fill="var(--message-bubble-incoming-text-color)"
         x="40px"
         y="54px"
         style={{ letterSpacing: '0.43' }}
@@ -217,7 +217,7 @@ function ChatBubblePreview() {
         What are you doing this week?
       </text>
       <text
-        fill="var(--message-bubbles-received-text-color)"
+        fill="var(--message-bubble-incoming-text-color)"
         x="30px"
         y="75px"
         style={{ letterSpacing: '0.43' }}
@@ -226,7 +226,7 @@ function ChatBubblePreview() {
       </text>
 
       <text
-        fill="var(--message-bubbles-sent-text-color)"
+        fill="var(--message-bubble-outgoing-text-color)"
         x="155px"
         y="130px"
         style={{ letterSpacing: '0.43' }}

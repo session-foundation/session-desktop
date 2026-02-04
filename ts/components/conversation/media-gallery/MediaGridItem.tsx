@@ -61,7 +61,7 @@ const MediaGridItemContent = (props: Props) => {
     if (imageBroken || !srcData) {
       return (
         <LucideIcon
-          iconColor="var(--button-icon-stroke-color)"
+          iconColor="var(--text-secondary-color)"
           iconSize="small"
           unicode={LUCIDE_ICONS_UNICODE.IMAGE}
         />
@@ -81,7 +81,7 @@ const MediaGridItemContent = (props: Props) => {
     if (imageBroken || !srcData) {
       return (
         <LucideIcon
-          iconColor="var(--button-icon-stroke-color)"
+          iconColor="var(--text-secondary-color)"
           iconSize="small"
           unicode={LUCIDE_ICONS_UNICODE.CLAPERBOARD}
         />

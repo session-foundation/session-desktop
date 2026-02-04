@@ -18,7 +18,7 @@ const StyledRightPanelContainer = styled(motion.div)`
   z-index: 3;
 
   background-color: var(--background-primary-color);
-  border-left: 1px solid var(--border-color);
+  border-left: var(--default-borders);
 `;
 
 const StyledRightPanel = styled(Flex)`

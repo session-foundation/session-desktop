@@ -28,13 +28,13 @@ const StyledQuoteText = styled.div<{ $isIncoming: boolean }>`
 
   color: ${props =>
     props.$isIncoming
-      ? 'var(--message-bubbles-received-text-color)'
-      : 'var(--message-bubbles-sent-text-color)'};
+      ? 'var(--message-bubble-incoming-text-color)'
+      : 'var(--message-bubble-outgoing-text-color)'};
   a {
     color: ${props =>
       props.$isIncoming
         ? 'var(--color-received-message-text)'
-        : 'var(--message-bubbles-sent-text-color)'};
+        : 'var(--message-bubble-outgoing-text-color)'};
   }
 `;
 

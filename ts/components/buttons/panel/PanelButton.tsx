@@ -67,6 +67,7 @@ export function PanelLabelWithDescription({
 const StyledRoundedPanelButtonGroup = styled.div<{
   $isSidePanel?: boolean;
   $isDarkTheme?: boolean;
+  $withBorder?: boolean;
 }>`
   display: flex;
   flex-direction: column;
@@ -82,6 +83,7 @@ const StyledRoundedPanelButtonGroup = styled.div<{
   // Note: we need no padding here so we can change the bg color on hover
   padding: 0;
   width: -webkit-fill-available;
+  border: ${props => (props.$withBorder ? 'var(--default-borders)' : 'none')};
 `;
 
 const PanelButtonContainer = styled.div`
@@ -96,17 +98,19 @@ type PanelButtonGroupProps = {
   children: ReactNode;
   style?: CSSProperties;
   isSidePanel?: boolean;
+  withBorder?: boolean;
 };
 
 export const PanelButtonGroup = (
   props: PanelButtonGroupProps & { containerStyle?: CSSProperties }
 ) => {
-  const { children, style, containerStyle, isSidePanel } = props;
+  const { children, style, containerStyle, isSidePanel, withBorder } = props;
   const isDarkTheme = useIsDarkTheme();
   return (
     <StyledRoundedPanelButtonGroup
       style={style}
       $isSidePanel={isSidePanel}
+      $withBorder={withBorder}
       $isDarkTheme={isDarkTheme}
     >
       <PanelButtonContainer style={containerStyle}>{children}</PanelButtonContainer>

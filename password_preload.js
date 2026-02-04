@@ -32,13 +32,12 @@ window.clearLocalData = async () => {
 
 window.onLogin = passPhrase =>
   new Promise((resolve, reject) => {
+    ipcRenderer.send('password-window-login', passPhrase);
+
     ipcRenderer.once('password-window-login-response', (event, error) => {
       if (error) {
         return reject(error);
       }
       return resolve();
     });
-    ipcRenderer.send('password-window-login', passPhrase);
   });
-
-require('./ts/util/logging');

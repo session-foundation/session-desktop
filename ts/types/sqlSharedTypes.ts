@@ -118,7 +118,7 @@ export type ConfigDumpDataNode = {
 
 export type AttachmentDownloadMessageDetails = {
   messageId: string;
-  type: 'preview' | 'quote' | 'attachment';
+  type: 'preview' | 'attachment';
   index: number;
   isOpenGroupV2: boolean;
   openGroupV2Details: OpenGroupRequestCommonType | undefined;

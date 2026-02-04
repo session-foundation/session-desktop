@@ -44,15 +44,15 @@ const StyledMessageContent = styled.div<{ $msgDirection: MessageModelType }>`
   align-self: ${props => (props.$msgDirection === 'incoming' ? 'flex-start' : 'flex-end')};
 `;
 
-const StyledMessageOpaqueContent = styled(MessageHighlighter)<{
+const StyledMessageOpaqueContent = styled.div<{
   $isIncoming: boolean;
   $highlight: boolean;
   $selected: boolean;
 }>`
   background: ${props =>
     props.$isIncoming
-      ? 'var(--message-bubbles-received-background-color)'
-      : 'var(--message-bubbles-sent-background-color)'};
+      ? 'var(--message-bubble-incoming-background-color)'
+      : 'var(--message-bubble-outgoing-background-color)'};
   align-self: ${props => (props.$isIncoming ? 'flex-start' : 'flex-end')};
   padding: var(--padding-message-content);
   border-radius: var(--border-radius-message-box);
@@ -104,6 +104,7 @@ export const MessageContent = (props: Props) => {
       if (!highlight && !didScroll) {
         // scroll to me and flash me
         scrollToLoadedMessage(props.messageId, 'quote-or-search-result');
+
         setDidScroll(true);
         if (shouldHighlightMessage) {
           setHighlight(true);
@@ -167,22 +168,24 @@ export const MessageContent = (props: Props) => {
         <IsMessageVisibleContext.Provider value={isMessageVisible}>
           <ContextMessageProvider value={props.messageId}>
             {hasContentBeforeAttachment && (
-              <StyledMessageOpaqueContent
-                $isIncoming={direction === 'incoming'}
-                $highlight={highlight}
-                $selected={selected}
-              >
-                {!isDeleted && (
-                  <>
-                    <MessageQuote messageId={props.messageId} />
-                    <MessageLinkPreview
-                      messageId={props.messageId}
-                      handleImageError={handleImageError}
-                    />
-                  </>
-                )}
-                <MessageText messageId={props.messageId} />
-              </StyledMessageOpaqueContent>
+              <MessageHighlighter $highlight={highlight}>
+                <StyledMessageOpaqueContent
+                  $isIncoming={direction === 'incoming'}
+                  $highlight={highlight}
+                  $selected={selected}
+                >
+                  {!isDeleted && (
+                    <>
+                      <MessageQuote messageId={props.messageId} />
+                      <MessageLinkPreview
+                        messageId={props.messageId}
+                        handleImageError={handleImageError}
+                      />
+                    </>
+                  )}
+                  <MessageText messageId={props.messageId} />
+                </StyledMessageOpaqueContent>
+              </MessageHighlighter>
             )}
             {!isDeleted ? (
               <MessageAttachment

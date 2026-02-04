@@ -22,6 +22,7 @@ import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { tr } from '../../localization/localeTools';
 import { userSettingsModal } from '../../state/ducks/modalDialog';
 import { SettingsKey } from '../../data/settings-key';
+import { LeftPaneAnnouncements } from './LeftPaneAnnoucements';
 
 const StyledLeftPaneSectionHeader = styled(Flex)`
   height: var(--main-view-header-height);
@@ -37,7 +38,7 @@ const StyledProgressBarContainer = styled.div`
   width: 100%;
   height: 5px;
   flex-direction: row;
-  background: var(--border-color);
+  background: var(--borders-color);
 `;
 
 const StyledProgressBarInner = styled.div`
@@ -78,7 +79,7 @@ const StyledLeftPaneBanner = styled.div`
   background: var(--background-secondary-color);
   display: flex;
   flex-direction: column;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: var(--default-borders);
 `;
 
 function getLeftPaneHeaderLabel(leftOverlayMode: LeftOverlayMode | undefined): string {
@@ -108,7 +109,7 @@ function getLeftPaneHeaderLabel(leftOverlayMode: LeftOverlayMode | undefined): s
   return label;
 }
 
-export const LeftPaneBanner = () => {
+const LeftPaneBanner = () => {
   const isDarkTheme = useIsDarkTheme();
   const isSignInWithRecoveryPhrase = isSignWithRecoveryPhrase();
   const hideRecoveryPassword = useHideRecoveryPasswordEnabled();
@@ -162,8 +163,9 @@ export const LeftPaneBanner = () => {
 };
 
 export const LeftPaneSectionHeader = () => {
-  const showRecoveryPhrasePrompt = useSelector(getShowRecoveryPhrasePrompt);
   const leftOverlayMode = useLeftOverlayMode();
+  const noOverlayMode = !leftOverlayMode;
+  const showRecoveryPhrasePrompt = useSelector(getShowRecoveryPhrasePrompt);
 
   const dispatch = getAppDispatch();
   const goBack = () => {
@@ -216,7 +218,8 @@ export const LeftPaneSectionHeader = () => {
         </SectionTitle>
         {!leftOverlayMode && <MenuButton />}
       </StyledLeftPaneSectionHeader>
-      {showRecoveryPhrasePrompt ? <LeftPaneBanner /> : null}
+      {noOverlayMode && showRecoveryPhrasePrompt ? <LeftPaneBanner /> : null}
+      {noOverlayMode ? <LeftPaneAnnouncements /> : null}
     </Flex>
   );
 };

@@ -1,4 +1,4 @@
-import z from '../../../util/zod';
+import { z } from '../../../util/zod';
 import { SessionBackendBaseResponseSchema } from '../session_backend_server';
 
 // NOTE: this is only needed here for schema validation, but we should move this elsewhere if we use it for other things

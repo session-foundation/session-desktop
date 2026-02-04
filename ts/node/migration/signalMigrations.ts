@@ -15,7 +15,7 @@ import {
 } from '../database_utility';
 import { updateSessionSchema } from './sessionMigrations';
 
-const openDbOptions = {} satisfies DatabaseOptions;
+const openDbOptions = { cacheStatements: true } satisfies DatabaseOptions;
 
 // eslint:disable: one-variable-per-declaration
 

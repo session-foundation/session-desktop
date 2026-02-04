@@ -479,6 +479,8 @@ module.exports = {
         },
       };
     },
+    // Add data-component attribute to styled-components for debugging
+    require.resolve('./babel-plugins/styled-components-data-component'),
     [
       require.resolve('babel-plugin-react-compiler'),
       {

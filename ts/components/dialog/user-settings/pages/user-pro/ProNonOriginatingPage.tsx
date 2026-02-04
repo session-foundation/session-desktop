@@ -22,14 +22,30 @@ import type { ProNonOriginatingPageVariant } from '../../../../../types/ReduxTyp
 import { useCurrentNeverHadPro } from '../../../../../hooks/useHasPro';
 import LIBSESSION_CONSTANTS from '../../../../../session/utils/libsession/libsession_constants';
 import { ProPaymentProvider } from '../../../../../session/apis/pro_backend_api/types';
-import { useProBackendProDetails } from '../../../../../state/selectors/proBackendData';
+import {
+  useProBackendProDetails,
+  type ProcessedProDetails,
+} from '../../../../../state/selectors/proBackendData';
 
 type VariantPageProps = {
   variant: ProNonOriginatingPageVariant;
 };
 
+const useProBackendProDetailsLocal = useProBackendProDetails;
+const useCurrentNeverHadProLocal = useCurrentNeverHadPro;
+
+/**
+ * For some texts, we want `Apple website` for apple but `Google Play Store website` for google...
+ * Those two are not stored in the same field, so this hook can be used to fetch the right one
+ */
+function useStoreOrPlatformFromProvider(data: ProcessedProDetails['data']) {
+  return data.provider === ProPaymentProvider.iOSAppStore
+    ? data.providerConstants.platform // we want `Apple website` for apple
+    : data.providerConstants.store; // but `Google Play Store website` for google...
+}
+
 function ProStatusTextUpdate() {
-  const { data } = useProBackendProDetails();
+  const { data } = useProBackendProDetailsLocal();
   return data.autoRenew ? (
     <Localizer
       token="proAccessActivatedAutoShort"
@@ -88,6 +104,7 @@ function ProInfoBlockItem({
         padding: 'var(--margins-md)',
         background: 'var(--background-tertiary-color)',
       }}
+      withBorder={true}
     >
       <StyledContent style={{ gap: 'var(--margins-md)', alignItems: 'flex-start' }}>
         {iconElement}
@@ -106,6 +123,7 @@ const StyledBlockItemIcon = styled.div`
   padding: 0;
   border-radius: var(--margins-xs);
   color: var(--primary-color);
+  box-shadow: var(--button-drop-shadow);
 `;
 
 function ProInfoBlockIconElement({ unicode }: WithLucideUnicode) {
@@ -116,10 +134,12 @@ function ProInfoBlockIconElement({ unicode }: WithLucideUnicode) {
       $justifyContent={'center'}
       $flexGap="var(--margins-sm)"
     >
-      <StyledBlockItemIcon
-        style={{ background: 'color-mix(in srgb, var(--primary-color) 10%, transparent)' }}
-      >
-        <LucideIcon unicode={unicode} iconSize={'large'} />
+      <StyledBlockItemIcon style={{ background: 'var(--accent-icon-background-color)' }}>
+        <LucideIcon
+          unicode={unicode}
+          iconSize={'large'}
+          iconColor={'var(--accent-icon-fill-color)'}
+        />
       </StyledBlockItemIcon>
     </Flex>
   );
@@ -134,7 +154,7 @@ const ProInfoBlockText = styled.div`
 `;
 
 function ProInfoBlockDevice({ textElement }: { textElement: ReactNode }) {
-  const { data } = useProBackendProDetails();
+  const { data } = useProBackendProDetailsLocal();
   return (
     <ProInfoBlockItem
       iconElement={<ProInfoBlockIconElement unicode={LUCIDE_ICONS_UNICODE.SMARTPHONE} />}
@@ -149,8 +169,9 @@ function ProInfoBlockDevice({ textElement }: { textElement: ReactNode }) {
 }
 
 function ProInfoBlockDeviceLinked() {
-  const { data } = useProBackendProDetails();
-  const hasNeverHadPro = useCurrentNeverHadPro();
+  const { data } = useProBackendProDetailsLocal();
+  const hasNeverHadPro = useCurrentNeverHadProLocal();
+
   return (
     <ProInfoBlockItem
       iconElement={<ProInfoBlockIconElement unicode={LUCIDE_ICONS_UNICODE.LINK} />}
@@ -159,7 +180,7 @@ function ProInfoBlockDeviceLinked() {
           <strong>{tr('onLinkedDevice')}</strong>
           <Localizer
             token={hasNeverHadPro ? 'proUpgradeDesktopLinked' : 'proRenewDesktopLinked'}
-            platform_store={data.providerConstants.store}
+            platform_store={data.providerConstants.store} // this one is always store
             platform_store_other={data.providerConstants.store_other}
           />
         </ProInfoBlockText>
@@ -169,13 +190,19 @@ function ProInfoBlockDeviceLinked() {
 }
 
 function ProInfoBlockWebsite({ textElement }: { textElement: ReactNode }) {
-  const { data } = useProBackendProDetails();
+  const { data } = useProBackendProDetailsLocal();
+  const storeOrPlatform = useStoreOrPlatformFromProvider(data);
+
   return (
     <ProInfoBlockItem
       iconElement={<ProInfoBlockIconElement unicode={LUCIDE_ICONS_UNICODE.GLOBE} />}
       textElement={
         <ProInfoBlockText>
-          <strong>{tr('viaStoreWebsite', { platform: data.providerConstants.platform })}</strong>
+          <strong>
+            {tr('viaStoreWebsite', {
+              platform: storeOrPlatform,
+            })}
+          </strong>
           {textElement}
         </ProInfoBlockText>
       }
@@ -223,14 +250,14 @@ function ProInfoBlockLayout({
 
 function ProInfoBlockUpgrade() {
   const dispatch = getAppDispatch();
-  const { data } = useProBackendProDetails();
+  const { data } = useProBackendProDetailsLocal();
   return (
     <ProInfoBlockLayout
       titleElement={tr('proUpgradingTo')}
       descriptionElement={
         <Localizer
           token="proAccessUpgradeDesktop"
-          platform_store={data.providerConstants.store}
+          platform_store={data.providerConstants.store} // this one is always store
           platform_store_other={data.providerConstants.store_other}
           icon={LUCIDE_ICONS_UNICODE.EXTERNAL_LINK_ICON}
         />
@@ -247,7 +274,9 @@ function ProInfoBlockUpgrade() {
 }
 
 function ProInfoBlockUpdate() {
-  const { data } = useProBackendProDetails();
+  const { data } = useProBackendProDetailsLocal();
+  const storeOrPlatform = useStoreOrPlatformFromProvider(data);
+
   return (
     <ProInfoBlockLayout
       titleElement={tr('updateAccess')}
@@ -276,11 +305,7 @@ function ProInfoBlockUpdate() {
             textElement={
               <Localizer
                 token="viaStoreWebsiteDescription"
-                platform_store={
-                  data.provider === ProPaymentProvider.iOSAppStore
-                    ? data.providerConstants.platform // we want `Apple website` for apple
-                    : data.providerConstants.store // but `Google Play Store website` for google...
-                }
+                platform_store={storeOrPlatform}
                 platform_account={data.providerConstants.platform_account}
               />
             }
@@ -293,7 +318,9 @@ function ProInfoBlockUpdate() {
 
 function ProInfoBlockRenew() {
   const dispatch = getAppDispatch();
-  const { data } = useProBackendProDetails();
+  const { data } = useProBackendProDetailsLocal();
+  const storeOrPlatform = useStoreOrPlatformFromProvider(data);
+
   return (
     <ProInfoBlockLayout
       titleElement={tr('renewingPro')}
@@ -320,7 +347,7 @@ function ProInfoBlockRenew() {
             textElement={
               <Localizer
                 token="proAccessRenewPlatformStoreWebsite"
-                platform_store={data.providerConstants.platform}
+                platform_store={storeOrPlatform}
                 platform_account={data.providerConstants.platform_account}
               />
             }
@@ -332,7 +359,7 @@ function ProInfoBlockRenew() {
 }
 
 function ProInfoBlockCancel() {
-  const { data } = useProBackendProDetails();
+  const { data } = useProBackendProDetailsLocal();
   return (
     <ProInfoBlockLayout
       titleElement={tr('proCancellation')}
@@ -400,7 +427,7 @@ function ProInfoBlockRefundSessionSupport() {
 }
 
 function ProInfoBlockRefundGooglePlay() {
-  const { data } = useProBackendProDetails();
+  const { data } = useProBackendProDetailsLocal();
   return (
     <PanelButtonGroup
       containerStyle={{
@@ -422,7 +449,7 @@ function ProInfoBlockRefundGooglePlay() {
 }
 
 function ProInfoBlockRefundIOS() {
-  const { data } = useProBackendProDetails();
+  const { data } = useProBackendProDetailsLocal();
   return (
     <ProInfoBlockLayout
       titleElement={tr('proRefunding')}
@@ -463,7 +490,7 @@ function ProInfoBlockRefundIOS() {
 }
 
 function ProInfoBlockRefund() {
-  const { data } = useProBackendProDetails();
+  const { data } = useProBackendProDetailsLocal();
 
   if (!data.isPlatformRefundAvailable) {
     return <ProInfoBlockRefundSessionSupport />;
@@ -500,7 +527,9 @@ function ProInfoBlock({ variant }: VariantPageProps) {
 
 function ProPageButtonUpdate() {
   const dispatch = getAppDispatch();
-  const { data } = useProBackendProDetails();
+  const { data } = useProBackendProDetailsLocal();
+  const storeOrPlatform = useStoreOrPlatformFromProvider(data);
+
   return (
     <SessionButton
       {...proButtonProps}
@@ -510,14 +539,15 @@ function ProPageButtonUpdate() {
       }}
       dataTestId="pro-open-platform-website-button"
     >
-      <Localizer token="openPlatformWebsite" platform={data.providerConstants.platform} />
+      <Localizer token="openPlatformWebsite" platform={storeOrPlatform} />
     </SessionButton>
   );
 }
 
 function ProPageButtonCancel() {
   const dispatch = getAppDispatch();
-  const { data } = useProBackendProDetails();
+  const { data } = useProBackendProDetailsLocal();
+  const storeOrPlatform = useStoreOrPlatformFromProvider(data);
   return (
     <SessionButton
       {...proButtonProps}
@@ -527,14 +557,15 @@ function ProPageButtonCancel() {
       }}
       dataTestId="pro-open-platform-website-button"
     >
-      <Localizer token="openPlatformWebsite" platform={data.providerConstants.platform} />
+      <Localizer token="openPlatformWebsite" platform={storeOrPlatform} />
     </SessionButton>
   );
 }
 
 function ProPageButtonRefund() {
   const dispatch = getAppDispatch();
-  const { data } = useProBackendProDetails();
+  const { data } = useProBackendProDetailsLocal();
+  const storeOrPlatform = useStoreOrPlatformFromProvider(data);
   return (
     <SessionButton
       {...proButtonProps}
@@ -550,7 +581,7 @@ function ProPageButtonRefund() {
       dataTestId="pro-open-platform-website-button"
     >
       {data.isPlatformRefundAvailable ? (
-        <Localizer token="openPlatformWebsite" platform={data.providerConstants.platform} />
+        <Localizer token="openPlatformWebsite" platform={storeOrPlatform} />
       ) : (
         <Localizer token="requestRefund" />
       )}

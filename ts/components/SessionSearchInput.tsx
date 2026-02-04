@@ -39,10 +39,10 @@ const StyledInput = styled.input`
   font-family: var(--font-default);
   text-overflow: ellipsis;
   background: none;
-  color: var(--search-bar-text-control-color);
+  color: var(--text-secondary-color);
 
   &:focus {
-    color: var(--search-bar-text-user-color);
+    color: var(--text-primary-color);
     outline: none !important;
   }
 `;
@@ -112,7 +112,7 @@ export const SessionSearchInput = ({ searchType }: { searchType: SearchType }) =
       style={{ backgroundColor }}
     >
       <LucideIcon
-        iconColor="var(--search-bar-icon-color)"
+        iconColor="var(--text-secondary-color)"
         iconSize={iconSize}
         unicode={LUCIDE_ICONS_UNICODE.SEARCH}
       />
@@ -132,7 +132,7 @@ export const SessionSearchInput = ({ searchType }: { searchType: SearchType }) =
       />
       {Boolean(currentSearchTerm.length) && (
         <SessionLucideIconButton
-          iconColor="var(--search-bar-icon-color)"
+          iconColor="var(--text-secondary-color)"
           iconSize={iconSize}
           unicode={LUCIDE_ICONS_UNICODE.X}
           // NOTE: we dont want the clear button in the tab index list

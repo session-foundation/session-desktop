@@ -150,7 +150,6 @@ export const MessageAttachment = (props: Props) => {
     return (
       <MessageHighlighter
         $highlight={highlight}
-        role="main"
         onClick={(e: any) => {
           if (multiSelectMode) {
             dispatch(toggleSelectedMessageId(messageId));

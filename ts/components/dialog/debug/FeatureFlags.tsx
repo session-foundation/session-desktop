@@ -34,6 +34,7 @@ import { proBackendDataActions } from '../../../state/ducks/proBackendData';
 import { Storage } from '../../../util/storage';
 import { SettingsKey } from '../../../data/settings-key';
 import {
+  defaultAvatarPickerColor,
   defaultProBooleanFeatureFlags,
   defaultProDataFeatureFlags,
 } from '../../../state/ducks/types/defaultFeatureFlags';
@@ -233,7 +234,7 @@ export const FlagEnumDropdownInput = ({
           padding: 'var(--margins-sm) var(--margins-md)',
           backgroundColor: 'var(--background-primary-color)',
           color: 'var(--text-primary-color)',
-          border: '1px solid var(--border-color)',
+          border: '1px solid var(--borders-color)',
           borderRadius: 'var(--border-radius)',
           cursor: 'pointer',
         }}
@@ -338,7 +339,7 @@ export const FlagIntegerInput = ({
             padding: 'var(--margins-xs) var(--margins-sm)',
             backgroundColor: 'var(--background-primary-color)',
             color: 'var(--text-primary-color)',
-            border: '1px solid var(--border-color)',
+            border: '1px solid var(--borders-color)',
             borderRadius: 'var(--border-radius)',
             cursor: 'pointer',
           }}
@@ -551,6 +552,18 @@ export function DebugFeatureFlags({ forceUpdate }: { forceUpdate: () => void }) 
         min={1}
         max={10}
       />
+      <FlagEnumDropdownInput
+        label="Fake Avatar Picker Color"
+        flag="fakeAvatarPickerColor"
+        options={[
+          { label: 'green', value: '#00ff00' },
+          { label: 'red', value: '#ff0000' },
+          { label: 'black', value: '#000000' },
+          { label: 'white', value: '#fffff' },
+        ]}
+        forceUpdate={forceUpdate}
+        unsetOption={{ label: 'blue', value: defaultAvatarPickerColor }}
+      />
     </DebugMenuSection>
   );
 }
@@ -635,7 +648,7 @@ export function FeatureFlagDumper({ forceUpdate }: { forceUpdate: () => void }) 
           padding: 'var(--margins-xs) var(--margins-sm)',
           backgroundColor: 'var(--background-primary-color)',
           color: 'var(--text-primary-color)',
-          border: '1px solid var(--border-color)',
+          border: '1px solid var(--borders-color)',
           borderRadius: 'var(--border-radius)',
         }}
         onChange={e => setValue(e.target.value)}
@@ -698,7 +711,7 @@ function DebugInput({
           padding: 'var(--margins-xs) var(--margins-sm)',
           backgroundColor: 'var(--background-primary-color)',
           color: 'var(--text-primary-color)',
-          border: '1px solid var(--border-color)',
+          border: '1px solid var(--borders-color)',
           borderRadius: 'var(--border-radius)',
           cursor: 'pointer',
         }}
@@ -833,7 +846,7 @@ function ProConfigForm({
           padding: 'var(--margins-xs) var(--margins-sm)',
           backgroundColor: 'var(--background-primary-color)',
           color: 'var(--text-primary-color)',
-          border: '1px solid var(--border-color)',
+          border: '1px solid var(--borders-color)',
           borderRadius: 'var(--border-radius)',
         }}
         onChange={e => setConfigDumpValue(e.target.value)}
