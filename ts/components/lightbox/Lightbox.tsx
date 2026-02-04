@@ -29,6 +29,46 @@ type Props = {
 const CONTROLS_WIDTH = 50;
 const CONTROLS_SPACING = 10;
 
+const MainContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  flex-grow: 1;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  padding: 40px 40px 0px;
+  @media screen and (min-width: 799px) {
+    padding: 40px 40px 0px;
+  }
+`;
+
+const ControlsOffset = styled.div`
+  @media screen and (min-width: 799px) {
+    width: ${CONTROLS_WIDTH};
+    margin-right: ${CONTROLS_SPACING};
+    flex-shrink: 0;
+  }
+`;
+
+const Controls = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  justify-content: space-between;
+  margin-left: ${CONTROLS_SPACING},
+  position: fixed;
+  top: 0px;
+  right: 40px;
+  bottom: 0px;
+  width: ${CONTROLS_WIDTH}px;
+  @media screen and (min-width: 799px) {
+    position: relative;
+    top: unset;
+    right: unset;
+    bottom: unset;
+  }
+`;
+
 const styles = {
   container: {
     display: 'flex',
@@ -132,10 +172,10 @@ interface IconButtonProps {
   onClick?: () => void;
   style?: CSSProperties;
   unicode:
-    | LUCIDE_ICONS_UNICODE.CHEVRON_RIGHT
-    | LUCIDE_ICONS_UNICODE.CHEVRON_LEFT
-    | LUCIDE_ICONS_UNICODE.X
-    | LUCIDE_ICONS_UNICODE.ARROW_DOWN_TO_LINE;
+  | LUCIDE_ICONS_UNICODE.CHEVRON_RIGHT
+  | LUCIDE_ICONS_UNICODE.CHEVRON_LEFT
+  | LUCIDE_ICONS_UNICODE.X
+  | LUCIDE_ICONS_UNICODE.ARROW_DOWN_TO_LINE;
 }
 
 const IconButton = ({ onClick, unicode }: IconButtonProps) => {
@@ -287,8 +327,8 @@ export const Lightbox = (props: Props) => {
 
   return (
     <div style={styles.container} role="dialog" onClick={onContainerClick}>
-      <div style={styles.mainContainer}>
-        <div style={styles.controlsOffsetPlaceholder} />
+      <MainContainer>
+        <ControlsOffset />
         <div style={styles.objectParentContainer} role="button">
           <div style={styles.objectContainer}>
             {!isUndefined(contentType) ? (
@@ -302,7 +342,7 @@ export const Lightbox = (props: Props) => {
             {caption ? <div style={styles.caption}>{caption}</div> : null}
           </div>
         </div>
-        <div style={styles.controls}>
+        <Controls>
           <Flex $container={true}>
             <IconButton unicode={LUCIDE_ICONS_UNICODE.X} onClick={handleClose} />
           </Flex>
@@ -314,8 +354,8 @@ export const Lightbox = (props: Props) => {
               style={styles.saveButton}
             />
           ) : null}
-        </div>
-      </div>
+        </Controls>
+      </MainContainer>
       <div style={styles.navigationContainer as any}>
         {onPrevious ? (
           <IconButton unicode={LUCIDE_ICONS_UNICODE.CHEVRON_LEFT} onClick={onPrevious} />

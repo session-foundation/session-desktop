@@ -5,6 +5,7 @@ export const LeftPaneSectionContainer = styled.div`
   width: 100%;
   justify-content: space-between;
   align-items: center;
+  background: var(--background-primary-color);
 
   @media screen and (min-width: 799px) {
     width: var(--actions-panel-width);

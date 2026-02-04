@@ -27,6 +27,7 @@ const StyledLeftPaneSectionHeader = styled(Flex)`
   height: var(--main-view-header-height);
   padding-inline-end: 7px;
   transition: var(--default-duration);
+  background: var(--background-primary-color);
 `;
 
 const SectionTitle = styled(H4)`

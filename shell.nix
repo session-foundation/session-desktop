@@ -4,15 +4,13 @@ pkgs.mkShell {
 
   name = "session-desktop";
   packages = with pkgs; [
-    nodejs_20
+    nodejs_24
     nodeenv
     python314
     cmake
     gnumake
     nodeenv
-        (pkgs.yarn.override {
-          nodejs = null;
-        })
+    (pkgs.yarn.override { nodejs = null; })
   ];
 
   env = {
