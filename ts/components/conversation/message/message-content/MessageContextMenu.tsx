@@ -1,52 +1,28 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
-import {
-  Dispatch,
-  type KeyboardEvent,
-  type MouseEvent,
-  useCallback,
-  useRef,
-  useState,
-  RefObject,
-} from 'react';
+import { Dispatch, type KeyboardEvent, type MouseEvent, useRef } from 'react';
 
 import { isNil, isNumber, isString } from 'lodash';
-import { ItemParams, Menu } from 'react-contexify';
+import { Menu, MenuOnHideCallback, MenuOnShowCallback } from 'react-contexify';
 import styled from 'styled-components';
 import { toNumber } from 'lodash/fp';
-import useClickAway from 'react-use/lib/useClickAway';
-import useUpdate from 'react-use/lib/useUpdate';
 import { getAppDispatch } from '../../../../state/dispatch';
 import { Data } from '../../../../data/data';
 
-import { MessageInteraction } from '../../../../interactions';
-import { replyToMessage } from '../../../../interactions/conversationInteractions';
 import { MessageRenderingProps } from '../../../../models/messageType';
-import { pushUnblockToSend } from '../../../../session/utils/Toast';
-import {
-  openRightPanel,
-  showMessageInfoView,
-  toggleSelectedMessageId,
-} from '../../../../state/ducks/conversations';
+import { openRightPanel, showMessageInfoView } from '../../../../state/ducks/conversations';
 import {
   useMessageAttachments,
-  useMessageBody,
   useMessageDirection,
   useMessageIsDeletable,
   useMessageSender,
   useMessageSenderIsAdmin,
-  useMessageServerTimestamp,
   useMessageStatus,
-  useMessageTimestamp,
 } from '../../../../state/selectors';
 import {
   useSelectedConversationKey,
-  useSelectedIsBlocked,
   useSelectedIsLegacyGroup,
 } from '../../../../state/selectors/selectedConversation';
-import { saveAttachmentToDisk } from '../../../../util/attachment/attachmentsUtil';
-import { Reactions } from '../../../../util/reactions';
 import { SessionContextMenuContainer } from '../../../SessionContextMenuContainer';
-import { MessageReactBar } from './MessageReactBar';
 import { CopyAccountIdMenuItem } from '../../../menu/items/CopyAccountId/CopyAccountIdMenuItem';
 import { Localizer } from '../../../basic/Localizer';
 import { ItemWithDataTestId } from '../../../menu/items/MenuItemWithDataTestId';
@@ -60,11 +36,14 @@ import { tr } from '../../../../localization/localeTools';
 import { sectionActions } from '../../../../state/ducks/section';
 import { useRemoveSenderFromCommunityAdmin } from '../../../menuAndSettingsHooks/useRemoveSenderFromCommunityAdmin';
 import { useAddSenderAsCommunityAdmin } from '../../../menuAndSettingsHooks/useAddSenderAsCommunityAdmin';
-import { closeContextMenus, showContextMenu } from '../../../../util/contextMenu';
+import { showContextMenu } from '../../../../util/contextMenu';
 import { clampNumber } from '../../../../util/maths';
-import { SessionEmojiPanelPopover } from '../../SessionEmojiPanelPopover';
-import { SessionPopoverContent } from '../../../SessionPopover';
-import { useTriggerPosition } from '../../../SessionTooltip';
+import { PopoverTriggerPosition } from '../../../SessionTooltip';
+import { SessionLucideIconButton } from '../../../icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
+import { SpacerSM } from '../../../basic/Text';
+import { SessionIcon } from '../../../icon';
+import { useMessageInteractions } from '../../../../hooks/useMessageInteractions';
 
 export type MessageContextMenuSelectorProps = Pick<
   MessageRenderingProps,
@@ -78,7 +57,11 @@ export type MessageContextMenuSelectorProps = Pick<
   | 'timestamp'
 >;
 
-type Props = { messageId: string; contextMenuId: string; enableReactions: boolean };
+type Props = {
+  messageId: string;
+  contextMenuId: string;
+  setTriggerPosition: Dispatch<PopoverTriggerPosition | null>;
+};
 
 const CONTEXTIFY_MENU_WIDTH_PX = 200;
 const SCREEN_RIGHT_MARGIN_PX = 104;
@@ -139,21 +122,6 @@ const StyledMessageContextMenu = styled.div`
   position: relative;
 `;
 
-/** const StyledEmojiPanelContainer = styled.div<{ x: number; y: number }>`
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 101;
-
-  ${StyledEmojiPanel} {
-    position: absolute;
-    left: ${props => `${props.x}px`};
-    top: ${props => `${props.y}px`};
-  }
-`; */
-
 const CommunityAdminActionItems = ({ messageId }: WithMessageId) => {
   const convoId = useSelectedConversationKey();
 
@@ -180,17 +148,37 @@ const CommunityAdminActionItems = ({ messageId }: WithMessageId) => {
 
   return (
     <>
-      <ItemWithDataTestId onClick={banUserCb}>{tr('banUser')}</ItemWithDataTestId>
-      <ItemWithDataTestId onClick={unbanUserCb}>{tr('banUnbanUser')}</ItemWithDataTestId>
+      <ItemWithDataTestId onClick={banUserCb}>
+        <SessionLucideIconButton
+          iconSize="medium"
+          iconColor="inherit"
+          unicode={LUCIDE_ICONS_UNICODE.USER_ROUND_X}
+        />
+        <SpacerSM />
+        {tr('banUser')}
+      </ItemWithDataTestId>
+      <ItemWithDataTestId onClick={unbanUserCb}>
+        <SessionLucideIconButton
+          iconSize="medium"
+          iconColor="inherit"
+          unicode={LUCIDE_ICONS_UNICODE.USER_ROUND_CHECK}
+        />
+        <SpacerSM />
+        {tr('banUnbanUser')}
+      </ItemWithDataTestId>
       {/* only an admin can promote/remove moderators from a community. Another moderator cannot. */}
       {isSenderAdmin ? (
         removeSenderFromCommunityAdminCb ? (
           <ItemWithDataTestId onClick={removeSenderFromCommunityAdminCb}>
+            <SessionIcon iconType="deleteModerator" iconSize="medium" iconColor="inherit" />
+            <SpacerSM />
             {tr('adminRemoveAsAdmin')}
           </ItemWithDataTestId>
         ) : null
       ) : addSenderAsCommunityAdminCb ? (
         <ItemWithDataTestId onClick={addSenderAsCommunityAdminCb}>
+          <SessionIcon iconType="addModerator" iconSize="medium" iconColor="inherit" />
+          <SpacerSM />
           {tr('adminPromoteToAdmin')}
         </ItemWithDataTestId>
       ) : null}
@@ -221,123 +209,46 @@ export const showMessageInfoOverlay = async ({
 };
 
 export const MessageContextMenu = (props: Props) => {
-  const { messageId, contextMenuId, enableReactions } = props;
+  const { messageId, contextMenuId, setTriggerPosition } = props;
+
+  const { copyText, saveAttachment, reply, select } = useMessageInteractions(messageId);
+
   const dispatch = getAppDispatch();
 
-  const forceUpdate = useUpdate();
   const isLegacyGroup = useSelectedIsLegacyGroup();
-
-  const isSelectedBlocked = useSelectedIsBlocked();
   const convoId = useSelectedConversationKey();
-
   const direction = useMessageDirection(messageId);
   const status = useMessageStatus(messageId);
   const isDeletable = useMessageIsDeletable(messageId);
-  const text = useMessageBody(messageId);
   const attachments = useMessageAttachments(messageId);
-  const timestamp = useMessageTimestamp(messageId);
-  const serverTimestamp = useMessageServerTimestamp(messageId);
   const sender = useMessageSender(messageId);
 
   const isOutgoing = direction === 'outgoing';
   const isSent = status === 'sent' || status === 'read'; // a read message should be replyable
 
-  const emojiPanelRef = useRef<HTMLDivElement>(null);
-  const emojiPanelTriggerRef = useRef<HTMLElement>(null);
-  const emojiReactionBarRef = useRef<HTMLDivElement>(null);
+  const contextMenuRef = useRef<HTMLDivElement | null>(null);
 
-  const [showEmojiPanel, setShowEmojiPanel] = useState<boolean>(false);
-  const [showEmojiBar, setShowEmojiBar] = useState<boolean>(false);
+  const onShow: MenuOnShowCallback = (_, { x, y }) => {
+    const triggerHeight = contextMenuRef.current?.clientHeight ?? 0;
+    const triggerWidth = contextMenuRef.current?.clientWidth ?? 0;
 
-  const contextMenuInternalRef = useRef<HTMLDivElement | null>(null);
-
-  const triggerPos = useTriggerPosition(contextMenuInternalRef);
-
-  const [contextMenuVisible, setContextMenuVisible] = useState<boolean>(false);
-
-  const emojiBarVisible = enableReactions && (contextMenuVisible || showEmojiBar);
-
-  const onShow = (fromHidden: boolean) => {
-    window.log.warn('goblin show');
-    setContextMenuVisible(true);
-  };
-
-  const onHide = () => {
-    window.log.warn('goblin hide');
-    setContextMenuVisible(false);
-  };
-
-  const onReply = useCallback(() => {
-    if (isSelectedBlocked) {
-      pushUnblockToSend();
-      return;
-    }
-    void replyToMessage(messageId);
-  }, [isSelectedBlocked, messageId]);
-
-  const copyText = useCallback(() => {
-    const selection = window.getSelection();
-    const selectedText = selection?.toString().trim();
-    // Note: we want to allow to copy through the "Copy" menu item the currently selected text, if any.
-    MessageInteraction.copyBodyToClipboard(selectedText || text);
-  }, [text]);
-
-  const onSelect = useCallback(() => {
-    dispatch(toggleSelectedMessageId(messageId));
-  }, [dispatch, messageId]);
-
-  const closeEmojiPanel = () => {
-    closeContextMenus();
-    setShowEmojiPanel(false);
-  };
-
-  const openEmojiPanel = () => {
-    closeContextMenus();
-    setShowEmojiPanel(true);
-  };
-
-  const onEmojiClick = async (args: any) => {
-    const emoji = args.native ?? args;
-    closeEmojiPanel();
-    await Reactions.sendMessageReaction(messageId, emoji);
-  };
-
-  const saveAttachment = (e: ItemParams) => {
-    // this is quite dirty but considering that we want the context menu of the message to show on click on the attachment
-    // and the context menu save attachment item to save the right attachment I did not find a better way for now.
-    // Note: If you change this, also make sure to update the `handleContextMenu()` in GenericReadableMessage.tsx
-    const targetAttachmentIndex = isNumber(e?.props?.dataAttachmentIndex)
-      ? e.props.dataAttachmentIndex
-      : 0;
-    e.event.stopPropagation();
-    if (!attachments?.length || !convoId || !sender) {
-      return;
-    }
-
-    if (targetAttachmentIndex > attachments.length) {
-      return;
-    }
-    const messageTimestamp = timestamp || serverTimestamp || 0;
-    void saveAttachmentToDisk({
-      attachment: attachments[targetAttachmentIndex],
-      messageTimestamp,
-      messageSender: sender,
-      conversationId: convoId,
-      index: targetAttachmentIndex,
+    // FIXME: there is a bug with react-contexify where the position is just the event position,
+    // it doesnt include changes to prevent the menu from overflowing the window. This temporary
+    // fix resolves this by mirroring the y-offset adjustment.
+    const yClamped = clampNumber(y, 0, window.innerHeight - triggerHeight);
+    setTriggerPosition({
+      x,
+      // Changes the x-anchor from the center to the far left
+      offsetX: -triggerWidth / 2,
+      y: yClamped,
+      height: triggerHeight,
+      width: triggerWidth,
     });
   };
 
-  useClickAway(emojiPanelRef, () => {
-    if (showEmojiPanel) {
-      closeEmojiPanel();
-    }
-  });
-
-  useClickAway(emojiReactionBarRef, () => {
-    if (emojiBarVisible) {
-      forceUpdate();
-    }
-  });
+  const onHide: MenuOnHideCallback = () => {
+    setTriggerPosition(null);
+  };
 
   if (!convoId) {
     return null;
@@ -367,77 +278,77 @@ export const MessageContextMenu = (props: Props) => {
   }
 
   return (
-    <>
-      {enableReactions ? (
-        <SessionEmojiPanelPopover
-          emojiPanelRef={emojiPanelRef as RefObject<HTMLDivElement>}
-          triggerRef={emojiPanelTriggerRef as RefObject<HTMLElement>}
-          // eslint-disable-next-line @typescript-eslint/no-misused-promises
-          onEmojiClicked={onEmojiClick}
-          open={showEmojiPanel}
-          onClose={closeEmojiPanel}
-        />
-      ) : null}
-      <SessionPopoverContent
-        triggerX={triggerPos.triggerX}
-        triggerY={triggerPos.triggerY}
-        triggerHeight={triggerPos.triggerHeight}
-        // NOTE: Setting triggerWidth to 0 means the trigger center is 0/2=0, so
-        // the popover will anchor from the far left of the trigger
-        triggerWidth={0}
-        open={emojiBarVisible}
-        isTooltip={false}
-        verticalPosition="top"
-        horizontalPosition="right"
-        fallbackContentHeight={48}
-        fallbackContentWidth={295}
-      >
-        {emojiBarVisible ? (
-          <MessageReactBar
-            ref={emojiReactionBarRef as RefObject<HTMLDivElement>}
-            // eslint-disable-next-line @typescript-eslint/no-misused-promises
-            action={onEmojiClick}
-            additionalAction={openEmojiPanel}
-            messageId={messageId}
-            emojiPanelTriggerRef={emojiPanelTriggerRef as RefObject<HTMLElement>}
-          />
-        ) : null}
-      </SessionPopoverContent>
-      <StyledMessageContextMenu>
-        <SessionContextMenuContainer>
-          <Menu
-            ref={contextMenuInternalRef}
-            id={contextMenuId}
-            animation={getMenuAnimation()}
-            onShow={onShow}
-            onHide={onHide}
-          >
-            {attachments?.length && attachments.every(m => !m.pending && m.path) ? (
-              <ItemWithDataTestId onClick={saveAttachment}>{tr('save')}</ItemWithDataTestId>
-            ) : null}
-            <ItemWithDataTestId onClick={copyText}>{tr('copy')}</ItemWithDataTestId>
-            {(isSent || !isOutgoing) && (
-              <ItemWithDataTestId onClick={onReply}>{tr('reply')}</ItemWithDataTestId>
-            )}
-            <ItemWithDataTestId
-              onClick={() => {
-                void showMessageInfoOverlay({ messageId, dispatch });
-              }}
-            >
-              <Localizer token="info" />
+    <StyledMessageContextMenu>
+      <SessionContextMenuContainer>
+        <Menu
+          ref={contextMenuRef}
+          id={contextMenuId}
+          animation={getMenuAnimation()}
+          onShow={onShow}
+          onHide={onHide}
+          viewportMargin={12}
+        >
+          {attachments?.length && attachments.every(m => !m.pending && m.path) ? (
+            <ItemWithDataTestId onClick={saveAttachment}>
+              <SessionLucideIconButton
+                iconSize="medium"
+                iconColor="inherit"
+                unicode={LUCIDE_ICONS_UNICODE.ARROW_DOWN_TO_LINE}
+              />
+              <SpacerSM />
+              {tr('save')}
             </ItemWithDataTestId>
-            {sender ? <CopyAccountIdMenuItem pubkey={sender} /> : null}
-            <RetryItem messageId={messageId} />
-            {isDeletable ? (
-              <ItemWithDataTestId onClick={onSelect}>
-                <Localizer token="select" />
-              </ItemWithDataTestId>
-            ) : null}
-            <DeleteItem messageId={messageId} />
-            <CommunityAdminActionItems messageId={messageId} />
-          </Menu>
-        </SessionContextMenuContainer>
-      </StyledMessageContextMenu>
-    </>
+          ) : null}
+          <ItemWithDataTestId onClick={copyText}>
+            <SessionLucideIconButton
+              iconSize="medium"
+              iconColor="inherit"
+              unicode={LUCIDE_ICONS_UNICODE.COPY}
+            />
+            <SpacerSM />
+            {tr('copy')}
+          </ItemWithDataTestId>
+          {(isSent || !isOutgoing) && (
+            <ItemWithDataTestId onClick={reply}>
+              <SessionLucideIconButton
+                iconSize="medium"
+                iconColor="inherit"
+                unicode={LUCIDE_ICONS_UNICODE.REPLY}
+              />
+              <SpacerSM />
+              {tr('reply')}
+            </ItemWithDataTestId>
+          )}
+          <ItemWithDataTestId
+            onClick={() => {
+              void showMessageInfoOverlay({ messageId, dispatch });
+            }}
+          >
+            <SessionLucideIconButton
+              iconSize="medium"
+              iconColor="inherit"
+              unicode={LUCIDE_ICONS_UNICODE.INFO}
+            />
+            <SpacerSM />
+            <Localizer token="messageInfo" />
+          </ItemWithDataTestId>
+          {sender && !isOutgoing ? <CopyAccountIdMenuItem pubkey={sender} /> : null}
+          <RetryItem messageId={messageId} />
+          {isDeletable ? (
+            <ItemWithDataTestId onClick={select}>
+              <SessionLucideIconButton
+                iconSize="medium"
+                iconColor="inherit"
+                unicode={LUCIDE_ICONS_UNICODE.CIRCLE_CHECK}
+              />
+              <SpacerSM />
+              <Localizer token="select" />
+            </ItemWithDataTestId>
+          ) : null}
+          <DeleteItem messageId={messageId} />
+          <CommunityAdminActionItems messageId={messageId} />
+        </Menu>
+      </SessionContextMenuContainer>
+    </StyledMessageContextMenu>
   );
 };

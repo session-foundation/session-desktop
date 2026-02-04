@@ -11,6 +11,7 @@ import { abbreviateNumber } from '../../../../util/numbers';
 import { nativeEmojiData } from '../../../../util/emoji';
 import { ReactionPopup } from './ReactionPopup';
 import { SessionTooltip } from '../../../SessionTooltip';
+import { THEME_GLOBALS } from '../../../../themes/globals';
 
 const StyledReaction = styled.button<{
   selected: boolean;
@@ -158,10 +159,12 @@ export const Reaction = (props: ReactionProps) => {
 
   return renderTooltip ? (
     <SessionTooltip
+      verticalPosition="top"
       horizontalPosition="right"
       debounceTimeout={50}
       content={content}
       maxContentWidth={'270px'}
+      containerMarginTop={THEME_GLOBALS['--main-view-header-height-number']}
     >
       {reactionContainer}
     </SessionTooltip>

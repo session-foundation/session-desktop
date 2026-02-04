@@ -314,6 +314,7 @@ export type ConversationsStateType = {
   shouldHighlightMessage: boolean;
   nextMessageToPlayId?: string;
   mentionMembers: Array<SessionSuggestionDataItem>;
+  focusedMessageId: string | null;
 };
 
 function buildQuoteId(sender: string, timestamp: number) {
@@ -488,6 +489,7 @@ export function getEmptyConversationState(): ConversationsStateType {
     oldBottomMessageId: null,
     shouldHighlightMessage: false,
     mostRecentMessageId: null,
+    focusedMessageId: null,
   };
 }
 
@@ -688,7 +690,9 @@ const conversationsSlice = createSlice({
     resetSelectedMessageIds(state: ConversationsStateType) {
       return { ...state, selectedMessageIds: [] };
     },
-
+    setFocusedMessageId(state: ConversationsStateType, action: PayloadAction<string | null>) {
+      return { ...state, focusedMessageId: action.payload };
+    },
     conversationAdded(
       state: ConversationsStateType,
       action: PayloadAction<{
@@ -844,6 +848,7 @@ const conversationsSlice = createSlice({
         oldTopMessageId: null,
         oldBottomMessageId: null,
         mentionMembers: [],
+        focusedMessageId: null,
       };
     },
     openConversationToSpecificMessage(
@@ -1100,6 +1105,7 @@ export const {
   removeMessageInfoId,
   addMessageIdToSelection,
   resetSelectedMessageIds,
+  setFocusedMessageId,
   toggleSelectedMessageId,
   quoteMessage,
   showScrollToBottomButton,

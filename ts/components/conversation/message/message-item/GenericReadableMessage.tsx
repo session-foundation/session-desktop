@@ -1,11 +1,4 @@
-import {
-  type MouseEvent,
-  type KeyboardEvent,
-  useCallback,
-  useEffect,
-  useState,
-  useRef,
-} from 'react';
+import { type MouseEvent, type KeyboardEvent, useCallback, useRef, useMemo } from 'react';
 import clsx from 'clsx';
 
 import { useSelector } from 'react-redux';
@@ -24,6 +17,8 @@ import {
 } from '../../../../state/selectors/selectedConversation';
 import { isButtonClickKey } from '../../../../util/keyboardShortcuts';
 import { showMessageContextMenu } from '../message-content/MessageContextMenu';
+import { getAppDispatch } from '../../../../state/dispatch';
+import { setFocusedMessageId } from '../../../../state/ducks/conversations';
 
 export type GenericReadableMessageSelectorProps = Pick<
   MessageRenderingProps,
@@ -70,15 +65,13 @@ const StyledReadableMessage = styled.div<{
 
 export const GenericReadableMessage = (props: Props) => {
   const isDetailView = useIsDetailMessageView();
+  const dispatch = getAppDispatch();
 
   const { ctxMenuID, messageId } = props;
-
-  const [enableReactions, setEnableReactions] = useState(true);
 
   const msgProps = useSelector((state: StateType) =>
     getGenericReadableMessageSelectorProps(state, props.messageId)
   );
-
   const isMessageSelected = useMessageSelected(props.messageId);
   const selectedIsBlocked = useSelectedIsBlocked();
 
@@ -109,13 +102,14 @@ export const GenericReadableMessage = (props: Props) => {
     [handleContextMenu]
   );
 
-  useEffect(() => {
+  const convoReactionsEnabled = useMemo(() => {
     if (msgProps?.convoId) {
       const conversationModel = ConvoHub.use().get(msgProps?.convoId);
       if (conversationModel) {
-        setEnableReactions(conversationModel.hasReactions());
+        return conversationModel.hasReactions();
       }
     }
+    return true;
   }, [msgProps?.convoId]);
 
   const onKeyDown = useCallback(
@@ -134,6 +128,14 @@ export const GenericReadableMessage = (props: Props) => {
     [handleContextMenu]
   );
 
+  const onFocus = () => {
+    dispatch(setFocusedMessageId(messageId));
+  };
+
+  const onBlur = () => {
+    dispatch(setFocusedMessageId(null));
+  };
+
   if (!msgProps) {
     return null;
   }
@@ -150,12 +152,14 @@ export const GenericReadableMessage = (props: Props) => {
       key={`readable-message-${messageId}`}
       onKeyDown={onKeyDown}
       tabIndex={0}
+      onFocus={onFocus}
+      onBlur={onBlur}
     >
       <MessageContentWithStatuses
         ctxMenuID={ctxMenuID}
         messageId={messageId}
         dataTestId={'message-content'}
-        enableReactions={enableReactions}
+        convoReactionsEnabled={convoReactionsEnabled}
       />
     </StyledReadableMessage>
   );

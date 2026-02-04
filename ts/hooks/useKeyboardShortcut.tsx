@@ -1,13 +1,31 @@
 import useKey, { Handler } from 'react-use/lib/useKey';
-import { useIsInScope } from '../state/selectors/modal';
+import { ScopeWithId, ScopeWithoutId, useIsInScope } from '../state/selectors/modal';
 import { ctrlKey, KbdShortcutOptions } from '../util/keyboardShortcuts';
 
-export function useKeyboardShortcut(
-  shortcut: KbdShortcutOptions,
-  handler: Handler | undefined | null,
-  disabled?: boolean | (() => boolean)
-) {
-  const inScope = useIsInScope(shortcut.scope);
+type BaseShortcutOptions = {
+  shortcut: KbdShortcutOptions;
+  handler: Handler | undefined | null;
+  disabled?: boolean | (() => boolean);
+};
+
+type ShortcutOptionsWithoutId = BaseShortcutOptions & {
+  shortcut: KbdShortcutOptions & { scope: ScopeWithoutId };
+  scopeId?: never;
+};
+
+type ShortcutOptionsWithId = BaseShortcutOptions & {
+  shortcut: KbdShortcutOptions & { scope: ScopeWithId };
+  scopeId: string;
+};
+
+type ShortcutOptions = ShortcutOptionsWithoutId | ShortcutOptionsWithId;
+
+export function useKeyboardShortcut({ shortcut, handler, disabled, scopeId }: ShortcutOptions) {
+  const inScope = useIsInScope(
+    shortcut.scope === 'message'
+      ? { scope: shortcut.scope, scopeId: scopeId as string }
+      : { scope: shortcut.scope }
+  );
 
   // NOTE: we pass handler in so we can type guard it
   const isDisabled = (_handler: Handler | undefined | null): _handler is undefined | null => {

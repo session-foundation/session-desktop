@@ -83,15 +83,15 @@ export const SessionSearchInput = ({ searchType }: { searchType: SearchType }) =
   const isDisabled = () =>
     !(inputRef.current !== null && inputRef.current !== document.activeElement);
 
-  useKeyboardShortcut(
-    KbdShortcut.conversationListSearch,
-    () => {
+  useKeyboardShortcut({
+    shortcut: KbdShortcut.conversationListSearch,
+    handler: () => {
       if (!isDisabled() && inputRef.current) {
         inputRef.current.focus();
       }
     },
-    isDisabled
-  );
+    disabled: isDisabled,
+  });
 
   // just after onboard we only have a conversation with ourself
   if (convoCount <= 1) {

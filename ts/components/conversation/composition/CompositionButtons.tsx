@@ -28,7 +28,11 @@ export const AddStagedAttachmentButton = ({ onClick }: CompositionButtonProps) =
   const isBlocked = useSelectedIsBlocked();
   const disabled = isOutgoingRequest || isBlocked;
 
-  useKeyboardShortcut(KbdShortcut.conversationUploadAttachment, onClick, disabled);
+  useKeyboardShortcut({
+    shortcut: KbdShortcut.conversationUploadAttachment,
+    handler: onClick,
+    disabled,
+  });
   return (
     <SessionLucideIconButton
       unicode={LUCIDE_ICONS_UNICODE.PLUS}
@@ -59,7 +63,10 @@ export const StartRecordingButton = ({ onClick }: CompositionButtonProps) => {
 
 export const ToggleEmojiButton = forwardRef<HTMLButtonElement, CompositionButtonProps>(
   (props, ref) => {
-    useKeyboardShortcut(KbdShortcut.conversationToggleEmojiPicker, props.onClick);
+    useKeyboardShortcut({
+      shortcut: KbdShortcut.conversationToggleEmojiPicker,
+      handler: props.onClick,
+    });
     return (
       <SessionLucideIconButton
         unicode={LUCIDE_ICONS_UNICODE.SMILE_PLUS}

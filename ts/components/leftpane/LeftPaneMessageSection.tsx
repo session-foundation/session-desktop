@@ -93,51 +93,51 @@ function openConversation(id: string) {
 }
 
 function useConversationListKeyboardShortcuts(conversationIds: Array<string>) {
-  useKeyboardShortcut(
-    KbdShortcut.conversationNavigation1,
-    () => void openConversation(conversationIds[0]),
-    !conversationIds[0]
-  );
-  useKeyboardShortcut(
-    KbdShortcut.conversationNavigation2,
-    () => void openConversation(conversationIds[1]),
-    !conversationIds[1]
-  );
-  useKeyboardShortcut(
-    KbdShortcut.conversationNavigation3,
-    () => void openConversation(conversationIds[2]),
-    !conversationIds[2]
-  );
-  useKeyboardShortcut(
-    KbdShortcut.conversationNavigation4,
-    () => void openConversation(conversationIds[3]),
-    !conversationIds[3]
-  );
-  useKeyboardShortcut(
-    KbdShortcut.conversationNavigation5,
-    () => void openConversation(conversationIds[4]),
-    !conversationIds[4]
-  );
-  useKeyboardShortcut(
-    KbdShortcut.conversationNavigation6,
-    () => void openConversation(conversationIds[5]),
-    !conversationIds[5]
-  );
-  useKeyboardShortcut(
-    KbdShortcut.conversationNavigation7,
-    () => void openConversation(conversationIds[6]),
-    !conversationIds[6]
-  );
-  useKeyboardShortcut(
-    KbdShortcut.conversationNavigation8,
-    () => void openConversation(conversationIds[7]),
-    !conversationIds[7]
-  );
-  useKeyboardShortcut(
-    KbdShortcut.conversationNavigation9,
-    () => void openConversation(conversationIds[8]),
-    !conversationIds[8]
-  );
+  useKeyboardShortcut({
+    shortcut: KbdShortcut.conversationNavigation1,
+    handler: () => void openConversation(conversationIds[0]),
+    disabled: !conversationIds[0],
+  });
+  useKeyboardShortcut({
+    shortcut: KbdShortcut.conversationNavigation2,
+    handler: () => void openConversation(conversationIds[1]),
+    disabled: !conversationIds[1],
+  });
+  useKeyboardShortcut({
+    shortcut: KbdShortcut.conversationNavigation3,
+    handler: () => void openConversation(conversationIds[2]),
+    disabled: !conversationIds[2],
+  });
+  useKeyboardShortcut({
+    shortcut: KbdShortcut.conversationNavigation4,
+    handler: () => void openConversation(conversationIds[3]),
+    disabled: !conversationIds[3],
+  });
+  useKeyboardShortcut({
+    shortcut: KbdShortcut.conversationNavigation5,
+    handler: () => void openConversation(conversationIds[4]),
+    disabled: !conversationIds[4],
+  });
+  useKeyboardShortcut({
+    shortcut: KbdShortcut.conversationNavigation6,
+    handler: () => void openConversation(conversationIds[5]),
+    disabled: !conversationIds[5],
+  });
+  useKeyboardShortcut({
+    shortcut: KbdShortcut.conversationNavigation7,
+    handler: () => void openConversation(conversationIds[6]),
+    disabled: !conversationIds[6],
+  });
+  useKeyboardShortcut({
+    shortcut: KbdShortcut.conversationNavigation8,
+    handler: () => void openConversation(conversationIds[7]),
+    disabled: !conversationIds[7],
+  });
+  useKeyboardShortcut({
+    shortcut: KbdShortcut.conversationNavigation9,
+    handler: () => void openConversation(conversationIds[8]),
+    disabled: !conversationIds[8],
+  });
 }
 
 function useConversationList() {

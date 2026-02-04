@@ -82,6 +82,7 @@ type ThemeGlobals = {
 
   /* Sizes */
   '--main-view-header-height': string;
+  '--main-view-header-height-number': number;
   '--composition-container-height': string;
   '--search-input-height': string;
   // The min height of the panel button container.
@@ -237,6 +238,7 @@ export const THEME_GLOBALS: ThemeGlobals = {
   '--border-radius-message-box': '16px',
 
   '--main-view-header-height': '68px',
+  '--main-view-header-height-number': 68,
   '--composition-container-height': '60px',
   '--search-input-height': '34px',
   '--panel-button-container-min-height': '70px',

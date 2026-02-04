@@ -15,19 +15,16 @@ export function SessionEmojiPanelPopover({
   open,
   onClose,
 }: {
-  triggerRef: RefObject<HTMLElement>;
+  triggerRef: RefObject<HTMLButtonElement | null>;
   open: boolean;
-  emojiPanelRef: RefObject<HTMLDivElement>;
+  emojiPanelRef: RefObject<HTMLDivElement | null>;
   onEmojiClicked: (emoji: FixedBaseEmoji) => void;
   onClose: () => void;
 }) {
   const triggerPos = useTriggerPosition(triggerRef);
   return (
     <SessionPopoverContent
-      triggerX={triggerPos.triggerX}
-      triggerY={triggerPos.triggerY}
-      triggerHeight={triggerPos.triggerHeight}
-      triggerWidth={triggerPos.triggerWidth}
+      triggerPosition={triggerPos}
       open={open}
       isTooltip={false}
       verticalPosition="bottom"

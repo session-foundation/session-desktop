@@ -22,6 +22,7 @@ const filesIgnoredByReactCompiler = new Set(
   [
     'dist/ts/components/conversation/composition/CompositionTextArea.js',
     'dist/ts/components/conversation/SessionStagedLinkPreview.js',
+    'dist/ts/components/conversation/message/message-content/MessageReactBar.js',
   ].map(f => path.join(PROJECT_ROOT, f))
 );
 

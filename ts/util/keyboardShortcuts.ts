@@ -10,16 +10,21 @@ export function debugKeyboardShortcutsLog(...args: Array<unknown>) {
   window.log.debug('[debugKeyboardShortcuts]', ...args);
 }
 
-export function isButtonClickKey(e: KeyboardEvent<HTMLDivElement>) {
+export function isButtonClickKey(e: KeyboardEvent<HTMLElement>) {
   return e.key === 'Enter' || e.code === 'Space';
 }
 
-export function createButtonOnKeyDownForClickEventHandler(callback: () => void) {
-  return (e: KeyboardEvent<HTMLDivElement>) => {
+export function createButtonOnKeyDownForClickEventHandler(
+  callback: () => void,
+  allowPropagation?: boolean
+) {
+  return (e: KeyboardEvent<HTMLElement>) => {
     debugKeyboardShortcutsLog(`createButtonOnKeyDownForClickEventHandler fn called with: `, e);
     if (isButtonClickKey(e)) {
-      e.preventDefault();
-      e.stopPropagation();
+      if (!allowPropagation) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
       callback();
     }
   };
@@ -39,12 +44,12 @@ export type KbdShortcutOptions = {
 export const ctrlKey = isMacOS() ? 'metaKey' : 'ctrlKey';
 export const ctrlKeyName = isMacOS() ? 'cmd' : 'ctrl';
 
-const baseConversationNavigation: KbdShortcutOptions = {
+const baseConversationNavigation = {
   name: 'Navigate to Conversation',
   withCtrl: true,
   keys: ['1-9'],
   scope: 'conversationList',
-};
+} satisfies KbdShortcutOptions;
 type ConversationNavKeys = `conversationNavigation${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9}`;
 
 const conversationNavigation = Object.fromEntries(
@@ -52,7 +57,7 @@ const conversationNavigation = Object.fromEntries(
     `conversationNavigation${i + 1}`,
     { ...baseConversationNavigation, keys: [`${i + 1}`] },
   ])
-) as Record<ConversationNavKeys, KbdShortcutOptions>;
+) as Record<ConversationNavKeys, typeof baseConversationNavigation>;
 
 // TODO: These should be user-editable. It should be simple to store custom user keybinds
 // in the database and its an often overlocked feature with little lift and massive UX gains.
@@ -97,6 +102,28 @@ export const KbdShortcut = {
     withCtrl: true,
     keys: ['.'],
   },
+  messageToggleReactionBar: {
+    name: 'Toggle Reaction Bar for message',
+    scope: 'message',
+    keys: ['e'],
+  },
+  messageToggleReply: {
+    name: 'Toggle Reply for message',
+    scope: 'conversationList',
+    keys: ['r'],
+  },
+  messageCopyText: {
+    name: 'Copy message text',
+    scope: 'conversationList',
+    withCtrl: true,
+    keys: ['c'],
+  },
+  messageSaveAttachment: {
+    name: 'Save message attachment',
+    scope: 'message',
+    withCtrl: true,
+    keys: ['s'],
+  },
   ...conversationNavigation,
 } as const satisfies Record<string, KbdShortcutOptions>;
 
@@ -113,5 +140,6 @@ export const KbdShortcutInformation: Record<string, Array<KbdShortcutOptions>> =
     KbdShortcut.conversationToggleEmojiPicker,
     KbdShortcut.conversationSettingsModal,
   ],
+  message: [KbdShortcut.messageCopyText, KbdShortcut.messageToggleReply],
   view: [KbdShortcut.zoomIn, KbdShortcut.zoomOut],
 };

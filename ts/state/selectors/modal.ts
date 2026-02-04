@@ -129,18 +129,30 @@ export function useIsTopModal(modalId: ModalId) {
   return !modalStack?.length || modalStack[modalStack.length - 1] === modalId;
 }
 
-export type FocusScope = 'global' | 'conversationList' | ModalId;
+export function useFocusedMessageId() {
+  return useSelector((state: StateType) => state.conversations.focusedMessageId); // that [] is needed for the password window
+}
+export type FocusScope = 'global' | 'conversationList' | 'message' | ModalId;
 
-export function useIsInScope(scope: FocusScope) {
+export type ScopeWithId = 'message';
+export type ScopeWithoutId = Exclude<FocusScope, ScopeWithId>;
+
+type ScopeArgs =
+  | { scope: ScopeWithoutId; scopeId?: never }
+  | { scope: ScopeWithId; scopeId: string };
+
+export function useIsInScope({ scope, scopeId }: ScopeArgs) {
   const modalStack = useModalStack();
+  const focusedMessageId = useFocusedMessageId();
 
   if (scope === 'global') {
     return true;
   }
-
+  if (scope === 'message') {
+    return scopeId && scopeId === focusedMessageId;
+  }
   if (scope === 'conversationList') {
     return !modalStack?.length;
   }
-
   return modalStack[modalStack.length - 1] === scope;
 }

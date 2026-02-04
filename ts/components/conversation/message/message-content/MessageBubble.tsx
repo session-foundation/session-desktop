@@ -2,6 +2,7 @@ import { useState, useRef, type ReactNode, useLayoutEffect } from 'react';
 import styled, { css } from 'styled-components';
 import { Constants } from '../../../../session';
 import { tr } from '../../../../localization/localeTools';
+import { createButtonOnKeyDownForClickEventHandler } from '../../../../util/keyboardShortcuts';
 
 export const StyledMessageBubble = styled.div<{ $expanded: boolean }>`
   position: relative;
@@ -47,6 +48,8 @@ export function MessageBubble({ children }: { children: ReactNode }) {
     // we cannot "show less", only show more
     setExpanded(true);
   };
+
+  const onKeyDown = createButtonOnKeyDownForClickEventHandler(onClick);
 
   /**
    * Used to re-trigger the "Read More" layout effect when the message content changes scroll height.
@@ -99,7 +102,9 @@ export function MessageBubble({ children }: { children: ReactNode }) {
         {children}
       </StyledMessageBubble>
       {showReadMore && !expanded ? (
-        <ReadMoreButton onClick={onClick}>{tr('messageBubbleReadMore')}</ReadMoreButton>
+        <ReadMoreButton onClick={onClick} onKeyDown={onKeyDown}>
+          {tr('messageBubbleReadMore')}
+        </ReadMoreButton>
       ) : null}
     </>
   );

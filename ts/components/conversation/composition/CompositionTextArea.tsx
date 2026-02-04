@@ -50,6 +50,7 @@ import { Mention } from '../AddMentions';
 import { useDebugInputCommands } from '../../dialog/debug/hooks/useDebugInputCommands';
 import { useKeyboardShortcut } from '../../../hooks/useKeyboardShortcut';
 import { KbdShortcut } from '../../../util/keyboardShortcuts';
+import { PopoverTriggerPosition } from '../../SessionTooltip';
 
 type Props = {
   initialDraft: string;
@@ -447,8 +448,7 @@ export function CompositionTextArea(props: Props) {
   const [focusedMentionItem, setFocusedMentionItem] = useState<SessionSuggestionDataItem | null>(
     null
   );
-  const [popoverX, setPopoverX] = useState<number | null>(null);
-  const [popoverY, setPopoverY] = useState<number | null>(null);
+  const [popoverTriggerPos, setPopoverTriggerPos] = useState<PopoverTriggerPosition | null>(null);
 
   const selectedConversationKey = useSelectedConversationKey();
   const messagePlaceHolder = useMessagePlaceholder();
@@ -459,7 +459,7 @@ export function CompositionTextArea(props: Props) {
   const handleMentionCleanup = useCallback(() => {
     setMention(null);
     setFocusedMentionItem(null);
-    setPopoverX(null);
+    setPopoverTriggerPos(null);
   }, []);
 
   /**
@@ -505,8 +505,7 @@ export function CompositionTextArea(props: Props) {
   const handleUpdatePopoverPosition = useCallback(() => {
     const pos = inputRef.current?.getCaretCoordinates();
     if (pos) {
-      setPopoverX(pos.left);
-      setPopoverY(pos.top - 6);
+      setPopoverTriggerPos({ x: pos.left, y: pos.top - 6, height: 18, width: 1 });
     }
   }, [inputRef]);
 
@@ -566,17 +565,20 @@ export function CompositionTextArea(props: Props) {
     [handleMentionCheck, selectedConversationKey, setDraft]
   );
 
-  useKeyboardShortcut(KbdShortcut.conversationFocusTextArea, () => {
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
+  useKeyboardShortcut({
+    shortcut: KbdShortcut.conversationFocusTextArea,
+    handler: () => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    },
   });
 
   if (!selectedConversationKey) {
     return null;
   }
 
-  const showPopover = !!(popoverX && popoverY && popoverContent);
+  const showPopover = !!(popoverTriggerPos && popoverContent);
 
   return (
     <>
@@ -601,11 +603,9 @@ export function CompositionTextArea(props: Props) {
         <SessionPopoverContent
           className="mention-container"
           open={showPopover}
-          triggerX={popoverX}
-          triggerY={popoverY}
-          triggerHeight={18}
-          triggerWidth={1}
+          triggerPosition={popoverTriggerPos}
           horizontalPosition="right"
+          verticalPosition="top"
         >
           {popoverContent}
         </SessionPopoverContent>

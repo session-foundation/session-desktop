@@ -64,7 +64,10 @@ export const ConversationHeaderWithDetails = () => {
           : showConvoSettingsCb({ settingsModalPage: 'default' })
     : undefined;
 
-  useKeyboardShortcut(KbdShortcut.conversationSettingsModal, showConvoSettings);
+  useKeyboardShortcut({
+    shortcut: KbdShortcut.conversationSettingsModal,
+    handler: showConvoSettings,
+  });
 
   if (!selectedConvoKey) {
     return null;

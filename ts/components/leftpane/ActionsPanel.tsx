@@ -123,22 +123,24 @@ function usePeriodicFetchRevocationList() {
 function useKeyboardShortcutsModalKeyboardShortcut() {
   const dispatch = getAppDispatch();
   const modalState = useKeyboardShortcutsModal();
-  return useKeyboardShortcut(KbdShortcut.keyboardShortcutModal, () =>
-    dispatch(updateKeyboardShortcutsMenuModal(modalState ? null : {}))
-  );
+  return useKeyboardShortcut({
+    shortcut: KbdShortcut.keyboardShortcutModal,
+    handler: () => dispatch(updateKeyboardShortcutsMenuModal(modalState ? null : {})),
+  });
 }
 
 function useUserSettingsModalKeyboardShortcut() {
   const dispatch = getAppDispatch();
   const modalState = useUserSettingsModal();
-  return useKeyboardShortcut(KbdShortcut.userSettingsModal, () =>
-    dispatch(userSettingsModal(modalState ? null : { userSettingsPage: 'default' }))
-  );
+  return useKeyboardShortcut({
+    shortcut: KbdShortcut.userSettingsModal,
+    handler: () => dispatch(userSettingsModal(modalState ? null : { userSettingsPage: 'default' })),
+  });
 }
 
 function useNewConversationKeyboardShortcut() {
-  const callback = useNewConversationCallback();
-  return useKeyboardShortcut(KbdShortcut.newConversation, callback);
+  const handler = useNewConversationCallback();
+  return useKeyboardShortcut({ shortcut: KbdShortcut.newConversation, handler });
 }
 
 function useDebugThemeSwitch() {

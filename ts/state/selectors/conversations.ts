@@ -534,6 +534,9 @@ export const getSelectedMessageIds = (state: StateType): Array<string> =>
 export const getIsMessageSelectionMode = (state: StateType): boolean =>
   Boolean(getSelectedMessageIds(state).length);
 
+export const getFocusedMessageId = (state: StateType): string | null =>
+  state.conversations.focusedMessageId;
+
 export const getQuotedMessage = (state: StateType): ReplyingToMessageProps | undefined =>
   state.conversations.quotedMessage;
 

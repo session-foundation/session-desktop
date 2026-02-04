@@ -22,6 +22,10 @@ import { TimerNotification } from './TimerNotification';
 import { DataExtractionNotification } from './message/message-item/DataExtractionNotification';
 import { InteractionNotification } from './message/message-item/InteractionNotification';
 import type { WithMessageId } from '../../session/types/with';
+import { useFocusedMessageId } from '../../state/selectors/modal';
+import { useKeyboardShortcut } from '../../hooks/useKeyboardShortcut';
+import { KbdShortcut } from '../../util/keyboardShortcuts';
+import { useMessageInteractions } from '../../hooks/useMessageInteractions';
 
 function isNotTextboxEvent(e: KeyboardEvent) {
   return (e?.target as any)?.type === undefined;
@@ -56,6 +60,11 @@ export const SessionMessagesList = (props: {
   const [didScroll, setDidScroll] = useState(false);
   const oldTopMessageId = useSelector(getOldTopMessageId);
   const oldBottomMessageId = useSelector(getOldBottomMessageId);
+  const focusedMessageId = useFocusedMessageId();
+  const { reply, copyText } = useMessageInteractions(focusedMessageId);
+
+  useKeyboardShortcut({ shortcut: KbdShortcut.messageToggleReply, handler: reply });
+  useKeyboardShortcut({ shortcut: KbdShortcut.messageCopyText, handler: copyText });
 
   useLayoutEffect(() => {
     const newTopMessageId = messagesProps.length
