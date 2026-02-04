@@ -2,22 +2,18 @@ import { Submenu } from 'react-contexify';
 import type { JSX } from 'react';
 import { useConvoIdFromContext } from '../../contexts/ConvoIdContext';
 import {
-  useIsGroupV2,
   useIsIncomingRequest,
   useIsPrivate,
   useIsPrivateAndFriend,
   useNotificationSetting,
 } from '../../hooks/useParamSelector';
 import {
-  declineConversationWithConfirm,
-  handleAcceptConversationRequest,
+  handleAcceptConversationRequestWithoutConfirm,
   markAllReadByConvoId,
 } from '../../interactions/conversationInteractions';
 import { ConvoHub } from '../../session/conversations';
 import { PubKey } from '../../session/types';
-import { useConversationIdOrigin } from '../../state/selectors/conversations';
 import { useIsMessageRequestOverlayShown } from '../../state/selectors/section';
-import { useSelectedConversationKey } from '../../state/selectors/selectedConversation';
 import { ItemWithDataTestId } from './items/MenuItemWithDataTestId';
 import { NetworkTime } from '../../util/NetworkTime';
 import { useShowNotificationFor } from '../menuAndSettingsHooks/useShowNotificationFor';
@@ -38,6 +34,7 @@ import { Localizer } from '../basic/Localizer';
 import { useChangeNickname } from '../menuAndSettingsHooks/useChangeNickname';
 import { useShowNoteToSelfCb } from '../menuAndSettingsHooks/useShowNoteToSelf';
 import { useShowUserDetailsCbFromConversation } from '../menuAndSettingsHooks/useShowUserDetailsCb';
+import { useDeclineMessageRequest } from '../menuAndSettingsHooks/useDeclineMessageRequest';
 
 /** Menu items standardized */
 
@@ -290,9 +287,8 @@ export const AcceptMsgRequestMenuItem = () => {
   if (isRequest && (isPrivate || PubKey.is03Pubkey(convoId))) {
     return (
       <ItemWithDataTestId
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        onClick={async () => {
-          await handleAcceptConversationRequest({
+        onClick={() => {
+          void handleAcceptConversationRequestWithoutConfirm({
             convoId,
             approvalMessageTimestamp: NetworkTime.now(),
           });
@@ -308,59 +304,32 @@ export const AcceptMsgRequestMenuItem = () => {
 
 export const DeclineMsgRequestMenuItem = () => {
   const convoId = useConvoIdFromContext();
-  const isRequest = useIsIncomingRequest(convoId);
-  const isPrivate = useIsPrivate(convoId);
-  const selected = useSelectedConversationKey();
-  const isGroupV2 = useIsGroupV2(convoId);
-  if ((isPrivate || isGroupV2) && isRequest) {
-    return (
-      <ItemWithDataTestId
-        onClick={() => {
-          declineConversationWithConfirm({
-            conversationId: convoId,
-            syncToDevices: true,
-            alsoBlock: false,
-            currentlySelectedConvo: selected || undefined,
-            conversationIdOrigin: null,
-          });
-        }}
-        dataTestId="delete-menu-item"
-      >
-        {tr('delete')}
-      </ItemWithDataTestId>
-    );
+  const declineCb = useDeclineMessageRequest({ conversationId: convoId, alsoBlock: false });
+
+  if (!declineCb) {
+    return null;
   }
-  return null;
+
+  return (
+    <ItemWithDataTestId onClick={declineCb} dataTestId="delete-menu-item">
+      {tr('delete')}
+    </ItemWithDataTestId>
+  );
 };
 
 export const DeclineAndBlockMsgRequestMenuItem = () => {
   const convoId = useConvoIdFromContext();
-  const isRequest = useIsIncomingRequest(convoId);
-  const selected = useSelectedConversationKey();
-  const isPrivate = useIsPrivate(convoId);
-  const isGroupV2 = useIsGroupV2(convoId);
-  const convoOrigin = useConversationIdOrigin(convoId);
 
-  if (isRequest && (isPrivate || (isGroupV2 && convoOrigin))) {
-    // to block the author of a groupv2 invite we need the convoOrigin set
-    return (
-      <ItemWithDataTestId
-        onClick={() => {
-          declineConversationWithConfirm({
-            conversationId: convoId,
-            syncToDevices: true,
-            alsoBlock: true,
-            currentlySelectedConvo: selected || undefined,
-            conversationIdOrigin: convoOrigin ?? null,
-          });
-        }}
-        dataTestId="block-menu-item"
-      >
-        {tr('block')}
-      </ItemWithDataTestId>
-    );
+  const declineAndBlockCb = useDeclineMessageRequest({ conversationId: convoId, alsoBlock: true });
+
+  if (!declineAndBlockCb) {
+    return null;
   }
-  return null;
+  return (
+    <ItemWithDataTestId onClick={declineAndBlockCb} dataTestId="block-menu-item">
+      {tr('block')}
+    </ItemWithDataTestId>
+  );
 };
 
 export const NotificationForConvoMenuItem = (): JSX.Element | null => {

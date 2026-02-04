@@ -117,7 +117,7 @@ import {
   getSubscriberCountOutsideRedux,
 } from '../state/selectors/sogsRoomInfo'; // decide it it makes sense to move this to a redux slice?
 
-import { handleAcceptConversationRequest } from '../interactions/conversationInteractions';
+import { handleAcceptConversationRequestWithoutConfirm } from '../interactions/conversationInteractions';
 import { DisappearingMessages } from '../session/disappearing_messages';
 import { GroupUpdateInfoChangeMessage } from '../session/messages/outgoing/controlMessage/group_v2/to_group/GroupUpdateInfoChangeMessage';
 import { FetchMsgExpirySwarm } from '../session/utils/job_runners/jobs/FetchMsgExpirySwarmJob';
@@ -699,8 +699,8 @@ export class ConversationModel extends Model<ConversationAttributes> {
         return;
       }
 
-      // handleAcceptConversationRequest will take care of sending response depending on the type of conversation, if needed
-      await handleAcceptConversationRequest({
+      // handleAcceptConversationRequestWithoutConfirm will take care of sending response depending on the type of conversation, if needed
+      await handleAcceptConversationRequestWithoutConfirm({
         convoId: this.id,
         approvalMessageTimestamp: NetworkTime.now() - 100,
       });
@@ -814,7 +814,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
   /**
    * When you have accepted another users message request
-   * Note: you shouldn't need to use this directly. Instead use `handleAcceptConversationRequest()`
+   * Note: you shouldn't need to use this directly. Instead use `handleAcceptConversationRequestWithoutConfirm()`
    */
   public async addOutgoingApprovalMessage(timestamp: number) {
     const msg = await this.addSingleOutgoingMessage({
@@ -846,7 +846,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
   /**
    * Sends an accepted message request response to a private chat
    * Currently, we never send anything for denied message requests.
-   * Note: you shouldn't need to use this directly. Instead use `handleAcceptConversationRequest()`
+   * Note: you shouldn't need to use this directly. Instead use `handleAcceptConversationRequestWithoutConfirm()`
    */
   public async sendMessageRequestResponse(msg: MessageModel) {
     if (!this.isPrivate()) {
@@ -2411,8 +2411,8 @@ export class ConversationModel extends Model<ConversationAttributes> {
         return;
       }
 
-      // handleAcceptConversationRequest will take care of sending response depending on the type of conversation
-      await handleAcceptConversationRequest({
+      // handleAcceptConversationRequestWithoutConfirm will take care of sending response depending on the type of conversation
+      await handleAcceptConversationRequestWithoutConfirm({
         convoId: this.id,
         approvalMessageTimestamp: NetworkTime.now() - 100,
       });

@@ -4,7 +4,6 @@ import { tr } from '../../localization/localeTools';
 import { ConvoHub } from '../../session/conversations';
 import { updateConfirmModal, updateConversationSettingsModal } from '../../state/ducks/modalDialog';
 import { SessionButtonColor } from '../basic/SessionButton';
-import { leaveGroupOrCommunityByConvoId } from '../../interactions/conversationInteractions';
 
 export function useShowLeaveCommunityCb(conversationId?: string) {
   const isPublic = useIsPublic(conversationId);
@@ -16,23 +15,12 @@ export function useShowLeaveCommunityCb(conversationId?: string) {
   }
 
   return () => {
-    const conversation = ConvoHub.use().get(conversationId);
-
-    if (!conversation.isOpenGroupV2()) {
-      throw new Error('showLeaveCommunityByConvoId() called with a non public convo.');
-    }
-
     const onClickClose = () => {
       dispatch(updateConfirmModal(null));
     };
 
     const onClickOk = async () => {
-      await leaveGroupOrCommunityByConvoId({
-        conversationId,
-        isPublic: true,
-        sendLeaveMessage: false,
-        onClickClose,
-      });
+      await ConvoHub.use().deleteCommunity(conversationId);
       // The conversation was just removed, we need to remove the settings modal about it
       // so the modal doesn't appear empty.
       dispatch(updateConversationSettingsModal(null));

@@ -234,7 +234,7 @@ export const FlagEnumDropdownInput = ({
           padding: 'var(--margins-sm) var(--margins-md)',
           backgroundColor: 'var(--background-primary-color)',
           color: 'var(--text-primary-color)',
-          border: '1px solid var(--borders-color)',
+          border: '1px solid var(--default-borders)',
           borderRadius: 'var(--border-radius)',
           cursor: 'pointer',
         }}
@@ -339,7 +339,7 @@ export const FlagIntegerInput = ({
             padding: 'var(--margins-xs) var(--margins-sm)',
             backgroundColor: 'var(--background-primary-color)',
             color: 'var(--text-primary-color)',
-            border: '1px solid var(--borders-color)',
+            border: 'var(--default-borders)',
             borderRadius: 'var(--border-radius)',
             cursor: 'pointer',
           }}
@@ -647,7 +647,7 @@ export function FeatureFlagDumper({ forceUpdate }: { forceUpdate: () => void }) 
           padding: 'var(--margins-xs) var(--margins-sm)',
           backgroundColor: 'var(--background-primary-color)',
           color: 'var(--text-primary-color)',
-          border: '1px solid var(--borders-color)',
+          border: 'var(--default-borders)',
           borderRadius: 'var(--border-radius)',
         }}
         onChange={e => setValue(e.target.value)}
@@ -710,7 +710,7 @@ function DebugInput({
           padding: 'var(--margins-xs) var(--margins-sm)',
           backgroundColor: 'var(--background-primary-color)',
           color: 'var(--text-primary-color)',
-          border: '1px solid var(--borders-color)',
+          border: 'var(--default-borders)',
           borderRadius: 'var(--border-radius)',
           cursor: 'pointer',
         }}
@@ -845,7 +845,7 @@ function ProConfigForm({
           padding: 'var(--margins-xs) var(--margins-sm)',
           backgroundColor: 'var(--background-primary-color)',
           color: 'var(--text-primary-color)',
-          border: '1px solid var(--borders-color)',
+          border: 'var(--default-borders)',
           borderRadius: 'var(--border-radius)',
         }}
         onChange={e => setConfigDumpValue(e.target.value)}
