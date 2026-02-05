@@ -787,7 +787,10 @@ function searchMessages(query: string, limit: number) {
   }
 
   // JSONRow<{ snippet: string }>
-  const params = { query: sanitizeFTS5Query(trimmedQuery), limit };
+  const params = {
+    query: sanitizeFTS5Query(trimmedQuery),
+    limit,
+  };
 
   /**
    * This is overly complex, but on a large DB the ORDER BY is very slow.

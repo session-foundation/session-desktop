@@ -972,6 +972,11 @@ ipc.on('restart', () => {
   app.quit();
 });
 
+ipc.on('force-exit', () => {
+  console.log('Force app exit requested from renderer process');
+  app.exit(1);
+});
+
 ipc.on('resetDatabase', async () => {
   await removeDB();
   app.relaunch();
