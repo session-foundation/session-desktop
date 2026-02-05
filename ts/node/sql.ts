@@ -769,13 +769,28 @@ function getPubkeysInPublicConversation(conversationId: string) {
   return map(rows, row => row.source);
 }
 
+function sanitizeFTS5Query(query: string) {
+  // Escape double quotes by doubling them
+  const sanitized = query.replace(/"/g, '""');
+
+  // Wrap in quotes to treat as a phrase (prevents FTS5 syntax errors)
+  return `"${sanitized}"`;
+}
+
 function searchMessages(query: string, limit: number) {
   if (!limit) {
     throw new Error('searchMessages limit must be set');
   }
+  const trimmedQuery = query?.trim();
+  if (!trimmedQuery) {
+    return [];
+  }
 
   // JSONRow<{ snippet: string }>
-  const params = { query, limit };
+  const params = {
+    query: sanitizeFTS5Query(trimmedQuery),
+    limit,
+  };
 
   /**
    * This is overly complex, but on a large DB the ORDER BY is very slow.
