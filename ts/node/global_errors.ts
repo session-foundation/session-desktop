@@ -1,5 +1,7 @@
 import { app, dialog, clipboard } from 'electron';
 import os from 'node:os';
+import { isObject } from 'lodash';
+
 import { reallyJsonStringify } from '../util/reallyJsonStringify';
 import { Errors } from '../types/Errors';
 import { redactAll } from '../util/privacy';
@@ -64,6 +66,10 @@ export const addHandler = (): void => {
   process.on('uncaughtException', (reason: unknown) => {
     try {
       logCrash('main', { reason: 'uncaughtException', error: reason });
+
+      if (isObject(reason) && 'message' in reason && reason.message === 'write EPIPE') {
+        return;
+      }
 
       handleError('Unhandled Error', _getError(reason));
     } catch (e) {

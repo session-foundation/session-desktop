@@ -41,8 +41,11 @@ const doSearch = createAsyncThunk(
   'search/doSearch',
   async ({ query, searchType }: DoSearchActionType): Promise<SearchResultsPayloadType> => {
     const options: SearchOptions = {
-      noteToSelf: [tr('noteToSelf').toLowerCase(), tEnglish('noteToSelf').toLowerCase()],
-      savedMessages: tr('savedMessages').toLowerCase(),
+      noteToSelfAliases: [
+        tr('noteToSelf').toLowerCase(),
+        tEnglish('noteToSelf').toLowerCase(),
+        tr('savedMessages').toLowerCase(),
+      ],
       ourNumber: UserUtils.getOurPubKeyStrFromCache(),
       excludeBlocked: searchType !== 'global',
     };
@@ -106,7 +109,7 @@ function convoMatchesSearch(convo: ReduxConversationType, searchTermLower: strin
 }
 
 export async function queryContactsAndGroups(providedQuery: string, options: SearchOptions) {
-  const { ourNumber, noteToSelf, savedMessages } = options;
+  const { ourNumber, noteToSelfAliases } = options;
 
   // Remove formatting characters from the query
   const query = providedQuery.replace(/[+-.()]*/g, '');
@@ -130,12 +133,10 @@ export async function queryContactsAndGroups(providedQuery: string, options: Sea
     conversation => conversation.id
   );
 
-  const isSavedMessagesMatch =
-    typeof savedMessages === 'string' ? savedMessages.includes(query) : false;
-
   if (
-    noteToSelf.some(str => str.includes(query) || toSearchableString(str).includes(queryLower)) ||
-    isSavedMessagesMatch
+    noteToSelfAliases.some(
+      str => str.includes(query) || toSearchableString(str).includes(queryLower)
+    )
   ) {
     // Ensure that we don't have duplicates in our results
     searchResultContactsAndGroups = searchResultContactsAndGroups.filter(id => id !== ourNumber);
