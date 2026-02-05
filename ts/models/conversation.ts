@@ -2934,6 +2934,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
   }
 
   private async getQuoteAttachment(attachments: any, preview: any) {
+    try {
     if (attachments?.length) {
       return Promise.all(
         attachments
@@ -2984,6 +2985,9 @@ export class ConversationModel extends Model<ConversationAttributes> {
             };
           })
       );
+    }
+    } catch (e) {
+      window.log.warn('getQuoteAttachment failed with', e.message);
     }
 
     return [];
