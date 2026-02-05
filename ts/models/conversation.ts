@@ -2934,56 +2934,60 @@ export class ConversationModel extends Model<ConversationAttributes> {
   }
 
   private async getQuoteAttachment(attachments: any, preview: any) {
-    if (attachments?.length) {
-      return Promise.all(
-        attachments
-          .filter(
-            (attachment: any) =>
-              attachment && attachment.contentType && !attachment.pending && !attachment.error
-          )
-          .slice(0, 1)
-          .map(async (attachment: any) => {
-            const { fileName, thumbnail, contentType } = attachment;
+    try {
+      if (attachments?.length) {
+        return Promise.all(
+          attachments
+            .filter(
+              (attachment: any) =>
+                attachment && attachment.contentType && !attachment.pending && !attachment.error
+            )
+            .slice(0, 1)
+            .map(async (attachment: any) => {
+              const { fileName, thumbnail, contentType } = attachment;
 
-            return {
-              contentType,
-              // Our proto library complains about this field being undefined, so we
-              //   force it to null
-              fileName: fileName || null,
-              thumbnail: attachment?.thumbnail?.path // loadAttachmentData throws if the thumbnail.path is not set
-                ? {
-                    ...(await loadAttachmentData(thumbnail)),
-                    objectUrl: getAbsoluteAttachmentPath(thumbnail.path),
-                  }
-                : null,
-            };
-          })
-      );
-    }
+              return {
+                contentType,
+                // Our proto library complains about this field being undefined, so we
+                //   force it to null
+                fileName: fileName || null,
+                thumbnail: attachment?.thumbnail?.path // loadAttachmentData throws if the thumbnail.path is not set
+                  ? {
+                      ...(await loadAttachmentData(thumbnail)),
+                      objectUrl: getAbsoluteAttachmentPath(thumbnail.path),
+                    }
+                  : null,
+              };
+            })
+        );
+      }
 
-    if (preview?.length) {
-      return Promise.all(
-        preview
-          .filter((attachment: any) => attachment?.image?.path) // loadAttachmentData throws if the image.path is not set
-          .slice(0, 1)
-          .map(async (attachment: any) => {
-            const { image } = attachment;
-            const { contentType } = image;
+      if (preview?.length) {
+        return Promise.all(
+          preview
+            .filter((attachment: any) => attachment?.image?.path) // loadAttachmentData throws if the image.path is not set
+            .slice(0, 1)
+            .map(async (attachment: any) => {
+              const { image } = attachment;
+              const { contentType } = image;
 
-            return {
-              contentType,
-              // Our proto library complains about this field being undefined, so we
-              //   force it to null
-              fileName: null,
-              thumbnail: image
-                ? {
-                    ...(await loadAttachmentData(image)),
-                    objectUrl: getAbsoluteAttachmentPath(image.path),
-                  }
-                : null,
-            };
-          })
-      );
+              return {
+                contentType,
+                // Our proto library complains about this field being undefined, so we
+                //   force it to null
+                fileName: null,
+                thumbnail: image
+                  ? {
+                      ...(await loadAttachmentData(image)),
+                      objectUrl: getAbsoluteAttachmentPath(image.path),
+                    }
+                  : null,
+              };
+            })
+        );
+      }
+    } catch (e) {
+      window.log.warn('getQuoteAttachment failed with', e.message);
     }
 
     return [];
