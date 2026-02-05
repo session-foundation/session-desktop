@@ -155,7 +155,7 @@ export const KbdShortcut = {
     withCtrl: true,
     keys: ['s'],
   },
-  // NOTE: these are currently dummy shortcuts, they are native or implmeneted differently
+  // NOTE: these are currently dummy shortcuts, they are native or implemented differently
   messageOpenContextMenu: {
     name: 'Open message context menu',
     scope: 'message',

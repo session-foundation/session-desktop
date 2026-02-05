@@ -22,19 +22,15 @@ import { SelectionOverlay } from './ConversationHeaderSelectionOverlay';
 import { ConversationHeaderTitle } from './ConversationHeaderTitle';
 import { tr } from '../../../localization/localeTools';
 import { groupInfoActions } from '../../../state/ducks/metaGroups';
-import {
-  updateConfirmModal,
-  updateConversationSettingsModal,
-} from '../../../state/ducks/modalDialog';
+import { updateConfirmModal } from '../../../state/ducks/modalDialog';
 import { SessionButtonColor, SessionButton, SessionButtonType } from '../../basic/SessionButton';
 import { ConvoHub } from '../../../session/conversations';
 import { ConversationTypeEnum } from '../../../models/types';
 import { Constants } from '../../../session';
-import { useShowConversationSettingsFor } from '../../menuAndSettingsHooks/useShowConversationSettingsFor';
 import { sectionActions } from '../../../state/ducks/section';
 import { useKeyboardShortcut } from '../../../hooks/useKeyboardShortcut';
 import { KbdShortcut } from '../../../util/keyboardShortcuts';
-import { useConversationSettingsModal } from '../../../state/selectors/modal';
+import { useToggleConversationSettingsFor } from '../../menuAndSettingsHooks/useToggleConversationSettingsFor';
 
 const StyledConversationHeader = styled.div`
   display: flex;
@@ -47,26 +43,17 @@ const StyledConversationHeader = styled.div`
 `;
 
 export const ConversationHeaderWithDetails = () => {
-  const dispatch = getAppDispatch();
-  const convoSettings = useConversationSettingsModal();
   const isSelectionMode = useIsMessageSelectionMode();
   const selectedConvoKey = useSelectedConversationKey();
   const isOutgoingRequest = useIsOutgoingRequest(selectedConvoKey);
   const isIncomingRequest = useIsIncomingRequest(selectedConvoKey);
   const isBlocked = useSelectedIsBlocked();
 
-  const showConvoSettingsCb = useShowConversationSettingsFor(selectedConvoKey);
-
-  const showConvoSettings = showConvoSettingsCb
-    ? () =>
-        convoSettings
-          ? dispatch(updateConversationSettingsModal(null))
-          : showConvoSettingsCb({ settingsModalPage: 'default' })
-    : undefined;
+  const toggleConvoSettingsCb = useToggleConversationSettingsFor(selectedConvoKey);
 
   useKeyboardShortcut({
     shortcut: KbdShortcut.conversationSettingsModal,
-    handler: showConvoSettings,
+    handler: toggleConvoSettingsCb,
   });
 
   if (!selectedConvoKey) {
@@ -96,7 +83,7 @@ export const ConversationHeaderWithDetails = () => {
           >
             <RecreateGroupButton />
             <CallButton />
-            <AvatarHeader onAvatarClick={showConvoSettings} pubkey={selectedConvoKey} />
+            <AvatarHeader onAvatarClick={toggleConvoSettingsCb} pubkey={selectedConvoKey} />
           </Flex>
         )}
       </Flex>
