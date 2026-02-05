@@ -146,7 +146,7 @@ export class SwarmPolling {
       timeouts.push(
         setTimeout(() => {
           void this.pollForAllKeys();
-        }, 4000)
+        }, SWARM_POLLING_TIMEOUT.ACTIVE)
       );
     }
   }
