@@ -147,8 +147,8 @@ importers:
         specifier: 19.2.1
         version: 19.2.1
       react-contexify:
-        specifier: ^6.0.0
-        version: 6.0.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+        specifier: https://github.com/session-foundation/session-react-contexify/releases/download/v7.0.0-rc.1/react-contexify-v7.0.0-rc.1.tgz
+        version: https://github.com/session-foundation/session-react-contexify/releases/download/v7.0.0-rc.1/react-contexify-v7.0.0-rc.1.tgz(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       react-dom:
         specifier: 19.2.1
         version: 19.2.1(react@19.2.1)
@@ -4792,11 +4792,12 @@ packages:
     resolution: {integrity: sha512-y3bGgqKj3QBdxLbLkomlohkvsA8gdAiUQlSBJnBhfn+BPxg4bc62d8TcBW15wavDfgexCgccckhcZvywyQYPOw==}
     hasBin: true
 
-  react-contexify@6.0.0:
-    resolution: {integrity: sha512-jMhz6yZI81Jv3UDj7TXqCkhdkCFEEmvwGCPXsQuA2ZUC8EbCuVQ6Cy8FzKMXa0y454XTDClBN2YFvvmoFlrFkg==}
+  react-contexify@https://github.com/session-foundation/session-react-contexify/releases/download/v7.0.0-rc.1/react-contexify-v7.0.0-rc.1.tgz:
+    resolution: {integrity: sha512-RTUlLL4zRT4XP1lg/uvHItcuwLqX0BQBS0W/CNPdKh+JcfySL4jw/Wc2NCTaN+glwcHd7kaeRK6kbkI/oQid5A==, tarball: https://github.com/session-foundation/session-react-contexify/releases/download/v7.0.0-rc.1/react-contexify-v7.0.0-rc.1.tgz}
+    version: 7.0.0-rc.1
     peerDependencies:
       react: 19.2.1
-      react-dom: '>=16'
+      react-dom: ^16 || ^17 || ^18 || ^19
 
   react-dom@19.2.1:
     resolution: {integrity: sha512-ibrK8llX2a4eOskq1mXKu/TGZj9qzomO+sNfO98M6d9zIPOEhlBkMkBUBLd1vgS0gQsLDBzA+8jJBVXDnfHmJg==}
@@ -10909,7 +10910,7 @@ snapshots:
       minimist: 1.2.8
       strip-json-comments: 2.0.1
 
-  react-contexify@6.0.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1):
+  react-contexify@https://github.com/session-foundation/session-react-contexify/releases/download/v7.0.0-rc.1/react-contexify-v7.0.0-rc.1.tgz(react-dom@19.2.1(react@19.2.1))(react@19.2.1):
     dependencies:
       clsx: 1.2.1
       react: 19.2.1
