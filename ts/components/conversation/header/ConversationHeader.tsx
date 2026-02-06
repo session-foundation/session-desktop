@@ -21,16 +21,15 @@ import { AvatarHeader, CallButton } from './ConversationHeaderItems';
 import { SelectionOverlay } from './ConversationHeaderSelectionOverlay';
 import { ConversationHeaderTitle } from './ConversationHeaderTitle';
 import { tr } from '../../../localization/localeTools';
-import { groupInfoActions } from '../../../state/ducks/metaGroups';
 import { updateConfirmModal } from '../../../state/ducks/modalDialog';
 import { SessionButtonColor, SessionButton, SessionButtonType } from '../../basic/SessionButton';
 import { ConvoHub } from '../../../session/conversations';
 import { ConversationTypeEnum } from '../../../models/types';
 import { Constants } from '../../../session';
-import { sectionActions } from '../../../state/ducks/section';
 import { useKeyboardShortcut } from '../../../hooks/useKeyboardShortcut';
 import { KbdShortcut } from '../../../util/keyboardShortcuts';
 import { useToggleConversationSettingsFor } from '../../menuAndSettingsHooks/useToggleConversationSettingsFor';
+import { useOverlayChooseAction } from '../../leftpane/overlay/choose-action/OverlayChooseAction';
 
 const StyledConversationHeader = styled.div`
   display: flex;
@@ -106,6 +105,7 @@ const RecreateGroupContainer = styled.div`
 
 function useShowRecreateModal() {
   const dispatch = getAppDispatch();
+  const { openCreateGroup } = useOverlayChooseAction();
 
   return useCallback(
     (name: string, members: Array<PubkeyType>) => {
@@ -117,9 +117,7 @@ function useShowRecreateModal() {
           cancelText: tr('cancel'),
           okTheme: SessionButtonColor.Danger,
           onClickOk: () => {
-            dispatch(sectionActions.setLeftOverlayMode('closed-group'));
-            dispatch(groupInfoActions.updateGroupCreationName({ name }));
-            dispatch(groupInfoActions.setSelectedGroupMembers({ membersToSet: members }));
+            openCreateGroup(name, members);
           },
           onClickClose: () => {
             dispatch(updateConfirmModal(null));
@@ -127,7 +125,7 @@ function useShowRecreateModal() {
         })
       );
     },
-    [dispatch]
+    [dispatch, openCreateGroup]
   );
 }
 

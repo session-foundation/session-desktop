@@ -6,7 +6,7 @@ import styled from 'styled-components';
 import { getAppDispatch } from '../state/dispatch';
 import { searchActions, type DoSearchActionType, type SearchType } from '../state/ducks/search';
 import { getConversationsCount } from '../state/selectors/conversations';
-import { useLeftOverlayMode } from '../state/selectors/section';
+import { useLeftOverlayModeType } from '../state/selectors/section';
 import { useHotkey } from '../hooks/useHotkey';
 import { tr } from '../localization/localeTools';
 import { SessionLucideIconButton } from './icon/SessionIconButton';
@@ -68,7 +68,7 @@ function updateSearch(dispatch: Dispatch<any>, searchOpts: DoSearchActionType) {
 export const SessionSearchInput = ({ searchType }: { searchType: SearchType }) => {
   const [currentSearchTerm, setCurrentSearchTerm] = useState('');
   const dispatch = getAppDispatch();
-  const isGroupCreationSearch = useLeftOverlayMode() === 'closed-group';
+  const isGroupCreationSearch = useLeftOverlayModeType() === 'closed-group';
   const convoCount = useSelector(getConversationsCount);
 
   const inputRef = useRef<HTMLInputElement>(null);

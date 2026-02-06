@@ -11,7 +11,7 @@ import { MessageRequestsBanner } from './MessageRequestsBanner';
 
 import { getLeftPaneConversationIds } from '../../state/selectors/conversations';
 import { useSearchTermForType } from '../../state/selectors/search';
-import { useLeftOverlayMode } from '../../state/selectors/section';
+import { useLeftOverlayModeType } from '../../state/selectors/section';
 import { assertUnreachable } from '../../types/sqlSharedTypes';
 import { SessionSearchInput } from '../SessionSearchInput';
 import { StyledLeftPaneList } from './LeftPaneList';
@@ -45,7 +45,7 @@ const StyledConversationListContent = styled.div`
 `;
 
 const ClosableOverlay = () => {
-  const leftOverlayMode = useLeftOverlayMode();
+  const leftOverlayMode = useLeftOverlayModeType();
 
   switch (leftOverlayMode) {
     case 'choose-action':
@@ -191,7 +191,7 @@ const ConversationList = () => {
 };
 
 export const LeftPaneMessageSection = () => {
-  const leftOverlayMode = useLeftOverlayMode();
+  const leftOverlayMode = useLeftOverlayModeType();
   const dispatch = getAppDispatch();
 
   return (
@@ -204,7 +204,9 @@ export const LeftPaneMessageSection = () => {
           <SessionSearchInput searchType="global" />
           <MessageRequestsBanner
             handleOnClick={() => {
-              dispatch(sectionActions.setLeftOverlayMode('message-requests'));
+              dispatch(
+                sectionActions.setLeftOverlayMode({ type: 'message-requests', params: null })
+              );
             }}
           />
           <ConversationList />

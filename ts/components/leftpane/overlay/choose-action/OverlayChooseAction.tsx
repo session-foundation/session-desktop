@@ -1,8 +1,8 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 
 import { isEmpty, isString } from 'lodash';
+import type { PubkeyType } from 'libsession_util_nodejs';
 import useKey from 'react-use/lib/useKey';
-import useMount from 'react-use/lib/useMount';
 import { getAppDispatch } from '../../../../state/dispatch';
 import { SpacerSM } from '../../../basic/Text';
 import { StyledLeftPaneOverlay } from '../OverlayMessage';
@@ -12,25 +12,51 @@ import { groupInfoActions } from '../../../../state/ducks/metaGroups';
 import { sectionActions } from '../../../../state/ducks/section';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 import { tr } from '../../../../localization/localeTools';
+import { useIsInScope } from '../../../../state/focus';
+import { useLeftOverlayModeType } from '../../../../state/selectors/section';
 
 export function useOverlayChooseAction() {
   const dispatch = getAppDispatch();
-  const openNewMessage = useCallback(() => {
-    dispatch(sectionActions.setLeftOverlayMode('message'));
-  }, [dispatch]);
+  const openNewMessage = useCallback(
+    (conversationId?: string) => {
+      dispatch(
+        sectionActions.setLeftOverlayMode({
+          type: 'message',
+          params: { initialInputValue: conversationId ?? '' },
+        })
+      );
+    },
+    [dispatch]
+  );
 
-  const openCreateGroup = useCallback(() => {
-    dispatch(sectionActions.setLeftOverlayMode('closed-group'));
-    dispatch(groupInfoActions.updateGroupCreationName({ name: '' }));
-    dispatch(groupInfoActions.setSelectedGroupMembers({ membersToSet: [] }));
-  }, [dispatch]);
+  const openCreateGroup = useCallback(
+    (groupName?: string, members?: Array<PubkeyType>) => {
+      dispatch(
+        sectionActions.setLeftOverlayMode({
+          type: 'closed-group',
+          params: { initialInputValue: groupName ?? '' },
+        })
+      );
+      dispatch(groupInfoActions.updateGroupCreationName({ name: groupName ?? '' }));
+      dispatch(groupInfoActions.setSelectedGroupMembers({ membersToSet: members ?? [] }));
+    },
+    [dispatch]
+  );
 
-  const openJoinCommunity = useCallback(() => {
-    dispatch(sectionActions.setLeftOverlayMode('open-group'));
-  }, [dispatch]);
+  const openJoinCommunity = useCallback(
+    (communityUrl?: string) => {
+      dispatch(
+        sectionActions.setLeftOverlayMode({
+          type: 'open-group',
+          params: { initialInputValue: communityUrl ?? '' },
+        })
+      );
+    },
+    [dispatch]
+  );
 
   const inviteAFriend = useCallback(() => {
-    dispatch(sectionActions.setLeftOverlayMode('invite-a-friend'));
+    dispatch(sectionActions.setLeftOverlayMode({ type: 'invite-a-friend', params: null }));
   }, [dispatch]);
 
   return {
@@ -43,17 +69,27 @@ export function useOverlayChooseAction() {
 
 function useChooseActionOnPaste() {
   const { openNewMessage, openJoinCommunity } = useOverlayChooseAction();
-  useMount(() => {
+  const inScope = useIsInScope({ scope: 'conversationList' });
+  const leftOverlayMode = useLeftOverlayModeType();
+
+  useEffect(() => {
     function handlePaste(event: ClipboardEvent) {
+      if (!inScope) {
+        return;
+      }
       const pasted = event.clipboardData?.getData('text');
 
       if (pasted && isString(pasted) && !isEmpty(pasted)) {
         if (pasted.startsWith('http') || pasted.startsWith('https')) {
-          openJoinCommunity();
-          event.preventDefault();
+          if (leftOverlayMode !== 'open-group') {
+            openJoinCommunity(pasted);
+            event.preventDefault();
+          }
         } else if (pasted.startsWith('05')) {
-          openNewMessage();
-          event.preventDefault();
+          if (leftOverlayMode !== 'message') {
+            openNewMessage(pasted);
+            event.preventDefault();
+          }
         }
       }
     }
@@ -62,7 +98,7 @@ function useChooseActionOnPaste() {
     return () => {
       document?.removeEventListener('paste', handlePaste);
     };
-  });
+  }, [inScope, leftOverlayMode, openNewMessage, openJoinCommunity]);
 }
 
 export const OverlayChooseAction = () => {
@@ -94,28 +130,28 @@ export const OverlayChooseAction = () => {
           title={tr('messageNew', { count: 1 })}
           ariaLabel={'New message button'}
           unicode={LUCIDE_ICONS_UNICODE.MESSAGE_SQUARE}
-          onClick={openNewMessage}
+          onClick={() => openNewMessage()}
           dataTestId="chooser-new-conversation-button"
         />
         <ActionRow
           title={tr('groupCreate')}
           ariaLabel={'Create a group button'}
           unicode={LUCIDE_ICONS_UNICODE.USERS_ROUND}
-          onClick={openCreateGroup}
+          onClick={() => openCreateGroup()}
           dataTestId="chooser-new-group"
         />
         <ActionRow
           title={tr('communityJoin')}
           ariaLabel={'Join a community button'}
           unicode={LUCIDE_ICONS_UNICODE.GLOBE}
-          onClick={openJoinCommunity}
+          onClick={() => openJoinCommunity()}
           dataTestId="chooser-new-community"
         />
         <ActionRow
           title={tr('sessionInviteAFriend')}
           ariaLabel={'Invite a friend button'}
           unicode={LUCIDE_ICONS_UNICODE.USER_ROUND_PLUS}
-          onClick={inviteAFriend}
+          onClick={() => inviteAFriend()}
           dataTestId="chooser-invite-friend"
         />
       </StyledActionRowContainer>

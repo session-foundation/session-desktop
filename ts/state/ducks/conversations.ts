@@ -305,6 +305,7 @@ export type ConversationsStateType = {
   nextMessageToPlayId?: string;
   mentionMembers: Array<SessionSuggestionDataItem>;
   focusedMessageId: string | null;
+  isCompositionTextAreaFocused: boolean;
 };
 
 export function lookupQuoteInStore({
@@ -491,6 +492,7 @@ export function getEmptyConversationState(): ConversationsStateType {
     shouldHighlightMessage: false,
     mostRecentMessageId: null,
     focusedMessageId: null,
+    isCompositionTextAreaFocused: false,
   };
 }
 
@@ -692,6 +694,9 @@ const conversationsSlice = createSlice({
     setFocusedMessageId(state: ConversationsStateType, action: PayloadAction<string | null>) {
       return { ...state, focusedMessageId: action.payload };
     },
+    setIsCompositionTextAreaFocused(state: ConversationsStateType, action: PayloadAction<boolean>) {
+      return { ...state, isCompositionTextAreaFocused: action.payload };
+    },
     conversationAdded(
       state: ConversationsStateType,
       action: PayloadAction<{
@@ -852,6 +857,7 @@ const conversationsSlice = createSlice({
         oldBottomMessageId: null,
         mentionMembers: [],
         focusedMessageId: null,
+        isCompositionTextAreaFocused: false,
       };
     },
     openConversationToSpecificMessage(
@@ -1117,6 +1123,7 @@ export const {
   addMessageIdToSelection,
   resetSelectedMessageIds,
   setFocusedMessageId,
+  setIsCompositionTextAreaFocused,
   toggleSelectedMessageId,
   quoteMessage,
   showScrollToBottomButton,

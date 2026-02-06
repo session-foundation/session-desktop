@@ -6,6 +6,7 @@ import {
   getOldBottomMessageId,
   getOldTopMessageId,
   getSortedMessagesTypesOfSelectedConversation,
+  useFocusedMessageId,
   type MessagePropsType,
 } from '../../state/selectors/conversations';
 import { useSelectedConversationKey } from '../../state/selectors/selectedConversation';
@@ -22,7 +23,6 @@ import { TimerNotification } from './TimerNotification';
 import { DataExtractionNotification } from './message/message-item/DataExtractionNotification';
 import { InteractionNotification } from './message/message-item/InteractionNotification';
 import type { WithMessageId } from '../../session/types/with';
-import { useFocusedMessageId } from '../../state/selectors/modal';
 import { useKeyboardShortcut } from '../../hooks/useKeyboardShortcut';
 import { KbdShortcut } from '../../util/keyboardShortcuts';
 import { useMessageInteractions } from '../../hooks/useMessageInteractions';

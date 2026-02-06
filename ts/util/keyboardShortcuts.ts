@@ -1,7 +1,7 @@
 import type { KeyboardEvent } from 'react';
 import { isMacOS } from '../OS';
-import type { FocusScope } from '../state/selectors/modal';
 import { getFeatureFlag } from '../state/ducks/types/releasedFeaturesReduxTypes';
+import type { FocusScope } from '../state/focus';
 
 export function debugKeyboardShortcutsLog(...args: Array<unknown>) {
   if (!getFeatureFlag('debugKeyboardShortcuts')) {

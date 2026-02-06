@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import useClickAway from 'react-use/lib/useClickAway';
-import { PopoverTriggerPosition } from '../SessionTooltip';
+import type { PopoverTriggerPosition } from '../SessionTooltip';
 import { SessionPopoverContent } from '../SessionPopover';
 import { MessageReactBar } from './message/message-content/MessageReactBar';
 import { THEME_GLOBALS } from '../../themes/globals';
 import { SessionEmojiPanelPopover } from './SessionEmojiPanelPopover';
 import { closeContextMenus } from '../../util/contextMenu';
 import { useMessageInteractions } from '../../hooks/useMessageInteractions';
-import { useFocusedMessageId } from '../../state/selectors/modal';
+import { useFocusedMessageId } from '../../state/selectors/conversations';
 
 export function SessionEmojiReactBarPopover({
   messageId,

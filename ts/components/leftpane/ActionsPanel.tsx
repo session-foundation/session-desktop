@@ -49,11 +49,13 @@ import { OnionStatusLight } from '../dialog/OnionStatusPathDialog';
 import { AvatarReupload } from '../../session/utils/job_runners/jobs/AvatarReuploadJob';
 import {
   useDebugMenuModal,
-  useFocusScope,
   useKeyboardShortcutsModal,
   useUserSettingsModal,
 } from '../../state/selectors/modal';
-import { getFeatureFlagMemo } from '../../state/ducks/types/releasedFeaturesReduxTypes';
+import {
+  getFeatureFlagMemo,
+  setFeatureFlag,
+} from '../../state/ducks/types/releasedFeaturesReduxTypes';
 import { useDebugKey } from '../../hooks/useDebugKey';
 import { UpdateProRevocationList } from '../../session/utils/job_runners/jobs/UpdateProRevocationListJob';
 import { getIsProAvailableMemo } from '../../hooks/useIsProAvailable';
@@ -62,6 +64,7 @@ import { useKeyboardShortcut } from '../../hooks/useKeyboardShortcut';
 import { KbdShortcut } from '../../util/keyboardShortcuts';
 import { useNewConversationCallback } from '../buttons/MenuButton';
 import { useOverlayChooseAction } from './overlay/choose-action/OverlayChooseAction';
+import { useFocusScope } from '../../state/focus';
 
 const StyledContainerAvatar = styled.button`
   padding: var(--margins-lg);
@@ -144,10 +147,10 @@ function useNewConversationKeyboardShortcut() {
   const { openNewMessage, openCreateGroup, openJoinCommunity } = useOverlayChooseAction();
   const newConversation = useNewConversationCallback();
 
-  useKeyboardShortcut({ shortcut: KbdShortcut.newConversation, handler: newConversation });
-  useKeyboardShortcut({ shortcut: KbdShortcut.newMessage, handler: openNewMessage });
-  useKeyboardShortcut({ shortcut: KbdShortcut.createGroup, handler: openCreateGroup });
-  useKeyboardShortcut({ shortcut: KbdShortcut.joinCommunity, handler: openJoinCommunity });
+  useKeyboardShortcut({ shortcut: KbdShortcut.newConversation, handler: () => newConversation() });
+  useKeyboardShortcut({ shortcut: KbdShortcut.newMessage, handler: () => openNewMessage() });
+  useKeyboardShortcut({ shortcut: KbdShortcut.createGroup, handler: () => openCreateGroup() });
+  useKeyboardShortcut({ shortcut: KbdShortcut.joinCommunity, handler: () => openJoinCommunity() });
 }
 
 function useDebugThemeSwitch() {
@@ -158,17 +161,22 @@ function useDebugThemeSwitch() {
   });
 }
 
+function useDebugToggleLocalizerKeys() {
+  const enabled = getFeatureFlagMemo('replaceLocalizedStringsWithKeys');
+  useDebugKey({
+    withCtrl: true,
+    key: 'l',
+    callback: () => setFeatureFlag('replaceLocalizedStringsWithKeys', !enabled),
+  });
+}
+
 function useDebugFocusScope() {
   const debugFocusScope = getFeatureFlagMemo('debugFocusScope');
   const focusScope = useFocusScope();
 
   useEffect(() => {
     if (debugFocusScope) {
-      const isMessage = !!focusScope.focusedMessageId;
-      const isModal = !!focusScope.modalId;
-      window.log.debug(
-        `[debugFocusScope] focus scope changed to ${isModal ? `Modal ${focusScope.modalId}` : isMessage ? `Message ${focusScope.focusedMessageId}` : '??'}`
-      );
+      window.log.debug(`[debugFocusScope] focus scope changed to`, focusScope);
     }
   }, [debugFocusScope, focusScope]);
 }
@@ -241,6 +249,7 @@ export const ActionsPanel = () => {
 
   const fsTTL30sEnabled = getFeatureFlagMemo('fsTTL30s');
   useDebugThemeSwitch();
+  useDebugToggleLocalizerKeys();
   useDebugFocusScope();
   useUpdateBadgeCount();
   usePeriodicFetchRevocationList();

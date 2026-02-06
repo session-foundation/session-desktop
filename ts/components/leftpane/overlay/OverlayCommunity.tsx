@@ -46,11 +46,13 @@ async function joinOpenGroup(
 export const OverlayCommunity = () => {
   const dispatch = getAppDispatch();
 
-  const [groupUrl, setGroupUrl] = useState('');
+  const overlayMode = useLeftOverlayMode();
+  const overlayModeIsCommunity = overlayMode?.type === 'open-group';
+  const [groupUrl, setGroupUrl] = useState<string>(
+    overlayModeIsCommunity ? overlayMode.params.initialInputValue : ''
+  );
   const [groupUrlError, setGroupUrlError] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(false);
-
-  const overlayModeIsCommunity = useLeftOverlayMode() === 'open-group';
 
   function closeOverlay() {
     dispatch(sectionActions.resetLeftOverlayMode());

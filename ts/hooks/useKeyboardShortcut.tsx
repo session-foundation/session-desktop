@@ -1,6 +1,6 @@
 import useKey, { Handler } from 'react-use/lib/useKey';
-import { ScopeWithId, ScopeWithoutId, useIsInScope } from '../state/selectors/modal';
 import { ctrlKey, KbdShortcutOptions } from '../util/keyboardShortcuts';
+import { ScopeWithId, ScopeWithoutId, useIsInScope } from '../state/focus';
 
 type BaseShortcutOptions = {
   shortcut: KbdShortcutOptions;

@@ -51,6 +51,8 @@ import { useDebugInputCommands } from '../../dialog/debug/hooks/useDebugInputCom
 import { useKeyboardShortcut } from '../../../hooks/useKeyboardShortcut';
 import { KbdShortcut } from '../../../util/keyboardShortcuts';
 import { PopoverTriggerPosition } from '../../SessionTooltip';
+import { getAppDispatch } from '../../../state/dispatch';
+import { setIsCompositionTextAreaFocused } from '../../../state/ducks/conversations';
 
 type Props = {
   initialDraft: string;
@@ -450,6 +452,7 @@ function useHandleKeyUp({
 export function CompositionTextArea(props: Props) {
   const { draft, initialDraft, setDraft, inputRef, typingEnabled, onKeyDown } = props;
 
+  const dispatch = getAppDispatch();
   const [lastBumpTypingMessageLength, setLastBumpTypingMessageLength] = useState(0);
   const [mention, setMention] = useState<MentionDetails | null>(null);
   const [focusedMentionItem, setFocusedMentionItem] = useState<SessionSuggestionDataItem | null>(
@@ -581,6 +584,14 @@ export function CompositionTextArea(props: Props) {
     },
   });
 
+  const onFocus = () => {
+    dispatch(setIsCompositionTextAreaFocused(true));
+  };
+
+  const onBlur = () => {
+    dispatch(setIsCompositionTextAreaFocused(false));
+  };
+
   if (!selectedConversationKey) {
     return null;
   }
@@ -607,6 +618,8 @@ export function CompositionTextArea(props: Props) {
         data-testid="message-input-text-area"
         // NOTE: we want to close any mentions when clicking within the input as clicking will invalidate the cursor position
         onClick={handleMentionCleanup}
+        onFocus={onFocus}
+        onBlur={onBlur}
       />
       {showPopover ? (
         <SessionPopoverContent

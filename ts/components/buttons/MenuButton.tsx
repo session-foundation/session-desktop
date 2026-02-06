@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 import { getAppDispatch } from '../../state/dispatch';
-import { useLeftOverlayMode } from '../../state/selectors/section';
+import { useLeftOverlayModeType } from '../../state/selectors/section';
 import { sectionActions } from '../../state/ducks/section';
 import { searchActions } from '../../state/ducks/search';
 import { LucideIcon } from '../icon/LucideIcon';
@@ -35,7 +35,7 @@ const StyledMenuButton = styled.button`
 `;
 
 export function useNewConversationCallback() {
-  const leftOverlayMode = useLeftOverlayMode();
+  const leftOverlayMode = useLeftOverlayModeType();
   const dispatch = getAppDispatch();
 
   return () => {
@@ -43,7 +43,7 @@ export function useNewConversationCallback() {
     dispatch(
       leftOverlayMode
         ? sectionActions.resetLeftOverlayMode()
-        : sectionActions.setLeftOverlayMode('choose-action')
+        : sectionActions.setLeftOverlayMode({ type: 'choose-action', params: null })
     );
   };
 }
