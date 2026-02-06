@@ -347,6 +347,7 @@ export function UpdateConversationDetailsDialog(props: WithConvoId) {
         autoFocus={true}
         required={true}
         tabIndex={0}
+        allowEscapeKeyPassthrough={true}
         buttonEnd={
           <ClearInputButton
             dataTestId={`clear-${partDetail}-info-name-button`}
@@ -373,6 +374,7 @@ export function UpdateConversationDetailsDialog(props: WithConvoId) {
           tabIndex={1}
           required={false}
           singleLine={false}
+          allowEscapeKeyPassthrough={true}
           buttonEnd={
             <ClearInputButton
               dataTestId={`clear-${partDetail}-info-description-button`}

@@ -227,6 +227,7 @@ type SimpleSessionInputProps = Pick<
     providedError: string | TrArgs | undefined;
     disabled?: boolean;
     buttonEnd?: ReactNode;
+    allowEscapeKeyPassthrough?: boolean;
   };
 
 // NOTE: [react-compiler] this convinces the compiler the hook is static
@@ -262,6 +263,7 @@ export const SimpleSessionInput = (props: SimpleSessionInputProps) => {
     tabIndex,
     centerText,
     buttonEnd,
+    allowEscapeKeyPassthrough,
   } = props;
   const hasError = !isEmpty(providedError);
   const hasValue = !isEmpty(value);
@@ -296,6 +298,9 @@ export const SimpleSessionInput = (props: SimpleSessionInputProps) => {
     if (event.key === 'Enter' && onEnterPressed) {
       event.preventDefault();
       onEnterPressed();
+    }
+    if (event.key === 'Escape' && allowEscapeKeyPassthrough) {
+      return;
     }
     event.stopPropagation();
   };
