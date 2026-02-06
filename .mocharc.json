@@ -1,7 +1,7 @@
 {
   "exit": true,
   "spec": ["app/ts/test/**/*_test.js"],
-  "require": ["jsdom-global/register", "./ts/test/setup/canvas-mock.js"],
+  "require": ["jsdom-global/register"],
   "timeout": 10000,
   "recursive": true,
   "reporter": "spec"
