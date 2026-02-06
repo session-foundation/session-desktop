@@ -1,7 +1,8 @@
 .module-conversation-list-item {
   background: var(--conversation-tab-background-color);
 }
-.module-conversation-list-item:hover {
+.module-conversation-list-item:hover,
+.module-conversation-list-item:focus {
   background: var(--conversation-tab-background-hover-color) !important;
 }
 

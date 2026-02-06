@@ -175,5 +175,7 @@ fieldset {
 *:focus-visible {
   // The FocusTrap we use adds a border around the focused element, even if TAB has not been pressed yet
   // This hides the outline altogether. We might consider adding a new variable linked to a theme setting to fix this, for all users
-  outline: none;
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+  border-radius: 2px;
 }

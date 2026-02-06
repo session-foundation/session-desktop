@@ -533,6 +533,12 @@ export const getSelectedMessageIds = (state: StateType): Array<string> =>
 export const getIsMessageSelectionMode = (state: StateType): boolean =>
   Boolean(getSelectedMessageIds(state).length);
 
+export const getFocusedMessageId = (state: StateType): string | null =>
+  state.conversations.focusedMessageId;
+
+export const getIsCompositionTextAreaFocused = (state: StateType): boolean =>
+  state.conversations.isCompositionTextAreaFocused;
+
 export const getQuotedMessage = (state: StateType): ReplyingToMessageProps | undefined =>
   state.conversations.quotedMessage;
 
@@ -553,6 +559,14 @@ export const getNextMessageToPlayId = (state: StateType): string | undefined =>
 
 export const getMentionsInput = (state: StateType): Array<SessionSuggestionDataItem> =>
   state.conversations.mentionMembers;
+
+export function useFocusedMessageId() {
+  return useSelector(getFocusedMessageId);
+}
+
+export function useIsCompositionTextAreaFocused() {
+  return useSelector(getIsCompositionTextAreaFocused);
+}
 
 /**
  * Returns true if the props are not corresponding to a visible message.

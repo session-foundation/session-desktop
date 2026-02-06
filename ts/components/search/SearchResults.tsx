@@ -37,6 +37,7 @@ const StyledSeparatorSection = styled.div<{ $isSubtitle: boolean }>`
 
 const SearchResultsContainer = styled.div`
   overflow-y: auto;
+  overflow-x: hidden;
   max-height: 100%;
   color: var(--text-secondary-color);
   flex-grow: 1;
@@ -134,6 +135,8 @@ const VirtualizedList = () => {
     <AutoSizer>
       {({ height, width }) => (
         <List
+          // NOTE: we dont want the list itself to be in the tab list
+          tabIndex={-1}
           ref={listRef}
           height={height}
           rowCount={searchResultList.length}

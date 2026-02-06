@@ -1,44 +1,28 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
-import { Dispatch, RefObject, useCallback, useEffect, useRef, useState } from 'react';
+import { Dispatch, type KeyboardEvent, type MouseEvent, useRef } from 'react';
 
-import { isNumber } from 'lodash';
-import { ItemParams, Menu, useContextMenu } from 'react-contexify';
-import useClickAway from 'react-use/lib/useClickAway';
-import useMouse from 'react-use/lib/useMouse';
+import { isNil, isNumber, isString } from 'lodash';
+import { Menu, MenuOnHideCallback, MenuOnShowCallback } from 'react-contexify';
 import styled from 'styled-components';
+import { toNumber } from 'lodash/fp';
 import { getAppDispatch } from '../../../../state/dispatch';
 import { Data } from '../../../../data/data';
 
-import { MessageInteraction } from '../../../../interactions';
-import { replyToMessage } from '../../../../interactions/conversationInteractions';
 import { MessageRenderingProps } from '../../../../models/messageType';
-import { pushUnblockToSend } from '../../../../session/utils/Toast';
-import {
-  openRightPanel,
-  showMessageInfoView,
-  toggleSelectedMessageId,
-} from '../../../../state/ducks/conversations';
+import { openRightPanel, showMessageInfoView } from '../../../../state/ducks/conversations';
 import {
   useMessageAttachments,
-  useMessageBody,
   useMessageDirection,
   useMessageIsDeletable,
   useMessageSender,
   useMessageSenderIsAdmin,
-  useMessageServerTimestamp,
   useMessageStatus,
-  useMessageTimestamp,
 } from '../../../../state/selectors';
 import {
   useSelectedConversationKey,
-  useSelectedIsBlocked,
   useSelectedIsLegacyGroup,
 } from '../../../../state/selectors/selectedConversation';
-import { saveAttachmentToDisk } from '../../../../util/attachment/attachmentsUtil';
-import { Reactions } from '../../../../util/reactions';
 import { SessionContextMenuContainer } from '../../../SessionContextMenuContainer';
-import { SessionEmojiPanel, StyledEmojiPanel } from '../../SessionEmojiPanel';
-import { MessageReactBar } from './MessageReactBar';
 import { CopyAccountIdMenuItem } from '../../../menu/items/CopyAccountId/CopyAccountIdMenuItem';
 import { Localizer } from '../../../basic/Localizer';
 import { ItemWithDataTestId } from '../../../menu/items/MenuItemWithDataTestId';
@@ -52,6 +36,14 @@ import { tr } from '../../../../localization/localeTools';
 import { sectionActions } from '../../../../state/ducks/section';
 import { useRemoveSenderFromCommunityAdmin } from '../../../menuAndSettingsHooks/useRemoveSenderFromCommunityAdmin';
 import { useAddSenderAsCommunityAdmin } from '../../../menuAndSettingsHooks/useAddSenderAsCommunityAdmin';
+import { showContextMenu } from '../../../../util/contextMenu';
+import { clampNumber } from '../../../../util/maths';
+import { PopoverTriggerPosition } from '../../../SessionTooltip';
+import { SessionLucideIconButton } from '../../../icon/SessionIconButton';
+import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
+import { SpacerSM } from '../../../basic/Text';
+import { SessionIcon } from '../../../icon';
+import { useMessageInteractions } from '../../../../hooks/useMessageInteractions';
 
 export type MessageContextMenuSelectorProps = Pick<
   MessageRenderingProps,
@@ -65,29 +57,69 @@ export type MessageContextMenuSelectorProps = Pick<
   | 'timestamp'
 >;
 
-type Props = { messageId: string; contextMenuId: string; enableReactions: boolean };
+type Props = {
+  messageId: string;
+  contextMenuId: string;
+  setTriggerPosition: Dispatch<PopoverTriggerPosition | null>;
+};
+
+const CONTEXTIFY_MENU_WIDTH_PX = 200;
+const SCREEN_RIGHT_MARGIN_PX = 104;
+
+export type ShowMessageContextMenuParams = {
+  id: string;
+  event: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>;
+  triggerPosition?: { x: number; y: number };
+};
+
+export function showMessageContextMenu({
+  id,
+  event,
+  triggerPosition,
+}: ShowMessageContextMenuParams) {
+  // this is quite dirty but considering that we want the context menu of the message to show on click on the attachment
+  // and the context menu save attachment item to save the right attachment I did not find a better way for now.
+  // NOTE: If you change this, also make sure to update the `saveAttachment()`
+  const attachmentIndexStr = (event?.target as any)?.parentElement?.getAttribute?.(
+    'data-attachmentindex'
+  );
+  const attachmentIndex =
+    isString(attachmentIndexStr) && !isNil(toNumber(attachmentIndexStr))
+      ? toNumber(attachmentIndexStr)
+      : 0;
+
+  const MAX_TRIGGER_X = window.innerWidth - CONTEXTIFY_MENU_WIDTH_PX - SCREEN_RIGHT_MARGIN_PX;
+  let _triggerPosition = triggerPosition;
+  if (!_triggerPosition) {
+    if (
+      'clientX' in event &&
+      'clientY' in event &&
+      isNumber(event.clientX) &&
+      isNumber(event.clientY)
+    ) {
+      _triggerPosition = { x: event.clientX, y: event.clientY };
+    } else {
+      throw new Error(
+        '[showMessageContextMenu] when called without a MouseEvent and triggerPosition must be provided'
+      );
+    }
+  }
+
+  // NOTE: contextify seems to have window y overflow avoidance but not window x
+  const position = { x: clampNumber(_triggerPosition.x, 0, MAX_TRIGGER_X), y: _triggerPosition.y };
+
+  showContextMenu({
+    id,
+    event,
+    position,
+    props: {
+      dataAttachmentIndex: attachmentIndex,
+    },
+  });
+}
 
 const StyledMessageContextMenu = styled.div`
   position: relative;
-
-  .contexify {
-    margin-left: -104px;
-  }
-`;
-
-const StyledEmojiPanelContainer = styled.div<{ x: number; y: number }>`
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 101;
-
-  ${StyledEmojiPanel} {
-    position: absolute;
-    left: ${props => `${props.x}px`};
-    top: ${props => `${props.y}px`};
-  }
 `;
 
 const CommunityAdminActionItems = ({ messageId }: WithMessageId) => {
@@ -116,17 +148,37 @@ const CommunityAdminActionItems = ({ messageId }: WithMessageId) => {
 
   return (
     <>
-      <ItemWithDataTestId onClick={banUserCb}>{tr('banUser')}</ItemWithDataTestId>
-      <ItemWithDataTestId onClick={unbanUserCb}>{tr('banUnbanUser')}</ItemWithDataTestId>
+      <ItemWithDataTestId onClick={banUserCb}>
+        <SessionLucideIconButton
+          iconSize="medium"
+          iconColor="inherit"
+          unicode={LUCIDE_ICONS_UNICODE.USER_ROUND_X}
+        />
+        <SpacerSM />
+        {tr('banUser')}
+      </ItemWithDataTestId>
+      <ItemWithDataTestId onClick={unbanUserCb}>
+        <SessionLucideIconButton
+          iconSize="medium"
+          iconColor="inherit"
+          unicode={LUCIDE_ICONS_UNICODE.USER_ROUND_CHECK}
+        />
+        <SpacerSM />
+        {tr('banUnbanUser')}
+      </ItemWithDataTestId>
       {/* only an admin can promote/remove moderators from a community. Another moderator cannot. */}
       {isSenderAdmin ? (
         removeSenderFromCommunityAdminCb ? (
           <ItemWithDataTestId onClick={removeSenderFromCommunityAdminCb}>
+            <SessionIcon iconType="deleteModerator" iconSize="medium" iconColor="inherit" />
+            <SpacerSM />
             {tr('adminRemoveAsAdmin')}
           </ItemWithDataTestId>
         ) : null
       ) : addSenderAsCommunityAdminCb ? (
         <ItemWithDataTestId onClick={addSenderAsCommunityAdminCb}>
+          <SessionIcon iconType="addModerator" iconSize="medium" iconColor="inherit" />
+          <SpacerSM />
           {tr('adminPromoteToAdmin')}
         </ItemWithDataTestId>
       ) : null}
@@ -157,152 +209,46 @@ export const showMessageInfoOverlay = async ({
 };
 
 export const MessageContextMenu = (props: Props) => {
-  const { messageId, contextMenuId, enableReactions } = props;
+  const { messageId, contextMenuId, setTriggerPosition } = props;
+
+  const { copyText, saveAttachment, reply, select } = useMessageInteractions(messageId);
+
   const dispatch = getAppDispatch();
-  const { hideAll } = useContextMenu();
+
   const isLegacyGroup = useSelectedIsLegacyGroup();
-
-  const isSelectedBlocked = useSelectedIsBlocked();
   const convoId = useSelectedConversationKey();
-
   const direction = useMessageDirection(messageId);
   const status = useMessageStatus(messageId);
   const isDeletable = useMessageIsDeletable(messageId);
-  const text = useMessageBody(messageId);
   const attachments = useMessageAttachments(messageId);
-  const timestamp = useMessageTimestamp(messageId);
-  const serverTimestamp = useMessageServerTimestamp(messageId);
   const sender = useMessageSender(messageId);
 
   const isOutgoing = direction === 'outgoing';
   const isSent = status === 'sent' || status === 'read'; // a read message should be replyable
 
-  const emojiPanelRef = useRef<HTMLDivElement>(null);
-  const [showEmojiPanel, setShowEmojiPanel] = useState(false);
-  // emoji-mart v5.2.2 default dimensions
-  const emojiPanelWidth = 354;
-  const emojiPanelHeight = 435;
-
   const contextMenuRef = useRef<HTMLDivElement | null>(null);
-  // FIXME: remove as cast
-  const { docX, docY } = useMouse(contextMenuRef as RefObject<Element>);
-  const [mouseX, setMouseX] = useState(0);
-  const [mouseY, setMouseY] = useState(0);
 
-  const onVisibilityChange = useCallback(
-    (isVisible: boolean) => {
-      if (isVisible) {
-        if (showEmojiPanel) {
-          setShowEmojiPanel(false);
-        }
-        window.contextMenuShown = true;
-        return;
-      }
-      // This function will called before the click event
-      // on the message would trigger (and I was unable to
-      // prevent propagation in this case), so use a short timeout
-      setTimeout(() => {
-        window.contextMenuShown = false;
-      }, 100);
-    },
-    [showEmojiPanel]
-  );
+  const onShow: MenuOnShowCallback = (_, { x, y }) => {
+    const triggerHeight = contextMenuRef.current?.clientHeight ?? 0;
+    const triggerWidth = contextMenuRef.current?.clientWidth ?? 0;
 
-  const onReply = useCallback(() => {
-    if (isSelectedBlocked) {
-      pushUnblockToSend();
-      return;
-    }
-    void replyToMessage(messageId);
-  }, [isSelectedBlocked, messageId]);
-
-  const copyText = useCallback(() => {
-    const selection = window.getSelection();
-    const selectedText = selection?.toString().trim();
-    // Note: we want to allow to copy through the "Copy" menu item the currently selected text, if any.
-    MessageInteraction.copyBodyToClipboard(selectedText || text);
-  }, [text]);
-
-  const onSelect = useCallback(() => {
-    dispatch(toggleSelectedMessageId(messageId));
-  }, [dispatch, messageId]);
-
-  const onShowEmoji = () => {
-    hideAll();
-    setMouseX(docX);
-    setMouseY(docY);
-    setShowEmojiPanel(true);
-  };
-
-  const onCloseEmoji = () => {
-    setShowEmojiPanel(false);
-    hideAll();
-  };
-
-  const onEmojiLoseFocus = () => {
-    window.log.debug('closed due to lost focus');
-    onCloseEmoji();
-  };
-
-  const onEmojiClick = async (args: any) => {
-    const emoji = args.native ?? args;
-    onCloseEmoji();
-    await Reactions.sendMessageReaction(messageId, emoji);
-  };
-
-  const saveAttachment = (e: ItemParams) => {
-    // this is quite dirty but considering that we want the context menu of the message to show on click on the attachment
-    // and the context menu save attachment item to save the right attachment I did not find a better way for now.
-    // Note: If you change this, also make sure to update the `handleContextMenu()` in GenericReadableMessage.tsx
-    const targetAttachmentIndex = isNumber(e?.props?.dataAttachmentIndex)
-      ? e.props.dataAttachmentIndex
-      : 0;
-    e.event.stopPropagation();
-    if (!attachments?.length || !convoId || !sender) {
-      return;
-    }
-
-    if (targetAttachmentIndex > attachments.length) {
-      return;
-    }
-    const messageTimestamp = timestamp || serverTimestamp || 0;
-    void saveAttachmentToDisk({
-      attachment: attachments[targetAttachmentIndex],
-      messageTimestamp,
-      messageSender: sender,
-      conversationId: convoId,
-      index: targetAttachmentIndex,
+    // FIXME: there is a bug with react-contexify where the position is just the event position,
+    // it doesnt include changes to prevent the menu from overflowing the window. This temporary
+    // fix resolves this by mirroring the y-offset adjustment.
+    const yClamped = clampNumber(y, 0, window.innerHeight - triggerHeight);
+    setTriggerPosition({
+      x,
+      // Changes the x-anchor from the center to the far left
+      offsetX: -triggerWidth / 2,
+      y: yClamped,
+      height: triggerHeight,
+      width: triggerWidth,
     });
   };
 
-  useClickAway(emojiPanelRef, () => {
-    onEmojiLoseFocus();
-  });
-
-  useEffect(() => {
-    if (emojiPanelRef.current) {
-      const { innerWidth: windowWidth, innerHeight: windowHeight } = window;
-
-      if (mouseX + emojiPanelWidth > windowWidth) {
-        let x = mouseX;
-        x = (mouseX + emojiPanelWidth - windowWidth) * 2;
-
-        if (x === mouseX) {
-          return;
-        }
-        setMouseX(mouseX - x);
-      }
-
-      if (mouseY + emojiPanelHeight > windowHeight) {
-        const y = mouseY + emojiPanelHeight * 1.25 - windowHeight;
-
-        if (y === mouseY) {
-          return;
-        }
-        setMouseY(mouseY - y);
-      }
-    }
-  }, [emojiPanelWidth, emojiPanelHeight, mouseX, mouseY]);
+  const onHide: MenuOnHideCallback = () => {
+    setTriggerPosition(null);
+  };
 
   if (!convoId) {
     return null;
@@ -310,13 +256,9 @@ export const MessageContextMenu = (props: Props) => {
 
   if (isLegacyGroup) {
     return (
-      <StyledMessageContextMenu ref={contextMenuRef}>
+      <StyledMessageContextMenu>
         <SessionContextMenuContainer>
-          <Menu
-            id={contextMenuId}
-            onVisibilityChange={onVisibilityChange}
-            animation={getMenuAnimation()}
-          >
+          <Menu id={contextMenuId} animation={getMenuAnimation()}>
             {attachments?.length && attachments.every(m => !m.pending && m.path) ? (
               <ItemWithDataTestId onClick={saveAttachment}>{tr('save')}</ItemWithDataTestId>
             ) : null}
@@ -336,51 +278,70 @@ export const MessageContextMenu = (props: Props) => {
   }
 
   return (
-    <StyledMessageContextMenu ref={contextMenuRef}>
-      {enableReactions && showEmojiPanel && (
-        <StyledEmojiPanelContainer role="button" x={mouseX} y={mouseY}>
-          <SessionEmojiPanel
-            ref={emojiPanelRef}
-            // eslint-disable-next-line @typescript-eslint/no-misused-promises
-            onEmojiClicked={onEmojiClick}
-            show={showEmojiPanel}
-            isModal={true}
-            onClose={onCloseEmoji}
-          />
-        </StyledEmojiPanelContainer>
-      )}
+    <StyledMessageContextMenu>
       <SessionContextMenuContainer>
         <Menu
+          ref={contextMenuRef}
           id={contextMenuId}
-          onVisibilityChange={onVisibilityChange}
           animation={getMenuAnimation()}
+          onShow={onShow}
+          onHide={onHide}
+          viewportMargin={12}
         >
-          {enableReactions && (
-            // eslint-disable-next-line @typescript-eslint/no-misused-promises
-            <MessageReactBar
-              action={onEmojiClick}
-              additionalAction={onShowEmoji}
-              messageId={messageId}
-            />
-          )}
           {attachments?.length && attachments.every(m => !m.pending && m.path) ? (
-            <ItemWithDataTestId onClick={saveAttachment}>{tr('save')}</ItemWithDataTestId>
+            <ItemWithDataTestId onClick={saveAttachment}>
+              <SessionLucideIconButton
+                iconSize="medium"
+                iconColor="inherit"
+                unicode={LUCIDE_ICONS_UNICODE.ARROW_DOWN_TO_LINE}
+              />
+              <SpacerSM />
+              {tr('save')}
+            </ItemWithDataTestId>
           ) : null}
-          <ItemWithDataTestId onClick={copyText}>{tr('copy')}</ItemWithDataTestId>
+          <ItemWithDataTestId onClick={copyText}>
+            <SessionLucideIconButton
+              iconSize="medium"
+              iconColor="inherit"
+              unicode={LUCIDE_ICONS_UNICODE.COPY}
+            />
+            <SpacerSM />
+            {tr('copy')}
+          </ItemWithDataTestId>
           {(isSent || !isOutgoing) && (
-            <ItemWithDataTestId onClick={onReply}>{tr('reply')}</ItemWithDataTestId>
+            <ItemWithDataTestId onClick={reply}>
+              <SessionLucideIconButton
+                iconSize="medium"
+                iconColor="inherit"
+                unicode={LUCIDE_ICONS_UNICODE.REPLY}
+              />
+              <SpacerSM />
+              {tr('reply')}
+            </ItemWithDataTestId>
           )}
           <ItemWithDataTestId
             onClick={() => {
               void showMessageInfoOverlay({ messageId, dispatch });
             }}
           >
-            <Localizer token="info" />
+            <SessionLucideIconButton
+              iconSize="medium"
+              iconColor="inherit"
+              unicode={LUCIDE_ICONS_UNICODE.INFO}
+            />
+            <SpacerSM />
+            <Localizer token="messageInfo" />
           </ItemWithDataTestId>
-          {sender ? <CopyAccountIdMenuItem pubkey={sender} /> : null}
+          {sender && !isOutgoing ? <CopyAccountIdMenuItem pubkey={sender} /> : null}
           <RetryItem messageId={messageId} />
           {isDeletable ? (
-            <ItemWithDataTestId onClick={onSelect}>
+            <ItemWithDataTestId onClick={select}>
+              <SessionLucideIconButton
+                iconSize="medium"
+                iconColor="inherit"
+                unicode={LUCIDE_ICONS_UNICODE.CIRCLE_CHECK}
+              />
+              <SpacerSM />
               <Localizer token="select" />
             </ItemWithDataTestId>
           ) : null}

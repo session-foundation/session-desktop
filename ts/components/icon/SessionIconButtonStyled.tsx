@@ -38,7 +38,12 @@ export const StyledSessionIconButton = styled.button<{
     ${props => !props.disabled && !props.color && 'fill: var(--button-icon-stroke-hover-color);'}
   }
 
-  &:hover {
+  &:focus svg path {
+    ${props => !props.disabled && !props.color && 'fill: var(--button-icon-stroke-hover-color);'}
+  }
+
+  &:hover,
+  &:focus {
     ${props =>
       props.disabled
         ? ''

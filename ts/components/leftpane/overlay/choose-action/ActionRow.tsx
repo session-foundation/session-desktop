@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { SessionDataTestId } from 'react';
+import type { SessionDataTestId, MouseEvent } from 'react';
 import { Flex } from '../../../basic/Flex';
 import { LucideIcon } from '../../../icon/LucideIcon';
 import type { WithLucideUnicode } from '../../../icon/lucide';
@@ -50,7 +50,7 @@ export const StyledActionRowContainer = styled(Flex)`
 type ActionRowProps = WithLucideUnicode & {
   title: string;
   ariaLabel: string;
-  onClick: () => void;
+  onClick: (e: MouseEvent<HTMLButtonElement>) => void;
   dataTestId: SessionDataTestId;
 };
 

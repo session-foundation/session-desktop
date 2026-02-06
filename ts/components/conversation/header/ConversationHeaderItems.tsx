@@ -18,10 +18,12 @@ import { SessionLucideIconButton } from '../../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 import { useIsGroupV2, useIsLegacyGroup } from '../../../hooks/useParamSelector';
 import { useLibGroupInvitePending } from '../../../state/selectors/userGroups';
+import { createButtonOnKeyDownForClickEventHandler } from '../../../util/keyboardShortcuts';
 
 const StyledConversationHeaderAvatar = styled.span`
   min-width: 28px;
   user-select: none;
+  border-radius: 50%;
 `;
 
 export const AvatarHeader = (props: { pubkey: string; onAvatarClick?: () => void }) => {
@@ -45,8 +47,12 @@ export const AvatarHeader = (props: { pubkey: string; onAvatarClick?: () => void
       ? onAvatarClick
       : undefined;
 
+  const onKeyDown = optOnAvatarClick
+    ? createButtonOnKeyDownForClickEventHandler(optOnAvatarClick)
+    : undefined;
+
   return (
-    <StyledConversationHeaderAvatar>
+    <StyledConversationHeaderAvatar onKeyDown={onKeyDown} tabIndex={0} role="button">
       <Avatar
         size={AvatarSize.S}
         onAvatarClick={optOnAvatarClick}

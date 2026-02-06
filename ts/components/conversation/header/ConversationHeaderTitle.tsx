@@ -25,6 +25,7 @@ import { tr } from '../../../localization/localeTools';
 import { useShowProBadgeFor } from '../../../hooks/useHasPro';
 import { useProBadgeOnClickCb } from '../../menuAndSettingsHooks/useProBadgeOnClickCb';
 import { ProIconButton } from '../../buttons/ProButton';
+import { clampNumber } from '../../../util/maths';
 
 export type SubtitleStrings = Record<string, string> & {
   notifications?: string;
@@ -265,7 +266,7 @@ export const ConversationHeaderTitle = ({ showSubtitle }: { showSubtitle: boolea
 
   const displayName = isMe ? tr('noteToSelf') : convoName;
 
-  const clampedSubtitleIndex = Math.max(0, Math.min(subtitles.length - 1, subtitleIndex));
+  const clampedSubtitleIndex = clampNumber(subtitleIndex, 0, subtitles.length - 1);
 
   const visibleSubtitle = subtitles?.[clampedSubtitleIndex];
 

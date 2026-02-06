@@ -42,17 +42,16 @@ type Props = SessionMessageListProps & {
 
   conversation?: ReduxConversationType;
   animateQuotedMessageId: string | undefined;
-  scrollToNow: () => Promise<void>;
+  scrollToNow: () => Promise<number>;
 };
 
 const StyledMessagesContainer = styled.div`
   display: flex;
-  flex-grow: 1;
   gap: var(--margins-sm);
-  flex-direction: column-reverse;
+  flex-direction: column;
+  justify-items: end;
   position: relative;
   overflow-x: hidden;
-  min-width: 370px;
   scrollbar-width: 4px;
   padding-top: var(--margins-sm);
   padding-bottom: var(--margins-xl);
@@ -130,14 +129,6 @@ class SessionMessagesListContainerInner extends Component<Props> {
           ref={this.props.messageContainerRef}
           data-testid="messages-container"
         >
-          <StyledTypingBubbleContainer>
-            <TypingBubble
-              conversationType={conversation.type}
-              isTyping={!!conversation.isTyping}
-              key="typing-bubble"
-            />
-          </StyledTypingBubbleContainer>
-
           <ScrollToLoadedMessageContext.Provider value={this.scrollToLoadedMessage}>
             <SessionMessagesList
               scrollAfterLoadMore={(
@@ -152,13 +143,18 @@ class SessionMessagesListContainerInner extends Component<Props> {
               onEndPressed={this.scrollEnd}
             />
           </ScrollToLoadedMessageContext.Provider>
-
-          <SessionScrollButton
-            // eslint-disable-next-line @typescript-eslint/no-misused-promises
-            onClickScrollBottom={this.props.scrollToNow}
-            key="scroll-down-button"
-          />
+          <StyledTypingBubbleContainer>
+            <TypingBubble
+              conversationType={conversation.type}
+              isTyping={!!conversation.isTyping}
+              key="typing-bubble"
+            />
+          </StyledTypingBubbleContainer>
         </StyledMessagesContainer>
+        <SessionScrollButton
+          onClickScrollBottom={this.props.scrollToNow}
+          key="scroll-down-button"
+        />
       </MessagesContainerRefContext.Provider>
     );
   }
@@ -283,7 +279,7 @@ class SessionMessagesListContainerInner extends Component<Props> {
       return;
     }
 
-    messageContainer.scrollTo(0, 0);
+    messageContainer.scrollTo(0, messageContainer.scrollHeight);
   }
 
   private scrollToLoadedMessage(loadedMessageToScrollTo: string, reason: ScrollToLoadedReasons) {

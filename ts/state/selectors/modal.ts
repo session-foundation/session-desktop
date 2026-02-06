@@ -103,6 +103,10 @@ export function useDebugMenuModal() {
   return useSelector((state: StateType) => getModal(state).debugMenuModal);
 }
 
+export function useKeyboardShortcutsModal() {
+  return useSelector((state: StateType) => getModal(state).keyboardShortcutsModal);
+}
+
 export function useConversationSettingsModal() {
   return useSelector((state: StateType) => getModal(state).conversationSettingsModal);
 }

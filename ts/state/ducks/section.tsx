@@ -8,13 +8,26 @@ export enum SectionType {
   ThemeSwitch,
 }
 
-export type LeftOverlayMode =
+export type LeftOverlayType =
   | 'choose-action'
   | 'message'
   | 'open-group'
   | 'closed-group'
   | 'message-requests'
   | 'invite-a-friend';
+
+type LeftOverlayTypesWithInput = 'message' | 'open-group' | 'closed-group';
+
+type LeftOverlayDefaultState = {
+  type: Exclude<LeftOverlayType, LeftOverlayTypesWithInput>;
+  params: null;
+};
+type LeftOverlayWithInputState = {
+  type: Extract<LeftOverlayType, LeftOverlayTypesWithInput>;
+  params: { initialInputValue: string };
+};
+
+export type LeftOverlayMode = LeftOverlayDefaultState | LeftOverlayWithInputState;
 
 type RightPanelDefaultState = { type: 'default'; params: null };
 type RightPanelMessageInfoState = {

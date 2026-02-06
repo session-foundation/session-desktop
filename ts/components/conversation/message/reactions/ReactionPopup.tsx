@@ -8,6 +8,7 @@ import { nativeEmojiData } from '../../../../util/emoji';
 import { useSelectedIsPublic } from '../../../../state/selectors/selectedConversation';
 import { shortenDisplayName } from '../../../../session/profile_manager/ShortenDisplayName';
 import type { TrArgs } from '../../../../localization/localeTools';
+import { createButtonOnKeyDownForClickEventHandler } from '../../../../util/keyboardShortcuts';
 
 export const StyledPopupContainer = styled.div`
   display: flex;
@@ -107,8 +108,10 @@ export const ReactionPopup = (props: Props) => {
     [hasMe, contacts, count, emoji, emojiName]
   );
 
+  const onKeyDown = createButtonOnKeyDownForClickEventHandler(onClick);
+
   return (
-    <StyledPopupContainer onClick={onClick}>
+    <StyledPopupContainer onClick={onClick} onKeyDown={onKeyDown}>
       <Localizer {...i18nProps} />
       <StyledEmoji role={'img'} aria-label={emojiAriaLabel}>
         {emoji}
