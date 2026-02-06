@@ -291,10 +291,6 @@
   align-items: center;
 
   cursor: pointer;
-
-  &:hover {
-    background-color: var(--conversation-tab-background-hover-color);
-  }
 }
 
 .module-conversation-list-item__content {

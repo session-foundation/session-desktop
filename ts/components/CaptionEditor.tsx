@@ -4,6 +4,7 @@ import { AttachmentType } from '../types/Attachment';
 import { AriaLabels } from '../util/hardcodedAriaLabels';
 import { LUCIDE_ICONS_UNICODE } from './icon/lucide';
 import { SessionLucideIconButton } from './icon/SessionIconButton';
+import { useHotkey } from '../hooks/useHotkey';
 
 type Props = {
   attachment: AttachmentType;
@@ -47,6 +48,12 @@ const CaptionEditorObject = (props: Props) => {
  */
 export const CaptionEditor = (props: Props) => {
   const { onClose } = props;
+
+  useHotkey('Escape', e => {
+    e.stopPropagation();
+    e.preventDefault();
+    onClose();
+  });
 
   return (
     <div role="dialog" className="module-caption-editor">

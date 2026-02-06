@@ -219,7 +219,7 @@ function SettingsSection() {
         }
         text={{ token: 'sessionMessageRequests' }}
         onClick={() => {
-          dispatch(sectionActions.setLeftOverlayMode('message-requests'));
+          dispatch(sectionActions.setLeftOverlayMode({ type: 'message-requests', params: null }));
           dispatch(userSettingsModal(null));
           dispatch(resetConversationExternal());
         }}

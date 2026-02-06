@@ -11,7 +11,7 @@ import { MessageRequestsBanner } from './MessageRequestsBanner';
 
 import { getLeftPaneConversationIds } from '../../state/selectors/conversations';
 import { useSearchTermForType } from '../../state/selectors/search';
-import { useLeftOverlayMode } from '../../state/selectors/section';
+import { useLeftOverlayModeType } from '../../state/selectors/section';
 import { assertUnreachable } from '../../types/sqlSharedTypes';
 import { SessionSearchInput } from '../SessionSearchInput';
 import { StyledLeftPaneList } from './LeftPaneList';
@@ -23,6 +23,10 @@ import { OverlayMessage } from './overlay/OverlayMessage';
 import { OverlayMessageRequest } from './overlay/OverlayMessageRequest';
 import { OverlayChooseAction } from './overlay/choose-action/OverlayChooseAction';
 import { sectionActions } from '../../state/ducks/section';
+import { openConversationWithMessages } from '../../state/ducks/conversations';
+import { useKeyboardShortcut } from '../../hooks/useKeyboardShortcut';
+import { KbdShortcut } from '../../util/keyboardShortcuts';
+import { UserUtils } from '../../session/utils';
 
 const StyledLeftPaneContent = styled.div`
   display: flex;
@@ -41,7 +45,7 @@ const StyledConversationListContent = styled.div`
 `;
 
 const ClosableOverlay = () => {
-  const leftOverlayMode = useLeftOverlayMode();
+  const leftOverlayMode = useLeftOverlayModeType();
 
   switch (leftOverlayMode) {
     case 'choose-action':
@@ -85,10 +89,76 @@ const ConversationRow = (
   return <ConversationListItem key={key} style={style} conversationId={conversationId} />;
 };
 
-const ConversationList = () => {
+function openConversation(id: string) {
+  return openConversationWithMessages({ conversationKey: id, messageId: null });
+}
+
+function useConversationListKeyboardShortcuts(conversationIds: Array<string>) {
+  const openNoteToSelf = () => {
+    const id = UserUtils.getOurPubKeyStrFromCache();
+    void openConversationWithMessages({ conversationKey: id, messageId: null });
+  };
+
+  useKeyboardShortcut({ shortcut: KbdShortcut.openNoteToSelf, handler: openNoteToSelf });
+  useKeyboardShortcut({
+    shortcut: KbdShortcut.conversationNavigation1,
+    handler: () => void openConversation(conversationIds[0]),
+    disabled: !conversationIds[0],
+  });
+  useKeyboardShortcut({
+    shortcut: KbdShortcut.conversationNavigation2,
+    handler: () => void openConversation(conversationIds[1]),
+    disabled: !conversationIds[1],
+  });
+  useKeyboardShortcut({
+    shortcut: KbdShortcut.conversationNavigation3,
+    handler: () => void openConversation(conversationIds[2]),
+    disabled: !conversationIds[2],
+  });
+  useKeyboardShortcut({
+    shortcut: KbdShortcut.conversationNavigation4,
+    handler: () => void openConversation(conversationIds[3]),
+    disabled: !conversationIds[3],
+  });
+  useKeyboardShortcut({
+    shortcut: KbdShortcut.conversationNavigation5,
+    handler: () => void openConversation(conversationIds[4]),
+    disabled: !conversationIds[4],
+  });
+  useKeyboardShortcut({
+    shortcut: KbdShortcut.conversationNavigation6,
+    handler: () => void openConversation(conversationIds[5]),
+    disabled: !conversationIds[5],
+  });
+  useKeyboardShortcut({
+    shortcut: KbdShortcut.conversationNavigation7,
+    handler: () => void openConversation(conversationIds[6]),
+    disabled: !conversationIds[6],
+  });
+  useKeyboardShortcut({
+    shortcut: KbdShortcut.conversationNavigation8,
+    handler: () => void openConversation(conversationIds[7]),
+    disabled: !conversationIds[7],
+  });
+  useKeyboardShortcut({
+    shortcut: KbdShortcut.conversationNavigation9,
+    handler: () => void openConversation(conversationIds[8]),
+    disabled: !conversationIds[8],
+  });
+}
+
+function useConversationList() {
   const searchTerm = useSearchTermForType('global');
   const conversationIds = useSelector(getLeftPaneConversationIds);
+  return {
+    searchTerm,
+    conversationIds,
+  };
+}
 
+const ConversationList = () => {
+  const { searchTerm, conversationIds } = useConversationList();
+  useConversationListKeyboardShortcuts(conversationIds);
   if (!isEmpty(searchTerm)) {
     return <SearchResults />;
   }
@@ -104,6 +174,7 @@ const ConversationList = () => {
       <AutoSizer>
         {({ height, width }) => (
           <List
+            tabIndex={-1}
             height={height}
             rowCount={conversationIds.length}
             rowHeight={64}
@@ -120,7 +191,7 @@ const ConversationList = () => {
 };
 
 export const LeftPaneMessageSection = () => {
-  const leftOverlayMode = useLeftOverlayMode();
+  const leftOverlayMode = useLeftOverlayModeType();
   const dispatch = getAppDispatch();
 
   return (
@@ -133,7 +204,9 @@ export const LeftPaneMessageSection = () => {
           <SessionSearchInput searchType="global" />
           <MessageRequestsBanner
             handleOnClick={() => {
-              dispatch(sectionActions.setLeftOverlayMode('message-requests'));
+              dispatch(
+                sectionActions.setLeftOverlayMode({ type: 'message-requests', params: null })
+              );
             }}
           />
           <ConversationList />

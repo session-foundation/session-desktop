@@ -509,6 +509,7 @@ const handledBooleanFeatureFlags = proBooleanFlags
     'debugSnodePool',
     'debugOnlineState',
     'debugInsecureNodeFetch',
+    'debugKeyboardShortcuts',
   ]);
 
 export const FeatureFlags = ({ forceUpdate }: { forceUpdate: () => void }) => {

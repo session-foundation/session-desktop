@@ -304,6 +304,8 @@ export type ConversationsStateType = {
   shouldHighlightMessage: boolean;
   nextMessageToPlayId?: string;
   mentionMembers: Array<SessionSuggestionDataItem>;
+  focusedMessageId: string | null;
+  isCompositionTextAreaFocused: boolean;
 };
 
 export function lookupQuoteInStore({
@@ -489,6 +491,8 @@ export function getEmptyConversationState(): ConversationsStateType {
     oldBottomMessageId: null,
     shouldHighlightMessage: false,
     mostRecentMessageId: null,
+    focusedMessageId: null,
+    isCompositionTextAreaFocused: false,
   };
 }
 
@@ -654,7 +658,10 @@ const conversationsSlice = createSlice({
       return { ...state, showRightPanel: true };
     },
     closeRightPanel(state: ConversationsStateType) {
-      return { ...state, showRightPanel: false, messageInfoId: undefined };
+      return { ...state, showRightPanel: false };
+    },
+    removeMessageInfoId(state: ConversationsStateType) {
+      return { ...state, messageInfoId: undefined };
     },
     addMessageIdToSelection(state: ConversationsStateType, action: PayloadAction<string>) {
       if (state.selectedMessageIds.some(id => id === action.payload)) {
@@ -684,7 +691,12 @@ const conversationsSlice = createSlice({
     resetSelectedMessageIds(state: ConversationsStateType) {
       return { ...state, selectedMessageIds: [] };
     },
-
+    setFocusedMessageId(state: ConversationsStateType, action: PayloadAction<string | null>) {
+      return { ...state, focusedMessageId: action.payload };
+    },
+    setIsCompositionTextAreaFocused(state: ConversationsStateType, action: PayloadAction<boolean>) {
+      return { ...state, isCompositionTextAreaFocused: action.payload };
+    },
     conversationAdded(
       state: ConversationsStateType,
       action: PayloadAction<{
@@ -844,6 +856,8 @@ const conversationsSlice = createSlice({
         oldTopMessageId: null,
         oldBottomMessageId: null,
         mentionMembers: [],
+        focusedMessageId: null,
+        isCompositionTextAreaFocused: false,
       };
     },
     openConversationToSpecificMessage(
@@ -1105,8 +1119,11 @@ export const {
   showMessageInfoView,
   openRightPanel,
   closeRightPanel,
+  removeMessageInfoId,
   addMessageIdToSelection,
   resetSelectedMessageIds,
+  setFocusedMessageId,
+  setIsCompositionTextAreaFocused,
   toggleSelectedMessageId,
   quoteMessage,
   showScrollToBottomButton,
