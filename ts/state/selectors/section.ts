@@ -16,7 +16,7 @@ const getLeftOverlayMode = createSelector(
   (state: SectionStateType): LeftOverlayMode | undefined => state.leftOverlayMode
 );
 
-const getLeftOverlayModeType = createSelector(
+export const getLeftOverlayModeType = createSelector(
   getSection,
   (state: SectionStateType): LeftOverlayType | undefined => state.leftOverlayMode?.type
 );

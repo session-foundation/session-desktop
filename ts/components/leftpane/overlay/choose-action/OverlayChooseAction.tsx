@@ -1,71 +1,18 @@
-import { useCallback, useEffect } from 'react';
+import { useEffect } from 'react';
 
 import { isEmpty, isString } from 'lodash';
-import type { PubkeyType } from 'libsession_util_nodejs';
 import useKey from 'react-use/lib/useKey';
 import { getAppDispatch } from '../../../../state/dispatch';
 import { SpacerSM } from '../../../basic/Text';
 import { StyledLeftPaneOverlay } from '../OverlayMessage';
 import { ActionRow, StyledActionRowContainer } from './ActionRow';
 import { ContactsListWithBreaks } from './ContactsListWithBreaks';
-import { groupInfoActions } from '../../../../state/ducks/metaGroups';
 import { sectionActions } from '../../../../state/ducks/section';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 import { tr } from '../../../../localization/localeTools';
 import { useIsInScope } from '../../../../state/focus';
 import { useLeftOverlayModeType } from '../../../../state/selectors/section';
-
-export function useOverlayChooseAction() {
-  const dispatch = getAppDispatch();
-  const openNewMessage = useCallback(
-    (conversationId?: string) => {
-      dispatch(
-        sectionActions.setLeftOverlayMode({
-          type: 'message',
-          params: { initialInputValue: conversationId ?? '' },
-        })
-      );
-    },
-    [dispatch]
-  );
-
-  const openCreateGroup = useCallback(
-    (groupName?: string, members?: Array<PubkeyType>) => {
-      dispatch(
-        sectionActions.setLeftOverlayMode({
-          type: 'closed-group',
-          params: { initialInputValue: groupName ?? '' },
-        })
-      );
-      dispatch(groupInfoActions.updateGroupCreationName({ name: groupName ?? '' }));
-      dispatch(groupInfoActions.setSelectedGroupMembers({ membersToSet: members ?? [] }));
-    },
-    [dispatch]
-  );
-
-  const openJoinCommunity = useCallback(
-    (communityUrl?: string) => {
-      dispatch(
-        sectionActions.setLeftOverlayMode({
-          type: 'open-group',
-          params: { initialInputValue: communityUrl ?? '' },
-        })
-      );
-    },
-    [dispatch]
-  );
-
-  const inviteAFriend = useCallback(() => {
-    dispatch(sectionActions.setLeftOverlayMode({ type: 'invite-a-friend', params: null }));
-  }, [dispatch]);
-
-  return {
-    openNewMessage,
-    openCreateGroup,
-    openJoinCommunity,
-    inviteAFriend,
-  };
-}
+import { useOverlayChooseAction } from '../../../../hooks/useOverlayChooseAction';
 
 function useChooseActionOnPaste() {
   const { openNewMessage, openJoinCommunity } = useOverlayChooseAction();
@@ -93,18 +40,23 @@ function useChooseActionOnPaste() {
         }
       }
     }
-    document?.addEventListener('paste', handlePaste);
+    document.addEventListener('paste', handlePaste);
 
     return () => {
-      document?.removeEventListener('paste', handlePaste);
+      document.removeEventListener('paste', handlePaste);
     };
   }, [inScope, leftOverlayMode, openNewMessage, openJoinCommunity]);
+}
+
+// NOTE: [react-compiler] this has to live here for the hook to be identified as static
+function useOverlayChooseActionWrapper() {
+  return useOverlayChooseAction();
 }
 
 export const OverlayChooseAction = () => {
   const dispatch = getAppDispatch();
   const { openNewMessage, openCreateGroup, openJoinCommunity, inviteAFriend } =
-    useOverlayChooseAction();
+    useOverlayChooseActionWrapper();
   useChooseActionOnPaste();
 
   function closeOverlay() {

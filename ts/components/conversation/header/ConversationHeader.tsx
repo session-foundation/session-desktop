@@ -29,7 +29,7 @@ import { Constants } from '../../../session';
 import { useKeyboardShortcut } from '../../../hooks/useKeyboardShortcut';
 import { KbdShortcut } from '../../../util/keyboardShortcuts';
 import { useToggleConversationSettingsFor } from '../../menuAndSettingsHooks/useToggleConversationSettingsFor';
-import { useOverlayChooseAction } from '../../leftpane/overlay/choose-action/OverlayChooseAction';
+import { useOverlayChooseAction } from '../../../hooks/useOverlayChooseAction';
 
 const StyledConversationHeader = styled.div`
   display: flex;

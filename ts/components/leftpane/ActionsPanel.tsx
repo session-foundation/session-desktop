@@ -63,8 +63,8 @@ import { SettingsKey } from '../../data/settings-key';
 import { useKeyboardShortcut } from '../../hooks/useKeyboardShortcut';
 import { KbdShortcut } from '../../util/keyboardShortcuts';
 import { useNewConversationCallback } from '../buttons/MenuButton';
-import { useOverlayChooseAction } from './overlay/choose-action/OverlayChooseAction';
 import { useFocusScope } from '../../state/focus';
+import { useOverlayChooseAction } from '../../hooks/useOverlayChooseAction';
 
 const StyledContainerAvatar = styled.button`
   padding: var(--margins-lg);
