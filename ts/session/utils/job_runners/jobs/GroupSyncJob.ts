@@ -49,6 +49,7 @@ import { DisappearingMessages } from '../../../disappearing_messages';
 import { GroupUpdateMemberChangeMessage } from '../../../messages/outgoing/controlMessage/group_v2/to_group/GroupUpdateMemberChangeMessage';
 import { getFeatureFlag } from '../../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { longOrNumberToNumber } from '../../../../types/long/longOrNumberToNumber';
+import { uuidV4 } from '../../../../util/uuid';
 
 const defaultMsBetweenRetries = 15000; // a long time between retries, to avoid running multiple jobs at the same time, when one was postponed at the same time as one already planned (5s)
 const defaultMaxAttempts = 2;
@@ -283,6 +284,7 @@ async function allFailedToSentGroupControlMessagesToRetry(groupPk: GroupPubkeyTy
           identifier,
           createAtNetworkTimestamp,
           secretKey,
+          dbMessageIdentifier: uuidV4(),
           sodium,
           ...DisappearingMessages.getExpireDetailsForOutgoingMessage(
             convo,

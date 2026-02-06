@@ -501,7 +501,7 @@ export async function promoteUsersInGroup({
     sender: us,
     sentAt,
     convo,
-    markAlreadySent: false, // the store below will mark the message as sent with dbMsgIdentifier
+    markAlreadySent: false, // the store below will mark the message as sent with dbMessageIdentifier
     messageHash: null,
   });
   const groupMemberChange = await GroupUpdateMessageFactory.getPromotedControlMessage({
@@ -510,7 +510,7 @@ export async function promoteUsersInGroup({
     groupPk,
     promoted: membersHex,
     createAtNetworkTimestamp: sentAt,
-    dbMsgIdentifier: msgModel.id,
+    dbMessageIdentifier: msgModel.id,
   });
 
   if (!groupMemberChange) {

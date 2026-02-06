@@ -36,6 +36,7 @@ import { WithMessageHash } from '../../types/with';
 import { NetworkTime } from '../../../util/NetworkTime';
 import { sleepFor } from '../Promise';
 import { tr } from '../../../localization/localeTools';
+import { uuidV4 } from '../../../util/uuid';
 
 export type InputItem = { deviceId: string; label: string };
 
@@ -393,7 +394,7 @@ export async function selectAudioOutputByDeviceId(audioOutputDeviceId: string) {
   }
 }
 
-async function createOfferAndSendIt(recipient: string, msgIdentifier: string | null) {
+async function createOfferAndSendIt(recipient: string, dbMessageIdentifier: string | null) {
   try {
     const convo = ConvoHub.use().get(recipient);
     if (!convo) {
@@ -415,13 +416,13 @@ async function createOfferAndSendIt(recipient: string, msgIdentifier: string | n
     if (offer && offer.sdp) {
       const lines = offer.sdp.split(/\r?\n/);
       const lineWithFtmpIndex = lines.findIndex(f => f.startsWith('a=fmtp:111'));
-      // If webrtc does not find any audio input when initializing, the offer will not have a line with `a=fmtp:111` at all, `lineWithFtmpIndex` will be invalid.
+      // If web rtc does not find any audio input when initializing, the offer will not have a line with `a=fmtp:111` at all, `lineWithFtmpIndex` will be invalid.
       if (lineWithFtmpIndex > -1) {
         const partBeforeComma = lines[lineWithFtmpIndex].split(';');
         lines[lineWithFtmpIndex] = `${partBeforeComma[0]};cbr=1`;
       }
-      let overridenSdps = lines.join('\n');
-      overridenSdps = overridenSdps.replace(
+      let overriddenSdps = lines.join('\n');
+      overriddenSdps = overriddenSdps.replace(
         // eslint-disable-next-line prefer-regex-literals
         new RegExp('.+urn:ietf:params:rtp-hdrext:ssrc-audio-level.*\\r?\\n'),
         ''
@@ -433,9 +434,9 @@ async function createOfferAndSendIt(recipient: string, msgIdentifier: string | n
 
       const offerMessage = new CallMessage({
         createAtNetworkTimestamp: NetworkTime.now(),
-        identifier: msgIdentifier || undefined,
+        dbMessageIdentifier: dbMessageIdentifier || uuidv4(),
         type: SignalService.CallMessage.Type.OFFER,
-        sdps: [overridenSdps],
+        sdps: [overriddenSdps],
         uuid: currentCallUUID,
         expirationType,
         expireTimer,
@@ -527,6 +528,7 @@ export async function USER_callRecipient(recipient: string) {
     uuid: currentCallUUID,
     expirationType: 'unknown', // Note: Preoffer messages are not added to the DB, so no need to make them expire
     expireTimer: 0,
+    dbMessageIdentifier: uuidV4(),
   });
 
   window.log.info('Sending preOffer message to ', ed25519Str(recipient));
@@ -559,7 +561,7 @@ export async function USER_callRecipient(recipient: string) {
   });
 
   await openMediaDevicesAndAddTracks();
-  // Note CallMessages are very custom, as we moslty don't sync them to ourselves.
+  // Note CallMessages are very custom, as we mostly don't sync them to ourselves.
   // So here, we are creating a DaS/off message saved locally which will expire locally only,
   // but the "offer" we are sending the the called pubkey had a DaR on it (as that one is synced, and should expire after our message was read)
   const expireDetails = DisappearingMessages.forcedDeleteAfterSendMsgSetting(calledConvo);
@@ -618,7 +620,7 @@ const iceSenderDebouncer = _.debounce(async (recipient: string) => {
     window.log.warn('Cannot send ice candidates without a currentCallUUID');
     return;
   }
-  const callIceCandicates = new CallMessage({
+  const callIceCandidates = new CallMessage({
     createAtNetworkTimestamp: NetworkTime.now(),
     type: SignalService.CallMessage.Type.ICE_CANDIDATES,
     sdpMLineIndexes: validCandidates.map(c => c.sdpMLineIndex),
@@ -627,6 +629,7 @@ const iceSenderDebouncer = _.debounce(async (recipient: string) => {
     uuid: currentCallUUID,
     expirationType: 'unknown', // Note: An ICE_CANDIDATES is not saved to the DB on the recipient's side, so no need to make it expire
     expireTimer: 0,
+    dbMessageIdentifier: uuidV4(),
   });
 
   window.log.info(
@@ -635,7 +638,7 @@ const iceSenderDebouncer = _.debounce(async (recipient: string) => {
 
   await MessageQueue.use().sendTo1o1NonDurably({
     pubkey: PubKey.cast(recipient),
-    message: callIceCandicates,
+    message: callIceCandidates,
     namespace: SnodeNamespaces.Default,
   });
 }, 2000);
@@ -905,18 +908,18 @@ export async function USER_acceptIncomingCallRequest(fromSender: string) {
   );
 
   if (lastCandidatesFromSender) {
-    window.log.info('found sender ice candicate message already sent. Using it');
+    window.log.info('found sender ice candidate message already sent. Using it');
     for (let index = 0; index < lastCandidatesFromSender.sdps.length; index++) {
       const sdp = lastCandidatesFromSender.sdps[index];
       const sdpMLineIndex = lastCandidatesFromSender.sdpMLineIndexes[index];
       const sdpMid = lastCandidatesFromSender.sdpMids[index];
-      const candicate = new RTCIceCandidate({
+      const candidate = new RTCIceCandidate({
         sdpMid,
         sdpMLineIndex,
         candidate: sdp,
       });
       // eslint-disable-next-line no-await-in-loop
-      await peerConnection.addIceCandidate(candicate);
+      await peerConnection.addIceCandidate(candidate);
     }
   }
   const networkTimestamp = NetworkTime.now();
@@ -966,6 +969,7 @@ export async function rejectCallAlreadyAnotherCall(fromSender: string, forcedUUI
     uuid: forcedUUID,
     expirationType,
     expireTimer,
+    dbMessageIdentifier: uuidV4(),
   });
   await sendCallMessageAndSync(rejectCallMessage, fromSender);
 
@@ -999,6 +1003,7 @@ export async function USER_rejectIncomingCallRequest(fromSender: string) {
       uuid: aboutCallUUID,
       expirationType,
       expireTimer,
+      dbMessageIdentifier: uuidV4(),
     });
     // sync the reject event so our other devices remove the popup too
     await sendCallMessageAndSync(endCallMessage, fromSender);
@@ -1014,16 +1019,16 @@ export async function USER_rejectIncomingCallRequest(fromSender: string) {
   await addMissedCallMessage(fromSender, Date.now(), lastOfferMessage?.expireDetails || null);
 }
 
-async function sendCallMessageAndSync(callmessage: CallMessage, user: string) {
+async function sendCallMessageAndSync(callMessage: CallMessage, user: string) {
   await Promise.all([
     MessageQueue.use().sendTo1o1NonDurably({
       pubkey: PubKey.cast(user),
-      message: callmessage,
+      message: callMessage,
       namespace: SnodeNamespaces.Default,
     }),
     MessageQueue.use().sendTo1o1NonDurably({
       pubkey: UserUtils.getOurPubKeyFromCache(),
-      message: callmessage,
+      message: callMessage,
       namespace: SnodeNamespaces.Default,
     }),
   ]);
@@ -1050,6 +1055,7 @@ export async function USER_hangup(fromSender: string) {
     uuid: currentCallUUID,
     expirationType,
     expireTimer,
+    dbMessageIdentifier: uuidV4(),
   });
   void MessageQueue.use().sendTo1o1NonDurably({
     pubkey: PubKey.cast(fromSender),
@@ -1108,7 +1114,7 @@ export async function handleCallTypeEndCall(sender: string, aboutCallUUID?: stri
   }
 }
 
-async function buildAnswerAndSendIt(sender: string, msgIdentifier: string | null) {
+async function buildAnswerAndSendIt(sender: string, dbMessageIdentifier: string | null) {
   if (peerConnection) {
     if (!currentCallUUID) {
       window.log.warn('cannot send answer without a currentCallUUID');
@@ -1130,7 +1136,7 @@ async function buildAnswerAndSendIt(sender: string, msgIdentifier: string | null
     const answerSdp = answer.sdp;
     const callAnswerMessage = new CallMessage({
       createAtNetworkTimestamp: NetworkTime.now(),
-      identifier: msgIdentifier || undefined,
+      dbMessageIdentifier: dbMessageIdentifier || uuidV4(),
       type: SignalService.CallMessage.Type.ANSWER,
       sdps: [answerSdp],
       uuid: currentCallUUID,
@@ -1265,8 +1271,8 @@ export async function handleCallTypeOffer(
 
       // show a notification
       const callerConvo = ConvoHub.use().get(sender);
-      const convNotif = callerConvo?.getNotificationsFor() || 'disabled';
-      if (convNotif === 'disabled') {
+      const convoNotif = callerConvo?.getNotificationsFor() || 'disabled';
+      if (convoNotif === 'disabled') {
         window?.log?.info('notifications disabled for convo', ed25519Str(sender));
       } else if (callerConvo) {
         await callerConvo.notifyIncomingCall();
@@ -1446,7 +1452,7 @@ export async function handleCallTypeAnswer(
 
     await peerConnection?.setRemoteDescription(remoteDesc); // SRD rolls back as needed
   } catch (e) {
-    window.log.warn('setRemoteDescriptio failed:', e);
+    window.log.warn('setRemoteDescription failed:', e);
   } finally {
     isSettingRemoteAnswerPending = false;
   }
@@ -1458,7 +1464,7 @@ export async function handleCallTypeIceCandidates(
   envelopeTimestamp: number
 ) {
   if (!callMessage.sdps || callMessage.sdps.length === 0) {
-    window.log.warn('cannot handle iceCandicates message without candidates');
+    window.log.warn('cannot handle iceCandidates message without candidates');
     return;
   }
   const remoteCallUUID = callMessage.uuid;
@@ -1467,7 +1473,7 @@ export async function handleCallTypeIceCandidates(
     return;
   }
   window.log.info('handling callMessage ICE_CANDIDATES');
-  const cachedMessage = getCachedMessageFromCallMessage(callMessage, envelopeTimestamp, null); // we don't care about the expiredetails of those messages
+  const cachedMessage = getCachedMessageFromCallMessage(callMessage, envelopeTimestamp, null); // we don't care about the expire details of those messages
 
   pushCallMessageToCallCache(sender, remoteCallUUID, cachedMessage);
   if (currentCallUUID && callMessage.uuid === currentCallUUID) {
@@ -1482,11 +1488,11 @@ async function addIceCandidateToExistingPeerConnection(callMessage: SignalServic
 
       const sdpMLineIndex = callMessage.sdpMLineIndexes[index];
       const sdpMid = callMessage.sdpMids[index];
-      const candicate = new RTCIceCandidate({ sdpMid, sdpMLineIndex, candidate: sdp });
+      const candidate = new RTCIceCandidate({ sdpMid, sdpMLineIndex, candidate: sdp });
 
       try {
         // eslint-disable-next-line no-await-in-loop
-        await peerConnection.addIceCandidate(candicate);
+        await peerConnection.addIceCandidate(candidate);
       } catch (err) {
         if (!ignoreOffer) {
           window.log?.warn('Error handling ICE candidates message', err);
@@ -1494,7 +1500,7 @@ async function addIceCandidateToExistingPeerConnection(callMessage: SignalServic
       }
     }
   } else {
-    window.log.info('handleIceCandidatesMessage but we do not have a peerconnection set');
+    window.log.info('handleIceCandidatesMessage but we do not have a peer connection set');
   }
 }
 

@@ -23,6 +23,7 @@ import { MessageQueue } from '../../session/sending';
 import { WithLocalMessageDeletionType } from '../../session/types/with';
 import { tr, type TrArgs } from '../../localization/localeTools';
 import { sectionActions } from '../../state/ducks/section';
+import { uuidV4 } from '../../util/uuid';
 
 async function unsendMessagesForEveryone1o1AndLegacy(
   conversation: ConversationModel,
@@ -85,6 +86,7 @@ export async function unsendMessagesForEveryoneGroupV2({
       messageHashes: messageHashesToUnsend,
       sodium: await getSodiumRenderer(),
       secretKey: group?.secretKey || undefined,
+      dbMessageIdentifier: uuidV4(),
     }),
   });
 }
@@ -154,6 +156,7 @@ function getUnsendMessagesObjects1o1OrLegacyGroups(messages: Array<MessageModel>
         createAtNetworkTimestamp: NetworkTime.now() + index,
         referencedMessageTimestamp,
         author,
+        dbMessageIdentifier: uuidV4(),
       });
     })
   );

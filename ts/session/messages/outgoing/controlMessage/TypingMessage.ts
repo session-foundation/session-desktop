@@ -13,7 +13,7 @@ export class TypingMessage extends ContentMessageNoProfile {
   constructor(params: TypingMessageParams) {
     super({
       createAtNetworkTimestamp: params.createAtNetworkTimestamp,
-      identifier: params.identifier,
+      dbMessageIdentifier: params.dbMessageIdentifier,
     });
     this.isTyping = params.isTyping;
   }

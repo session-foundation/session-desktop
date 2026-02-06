@@ -1,7 +1,6 @@
 import { expect } from 'chai';
 import { isUndefined } from 'lodash';
 import Sinon from 'sinon';
-import { v4 } from 'uuid';
 import { sleepFor } from '../../../../../session/utils/Promise';
 import { PersistedJobRunner } from '../../../../../session/utils/job_runners/JobRunner';
 import {
@@ -14,10 +13,11 @@ import {
   FakeSleepForJob,
   FakeSleepForMultiJob,
 } from '../../../../../session/utils/job_runners/jobs/FakeSleepForJob';
+import { uuidV4 } from '../../../../../util/uuid';
 
 function getFakeSleepForJob(timestamp: number): FakeSleepForJob {
   const job = new FakeSleepForJob({
-    identifier: v4(),
+    identifier: uuidV4(),
     maxAttempts: 3,
     nextAttemptTimestamp: timestamp || 3000,
     currentRetry: 0,
@@ -41,7 +41,7 @@ function getFakeSleepForMultiJob({
   returnResult?: boolean;
 }): FakeSleepForMultiJob {
   const job = new FakeSleepForMultiJob({
-    identifier: identifier || v4(),
+    identifier: identifier || uuidV4(),
     maxAttempts: 3,
     nextAttemptTimestamp: timestamp || 3000,
     currentRetry: 0,

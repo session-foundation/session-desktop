@@ -1,7 +1,6 @@
 /* eslint-disable no-restricted-syntax */
 
 import { chunk } from 'lodash';
-import { v4 } from 'uuid';
 import { enSimpleNoArgs } from '../../localization/generated/english';
 import type { MessageAttributes } from '../../models/messageType';
 import { getLoggedInUserConvoDuringMigration } from '../migration/utils';
@@ -10,6 +9,7 @@ import { toSqliteBoolean } from '../database_utility';
 import type { ConversationAttributes } from '../../models/conversationAttributes';
 import { ConversationTypeEnum } from '../../models/types';
 import { sqlNode } from '../sql';
+import { uuidV4 } from '../../util/uuid';
 
 function extractWords(translationsObject: Record<string, string>): Array<string> {
   const wordSet = new Set<string>();
@@ -87,7 +87,7 @@ export function seedMessages({
 
   const messageAttrsOpts: Array<MessageAttributes> = bulkText.map(body => {
     return {
-      id: v4(),
+      id: uuidV4(),
       source: source ?? ourPk,
       type: isOutgoing ? 'outgoing' : 'incoming',
       direction: isOutgoing ? 'outgoing' : 'incoming',

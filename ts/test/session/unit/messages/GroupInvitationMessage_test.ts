@@ -5,12 +5,14 @@ import { SignalService } from '../../../../protobuf';
 import { Constants } from '../../../../session';
 import { CommunityInvitationMessage } from '../../../../session/messages/outgoing/visibleMessage/CommunityInvitationMessage';
 import { DisappearingMessageMode } from '../../../../session/disappearing_messages/types';
+import { uuidV4 } from '../../../../util/uuid';
 
 const sharedNoExpire = {
   expireTimer: 0,
   expirationType: DisappearingMessageMode[0],
   userProfile: null,
   outgoingProMessageDetails: null,
+  dbMessageIdentifier: uuidV4(),
 };
 
 describe('CommunityInvitationMessage', () => {
@@ -40,8 +42,11 @@ describe('CommunityInvitationMessage', () => {
     expect(message.ttl()).to.equal(Constants.TTL_DEFAULT.CONTENT_MESSAGE);
   });
 
-  it('has an identifier', () => {
-    expect(message.identifier).to.not.equal(null, 'identifier cannot be null');
-    expect(message.identifier).to.not.equal(undefined, 'identifier cannot be undefined');
+  it('has an dbMessageIdentifier', () => {
+    expect(message.dbMessageIdentifier).to.not.equal(null, 'dbMessageIdentifier cannot be null');
+    expect(message.dbMessageIdentifier).to.not.equal(
+      undefined,
+      'dbMessageIdentifier cannot be undefined'
+    );
   });
 });

@@ -2,7 +2,6 @@
 /* eslint-disable no-await-in-loop */
 import { base64_variants, from_base64 } from 'libsodium-wrappers-sumo';
 import { compact, isArray, isEmpty, isFinite, isNumber, isObject, pick } from 'lodash';
-import { v4 } from 'uuid';
 
 import { OpenGroupData } from '../../../../data/opengroups';
 import { ConversationModel } from '../../../../models/conversation';
@@ -47,6 +46,7 @@ import { MultiEncryptWrapperActions } from '../../../../webworker/workers/browse
 import ProBackendAPI from '../../pro_backend_api/ProBackendAPI';
 import { handleOpenGroupMessage } from '../../../../receiver/opengroup';
 import { longOrNumberToNumber } from '../../../../types/long/longOrNumberToNumber';
+import { uuidV4 } from '../../../../util/uuid';
 
 /**
  * Get the convo matching those criteria and make sure it is an opengroup convo, or return null.
@@ -332,7 +332,7 @@ const handleMessagesResponseV4 = async (
         }
 
         const decodedEnvelope = new SogsDecodedEnvelope({
-          id: v4(),
+          id: uuidV4(),
           source: msgToHandle.session_id,
           // important to keep the msgToHandle here as it has blindedIds replaced for us and people we know
           senderIdentity: msgToHandle.session_id,
@@ -469,7 +469,7 @@ async function handleInboxOutboxMessages(
         senderIdentity: '',
         receivedAtMs: NetworkTime.now(),
         sentAtMs: postedAtInMs,
-        id: v4(),
+        id: uuidV4(),
         decodedPro: decrypted[0].decodedPro,
         serverId: decrypted[0].serverId,
         messageHash: '',

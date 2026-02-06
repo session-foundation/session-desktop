@@ -1,5 +1,4 @@
 import { isNumber } from 'lodash';
-import { v4 } from 'uuid';
 import {
   AddJobCheckReturn,
   FakeSleepForMultiJobData,
@@ -8,6 +7,7 @@ import {
   RunJobResult,
 } from '../PersistedJob';
 import { sleepFor } from '../../Promise';
+import { uuidV4 } from '../../../../util/uuid';
 
 export class FakeSleepForMultiJob extends PersistedJob<FakeSleepForMultiJobData> {
   constructor({
@@ -23,7 +23,7 @@ export class FakeSleepForMultiJob extends PersistedJob<FakeSleepForMultiJobData>
     >) {
     super({
       jobType: 'FakeSleepForJobMultiType',
-      identifier: identifier || v4(),
+      identifier: identifier || uuidV4(),
       delayBetweenRetries: 10000,
       maxAttempts: isNumber(maxAttempts) ? maxAttempts : 3,
       nextAttemptTimestamp: nextAttemptTimestamp || Date.now() + 3000,
@@ -83,7 +83,7 @@ export class FakeSleepForJob extends PersistedJob<FakeSleepJobData> {
     Partial<Pick<FakeSleepJobData, 'nextAttemptTimestamp' | 'identifier'>>) {
     super({
       jobType: 'FakeSleepForJobType',
-      identifier: identifier || v4(),
+      identifier: identifier || uuidV4(),
       delayBetweenRetries: 10000,
       maxAttempts,
       nextAttemptTimestamp: nextAttemptTimestamp || Date.now() + 3000,

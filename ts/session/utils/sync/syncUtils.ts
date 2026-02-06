@@ -41,7 +41,7 @@ export const forceSyncConfigurationNowIfNeeded = async (waitForMessageSent = fal
 };
 
 const buildSyncVisibleMessage = (
-  identifier: string,
+  dbMessageIdentifier: string,
   dataMessage: SignalService.DataMessage,
   createAtNetworkTimestamp: number,
   syncTarget: string,
@@ -76,7 +76,7 @@ const buildSyncVisibleMessage = (
   const preview = (dataMessage.preview as Array<PreviewWithAttachmentUrl>) || [];
 
   return new VisibleMessage({
-    identifier,
+    dbMessageIdentifier,
     createAtNetworkTimestamp,
     attachments,
     body,
@@ -91,7 +91,7 @@ const buildSyncVisibleMessage = (
 };
 
 const buildSyncExpireTimerMessage = (
-  identifier: string,
+  dbMessageIdentifier: string,
   createAtNetworkTimestamp: number,
   expireUpdate: DisappearingMessageUpdate,
   syncTarget: string
@@ -99,7 +99,7 @@ const buildSyncExpireTimerMessage = (
   const { expirationType, expirationTimer: expireTimer } = expireUpdate;
 
   return new ExpirationTimerUpdateMessage({
-    identifier,
+    dbMessageIdentifier,
     createAtNetworkTimestamp,
     expirationType,
     expireTimer,
@@ -114,7 +114,7 @@ export type SyncMessageType =
   | UnsendMessage;
 
 export const buildSyncMessage = (
-  identifier: string,
+  dbMessageIdentifier: string,
   dataMessage: SignalService.DataMessage,
   syncTarget: string,
   sentTimestamp: number,
@@ -136,7 +136,7 @@ export const buildSyncMessage = (
     !isEmpty(expireUpdate)
   ) {
     const expireTimerSyncMessage = buildSyncExpireTimerMessage(
-      identifier,
+      dbMessageIdentifier,
       timestamp,
       expireUpdate,
       syncTarget
@@ -146,7 +146,7 @@ export const buildSyncMessage = (
   }
 
   const visibleSyncMessage = buildSyncVisibleMessage(
-    identifier,
+    dbMessageIdentifier,
     dataMessage,
     timestamp,
     syncTarget,

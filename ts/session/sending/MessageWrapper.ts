@@ -7,7 +7,7 @@ import { UserUtils } from '../utils';
 
 type SharedEncryptAndWrap = {
   ttl: number;
-  identifier: string;
+  dbMessageIdentifier: string;
   isSyncMessage: boolean;
   plainTextBuffer: Uint8Array;
 };
@@ -31,7 +31,7 @@ async function encryptForGroup(
   // We essentially need to do the opposite of the usual encryption which is send envelope unencrypted with content encrypted.
   const {
     destination,
-    identifier,
+    dbMessageIdentifier,
     isSyncMessage: syncMessage,
     namespace,
     plainTextBuffer,
@@ -62,7 +62,7 @@ async function encryptForGroup(
     encryptedAndWrappedData: cipherText.encryptedData[0],
     namespace,
     ttl,
-    identifier,
+    dbMessageIdentifier,
     isSyncMessage: syncMessage,
     plainTextBuffer,
   };
@@ -73,7 +73,7 @@ async function encryptMessageAndWrap(
 ): Promise<EncryptAndWrapMessageResults> {
   const {
     destination,
-    identifier,
+    dbMessageIdentifier,
     isSyncMessage: syncMessage,
     namespace,
     plainTextBuffer,
@@ -104,7 +104,7 @@ async function encryptMessageAndWrap(
     networkTimestamp,
     namespace,
     ttl,
-    identifier,
+    dbMessageIdentifier,
     isSyncMessage: syncMessage,
     plainTextBuffer,
   };

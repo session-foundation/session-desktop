@@ -27,14 +27,14 @@ describe('Message Utils', () => {
 
       expect(Object.keys(rawMessage)).to.have.length(6);
 
-      expect(rawMessage.identifier).to.exist;
+      expect(rawMessage.dbMessageIdentifier).to.exist;
       expect(rawMessage.namespace).to.exist;
       expect(rawMessage.device).to.exist;
       expect(rawMessage.plainTextBuffer).to.exist;
       expect(rawMessage.ttl).to.exist;
       expect(rawMessage.networkTimestampCreated).to.exist;
 
-      expect(rawMessage.identifier).to.equal(message.identifier);
+      expect(rawMessage.dbMessageIdentifier).to.equal(message.dbMessageIdentifier);
       expect(rawMessage.device).to.equal(device.key);
       expect(rawMessage.plainTextBuffer).to.deep.equal(message.plainTextBuffer());
       expect(rawMessage.ttl).to.equal(message.ttl());
