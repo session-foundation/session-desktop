@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import useKey from 'react-use/lib/useKey';
 import { getAppDispatch } from '../../state/dispatch';
 
 import { useFocusMount } from '../../hooks/useFocusMount';
@@ -119,6 +120,8 @@ export const BanOrUnBanUserDialog = (props: {
     dispatch(updateBanOrUnbanUserModal(null));
   };
 
+  useKey('Escape', onClose);
+
   const buttonText = isBan ? tr('banUser') : tr('banUnbanUser');
 
   return (
@@ -181,6 +184,7 @@ export const BanOrUnBanUserDialog = (props: {
           // don't do anything on enter as we don't know if the user wants to ban or ban-delete-all
           onEnterPressed={() => {}}
           inputDataTestId={isBan ? 'ban-user-input' : 'unban-user-input'}
+          allowEscapeKeyPassthrough={true}
         />
         <SessionSpinner $loading={inProgress} />
       </ModalFlexContainer>
