@@ -57,7 +57,7 @@ describe('TypingMessage', () => {
     expect(message.ttl()).to.equal(Constants.TTL_DEFAULT.TYPING_MESSAGE);
   });
 
-  it('has an dbMessageIdentifier', () => {
+  it('has a dbMessageIdentifier', () => {
     const message = new TypingMessage({
       createAtNetworkTimestamp: Date.now(),
       isTyping: true,

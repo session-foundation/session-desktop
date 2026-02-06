@@ -42,7 +42,7 @@ describe('CommunityInvitationMessage', () => {
     expect(message.ttl()).to.equal(Constants.TTL_DEFAULT.CONTENT_MESSAGE);
   });
 
-  it('has an dbMessageIdentifier', () => {
+  it('has a dbMessageIdentifier', () => {
     expect(message.dbMessageIdentifier).to.not.equal(null, 'dbMessageIdentifier cannot be null');
     expect(message.dbMessageIdentifier).to.not.equal(
       undefined,

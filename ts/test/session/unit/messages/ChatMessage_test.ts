@@ -161,7 +161,7 @@ describe('VisibleMessage', () => {
     expect(message.ttl()).to.equal(Constants.TTL_DEFAULT.CONTENT_MESSAGE);
   });
 
-  it('has an dbMessageIdentifier', () => {
+  it('has a dbMessageIdentifier', () => {
     const message = new VisibleMessage({
       createAtNetworkTimestamp: Date.now(),
       ...sharedNoExpire,

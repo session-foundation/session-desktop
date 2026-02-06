@@ -271,14 +271,12 @@ export class MessageQueueCl {
       });
       window.log.debug(`sendSingleMessage took ${Date.now() - start}ms`);
 
-      if (rawMessage.dbMessageIdentifier) {
-        const cb = this.pendingMessageCache.callbacks.get(rawMessage.dbMessageIdentifier);
+      const cb = this.pendingMessageCache.callbacks.get(rawMessage.dbMessageIdentifier);
 
-        if (cb) {
-          await cb(rawMessage);
-        }
-        this.pendingMessageCache.callbacks.delete(rawMessage.dbMessageIdentifier);
+      if (cb) {
+        await cb(rawMessage);
       }
+      this.pendingMessageCache.callbacks.delete(rawMessage.dbMessageIdentifier);
 
       return effectiveTimestamp;
     } catch (error) {

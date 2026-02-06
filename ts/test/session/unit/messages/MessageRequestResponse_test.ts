@@ -25,7 +25,7 @@ describe('MessageRequestResponse', () => {
     expect(message.ttl()).to.equal(Constants.TTL_DEFAULT.CONTENT_MESSAGE);
   });
 
-  it('has an dbMessageIdentifier matching if given', () => {
+  it('has a dbMessageIdentifier matching if given', () => {
     const dbMessageIdentifier = uuidV4();
     message = new MessageRequestResponse({
       createAtNetworkTimestamp: Date.now(),
