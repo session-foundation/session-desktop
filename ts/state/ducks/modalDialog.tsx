@@ -16,6 +16,7 @@ import type { TrArgs } from '../../localization/localeTools';
 import { SessionButtonType } from '../../components/basic/SessionButton';
 import { CTAVariant } from '../../components/dialog/cta/types';
 import { CTAInteraction, registerCtaInteraction } from '../../util/ctaHistory';
+import { closeContextMenus } from '../../util/contextMenu';
 
 export type BanType = 'ban' | 'unban';
 
@@ -126,6 +127,7 @@ export type LightBoxOptions = {
 } | null;
 
 export type DebugMenuModalState = object | null;
+export type KeyboardShotcutsModalState = object | null;
 
 export type ConversationSettingsModalPage = 'default' | 'disappearing_message' | 'notifications';
 type SettingsPageThatCannotBeStandalone = Extract<ConversationSettingsModalPage, 'default'>;
@@ -163,6 +165,7 @@ export type ModalId =
   | 'sessionProInfoModal'
   | 'lightBoxOptions'
   | 'debugMenuModal'
+  | 'keyboardShortcutsModal'
   | 'conversationSettingsModal';
 
 export type ModalState = {
@@ -189,6 +192,7 @@ export type ModalState = {
   sessionProInfoModal: SessionCTAState;
   lightBoxOptions: LightBoxOptions;
   debugMenuModal: DebugMenuModalState;
+  keyboardShortcutsModal: KeyboardShotcutsModalState;
   conversationSettingsModal: ConversationSettingsModalState;
   modalStack: Array<ModalId>;
 };
@@ -218,6 +222,7 @@ export const initialModalState: ModalState = {
   sessionProInfoModal: null,
   lightBoxOptions: null,
   debugMenuModal: null,
+  keyboardShortcutsModal: null,
   conversationSettingsModal: null,
 };
 
@@ -228,6 +233,8 @@ function pushModal<T extends ModalId>(
 ) {
   state[modalId] = thatModalState;
   state.modalStack.push(modalId);
+
+  closeContextMenus();
 
   return state;
 }
@@ -349,6 +356,9 @@ const ModalSlice = createSlice({
     updateDebugMenuModal(state, action: PayloadAction<DebugMenuModalState>) {
       return pushOrPopModal(state, 'debugMenuModal', action.payload);
     },
+    updateKeyboardShortcutsMenuModal(state, action: PayloadAction<KeyboardShotcutsModalState>) {
+      return pushOrPopModal(state, 'keyboardShortcutsModal', action.payload);
+    },
     updateConversationSettingsModal(state, action: PayloadAction<ConversationSettingsModalState>) {
       return pushOrPopModal(state, 'conversationSettingsModal', action.payload);
     },
@@ -380,6 +390,7 @@ export const {
   updateSessionCTA,
   updateLightBoxOptions,
   updateDebugMenuModal,
+  updateKeyboardShortcutsMenuModal,
   updateConversationSettingsModal,
 } = actions;
 export const modalReducer = reducer;

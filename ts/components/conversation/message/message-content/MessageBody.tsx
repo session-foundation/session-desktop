@@ -2,7 +2,7 @@ import LinkifyIt from 'linkify-it';
 
 import styled from 'styled-components';
 
-import type { ReactNode, JSX } from 'react';
+import type { ReactNode, JSX, MouseEvent } from 'react';
 import { getAppDispatch } from '../../../../state/dispatch';
 import { RenderTextCallbackType } from '../../../../types/Util';
 import { getEmojiSizeClass, SizeClassType } from '../../../../util/emoji';
@@ -11,6 +11,7 @@ import { AddMentions } from '../../AddMentions';
 import { AddNewLines } from '../../AddNewLines';
 import { Emojify } from '../../Emojify';
 import { showLinkVisitWarningDialog } from '../../../dialog/OpenUrlModal';
+import { createButtonOnKeyDownForClickEventHandler } from '../../../../util/keyboardShortcuts';
 
 const linkify = new LinkifyIt();
 
@@ -105,17 +106,18 @@ const Linkify = (props: LinkifyProps): JSX.Element => {
     if (isLink) {
       // disable click on <a> elements so clicking a message containing a link doesn't
       // select the message. The link will still be opened in the browser.
+      const showDialog = () => showLinkVisitWarningDialog(url, dispatch);
+
+      const onClick = (e: MouseEvent<HTMLElement>) => {
+        e.preventDefault();
+        e.stopPropagation();
+        showDialog();
+      };
+
+      const onKeyDown = createButtonOnKeyDownForClickEventHandler(showDialog);
 
       results.push(
-        <a
-          key={count++}
-          href={url}
-          onClick={e => {
-            e.preventDefault();
-            e.stopPropagation();
-            showLinkVisitWarningDialog(url, dispatch);
-          }}
-        >
+        <a key={count++} href={url} onClick={onClick} onKeyDown={onKeyDown}>
           {originalText}
         </a>
       );

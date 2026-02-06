@@ -43,6 +43,8 @@ export type SessionDebugBooleanFeatureFlags = {
   debugOnionRequests: boolean;
   debugInsecureNodeFetch: boolean;
   debugOnlineState: boolean;
+  debugKeyboardShortcuts: boolean;
+  debugFocusScope: boolean;
 };
 
 export type SessionBooleanFeatureFlags = SessionBaseBooleanFeatureFlags &

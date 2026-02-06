@@ -7,10 +7,11 @@ import { REACT_LIMIT } from '../../../../session/constants';
 import { useSelectedIsGroupOrCommunity } from '../../../../state/selectors/selectedConversation';
 import { nativeEmojiData } from '../../../../util/emoji';
 import { Flex } from '../../../basic/Flex';
-import { Reaction, ReactionProps } from '../reactions/Reaction';
+import { EMOJI_REACTION_HEIGHT, Reaction, ReactionProps } from '../reactions/Reaction';
 import { Localizer } from '../../../basic/Localizer';
 import { LucideIcon } from '../../../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
+import { createButtonOnKeyDownForClickEventHandler } from '../../../../util/keyboardShortcuts';
 
 export const StyledMessageReactionsContainer = styled(Flex)<{
   $noAvatar: boolean;
@@ -37,8 +38,13 @@ const StyledReactionOverflow = styled.button`
     border: var(--default-borders);
     border-radius: 50%;
     overflow: hidden;
+    width: ${EMOJI_REACTION_HEIGHT}px;
+    height: ${EMOJI_REACTION_HEIGHT}px;
+    display: flex;
+    justify-content: center;
+    align-content: center;
+    flex-wrap: wrap;
     margin-right: -9px;
-    padding: 1px 4.5px;
   }
 `;
 
@@ -72,6 +78,7 @@ interface ExpandReactionsProps extends ReactionsProps {
 
 const CompressedReactions = (props: ExpandReactionsProps) => {
   const { messageId, reactions, inModal, handleExpand } = props;
+  const onKeyDown = createButtonOnKeyDownForClickEventHandler(handleExpand);
   return (
     <StyledMessageReactions
       $container={true}
@@ -82,7 +89,7 @@ const CompressedReactions = (props: ExpandReactionsProps) => {
       {reactions.slice(0, 4).map(([emoji]) => (
         <Reaction key={`${messageId}-${emoji}`} emoji={emoji} {...props} />
       ))}
-      <StyledReactionOverflow onClick={handleExpand}>
+      <StyledReactionOverflow onClick={handleExpand} onKeyDown={onKeyDown}>
         {reactions
           .slice(4, 7)
           .reverse()

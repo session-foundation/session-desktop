@@ -25,6 +25,7 @@ import { ConversationTypeEnum } from '../../../models/types';
 import { Localizer } from '../../basic/Localizer';
 import { SimpleSessionTextarea } from '../../inputs/SimpleSessionTextarea';
 import { tr } from '../../../localization/localeTools';
+import { useLeftOverlayMode } from '../../../state/selectors/section';
 
 const StyledDescriptionContainer = styled(motion.div)`
   margin: 0 auto;
@@ -70,7 +71,11 @@ export const OverlayMessage = () => {
   }
 
   useKey('Escape', closeOverlay);
-  const [pubkeyOrOns, setPubkeyOrOns] = useState('');
+  const overlayMode = useLeftOverlayMode();
+  const overlayModeIsMessage = overlayMode?.type === 'message';
+  const [pubkeyOrOns, setPubkeyOrOns] = useState<string>(
+    overlayModeIsMessage ? overlayMode.params.initialInputValue : ''
+  );
   const [pubkeyOrOnsError, setPubkeyOrOnsError] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(false);
 

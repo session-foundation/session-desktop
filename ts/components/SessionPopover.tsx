@@ -1,6 +1,8 @@
 import styled from 'styled-components';
 import { type ReactNode, useMemo, useRef } from 'react';
 import { getFeatureFlagMemo } from '../state/ducks/types/releasedFeaturesReduxTypes';
+import { clampNumber } from '../util/maths';
+import { defaultTriggerPos, PopoverTriggerPosition } from './SessionTooltip';
 
 const TIP_LENGTH = 18;
 const VIEWPORT_MARGIN = 4;
@@ -18,10 +20,25 @@ const StyledCoordinateMarker = styled.div<{
   position: fixed;
   z-index: 9999;
   background-color: ${props => props.color || 'red'};
-  height: 3px;
-  width: 3px;
-  top: ${props => `${props.y + 1.5}px`};
-  left: ${props => `${props.x - 1.5}px`};
+  height: 4px;
+  width: 4px;
+  top: ${props => `${props.y + 2}px`};
+  left: ${props => `${props.x - 2}px`};
+`;
+
+const StyledCoordinateRectangleMarker = styled.div<{
+  $bounds: { x1: number; x2: number; y1: number; y2: number };
+  color?: string;
+}>`
+  position: fixed;
+  z-index: 9999;
+  background-color: transparent;
+  border: 2px solid ${props => props.color || 'red'};
+  top: ${props => `${Math.min(props.$bounds.y1, props.$bounds.y2)}px`};
+  left: ${props => `${Math.min(props.$bounds.x1, props.$bounds.x2)}px`};
+  width: ${props => `${Math.abs(props.$bounds.x2 - props.$bounds.x1)}px`};
+  height: ${props => `${Math.abs(props.$bounds.y2 - props.$bounds.y1)}px`};
+  pointer-events: none;
 `;
 
 const StyledPopover = styled.div<{
@@ -78,10 +95,7 @@ const StyledPopover = styled.div<{
 export type PopoverProps = {
   children: ReactNode;
   pointerOffset?: number;
-  triggerX: number;
-  triggerY: number;
-  triggerWidth: number;
-  triggerHeight: number;
+  triggerPosition: PopoverTriggerPosition;
   open: boolean;
   loading?: boolean;
   maxWidth?: string;
@@ -90,6 +104,16 @@ export type PopoverProps = {
   horizontalPosition?: HorizontalAlignment;
   verticalPosition?: VerticalPosition;
   isTooltip?: boolean;
+  contentMargin?: number;
+  containerMarginTop?: number;
+  containerMarginBottom?: number;
+  containerMarginLeft?: number;
+  containerMarginRight?: number;
+  // Fallbacks for when the content height and width are known, this
+  // allows popovers to pre-calculate an initial position before the
+  // content is rendered.
+  fallbackContentHeight?: number;
+  fallbackContentWidth?: number;
 };
 
 export const SessionPopoverContent = (props: PopoverProps) => {
@@ -100,41 +124,58 @@ export const SessionPopoverContent = (props: PopoverProps) => {
     loading,
     maxWidth,
     onClick,
-    triggerX,
-    triggerY,
-    triggerWidth,
-    triggerHeight,
+    triggerPosition = defaultTriggerPos,
     isTooltip,
+    contentMargin = 0,
+    containerMarginTop = VIEWPORT_MARGIN,
+    containerMarginBottom = VIEWPORT_MARGIN,
+    containerMarginLeft = VIEWPORT_MARGIN,
+    containerMarginRight = VIEWPORT_MARGIN,
     horizontalPosition = 'center',
     verticalPosition = 'top',
+    fallbackContentHeight,
+    fallbackContentWidth,
   } = props;
-
   const showPopoverAnchors = getFeatureFlagMemo('showPopoverAnchors');
 
   const ref = useRef<HTMLDivElement | null>(null);
 
-  const contentW = ref.current?.offsetWidth;
-  const contentH = ref.current?.offsetHeight;
+  const contentWidth = ref.current?.offsetWidth;
+  const contentHeight = ref.current?.offsetHeight;
 
   const viewportWidth = window.innerWidth;
   const viewportHeight = window.innerHeight;
 
-  const readyToShow = !!(!loading && contentW && contentH && open);
-
-  const { x, y, pointerOffset, anchorX } = useMemo(() => {
-    if (!readyToShow) {
+  const { x, y, pointerOffset, anchorX, finalVerticalPos, bounds } = useMemo(() => {
+    if (!open || loading) {
       return {
         x: 0,
         y: 0,
         pointerOffset: 0,
         anchorX: 0,
+        finalVerticalPos: verticalPosition,
+        finalHorizontalPos: horizontalPosition,
+        bounds: { x1: 0, x2: 0, y1: 0, y2: 0 },
       };
     }
 
+    let verticalPos = verticalPosition;
+    const horizontalPos = horizontalPosition;
+
+    const contentW = contentWidth || (fallbackContentWidth ?? 0);
+    const contentH = contentHeight || (fallbackContentHeight ?? 0);
+
+    const minX = containerMarginLeft;
+    const maxX = viewportWidth - containerMarginRight;
+
+    const minY = containerMarginTop;
+    const maxY = viewportHeight - containerMarginBottom;
+
     const coreContentWidth = contentW - (isTooltip ? CONTENT_BORDER_RADIUS : 0);
+    const margin = isTooltip ? TIP_MARGIN : contentMargin;
 
-    const newAnchorX = triggerX + triggerWidth / 2;
-
+    const newAnchorX =
+      triggerPosition.x + triggerPosition.width / 2 + (triggerPosition.offsetX ?? 0);
     let newX = newAnchorX;
     if (horizontalPosition === 'left') {
       newX -= coreContentWidth;
@@ -144,65 +185,66 @@ export const SessionPopoverContent = (props: PopoverProps) => {
       newX -= TIP_LENGTH;
     }
 
-    /**
-     * Clamp horizontally within viewport.
-     * If `x` is too far left, set `x` to the left margin.
-     * If `x` is too far right, set `x` to the right margin minus the content width.
-     *
-     * NOTE: the tooltip content `x` anchor is on the left of the tooltip content
-     */
-    if (newX < VIEWPORT_MARGIN) {
-      newX = VIEWPORT_MARGIN;
-    } else if (newX + contentW + VIEWPORT_MARGIN > viewportWidth) {
-      newX = viewportWidth - contentW - VIEWPORT_MARGIN;
+    const topAlignY = triggerPosition.y - contentH - margin;
+    const bottomAlignY = triggerPosition.y + triggerPosition.height + margin;
+
+    if (verticalPos === 'top') {
+      // NOTE: we only want to change to bottom if its actually better than top,
+      // if both are bad, we stick with the default.
+      if (topAlignY < minY && bottomAlignY - contentH < maxY) {
+        verticalPos = 'bottom';
+      }
+    } else if (verticalPos === 'bottom') {
+      if (bottomAlignY + contentH > maxY) {
+        verticalPos = 'top';
+      }
     }
 
-    let newY = 0;
-    if (verticalPosition === 'bottom') {
-      newY = triggerY + triggerHeight + TIP_MARGIN;
-    } else {
-      newY = triggerY - contentH - TIP_MARGIN;
-    }
+    const newY = verticalPos === 'bottom' ? bottomAlignY : topAlignY;
 
-    /**
-     * If `y + contentHeight` is above the viewport, position the tooltip content below the trigger.
-     */
-    if (newY < VIEWPORT_MARGIN) {
-      newY = triggerY + triggerHeight + VIEWPORT_MARGIN;
-    }
+    const clampedX = clampNumber(newX, minX, maxX - contentW);
+    const clampedY = clampNumber(newY, minY, maxY - contentH);
 
-    if (newY + contentH + VIEWPORT_MARGIN > viewportHeight) {
-      newY = viewportHeight - contentH - VIEWPORT_MARGIN;
-    }
-
-    const offset = newAnchorX - newX - TIP_LENGTH / 2;
+    const offset = newAnchorX - clampedX - (isTooltip ? TIP_LENGTH / 2 : 0);
 
     return {
-      x: newX,
-      y: newY,
+      x: clampedX,
+      y: clampedY,
       pointerOffset: offset,
       anchorX: newAnchorX,
+      finalVerticalPos: verticalPos,
+      finalHorizontalPos: horizontalPos,
+      bounds: { x1: minX, y1: minY, x2: maxX, y2: maxY },
     };
   }, [
-    readyToShow,
-    contentW,
+    open,
+    loading,
+    contentWidth,
     isTooltip,
-    triggerX,
-    triggerWidth,
+    triggerPosition.x,
+    triggerPosition.y,
+    triggerPosition.width,
+    triggerPosition.height,
+    triggerPosition.offsetX,
     horizontalPosition,
     viewportWidth,
     verticalPosition,
-    contentH,
+    contentHeight,
     viewportHeight,
-    triggerY,
-    triggerHeight,
+    fallbackContentWidth,
+    fallbackContentHeight,
+    contentMargin,
+    containerMarginTop,
+    containerMarginBottom,
+    containerMarginLeft,
+    containerMarginRight,
   ]);
 
   return (
     <>
       <StyledPopover
         ref={ref}
-        $readyToShow={readyToShow}
+        $readyToShow={open && !loading}
         onClick={onClick}
         x={x}
         y={y}
@@ -211,35 +253,69 @@ export const SessionPopoverContent = (props: PopoverProps) => {
         $pointerOffset={pointerOffset}
         $tooltipStyles={isTooltip}
         $borderRadius={CONTENT_BORDER_RADIUS}
-        $verticalPosition={verticalPosition}
+        $verticalPosition={finalVerticalPos}
       >
         {children}
       </StyledPopover>
-      {showPopoverAnchors ? (
+      {showPopoverAnchors && open ? (
+        // NOTE: these are only rendered when the debug option is enabled
         <>
-          <StyledCoordinateMarker x={x} y={y} title="x,y" />
-          <StyledCoordinateMarker
-            x={x + pointerOffset}
-            y={y + (contentH ?? 0) * (verticalPosition === 'top' ? 1 : -1) - TIP_LENGTH / 2}
-            title="offset"
-            color="green"
+          <StyledCoordinateRectangleMarker title="allowedArea" $bounds={bounds} />
+          <StyledCoordinateRectangleMarker
+            title="triggerArea"
+            color="orange"
+            $bounds={{
+              x1: triggerPosition.x,
+              x2: triggerPosition.x + triggerPosition.width,
+              y1: triggerPosition.y,
+              y2: triggerPosition.y + triggerPosition.height,
+            }}
           />
-          <StyledCoordinateMarker
-            x={x + pointerOffset + TIP_LENGTH / 2}
-            y={
-              y +
-              (contentH ?? 0) * (verticalPosition === 'top' ? 1 : -1) +
-              (verticalPosition === 'bottom' ? triggerHeight : 0)
-            }
-            title="offset-center"
-            color="green"
+          <StyledCoordinateRectangleMarker
+            title="popoverContentArea"
+            color="purple"
+            $bounds={{
+              x1: x,
+              x2: x + (contentWidth || (fallbackContentWidth ?? 0)),
+              y1: y,
+              y2: y + (contentHeight || (fallbackContentHeight ?? 0)),
+            }}
           />
+          {isTooltip ? (
+            <>
+              <StyledCoordinateMarker
+                x={x + pointerOffset}
+                y={
+                  y + (contentHeight ?? 0) * (verticalPosition === 'top' ? 1 : -1) - TIP_LENGTH / 2
+                }
+                title="offset"
+                color="green"
+              />
+              <StyledCoordinateMarker
+                x={x + pointerOffset + TIP_LENGTH / 2}
+                y={
+                  y +
+                  (contentHeight ?? 0) * (verticalPosition === 'top' ? 1 : -1) +
+                  (verticalPosition === 'bottom' ? triggerPosition.height : 0)
+                }
+                title="offset-center"
+                color="green"
+              />
+            </>
+          ) : null}
           <StyledCoordinateMarker
             x={anchorX}
-            y={triggerY - triggerHeight * (verticalPosition === 'top' ? 1 : -1)}
+            y={triggerPosition.y}
             title="anchorX"
-            color="blue"
+            color="purple"
           />
+          <StyledCoordinateMarker
+            x={triggerPosition.x}
+            y={triggerPosition.y}
+            title="triggerPos"
+            color="red"
+          />
+          <StyledCoordinateMarker x={x} y={y} title="anchorPos" color="blue" />
         </>
       ) : null}
     </>

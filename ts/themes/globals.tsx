@@ -86,6 +86,7 @@ type ThemeGlobals = {
 
   /* Sizes */
   '--main-view-header-height': string;
+  '--main-view-header-height-number': number;
   '--composition-container-height': string;
   '--search-input-height': string;
   // The min height of the panel button container.
@@ -103,7 +104,7 @@ type ThemeGlobals = {
   '--duration-session-spinner': string;
   '--duration-spinner': string;
   '--duration-pulse': string;
-  '--duration-right-panel': string;
+  '--duration-right-panel-seconds': number;
   '--duration-progress-bar': number;
   '--duration-fadein': number;
   '--duration-modal-error-faded': string;
@@ -242,6 +243,7 @@ export const THEME_GLOBALS: ThemeGlobals = {
   '--default-borders': '1px solid var(--borders-color)',
 
   '--main-view-header-height': '68px',
+  '--main-view-header-height-number': 68,
   '--composition-container-height': '60px',
   '--search-input-height': '34px',
   '--panel-button-container-min-height': '70px',
@@ -255,7 +257,7 @@ export const THEME_GLOBALS: ThemeGlobals = {
   '--duration-session-spinner': setDurationStr('0.6s'),
   '--duration-spinner': setDurationStr('3000ms'),
   '--duration-pulse': setDurationStr('1s'),
-  '--duration-right-panel': setDurationStr('0.3s'),
+  '--duration-right-panel-seconds': setDurationNum(0.3),
   '--duration-progress-bar': setDurationNum(0.5),
   '--duration-fadein': setDurationNum(1),
   '--duration-modal-error-faded': setDurationStr('100ms'),
