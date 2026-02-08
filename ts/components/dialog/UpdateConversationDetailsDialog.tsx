@@ -67,20 +67,20 @@ function useNameErrorString({
 }) {
   const byteLength = new TextEncoder().encode(newName).length;
   if (isMe) {
-    return !newName
+    return !newName?.trim()
       ? tr('displayNameErrorDescription')
       : byteLength > LIBSESSION_CONSTANTS.CONTACT_MAX_NAME_LENGTH
         ? tr('displayNameErrorDescriptionShorter')
         : '';
   }
   if (isPublic) {
-    return !newName
+    return !newName?.trim()
       ? tr('communityNameEnterPlease')
       : byteLength > LIBSESSION_CONSTANTS.BASE_GROUP_MAX_NAME_LENGTH
         ? tr('updateCommunityInformationEnterShorterName')
         : '';
   }
-  return !newName
+  return !newName?.trim()
     ? tr('groupNameEnterPlease')
     : byteLength > LIBSESSION_CONSTANTS.BASE_GROUP_MAX_NAME_LENGTH
       ? tr('groupNameEnterShorter')
@@ -127,7 +127,7 @@ function useDescriptionErrorString({
 // NOTE: [react-compiler] this has to live here for the hook to be identified as static
 function useUpdateConversationDetailsDialogInternal(convo: ConversationModel) {
   const conversationId = convo.id;
-  const nameOnOpen = convo.getRealSessionUsername();
+  const nameOnOpen = convo.getRealSessionUsername() ?? '';
   const [avatarPointerOnMount, setAvatarPointerOnMount] = useState<string>('');
   const [newName, setNewName] = useState(nameOnOpen);
   const originalGroupDescription = useLibGroupDescription(conversationId);
@@ -172,7 +172,7 @@ const useAvatarPointerLocal = useAvatarPointer;
 export function UpdateConversationDetailsDialog(props: WithConvoId) {
   const dispatch = getAppDispatch();
   const { conversationId } = props;
-  const refreshedAvatarPointer = useAvatarPointerLocal(conversationId);
+  const refreshedAvatarPointer = useAvatarPointerLocal(conversationId) ?? '';
   const convo = ConvoHub.use().get(conversationId);
 
   const {
@@ -277,37 +277,40 @@ export function UpdateConversationDetailsDialog(props: WithConvoId) {
 
   const nameOrDescriptionWasUpdated =
     newName !== nameOnOpen || newDescription !== descriptionOnOpen;
-  const avatarWasUpdated =
-    avatarPointerOnMount !== refreshedAvatarPointer &&
-    !!avatarPointerOnMount !== !!refreshedAvatarPointer;
-
+  const avatarWasUpdated = avatarPointerOnMount !== refreshedAvatarPointer;
   const avatarNameOrDescUpdated = nameOrDescriptionWasUpdated || avatarWasUpdated;
 
   const partDetail = isMe ? 'profile' : isPublic ? 'community' : 'group';
-  const partDetailCap = (partDetail.charAt(0).toUpperCase() + partDetail.slice(1)) as Capitalize<
-    typeof partDetail
-  >;
+
+  const canSave = avatarNameOrDescUpdated;
+  const canCancel = !avatarWasUpdated;
 
   return (
     <SessionWrapperModal
       modalId="updateConversationDetailsModal"
-      headerChildren={<ModalBasicHeader title={tr(`update${partDetailCap}Information`)} />}
+      headerChildren={
+        <ModalBasicHeader
+          title={tr(
+            partDetail === 'profile'
+              ? 'updateProfileInformation'
+              : partDetail === 'community'
+                ? 'updateCommunityInformation'
+                : 'updateGroupInformation'
+          )}
+        />
+      }
       onClose={closeDialog}
       buttonChildren={
         <ModalActionsContainer buttonType={SessionButtonType.Simple}>
-          <SessionButton
-            text={tr('save')}
-            onClick={onClickOK}
-            buttonType={SessionButtonType.Simple}
-            disabled={
-              !!errorStringName ||
-              !!errorStringDescription ||
-              isNameChangePending ||
-              !newName?.trim() ||
-              !avatarNameOrDescUpdated
-            }
-          />
-          {avatarNameOrDescUpdated ? (
+          {canSave ? (
+            <SessionButton
+              text={tr('save')}
+              onClick={onClickOK}
+              buttonType={SessionButtonType.Simple}
+              disabled={!!errorStringName || !!errorStringDescription || isNameChangePending}
+            />
+          ) : null}
+          {canCancel ? (
             <SessionButton
               text={tr('cancel')}
               buttonColor={SessionButtonColor.Danger}
