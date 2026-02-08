@@ -5,6 +5,7 @@ import { beforeEach } from 'mocha';
 import { SignalService } from '../../../../protobuf';
 import { Constants } from '../../../../session';
 import { ReadReceiptMessage } from '../../../../session/messages/outgoing/controlMessage/receipt/ReadReceiptMessage';
+import { uuidV4 } from '../../../../util/uuid';
 
 describe('ReceiptMessage', () => {
   let readMessage: ReadReceiptMessage;
@@ -13,7 +14,11 @@ describe('ReceiptMessage', () => {
   beforeEach(() => {
     timestamps = [987654321, 123456789];
     const createAtNetworkTimestamp = Date.now();
-    readMessage = new ReadReceiptMessage({ createAtNetworkTimestamp, timestamps });
+    readMessage = new ReadReceiptMessage({
+      createAtNetworkTimestamp,
+      timestamps,
+      dbMessageIdentifier: uuidV4(),
+    });
   });
 
   it('content of a read receipt is correct', () => {
@@ -30,7 +35,10 @@ describe('ReceiptMessage', () => {
   });
 
   it('has an identifier', () => {
-    expect(readMessage.identifier).to.not.equal(null, 'identifier cannot be null');
-    expect(readMessage.identifier).to.not.equal(undefined, 'identifier cannot be undefined');
+    expect(readMessage.dbMessageIdentifier).to.not.equal(null, 'identifier cannot be null');
+    expect(readMessage.dbMessageIdentifier).to.not.equal(
+      undefined,
+      'identifier cannot be undefined'
+    );
   });
 });

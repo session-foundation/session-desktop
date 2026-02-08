@@ -1,7 +1,6 @@
 /* eslint-disable no-await-in-loop */
 import { WithGroupPubkey } from 'libsession_util_nodejs';
 import { compact, isEmpty, isNumber } from 'lodash';
-import { v4 } from 'uuid';
 import AbortController from 'abort-controller';
 import { StringUtils } from '../..';
 import { Data } from '../../../../data/data';
@@ -39,6 +38,7 @@ import {
 import { groupInfoActions } from '../../../../state/ducks/metaGroups';
 import { DURATION, TTL_DEFAULT } from '../../../constants';
 import { timeoutWithAbort } from '../../Promise';
+import { uuidV4 } from '../../../../util/uuid';
 
 const defaultMsBetweenRetries = 10000;
 const defaultMaxAttempts = 1;
@@ -103,7 +103,7 @@ class GroupPendingRemovalsJob extends PersistedJob<GroupPendingRemovalsPersisted
     >) {
     super({
       jobType: 'GroupPendingRemovalJobType',
-      identifier: identifier || v4(),
+      identifier: identifier || uuidV4(),
       groupPk,
       delayBetweenRetries: defaultMsBetweenRetries,
       maxAttempts: isNumber(maxAttempts) ? maxAttempts : defaultMaxAttempts,
@@ -179,6 +179,7 @@ class GroupPendingRemovalsJob extends PersistedJob<GroupPendingRemovalsPersisted
           messageHashes: [],
           sodium: await getSodiumRenderer(),
           secretKey: group.secretKey,
+          dbMessageIdentifier: uuidV4(),
         });
         storeRequests = await StoreGroupRequestFactory.makeGroupMessageSubRequest(
           [deleteContentMsg],

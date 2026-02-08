@@ -7,10 +7,13 @@ import { OutgoingRawMessage, PubKey } from '../types';
 import { UserUtils } from '../utils';
 
 async function handlePublicMessageSentSuccess(
-  sentMessageIdentifier: string,
+  sentMessageIdentifier: string | null,
   result: { serverId: number; serverTimestamp: number }
 ) {
   const { serverId, serverTimestamp } = result;
+  if (!sentMessageIdentifier) {
+    return;
+  }
 
   try {
     const foundMessage = await fetchHandleMessageSentData(sentMessageIdentifier);
@@ -40,7 +43,10 @@ async function handlePublicMessageSentSuccess(
 }
 
 async function handlePublicMessageSentFailure(sentMessage: OpenGroupVisibleMessage, error: any) {
-  const fetchedMessage = await fetchHandleMessageSentData(sentMessage.identifier);
+  if (!sentMessage.dbMessageIdentifier) {
+    return;
+  }
+  const fetchedMessage = await fetchHandleMessageSentData(sentMessage.dbMessageIdentifier);
   if (!fetchedMessage) {
     return;
   }
@@ -61,13 +67,13 @@ async function handlePublicMessageSentFailure(sentMessage: OpenGroupVisibleMessa
 
 async function handleSwarmMessageSentSuccess({
   device: destination,
-  identifier,
+  dbMessageIdentifier,
   isDestinationClosedGroup,
   plainTextBuffer,
   sentAtMs,
   storedAtServerMs,
   storedHash,
-}: Pick<OutgoingRawMessage, 'device' | 'identifier'> & {
+}: Pick<OutgoingRawMessage, 'device' | 'dbMessageIdentifier'> & {
   /**
    * plainTextBuffer is only required when sending a message to a 1o1,
    * as we need it to encrypt it again for our linked devices (synced messages)
@@ -93,7 +99,7 @@ async function handleSwarmMessageSentSuccess({
   storedHash: string | null;
 }) {
   // The wrappedEnvelope will be set only if the message is not one of OpenGroupV2Message type.
-  let fetchedMessage = await fetchHandleMessageSentData(identifier);
+  let fetchedMessage = await fetchHandleMessageSentData(dbMessageIdentifier);
   if (!fetchedMessage) {
     return;
   }
@@ -125,7 +131,7 @@ async function handleSwarmMessageSentSuccess({
       if (contentDecoded && contentDecoded.dataMessage) {
         try {
           await fetchedMessage.sendSyncMessage(contentDecoded, sentAtMs);
-          const tempFetchMessage = await fetchHandleMessageSentData(identifier);
+          const tempFetchMessage = await fetchHandleMessageSentData(dbMessageIdentifier);
           if (!tempFetchMessage) {
             window?.log?.warn(
               'Got an error while trying to sendSyncMessage(): fetchedMessage is null'
@@ -171,10 +177,10 @@ async function handleSwarmMessageSentSuccess({
 }
 
 async function handleSwarmMessageSentFailure(
-  sentMessage: Pick<OutgoingRawMessage, 'device' | 'identifier'>,
+  sentMessage: Pick<OutgoingRawMessage, 'device' | 'dbMessageIdentifier'>,
   error: any
 ) {
-  const fetchedMessage = await fetchHandleMessageSentData(sentMessage.identifier);
+  const fetchedMessage = await fetchHandleMessageSentData(sentMessage.dbMessageIdentifier);
   if (!fetchedMessage) {
     return;
   }

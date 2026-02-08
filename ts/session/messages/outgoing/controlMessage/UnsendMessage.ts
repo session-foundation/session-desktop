@@ -16,6 +16,7 @@ export class UnsendMessage extends ContentMessageNoProfile {
     super({
       createAtNetworkTimestamp: params.createAtNetworkTimestamp,
       author: params.author,
+      dbMessageIdentifier: params.dbMessageIdentifier,
     } as MessageParams);
     this.author = params.author;
     if (

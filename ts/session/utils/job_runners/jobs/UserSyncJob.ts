@@ -1,7 +1,6 @@
 /* eslint-disable no-await-in-loop */
 import { PubkeyType } from 'libsession_util_nodejs';
 import { compact, flatten, isArray, isEmpty, isNumber, isString } from 'lodash';
-import { v4 } from 'uuid';
 import { to_hex } from 'libsodium-wrappers-sumo';
 import AbortController from 'abort-controller';
 import { UserUtils } from '../..';
@@ -30,6 +29,7 @@ import type { ConfigWrapperUser } from '../../../../webworker/workers/browser/li
 import { objectEntries } from '../../../../shared/object_utils';
 import { getFeatureFlag } from '../../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { longOrNumberToNumber } from '../../../../types/long/longOrNumberToNumber';
+import { uuidV4 } from '../../../../util/uuid';
 
 // a long time between retries, to avoid running multiple jobs at the same time,
 // when one was postponed at the same time as one already planned (5s)
@@ -210,7 +210,7 @@ class UserSyncJob extends PersistedJob<UserSyncPersistedData> {
   >) {
     super({
       jobType: 'UserSyncJobType',
-      identifier: identifier || v4(),
+      identifier: identifier || uuidV4(),
       delayBetweenRetries: defaultMsBetweenRetries,
       maxAttempts: isNumber(maxAttempts) ? maxAttempts : defaultMaxAttempts,
       currentRetry: isNumber(currentRetry) ? currentRetry : 0,

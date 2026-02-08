@@ -222,7 +222,7 @@ const initNewGroupInWrapper = createAsyncThunk(
           sender: us,
           sentAt,
           convo,
-          markAlreadySent: false, // the store below will mark the message as sent with dbMsgIdentifier
+          markAlreadySent: false, // the store below will mark the message as sent with dbMessageIdentifier
           messageHash: null,
         });
         groupMemberChange = await GroupUpdateMessageFactory.getWithoutHistoryControlMessage({
@@ -231,7 +231,7 @@ const initNewGroupInWrapper = createAsyncThunk(
           groupPk,
           withoutHistory: membersHexWithoutUs,
           createAtNetworkTimestamp: sentAt,
-          dbMsgIdentifier: msgModel.id,
+          dbMessageIdentifier: msgModel.id,
         });
       }
 
@@ -671,7 +671,7 @@ async function handleMemberAddedFromUI({
     sender: us,
     sentAt: createAtNetworkTimestamp,
     expireUpdate: expireDetails,
-    markAlreadySent: false, // the store below will mark the message as sent with dbMsgIdentifier
+    markAlreadySent: false, // the store below will mark the message as sent with dbMessageIdentifier
     messageHash: null,
   };
   const updateMessagesToPush: Array<GroupUpdateMemberChangeMessage> = [];
@@ -686,7 +686,7 @@ async function handleMemberAddedFromUI({
       groupPk,
       withHistory,
       createAtNetworkTimestamp,
-      dbMsgIdentifier: msgModel.id,
+      dbMessageIdentifier: msgModel.id,
     });
     if (groupChange) {
       updateMessagesToPush.push(groupChange);
@@ -703,7 +703,7 @@ async function handleMemberAddedFromUI({
       groupPk,
       withoutHistory,
       createAtNetworkTimestamp,
-      dbMsgIdentifier: msgModel.id,
+      dbMessageIdentifier: msgModel.id,
     });
     if (groupChange) {
       updateMessagesToPush.push(groupChange);
@@ -842,7 +842,7 @@ async function handleMemberRemovedFromUI({
             ? createAtNetworkTimestamp + expiringDetails.expireTimer
             : null,
       },
-      markAlreadySent: false, // the store below will mark the message as sent using dbMsgIdentifier
+      markAlreadySent: false, // the store below will mark the message as sent using dbMessageIdentifier
       messageHash: null,
     });
     removedControlMessage = await GroupUpdateMessageFactory.getRemovedControlMessage({
@@ -852,7 +852,7 @@ async function handleMemberRemovedFromUI({
       removed,
       createAtNetworkTimestamp,
       fromMemberLeftMessage,
-      dbMsgIdentifier: msgModel.id,
+      dbMessageIdentifier: msgModel.id,
     });
   }
 
@@ -936,7 +936,7 @@ async function handleNameChangeFromUI({
         convo,
         createAtNetworkTimestamp
       ),
-      markAlreadySent: false, // the store below will mark the message as sent with dbMsgIdentifier
+      markAlreadySent: false, // the store below will mark the message as sent with dbMessageIdentifier
       messageHash: null,
     });
 
@@ -945,7 +945,7 @@ async function handleNameChangeFromUI({
       groupPk,
       typeOfChange: SignalService.GroupUpdateInfoChangeMessage.Type.NAME,
       updatedName: newName,
-      identifier: msg.id,
+      dbMessageIdentifier: msg.id,
       createAtNetworkTimestamp,
       secretKey: group.secretKey,
       sodium: await getSodiumRenderer(),
@@ -1070,7 +1070,7 @@ async function handleAvatarChangeFromUI({
       convo,
       createAtNetworkTimestamp
     ),
-    markAlreadySent: false, // the store below will mark the message as sent with dbMsgIdentifier
+    markAlreadySent: false, // the store below will mark the message as sent with dbMessageIdentifier
     messageHash: null,
   });
 
@@ -1078,7 +1078,7 @@ async function handleAvatarChangeFromUI({
   const avatarChangeMsg = new GroupUpdateInfoChangeMessage({
     groupPk,
     typeOfChange: SignalService.GroupUpdateInfoChangeMessage.Type.AVATAR,
-    identifier: msg.id,
+    dbMessageIdentifier: msg.id,
     createAtNetworkTimestamp,
     secretKey: group.secretKey,
     sodium: await getSodiumRenderer(),
@@ -1170,7 +1170,7 @@ async function handleClearAvatarFromUI({ groupPk }: WithGroupPubkey) {
       convo,
       createAtNetworkTimestamp
     ),
-    markAlreadySent: false, // the store below will mark the message as sent with dbMsgIdentifier
+    markAlreadySent: false, // the store below will mark the message as sent with dbMessageIdentifier
     messageHash: null,
   });
 
@@ -1178,7 +1178,7 @@ async function handleClearAvatarFromUI({ groupPk }: WithGroupPubkey) {
   const avatarChangeMsg = new GroupUpdateInfoChangeMessage({
     groupPk,
     typeOfChange: SignalService.GroupUpdateInfoChangeMessage.Type.AVATAR,
-    identifier: msg.id,
+    dbMessageIdentifier: msg.id,
     createAtNetworkTimestamp,
     secretKey: group.secretKey,
     sodium: await getSodiumRenderer(),

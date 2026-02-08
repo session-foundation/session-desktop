@@ -18,7 +18,7 @@ export class CommunityInvitationMessage extends DataMessageWithProfile {
   constructor(params: CommunityInvitationMessageParams) {
     super({
       createAtNetworkTimestamp: params.createAtNetworkTimestamp,
-      identifier: params.identifier,
+      dbMessageIdentifier: params.dbMessageIdentifier,
       expirationType: params.expirationType,
       expireTimer: params.expireTimer,
       outgoingProMessageDetails: params.outgoingProMessageDetails,

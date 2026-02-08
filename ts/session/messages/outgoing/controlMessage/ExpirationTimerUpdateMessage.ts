@@ -3,7 +3,7 @@ import { PubKey } from '../../../types';
 import { DataMessageNoProfile } from '../DataMessage';
 import { ExpirableMessageParams } from '../ExpirableMessage';
 
-type ExpirationTimerUpdateMessageParams = ExpirableMessageParams & {
+export type ExpirationTimerUpdateMessageParams = ExpirableMessageParams & {
   syncTarget?: string | PubKey;
 };
 
@@ -16,7 +16,7 @@ export class ExpirationTimerUpdateMessage extends DataMessageNoProfile {
   constructor(params: ExpirationTimerUpdateMessageParams) {
     super({
       createAtNetworkTimestamp: params.createAtNetworkTimestamp,
-      identifier: params.identifier,
+      dbMessageIdentifier: params.dbMessageIdentifier,
       expirationType: params.expirationType,
       expireTimer: params.expireTimer,
     });

@@ -17,7 +17,6 @@ import {
 } from 'lodash';
 
 import { DisappearingMessageConversationModeType } from 'libsession_util_nodejs';
-import { v4 } from 'uuid';
 import { SignalService } from '../protobuf';
 import { ConvoHub } from '../session/conversations';
 import { ClosedGroupV2VisibleMessage } from '../session/messages/outgoing/visibleMessage/ClosedGroupVisibleMessage';
@@ -30,7 +29,10 @@ import { MessageAttributesOptionals, type MessageAttributes } from './messageTyp
 import { Data } from '../data/data';
 import { OpenGroupUtils } from '../session/apis/open_group_api/utils';
 import { getOpenGroupV2FromConversationId } from '../session/apis/open_group_api/utils/OpenGroupUtils';
-import { ExpirationTimerUpdateMessage } from '../session/messages/outgoing/controlMessage/ExpirationTimerUpdateMessage';
+import {
+  ExpirationTimerUpdateMessage,
+  type ExpirationTimerUpdateMessageParams,
+} from '../session/messages/outgoing/controlMessage/ExpirationTimerUpdateMessage';
 import { TypingMessage } from '../session/messages/outgoing/controlMessage/TypingMessage';
 import { CommunityInvitationMessage } from '../session/messages/outgoing/visibleMessage/CommunityInvitationMessage';
 import { OpenGroupVisibleMessage } from '../session/messages/outgoing/visibleMessage/OpenGroupVisibleMessage';
@@ -154,6 +156,7 @@ import {
   UserConfigWrapperActions,
 } from '../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 import { ProRevocationCache } from '../session/revocation_list/pro_revocation_list';
+import { uuidV4 } from '../util/uuid';
 
 type InMemoryConvoInfos = {
   mentionedUs: boolean;
@@ -691,6 +694,8 @@ export class ConversationModel extends Model<ConversationAttributes> {
         }),
         expirationType,
         expireTimer,
+        // we have a custom logic for the reacts and send the two messages separately
+        dbMessageIdentifier: uuidV4(),
       };
 
       if (PubKey.isBlinded(this.id)) {
@@ -860,6 +865,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
       createAtNetworkTimestamp: NetworkTime.now(),
       userProfile: await UserUtils.getOurProfile(),
       outgoingProMessageDetails,
+      dbMessageIdentifier: msg.id,
     };
 
     await msg.applyProFeatures(outgoingProMessageDetails);
@@ -1174,7 +1180,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     message.setExpireTimer(expireTimer);
 
     if (!message.id) {
-      message.setId(v4());
+      message.setId(uuidV4());
     }
 
     if (this.isActive()) {
@@ -1222,8 +1228,8 @@ export class ConversationModel extends Model<ConversationAttributes> {
     // Below is the "sending the update to the conversation" part.
     // We would have returned if that message sending part was not needed
     //
-    const expireUpdate = {
-      identifier: message.id,
+    const expireUpdate: ExpirationTimerUpdateMessageParams = {
+      dbMessageIdentifier: message.id,
       createAtNetworkTimestamp,
       expirationType,
       expireTimer,
@@ -1272,7 +1278,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
             typeOfChange: SignalService.GroupUpdateInfoChangeMessage.Type.DISAPPEARING_MESSAGES,
             ...expireUpdate,
             groupPk: this.id,
-            identifier: message.id,
+            dbMessageIdentifier: message.id,
             sodium: await getSodiumRenderer(),
             secretKey: group.secretKey,
             updatedExpirationSeconds: expireUpdate.expireTimer,
@@ -1443,6 +1449,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     const receiptMessage = new ReadReceiptMessage({
       createAtNetworkTimestamp: NetworkTime.now(),
       timestamps,
+      dbMessageIdentifier: uuidV4(),
     });
 
     const device = new PubKey(this.id);
@@ -2392,7 +2399,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
       // an OpenGroupV2 message is just a visible message
       const chatMessageParams: VisibleMessageParams = {
         body,
-        identifier: id,
+        dbMessageIdentifier: id,
         createAtNetworkTimestamp: networkTimestamp,
         attachments,
         expirationType: message.getExpirationType() ?? 'unknown', // Note we assume that the caller used a setting allowed for that conversation when building it. Here we just send it.
@@ -2455,7 +2462,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
         if (communityInvitation && communityInvitation.url) {
           const communityInviteMessage = new CommunityInvitationMessage({
-            identifier: id,
+            dbMessageIdentifier: id,
             createAtNetworkTimestamp: networkTimestamp,
             name: communityInvitation.name,
             url: communityInvitation.url,
@@ -2565,9 +2572,9 @@ export class ConversationModel extends Model<ConversationAttributes> {
     if (!encryptedData[0]) {
       throw new Error('MultiEncryptWrapperActions.encryptForCommunityInbox failed');
     }
-    if (!messageParams.identifier) {
+    if (!messageParams.dbMessageIdentifier) {
       throw new Error(
-        'MultiEncryptWrapperActions.encryptForCommunityInbox messageParams needs an identifier'
+        'MultiEncryptWrapperActions.encryptForCommunityInbox messageParams needs a dbMessageIdentifier'
       );
     }
 
@@ -2866,6 +2873,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
       createAtNetworkTimestamp: NetworkTime.now(),
       isTyping,
       typingTimestamp: NetworkTime.now(),
+      dbMessageIdentifier: uuidV4(),
     };
     const typingMessage = new TypingMessage(typingParams);
 

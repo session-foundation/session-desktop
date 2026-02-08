@@ -1,9 +1,12 @@
-import { v4 as uuid } from 'uuid';
 import type { OutgoingUserProfile } from '../../../types/message';
 
 export type MessageParams = {
   createAtNetworkTimestamp: number;
-  identifier?: string;
+  /**
+   * Every message we build needs an identifier.
+   * It can either be a valid message stored in the DB or a random uuid v4 created just for the purpose of sending that message.
+   */
+  dbMessageIdentifier: string;
 };
 
 export type WithOutgoingUserProfile = { userProfile: OutgoingUserProfile | null };
@@ -15,17 +18,18 @@ export abstract class Message {
    * There is also the stored_at/effectiveTimestamp which we get back once we sent a message to the recipient's swarm, but that's not included here.
    */
   public readonly createAtNetworkTimestamp: number;
-  public readonly identifier: string;
+  public readonly dbMessageIdentifier: string;
 
-  constructor({ createAtNetworkTimestamp, identifier }: MessageParams) {
+  constructor({ createAtNetworkTimestamp, dbMessageIdentifier }: MessageParams) {
     this.createAtNetworkTimestamp = createAtNetworkTimestamp;
-    if (identifier && identifier.length === 0) {
-      throw new Error('Cannot set empty identifier');
-    }
 
     if (!createAtNetworkTimestamp || createAtNetworkTimestamp <= 0) {
       throw new Error('Cannot set undefined createAtNetworkTimestamp or <=0');
     }
-    this.identifier = identifier || uuid();
+
+    if (!dbMessageIdentifier) {
+      throw new Error('Every message needs an non-empty dbMessageIdentifier');
+    }
+    this.dbMessageIdentifier = dbMessageIdentifier;
   }
 }

@@ -940,7 +940,7 @@ export class MessageModel extends Model<MessageAttributes> {
 
       if (conversation.isOpenGroupV2()) {
         const openGroupParams: OpenGroupVisibleMessageParams = {
-          identifier: this.id,
+          dbMessageIdentifier: this.id,
           createAtNetworkTimestamp: NetworkTime.now(),
           userProfile: await UserUtils.getOurProfile(),
           outgoingProMessageDetails: await UserUtils.getOutgoingProMessageDetails({
@@ -970,7 +970,7 @@ export class MessageModel extends Model<MessageAttributes> {
       const createAtNetworkTimestamp = NetworkTime.now();
 
       const chatParams: VisibleMessageParams = {
-        identifier: this.id,
+        dbMessageIdentifier: this.id,
         body,
         createAtNetworkTimestamp,
         attachments,

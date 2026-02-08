@@ -8,7 +8,6 @@ import {
 } from 'libsession_util_nodejs';
 
 import { compact, concat, flatten, isArray, isEmpty, last, omit, sampleSize, uniqBy } from 'lodash';
-import { v4 } from 'uuid';
 import { z } from '../../../util/zod';
 import { Data } from '../../../data/data';
 import * as Receiver from '../../../receiver/receiver';
@@ -56,6 +55,7 @@ import {
   UserConfigWrapperActions,
 } from '../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 import { isTestIntegration } from '../../../shared/env_vars';
+import { uuidV4 } from '../../../util/uuid';
 
 const minMsgCountShouldRetry = 95;
 /**
@@ -1182,7 +1182,7 @@ async function handleDecryptedMessagesForSwarm(
       }
 
       const decodedEnvelope = new SwarmDecodedEnvelope({
-        id: v4(),
+        id: uuidV4(),
         source: groupPk ?? foundDecrypted.decodedEnvelope.sessionId,
         senderIdentity: groupPk ? foundDecrypted.decodedEnvelope.sessionId : '', // none for 1o1 messages
         contentDecrypted: foundDecrypted.decodedEnvelope.contentPlaintextUnpadded,

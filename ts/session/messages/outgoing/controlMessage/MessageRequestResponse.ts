@@ -14,6 +14,7 @@ export class MessageRequestResponse extends ContentMessageWithProfile {
       createAtNetworkTimestamp: params.createAtNetworkTimestamp,
       outgoingProMessageDetails: params.outgoingProMessageDetails,
       userProfile: params.userProfile,
+      dbMessageIdentifier: params.dbMessageIdentifier,
     });
   }
 
