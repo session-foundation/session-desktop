@@ -23,6 +23,7 @@ import { getFeatureFlag } from '../state/ducks/types/releasedFeaturesReduxTypes'
 import type { StateType } from '../state/reducer';
 import { isUsFromCache } from '../session/utils/User';
 import { isUsAnySogsFromCache } from '../session/apis/open_group_api/sogsv3/knownBlindedkeys';
+import { ProWrapperActions } from '../webworker/workers/browser/libsession_worker_interface';
 
 /**
  * Note: this function does not trigger a write to the db nor trigger redux update.
@@ -228,10 +229,12 @@ async function handleRegularMessage(
       ? Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_PRO
       : Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_STANDARD;
 
-  const body =
-    rawDataMessage.body.length > maxChars
-      ? rawDataMessage.body.slice(0, maxChars)
-      : rawDataMessage.body;
+  const { truncateAt } = await ProWrapperActions.utf16CountTruncatedToCodepoints({
+    utf16: rawDataMessage.body,
+    codepointLen: maxChars,
+  });
+
+  const body = rawDataMessage.body.slice(0, truncateAt);
 
   message.set({
     // quote: rawDataMessage.quote, // do not do this copy here, it must be done only in copyFromQuotedMessage()

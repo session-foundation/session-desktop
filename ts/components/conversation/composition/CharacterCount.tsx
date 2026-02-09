@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import { useThrottledAsyncFn } from '../../../hooks/useThrottledAsyncFn';
 import { Constants } from '../../../session';
 import { getFeatureFlagMemo } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { SessionTooltip } from '../../SessionTooltip';
@@ -8,9 +9,10 @@ import { tr } from '../../../localization/localeTools';
 import { useCurrentUserHasPro } from '../../../hooks/useHasPro';
 import { ProIconButton } from '../../buttons/ProButton';
 import { useProBadgeOnClickCb } from '../../menuAndSettingsHooks/useProBadgeOnClickCb';
+import { ProWrapperActions } from '../../../webworker/workers/browser/libsession_worker_interface';
 
 export type CharacterCountProps = {
-  count: number;
+  text: string;
 };
 
 const CHARACTER_SHOW_REMAINING_BUFFER = 200;
@@ -51,16 +53,27 @@ function ProCta() {
   );
 }
 
-export function CharacterCount({ count }: CharacterCountProps) {
+const REFRESH_INTERVAL_MS = 200;
+
+export function CharacterCount({ text }: CharacterCountProps) {
   const alwaysShowFlag = getFeatureFlagMemo('alwaysShowRemainingChars');
 
   const currentUserHasPro = useCurrentUserHasPro();
+
+  const countResult = useThrottledAsyncFn(
+    () => {
+      const result = ProWrapperActions.utf16Count({ utf16: text });
+      return result;
+    },
+    REFRESH_INTERVAL_MS,
+    [text]
+  );
 
   const charLimit = currentUserHasPro
     ? Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_PRO
     : Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_STANDARD;
 
-  const remaining = charLimit - count;
+  const remaining = charLimit - (countResult?.codepointCount ?? 0);
   const pastLimit = remaining < 0;
 
   return alwaysShowFlag || remaining <= CHARACTER_SHOW_REMAINING_BUFFER ? (

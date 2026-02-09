@@ -99,8 +99,8 @@ importers:
         specifier: ^4.1.0
         version: 4.1.0
       libsession_util_nodejs:
-        specifier: https://github.com/session-foundation/libsession-util-nodejs/releases/download/v0.6.9/libsession_util_nodejs-v0.6.9.tar.gz
-        version: https://github.com/session-foundation/libsession-util-nodejs/releases/download/v0.6.9/libsession_util_nodejs-v0.6.9.tar.gz
+        specifier: https://github.com/session-foundation/libsession-util-nodejs/releases/download/v0.6.10/libsession_util_nodejs-v0.6.10.tar.gz
+        version: https://github.com/session-foundation/libsession-util-nodejs/releases/download/v0.6.10/libsession_util_nodejs-v0.6.10.tar.gz
       libsodium-wrappers-sumo:
         specifier: ^0.7.15
         version: 0.7.15
@@ -4004,9 +4004,9 @@ packages:
     resolution: {integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==}
     engines: {node: '>= 0.8.0'}
 
-  libsession_util_nodejs@https://github.com/session-foundation/libsession-util-nodejs/releases/download/v0.6.9/libsession_util_nodejs-v0.6.9.tar.gz:
-    resolution: {tarball: https://github.com/session-foundation/libsession-util-nodejs/releases/download/v0.6.9/libsession_util_nodejs-v0.6.9.tar.gz}
-    version: 0.6.9
+  libsession_util_nodejs@https://github.com/session-foundation/libsession-util-nodejs/releases/download/v0.6.10/libsession_util_nodejs-v0.6.10.tar.gz:
+    resolution: {integrity: sha512-vdmLu576Yxs7gfHxXvt5hUMoDVGwaiF5Tlaot9K+h4yF4M6LMfi2FLLZI1cx5A6R5vjWu/irGpwZjRYxH/7Gxg==, tarball: https://github.com/session-foundation/libsession-util-nodejs/releases/download/v0.6.10/libsession_util_nodejs-v0.6.10.tar.gz}
+    version: 0.6.10
 
   libsodium-sumo@0.7.15:
     resolution: {integrity: sha512-5tPmqPmq8T8Nikpm1Nqj0hBHvsLFCXvdhBFV7SGOitQPZAA6jso8XoL0r4L7vmfKXr486fiQInvErHtEvizFMw==}
@@ -10087,7 +10087,7 @@ snapshots:
       prelude-ls: 1.2.1
       type-check: 0.4.0
 
-  libsession_util_nodejs@https://github.com/session-foundation/libsession-util-nodejs/releases/download/v0.6.9/libsession_util_nodejs-v0.6.9.tar.gz:
+  libsession_util_nodejs@https://github.com/session-foundation/libsession-util-nodejs/releases/download/v0.6.10/libsession_util_nodejs-v0.6.10.tar.gz:
     dependencies:
       cmake-js: 7.3.1
       node-addon-api: 8.5.0

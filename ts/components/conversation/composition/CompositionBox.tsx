@@ -1,4 +1,4 @@
-import _, { debounce, isEmpty, isUndefined } from 'lodash';
+import _, { debounce, isEmpty } from 'lodash';
 
 import { connect } from 'react-redux';
 import styled from 'styled-components';
@@ -63,6 +63,7 @@ import { CTAVariant } from '../../dialog/cta/types';
 import { selectWeAreProUser } from '../../../hooks/useHasPro';
 import { closeContextMenus } from '../../../util/contextMenu';
 import type { MessageAttributes } from '../../../models/messageType';
+import { ProWrapperActions } from '../../../webworker/workers/browser/libsession_worker_interface';
 
 export interface ReplyingToMessageProps {
   convoId: string;
@@ -109,17 +110,15 @@ interface Props {
 interface State {
   showRecordingView: boolean;
   initialDraft: string;
+  /**
+   * This is an html draft (not a plain text draft. It contains html elements)
+   */
   draft: string;
   showEmojiPanel: boolean;
   lastSelectedLength: number; // used for emoji panel replacement
   ignoredLink?: string; // set the ignored url when users closed the link preview
   stagedLinkPreview?: StagedLinkPreviewData;
   showCaptionEditor?: AttachmentType;
-  characterCount?: number;
-}
-
-function getSendableTextLength(v: string): number {
-  return v.trim().replace(/^\n+|\n+$/g, '').length;
 }
 
 const getDefaultState = (newConvoId?: string) => {
@@ -133,7 +132,6 @@ const getDefaultState = (newConvoId?: string) => {
     ignoredLink: undefined,
     stagedLinkPreview: undefined,
     showCaptionEditor: undefined,
-    characterCount: getSendableTextLength(draft),
   };
 };
 
@@ -362,7 +360,7 @@ class CompositionBoxInner extends Component<Props, State> {
   }
 
   private setDraft(draft: string) {
-    this.setState({ draft, characterCount: this.getSendableText().length });
+    this.setState({ draft });
   }
 
   private setStagedLinkPreview(linkPreview: StagedLinkPreviewData) {
@@ -388,7 +386,7 @@ class CompositionBoxInner extends Component<Props, State> {
   }
 
   private renderCompositionView() {
-    const { showEmojiPanel, characterCount } = this.state;
+    const { showEmojiPanel } = this.state;
     const { typingEnabled, isBlocked } = this.props;
 
     // we can only send a message if the conversation allows writing in it AND
@@ -459,7 +457,7 @@ class CompositionBoxInner extends Component<Props, State> {
             />
           </StyledEmojiPanelContainer>
         ) : null}
-        {!isUndefined(characterCount) ? <CharacterCount count={characterCount} /> : null}
+        <CharacterCount text={this.getSendableTextFromDraft()} />
       </StyledCompositionBoxContainer>
     );
   }
@@ -576,30 +574,27 @@ class CompositionBoxInner extends Component<Props, State> {
     }
   }
 
-  private getSendableText(): string {
-    const input = this.inputRef.current;
-
-    if (!input) {
-      return '';
-    }
-
-    return input
-      .getRawValue(nodeTree =>
-        nodeTree.querySelectorAll('span[data-user-id]').forEach(span => {
-          const id = span.getAttribute('data-user-id');
-          // eslint-disable-next-line no-param-reassign -- intentional mutation of the clone to replace display with id
-          span.textContent = id ? `@${id}` : span.textContent;
-        })
-      )
-      .trim()
-      .replace(/^\n+|\n+$/g, '');
+  /**
+   * Our draft contains html elements to render mentions and custom actions.
+   * Before sending and to check the character count, we need to remove those html elements and replace those with
+   * the correct content.
+   * This is what this function does.
+   */
+  private getSendableTextFromDraft(): string {
+    const { draft } = this.state;
+    const doc = new DOMParser().parseFromString(`<div>${draft}</div>`, 'text/html');
+    doc.querySelectorAll('span[data-user-id]').forEach(span => {
+      const id = span.getAttribute('data-user-id');
+      // eslint-disable-next-line no-param-reassign
+      span.textContent = id ? `@${id}` : span.textContent;
+    });
+    const cleaned = doc.body.textContent?.trim().replace(/^\n+|\n+$/g, '') ?? '';
+    return cleaned;
   }
 
-  /**
-   * This is a significantly cheaper version of calling @see {@link getSendableText} and getting the length
-   */
-  private isTextSendable(): boolean {
-    return getSendableTextLength(this.state.draft) > 0;
+  private isTextSendable() {
+    const text = this.getSendableTextFromDraft();
+    return text.length > 0;
   }
 
   private async onSendMessage() {
@@ -629,9 +624,11 @@ class CompositionBoxInner extends Component<Props, State> {
       ? Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_PRO
       : Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_STANDARD;
 
-    const text = this.getSendableText();
+    const text = this.getSendableTextFromDraft();
 
-    if (text.length > charLimit) {
+    const { codepointCount } = await ProWrapperActions.utf16Count({ utf16: text });
+
+    if (codepointCount > charLimit) {
       const dispatch = window.inboxStore?.dispatch;
       if (dispatch) {
         if (isProAvailable && !hasPro) {
@@ -702,7 +699,6 @@ class CompositionBoxInner extends Component<Props, State> {
         stagedLinkPreview: undefined,
         ignoredLink: undefined,
         draft: '',
-        characterCount: 0,
       });
       updateDraftForConversation({
         conversationKey: selectedConversationKey,
