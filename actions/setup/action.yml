@@ -32,8 +32,8 @@ runs:
       uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
       with:
         node-version-file: '.nvmrc'
-        cache: 'pnpm'
-        cache-dependency-path: 'pnpm-lock.yaml'
+        # cache: 'pnpm'
+        # cache-dependency-path: 'pnpm-lock.yaml'
 
     - name: Setup cache for .electron-gyp
       uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
@@ -54,7 +54,14 @@ runs:
 
     - name: Install Desktop node_modules
       shell: bash
+      if: runner.os != 'Windows'
       run: pnpm install
       env:
         NPM_CONFIG_LOGLEVEL: verbose
 
+    - name: Install Desktop node_modules
+      shell: bash
+      if: runner.os == 'Windows'
+      run: pnpm install --shamefully-hoist --node-linker=hoisted --public-hoist-pattern "*"
+      env:
+        NPM_CONFIG_LOGLEVEL: verbose
