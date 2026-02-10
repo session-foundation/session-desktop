@@ -1,7 +1,8 @@
 import { ipcMain } from 'electron';
 import fse from 'fs-extra';
-import { glob } from 'glob';
-import { isString, map } from 'lodash';
+import { readdir } from 'fs/promises';
+
+import { isString } from 'lodash';
 import path from 'path';
 import { rimrafSync } from 'rimraf';
 
@@ -23,10 +24,17 @@ const ensureDirectory = async (userDataPath: string) => {
 
 const getAllAttachments = async (userDataPath: string) => {
   const dir = getAttachmentsPath(userDataPath);
-  const pattern = path.join(dir, '**', '*');
 
-  const files = await glob(pattern, { nodir: true });
-  return map(files, file => path.relative(dir, file));
+  const files: Array<string> = [];
+
+  for (const entry of await readdir(dir, { recursive: true, withFileTypes: true })) {
+    if (entry.isFile()) {
+      const fullPath = path.join(entry.parentPath ?? entry.parentPath, entry.name);
+      files.push(path.relative(dir, fullPath));
+    }
+  }
+
+  return files;
 };
 
 async function cleanupOrphanedAttachments(userDataPath: string) {
