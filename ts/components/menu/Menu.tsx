@@ -185,7 +185,7 @@ export const ServerBanMenuItem = (): JSX.Element | null => {
   if (showUnbanUserCb) {
     return (
       <ItemWithDataTestId onClick={showUnbanUserCb}>
-        <Localizer token="serverUnbanUserDev" />
+        <Localizer token="serverBanUserDev" />
       </ItemWithDataTestId>
     );
   }

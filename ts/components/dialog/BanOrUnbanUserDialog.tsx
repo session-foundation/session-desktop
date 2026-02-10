@@ -70,10 +70,10 @@ async function banOrUnBanUserCall(
           ToastUtils.pushUserBanFailure();
           break;
         case 'unban':
-          ToastUtils.pushGlobalUserBanFailure();
+          ToastUtils.pushUserUnbanFailure();
           break;
         case 'server-ban':
-          ToastUtils.pushUserUnbanFailure();
+          ToastUtils.pushGlobalUserBanFailure();
           break;
         case 'server-unban':
           ToastUtils.pushGlobalUserUnbanFailure();
