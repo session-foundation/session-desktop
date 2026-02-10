@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import useKey from 'react-use/lib/useKey';
 import { getAppDispatch } from '../../state/dispatch';
 
 import { useFocusMount } from '../../hooks/useFocusMount';
@@ -159,6 +160,7 @@ export const BanOrUnBanUserDialog = (props: {
   const onClose = () => {
     dispatch(updateBanOrUnbanUserModal(null));
   };
+  useKey('Escape', onClose);
 
   let buttonText = '';
 
@@ -239,6 +241,7 @@ export const BanOrUnBanUserDialog = (props: {
           // don't do anything on enter as we don't know if the user wants to ban or ban-delete-all
           onEnterPressed={() => {}}
           inputDataTestId={isBanAction ? 'ban-user-input' : 'unban-user-input'}
+          allowEscapeKeyPassthrough={true}
         />
         {getFeatureFlag('useDevCommunityActions') ? (
           <Flex

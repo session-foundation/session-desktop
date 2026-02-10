@@ -73,7 +73,7 @@ export const StyledSessionInput = styled(Flex)<{
 
 const StyledBorder = styled(AnimatedFlex)<{ $shape: 'round' | 'square' | 'none' }>`
   position: relative;
-  border: 1px solid var(--input-border-color);
+  border: var(--default-borders);
   border-radius: ${props =>
     props.$shape === 'none' ? '0px' : props.$shape === 'square' ? '7px' : '13px'};
 `;
@@ -98,7 +98,7 @@ const StyledInput = styled(motion.input)<{
   ${props => `font-size: var(--font-size-${props.$textSize});`}
 
   &::placeholder {
-    color: var(--input-text-placeholder-color);
+    color: var(--text-secondary-color);
     ${props => props.$centerText && 'text-align: center;'}
   }
 `;
@@ -115,7 +115,7 @@ export function BorderWithErrorState({
       $container={true}
       $alignItems="center"
       initial={{
-        borderColor: hasError ? 'var(--input-border-color)' : undefined,
+        borderColor: hasError ? 'var(--borders-color)' : undefined,
       }}
       animate={{
         borderColor: hasError ? 'var(--danger-color)' : undefined,
@@ -227,6 +227,7 @@ type SimpleSessionInputProps = Pick<
     providedError: string | TrArgs | undefined;
     disabled?: boolean;
     buttonEnd?: ReactNode;
+    allowEscapeKeyPassthrough?: boolean;
   };
 
 // NOTE: [react-compiler] this convinces the compiler the hook is static
@@ -262,6 +263,7 @@ export const SimpleSessionInput = (props: SimpleSessionInputProps) => {
     tabIndex,
     centerText,
     buttonEnd,
+    allowEscapeKeyPassthrough,
   } = props;
   const hasError = !isEmpty(providedError);
   const hasValue = !isEmpty(value);
@@ -296,6 +298,9 @@ export const SimpleSessionInput = (props: SimpleSessionInputProps) => {
     if (event.key === 'Enter' && onEnterPressed) {
       event.preventDefault();
       onEnterPressed();
+    }
+    if (event.key === 'Escape' && allowEscapeKeyPassthrough) {
+      return;
     }
     event.stopPropagation();
   };

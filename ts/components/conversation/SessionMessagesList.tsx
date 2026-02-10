@@ -6,6 +6,7 @@ import {
   getOldBottomMessageId,
   getOldTopMessageId,
   getSortedMessagesTypesOfSelectedConversation,
+  useFocusedMessageId,
   type MessagePropsType,
 } from '../../state/selectors/conversations';
 import { useSelectedConversationKey } from '../../state/selectors/selectedConversation';
@@ -22,6 +23,9 @@ import { TimerNotification } from './TimerNotification';
 import { DataExtractionNotification } from './message/message-item/DataExtractionNotification';
 import { InteractionNotification } from './message/message-item/InteractionNotification';
 import type { WithMessageId } from '../../session/types/with';
+import { useKeyboardShortcut } from '../../hooks/useKeyboardShortcut';
+import { KbdShortcut } from '../../util/keyboardShortcuts';
+import { useMessageInteractions } from '../../hooks/useMessageInteractions';
 
 function isNotTextboxEvent(e: KeyboardEvent) {
   return (e?.target as any)?.type === undefined;
@@ -56,6 +60,11 @@ export const SessionMessagesList = (props: {
   const [didScroll, setDidScroll] = useState(false);
   const oldTopMessageId = useSelector(getOldTopMessageId);
   const oldBottomMessageId = useSelector(getOldBottomMessageId);
+  const focusedMessageId = useFocusedMessageId();
+  const { reply, copyText } = useMessageInteractions(focusedMessageId);
+
+  useKeyboardShortcut({ shortcut: KbdShortcut.messageToggleReply, handler: reply, scopeId: 'all' });
+  useKeyboardShortcut({ shortcut: KbdShortcut.messageCopyText, handler: copyText, scopeId: 'all' });
 
   useLayoutEffect(() => {
     const newTopMessageId = messagesProps.length
@@ -100,35 +109,38 @@ export const SessionMessagesList = (props: {
 
   return (
     <IsDetailMessageViewContext.Provider value={false}>
-      {messagesProps.map(messageProps => {
-        const { messageId } = messageProps;
+      {messagesProps
+        .map(messageProps => {
+          const { messageId } = messageProps;
 
-        const ComponentToRender = componentForMessageType[messageProps.message.messageType];
+          const ComponentToRender = componentForMessageType[messageProps.message.messageType];
 
-        const unreadIndicator = messageProps.showUnreadIndicator ? (
-          <SessionLastSeenIndicator
-            key={'unread-indicator'}
-            messageId={messageId}
-            didScroll={didScroll}
-            setDidScroll={setDidScroll}
-          />
-        ) : null;
-
-        const dateBreak =
-          messageProps.showDateBreak !== undefined ? (
-            <MessageDateBreak
-              key={`date-break-${messageId}`}
-              timestamp={messageProps.showDateBreak}
+          const unreadIndicator = messageProps.showUnreadIndicator ? (
+            <SessionLastSeenIndicator
+              key={'unread-indicator'}
               messageId={messageId}
+              didScroll={didScroll}
+              setDidScroll={setDidScroll}
             />
           ) : null;
 
-        return [
-          <ComponentToRender key={messageId} messageId={messageId} />,
-          unreadIndicator,
-          dateBreak,
-        ];
-      })}
+          const dateBreak =
+            messageProps.showDateBreak !== undefined ? (
+              <MessageDateBreak
+                key={`date-break-${messageId}`}
+                timestamp={messageProps.showDateBreak}
+                messageId={messageId}
+              />
+            ) : null;
+
+          return [
+            dateBreak,
+            unreadIndicator,
+            <ComponentToRender key={messageId} messageId={messageId} />,
+          ];
+        })
+        // TODO: check if we reverse this upstream, we might be reversing twice
+        .toReversed()}
     </IsDetailMessageViewContext.Provider>
   );
 };

@@ -13,7 +13,7 @@ export function toRawMessage(
   const plainTextBuffer = message.plainTextBuffer();
 
   const rawMessage: OutgoingRawMessage = {
-    identifier: message.identifier,
+    dbMessageIdentifier: message.dbMessageIdentifier,
     plainTextBuffer,
     device: destinationPubKey.key,
     ttl,

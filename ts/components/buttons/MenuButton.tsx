@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 import { getAppDispatch } from '../../state/dispatch';
-import { useLeftOverlayMode } from '../../state/selectors/section';
+import { useLeftOverlayModeType } from '../../state/selectors/section';
 import { sectionActions } from '../../state/ducks/section';
 import { searchActions } from '../../state/ducks/search';
 import { LucideIcon } from '../icon/LucideIcon';
@@ -14,7 +14,7 @@ const StyledMenuButton = styled.button`
   display: flex;
   justify-content: center;
   align-items: center;
-  background: var(--menu-button-background-color);
+  background: var(--transparent-color);
 
   border: 1.5px solid var(--menu-button-border-color);
   border-radius: 7px;
@@ -26,34 +26,37 @@ const StyledMenuButton = styled.button`
 
   color: var(--menu-button-icon-color);
 
-  &:hover {
+  &:hover,
+  &:focus {
     background: var(--menu-button-background-hover-color);
     border-color: var(--menu-button-border-hover-color);
     color: var(--menu-button-icon-hover-color);
   }
 `;
 
+export function useNewConversationCallback() {
+  const leftOverlayMode = useLeftOverlayModeType();
+  const dispatch = getAppDispatch();
+
+  return () => {
+    dispatch(searchActions.clearSearch());
+    dispatch(
+      leftOverlayMode
+        ? sectionActions.resetLeftOverlayMode()
+        : sectionActions.setLeftOverlayMode({ type: 'choose-action', params: null })
+    );
+  };
+}
+
 /**
  * This is the Session Menu Button. i.e. the button on top of the conversation list to start a new conversation.
  * It has two state: selected or not and so we use an checkbox input to keep the state in sync.
  */
 export const MenuButton = () => {
-  const leftOverlayMode = useLeftOverlayMode();
-  const dispatch = getAppDispatch();
-
-  const isToggled = Boolean(leftOverlayMode);
-
-  const onClickFn = () => {
-    dispatch(searchActions.clearSearch());
-    dispatch(
-      isToggled
-        ? sectionActions.resetLeftOverlayMode()
-        : sectionActions.setLeftOverlayMode('choose-action')
-    );
-  };
+  const onClick = useNewConversationCallback();
 
   return (
-    <StyledMenuButton data-testid="new-conversation-button" onClick={onClickFn}>
+    <StyledMenuButton data-testid="new-conversation-button" onClick={onClick}>
       <LucideIcon
         unicode={LUCIDE_ICONS_UNICODE.PLUS}
         iconSize="large"

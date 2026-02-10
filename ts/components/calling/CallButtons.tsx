@@ -259,7 +259,7 @@ const ShowInFullScreenButton = ({ isFullScreen }: { isFullScreen: boolean }) => 
         iconSize={'max'}
         unicode={LUCIDE_ICONS_UNICODE.MAXIMIZE}
         onClick={showInFullScreen}
-        iconColor="var(--call-buttons-action-icon-color)"
+        iconColor="var(--black-color)"
         margin="10px"
       />
     </StyledCallActionButton>

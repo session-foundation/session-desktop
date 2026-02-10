@@ -33,7 +33,7 @@ export function getStyleForMessageItemText(
     overflow: 'hidden',
     whiteSpace: 'nowrap',
     textOverflow: 'ellipsis',
-    color: 'var(--conversation-tab-text-color)',
+    color: 'var(--text-secondary-color)',
     userSelect: 'none',
     ...(hasUnread && {
       fontWeight: '400',

@@ -25,7 +25,6 @@ import {
 } from '../state/ducks/conversations';
 import {
   updateConfirmModal,
-  updateConversationSettingsModal,
   updateGroupMembersModal,
   updateConversationDetailsModal,
 } from '../state/ducks/modalDialog';
@@ -41,7 +40,7 @@ import { MessageSender } from '../session/sending';
 import { StoreGroupRequestFactory } from '../session/apis/snode_api/factories/StoreGroupRequestFactory';
 import { DURATION } from '../session/constants';
 import { GroupInvite } from '../session/utils/job_runners/jobs/GroupInviteJob';
-import { tr, type TrArgs } from '../localization/localeTools';
+import { tr } from '../localization/localeTools';
 
 export async function copyPublicKeyByConvoId(convoId: string) {
   if (OpenGroupUtils.isOpenGroupV2(convoId)) {
@@ -68,7 +67,7 @@ export async function copyPublicKeyByConvoId(convoId: string) {
  * message we are sending to the user.
  *
  */
-export const handleAcceptConversationRequest = async ({
+export const handleAcceptConversationRequestWithoutConfirm = async ({
   convoId,
   approvalMessageTimestamp,
 }: {
@@ -120,7 +119,7 @@ export const handleAcceptConversationRequest = async ({
         }
 
         window.log.info(
-          `handleAcceptConversationRequest: first poll for group ${ed25519Str(convoId)} happened, we should have encryption keys now`
+          `handleAcceptConversationRequestWithoutConfirm: first poll for group ${ed25519Str(convoId)} happened, we should have encryption keys now`
         );
         return resolve(true);
       });
@@ -133,7 +132,7 @@ export const handleAcceptConversationRequest = async ({
       await PromiseUtils.timeout(pollAndSendResponsePromise, timeout);
     } catch (e) {
       window.log.warn(
-        `handleAcceptConversationRequest: waited ${timeout}ms for first poll of group ${ed25519Str(convoId)} to happen, but timed out with: ${e.message}`
+        `handleAcceptConversationRequestWithoutConfirm: waited ${timeout}ms for first poll of group ${ed25519Str(convoId)} to happen, but timed out with: ${e.message}`
       );
     }
   }
@@ -212,60 +211,6 @@ export async function declineConversationWithoutConfirm({
   }
 }
 
-export const declineConversationWithConfirm = ({
-  conversationId,
-  alsoBlock,
-  currentlySelectedConvo,
-  conversationIdOrigin,
-}: {
-  conversationId: string;
-  currentlySelectedConvo: string | undefined;
-  syncToDevices: boolean;
-  alsoBlock: boolean;
-  conversationIdOrigin: string | null;
-}) => {
-  const isGroupV2 = PubKey.is03Pubkey(conversationId);
-  // restoring from seed we might not have the sender of that invite, so we need to take care of not having one (and not block)
-  const originNameToBlock =
-    alsoBlock && !!conversationIdOrigin
-      ? ConvoHub.use().get(conversationIdOrigin)?.getNicknameOrRealUsernameOrPlaceholder()
-      : null;
-
-  const convoName = ConvoHub.use().get(conversationId)?.getNicknameOrRealUsernameOrPlaceholder();
-
-  const i18nMessage: TrArgs = isGroupV2
-    ? alsoBlock && originNameToBlock
-      ? { token: 'blockDescription', name: originNameToBlock } // groupv2, and blocking by sender name
-      : { token: 'groupInviteDelete' } // groupv2, and no info about the sender, falling back to delete only
-    : alsoBlock
-      ? { token: 'blockDescription', name: convoName }
-      : { token: 'messageRequestsDelete' };
-
-  window?.inboxStore?.dispatch(
-    updateConfirmModal({
-      okText: alsoBlock ? tr('block') : tr('delete'),
-      cancelText: tr('cancel'),
-      title: alsoBlock ? tr('block') : tr('delete'),
-      i18nMessage,
-      okTheme: SessionButtonColor.Danger,
-      onClickOk: async () => {
-        await declineConversationWithoutConfirm({
-          conversationId,
-          currentlySelectedConvo,
-          alsoBlock,
-          conversationIdOrigin,
-        });
-      },
-      onClickCancel: () => {
-        window?.inboxStore?.dispatch(updateConfirmModal(null));
-      },
-      onClickClose: () => {
-        window?.inboxStore?.dispatch(updateConfirmModal(null));
-      },
-    })
-  );
-};
-
 export async function showUpdateGroupOrCommunityDetailsByConvoId(conversationId: string) {
   const conversation = ConvoHub.use().get(conversationId);
   if (conversation.isClosedGroup()) {
@@ -290,165 +235,6 @@ export async function showUpdateGroupMembersByConvoId(conversationId: string) {
     );
   }
   window.inboxStore?.dispatch(updateGroupMembersModal({ conversationId }));
-}
-
-export async function leaveGroupOrCommunityByConvoId({
-  conversationId,
-  sendLeaveMessage,
-  isPublic,
-  onClickClose,
-}: {
-  conversationId: string;
-  isPublic: boolean;
-  sendLeaveMessage: boolean;
-  onClickClose?: () => void;
-}) {
-  try {
-    if (onClickClose) {
-      onClickClose();
-    }
-
-    if (isPublic) {
-      await ConvoHub.use().deleteCommunity(conversationId);
-      return;
-    }
-    // for groups, we have a "leaving..." state that we don't need for communities.
-    // that's because communities can be left always, whereas for groups we need to send a leave message (and so have some encryption keypairs)
-    await updateConversationInteractionState({
-      conversationId,
-      type: ConversationInteractionType.Leave,
-      status: ConversationInteractionStatus.Start,
-    });
-
-    if (PubKey.is05Pubkey(conversationId)) {
-      await ConvoHub.use().deleteLegacyGroup(conversationId, {
-        fromSyncMessage: false,
-        sendLeaveMessage,
-      });
-    } else if (PubKey.is03Pubkey(conversationId)) {
-      await ConvoHub.use().deleteGroup(conversationId, {
-        fromSyncMessage: false,
-        sendLeaveMessage,
-        deleteAllMessagesOnSwarm: false,
-        deletionType: 'doNotKeep',
-        forceDestroyForAllMembers: false,
-        clearFetchedHashes: true,
-      });
-    }
-    await clearConversationInteractionState({ conversationId });
-  } catch (err) {
-    window.log.warn(`showLeaveGroupByConvoId error: ${err}`);
-    await saveConversationInteractionErrorAsMessage({
-      conversationId,
-      interactionType: ConversationInteractionType.Leave,
-    });
-  }
-}
-
-export async function showLeaveGroupByConvoId(conversationId: string, name: string | undefined) {
-  const conversation = ConvoHub.use().get(conversationId);
-
-  if (!conversation.isClosedGroup()) {
-    throw new Error('showLeaveGroupDialog() called with a non group convo.');
-  }
-
-  const admins = conversation.getGroupAdmins();
-  const weAreAdmin = admins.includes(UserUtils.getOurPubKeyStrFromCache());
-  const weAreLastAdmin =
-    (PubKey.is05Pubkey(conversationId) || PubKey.is03Pubkey(conversationId)) &&
-    weAreAdmin &&
-    admins.length === 1;
-
-  // if this is a community, or we legacy group are not admin, we can just show a confirmation dialog
-
-  const onClickClose = () => {
-    window?.inboxStore?.dispatch(updateConfirmModal(null));
-  };
-
-  const onClickOk = async () => {
-    await leaveGroupOrCommunityByConvoId({
-      conversationId,
-      isPublic: false,
-      sendLeaveMessage: !weAreLastAdmin, // we don't need to send a leave message when we are the last admin: the group is removed.
-      onClickClose,
-    });
-    window?.inboxStore?.dispatch(updateConversationSettingsModal(null));
-  };
-
-  if (weAreLastAdmin) {
-    window?.inboxStore?.dispatch(
-      updateConfirmModal({
-        title: tr('groupLeave'),
-        i18nMessage: {
-          token: 'groupDeleteDescription',
-          group_name: name || tr('unknown'),
-        },
-        onClickOk,
-        okText: tr('leave'),
-        okTheme: SessionButtonColor.Danger,
-        onClickClose,
-        conversationId,
-      })
-    );
-    return;
-  }
-  window?.inboxStore?.dispatch(
-    updateConfirmModal({
-      title: tr('groupLeave'),
-      i18nMessage: { token: 'groupLeaveDescription', group_name: name ?? tr('unknown') },
-      onClickOk,
-      okText: tr('leave'),
-      okTheme: SessionButtonColor.Danger,
-      onClickClose,
-      conversationId,
-    })
-  );
-}
-
-/**
- * Can be used to show a dialog asking confirmation about deleting a group.
- * Communities are explicitly forbidden.
- * This function won't attempt to send a leave message. Use `showLeaveGroupByConvoId` for that purpose
- */
-export async function showDeleteGroupByConvoId(conversationId: string, name: string | undefined) {
-  const conversation = ConvoHub.use().get(conversationId);
-
-  const isPublic = conversation.isOpenGroupV2();
-
-  const weAreAdmin = conversation.weAreAdminUnblinded();
-
-  if (!conversation.isGroup() || isPublic) {
-    throw new Error('showDeleteGroupByConvoId() called with a non group convo.');
-  }
-
-  const onClickClose = () => {
-    window?.inboxStore?.dispatch(updateConfirmModal(null));
-  };
-
-  const onClickOk = async () => {
-    await leaveGroupOrCommunityByConvoId({
-      conversationId,
-      isPublic, // we check for isPublic above, and throw if it's true
-      sendLeaveMessage: false,
-      onClickClose,
-    });
-    window?.inboxStore?.dispatch(updateConversationSettingsModal(null));
-  };
-
-  window?.inboxStore?.dispatch(
-    updateConfirmModal({
-      title: tr('groupDelete'),
-      i18nMessage: {
-        token: weAreAdmin ? 'groupDeleteDescription' : 'groupDeleteDescriptionMember',
-        group_name: name ?? tr('unknown'),
-      },
-      onClickOk,
-      okText: tr('delete'),
-      okTheme: SessionButtonColor.Danger,
-      onClickClose,
-      conversationId,
-    })
-  );
 }
 
 export async function markAllReadByConvoId(conversationId: string) {
@@ -506,6 +292,7 @@ export async function setDisappearingMessagesByConvoId(
     });
   }
 }
+
 export async function replyToMessage(messageId: string) {
   const quotedMessageModel = await Data.getMessageById(messageId);
   if (!quotedMessageModel) {
@@ -644,7 +431,7 @@ export async function clearConversationInteractionState({
   }
 }
 
-async function saveConversationInteractionErrorAsMessage({
+export async function saveConversationInteractionErrorAsMessage({
   conversationId,
   interactionType,
 }: {
@@ -715,7 +502,7 @@ export async function promoteUsersInGroup({
     sender: us,
     sentAt,
     convo,
-    markAlreadySent: false, // the store below will mark the message as sent with dbMsgIdentifier
+    markAlreadySent: false, // the store below will mark the message as sent with dbMessageIdentifier
     messageHash: null,
   });
   const groupMemberChange = await GroupUpdateMessageFactory.getPromotedControlMessage({
@@ -724,7 +511,7 @@ export async function promoteUsersInGroup({
     groupPk,
     promoted: membersHex,
     createAtNetworkTimestamp: sentAt,
-    dbMsgIdentifier: msgModel.id,
+    dbMessageIdentifier: msgModel.id,
   });
 
   if (!groupMemberChange) {

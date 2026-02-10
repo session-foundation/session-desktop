@@ -1,5 +1,4 @@
 import { isEmpty, isNumber, isString } from 'lodash';
-import { v4 } from 'uuid';
 import { UserUtils } from '../..';
 import { processNewAttachment } from '../../../../types/MessageAttachment';
 import { decryptProfile } from '../../../../util/crypto/profileEncrypter';
@@ -17,6 +16,7 @@ import { downloadAttachmentFs } from '../../../../receiver/attachments';
 import { extractDetailsFromUrlFragment } from '../../../url';
 import { MultiEncryptWrapperActions } from '../../../../webworker/workers/browser/libsession_worker_interface';
 import { SessionProfileSetAvatarDownloadedAny } from '../../../../models/profile';
+import { uuidV4 } from '../../../../util/uuid';
 
 const defaultMsBetweenRetries = 10000;
 const defaultMaxAttempts = 3;
@@ -80,7 +80,7 @@ class AvatarDownloadJob extends PersistedJob<AvatarDownloadPersistedData> {
     >) {
     super({
       jobType: 'AvatarDownloadJobType',
-      identifier: identifier || v4(),
+      identifier: identifier || uuidV4(),
       conversationId,
       delayBetweenRetries: defaultMsBetweenRetries,
       maxAttempts: isNumber(maxAttempts) ? maxAttempts : defaultMaxAttempts,

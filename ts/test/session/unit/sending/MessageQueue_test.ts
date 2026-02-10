@@ -164,7 +164,7 @@ describe('MessageQueue', () => {
         Sinon.stub(MessageWrapper, 'encryptMessagesAndWrap').resolves([
           {
             encryptedAndWrappedData: randombytes_buf(100),
-            identifier: message.identifier,
+            dbMessageIdentifier: message.dbMessageIdentifier,
             isSyncMessage: false,
             namespace: SnodeNamespaces.Default,
             networkTimestamp: message.createAtNetworkTimestamp,
@@ -177,9 +177,9 @@ describe('MessageQueue', () => {
             resolve();
             try {
               expect(messageSentHandlerSuccessStub.callCount).to.be.equal(1);
-              expect(messageSentHandlerSuccessStub.lastCall.args[0].identifier).to.be.equal(
-                message.identifier
-              );
+              expect(
+                messageSentHandlerSuccessStub.lastCall.args[0].dbMessageIdentifier
+              ).to.be.equal(message.dbMessageIdentifier);
               done();
             } catch (e) {
               console.warn('messageSentHandlerSuccessStub was not called, but should have been');
@@ -207,9 +207,9 @@ describe('MessageQueue', () => {
             if (messageSentHandlerFailedStub.callCount === 1) {
               try {
                 expect(messageSentHandlerFailedStub.callCount).to.be.equal(1);
-                expect(messageSentHandlerFailedStub.lastCall.args[0].identifier).to.be.equal(
-                  message.identifier
-                );
+                expect(
+                  messageSentHandlerFailedStub.lastCall.args[0].dbMessageIdentifier
+                ).to.be.equal(message.dbMessageIdentifier);
                 expect(messageSentHandlerFailedStub.lastCall.args[1].message).to.equal('failure');
                 done();
               } catch (e) {
@@ -274,7 +274,9 @@ describe('MessageQueue', () => {
       });
 
       expect(messageSentPublicHandlerSuccessStub.callCount).to.equal(1);
-      expect(messageSentPublicHandlerSuccessStub.lastCall.args[0]).to.equal(message.identifier);
+      expect(messageSentPublicHandlerSuccessStub.lastCall.args[0]).to.equal(
+        message.dbMessageIdentifier
+      );
       expect(messageSentPublicHandlerSuccessStub.lastCall.args[1].serverId).to.equal(5125);
       expect(messageSentPublicHandlerSuccessStub.lastCall.args[1].serverTimestamp).to.equal(5127);
     });
@@ -292,8 +294,8 @@ describe('MessageQueue', () => {
         filesToLink: [],
       });
       expect(handlePublicMessageSentFailureStub.callCount).to.equal(1);
-      expect(handlePublicMessageSentFailureStub.lastCall.args[0].identifier).to.equal(
-        message.identifier
+      expect(handlePublicMessageSentFailureStub.lastCall.args[0].dbMessageIdentifier).to.equal(
+        message.dbMessageIdentifier
       );
     });
   });

@@ -1,4 +1,3 @@
-import { v4 } from 'uuid';
 /* eslint-disable no-await-in-loop */
 import { isNumber } from 'lodash';
 import { runners } from '../JobRunner';
@@ -18,6 +17,7 @@ import { stringify } from '../../../../types/sqlSharedTypes';
 import { proBackendDataActions } from '../../../../state/ducks/proBackendData';
 import { getCachedUserConfig } from '../../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 import { ConvoHub } from '../../../conversations';
+import { uuidV4 } from '../../../../util/uuid';
 
 let lastRunAtMs = 0;
 
@@ -37,7 +37,7 @@ class UpdateProRevocationListJob extends PersistedJob<UpdateProRevocationListPer
   >) {
     super({
       jobType: 'UpdateProRevocationListJobType',
-      identifier: identifier ?? v4(),
+      identifier: identifier ?? uuidV4(),
       delayBetweenRetries: 15 * DURATION.SECONDS,
       maxAttempts: isNumber(maxAttempts) ? maxAttempts : 2,
       currentRetry: isNumber(currentRetry) ? currentRetry : 0,

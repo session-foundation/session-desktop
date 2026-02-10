@@ -1,7 +1,6 @@
 export type SearchOptions = {
   ourNumber: string;
-  noteToSelf: Array<string>;
-  savedMessages: string;
+  noteToSelfAliases: Array<string>;
   excludeBlocked: boolean;
 };
 

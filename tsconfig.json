@@ -45,6 +45,7 @@
     "ts/webworker/workers/node/image_processor/image_processor.worker.ts",
     "ts/webworker/workers/node/libsession/libsession.worker.ts",
     "ts/webworker/workers/node/util/util.worker.ts",
-    "dynamic_assets/populate_cache.ts"
+    "dynamic_assets/populate_cache.ts",
+    "dynamic_assets/**/*.ts"
   ]
 }

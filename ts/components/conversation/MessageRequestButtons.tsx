@@ -1,11 +1,7 @@
 import styled from 'styled-components';
 import { useIsIncomingRequest, useIsOutgoingRequest } from '../../hooks/useParamSelector';
+import { handleAcceptConversationRequestWithoutConfirm } from '../../interactions/conversationInteractions';
 import {
-  declineConversationWithConfirm,
-  handleAcceptConversationRequest,
-} from '../../interactions/conversationInteractions';
-import {
-  useSelectedConversationIdOrigin,
   useSelectedConversationKey,
   useSelectedIsGroupV2,
   useSelectedIsPrivateFriend,
@@ -18,6 +14,7 @@ import {
 } from './SubtleNotification';
 import { NetworkTime } from '../../util/NetworkTime';
 import { tr } from '../../localization/localeTools';
+import { useDeclineMessageRequest } from '../menuAndSettingsHooks/useDeclineMessageRequest';
 
 const MessageRequestContainer = styled.div`
   display: flex;
@@ -48,42 +45,18 @@ const StyledBlockUserText = styled.span`
   font-weight: 700;
 `;
 
-const handleDeclineConversationRequest = (
-  convoId: string,
-  currentSelected: string | undefined,
-  conversationIdOrigin: string | null
-) => {
-  declineConversationWithConfirm({
-    conversationId: convoId,
-    syncToDevices: true,
-    alsoBlock: false,
-    currentlySelectedConvo: currentSelected,
-    conversationIdOrigin,
-  });
-};
-
-const handleDeclineAndBlockConversationRequest = (
-  convoId: string,
-  currentSelected: string | undefined,
-  conversationIdOrigin: string | null
-) => {
-  declineConversationWithConfirm({
-    conversationId: convoId,
-    syncToDevices: true,
-    alsoBlock: true,
-    currentlySelectedConvo: currentSelected,
-    conversationIdOrigin,
-  });
-};
-
 export const ConversationMessageRequestButtons = () => {
   const selectedConvoId = useSelectedConversationKey();
   const isIncomingRequest = useIsIncomingRequest(selectedConvoId);
   const isGroupV2 = useSelectedIsGroupV2();
   const isPrivateAndFriend = useSelectedIsPrivateFriend();
   const isGroupPendingInvite = useLibGroupInvitePending(selectedConvoId);
-  const convoOrigin = useSelectedConversationIdOrigin() ?? null;
   const isOutgoingRequest = useIsOutgoingRequest(selectedConvoId);
+  const declineCb = useDeclineMessageRequest({ conversationId: selectedConvoId, alsoBlock: false });
+  const declineAndBlockCb = useDeclineMessageRequest({
+    conversationId: selectedConvoId,
+    alsoBlock: true,
+  });
 
   if (
     !selectedConvoId ||
@@ -96,13 +69,13 @@ export const ConversationMessageRequestButtons = () => {
 
   return (
     <MessageRequestContainer>
-      {isIncomingRequest ? (
+      {declineCb ? (
         <ConversationBannerRow>
           <SessionButton
             buttonColor={SessionButtonColor.PrimaryDark}
             text={tr('accept')}
             onClick={() => {
-              void handleAcceptConversationRequest({
+              void handleAcceptConversationRequestWithoutConfirm({
                 convoId: selectedConvoId,
                 approvalMessageTimestamp: NetworkTime.now(),
               });
@@ -112,9 +85,7 @@ export const ConversationMessageRequestButtons = () => {
           <SessionButton
             buttonColor={SessionButtonColor.Danger}
             text={tr('delete')}
-            onClick={() => {
-              handleDeclineConversationRequest(selectedConvoId, selectedConvoId, convoOrigin);
-            }}
+            onClick={declineCb}
             dataTestId="delete-message-request"
           />
         </ConversationBannerRow>
@@ -126,15 +97,9 @@ export const ConversationMessageRequestButtons = () => {
         <ConversationOutgoingRequestExplanation />
       ) : (
         <>
-          {(isGroupV2 && !!convoOrigin) || !isGroupV2 ? (
+          {declineAndBlockCb ? (
             <StyledBlockUserText
-              onClick={() => {
-                handleDeclineAndBlockConversationRequest(
-                  selectedConvoId,
-                  selectedConvoId,
-                  convoOrigin
-                );
-              }}
+              onClick={declineAndBlockCb}
               data-testid="decline-and-block-message-request"
             >
               {tr('block')}

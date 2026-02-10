@@ -9,8 +9,12 @@ type ReadReceiptMessageParams = MessageParams & {
 export class ReadReceiptMessage extends ContentMessageNoProfile {
   public readonly timestamps: Array<number>;
 
-  constructor({ createAtNetworkTimestamp, identifier, timestamps }: ReadReceiptMessageParams) {
-    super({ createAtNetworkTimestamp, identifier });
+  constructor({
+    createAtNetworkTimestamp,
+    dbMessageIdentifier,
+    timestamps,
+  }: ReadReceiptMessageParams) {
+    super({ createAtNetworkTimestamp, dbMessageIdentifier });
     this.timestamps = timestamps;
   }
 

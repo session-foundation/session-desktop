@@ -34,6 +34,7 @@ import { ModalDescription } from './shared/ModalDescriptionContainer';
 import { ModalFlexContainer } from './shared/ModalFlexContainer';
 import { getDataFeatureFlagMemo } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 import { DURATION } from '../../session/constants';
+import { createButtonOnKeyDownForClickEventHandler } from '../../util/keyboardShortcuts';
 
 type StatusLightType = {
   glowing?: boolean;
@@ -56,7 +57,7 @@ const StyledOnionNodeList = styled.div`
 `;
 
 const StyledVerticalLine = styled.div`
-  background: var(--border-color);
+  background: var(--borders-color);
   position: absolute;
   height: calc(100% - 2 * 15px);
   margin: 15px calc(100% / 2 - 1px);
@@ -307,7 +308,8 @@ const connectingColor = 'var(--button-path-connecting-color)';
 const StyledStatusLightContainer = styled.div<{ $inActionPanel: boolean }>`
   margin-top: ${props => (props.$inActionPanel ? 'auto' : '0')};
   cursor: ${props => (props.$inActionPanel ? 'pointer' : 'inherit')};
-  padding: ${props => (props.$inActionPanel ? 'var(--margins-md)' : '0')};
+  padding: ${props => (props.$inActionPanel ? 'var(--margins-lg)' : '0')};
+  border-radius: 50%;
 `;
 
 // NOTE: [react-compiler] this has to live here for the hook to be identified as static
@@ -345,10 +347,17 @@ export const OnionStatusLight = (
       onionPathsCount >= 2 ? defaultColor : onionPathsCount >= 1 ? connectingColor : errorColor;
   }
 
+  const onKeyDown = handleClick
+    ? createButtonOnKeyDownForClickEventHandler(handleClick)
+    : undefined;
+
   return (
     <StyledStatusLightContainer
       data-testid="path-light-container"
       onClick={handleClick}
+      onKeyDown={onKeyDown}
+      role="button"
+      tabIndex={0}
       $inActionPanel={inActionPanel}
     >
       <OnionPathDot dataTestId="path-light-svg" iconColor={iconColor} />

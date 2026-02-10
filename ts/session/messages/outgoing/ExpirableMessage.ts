@@ -52,7 +52,7 @@ export abstract class ExpirableMessageNoProfile extends ContentMessageNoProfile 
   constructor(params: ExpirableMessageParams) {
     super({
       createAtNetworkTimestamp: params.createAtNetworkTimestamp,
-      identifier: params.identifier,
+      dbMessageIdentifier: params.dbMessageIdentifier,
     });
     this.expirationType = params.expirationType;
     this.expireTimerSeconds = params.expireTimer;
@@ -83,7 +83,7 @@ export abstract class ExpirableMessageWithProfile extends ContentMessageWithProf
   ) {
     super({
       createAtNetworkTimestamp: params.createAtNetworkTimestamp,
-      identifier: params.identifier,
+      dbMessageIdentifier: params.dbMessageIdentifier,
       userProfile: params.userProfile,
       outgoingProMessageDetails: params.outgoingProMessageDetails,
     });

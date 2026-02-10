@@ -1,42 +1,26 @@
 import styled from 'styled-components';
-
-import { isEmpty } from 'lodash';
-import useInterval from 'react-use/lib/useInterval';
-import useUpdate from 'react-use/lib/useUpdate';
-import { useMessageExpirationPropsById } from '../../../../hooks/useParamSelector';
-import { DURATION } from '../../../../session/constants';
+import { RefObject } from 'react';
 import { nativeEmojiData } from '../../../../util/emoji';
 import { getRecentReactions } from '../../../../util/storage';
-import { SpacerSM } from '../../../basic/Text';
-import { SessionIcon } from '../../../icon';
-import { formatAbbreviatedExpireDoubleTimer } from '../../../../util/i18n/formatting/expirationTimer';
-import { SessionLucideIconButton } from '../../../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
-import { tr } from '../../../../localization/localeTools';
+import { SessionLucideIconButton } from '../../../icon/SessionIconButton';
+import { createButtonOnKeyDownForClickEventHandler } from '../../../../util/keyboardShortcuts';
 
 type Props = {
+  ref?: RefObject<HTMLDivElement | null>;
   action: (...args: Array<any>) => void;
   additionalAction: (...args: Array<any>) => void;
-  messageId: string;
+  emojiPanelTriggerRef: RefObject<HTMLButtonElement | null>;
 };
 
 const StyledMessageReactBar = styled.div`
-  background-color: var(--emoji-reaction-bar-background-color);
-  border-radius: 25px;
-  box-shadow:
-    0 2px 16px 0 rgba(0, 0, 0, 0.2),
-    0 0px 20px 0 rgba(0, 0, 0, 0.19);
-
-  padding: 4px 8px;
+  padding: 4px 6px;
   white-space: nowrap;
-  width: 302px;
 
   display: flex;
   align-items: center;
 
   .session-icon-button {
-    margin: 0 4px;
-
     &:hover svg {
       background-color: var(--chat-buttons-background-hover-color);
     }
@@ -59,9 +43,7 @@ const ReactButton = styled.span`
   }
 `;
 
-const StyledContainer = styled.div<{ $expirationTimestamp: number | null }>`
-  position: absolute;
-  top: ${props => (props.$expirationTimestamp ? '-106px' : '-56px')};
+const StyledContainer = styled.div`
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -69,117 +51,44 @@ const StyledContainer = styled.div<{ $expirationTimestamp: number | null }>`
   left: -1px;
 `;
 
-const StyledExpiresIn = styled.div`
-  border-radius: 8px;
-  padding: 10px;
-  white-space: nowrap;
-  color: var(--text-primary-color);
-  size: var(--font-size-sm);
-  background-color: var(--context-menu-background-color);
-  box-shadow: 0px 0px 9px 0px var(--context-menu-shadow-color);
-  margin-top: 7px;
-  display: flex;
-  align-items: center;
-  min-width: 0;
-`;
-
-function useIsRenderedExpiresInItem(messageId: string) {
-  const expiryDetails = useMessageExpirationPropsById(messageId);
-
-  if (
-    !expiryDetails ||
-    isEmpty(expiryDetails) ||
-    !expiryDetails.expirationDurationMs ||
-    expiryDetails.isExpired ||
-    !expiryDetails.expirationTimestamp
-  ) {
-    return null;
-  }
-
-  return expiryDetails.expirationTimestamp;
-}
-
-function formatTimeLeft({ timeLeftMs }: { timeLeftMs: number }) {
-  const timeLeftSeconds = Math.floor(timeLeftMs / 1000);
-
-  if (timeLeftSeconds <= 0) {
-    return '0s';
-  }
-
-  const [time_large, time_small] = formatAbbreviatedExpireDoubleTimer(timeLeftSeconds);
-  if (time_large && time_small) {
-    return tr('disappearingMessagesCountdownBigSmall', {
-      time_large,
-      time_small,
-    });
-  }
-  if (time_large) {
-    return tr('disappearingMessagesCountdownBig', {
-      time_large,
-    });
-  }
-
-  throw new Error('formatTimeLeft unexpected duration given');
-}
-
-const ExpiresInItem = ({ expirationTimestamp }: { expirationTimestamp?: number | null }) => {
-  // this boolean is just used to forceRefresh the state when we get to display seconds in the contextmenu
-  const update = useUpdate();
-  const timeLeftMs = (expirationTimestamp || 0) - Date.now();
-
-  useInterval(
-    () => {
-      update();
-    },
-    // We want to force refresh this component a lot more if the message has less than 1h before disappearing,
-    // because when that's the case we also display the seconds left (i.e. 59min 23s) and we want that 23s to be dynamic.
-    // Also, we use a refresh interval of 500 rather than 1s so that the counter is a bit smoother
-    timeLeftMs > 0 && timeLeftMs <= 1 * DURATION.HOURS ? 500 : null
-  );
-  if (!expirationTimestamp || timeLeftMs < 0) {
-    return null;
-  }
-
-  return (
-    <StyledExpiresIn>
-      <SessionIcon iconSize={'small'} iconType="timerFixed" />
-      <SpacerSM />
-      <span>{formatTimeLeft({ timeLeftMs })}</span>
-    </StyledExpiresIn>
-  );
-};
-
-export const MessageReactBar = ({ action, additionalAction, messageId }: Props) => {
+export const MessageReactBar = ({ ref, action, additionalAction, emojiPanelTriggerRef }: Props) => {
   const recentReactions = getRecentReactions();
-  const expirationTimestamp = useIsRenderedExpiresInItem(messageId);
 
   return (
-    <StyledContainer $expirationTimestamp={expirationTimestamp}>
+    <StyledContainer ref={ref}>
       <StyledMessageReactBar>
-        {recentReactions &&
-          recentReactions.map(emoji => (
+        {recentReactions.map(emoji => {
+          const onClick = () => action(emoji);
+          const onKeyDown = createButtonOnKeyDownForClickEventHandler(onClick);
+          const ariaLabel = nativeEmojiData?.ariaLabels
+            ? nativeEmojiData.ariaLabels[emoji]
+            : undefined;
+
+          return (
             <ReactButton
               key={emoji}
-              role={'img'}
-              aria-label={
-                nativeEmojiData?.ariaLabels ? nativeEmojiData.ariaLabels[emoji] : undefined
-              }
-              onClick={() => {
-                action(emoji);
-              }}
+              role="button"
+              tabIndex={0}
+              aria-label={ariaLabel}
+              onKeyDown={onKeyDown}
+              onClick={onClick}
             >
               {emoji}
             </ReactButton>
-          ))}
+          );
+        })}
         <SessionLucideIconButton
-          iconColor={'var(--emoji-reaction-bar-icon-color)'}
+          ref={emojiPanelTriggerRef}
+          iconColor={'var(--text-primary-color)'}
           iconSize={'large'}
           unicode={LUCIDE_ICONS_UNICODE.PLUS}
           onClick={additionalAction}
           backgroundColor="var(--emoji-reaction-bar-icon-background-color)"
+          // NOTE: these magic numbers align the plus icon with the emoji buttons
+          padding="3px"
+          margin="4px"
         />
       </StyledMessageReactBar>
-      <ExpiresInItem expirationTimestamp={expirationTimestamp} />
     </StyledContainer>
   );
 };

@@ -61,6 +61,7 @@ import { tStripped } from '../../../localization/localeTools';
 import type { ProcessedLinkPreviewThumbnailType } from '../../../webworker/workers/node/image_processor/image_processor';
 import { CTAVariant } from '../../dialog/cta/types';
 import { selectWeAreProUser } from '../../../hooks/useHasPro';
+import { closeContextMenus } from '../../../util/contextMenu';
 import type { MessageAttributes } from '../../../models/messageType';
 
 export interface ReplyingToMessageProps {
@@ -157,7 +158,7 @@ const StyledSendMessageInput = styled.div<{ dir?: HTMLDirection }>`
 
   .mention-container {
     border-radius: var(--border-radius);
-    box-shadow: var(--suggestions-shadow);
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
     background-color: var(--suggestions-background-color);
     z-index: 3;
     min-width: 100px;
@@ -180,7 +181,7 @@ const StyledSendMessageInput = styled.div<{ dir?: HTMLDirection }>`
         padding-top: var(--margins-xs);
         padding-bottom: var(--margins-xs);
         background-color: var(--suggestions-background-color);
-        color: var(--suggestions-text-color);
+        color: var(--text-primary-color);
         transition: var(--default-duration);
 
         &:hover,
@@ -343,6 +344,7 @@ class CompositionBoxInner extends Component<Props, State> {
     document.addEventListener('mousedown', this.handleClick, false);
     this.setState({ lastSelectedLength: window.getSelection()?.toString().length ?? 0 });
 
+    closeContextMenus();
     this.setState({
       showEmojiPanel: true,
     });

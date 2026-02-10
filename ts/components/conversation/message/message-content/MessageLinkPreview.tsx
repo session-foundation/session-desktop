@@ -14,6 +14,7 @@ import { showLinkVisitWarningDialog } from '../../../dialog/OpenUrlModal';
 import { AriaLabels } from '../../../../util/hardcodedAriaLabels';
 import { LucideIcon } from '../../../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
+import { createButtonOnKeyDownForClickEventHandler } from '../../../../util/keyboardShortcuts';
 
 export type MessageLinkPreviewSelectorProps = Pick<
   MessageRenderingProps,
@@ -63,11 +64,15 @@ export const MessageLinkPreview = (props: Props) => {
     }
   }
 
+  const onKeyDown = createButtonOnKeyDownForClickEventHandler(openLinkFromPreview);
+
   return (
     <div
       role="button"
+      tabIndex={0}
       className={clsx(`module-message__link-preview module-message__link-preview--${direction}`)}
       onClick={openLinkFromPreview}
+      onKeyDown={onKeyDown}
     >
       <div className={clsx('module-message__link-preview__content')}>
         {previewHasImage ? (

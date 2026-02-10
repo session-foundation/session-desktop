@@ -1,4 +1,4 @@
-import styled, { CSSProperties } from 'styled-components';
+import styled, { type CSSProperties } from 'styled-components';
 
 import {
   useConversationUsernameWithFallback,
@@ -17,6 +17,7 @@ import { ContactName } from '../conversation/ContactName/ContactName';
 import { Timestamp } from '../conversation/Timestamp';
 import { leftPaneListWidth } from '../leftpane/LeftPane';
 import { tr } from '../../localization/localeTools';
+import { createButtonOnKeyDownForClickEventHandler } from '../../util/keyboardShortcuts';
 import { Localizer } from '../basic/Localizer';
 
 const StyledConversationTitleResults = styled.div`
@@ -27,7 +28,7 @@ const StyledConversationTitleResults = styled.div`
   overflow-x: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  color: var(--conversation-tab-text-color);
+  color: var(--text-secondary-color);
   /* We don't want this to overflow horizontally past the timestamp */
   width: 90px;
 `;
@@ -38,7 +39,7 @@ const StyledConversationFromUserInGroup = styled(StyledConversationTitleResults)
   line-height: 14px;
   overflow-x: hidden;
   font-weight: 700;
-  color: var(--conversation-tab-text-color);
+  color: var(--text-secondary-color);
 `;
 
 const StyledSearchResults = styled.div`
@@ -52,7 +53,8 @@ const StyledSearchResults = styled.div`
 
   cursor: pointer;
 
-  &:hover {
+  &:hover,
+  &:focus {
     background-color: var(--conversation-tab-background-hover-color);
   }
 `;
@@ -161,7 +163,7 @@ const ResultBody = styled.div`
 
   font-size: var(--font-size-sm);
 
-  color: var(--conversation-tab-text-color);
+  color: var(--text-secondary-color);
 
   max-height: 3.6em;
 
@@ -185,7 +187,7 @@ const StyledTimestampContainer = styled.div`
 
   text-transform: uppercase;
 
-  color: var(--conversation-tab-text-color);
+  color: var(--text-secondary-color);
 `;
 
 type MessageSearchResultProps = MessageResultProps & { style: CSSProperties };
@@ -222,6 +224,15 @@ export const MessageSearchResult = (props: MessageSearchResultProps) => {
   const destination =
     direction === 'incoming' ? conversationId : convoIsPrivate ? me : conversationId;
 
+  const onClick = () =>
+    void openConversationToSpecificMessage({
+      conversationKey: conversationId,
+      messageIdToNavigateTo: id,
+      shouldHighlightMessage: true,
+    });
+
+  const onKeyDown = createButtonOnKeyDownForClickEventHandler(onClick);
+
   if (!source && !destination) {
     return null;
   }
@@ -230,14 +241,10 @@ export const MessageSearchResult = (props: MessageSearchResultProps) => {
     <StyledSearchResults
       key={`div-msg-searchresult-${id}`}
       style={style}
+      tabIndex={0}
       role="button"
-      onClick={() => {
-        void openConversationToSpecificMessage({
-          conversationKey: conversationId,
-          messageIdToNavigateTo: id,
-          shouldHighlightMessage: true,
-        });
-      }}
+      onKeyDown={onKeyDown}
+      onClick={onClick}
     >
       <AvatarItem source={conversationId} />
       <StyledResultText>

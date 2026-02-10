@@ -7,6 +7,8 @@ import {
 import { SessionLucideIconButton } from '../../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 import type { SessionIconSize } from '../../icon';
+import { useKeyboardShortcut } from '../../../hooks/useKeyboardShortcut';
+import { KbdShortcut } from '../../../util/keyboardShortcuts';
 
 type CompositionButtonProps = {
   onClick: () => void;
@@ -26,6 +28,11 @@ export const AddStagedAttachmentButton = ({ onClick }: CompositionButtonProps) =
   const isBlocked = useSelectedIsBlocked();
   const disabled = isOutgoingRequest || isBlocked;
 
+  useKeyboardShortcut({
+    shortcut: KbdShortcut.conversationUploadAttachment,
+    handler: onClick,
+    disabled,
+  });
   return (
     <SessionLucideIconButton
       unicode={LUCIDE_ICONS_UNICODE.PLUS}
@@ -56,6 +63,10 @@ export const StartRecordingButton = ({ onClick }: CompositionButtonProps) => {
 
 export const ToggleEmojiButton = forwardRef<HTMLButtonElement, CompositionButtonProps>(
   (props, ref) => {
+    useKeyboardShortcut({
+      shortcut: KbdShortcut.conversationToggleEmojiPicker,
+      handler: props.onClick,
+    });
     return (
       <SessionLucideIconButton
         unicode={LUCIDE_ICONS_UNICODE.SMILE_PLUS}

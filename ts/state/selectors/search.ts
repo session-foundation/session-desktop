@@ -31,6 +31,10 @@ const getSearchResults = createSelector(
       searchResultContactsAndGroups: compact(
         searchState.searchResultContactsAndGroups
           .filter(id => {
+            // Note, if the user is searching for themselves, we always want to show it
+            if (id === UserUtils.getOurPubKeyStrFromCache()) {
+              return true;
+            }
             const value = lookup[id];
 
             // on some edges cases, we have an id but no corresponding convo because it matches a query but the conversation was removed.

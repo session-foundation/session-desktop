@@ -58,7 +58,7 @@ export class PendingMessageCache {
 
     this.cache.push(rawMessage);
     if (sentCb) {
-      this.callbacks.set(rawMessage.identifier, sentCb);
+      this.callbacks.set(rawMessage.dbMessageIdentifier, sentCb);
     }
     await this.saveToDB();
 
@@ -76,10 +76,14 @@ export class PendingMessageCache {
 
     // Remove item from cache and sync with database
     const updatedCache = this.cache.filter(
-      cached => !(cached.device === message.device && cached.identifier === message.identifier)
+      cached =>
+        !(
+          cached.device === message.device &&
+          cached.dbMessageIdentifier === message.dbMessageIdentifier
+        )
     );
     this.cache = updatedCache;
-    this.callbacks.delete(message.identifier);
+    this.callbacks.delete(message.dbMessageIdentifier);
     await this.saveToDB();
 
     return updatedCache;
@@ -87,7 +91,9 @@ export class PendingMessageCache {
 
   public find(message: OutgoingRawMessage): OutgoingRawMessage | undefined {
     // Find a message in the cache
-    return this.cache.find(m => m.device === message.device && m.identifier === message.identifier);
+    return this.cache.find(
+      m => m.device === message.device && m.dbMessageIdentifier === message.dbMessageIdentifier
+    );
   }
 
   public async clear() {

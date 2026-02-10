@@ -24,14 +24,14 @@ async function getRemovedControlMessage({
   adminSecretKey,
   createAtNetworkTimestamp,
   fromMemberLeftMessage,
-  dbMsgIdentifier,
+  dbMessageIdentifier,
 }: WithFromMemberLeftMessage &
   WithRemoveMembers &
   WithGroupPubkey & {
     convo: ConversationModel;
     adminSecretKey: Uint8ArrayLen64;
     createAtNetworkTimestamp: number;
-    dbMsgIdentifier: string;
+    dbMessageIdentifier: string;
   }) {
   const sodium = await getSodiumRenderer();
 
@@ -40,7 +40,7 @@ async function getRemovedControlMessage({
   }
 
   return new GroupUpdateMemberChangeMessage({
-    identifier: dbMsgIdentifier,
+    dbMessageIdentifier,
     removed,
     groupPk,
     typeOfChange: 'removed',
@@ -57,10 +57,10 @@ async function getWithoutHistoryControlMessage({
   groupPk,
   adminSecretKey,
   createAtNetworkTimestamp,
-  dbMsgIdentifier,
+  dbMessageIdentifier,
 }: WithAddWithoutHistoryMembers &
   WithGroupPubkey & {
-    dbMsgIdentifier: string;
+    dbMessageIdentifier: string;
     convo: ConversationModel;
     adminSecretKey: Uint8ArrayLen64;
     createAtNetworkTimestamp: number;
@@ -72,7 +72,7 @@ async function getWithoutHistoryControlMessage({
   }
 
   return new GroupUpdateMemberChangeMessage({
-    identifier: dbMsgIdentifier,
+    dbMessageIdentifier,
     added: withoutHistory,
     groupPk,
     typeOfChange: 'added',
@@ -89,10 +89,10 @@ async function getWithHistoryControlMessage({
   groupPk,
   adminSecretKey,
   createAtNetworkTimestamp,
-  dbMsgIdentifier,
+  dbMessageIdentifier,
 }: WithAddWithHistoryMembers &
   WithGroupPubkey & {
-    dbMsgIdentifier: string;
+    dbMessageIdentifier: string;
     convo: ConversationModel;
     adminSecretKey: Uint8ArrayLen64;
     createAtNetworkTimestamp: number;
@@ -104,7 +104,7 @@ async function getWithHistoryControlMessage({
   }
 
   return new GroupUpdateMemberChangeMessage({
-    identifier: dbMsgIdentifier,
+    dbMessageIdentifier,
     added: withHistory,
     groupPk,
     typeOfChange: 'addedWithHistory',
@@ -121,10 +121,10 @@ async function getPromotedControlMessage({
   groupPk,
   adminSecretKey,
   createAtNetworkTimestamp,
-  dbMsgIdentifier,
+  dbMessageIdentifier,
 }: WithPromotedMembers &
   WithGroupPubkey & {
-    dbMsgIdentifier: string;
+    dbMessageIdentifier: string;
     convo: ConversationModel;
     adminSecretKey: Uint8ArrayLen64;
     createAtNetworkTimestamp: number;
@@ -136,7 +136,7 @@ async function getPromotedControlMessage({
   }
 
   return new GroupUpdateMemberChangeMessage({
-    identifier: dbMsgIdentifier,
+    dbMessageIdentifier,
     promoted,
     groupPk,
     typeOfChange: 'promoted',

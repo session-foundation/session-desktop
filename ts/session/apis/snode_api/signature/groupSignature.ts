@@ -20,6 +20,7 @@ import { SignatureShared } from './signatureShared';
 import { SnodeSignatureResult } from './snodeSignatures';
 import { getSodiumRenderer } from '../../../crypto';
 import { NetworkTime } from '../../../../util/NetworkTime';
+import { uuidV4 } from '../../../../util/uuid';
 
 async function getGroupInviteMessage({
   groupName,
@@ -61,6 +62,7 @@ async function getGroupInviteMessage({
     }),
     expirationType: 'unknown', // an invite is not expiring
     expireTimer: 0,
+    dbMessageIdentifier: uuidV4(),
   });
   return invite;
 }
@@ -96,6 +98,7 @@ async function getGroupPromoteMessage({
     outgoingProMessageDetails: await UserUtils.getOutgoingProMessageDetails({
       utf16: undefined,
     }),
+    dbMessageIdentifier: uuidV4(),
   });
   return msg;
 }

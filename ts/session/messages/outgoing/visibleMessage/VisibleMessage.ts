@@ -99,7 +99,7 @@ export class VisibleMessage extends DataMessageWithProfile {
   constructor(params: VisibleMessageParams) {
     super({
       createAtNetworkTimestamp: params.createAtNetworkTimestamp,
-      identifier: params.identifier,
+      dbMessageIdentifier: params.dbMessageIdentifier,
       expirationType: params.expirationType,
       expireTimer: params.expireTimer,
       outgoingProMessageDetails: params.outgoingProMessageDetails,
@@ -172,7 +172,7 @@ export class VisibleMessage extends DataMessageWithProfile {
 
   public isEqual(comparator: VisibleMessage): boolean {
     return (
-      this.identifier === comparator.identifier &&
+      this.dbMessageIdentifier === comparator.dbMessageIdentifier &&
       this.createAtNetworkTimestamp === comparator.createAtNetworkTimestamp
     );
   }

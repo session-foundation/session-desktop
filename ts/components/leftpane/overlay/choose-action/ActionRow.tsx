@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { SessionDataTestId } from 'react';
+import type { SessionDataTestId, MouseEvent } from 'react';
 import { Flex } from '../../../basic/Flex';
 import { LucideIcon } from '../../../icon/LucideIcon';
 import type { WithLucideUnicode } from '../../../icon/lucide';
@@ -32,15 +32,15 @@ const StyledIcon = styled.div`
 const StyledHR = styled.hr`
   height: 0px;
   width: 100%;
-  border: 0.5px solid var(--border-color);
+  border: 0.5px solid var(--borders-color);
   padding: 0;
   margin: 0;
 `;
 
 export const StyledActionRowContainer = styled(Flex)`
   width: 100%;
-  border-top: 1px solid var(--border-color);
-  border-bottom: 1px solid var(--border-color);
+  border-top: var(--default-borders);
+  border-bottom: var(--default-borders);
 
   ${StyledActionRow}:last-child ${StyledHR} {
     border-color: transparent;
@@ -50,7 +50,7 @@ export const StyledActionRowContainer = styled(Flex)`
 type ActionRowProps = WithLucideUnicode & {
   title: string;
   ariaLabel: string;
-  onClick: () => void;
+  onClick: (e: MouseEvent<HTMLButtonElement>) => void;
   dataTestId: SessionDataTestId;
 };
 

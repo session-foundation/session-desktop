@@ -118,7 +118,7 @@ describe('PendingMessageCache', () => {
     expect(finalCache).to.have.length(0);
   });
 
-  it('should only remove messages with different identifier and device', async () => {
+  it('should only remove messages with different dbMessageIdentifier and device', async () => {
     const device = TestUtils.generateFakePubKey();
     const message = TestUtils.generateVisibleMessage();
     const rawMessage = MessageUtils.toRawMessage(device, message, SnodeNamespaces.Default);

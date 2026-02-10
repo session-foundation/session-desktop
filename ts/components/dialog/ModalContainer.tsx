@@ -24,6 +24,7 @@ import {
   useLightBoxOptions,
   useDebugMenuModal,
   useConversationSettingsModal,
+  useKeyboardShortcutsModal,
 } from '../../state/selectors/modal';
 import { LightboxGallery } from '../lightbox/LightboxGallery';
 import { BanOrUnBanUserDialog } from './BanOrUnbanUserDialog';
@@ -50,6 +51,7 @@ import { SessionConfirm } from './SessionConfirm';
 import { SessionCTA } from './SessionCTA';
 import { LocalizedPopupDialog } from './LocalizedPopupDialog';
 import { UserSettingsDialog } from './user-settings/UserSettingsDialog';
+import { KeyboardShortcutsModal } from './KeyboardShortcutsModal';
 
 export const ModalContainer = () => {
   const confirmModalState = useConfirmModal();
@@ -76,6 +78,7 @@ export const ModalContainer = () => {
   const sessionProInfoState = useSessionProInfoModal();
   const lightBoxOptions = useLightBoxOptions();
   const debugMenuModalState = useDebugMenuModal();
+  const keyboardShortcutsModalState = useKeyboardShortcutsModal();
   const conversationSettingsModalState = useConversationSettingsModal();
 
   // NOTE the order of the modals is important for the z-index
@@ -120,6 +123,7 @@ export const ModalContainer = () => {
       {lightBoxOptions && <LightboxGallery {...lightBoxOptions} />}
       {openUrlModalState && <OpenUrlModal {...openUrlModalState} />}
       {sessionProInfoState && <SessionCTA {...sessionProInfoState} />}
+      {keyboardShortcutsModalState && <KeyboardShortcutsModal {...keyboardShortcutsModalState} />}
       {/* Should be on top of all other modals */}
       {confirmModalState && <SessionConfirm {...confirmModalState} />}
     </>

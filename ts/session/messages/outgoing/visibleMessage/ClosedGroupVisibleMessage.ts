@@ -14,7 +14,7 @@ type ClosedGroupMessageParams = ExpirableMessageParams & {
 interface ClosedGroupVisibleMessageParams
   extends Omit<
     ClosedGroupMessageParams,
-    'expireTimer' | 'expirationType' | 'identifier' | 'createAtNetworkTimestamp'
+    'expireTimer' | 'expirationType' | 'dbMessageIdentifier' | 'createAtNetworkTimestamp'
   > {
   groupId: string;
   chatMessageParams: VisibleMessageParams;

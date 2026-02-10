@@ -1,6 +1,5 @@
 /* eslint-disable no-await-in-loop */
 import { isEmpty, isNumber, uniq } from 'lodash';
-import { v4 } from 'uuid';
 import { Data } from '../../../../data/data';
 import { isSignInByLinking } from '../../../../util/storage';
 import { DisappearingMessages } from '../../../disappearing_messages';
@@ -11,6 +10,7 @@ import {
   RunJobResult,
   UpdateMsgExpirySwarmPersistedData,
 } from '../PersistedJob';
+import { uuidV4 } from '../../../../util/uuid';
 
 class UpdateMsgExpirySwarmJob extends PersistedJob<UpdateMsgExpirySwarmPersistedData> {
   constructor({
@@ -28,7 +28,7 @@ class UpdateMsgExpirySwarmJob extends PersistedJob<UpdateMsgExpirySwarmPersisted
     Pick<UpdateMsgExpirySwarmPersistedData, 'msgIds'>) {
     super({
       jobType: 'UpdateMsgExpirySwarmJobType',
-      identifier: identifier || v4(),
+      identifier: identifier || uuidV4(),
       delayBetweenRetries: 2000,
       maxAttempts: isNumber(maxAttempts) ? maxAttempts : 2,
       currentRetry: isNumber(currentRetry) ? currentRetry : 0,

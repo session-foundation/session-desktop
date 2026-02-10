@@ -48,7 +48,7 @@ const StyledAttachmentHeader = styled.div`
 `;
 
 const StyledAttachmentsContainer = styled.div`
-  border-top: 1px solid var(--border-color);
+  border-top: var(--default-borders);
 `;
 
 export const StagedAttachmentList = (props: Props) => {
@@ -86,6 +86,7 @@ export const StagedAttachmentList = (props: Props) => {
             iconColor="var(--text-primary-color)"
             unicode={LUCIDE_ICONS_UNICODE.X}
             onClick={onRemoveAllStaged}
+            tabIndex={0}
             padding="var(--margins-xs) var(--margins-xs) 0 0"
             style={{
               position: 'absolute',

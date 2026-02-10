@@ -19,7 +19,7 @@ export const DraggableCallWindow = styled.div`
   display: flex;
   flex-direction: column;
   background-color: var(--modal-background-content-color);
-  border: 1px solid var(--border-color);
+  border: var(--default-borders);
   border-radius: var(--border-radius);
 `;
 

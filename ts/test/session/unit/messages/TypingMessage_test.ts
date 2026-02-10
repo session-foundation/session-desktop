@@ -4,12 +4,14 @@ import { SignalService } from '../../../../protobuf';
 import { Constants } from '../../../../session';
 import { TypingMessage } from '../../../../session/messages/outgoing/controlMessage/TypingMessage';
 import { longOrNumberToNumber } from '../../../../types/long/longOrNumberToNumber';
+import { uuidV4 } from '../../../../util/uuid';
 
 describe('TypingMessage', () => {
   it('has Action.STARTED if isTyping = true', () => {
     const message = new TypingMessage({
       createAtNetworkTimestamp: Date.now(),
       isTyping: true,
+      dbMessageIdentifier: uuidV4(),
     });
     const plainText = message.plainTextBuffer();
     const decoded = SignalService.Content.decode(plainText);
@@ -23,6 +25,7 @@ describe('TypingMessage', () => {
     const message = new TypingMessage({
       createAtNetworkTimestamp: Date.now(),
       isTyping: false,
+      dbMessageIdentifier: uuidV4(),
     });
     const plainText = message.plainTextBuffer();
     const decoded = SignalService.Content.decode(plainText);
@@ -36,6 +39,7 @@ describe('TypingMessage', () => {
     const message = new TypingMessage({
       createAtNetworkTimestamp: Date.now(),
       isTyping: true,
+      dbMessageIdentifier: uuidV4(),
     });
     const plainText = message.plainTextBuffer();
     const decoded = SignalService.Content.decode(plainText);
@@ -48,16 +52,21 @@ describe('TypingMessage', () => {
     const message = new TypingMessage({
       createAtNetworkTimestamp: Date.now(),
       isTyping: true,
+      dbMessageIdentifier: uuidV4(),
     });
     expect(message.ttl()).to.equal(Constants.TTL_DEFAULT.TYPING_MESSAGE);
   });
 
-  it('has an identifier', () => {
+  it('has a dbMessageIdentifier', () => {
     const message = new TypingMessage({
       createAtNetworkTimestamp: Date.now(),
       isTyping: true,
+      dbMessageIdentifier: uuidV4(),
     });
-    expect(message.identifier).to.not.equal(null, 'identifier cannot be null');
-    expect(message.identifier).to.not.equal(undefined, 'identifier cannot be undefined');
+    expect(message.dbMessageIdentifier).to.not.equal(null, 'dbMessageIdentifier cannot be null');
+    expect(message.dbMessageIdentifier).to.not.equal(
+      undefined,
+      'dbMessageIdentifier cannot be undefined'
+    );
   });
 });

@@ -53,7 +53,7 @@ export const StyledTextAreaContainer = styled(motion.div)<{
     }
 
     &::placeholder {
-      color: var(--input-text-placeholder-color);
+      color: var(--text-secondary-color);
     }
   }
 `;
@@ -84,6 +84,7 @@ export const SimpleSessionTextarea = (
       providedError: string | TrArgs | undefined;
       disabled?: boolean;
       buttonEnd?: ReactNode;
+      allowEscapeKeyPassthrough?: boolean;
     } & ({ singleLine: false } | { singleLine: true; onEnterPressed: () => void })
 ) => {
   const {
@@ -102,6 +103,7 @@ export const SimpleSessionTextarea = (
     required,
     tabIndex,
     buttonEnd,
+    allowEscapeKeyPassthrough,
   } = props;
   const hasError = !isEmpty(providedError);
   const hasValue = !isEmpty(value);
@@ -157,15 +159,20 @@ export const SimpleSessionTextarea = (
             aria-label={ariaLabel}
             spellCheck={false} // maybe we should make this a prop, but it seems we never want spellcheck for those fields
             onKeyDown={e => {
-              e.stopPropagation();
-
+              if (e.key === 'Escape' && allowEscapeKeyPassthrough) {
+                return;
+              }
               if (!props.singleLine) {
+                e.stopPropagation();
                 return;
               }
               if (e.key === 'Enter') {
                 e.preventDefault();
+                e.stopPropagation();
                 props?.onEnterPressed();
               }
+
+              e.stopPropagation();
             }}
           />
         </StyledTextAreaContainer>

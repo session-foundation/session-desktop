@@ -1,5 +1,5 @@
 import { ipcRenderer } from 'electron';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 import useInterval from 'react-use/lib/useInterval';
@@ -23,6 +23,7 @@ import { DURATION } from '../../session/constants';
 import {
   onionPathModal,
   updateDebugMenuModal,
+  updateKeyboardShortcutsMenuModal,
   userSettingsModal,
 } from '../../state/ducks/modalDialog';
 
@@ -46,17 +47,30 @@ import { GearAvatarButton } from '../buttons/avatar/GearAvatarButton';
 import { useZoomShortcuts } from '../../hooks/useZoomingShortcut';
 import { OnionStatusLight } from '../dialog/OnionStatusPathDialog';
 import { AvatarReupload } from '../../session/utils/job_runners/jobs/AvatarReuploadJob';
-import { useDebugMenuModal } from '../../state/selectors/modal';
-import { getFeatureFlagMemo } from '../../state/ducks/types/releasedFeaturesReduxTypes';
+import {
+  useDebugMenuModal,
+  useKeyboardShortcutsModal,
+  useUserSettingsModal,
+} from '../../state/selectors/modal';
+import {
+  getFeatureFlagMemo,
+  setFeatureFlag,
+} from '../../state/ducks/types/releasedFeaturesReduxTypes';
 import { useDebugKey } from '../../hooks/useDebugKey';
 import { UpdateProRevocationList } from '../../session/utils/job_runners/jobs/UpdateProRevocationListJob';
 import { getIsProAvailableMemo } from '../../hooks/useIsProAvailable';
 import { SettingsKey } from '../../data/settings-key';
+import { useKeyboardShortcut } from '../../hooks/useKeyboardShortcut';
+import { KbdShortcut } from '../../util/keyboardShortcuts';
+import { useNewConversationCallback } from '../buttons/MenuButton';
+import { useFocusScope } from '../../state/focus';
+import { useOverlayChooseAction } from '../../hooks/useOverlayChooseAction';
 
-const StyledContainerAvatar = styled.div`
+const StyledContainerAvatar = styled.button`
   padding: var(--margins-lg);
   position: relative;
   cursor: pointer;
+  border-radius: 50%;
 `;
 
 function handleThemeSwitch() {
@@ -111,12 +125,60 @@ function usePeriodicFetchRevocationList() {
   );
 }
 
+function useKeyboardShortcutsModalKeyboardShortcut() {
+  const dispatch = getAppDispatch();
+  const modalState = useKeyboardShortcutsModal();
+  return useKeyboardShortcut({
+    shortcut: KbdShortcut.keyboardShortcutModal,
+    handler: () => dispatch(updateKeyboardShortcutsMenuModal(modalState ? null : {})),
+  });
+}
+
+function useUserSettingsModalKeyboardShortcut() {
+  const dispatch = getAppDispatch();
+  const modalState = useUserSettingsModal();
+  return useKeyboardShortcut({
+    shortcut: KbdShortcut.userSettingsModal,
+    handler: () => dispatch(userSettingsModal(modalState ? null : { userSettingsPage: 'default' })),
+  });
+}
+
+function useNewConversationKeyboardShortcut() {
+  const { openNewMessage, openCreateGroup, openJoinCommunity } = useOverlayChooseAction();
+  const newConversation = useNewConversationCallback();
+
+  useKeyboardShortcut({ shortcut: KbdShortcut.newConversation, handler: () => newConversation() });
+  useKeyboardShortcut({ shortcut: KbdShortcut.newMessage, handler: () => openNewMessage() });
+  useKeyboardShortcut({ shortcut: KbdShortcut.createGroup, handler: () => openCreateGroup() });
+  useKeyboardShortcut({ shortcut: KbdShortcut.joinCommunity, handler: () => openJoinCommunity() });
+}
+
 function useDebugThemeSwitch() {
   useDebugKey({
     withCtrl: true,
     key: 't',
     callback: handleThemeSwitch,
   });
+}
+
+function useDebugToggleLocalizerKeys() {
+  const enabled = getFeatureFlagMemo('replaceLocalizedStringsWithKeys');
+  useDebugKey({
+    withCtrl: true,
+    key: 'l',
+    callback: () => setFeatureFlag('replaceLocalizedStringsWithKeys', !enabled),
+  });
+}
+
+function useDebugFocusScope() {
+  const debugFocusScope = getFeatureFlagMemo('debugFocusScope');
+  const focusScope = useFocusScope();
+
+  useEffect(() => {
+    if (debugFocusScope) {
+      window.log.debug(`[debugFocusScope] focus scope changed to`, focusScope);
+    }
+  }, [debugFocusScope, focusScope]);
 }
 
 function DebugMenuModalButton() {
@@ -187,8 +249,13 @@ export const ActionsPanel = () => {
 
   const fsTTL30sEnabled = getFeatureFlagMemo('fsTTL30s');
   useDebugThemeSwitch();
+  useDebugToggleLocalizerKeys();
+  useDebugFocusScope();
   useUpdateBadgeCount();
   usePeriodicFetchRevocationList();
+  useKeyboardShortcutsModalKeyboardShortcut();
+  useUserSettingsModalKeyboardShortcut();
+  useNewConversationKeyboardShortcut();
 
   useInterval(() => {
     if (!ourPrimaryConversation) {

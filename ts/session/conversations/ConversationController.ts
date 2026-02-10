@@ -54,6 +54,7 @@ import {
   getShowRecoveryPhrasePrompt,
 } from '../../state/selectors/settings';
 import { SettingsKey } from '../../data/settings-key';
+import { uuidV4 } from '../../util/uuid';
 
 let instance: ConvoController | null;
 
@@ -730,11 +731,13 @@ async function leaveClosedGroup(groupPk: GroupPubkeyType, fromSyncMessage: boole
     groupPk,
     expirationType: 'unknown', // we keep that one **not** expiring
     expireTimer: 0,
+    dbMessageIdentifier: uuidV4(),
   });
 
   const ourLeavingNotificationMessage = new GroupUpdateMemberLeftNotificationMessage({
     createAtNetworkTimestamp,
     groupPk,
+    dbMessageIdentifier: uuidV4(),
     ...DisappearingMessages.getExpireDetailsForOutgoingMessage(convo, createAtNetworkTimestamp), // this one should be expiring with the convo expiring details
   });
 

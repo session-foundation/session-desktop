@@ -23,14 +23,14 @@ export const StyledSessionIconButton = styled.button<{
         ${
           props.$isSelected
             ? 'var(--button-icon-stroke-selected-color)'
-            : 'var(--button-icon-stroke-color)'
+            : 'var(--text-secondary-color)'
         };`}
   }
 
   color: ${props =>
     props.color || props.$isSelected
       ? 'var(--button-icon-stroke-selected-color)'
-      : 'var(--button-icon-stroke-color)'};
+      : 'var(--text-secondary-color)'};
 
   ${props => props.disabled && 'cursor: not-allowed;'}
 
@@ -38,7 +38,12 @@ export const StyledSessionIconButton = styled.button<{
     ${props => !props.disabled && !props.color && 'fill: var(--button-icon-stroke-hover-color);'}
   }
 
-  &:hover {
+  &:focus svg path {
+    ${props => !props.disabled && !props.color && 'fill: var(--button-icon-stroke-hover-color);'}
+  }
+
+  &:hover,
+  &:focus {
     ${props =>
       props.disabled
         ? ''

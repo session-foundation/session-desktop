@@ -1,7 +1,7 @@
 import { createSelector } from '@reduxjs/toolkit';
 
 import { useSelector } from 'react-redux';
-import { LeftOverlayMode, SectionStateType } from '../ducks/section';
+import { LeftOverlayMode, LeftOverlayType, SectionStateType } from '../ducks/section';
 import { StateType } from '../reducer';
 
 export const getSection = (state: StateType): SectionStateType => state.section;
@@ -16,6 +16,15 @@ const getLeftOverlayMode = createSelector(
   (state: SectionStateType): LeftOverlayMode | undefined => state.leftOverlayMode
 );
 
+export const getLeftOverlayModeType = createSelector(
+  getSection,
+  (state: SectionStateType): LeftOverlayType | undefined => state.leftOverlayMode?.type
+);
+
+export const useLeftOverlayModeType = () => {
+  return useSelector(getLeftOverlayModeType);
+};
+
 export const useLeftOverlayMode = () => {
   return useSelector(getLeftOverlayMode);
 };
@@ -25,7 +34,7 @@ export const getRightOverlayMode = (state: StateType) => {
 };
 
 const getIsMessageRequestOverlayShown = (state: StateType) => {
-  const leftOverlayMode = getLeftOverlayMode(state);
+  const leftOverlayMode = getLeftOverlayModeType(state);
 
   return leftOverlayMode === 'message-requests';
 };

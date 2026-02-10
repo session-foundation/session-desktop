@@ -73,7 +73,7 @@ export const StyledBaseButton = styled.button<StyledButtonProps>`
   &.disabled {
     cursor: not-allowed;
     outline: none;
-    color: ${props => `var(--button-${props.$buttonType}-disabled-color)`};
+    color: var(--disabled-color);
   }
 
   &:not(.disabled) {
@@ -92,7 +92,7 @@ const StyledOutlineButton = styled(StyledBaseButton)`
     }`};
 
   &.disabled {
-    border: 1px solid var(--button-outline-disabled-color);
+    border: 1px solid var(--disabled-color);
   }
 
   &:not(.disabled) {
@@ -121,7 +121,7 @@ const StyledSolidButton = styled(StyledBaseButton)<{ $isDarkTheme: boolean }>`
 
   &.disabled {
     background-color: var(--transparent-color);
-    border: 1px solid var(--button-solid-disabled-color);
+    border: 1px solid var(--disabled-color);
   }
 
   &:not(.disabled) {
