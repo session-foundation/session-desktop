@@ -285,7 +285,7 @@ export function ChangeCommunityPermissionsButton({ conversationId }: WithConvoId
   return (
     <PanelIconButton
       iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.LOCK_KEYHOLE} />}
-      text={{ token: 'communityChangePermissions' }}
+      text={{ token: 'communityChangePermissionsDev' }}
       onClick={cb}
       dataTestId="edit-community-permissions"
     />

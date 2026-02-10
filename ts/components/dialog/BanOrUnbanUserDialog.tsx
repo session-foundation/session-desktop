@@ -164,9 +164,9 @@ export const BanOrUnBanUserDialog = (props: {
 
   if (isServerWide) {
     if (isBanAction) {
-      buttonText = tr('serverBanUser');
+      buttonText = tr('serverBanUserDev');
     } else {
-      buttonText = tr('serverUnbanUser');
+      buttonText = tr('serverUnbanUserDev');
     }
   } else if (isBanAction) {
     buttonText = tr('banUser');
@@ -206,7 +206,7 @@ export const BanOrUnBanUserDialog = (props: {
               buttonType={SessionButtonType.Simple}
               buttonColor={SessionButtonColor.Danger}
               onClick={startBanAndDeleteAllSequence}
-              text={isServerWide ? tr('serverBanUserAndDeleteAll') : tr('banDeleteAll')}
+              text={isServerWide ? tr('serverBanUserAndDeleteAllDev') : tr('banDeleteAll')}
               disabled={inProgress}
               dataTestId="ban-user-delete-all-confirm-button"
             />

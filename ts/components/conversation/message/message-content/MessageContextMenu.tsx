@@ -162,21 +162,23 @@ const CommunityAdminActionItems = ({ messageId }: WithMessageId) => {
       ) : null}
 
       {serverBanUser ? (
-        <ItemWithDataTestId onClick={serverBanUser}>{tr('serverBanUser')}</ItemWithDataTestId>
+        <ItemWithDataTestId onClick={serverBanUser}>{tr('serverBanUserDev')}</ItemWithDataTestId>
       ) : null}
       {serverUnbanUser ? (
-        <ItemWithDataTestId onClick={serverUnbanUser}>{tr('serverUnbanUser')}</ItemWithDataTestId>
+        <ItemWithDataTestId onClick={serverUnbanUser}>
+          {tr('serverUnbanUserDev')}
+        </ItemWithDataTestId>
       ) : null}
       {!isSenderAdmin && isRoomUploadRestricted && (
         <>
           {canSenderUpload && addUploadPermissionCb ? (
             <ItemWithDataTestId onClick={addUploadPermissionCb}>
-              {tr('addUploadPermission')}
+              {tr('addUploadPermissionDev')}
             </ItemWithDataTestId>
           ) : null}
           {canSenderNotUpload && clearUploadPermissionCb ? (
             <ItemWithDataTestId onClick={clearUploadPermissionCb}>
-              {tr('clearUploadPermission')}
+              {tr('clearUploadPermissionDev')}
             </ItemWithDataTestId>
           ) : null}
         </>

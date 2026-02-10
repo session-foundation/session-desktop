@@ -53,7 +53,7 @@ export function UpdateCommunityPermissionsDialog(props: WithConvoId) {
   return (
     <SessionWrapperModal
       modalId="communityPermissionsModal"
-      headerChildren={<ModalBasicHeader title={tr('communityChangePermissions')} />}
+      headerChildren={<ModalBasicHeader title={tr('communityChangePermissionsDev')} />}
       onClose={closeDialog}
       buttonChildren={
         <ModalActionsContainer buttonType={SessionButtonType.Outline}>
@@ -75,15 +75,15 @@ export function UpdateCommunityPermissionsDialog(props: WithConvoId) {
       <ModalFlexContainer>
         <ModalDescription
           dataTestId="modal-description"
-          localizerProps={{ token: 'communityChangePermissionsDescription' }}
+          localizerProps={{ token: 'communityChangePermissionsDescriptionDev' }}
         />
 
         <PanelButtonGroup>
           <PanelToggleButton
             textElement={
               <PanelButtonTextWithSubText
-                text={{ token: 'communityPermissionAccessEnable' }}
-                subText={{ token: 'communityPermissionAccessDescription' }}
+                text={{ token: 'communityPermissionAccessEnableDev' }}
+                subText={{ token: 'communityPermissionAccessDescriptionDev' }}
                 textDataTestId="invalid-data-testid"
                 subTextDataTestId="invalid-data-testid"
               />
@@ -96,8 +96,8 @@ export function UpdateCommunityPermissionsDialog(props: WithConvoId) {
           <PanelToggleButton
             textElement={
               <PanelButtonTextWithSubText
-                text={{ token: 'communityPermissionReadEnable' }}
-                subText={{ token: 'communityPermissionReadDescription' }}
+                text={{ token: 'communityPermissionReadEnableDev' }}
+                subText={{ token: 'communityPermissionReadDescriptionDev' }}
                 textDataTestId="invalid-data-testid"
                 subTextDataTestId="invalid-data-testid"
               />
@@ -110,8 +110,8 @@ export function UpdateCommunityPermissionsDialog(props: WithConvoId) {
           <PanelToggleButton
             textElement={
               <PanelButtonTextWithSubText
-                text={{ token: 'communityPermissionWriteEnable' }}
-                subText={{ token: 'communityPermissionWriteDescription' }}
+                text={{ token: 'communityPermissionWriteEnableDev' }}
+                subText={{ token: 'communityPermissionWriteDescriptionDev' }}
                 textDataTestId="invalid-data-testid"
                 subTextDataTestId="invalid-data-testid"
               />
@@ -124,8 +124,8 @@ export function UpdateCommunityPermissionsDialog(props: WithConvoId) {
           <PanelToggleButton
             textElement={
               <PanelButtonTextWithSubText
-                text={{ token: 'communityPermissionUploadEnable' }}
-                subText={{ token: 'communityPermissionUploadDescription' }}
+                text={{ token: 'communityPermissionUploadEnableDev' }}
+                subText={{ token: 'communityPermissionUploadDescriptionDev' }}
                 textDataTestId="invalid-data-testid"
                 subTextDataTestId="invalid-data-testid"
               />

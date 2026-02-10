@@ -103,31 +103,32 @@ const DebugMessageInfo = ({ messageId }: { messageId: string }) => {
   if (!isDevProd()) {
     return null;
   }
-  // Note: the strings here are hardcoded because we do not share them with other platforms through crowdin
   return (
     <>
-      {convoId ? <LabelWithInfo label={`Conversation ID:`} info={convoId} /> : null}
-      {messageHash ? <LabelWithInfo label={`Message Hash:`} info={messageHash} /> : null}
-      {serverId ? <LabelWithInfo label={`Server ID:`} info={`${serverId}`} /> : null}
-      {timestamp ? <LabelWithInfo label={`Timestamp:`} info={String(timestamp)} /> : null}
+      {convoId ? <LabelWithInfo label={tr('conversationIdDev')} info={convoId} /> : null}
+      {messageHash ? <LabelWithInfo label={tr('messageHashDev')} info={messageHash} /> : null}
+      {serverId ? <LabelWithInfo label={tr('serverIdDev')} info={`${serverId}`} /> : null}
+      {timestamp ? <LabelWithInfo label={tr('timestampDev')} info={String(timestamp)} /> : null}
       {serverTimestamp ? (
-        <LabelWithInfo label={`Server Timestamp:`} info={String(serverTimestamp)} />
+        <LabelWithInfo label={tr('serverTimestampDev')} info={String(serverTimestamp)} />
       ) : null}
-      {expirationType ? <LabelWithInfo label={`Expiration Type:`} info={expirationType} /> : null}
+      {expirationType ? (
+        <LabelWithInfo label={tr('expirationTypeDev')} info={expirationType} />
+      ) : null}
       {expirationDurationMs ? (
         <LabelWithInfo
-          label={`Expiration Duration:`}
+          label={tr('expirationDurationDev')}
           info={formatTimeDurationMs(Math.floor(expirationDurationMs))}
         />
       ) : null}
       {expirationTimestamp ? (
         <LabelWithInfo
-          label={`Disappears:`}
+          label={tr('disappearsDev')}
           info={formatTimeDistanceToNow(Math.floor(expirationTimestamp / 1000))}
         />
       ) : null}
       {message ? (
-        <LabelWithInfo label={'Characters:'} info={formatNumber(message.length ?? 0)} />
+        <LabelWithInfo label={tr('charactersDev')} info={formatNumber(message.length ?? 0)} />
       ) : null}
     </>
   );
