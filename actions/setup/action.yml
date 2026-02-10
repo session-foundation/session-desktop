@@ -23,6 +23,11 @@ runs:
       shell: bash
       run: git config --system core.longpaths true
 
+    - name: Shorten pnpm virtual store (Windows Only)
+      if: runner.os == 'Windows'
+      shell: bash
+      run: pnpm config set virtual-store-dir D:/.pnpm
+
     # - name: Setup pnpm hoisted node-linker (Windows Only)
     #   if: runner.os == 'Windows'
     #   shell: bash
@@ -69,7 +74,7 @@ runs:
       # Check if the transitive dep is physically present (not just a symlink)
     - name: Debug node_modules layout
       shell: bash
-      if: runner.os == 'Windows'
+      if: runner.os == 'WindowsPLOP'
       run: |
         # Is it there at all?
         ls node_modules/builder-util-runtime || echo "NOT FOUND at top level"
