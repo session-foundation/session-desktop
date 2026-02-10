@@ -800,6 +800,10 @@ export const BlindingActions: BlindingActionsCalls = {
     callLibSessionWorker(['Blinding', 'blindVersionSignRequest', opts]) as Promise<
       ReturnType<BlindingActionsCalls['blindVersionSignRequest']>
     >,
+  blindVersionSign: async (opts: Parameters<BlindingActionsCalls['blindVersionSign']>[0]) =>
+    callLibSessionWorker(['Blinding', 'blindVersionSign', opts]) as Promise<
+      ReturnType<BlindingActionsCalls['blindVersionSign']>
+    >,
 };
 
 export const UtilitiesActions: UtilitiesWrapperActionsCalls = {
