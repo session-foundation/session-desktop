@@ -54,7 +54,15 @@ runs:
 
     - name: Install Desktop node_modules
       shell: bash
+      if: runner.os != 'Windows'
       run: pnpm install
       env:
         NPM_CONFIG_LOGLEVEL: verbose
 
+    - name: Install Desktop node_modules
+      shell: bash
+      if: runner.os == 'Windows'
+      # Note: this only works on windows with electron-builder@26.7.0
+      run: pnpm install --shamefully-hoist --node-linker=hoisted --public-hoist-pattern "*"
+      env:
+        NPM_CONFIG_LOGLEVEL: verbose

@@ -54,11 +54,11 @@ export const TTL_DEFAULT = {
 
 export const SWARM_POLLING_TIMEOUT = {
   /** 5 seconds */
-  ACTIVE: isTestIntegration() ? DURATION.SECONDS * 0.1 : DURATION.SECONDS * 5,
+  ACTIVE: isTestIntegration() ? DURATION.SECONDS * 1 : DURATION.SECONDS * 5,
   /** 1 minute */
-  MEDIUM_ACTIVE: isTestIntegration() ? DURATION.SECONDS * 0.1 : DURATION.SECONDS * 60,
+  MEDIUM_ACTIVE: isTestIntegration() ? DURATION.SECONDS * 1 : DURATION.SECONDS * 60,
   /** 2 minutes */
-  INACTIVE: isTestIntegration() ? DURATION.SECONDS * 0.1 : DURATION.SECONDS * 120,
+  INACTIVE: isTestIntegration() ? DURATION.SECONDS * 1 : DURATION.SECONDS * 120,
 };
 
 export const PROTOCOLS = {

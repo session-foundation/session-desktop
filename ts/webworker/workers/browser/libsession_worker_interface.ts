@@ -773,6 +773,14 @@ export const ProWrapperActions: ProActionsCalls = {
     callLibSessionWorker(['Pro', 'proFeaturesForMessage', first]) as Promise<
       ReturnType<ProActionsCalls['proFeaturesForMessage']>
     >,
+  utf16Count: async first =>
+    callLibSessionWorker(['Pro', 'utf16Count', first]) as Promise<
+      ReturnType<ProActionsCalls['utf16Count']>
+    >,
+  utf16CountTruncatedToCodepoints: async first =>
+    callLibSessionWorker(['Pro', 'utf16CountTruncatedToCodepoints', first]) as Promise<
+      ReturnType<ProActionsCalls['utf16CountTruncatedToCodepoints']>
+    >,
   proProofRequestBody: async first =>
     callLibSessionWorker(['Pro', 'proProofRequestBody', first]) as Promise<
       ReturnType<ProActionsCalls['proProofRequestBody']>
@@ -793,10 +801,6 @@ export const BlindingActions: BlindingActionsCalls = {
   blindVersionPubkey: async (opts: Parameters<BlindingActionsCalls['blindVersionPubkey']>[0]) =>
     callLibSessionWorker(['Blinding', 'blindVersionPubkey', opts]) as Promise<
       ReturnType<BlindingActionsCalls['blindVersionPubkey']>
-    >,
-  blindVersionSign: async (opts: Parameters<BlindingActionsCalls['blindVersionSign']>[0]) =>
-    callLibSessionWorker(['Blinding', 'blindVersionSign', opts]) as Promise<
-      ReturnType<BlindingActionsCalls['blindVersionSign']>
     >,
   blindVersionSignRequest: async (
     opts: Parameters<BlindingActionsCalls['blindVersionSignRequest']>[0]
