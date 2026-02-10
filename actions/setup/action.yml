@@ -65,3 +65,25 @@ runs:
       run: pnpm install --shamefully-hoist --node-linker=hoisted --public-hoist-pattern "*"
       env:
         NPM_CONFIG_LOGLEVEL: verbose
+
+      # Check if the transitive dep is physically present (not just a symlink)
+    - name: Debug node_modules layout
+      shell: bash
+      if: runner.os == 'Windows'
+      run: |
+        # Is it there at all?
+        ls node_modules/builder-util-runtime || echo "NOT FOUND at top level"
+
+         # Is it a symlink or a real directory?
+        powershell -Command "Get-Item node_modules/builder-util-runtime | Select-Object Mode, Target, FullName"
+         # What does the full tree look like for electron-updater?
+        ls node_modules/electron-updater/node_modules/ || echo "No nested node_modules"
+
+         # Nuclear option: show all top-level dirs to see what's actually hoisted
+        ls node_modules | head -50
+
+    - name: Inspect packaged app contents
+      shell: bash
+      if: runner.os == 'Windows'
+      run: |
+        npx asar list release/win-unpacked/resources/app.asar | findstr builder-util-runtime
