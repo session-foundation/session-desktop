@@ -23,15 +23,15 @@ runs:
       shell: bash
       run: git config --system core.longpaths true
 
-    - name: Shorten pnpm virtual store (Windows Only)
-      if: runner.os == 'Windows'
-      shell: bash
-      run: pnpm config set virtual-store-dir D:/.pnpm
-
-    # - name: Setup pnpm hoisted node-linker (Windows Only)
+    # - name: Shorten pnpm virtual store (Windows Only)
     #   if: runner.os == 'Windows'
     #   shell: bash
-    #   run: pnpm config set node-linker hoisted
+    #   run: pnpm config set virtual-store-dir D:/.pnpm
+
+    - name: Setup pnpm hoisted node-linker (Windows Only)
+      if: runner.os == 'Windows'
+      shell: bash
+      run: pnpm config set node-linker hoisted
 
     - name: Setup node.js
       uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
@@ -67,14 +67,14 @@ runs:
     - name: Install Desktop node_modules
       shell: bash
       if: runner.os == 'Windows'
-      run: pnpm install
+      run: pnpm install --shamefully-hoist --node-linker=hoisted --public-hoist-pattern "*"
       env:
         NPM_CONFIG_LOGLEVEL: verbose
 
       # Check if the transitive dep is physically present (not just a symlink)
     - name: Debug node_modules layout
       shell: bash
-      if: runner.os == 'WindowsPLOP'
+      if: runner.os == 'Windows'
       run: |
         # Is it there at all?
         ls node_modules/builder-util-runtime || echo "NOT FOUND at top level"
