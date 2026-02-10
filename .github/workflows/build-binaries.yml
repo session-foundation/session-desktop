@@ -84,33 +84,33 @@ jobs:
     timeout-minutes: 10
 
     steps:
-    - name: Checkout git repo
-      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
-      with:
-        ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target_branch || github.ref  }}
-        submodules: 'recursive'
+      - name: Checkout git repo
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target_branch || github.ref  }}
+          submodules: "recursive"
 
-    - name: Setup
-      uses: ./actions/setup
-      with:
-        cache_suffix: "linux_x64"
+      - name: Setup
+        uses: ./actions/setup
+        with:
+          cache_suffix: "linux_x64"
 
-    - name: Setup ESLint cache
-      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
-      with:
-        path: .eslintcache
-        key: eslint-${{ hashFiles('pnpm-lock.yaml', 'patches/**', '.eslintrc.js', '.eslint/**') }}
-        restore-keys: |
-          eslint-
+      - name: Setup ESLint cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: .eslintcache
+          key: eslint-${{ hashFiles('pnpm-lock.yaml', 'patches/**', '.eslintrc.js', '.eslint/**') }}
+          restore-keys: |
+            eslint-
 
-    - name: Ensure pnpm-lock.yaml has no duplicates
-      run: pnpm dedupe --check
+      - name: Ensure pnpm-lock.yaml has no duplicates
+        run: pnpm dedupe --check
 
-    - name: Format & Lint
-      run: pnpm run lint
+      - name: Format & Lint
+        run: pnpm run lint
 
-    - name: Validate formatting & linting changed no files
-      run: git diff --exit-code
+      - name: Validate formatting & linting changed no files
+        run: git diff --exit-code
 
   build_linux:
     # We want to run the linux builds at the same time as linting for faster dev iteration
@@ -155,7 +155,7 @@ jobs:
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target_branch || github.ref  }}
-          submodules: 'recursive'
+          submodules: "recursive"
 
       - name: Setup
         uses: ./actions/setup
@@ -271,7 +271,7 @@ jobs:
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target_branch || github.ref  }}
-          submodules: 'recursive'
+          submodules: "recursive"
 
       - name: Setup
         uses: ./actions/setup
@@ -289,6 +289,12 @@ jobs:
         # always run this, except on "push" to "master" or alpha releases
         if: ${{ needs.create_draft_release_if_needed.outputs.version_tag == ''  }}
         run: pnpm run build-release
+
+      - name: Inspect packaged app contents
+        shell: bash
+        if: runner.os == 'Windows'
+        run: |
+          npx asar list release/win-unpacked/resources/app.asar | findstr builder-util-runtime
 
       - name: Upload artefacts
         # we do want this part to run only when version_tag is unset (i.e. we are not making a release)
@@ -332,7 +338,7 @@ jobs:
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target_branch || github.ref  }}
-          submodules: 'recursive'
+          submodules: "recursive"
 
       - name: Setup
         uses: ./actions/setup

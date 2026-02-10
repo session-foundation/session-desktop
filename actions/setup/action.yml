@@ -23,10 +23,10 @@ runs:
       shell: bash
       run: git config --system core.longpaths true
 
-    - name: Setup pnpm hoisted node-linker (Windows Only)
-      if: runner.os == 'Windows'
-      shell: bash
-      run: pnpm config set node-linker hoisted
+    # - name: Setup pnpm hoisted node-linker (Windows Only)
+    #   if: runner.os == 'Windows'
+    #   shell: bash
+    #   run: pnpm config set node-linker hoisted
 
     - name: Setup node.js
       uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
@@ -62,7 +62,7 @@ runs:
     - name: Install Desktop node_modules
       shell: bash
       if: runner.os == 'Windows'
-      run: pnpm install --shamefully-hoist --node-linker=hoisted --public-hoist-pattern "*"
+      run: pnpm install
       env:
         NPM_CONFIG_LOGLEVEL: verbose
 
@@ -81,9 +81,3 @@ runs:
 
          # Nuclear option: show all top-level dirs to see what's actually hoisted
         ls node_modules | head -50
-
-    - name: Inspect packaged app contents
-      shell: bash
-      if: runner.os == 'Windows'
-      run: |
-        npx asar list release/win-unpacked/resources/app.asar | findstr builder-util-runtime
