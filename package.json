@@ -103,6 +103,7 @@
     "long": "^4.0.0",
     "maxmind": "^4.3.24",
     "mic-recorder-to-mp3": "^2.2.2",
+    "minimatch": "^10.1.2",
     "node-fetch": "^2.7.0",
     "os-locale": "5.0.0",
     "p-retry": "^4.6.2",
