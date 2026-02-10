@@ -117,6 +117,7 @@ export const OverlayMessageRequest = () => {
             text={buttonText}
             onClick={handleClearAllRequestsClick}
           />
+          <SpacerLG />
         </>
       ) : (
         <>

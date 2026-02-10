@@ -17,6 +17,7 @@ import {
   NodeGraph9,
 } from '../../../../../svgs/index';
 import { useInfoFakeRefreshing } from '../../../../../state/selectors/networkModal';
+import { clamp } from 'lodash';
 
 const StyledNodeImage = styled.div<{ $nodeColor: string; $pathColor: string }>`
   --c1: ${({ $nodeColor }) => $nodeColor};
@@ -53,7 +54,9 @@ const nodeGraphs: Record<number, React.FC<React.SVGProps<SVGSVGElement>>> = {
 export const NodeImage = () => {
   const { swarmNodeCount, dataIsStale } = useSecuringNodesCount();
   const isFakeRefreshing = useInfoFakeRefreshing();
-  const NodeGraph = nodeGraphs[swarmNodeCount ?? 1];
+  // Note: clamp so that we always have a swarm image even if we have too many nodes in our swarm.
+  // On sesh-net for instance we can have 11 or more
+  const NodeGraph = nodeGraphs[clamp(swarmNodeCount ?? 1, 1, 10)];
 
   const loading = !swarmNodeCount || !NodeGraph || dataIsStale || isFakeRefreshing;
 
