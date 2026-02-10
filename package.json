@@ -124,7 +124,6 @@
     "redux": "5.0.1",
     "redux-promise-middleware": "6.2.0",
     "reselect": "5.1.1",
-    "rimraf": "6.1.2",
     "sanitize.css": "^12.0.1",
     "semver": "^7.7.1",
     "sharp": "https://github.com/session-foundation/sharp/releases/download/v0.34.5/sharp-0.34.5.tgz",

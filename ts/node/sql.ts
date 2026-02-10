@@ -3,7 +3,6 @@ import { type Database, type StatementParameters } from '@signalapp/sqlcipher';
 import { app, clipboard, dialog, Notification } from 'electron';
 import fs from 'fs';
 import path from 'path';
-import { rimrafSync } from 'rimraf';
 
 import { base64_variants, from_base64, to_hex } from 'libsodium-wrappers-sumo';
 import {
@@ -293,9 +292,9 @@ function removeDB(configDir: string | null = null) {
   }
 
   if (databaseFilePath) {
-    rimrafSync(databaseFilePath);
-    rimrafSync(`${databaseFilePath}-shm`);
-    rimrafSync(`${databaseFilePath}-wal`);
+    fs.rmSync(databaseFilePath, { force: true });
+    fs.rmSync(`${databaseFilePath}-shm`, { force: true });
+    fs.rmSync(`${databaseFilePath}-wal`, { force: true });
   }
 }
 

@@ -1,10 +1,10 @@
 import { ipcMain } from 'electron';
+import { rmSync } from 'fs';
 import fse from 'fs-extra';
 import { readdir } from 'fs/promises';
 
 import { isString } from 'lodash';
 import path from 'path';
-import { rimrafSync } from 'rimraf';
 
 import { getAttachmentsPath } from '../shared/attachments/shared_attachments';
 import { sqlNode } from './sql';
@@ -59,7 +59,8 @@ export async function initAttachmentsChannel({ userDataPath }: { userDataPath: s
 
   ipcMain.on(ERASE_ATTACHMENTS_KEY, event => {
     try {
-      rimrafSync(attachmentsDir);
+      rmSync(attachmentsDir, { recursive: true, force: true });
+
       event.sender.send(`${ERASE_ATTACHMENTS_KEY}-done`);
     } catch (error) {
       const errorForDisplay = error && error.stack ? error.stack : error;
