@@ -862,7 +862,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
       utf16: undefined,
     });
     const messageRequestResponseParams: MessageRequestResponseParams = {
-      createAtNetworkTimestamp: NetworkTime.now(),
+      createAtNetworkTimestamp: msg.get('sent_at') ?? NetworkTime.now(),
       userProfile: await UserUtils.getOurProfile(),
       outgoingProMessageDetails,
       dbMessageIdentifier: msg.id,
@@ -2421,7 +2421,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
       // handleAcceptConversationRequestWithoutConfirm will take care of sending response depending on the type of conversation
       await handleAcceptConversationRequestWithoutConfirm({
         convoId: this.id,
-        approvalMessageTimestamp: NetworkTime.now() - 100,
+        approvalMessageTimestamp: networkTimestamp - 100,
       });
 
       if (this.isOpenGroupV2()) {
