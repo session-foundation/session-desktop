@@ -2953,7 +2953,8 @@ export class ConversationModel extends Model<ConversationAttributes> {
   private async getQuoteAttachment(attachments: any, preview: any) {
     try {
       if (attachments?.length) {
-        return Promise.all(
+        // Note: the await is needed for the catch to work
+        return await Promise.all(
           attachments
             .filter(
               (attachment: any) =>
@@ -2980,7 +2981,8 @@ export class ConversationModel extends Model<ConversationAttributes> {
       }
 
       if (preview?.length) {
-        return Promise.all(
+        // Note: the await is needed for the catch to work
+        return await Promise.all(
           preview
             .filter((attachment: any) => attachment?.image?.path) // loadAttachmentData throws if the image.path is not set
             .slice(0, 1)
