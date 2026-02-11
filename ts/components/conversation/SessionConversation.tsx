@@ -342,6 +342,7 @@ export class SessionConversation extends Component<Props, State> {
       }
       messageContainer.scrollTop = messageContainer.scrollHeight - messageContainer.clientHeight;
       const targetElement = document.getElementById(`msg-${mostRecentMessage.id}`);
+
       if (!targetElement) {
         await openConversationToSpecificMessage({
           conversationKey,

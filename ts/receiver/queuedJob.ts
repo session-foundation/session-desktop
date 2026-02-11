@@ -1,3 +1,4 @@
+import type Long from 'long';
 import _, { isEmpty, isNumber, toNumber } from 'lodash';
 import { queueAttachmentDownloads } from './attachments';
 import { Data } from '../data/data';
@@ -25,6 +26,42 @@ import { isUsFromCache } from '../session/utils/User';
 import { isUsAnySogsFromCache } from '../session/apis/open_group_api/sogsv3/knownBlindedkeys';
 import { ProWrapperActions } from '../webworker/workers/browser/libsession_worker_interface';
 
+export async function pushQuotedMessageToStoreIfNeeded(quoteDetails: {
+  id: Long | number;
+  author: string;
+}) {
+  const idNumber = longOrNumberToNumber(quoteDetails.id);
+  const { foundProps } = lookupQuoteInStore({
+    timestamp: idNumber,
+    quotedMessagesInStore:
+      (window.inboxStore?.getState() as StateType)?.conversations.quotedMessages || [],
+  });
+  if (foundProps) {
+    return foundProps;
+  }
+  // If the quote is not found in memory, we try to find it in the DB
+  // We always look for the quote by sentAt timestamp, for opengroups, closed groups and session chats
+  // this will return an array of sent messages by id that we have locally.
+  const quotedMessagesCollection = await Data.getMessagesBySenderAndSentAt([
+    {
+      timestamp: idNumber,
+      source: quoteDetails.author,
+    },
+  ]);
+
+  const first = quotedMessagesCollection?.at(0);
+  const foundPropsOrLookedUp = first?.getMessageModelProps();
+
+  if (foundPropsOrLookedUp) {
+    window?.log?.info(`Found quoted message id: ${idNumber}`);
+    window.inboxStore?.dispatch(pushQuotedMessageDetails(foundPropsOrLookedUp));
+  } else {
+    window?.log?.info(`We did not found quoted message ${idNumber}.`);
+  }
+
+  return foundPropsOrLookedUp;
+}
+
 /**
  * Note: this function does not trigger a write to the db nor trigger redux update.
  * You have to call msg.commit() once you are done with the handling of this message
@@ -45,45 +82,12 @@ async function copyFromQuotedMessage(
         ? UserUtils.getOurPubKeyStrFromCache()
         : author,
   };
-
-  const id = longOrNumberToNumber(quoteId);
-
-  // First we try to look for the quote in memory
-  const { foundProps } = lookupQuoteInStore({
-    timestamp: id,
-    quotedMessagesInStore:
-      (window.inboxStore?.getState() as StateType)?.conversations.quotedMessages || [],
-  });
-  let foundPropsOrLookedUp = foundProps;
-  // If the quote is not found in memory, we try to find it in the DB
-  if (!foundProps) {
-    // We always look for the quote by sentAt timestamp, for opengroups, closed groups and session chats
-    // this will return an array of sent messages by id that we have locally.
-    const quotedMessagesCollection = await Data.getMessagesBySenderAndSentAt([
-      {
-        timestamp: id,
-        source: quote.author,
-      },
-    ]);
-
-    if (quotedMessagesCollection?.length) {
-      const first = quotedMessagesCollection.at(0);
-      if (!first) {
-        throw new Error('just to make tsc happy, this cannot happen');
-      }
-      foundPropsOrLookedUp = first.getMessageModelProps();
-    }
-  }
+  const foundPropsOrLookedUp = await pushQuotedMessageToStoreIfNeeded(quote);
 
   if (!foundPropsOrLookedUp) {
-    window?.log?.info(`We did not found quoted message ${id}.`);
     msg.setQuote(quoteLocal);
     return;
   }
-
-  window?.log?.info(`Found quoted message id: ${id}`);
-
-  window.inboxStore?.dispatch(pushQuotedMessageDetails(foundPropsOrLookedUp));
 
   msg.setQuote(quoteLocal);
 }

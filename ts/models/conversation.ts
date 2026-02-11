@@ -157,6 +157,7 @@ import {
 } from '../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 import { ProRevocationCache } from '../session/revocation_list/pro_revocation_list';
 import { uuidV4 } from '../util/uuid';
+import { pushQuotedMessageToStoreIfNeeded } from '../receiver/queuedJob';
 
 type InMemoryConvoInfos = {
   mentionedUs: boolean;
@@ -1003,6 +1004,14 @@ export class ConversationModel extends Model<ConversationAttributes> {
       await this.commit();
 
       return;
+    }
+
+    // await messageModel.commit();
+    if (quote) {
+      await pushQuotedMessageToStoreIfNeeded({
+        author: quote.author,
+        id: quote.timestamp,
+      });
     }
 
     this.setLastMessage(messageModel.getNotificationText());

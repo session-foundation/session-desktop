@@ -1,3 +1,4 @@
+import { clamp } from 'lodash';
 import styled from 'styled-components';
 import { useSecuringNodesCount } from './sections/network/hooks/useSecuringNodesCount';
 import {
@@ -17,7 +18,6 @@ import {
   NodeGraph9,
 } from '../../../../../svgs/index';
 import { useInfoFakeRefreshing } from '../../../../../state/selectors/networkModal';
-import { clamp } from 'lodash';
 
 const StyledNodeImage = styled.div<{ $nodeColor: string; $pathColor: string }>`
   --c1: ${({ $nodeColor }) => $nodeColor};

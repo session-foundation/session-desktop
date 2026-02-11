@@ -42,7 +42,7 @@ type Props = SessionMessageListProps & {
 
   conversation?: ReduxConversationType;
   animateQuotedMessageId: string | undefined;
-  scrollToNow: () => Promise<number>;
+  scrollToNow: () => Promise<unknown>;
 };
 
 const StyledMessagesContainer = styled.div`
@@ -98,9 +98,6 @@ class SessionMessagesListContainerInner extends Component<Props> {
   }
 
   public componentDidUpdate(prevProps: Props, _prevState: any) {
-    // // If you want to mess with this, be my guest.
-    // // just make sure you don't remove that as a bug in chrome makes the column-reverse do bad things
-    // // https://bugs.chromium.org/p/chromium/issues/detail?id=1189195&q=column-reverse&can=2#makechanges
     const isSameConvo = prevProps.conversationKey === this.props.conversationKey;
 
     if (

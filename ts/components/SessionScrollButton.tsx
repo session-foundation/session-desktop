@@ -14,7 +14,7 @@ const SessionScrollButtonDiv = styled.div`
   animation: fadein var(--default-duration);
 `;
 
-export const SessionScrollButton = (props: { onClickScrollBottom: () => Promise<number> }) => {
+export const SessionScrollButton = (props: { onClickScrollBottom: () => Promise<unknown> }) => {
   const show = useSelector(getShowScrollButton);
   const unreadCount = useSelectedUnreadCount();
 

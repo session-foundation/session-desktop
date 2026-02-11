@@ -319,7 +319,7 @@ export function lookupQuoteInStore({
 
   return {
     foundAt,
-    foundProps: quotedMessagesInStore[foundAt],
+    foundProps: foundAt >= 0 ? quotedMessagesInStore[foundAt] : undefined,
   };
 }
 

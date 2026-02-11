@@ -680,7 +680,6 @@ function getMessagesFromState(state: StateType) {
   return state.conversations.messages;
 }
 
-
 export function useSelectedHasMessages(): boolean {
   return useSelector((state: StateType) => !isEmpty(getMessagesFromState(state)));
 }
