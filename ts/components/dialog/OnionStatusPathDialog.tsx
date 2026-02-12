@@ -356,8 +356,8 @@ export const OnionStatusLight = (
       data-testid="path-light-container"
       onClick={handleClick}
       onKeyDown={onKeyDown}
-      role="button"
-      tabIndex={0}
+      role={'button'}
+      tabIndex={inActionPanel ? 0 : undefined}
       $inActionPanel={inActionPanel}
     >
       <OnionPathDot dataTestId="path-light-svg" iconColor={iconColor} />
