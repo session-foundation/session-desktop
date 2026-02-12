@@ -63,7 +63,6 @@ const conversationNavigation = Object.fromEntries(
 // TODO: These should be user-editable. It should be simple to store custom user keybinds
 // in the database and its an often overlooked feature with little lift and massive UX gains.
 
-console.warn('a bunch of those still need a string in crowdin');
 export const KbdShortcut = {
   ...conversationNavigation,
   keyboardShortcutModal: {
