@@ -3,7 +3,7 @@ import type { JSX } from 'react';
 
 import { SessionContextMenuContainer } from '../SessionContextMenuContainer';
 
-import { ItemWithDataTestId } from './items/MenuItemWithDataTestId';
+import { MenuItem } from './items/MenuItem';
 import { getMenuAnimation } from './MenuAnimation';
 import { tr } from '../../localization/localeTools';
 import { SettingsKey } from '../../data/settings-key';
@@ -18,9 +18,13 @@ async function hideMessageRequestsBanner() {
 
 const HideBannerMenuItem = (): JSX.Element => {
   return (
-    <ItemWithDataTestId onClick={() => void hideMessageRequestsBanner()}>
+    <MenuItem
+      onClick={() => void hideMessageRequestsBanner()}
+      iconType={null}
+      isDangerAction={false}
+    >
       {tr('hide')}
-    </ItemWithDataTestId>
+    </MenuItem>
   );
 };
 

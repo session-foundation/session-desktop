@@ -4,8 +4,8 @@ export const SessionContextMenuContainer = styled.div.attrs({
   // custom props
 })`
   .contexify {
-    --contexify-activeItem-bgColor: var(--primary-color);
-    --contexify-activeItem-color: var(--black-color);
+    --contexify-activeItem-bgColor: var(--text-primary-color);
+    --contexify-activeItem-color: var(--background-primary-color);
     // be sure it is more than the one set for the More Information screen of messages
     z-index: 30;
     min-width: 200px;
@@ -20,9 +20,18 @@ export const SessionContextMenuContainer = styled.div.attrs({
       background: var(--background-primary-color);
     }
 
+    .contexify_item.danger > .contexify_itemContent {
+      color: var(--danger-color);
+    }
+
+    .contexify_item.danger:not(.contexify_item-disabled):hover > .contexify_itemContent {
+      background: var(--danger-color);
+      color: var(--black-color) !important;
+    }
+
     .contexify_item:not(.contexify_item-disabled):hover > .contexify_itemContent {
-      background: var(--primary-color);
-      color: var(--black-color);
+      background: var(--contexify-activeItem-bgColor);
+      color: var(--contexify-activeItem-color);
     }
     .contexify_itemContent {
       transition: var(--default-duration);

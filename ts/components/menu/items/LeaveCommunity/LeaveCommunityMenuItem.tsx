@@ -1,7 +1,8 @@
 import { useConvoIdFromContext } from '../../../../contexts/ConvoIdContext';
 import { Localizer } from '../../../basic/Localizer';
+import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 import { useShowLeaveCommunityCb } from '../../../menuAndSettingsHooks/useShowLeaveCommunity';
-import { ItemWithDataTestId } from '../MenuItemWithDataTestId';
+import { MenuItem } from '../MenuItem';
 
 export const LeaveCommunityMenuItem = () => {
   const convoId = useConvoIdFromContext();
@@ -13,8 +14,8 @@ export const LeaveCommunityMenuItem = () => {
   }
 
   return (
-    <ItemWithDataTestId onClick={cb}>
+    <MenuItem onClick={cb} iconType={LUCIDE_ICONS_UNICODE.LOG_OUT} isDangerAction={true}>
       <Localizer token="communityLeave" />
-    </ItemWithDataTestId>
+    </MenuItem>
   );
 };

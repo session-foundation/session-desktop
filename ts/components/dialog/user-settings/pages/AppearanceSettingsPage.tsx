@@ -43,7 +43,7 @@ import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 import { LucideIcon } from '../../../icon/LucideIcon';
 import { H9 } from '../../../basic/Heading';
 import { getMenuAnimation } from '../../../menu/MenuAnimation';
-import { ItemWithDataTestId } from '../../../menu/items/MenuItemWithDataTestId';
+import { MenuItem } from '../../../menu/items/MenuItem';
 import { ZOOM_FACTOR } from '../../../../session/constants';
 import { SessionContextMenuContainerItemsCentered } from '../../../SessionContextMenuContainer';
 import { UserSettingsModalContainer } from '../components/UserSettingsModalContainer';
@@ -294,7 +294,7 @@ const ZoomFactorMenuPicker = ({
       >
         {zoomFactorValues.map(m => {
           return (
-            <ItemWithDataTestId
+            <MenuItem
               key={m}
               onClick={() => {
                 void setZoomFactor(m, forceUpdate);
@@ -302,9 +302,11 @@ const ZoomFactorMenuPicker = ({
               style={{
                 backgroundColor: m === currentZoomFactor ? 'var(--primary-color)' : 'unset',
               }}
+              iconType={null}
+              isDangerAction={false}
             >
               <div ref={m === currentZoomFactor ? selectedRef : undefined}>{m}%</div>
-            </ItemWithDataTestId>
+            </MenuItem>
           );
         })}
       </Menu>

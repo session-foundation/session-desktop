@@ -10,7 +10,7 @@ import { setFullScreenCall } from '../../state/ducks/call';
 import { getHasOngoingCallWithPubkey } from '../../state/selectors/call';
 import { DropDownAndToggleButton } from '../icon/DropDownAndToggleButton';
 import { SessionContextMenuContainer } from '../SessionContextMenuContainer';
-import { ItemWithDataTestId } from '../menu/items/MenuItemWithDataTestId';
+import { MenuItem } from '../menu/items/MenuItem';
 import { getMenuAnimation } from '../menu/MenuAnimation';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
@@ -27,14 +27,16 @@ const VideoInputMenu = ({
       <Menu id={triggerId} animation={getMenuAnimation()}>
         {camerasList.map(m => {
           return (
-            <ItemWithDataTestId
+            <MenuItem
               key={m.deviceId}
               onClick={() => {
                 void CallManager.selectCameraByDeviceId(m.deviceId);
               }}
+              iconType={null}
+              isDangerAction={false}
             >
-              {m.label.substr(0, 40)}
-            </ItemWithDataTestId>
+              {m.label.substring(0, 40)}
+            </MenuItem>
           );
         })}
       </Menu>
@@ -100,14 +102,16 @@ const AudioInputMenu = ({
       <Menu id={triggerId} animation={getMenuAnimation()}>
         {audioInputsList.map(m => {
           return (
-            <ItemWithDataTestId
+            <MenuItem
               key={m.deviceId}
               onClick={() => {
                 void CallManager.selectAudioInputByDeviceId(m.deviceId);
               }}
+              iconType={null}
+              isDangerAction={false}
             >
-              {m.label.substr(0, 40)}
-            </ItemWithDataTestId>
+              {m.label.substring(0, 40)}
+            </MenuItem>
           );
         })}
       </Menu>
@@ -169,14 +173,16 @@ const AudioOutputMenu = ({
       <Menu id={triggerId} animation={getMenuAnimation()}>
         {audioOutputsList.map(m => {
           return (
-            <ItemWithDataTestId
+            <MenuItem
               key={m.deviceId}
               onClick={() => {
                 void CallManager.selectAudioOutputByDeviceId(m.deviceId);
               }}
+              iconType={null}
+              isDangerAction={false}
             >
-              {m.label.substr(0, 40)}
-            </ItemWithDataTestId>
+              {m.label.substring(0, 40)}
+            </MenuItem>
           );
         })}
       </Menu>

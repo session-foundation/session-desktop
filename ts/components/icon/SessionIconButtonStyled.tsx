@@ -28,9 +28,11 @@ export const StyledSessionIconButton = styled.button<{
   }
 
   color: ${props =>
-    props.color || props.$isSelected
-      ? 'var(--button-icon-stroke-selected-color)'
-      : 'var(--text-secondary-color)'};
+    props.color
+      ? props.color
+      : props.$isSelected
+        ? 'var(--button-icon-stroke-selected-color)'
+        : 'var(--text-secondary-color)'};
 
   ${props => props.disabled && 'cursor: not-allowed;'}
 

@@ -175,7 +175,10 @@ export const AttachmentsButton = (_props: WithConvoId) => {
 };
 
 export const CopyAccountIdButton = ({ conversationId }: WithConvoId) => {
-  const showCopyAccountId = useShowCopyAccountIdCb(conversationId);
+  const showCopyAccountId = useShowCopyAccountIdCb({
+    sender: conversationId,
+    messageId: undefined,
+  });
 
   if (!showCopyAccountId) {
     return null;
@@ -305,7 +308,7 @@ export function AddAdminCommunityButton({ conversationId }: WithConvoId) {
       iconElement={
         <PanelIconSessionLegacyIcon
           iconType={'addModerator'}
-          iconColor="var(--text-primary-color"
+          iconColor="var(--text-primary-color)"
         />
       }
       text={{ token: 'addAdmin', count: PLURAL_COUNT_OTHER }}
@@ -325,7 +328,7 @@ export function RemoveAdminCommunityButton({ conversationId }: WithConvoId) {
       iconElement={
         <PanelIconSessionLegacyIcon
           iconType={'deleteModerator'}
-          iconColor="var(--text-primary-color"
+          iconColor="var(--text-primary-color)"
         />
       }
       text={{ token: 'adminRemove' }}

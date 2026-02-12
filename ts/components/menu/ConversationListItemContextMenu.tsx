@@ -26,7 +26,7 @@ import {
 } from './Menu';
 import { CopyCommunityUrlMenuItem } from './items/CopyCommunityUrl/CopyCommunityUrlMenuItem';
 import { CopyAccountIdMenuItem } from './items/CopyAccountId/CopyAccountIdMenuItem';
-import { ItemWithDataTestId } from './items/MenuItemWithDataTestId';
+import { MenuItem } from './items/MenuItem';
 import { getMenuAnimation } from './MenuAnimation';
 import { LeaveCommunityMenuItem } from './items/LeaveCommunity/LeaveCommunityMenuItem';
 import { LeaveGroupMenuItem } from './items/LeaveAndDeleteGroup/LeaveGroupMenuItem';
@@ -37,6 +37,7 @@ import {
 } from './items/LeaveAndDeleteGroup/DeleteGroupMenuItem';
 import { tr } from '../../localization/localeTools';
 import { useTogglePinConversationHandler } from '../menuAndSettingsHooks/UseTogglePinConversationHandler';
+import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 
 export type PropsContextConversationItem = {
   triggerId: string;
@@ -55,8 +56,9 @@ const ConversationListItemContextMenu = (props: PropsContextConversationItem) =>
     return (
       <SessionContextMenuContainer>
         <Menu id={triggerId} animation={getMenuAnimation()}>
-          <DeleteDeprecatedLegacyGroupMenuItem />
           {isPinned ? <PinConversationMenuItem /> : null}
+          {/* Danger actions */}
+          <DeleteDeprecatedLegacyGroupMenuItem />
         </Menu>
       </SessionContextMenuContainer>
     );
@@ -69,18 +71,19 @@ const ConversationListItemContextMenu = (props: PropsContextConversationItem) =>
     return (
       <SessionContextMenuContainer>
         <Menu id={triggerId} animation={getMenuAnimation()}>
+          <PinConversationMenuItem />
+          <CopyCommunityUrlMenuItem convoId={convoIdFromContext} />
+          <CopyAccountIdMenuItem pubkey={convoIdFromContext} messageId={undefined} />
+          <ShowNoteToSelfMenuItem />
+          {/* Danger actions */}
+          <BlockMenuItem />
           <DeleteDeprecatedLegacyGroupMenuItem />
           <DeleteDestroyedOrKickedGroupMenuItem />
-          <PinConversationMenuItem />
-          <BlockMenuItem />
-          <CopyCommunityUrlMenuItem convoId={convoIdFromContext} />
-          <CopyAccountIdMenuItem pubkey={convoIdFromContext} />
-          <DeleteMessagesMenuItem />
+          <LeaveGroupMenuItem />
           <DeletePrivateConversationMenuItem />
           <LeaveCommunityMenuItem />
-          <LeaveGroupMenuItem />
           <DeleteGroupMenuItem />
-          <ShowNoteToSelfMenuItem />
+          <DeleteMessagesMenuItem />
         </Menu>
       </SessionContextMenuContainer>
     );
@@ -89,35 +92,39 @@ const ConversationListItemContextMenu = (props: PropsContextConversationItem) =>
   return (
     <SessionContextMenuContainer>
       <Menu id={triggerId} animation={getMenuAnimation()}>
-        {/* Message request related actions */}
-        <AcceptMsgRequestMenuItem />
-        <DeclineMsgRequestMenuItem />
-        <DeclineAndBlockMsgRequestMenuItem />
+        {/* Note: the order here is on purpose */}
+
         {/* Generic actions */}
         <PinConversationMenuItem />
-        <NotificationForConvoMenuItem />
-        <BlockMenuItem />
+        {/* Message request related actions */}
+        <AcceptMsgRequestMenuItem />
         <CopyCommunityUrlMenuItem convoId={convoIdFromContext} />
-        <CopyAccountIdMenuItem pubkey={convoIdFromContext} />
+        <CopyAccountIdMenuItem pubkey={convoIdFromContext} messageId={undefined} />
+        <NotificationForConvoMenuItem />
         {/* Read state actions */}
         <MarkAllReadMenuItem />
         <MarkConversationUnreadMenuItem />
         {/* Nickname actions */}
         <ChangeNicknameMenuItem />
-        {/* Communities actions */}
-        <BanMenuItem />
-        <UnbanMenuItem />
-        <InviteContactMenuItem />
-        <DeleteMessagesMenuItem />
-        <DeletePrivateConversationMenuItem />
-        <DeletePrivateContactMenuItem />
+        <ShowUserProfileMenuItem />
         <HideNoteToSelfMenuItem />
         <ShowNoteToSelfMenuItem />
+        {/* Communities actions */}
+        <InviteContactMenuItem />
+        {/* Danger actions */}
+
+        <BlockMenuItem />
+        <DeclineMsgRequestMenuItem />
+        <DeclineAndBlockMsgRequestMenuItem />
+        <DeletePrivateConversationMenuItem />
+        <DeletePrivateContactMenuItem />
         <LeaveCommunityMenuItem />
         <LeaveGroupMenuItem />
         <DeleteGroupMenuItem />
         <DeleteDestroyedOrKickedGroupMenuItem />
-        <ShowUserProfileMenuItem />
+        <BanMenuItem />
+        <UnbanMenuItem />
+        <DeleteMessagesMenuItem />
       </Menu>
     </SessionContextMenuContainer>
   );
@@ -135,5 +142,13 @@ export const PinConversationMenuItem = (): JSX.Element | null => {
   }
 
   const menuText = tr(isPinned ? 'pinUnpin' : 'pin');
-  return <ItemWithDataTestId onClick={togglePinConversation}>{menuText}</ItemWithDataTestId>;
+  return (
+    <MenuItem
+      onClick={togglePinConversation}
+      iconType={isPinned ? LUCIDE_ICONS_UNICODE.PIN_OFF : LUCIDE_ICONS_UNICODE.PIN}
+      isDangerAction={false}
+    >
+      {menuText}
+    </MenuItem>
+  );
 };

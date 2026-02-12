@@ -1434,6 +1434,8 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
     // otherwise, do it the slow and expensive way
     await this.markConversationReadBouncy({ newestUnreadDate: Date.now() });
+    await this.markAsUnread(false, false);
+    await this.commit();
   }
 
   public getUsInThatConversation() {

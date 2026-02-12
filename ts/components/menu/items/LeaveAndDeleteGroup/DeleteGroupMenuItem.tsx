@@ -1,6 +1,6 @@
 import { useConvoIdFromContext } from '../../../../contexts/ConvoIdContext';
 import { useIsLegacyGroup } from '../../../../hooks/useParamSelector';
-import { ItemWithDataTestId } from '../MenuItemWithDataTestId';
+import { MenuItem } from '../MenuItem';
 import { Localizer } from '../../../basic/Localizer';
 import {
   useDeleteDestroyedOrKickedGroupCb,
@@ -8,6 +8,7 @@ import {
 } from '../../../menuAndSettingsHooks/useShowLeaveGroup';
 import { ConvoHub } from '../../../../session/conversations';
 import { PubKey } from '../../../../session/types';
+import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 
 export const DeleteGroupMenuItem = () => {
   const convoId = useConvoIdFromContext();
@@ -19,9 +20,13 @@ export const DeleteGroupMenuItem = () => {
   }
 
   return (
-    <ItemWithDataTestId onClick={showDeleteGroup}>
+    <MenuItem
+      onClick={showDeleteGroup}
+      iconType={LUCIDE_ICONS_UNICODE.TRASH2}
+      isDangerAction={true}
+    >
       <Localizer token={'groupDelete'} />
-    </ItemWithDataTestId>
+    </MenuItem>
   );
 };
 
@@ -37,16 +42,18 @@ export const DeleteDeprecatedLegacyGroupMenuItem = () => {
   // no confirmations for deleting legacy groups anymore, we just delete them
 
   return (
-    <ItemWithDataTestId
+    <MenuItem
       onClick={() => {
         void ConvoHub.use().deleteLegacyGroup(convoId, {
           fromSyncMessage: false,
           sendLeaveMessage: false,
         });
       }}
+      iconType={LUCIDE_ICONS_UNICODE.TRASH2}
+      isDangerAction={true}
     >
       <Localizer token={'groupDelete'} />
-    </ItemWithDataTestId>
+    </MenuItem>
   );
 };
 
@@ -61,8 +68,8 @@ export const DeleteDestroyedOrKickedGroupMenuItem = () => {
   // no confirmations for deleting legacy groups anymore, we just delete them
 
   return (
-    <ItemWithDataTestId onClick={cb}>
+    <MenuItem onClick={cb} iconType={LUCIDE_ICONS_UNICODE.TRASH2} isDangerAction={true}>
       <Localizer token={'groupDelete'} />
-    </ItemWithDataTestId>
+    </MenuItem>
   );
 };

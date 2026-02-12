@@ -313,6 +313,8 @@
   display: flex;
   flex-direction: row;
   align-items: center;
+  // enforce height so icons appearing do not make a layout shift
+  height: 21px;
 }
 
 .module-conversation-list-item__header__name {
