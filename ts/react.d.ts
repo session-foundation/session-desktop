@@ -273,6 +273,9 @@ declare module 'react' {
     | `${Sections}-section`
     | `${SettingsToggles | SettingsInlineButtons | SettingsRadio | SettingsChevron | SettingsExternalLinkButtons | 'zoom-factor'}-settings-${'text' | 'sub-text' | 'toggle' | 'radio' | 'button' | 'chevron' | 'row'}`
 
+    // quote components
+    | `quote-${'icon-container' | 'container' | 'icon' | 'image' | 'text' | 'author'}`
+
     // Buttons
     | `${Buttons}-button`
 

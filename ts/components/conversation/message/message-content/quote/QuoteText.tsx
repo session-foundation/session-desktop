@@ -78,7 +78,7 @@ export const QuoteText = (
   }
 
   return (
-    <StyledQuoteText $isIncoming={isIncoming} dir="auto">
+    <StyledQuoteText $isIncoming={isIncoming} dir="auto" data-testid="quote-text">
       <MessageBody
         text={text || tr('messageErrorOriginal')}
         disableRichContent={true}

@@ -79,7 +79,7 @@ export const Quote = (props: QuoteProps) => {
   };
 
   return (
-    <StyledQuoteContainer>
+    <StyledQuoteContainer data-testid="quote-container">
       <StyledQuote
         $hasAttachment={Boolean(!isEmpty(attachment))}
         $isIncoming={isIncoming}
