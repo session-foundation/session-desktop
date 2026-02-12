@@ -15,7 +15,7 @@ export const GearAvatarButton = () => {
       style={{
         position: 'absolute',
         top: '54%',
-        insetInlineEnd: '23%',
+        insetInlineEnd: '0',
         backgroundColor: 'var(--primary-color)',
         padding: 'var(--margins-xxs)',
         borderRadius: '50%',

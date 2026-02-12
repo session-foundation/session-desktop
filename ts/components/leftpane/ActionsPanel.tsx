@@ -65,9 +65,10 @@ import { KbdShortcut } from '../../util/keyboardShortcuts';
 import { useNewConversationCallback } from '../buttons/MenuButton';
 import { useFocusScope } from '../../state/focus';
 import { useOverlayChooseAction } from '../../hooks/useOverlayChooseAction';
+import { Flex } from '../basic/Flex';
+import { FlexSpacer } from '../basic/Text';
 
 const StyledContainerAvatar = styled.button`
-  padding: var(--margins-lg);
   position: relative;
   cursor: pointer;
   border-radius: 50%;
@@ -196,7 +197,7 @@ function DebugMenuModalButton() {
   return (
     <SessionLucideIconButton
       iconSize="medium"
-      padding="var(--margins-lg)"
+      padding="var(--margins-md)"
       unicode={LUCIDE_ICONS_UNICODE.SQUARE_CODE}
       dataTestId="debug-menu-section"
       onClick={() => {
@@ -300,36 +301,51 @@ export const ActionsPanel = () => {
   return (
     <>
       <LeftPaneSectionContainer data-testid="leftpane-section-container">
-        <StyledContainerAvatar
-          onClick={() => {
-            dispatch(userSettingsModal({ userSettingsPage: 'default' }));
-          }}
+        <Flex
+          $container={true}
+          $alignItems="center"
+          $flexGap="var(--margins-lg)"
+          $flexDirection="column"
         >
-          <Avatar
-            size={AvatarSize.S}
-            pubkey={ourNumber}
-            dataTestId="leftpane-primary-avatar"
-            imageDataTestId={`img-leftpane-primary-avatar`}
+          <StyledContainerAvatar
+            onClick={() => {
+              dispatch(userSettingsModal({ userSettingsPage: 'default' }));
+            }}
+          >
+            <Avatar
+              size={AvatarSize.S}
+              pubkey={ourNumber}
+              dataTestId="leftpane-primary-avatar"
+              imageDataTestId={`img-leftpane-primary-avatar`}
+            />
+            <GearAvatarButton />
+          </StyledContainerAvatar>
+          {showDebugMenu ? <DebugMenuModalButton /> : null}
+        </Flex>
+        <FlexSpacer />
+        <Flex
+          $container={true}
+          $alignItems="center"
+          $flexGap="var(--margins-lg)"
+          $flexDirection="column"
+        >
+          <OnionStatusLight
+            handleClick={() => {
+              dispatch(onionPathModal({}));
+            }}
+            inActionPanel={true}
           />
-          <GearAvatarButton />
-        </StyledContainerAvatar>
-        {showDebugMenu ? <DebugMenuModalButton /> : null}
-        <OnionStatusLight
-          handleClick={() => {
-            dispatch(onionPathModal({}));
-          }}
-          inActionPanel={true}
-        />
-        <SessionLucideIconButton
-          margin="0 0 0 0"
-          iconSize="medium"
-          padding="var(--margins-lg)"
-          unicode={isDarkTheme ? LUCIDE_ICONS_UNICODE.MOON : LUCIDE_ICONS_UNICODE.SUN_MEDIUM}
-          dataTestId="theme-section"
-          onClick={() => {
-            void handleThemeSwitch();
-          }}
-        />
+          <SessionLucideIconButton
+            margin="0 0 0 0"
+            iconSize="medium"
+            padding="var(--margins-md)"
+            unicode={isDarkTheme ? LUCIDE_ICONS_UNICODE.MOON : LUCIDE_ICONS_UNICODE.SUN_MEDIUM}
+            dataTestId="theme-section"
+            onClick={() => {
+              void handleThemeSwitch();
+            }}
+          />
+        </Flex>
       </LeftPaneSectionContainer>
     </>
   );

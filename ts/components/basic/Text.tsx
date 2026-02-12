@@ -83,6 +83,18 @@ export const Spacer3XL = (props: { style?: CSSProperties }) => {
   return <Spacer size="3xl" style={props.style} />;
 };
 
+const StyledFlexSpacer = styled.div`
+  display: flex;
+  flex-grow: 1;
+`;
+
+/**
+ * A spacer that will take as much space as it can.
+ */
+export const FlexSpacer = (props: { style?: CSSProperties }) => {
+  return <StyledFlexSpacer style={props.style} />;
+};
+
 export const HintText = ({ children }: { children: string }) => {
   return (
     <span
