@@ -127,7 +127,7 @@ export type LightBoxOptions = {
 } | null;
 
 export type DebugMenuModalState = object | null;
-export type KeyboardShotcutsModalState = object | null;
+export type KeyboardShortcutsModalState = object | null;
 
 export type ConversationSettingsModalPage = 'default' | 'disappearing_message' | 'notifications';
 type SettingsPageThatCannotBeStandalone = Extract<ConversationSettingsModalPage, 'default'>;
@@ -192,7 +192,7 @@ export type ModalState = {
   sessionProInfoModal: SessionCTAState;
   lightBoxOptions: LightBoxOptions;
   debugMenuModal: DebugMenuModalState;
-  keyboardShortcutsModal: KeyboardShotcutsModalState;
+  keyboardShortcutsModal: KeyboardShortcutsModalState;
   conversationSettingsModal: ConversationSettingsModalState;
   modalStack: Array<ModalId>;
 };
@@ -356,7 +356,11 @@ const ModalSlice = createSlice({
     updateDebugMenuModal(state, action: PayloadAction<DebugMenuModalState>) {
       return pushOrPopModal(state, 'debugMenuModal', action.payload);
     },
-    updateKeyboardShortcutsMenuModal(state, action: PayloadAction<KeyboardShotcutsModalState>) {
+    updateKeyboardShortcutsMenuModal(state, action: PayloadAction<KeyboardShortcutsModalState>) {
+      // if we want to show the keyboard shortcuts modal, but the lightbox is opened, ignore the change
+      if (state.lightBoxOptions && action.payload) {
+        return state;
+      }
       return pushOrPopModal(state, 'keyboardShortcutsModal', action.payload);
     },
     updateConversationSettingsModal(state, action: PayloadAction<ConversationSettingsModalState>) {
