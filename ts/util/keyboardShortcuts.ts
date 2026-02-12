@@ -2,6 +2,7 @@ import type { KeyboardEvent } from 'react';
 import { isMacOS } from '../OS';
 import { getFeatureFlag } from '../state/ducks/types/releasedFeaturesReduxTypes';
 import type { FocusScope } from '../state/focus';
+import { tr } from '../localization';
 
 export function debugKeyboardShortcutsLog(...args: Array<unknown>) {
   if (!getFeatureFlag('debugKeyboardShortcuts')) {
@@ -60,8 +61,9 @@ const conversationNavigation = Object.fromEntries(
 ) as Record<ConversationNavKeys, typeof baseConversationNavigation>;
 
 // TODO: These should be user-editable. It should be simple to store custom user keybinds
-// in the database and its an often overlocked feature with little lift and massive UX gains.
+// in the database and its an often overlooked feature with little lift and massive UX gains.
 
+console.warn('a bunch of those still need a string in crowdin');
 export const KbdShortcut = {
   ...conversationNavigation,
   keyboardShortcutModal: {
@@ -70,26 +72,26 @@ export const KbdShortcut = {
     withCtrl: true,
     keys: ['/'],
   },
-  zoomIn: { name: 'Zoom In', scope: 'global', withCtrl: true, keys: ['+'] },
-  zoomOut: { name: 'Zoom Out', scope: 'global', withCtrl: true, keys: ['-'] },
+  zoomIn: { name: tr('appearanceZoomIn'), scope: 'global', withCtrl: true, keys: ['+'] },
+  zoomOut: { name: tr('appearanceZoomOut'), scope: 'global', withCtrl: true, keys: ['-'] },
   userSettingsModal: { name: 'User Settings', scope: 'global', withCtrl: true, keys: [','] },
-  newConversation: { name: 'New Conversation', scope: 'global', withCtrl: true, keys: ['n'] },
+  newConversation: { name: tr('conversationsNew'), scope: 'global', withCtrl: true, keys: ['n'] },
   newMessage: {
-    name: 'New Message',
+    name: tr('messageNew', { count: 1 }),
     scope: 'global',
     withCtrl: true,
     withShift: true,
     keys: ['m'],
   },
   createGroup: {
-    name: 'Create Group',
+    name: tr('groupCreate'),
     scope: 'global',
     withCtrl: true,
     withShift: true,
     keys: ['g'],
   },
   joinCommunity: {
-    name: 'Join Community',
+    name: tr('communityJoin'),
     scope: 'global',
     withCtrl: true,
     withShift: true,
@@ -103,7 +105,7 @@ export const KbdShortcut = {
     keys: ['n'],
   },
   conversationListSearch: {
-    name: 'Search',
+    name: tr('search'),
     scope: 'conversationList',
     withCtrl: true,
     keys: ['f'],
@@ -144,7 +146,7 @@ export const KbdShortcut = {
     keys: ['r'],
   },
   messageCopyText: {
-    name: 'Copy message text',
+    name: tr('messageCopy'),
     scope: 'message',
     withCtrl: true,
     keys: ['c'],
