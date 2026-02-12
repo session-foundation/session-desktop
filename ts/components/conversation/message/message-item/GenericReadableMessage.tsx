@@ -60,7 +60,7 @@ const StyledReadableMessage = styled.div<{
     margin-top: var(--margins-xs);
   }
 
-  &:focus {
+  &:focus-visible {
     background-color: var(--conversation-tab-background-selected-color);
   }
 `;
@@ -80,6 +80,8 @@ export const GenericReadableMessage = (props: Props) => {
   const multiSelectMode = useIsMessageSelectionMode();
 
   const ref = useRef<HTMLDivElement>(null);
+  const pointerDownRef = useRef(false);
+  const keyboardFocusedRef = useRef(false);
   const [triggerPosition, setTriggerPosition] = useState<PopoverTriggerPosition | null>(null);
 
   const getMessageContainerTriggerPosition = (): PopoverTriggerPosition | null => {
@@ -174,8 +176,22 @@ export const GenericReadableMessage = (props: Props) => {
       key={`readable-message-${messageId}`}
       onKeyDown={onKeyDown}
       tabIndex={0}
-      onFocus={onFocus}
-      onBlur={onBlur}
+      onPointerDown={() => {
+        pointerDownRef.current = true;
+      }}
+      onFocus={() => {
+        if (!pointerDownRef.current) {
+          keyboardFocusedRef.current = true;
+          onFocus();
+        }
+        pointerDownRef.current = false;
+      }}
+      onBlur={() => {
+        if (keyboardFocusedRef.current) {
+          keyboardFocusedRef.current = false;
+          onBlur();
+        }
+      }}
     >
       <MessageContentWithStatuses
         ctxMenuID={ctxMenuID}

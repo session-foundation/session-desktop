@@ -152,7 +152,7 @@ function MiscSection() {
       />
       <PanelIconButton
         iconElement={
-          <div style={{ width: 'var(--user-settings-icon-min-width)' }}>
+          <div style={{ width: 'var(--user-settings-icon-min-width)', justifyItems: 'center' }}>
             <OnionStatusLight inActionPanel={false} handleClick={undefined} />
           </div>
         }
@@ -428,7 +428,7 @@ export const DefaultSettingPage = (modalState: UserSettingsModalState) => {
             <SessionLucideIconButton
               iconSize="small"
               unicode={LUCIDE_ICONS_UNICODE.COPY}
-              iconColor="var(--renderer-span-primary)"
+              iconColor="var(--renderer-span-primary-color)"
               onClick={copyAccountIdToClipboard}
             />
           }

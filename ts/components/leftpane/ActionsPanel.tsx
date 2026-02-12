@@ -1,5 +1,6 @@
 import { ipcRenderer } from 'electron';
 import { useEffect, useState } from 'react';
+import { debounce } from 'lodash';
 
 import { useSelector } from 'react-redux';
 import useInterval from 'react-use/lib/useInterval';
@@ -90,6 +91,7 @@ function handleThemeSwitch() {
     dispatch: window.inboxStore?.dispatch,
   });
 }
+const debouncedHandleThemeSwitch = debounce(handleThemeSwitch, 100);
 
 const cleanUpMediasInterval = DURATION.MINUTES * 60;
 
@@ -158,7 +160,7 @@ function useDebugThemeSwitch() {
   useDebugKey({
     withCtrl: true,
     key: 't',
-    callback: handleThemeSwitch,
+    callback: debouncedHandleThemeSwitch,
   });
 }
 
@@ -341,9 +343,7 @@ export const ActionsPanel = () => {
             padding="var(--margins-md)"
             unicode={isDarkTheme ? LUCIDE_ICONS_UNICODE.MOON : LUCIDE_ICONS_UNICODE.SUN_MEDIUM}
             dataTestId="theme-section"
-            onClick={() => {
-              void handleThemeSwitch();
-            }}
+            onClick={debouncedHandleThemeSwitch}
           />
         </Flex>
       </LeftPaneSectionContainer>
