@@ -18,7 +18,6 @@ export type SessionIconType =
   | 'sessionPro' // no lucide alternative (app specific)
   | 'sessionTokenLogoWithText' // no lucide alternative (app specific)
   | 'shield' // no lucide alternative (app specific)
-  | 'mailWithUnread' // no lucide alternative (app specific)
   /**
    * Lucide only has a question-circle icon, but we need a question icon with no circle, sometimes
    */
@@ -145,11 +144,6 @@ export const icons: Record<SessionIconType, IconProps> = {
     ratio: 1,
     fillRule: 'evenodd',
     clipRule: 'evenodd',
-  },
-  mailWithUnread: {
-    path: ' ',
-    viewBox: '0 0 32 32',
-    ratio: 1,
   },
   questionNoCircle: {
     path: 'M18.2075 6.409a5.6335 5.6335 90 00-6.2605 3.686 2.812 2.812 90 11-5.3105-1.8715 11.2575 11.2575 90 0121.8785 3.7525c0 4.3035-3.192 7.1535-5.472 8.6735a22.6385 22.6385 90 01-4.75 2.3845l-.095.038h-.0285l-.0095.0095h-.0095l-.893-2.66.893 2.66a2.812 2.812 90 01-1.786-5.3295l.0475-.019a9.956 9.956 90 001.026-.418c.6935-.304 1.596-.76 2.4795-1.349 1.938-1.292 2.9735-2.6695 2.9735-3.99a5.6335 5.6335 90 00-4.6835-5.567ZM14.664 31.679a2.812 2.812 90 012.8215-2.8215h.0285a2.812 2.812 90 010 5.6335h-.0285a2.812 2.812 90 01-2.8215-2.812Z',

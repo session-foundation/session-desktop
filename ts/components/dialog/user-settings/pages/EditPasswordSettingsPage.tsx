@@ -33,13 +33,13 @@ function StrengthCriteria(opts: { isMet: boolean } & WithTrArgs) {
   const theme = useTheme();
   const criteriaMetColor = theme.includes('classic') ? 'var(--green-color)' : 'var(--blue-color)';
   return (
-    <Flex $container={true} $alignItems="flex-start" $flexGap="var(--margins-xs)">
-      <Localizer {...opts.trArgs} />
+    <Flex $container={true} $alignItems="flex-start" $flexGap="var(--margins-sm)">
       <LucideIcon
         iconColor={opts.isMet ? criteriaMetColor : 'var(--danger-color)'}
         unicode={opts.isMet ? LUCIDE_ICONS_UNICODE.CIRCLE_CHECK : LUCIDE_ICONS_UNICODE.CIRCLE_X}
         iconSize="small"
       />
+      <Localizer {...opts.trArgs} />
     </Flex>
   );
 }
