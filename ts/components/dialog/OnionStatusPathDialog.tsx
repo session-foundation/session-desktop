@@ -306,6 +306,7 @@ const defaultColor = 'var(--button-path-default-color)';
 const connectingColor = 'var(--button-path-connecting-color)';
 
 const StyledStatusLightContainer = styled.div<{ $inActionPanel: boolean }>`
+  display: flex;
   margin-top: ${props => (props.$inActionPanel ? 'auto' : '0')};
   cursor: ${props => (props.$inActionPanel ? 'pointer' : 'inherit')};
   padding: ${props => (props.$inActionPanel ? 'var(--margins-lg)' : '0')};
