@@ -100,11 +100,11 @@ function CycleButton({
         direction === 1 ? LUCIDE_ICONS_UNICODE.CHEVRON_RIGHT : LUCIDE_ICONS_UNICODE.CHEVRON_LEFT
       }
       margin={direction === 1 ? '0 0 0 3px' : '0 3px 0 0'}
-      padding="0 var(--margins-xs)"
       onClick={() => onCycle(direction)}
       tabIndex={0}
       // we do not want to mirror those chevrons when the app is in RTL mode
       respectRtl={false}
+      style={{ outlineOffset: '-2px' }}
     />
   );
 }

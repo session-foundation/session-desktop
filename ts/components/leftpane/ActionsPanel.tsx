@@ -73,6 +73,7 @@ const StyledContainerAvatar = styled.button`
   position: relative;
   cursor: pointer;
   border-radius: 50%;
+  outline-offset: 10px;
 `;
 
 function handleThemeSwitch() {
@@ -313,6 +314,7 @@ export const ActionsPanel = () => {
             onClick={() => {
               dispatch(userSettingsModal({ userSettingsPage: 'default' }));
             }}
+            tabIndex={0}
           >
             <Avatar
               size={AvatarSize.S}

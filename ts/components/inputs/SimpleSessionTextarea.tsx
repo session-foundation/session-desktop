@@ -108,7 +108,7 @@ export const SimpleSessionTextarea = (
   const hasError = !isEmpty(providedError);
   const hasValue = !isEmpty(value);
 
-  const ref = useRef<HTMLInputElement | null>(null);
+  const ref = useRef<HTMLTextAreaElement>(null);
 
   const updateInputValue = useUpdateInputValue(onValueChanged, disabled);
 

@@ -252,8 +252,8 @@ function OnionPathDot({
 }) {
   return (
     <svg
-      width="12"
-      height="12"
+      width={12}
+      height={12}
       viewBox="0 0 100 100"
       clipRule="nonzero"
       fillRule="nonzero"
@@ -307,9 +307,8 @@ const connectingColor = 'var(--button-path-connecting-color)';
 
 const StyledStatusLightContainer = styled.div<{ $inActionPanel: boolean }>`
   display: flex;
-  margin-top: ${props => (props.$inActionPanel ? 'auto' : '0')};
   cursor: ${props => (props.$inActionPanel ? 'pointer' : 'inherit')};
-  padding: ${props => (props.$inActionPanel ? 'var(--margins-md)' : '0')};
+  padding: ${props => (props.$inActionPanel ? '22px' : '0')};
   border-radius: 50%;
 `;
 

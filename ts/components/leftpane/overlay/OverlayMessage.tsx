@@ -69,8 +69,12 @@ export const OverlayMessage = () => {
   function closeOverlay() {
     dispatch(sectionActions.resetLeftOverlayMode());
   }
+  function goBack() {
+    dispatch(sectionActions.setLeftOverlayMode({ type: 'choose-action', params: null }));
+  }
 
-  useKey('Escape', closeOverlay);
+  useKey('Escape', goBack);
+
   const overlayMode = useLeftOverlayMode();
   const overlayModeIsMessage = overlayMode?.type === 'message';
   const [pubkeyOrOns, setPubkeyOrOns] = useState<string>(
@@ -179,6 +183,7 @@ export const OverlayMessage = () => {
         singleLine={true}
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onEnterPressed={handleMessageButtonClick}
+        allowEscapeKeyPassthrough={true}
       />
       <SpacerMD />
       <SessionSpinner $loading={loading} />

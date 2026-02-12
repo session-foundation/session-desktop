@@ -84,6 +84,11 @@ const StyledRoundedPanelButtonGroup = styled.div<{
   padding: 0;
   width: -webkit-fill-available;
   border: ${props => (props.$withBorder ? 'var(--default-borders)' : 'none')};
+
+  & > div > button:focus-visible,
+  & > div > button:focus-visible {
+    border-radius: 16px;
+  }
 `;
 
 const PanelButtonContainer = styled.div`

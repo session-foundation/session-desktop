@@ -172,6 +172,7 @@ export const SessionLucideIconButton = forwardRef<
       aria-label={ariaLabel}
       onClick={clickHandler}
       style={{
+        outlineOffset: 'var(--margins-xs)',
         ...style,
         backgroundColor,
         display: style?.display ? style.display : 'flex',

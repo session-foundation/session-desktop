@@ -1,4 +1,5 @@
 import type { JSX } from 'react';
+import { contextMenu } from 'react-contexify';
 import { useConvoIdFromContext } from '../../contexts/ConvoIdContext';
 import {
   useIsIncomingRequest,
@@ -395,6 +396,7 @@ export const NotificationForConvoMenuItem = (): JSX.Element | null => {
             key={item.value}
             onClick={() => {
               setNotificationFor(item.value);
+              contextMenu.hideAll();
             }}
             disabled={disabled}
             iconType={

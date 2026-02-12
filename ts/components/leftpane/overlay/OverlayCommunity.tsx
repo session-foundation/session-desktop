@@ -90,7 +90,11 @@ export const OverlayCommunity = () => {
     }
   }
 
-  useKey('Escape', closeOverlay);
+  function goBack() {
+    dispatch(sectionActions.resetLeftOverlayMode());
+  }
+
+  useKey('Escape', goBack);
 
   return (
     <StyledLeftPaneOverlay
@@ -116,6 +120,7 @@ export const OverlayCommunity = () => {
         textSize="md"
         inputDataTestId="join-community-conversation"
         errorDataTestId="error-message"
+        allowEscapeKeyPassthrough={true}
       />
       <Spacer2XL />
       <SessionButton

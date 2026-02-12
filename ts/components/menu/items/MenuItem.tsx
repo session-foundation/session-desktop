@@ -1,9 +1,11 @@
 import type { ReactNode, SessionDataTestId } from 'react';
 import { Item, ItemProps, Submenu } from 'react-contexify';
-import { SessionIconButton, SessionLucideIconButton } from '../../icon/SessionIconButton';
+import { SessionLucideIconButton } from '../../icon/SessionIconButton';
 import { SpacerSM } from '../../basic/Text';
 import { isLucideIcon, LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
-import { type SessionIconType } from '../../icon';
+import { SessionIcon, type SessionIconType } from '../../icon';
+import { LucideIcon } from '../../icon/LucideIcon';
+import { Flex } from '../../basic/Flex';
 
 function isReactNode(
   iconType: LUCIDE_ICONS_UNICODE | SessionIconType | ReactNode | null
@@ -31,12 +33,12 @@ function MenuItemIcon({
 
   return isLucideIcon(iconType) ? (
     <>
-      <SessionLucideIconButton unicode={iconType} iconSize="medium" iconColor="currentColor" />
+      <LucideIcon unicode={iconType} iconSize="medium" iconColor="currentColor" />
       <SpacerSM />
     </>
   ) : (
     <>
-      <SessionIconButton iconType={iconType} iconSize="medium" iconColor="currentColor" />
+      <SessionIcon iconType={iconType} iconSize="medium" iconColor="currentColor" />
       <SpacerSM />
     </>
   );
@@ -59,8 +61,17 @@ export function MenuItem({
       {...props}
       className={isDangerAction ? 'danger' : ''}
     >
-      <MenuItemIcon iconType={iconType} />
-      {children}
+      <Flex
+        $container={true}
+        $alignItems="center"
+        tabIndex={0}
+        $flexGrow={1}
+        height="100%"
+        style={{ outlineOffset: 'var(--margins-xs)' }}
+      >
+        <MenuItemIcon iconType={iconType} />
+        {children}
+      </Flex>
     </Item>
   );
 }
@@ -95,5 +106,13 @@ export function SubMenuItem({
   iconType: LUCIDE_ICONS_UNICODE;
   label: string;
 }) {
-  return <Submenu label={SubMenuLabelWithIcon({ iconType, label })}>{children}</Submenu>;
+  return (
+    <Submenu
+      label={SubMenuLabelWithIcon({ iconType, label })}
+      tabIndex={0}
+      style={{ outlineOffset: '-2px' }}
+    >
+      {children}
+    </Submenu>
+  );
 }

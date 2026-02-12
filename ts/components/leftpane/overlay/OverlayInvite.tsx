@@ -63,11 +63,11 @@ export const OverlayInvite = () => {
 
   const dispatch = getAppDispatch();
 
-  function closeOverlay() {
-    dispatch(sectionActions.resetLeftOverlayMode());
+  function goBack() {
+    dispatch(sectionActions.setLeftOverlayMode({ type: 'choose-action', params: null }));
   }
 
-  useKey('Escape', closeOverlay);
+  useKey('Escape', goBack);
 
   return (
     <StyledLeftPaneOverlay

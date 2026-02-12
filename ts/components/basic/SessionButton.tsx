@@ -213,6 +213,7 @@ export const SessionButton = (props: SessionButtonProps) => {
       $fontWeight={fontWeight}
       width={width}
       style={{ ...style, margin }}
+      tabIndex={0}
     >
       {props.children || text}
     </Comp>

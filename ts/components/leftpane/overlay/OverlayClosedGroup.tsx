@@ -92,9 +92,9 @@ export const OverlayClosedGroupV2 = () => {
     dispatch(groupInfoActions.removeSelectedGroupMember({ memberToRemove: member }));
   };
 
-  function closeOverlay() {
+  function goBack() {
     dispatch(searchActions.clearSearch());
-    dispatch(sectionActions.resetLeftOverlayMode());
+    dispatch(sectionActions.setLeftOverlayMode({ type: 'choose-action', params: null }));
   }
 
   function onValueChanged(value: string) {
@@ -136,7 +136,7 @@ export const OverlayClosedGroupV2 = () => {
     );
   }
 
-  useKey('Escape', closeOverlay);
+  useKey('Escape', goBack);
 
   const noContactsForClosedGroup = isEmpty(searchTerm) && contactsToInvite.length === 0;
   const disableCreateButton = isCreatingGroup || (!selectedMemberIds.length && !groupName.length);
@@ -190,6 +190,7 @@ export const OverlayClosedGroupV2 = () => {
           textSize="md"
           inputDataTestId="new-closed-group-name"
           errorDataTestId="error-message"
+          allowEscapeKeyPassthrough={true}
         />
         <SpacerMD />
         {getFeatureFlag('useClosedGroupV2QAButtons') && (
