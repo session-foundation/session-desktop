@@ -4,6 +4,7 @@ export const StyledSessionIconButton = styled.button<{
   color?: string;
   $isSelected?: boolean;
   $isDarkTheme: boolean;
+  $focusVisibleEffect?: string;
 }>`
   background-color: var(--button-icon-background-color);
   transition:
@@ -40,19 +41,7 @@ export const StyledSessionIconButton = styled.button<{
     ${props => !props.disabled && !props.color && 'fill: var(--button-icon-stroke-hover-color);'}
   }
 
-  &:focus svg path {
-    ${props => !props.disabled && !props.color && 'fill: var(--button-icon-stroke-hover-color);'}
-  }
-
-  &:hover,
-  &:focus {
-    ${props =>
-      props.disabled
-        ? ''
-        : props.$isSelected
-          ? ''
-          : props.$isDarkTheme
-            ? 'filter: brightness(0.5);'
-            : 'filter: opacity(0.5)'}// not ideal to use opacity for a hover effect, but on light theme I couldn't find another filter that worked
+  &:focus-visible {
+    ${props => (!props.disabled && props.$focusVisibleEffect ? props.$focusVisibleEffect : '')}
   }
 `;

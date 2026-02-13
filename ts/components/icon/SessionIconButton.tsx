@@ -23,6 +23,7 @@ export type SessionIconButtonProps = SessionIconProps & {
   className?: string;
   children?: ReactNode;
   disabled?: boolean;
+  focusVisibleEffect?: string;
 };
 
 // eslint-disable-next-line react/display-name
@@ -49,6 +50,7 @@ const SessionIconButtonInner = forwardRef<HTMLButtonElement, SessionIconButtonPr
       children,
       disabled,
       backgroundColor,
+      focusVisibleEffect,
     } = props;
     const clickHandler = (e: MouseEvent<HTMLButtonElement>) => {
       if (!disabled && props.onClick) {
@@ -86,6 +88,7 @@ const SessionIconButtonInner = forwardRef<HTMLButtonElement, SessionIconButtonPr
         disabled={disabled}
         data-testid={dataTestId}
         $isDarkTheme={isDarkTheme}
+        $focusVisibleEffect={focusVisibleEffect}
       >
         <SessionIcon
           iconType={iconType}
@@ -119,6 +122,7 @@ export type SessionLucideIconButtonProps = Pick<
   | 'children'
   // backgroundColor is a dedicated prop (forbidden from the `style` prop)
   | 'backgroundColor'
+  | 'focusVisibleEffect'
 > &
   Pick<LucideIconProps, 'unicode' | 'iconSize' | 'iconColor' | 'respectRtl'> & {
     // margin and backgroundColor have a dedicated prop
@@ -148,6 +152,7 @@ export const SessionLucideIconButton = forwardRef<
     children,
     backgroundColor,
     respectRtl,
+    focusVisibleEffect,
   } = props;
 
   const clickHandler = (e: MouseEvent<HTMLButtonElement>) => {
@@ -172,7 +177,6 @@ export const SessionLucideIconButton = forwardRef<
       aria-label={ariaLabel}
       onClick={clickHandler}
       style={{
-        outlineOffset: 'var(--margins-xs)',
         ...style,
         backgroundColor,
         display: style?.display ? style.display : 'flex',
@@ -187,6 +191,7 @@ export const SessionLucideIconButton = forwardRef<
       data-testid={dataTestId}
       ref={ref}
       $isDarkTheme={isDarkTheme}
+      $focusVisibleEffect={focusVisibleEffect}
     >
       <LucideIcon
         unicode={unicode}

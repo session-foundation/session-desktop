@@ -201,7 +201,7 @@ export const OverlayMessage = () => {
             </SessionIDDescription>
             <HelpDeskButton
               iconSize="small"
-              style={{ display: 'inline-flex', paddingInline: 'var(--margins-xs)' }}
+              style={{ display: 'inline-flex', marginInline: 'var(--margins-xs)' }}
               iconColor="var(--text-secondary-color)"
             />
           </StyledDescriptionContainer>

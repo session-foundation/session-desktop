@@ -9,6 +9,7 @@ export function ModalPencilIcon(props: { onClick: () => void }) {
       iconSize="large"
       dataTestId="modal-pencil-button"
       iconColor="var(--text-primary-color)"
+      focusVisibleEffect="box-shadow: var(--box-shadow-focus-visible-outset);"
     />
   );
 }

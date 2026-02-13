@@ -24,6 +24,7 @@ const StyledConversationHeaderAvatar = styled.span`
   min-width: 28px;
   user-select: none;
   border-radius: 50%;
+  padding: var(--margins-sm);
 `;
 
 export const AvatarHeader = (props: { pubkey: string; onAvatarClick?: () => void }) => {

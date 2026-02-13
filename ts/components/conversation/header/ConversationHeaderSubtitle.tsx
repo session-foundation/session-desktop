@@ -6,6 +6,7 @@ import { SessionLucideIconButton } from '../../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 import type { TrArgs } from '../../../localization/localeTools';
 import { Localizer } from '../../basic/Localizer';
+import { createButtonOnKeyDownForClickEventHandler } from '../../../util/keyboardShortcuts';
 
 function loadDataTestId(currentSubtitle: SubtitleStringsType) {
   if (currentSubtitle === 'disappearingMessages') {
@@ -104,7 +105,6 @@ function CycleButton({
       tabIndex={0}
       // we do not want to mirror those chevrons when the app is in RTL mode
       respectRtl={false}
-      style={{ outlineOffset: '-2px' }}
     />
   );
 }
@@ -127,6 +127,7 @@ export const ConversationHeaderSubtitle = (props: ConversationHeaderSubtitleProp
   }
 
   const cannotCycle = subtitlesArray.length < 2;
+  const onKeyDown = createButtonOnKeyDownForClickEventHandler(onClickFunction);
 
   return (
     <StyledSubtitleContainer>
@@ -149,12 +150,7 @@ export const ConversationHeaderSubtitle = (props: ConversationHeaderSubtitleProp
         <StyledConversationHeaderSubtitleText
           role="button"
           onClick={onClickFunction}
-          onKeyPress={(e: any) => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              onClickFunction();
-            }
-          }}
+          onKeyDown={onKeyDown}
           tabIndex={0}
           data-testid={loadDataTestId(currentSubtitle.type)}
         >

@@ -21,9 +21,22 @@
   word-break: break-all;
 }
 
+@keyframes blink-caret {
+  0%,
+  100% {
+    caret-color: transparent;
+  }
+  50% {
+    caret-color: var(--text-primary-color);
+  }
+}
+
 input,
-textarea {
-  caret-color: var(--input-text-color) !important;
+textarea,
+div[role='textbox'] {
+  caret-color: var(--text-primary-color);
+  animation: blink-caret infinite linear alternate 0.75s;
+  caret-animation: manual;
 }
 
 * {

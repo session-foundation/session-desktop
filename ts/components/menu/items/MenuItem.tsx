@@ -1,4 +1,5 @@
 import type { ReactNode, SessionDataTestId } from 'react';
+import styled from 'styled-components';
 import { Item, ItemProps, Submenu } from 'react-contexify';
 import { SessionLucideIconButton } from '../../icon/SessionIconButton';
 import { SpacerSM } from '../../basic/Text';
@@ -44,6 +45,12 @@ function MenuItemIcon({
   );
 }
 
+const StyledItemContainer = styled(Flex)`
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--box-shadow-focus-visible-outset);
+  }
+`;
 export function MenuItem({
   children,
   dataTestId,
@@ -61,17 +68,16 @@ export function MenuItem({
       {...props}
       className={isDangerAction ? 'danger' : ''}
     >
-      <Flex
+      <StyledItemContainer
         $container={true}
         $alignItems="center"
         tabIndex={0}
         $flexGrow={1}
         height="100%"
-        style={{ outlineOffset: 'var(--margins-xs)' }}
       >
         <MenuItemIcon iconType={iconType} />
         {children}
-      </Flex>
+      </StyledItemContainer>
     </Item>
   );
 }
@@ -110,7 +116,7 @@ export function SubMenuItem({
     <Submenu
       label={SubMenuLabelWithIcon({ iconType, label })}
       tabIndex={0}
-      style={{ outlineOffset: '-2px' }}
+      style={{ '--focus-ring-size': '-2px' } as React.CSSProperties}
     >
       {children}
     </Submenu>

@@ -87,7 +87,7 @@ const StyledRoundedPanelButtonGroup = styled.div<{
 
   & > div > button:focus-visible,
   & > div > button:focus-visible {
-    border-radius: 16px;
+    --focus-border-radius: 16px;
   }
 `;
 
@@ -144,8 +144,7 @@ export const StyledPanelButton = styled.button<{
   padding-block: var(--margins-sm);
   min-height: var(--panel-button-container-min-height);
 
-  &:hover,
-  &:focus {
+  &:hover {
     background-color: ${props => {
       if (props.disabled) {
         return 'transparent'; // let the PanelButtonGroup background be visible
@@ -155,6 +154,9 @@ export const StyledPanelButton = styled.button<{
       }
       return 'color-mix(in srgb, var(--background-tertiary-color) 95%, black)';
     }};
+  }
+  &:focus-visible {
+    box-shadow: var(--box-shadow-focus-visible-inset);
   }
 `;
 

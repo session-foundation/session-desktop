@@ -1,4 +1,4 @@
-import type { KeyboardEvent } from 'react';
+import type { KeyboardEvent, MouseEvent } from 'react';
 import { isMacOS } from '../OS';
 import { getFeatureFlag } from '../state/ducks/types/releasedFeaturesReduxTypes';
 import type { FocusScope } from '../state/focus';
@@ -16,7 +16,7 @@ export function isButtonClickKey(e: KeyboardEvent<HTMLElement>) {
 }
 
 export function createButtonOnKeyDownForClickEventHandler(
-  callback: () => void,
+  callback: (e: KeyboardEvent<HTMLElement> | MouseEvent<HTMLElement>) => void,
   allowPropagation?: boolean
 ) {
   return (e: KeyboardEvent<HTMLElement>) => {
@@ -26,7 +26,7 @@ export function createButtonOnKeyDownForClickEventHandler(
         e.preventDefault();
         e.stopPropagation();
       }
-      callback();
+      callback(e);
     }
   };
 }

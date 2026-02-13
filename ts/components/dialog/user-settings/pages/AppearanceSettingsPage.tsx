@@ -69,7 +69,7 @@ function PrimaryColorSwitcher() {
       {getPrimaryColors().map(item => {
         const overriddenColorsVars = {
           '--primary-color': item.color,
-          '--text-primary-color': item.id === selectedPrimaryColor ? undefined : 'transparent',
+          '--radio-border-color': item.id === selectedPrimaryColor ? undefined : 'transparent',
         } as React.CSSProperties;
         return (
           <RadioDot
@@ -83,6 +83,7 @@ function PrimaryColorSwitcher() {
             diameterRadioBorder={diameterRadioBorder}
             style={overriddenColorsVars}
             ariaLabel={item.ariaLabel}
+            tabIndex={0}
           />
         );
       })}

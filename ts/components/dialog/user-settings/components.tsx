@@ -7,6 +7,7 @@ import { useProBadgeOnClickCb } from '../../menuAndSettingsHooks/useProBadgeOnCl
 import { useCurrentUserHasExpiredPro, useCurrentUserHasPro } from '../../../hooks/useHasPro';
 import { ProIconButton } from '../../buttons/ProButton';
 import { AvatarQrCodeButton } from '../../buttons/avatar/AvatarQrCodeButton';
+import { createButtonOnKeyDownForClickEventHandler } from '../../../util/keyboardShortcuts';
 
 type ProfileAvatarProps = {
   avatarPath: string | null;
@@ -112,10 +113,16 @@ export const ProfileName = (props: { profileName: string; onClick: () => void })
     context: 'show-our-profile-dialog',
     args: { currentUserHasPro, currentUserHasExpiredPro, providedCb: onClick },
   });
+  const onKeyDown = createButtonOnKeyDownForClickEventHandler(onClick);
 
   return (
     <StyledProfileName $container={true} $justifyContent="center" $alignItems="center">
-      <StyledName data-testid="your-profile-name" onClick={onClick}>
+      <StyledName
+        data-testid="your-profile-name"
+        onClick={onClick}
+        tabIndex={0}
+        onKeyDown={onKeyDown}
+      >
         {profileName}
         {showPro.show ? (
           <ProIconButton

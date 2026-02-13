@@ -480,6 +480,7 @@ export function CompositionTextArea(props: Props) {
   useEffect(() => {
     handleMentionCleanup();
     inputRef.current?.resetState(initialDraft);
+    inputRef.current?.focus();
   }, [handleMentionCleanup, initialDraft, inputRef, selectedConversationKey]);
 
   const results = useMentionResults(mention);
@@ -608,7 +609,7 @@ export function CompositionTextArea(props: Props) {
         onKeyUp={handleKeyUp}
         spellCheck={true}
         disabled={!typingEnabled}
-        autoFocus={true}
+        autoFocus={false}
         ref={inputRef}
         $scrollbarPadding={140}
         autoCorrect="off"

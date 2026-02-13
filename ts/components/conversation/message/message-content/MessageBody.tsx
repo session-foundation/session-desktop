@@ -117,7 +117,13 @@ const Linkify = (props: LinkifyProps): JSX.Element => {
       const onKeyDown = createButtonOnKeyDownForClickEventHandler(showDialog);
 
       results.push(
-        <a key={count++} href={url} onClick={onClick} onKeyDown={onKeyDown}>
+        <a
+          key={count++}
+          href={url}
+          onClick={onClick}
+          onKeyDown={onKeyDown}
+          style={{ '--focus-ring-color': 'var(--text-primary-color)' } as React.CSSProperties}
+        >
           {originalText}
         </a>
       );

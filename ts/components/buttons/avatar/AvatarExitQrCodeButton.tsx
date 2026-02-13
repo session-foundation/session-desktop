@@ -17,6 +17,7 @@ export function AvatarExitQrCodeButton({ onExitQrCodeView }: { onExitQrCodeView:
         display: 'flex',
         alignItems: 'center',
         borderRadius: '50%',
+        boxShadow: 'var(--box-shadow-focus-visible-outset)',
       }}
     />
   );

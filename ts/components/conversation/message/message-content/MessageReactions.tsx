@@ -113,10 +113,12 @@ const CompressedReactions = (props: ExpandReactionsProps) => {
 
 const ExpandedReactions = (props: ExpandReactionsProps) => {
   const { handleExpand } = props;
+  const onKeyDown = createButtonOnKeyDownForClickEventHandler(handleExpand);
+
   return (
     <Flex $container={true} $flexDirection={'column'} $alignItems={'center'} $margin="4px 0 0">
       <Reactions {...props} />
-      <StyledReadLess onClick={handleExpand}>
+      <StyledReadLess onClick={handleExpand} role="button" tabIndex={0} onKeyDown={onKeyDown}>
         <LucideIcon
           unicode={LUCIDE_ICONS_UNICODE.CHEVRON_UP}
           iconSize="medium"

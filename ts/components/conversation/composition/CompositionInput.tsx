@@ -72,7 +72,7 @@ function setCaretAtHtmlIndex(el: HTMLElement, idx: number) {
     }
     marker.parentNode?.removeChild(marker);
   }
-  el.focus();
+  refocus(el);
 }
 
 /**
@@ -170,8 +170,12 @@ function replaceCaret(el: HTMLElement) {
       sel.removeAllRanges();
       sel.addRange(range);
     }
-    el.focus();
+    refocus(el);
   }
+}
+
+function refocus(el: HTMLElement) {
+  el.focus();
 }
 
 function ConSpan(props: ConvoSpanProps) {
@@ -236,7 +240,6 @@ export type ContentEditableEvent = ContentEditableEventWithoutTarget & {
 };
 
 export interface CompositionInputRef {
-  /** Focus the input */
   focus: () => void;
   getCaretCoordinates: () => { left: number; top: number } | null;
   /**
@@ -939,6 +942,12 @@ const CompositionInput = styled(UnstyledCompositionInput)<{
     display: block;
     color: var(--text-secondary-color);
     font-size: inherit;
+  }
+
+  // the caret is already there to say that this is focused
+  &:focus-visible {
+    outline: none;
+    box-shadow: none;
   }
 `;
 

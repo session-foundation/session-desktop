@@ -39,6 +39,12 @@ const StyledReaction = styled.button<{
   }
 
   ${props => !props.onClick && 'cursor: not-allowed;'}
+
+  &:focus-visible {
+    // add an outline here as box-shadow is already set when we've reacted with the same reaction
+    outline: var(--focus-ring-size, 2px) solid var(--primary-color);
+    outline-offset: var(--margins-xs);
+  }
 `;
 
 const StyledReactionContainer = styled.div<{

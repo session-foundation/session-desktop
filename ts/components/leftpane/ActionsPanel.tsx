@@ -73,7 +73,12 @@ const StyledContainerAvatar = styled.button`
   position: relative;
   cursor: pointer;
   border-radius: 50%;
-  outline-offset: 10px;
+
+  transition: var(--default-duration);
+
+  &:focus-visible {
+    box-shadow: var(--box-shadow-focus-visible-outset);
+  }
 `;
 
 function handleThemeSwitch() {

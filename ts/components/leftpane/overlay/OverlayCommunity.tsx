@@ -74,6 +74,10 @@ export const OverlayCommunity = () => {
     }
   }
 
+  async function onTryJoinRoomFromInput() {
+    return onTryJoinRoom();
+  }
+
   function joinSogsUICallback(args: JoinSogsRoomUICallbackArgs) {
     setLoading(args.loadingState === 'started');
     if (args.conversationKey) {
@@ -112,7 +116,7 @@ export const OverlayCommunity = () => {
         onValueChanged={setGroupUrl}
         singleLine={true}
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        onEnterPressed={onTryJoinRoom}
+        onEnterPressed={onTryJoinRoomFromInput}
         providedError={groupUrlError}
         disabled={loading}
         // - 1 for null terminator
@@ -126,7 +130,7 @@ export const OverlayCommunity = () => {
       <SessionButton
         text={tr('join')}
         disabled={!groupUrl || loading}
-        onClick={onTryJoinRoom}
+        onClick={onTryJoinRoomFromInput}
         dataTestId="join-community-button"
         buttonColor={SessionButtonColor.PrimaryDark}
       />

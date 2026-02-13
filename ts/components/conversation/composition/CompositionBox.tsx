@@ -552,6 +552,10 @@ class CompositionBoxInner extends Component<Props, State> {
       this.hideEmojiPanel();
       return;
     }
+    if (event.key === 'e' && (event.ctrlKey || event.metaKey)) {
+      this.toggleEmojiPanel();
+      return;
+    }
     const isShiftSendEnabled = !!window.getSettingValue(SettingsKey.hasShiftSendEnabled);
     if (
       !event.nativeEvent.isComposing &&

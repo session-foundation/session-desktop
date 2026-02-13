@@ -913,7 +913,7 @@ function ProConfigManager({ forceUpdate }: { forceUpdate: () => void }) {
   ) : (
     <div style={{ width: '100%' }}>
       <h2>Pro Config Manager</h2>
-      <DebugButton onClick={refetch}>Generate New Proof From Backend (refresh)</DebugButton>
+      <DebugButton onClick={() => refetch()}>Generate New Proof From Backend (refresh)</DebugButton>
       <i>Changing the pro config may result in an invalid pro config</i>
       <ProConfigForm proConfig={proConfig ?? initialState.value} forceUpdate={_forceUpdate} />
     </div>

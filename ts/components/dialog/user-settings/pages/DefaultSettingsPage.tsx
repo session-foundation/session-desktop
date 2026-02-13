@@ -430,6 +430,9 @@ export const DefaultSettingPage = (modalState: UserSettingsModalState) => {
               unicode={LUCIDE_ICONS_UNICODE.COPY}
               iconColor="var(--renderer-span-primary-color)"
               onClick={copyAccountIdToClipboard}
+              // some padding because the box-shadow does not look good otherwise
+              padding="3px"
+              focusVisibleEffect="box-shadow: var(--box-shadow-focus-visible-outset);"
             />
           }
           style={{

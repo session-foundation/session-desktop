@@ -22,6 +22,7 @@ export function AvatarQrCodeButton({
       onClick={onQRClick}
       backgroundColor="var(--primary-color)"
       padding="var(--margins-xs)"
+      focusVisibleEffect="outline: 2px solid var(--text-primary-color);"
       style={{
         display: 'flex',
         alignItems: 'center',
