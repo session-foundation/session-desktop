@@ -45,6 +45,11 @@ const StyledInput = styled.input`
     color: var(--text-primary-color);
     outline: none !important;
   }
+
+  &:focus-visible {
+    box-shadow: var(--box-shadow-focus-visible-inset);
+    border-radius: var(--border-radius);
+  }
 `;
 
 const doTheSearch = (dispatch: Dispatch<any>, searchOpts: DoSearchActionType) => {
@@ -130,7 +135,7 @@ export const SessionSearchInput = ({ searchType }: { searchType: SearchType }) =
         placeholder={placeholder}
         style={{ borderWidth: '0' }}
       />
-      {Boolean(currentSearchTerm.length) && (
+      {currentSearchTerm.length ? (
         <SessionLucideIconButton
           iconColor="var(--text-secondary-color)"
           iconSize={iconSize}
@@ -143,7 +148,7 @@ export const SessionSearchInput = ({ searchType }: { searchType: SearchType }) =
             dispatch(searchActions.clearSearch());
           }}
         />
-      )}
+      ) : null}
     </StyledSearchInput>
   );
 };

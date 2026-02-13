@@ -37,6 +37,7 @@ const StyledActionRow = styled.button`
   }
 
   &:focus-visible ${StyledHR} {
+    // hide the border so the focus-visible looks better
     border-color: var(--transparent-color);
   }
 `;

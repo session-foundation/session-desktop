@@ -182,6 +182,10 @@ fieldset {
     var(--focus-ring-color, var(--text-primary-color));
   --box-shadow-focus-visible-outset: 0px 0px 0px var(--focus-ring-size, 2px)
     var(--focus-ring-color, var(--text-primary-color));
-  // Note: we use box-shadow as we have some buttons with an outline (and having an outline here would override it)
+
+  --outline-focus-visible-small: var(--focus-outline-width, 2px) solid var(--text-primary-color);
+  // Note:
+  // - we use box-shadow as we have some buttons with an outline (and having an outline here would override it)
+  // - but for some rare case, we still fallback to the outline, via  --outline-focus-visible-small
   box-shadow: var(--box-shadow-focus-visible-inset);
 }

@@ -37,6 +37,7 @@ export const ProfileAvatar = (props: ProfileAvatarProps) => {
       onAvatarClick={onAvatarClick}
       onPlusAvatarClick={onPlusAvatarClick ?? undefined}
       dataTestId={dataTestId}
+      tabIndex={0}
     />
   );
 };

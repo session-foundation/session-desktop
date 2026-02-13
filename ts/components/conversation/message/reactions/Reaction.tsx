@@ -42,7 +42,7 @@ const StyledReaction = styled.button<{
 
   &:focus-visible {
     // add an outline here as box-shadow is already set when we've reacted with the same reaction
-    outline: var(--focus-ring-size, 2px) solid var(--primary-color);
+    outline: var(--outline-focus-visible-small);
     outline-offset: var(--margins-xs);
   }
 `;

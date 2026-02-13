@@ -4,12 +4,16 @@ import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 import { LucideIcon } from '../../icon/LucideIcon';
 import { useTheme } from '../../../state/theme/selectors/theme';
 import { PlusAvatarButton } from './PlusAvatarButton';
+import { createButtonOnKeyDownForClickEventHandler } from '../../../util/keyboardShortcuts';
 
 const StyledUploadButton = styled.div`
   border-radius: 50%;
   overflow: hidden;
   padding: var(--margins-lg);
   aspect-ratio: 1;
+  &:focus-visible {
+    box-shadow: var(--box-shadow-focus-visible-inset);
+  }
 `;
 
 export const UploadFirstImageButton = ({ onClick }: { onClick: () => void }) => {
@@ -21,9 +25,16 @@ export const UploadFirstImageButton = ({ onClick }: { onClick: () => void }) => 
       ? 'var(--background-primary-color)'
       : 'var(--chat-buttons-background-color)';
 
+  const onKeyDown = createButtonOnKeyDownForClickEventHandler(onClick);
+
   return (
     <div style={{ position: 'relative' }} onClick={onClick}>
-      <StyledUploadButton style={{ backgroundColor }}>
+      <StyledUploadButton
+        style={{ backgroundColor }}
+        role="button"
+        tabIndex={0}
+        onKeyDown={onKeyDown}
+      >
         <LucideIcon unicode={LUCIDE_ICONS_UNICODE.IMAGE} iconSize={'max'} />
       </StyledUploadButton>
       <PlusAvatarButton

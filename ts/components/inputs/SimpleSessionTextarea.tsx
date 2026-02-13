@@ -55,6 +55,12 @@ export const StyledTextAreaContainer = styled(motion.div)<{
     &::placeholder {
       color: var(--text-secondary-color);
     }
+
+    &:focus-visible {
+      outline: var(--outline-focus-visible-small);
+      box-shadow: none;
+      outline-offset: var(--margins-sm);
+    }
   }
 `;
 

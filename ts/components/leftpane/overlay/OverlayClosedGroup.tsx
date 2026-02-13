@@ -237,6 +237,7 @@ export const OverlayClosedGroupV2 = () => {
                 // NOTE: These are passed as props to trigger a re-render when they change
                 selectedMemberIds={selectedMemberIds}
                 isCreatingGroup={isCreatingGroup}
+                tabIndex={-1}
               />
             )}
           </AutoSizer>

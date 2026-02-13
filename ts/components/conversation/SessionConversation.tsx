@@ -279,7 +279,7 @@ export class SessionConversation extends Component<Props, State> {
             <div
               // if you change the class name, also update it on onKeyDown
               className={clsx('conversation-content', selectionMode && 'selection-mode')}
-              tabIndex={0}
+              tabIndex={-1}
               onKeyDown={this.onKeyDown}
               role="navigation"
             >

@@ -98,6 +98,7 @@ export const PlusAvatarButton = ({
         ...hardcodedPosition,
         boxShadow: '0px 0px 3px 2px var(--borders-color)',
       }}
+      focusVisibleEffect="outline: var(--outline-focus-visible-small);"
     />
   );
 };

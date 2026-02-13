@@ -17,10 +17,9 @@ export const StyledAvatar = styled.div<{ $diameter: number; $isClickable: boolea
     width: 100%;
   }
 
-  ${({ $isClickable }) => $isClickable && 'cursor: pointer; }'}
+  ${({ $isClickable }) => $isClickable && 'cursor: pointer;'}
 
   &:focus-visible {
-    outline: none;
-    box-shadow: var(--box-shadow-focus-visible-outset);
+    outline: var(--outline-focus-visible-small);
   }
 `;

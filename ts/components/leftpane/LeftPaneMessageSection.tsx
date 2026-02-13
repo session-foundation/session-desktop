@@ -2,7 +2,7 @@ import { isEmpty } from 'lodash';
 import { useSelector } from 'react-redux';
 import { AutoSizer, List, ListRowProps } from 'react-virtualized';
 import styled from 'styled-components';
-import type { JSX } from 'react';
+import { useRef, type JSX } from 'react';
 import { getAppDispatch } from '../../state/dispatch';
 
 import { SearchResults } from '../search/SearchResults';
@@ -159,6 +159,9 @@ function useConversationList() {
 const ConversationList = () => {
   const { searchTerm, conversationIds } = useConversationList();
   useConversationListKeyboardShortcuts(conversationIds);
+  const ref = useRef<List>(null);
+  const isMouseFocusRef = useRef(false);
+
   if (!isEmpty(searchTerm)) {
     return <SearchResults />;
   }
@@ -170,10 +173,32 @@ const ConversationList = () => {
   }
 
   return (
-    <StyledLeftPaneList key={`conversation-list-0`}>
+    <StyledLeftPaneList
+      key={`conversation-list-0`}
+      onPointerDown={() => {
+        isMouseFocusRef.current = true;
+      }}
+      onFocusCapture={e => {
+        if (!isMouseFocusRef.current) {
+          const container = e.currentTarget;
+          // Only scroll to top when focus enters from outside the list
+          if (!container.contains(e.relatedTarget as Node)) {
+            ref.current?.scrollToRow(0);
+            requestAnimationFrame(() => {
+              const firstItem = container.querySelector<HTMLElement>(
+                '.module-conversation-list-item'
+              );
+              firstItem?.focus();
+            });
+          }
+        }
+        isMouseFocusRef.current = false;
+      }}
+    >
       <AutoSizer>
         {({ height, width }) => (
           <List
+            ref={ref}
             tabIndex={-1}
             height={height}
             rowCount={conversationIds.length}
