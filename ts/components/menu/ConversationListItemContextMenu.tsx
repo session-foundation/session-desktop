@@ -1,5 +1,3 @@
-import { Menu } from 'react-contexify';
-
 import type { JSX } from 'react';
 import { useConvoIdFromContext } from '../../contexts/ConvoIdContext';
 import { useIsLegacyGroup, useIsPinned } from '../../hooks/useParamSelector';
@@ -26,8 +24,7 @@ import {
 } from './Menu';
 import { CopyCommunityUrlMenuItem } from './items/CopyCommunityUrl/CopyCommunityUrlMenuItem';
 import { CopyAccountIdMenuItem } from './items/CopyAccountId/CopyAccountIdMenuItem';
-import { MenuItem } from './items/MenuItem';
-import { getMenuAnimation } from './MenuAnimation';
+import { Menu, MenuItem } from './items/MenuItem';
 import { LeaveCommunityMenuItem } from './items/LeaveCommunity/LeaveCommunityMenuItem';
 import { LeaveGroupMenuItem } from './items/LeaveAndDeleteGroup/LeaveGroupMenuItem';
 import {
@@ -55,7 +52,7 @@ const ConversationListItemContextMenu = (props: PropsContextConversationItem) =>
   if (legacyGroup) {
     return (
       <SessionContextMenuContainer>
-        <Menu id={triggerId} animation={getMenuAnimation()}>
+        <Menu id={triggerId}>
           {isPinned ? <PinConversationMenuItem /> : null}
           {/* Danger actions */}
           <DeleteDeprecatedLegacyGroupMenuItem />
@@ -70,7 +67,7 @@ const ConversationListItemContextMenu = (props: PropsContextConversationItem) =>
 
     return (
       <SessionContextMenuContainer>
-        <Menu id={triggerId} animation={getMenuAnimation()}>
+        <Menu id={triggerId}>
           <PinConversationMenuItem />
           <CopyCommunityUrlMenuItem convoId={convoIdFromContext} />
           <CopyAccountIdMenuItem pubkey={convoIdFromContext} messageId={undefined} />
@@ -91,7 +88,7 @@ const ConversationListItemContextMenu = (props: PropsContextConversationItem) =>
 
   return (
     <SessionContextMenuContainer>
-      <Menu id={triggerId} animation={getMenuAnimation()}>
+      <Menu id={triggerId}>
         {/* Note: the order here is on purpose */}
 
         {/* Generic actions */}

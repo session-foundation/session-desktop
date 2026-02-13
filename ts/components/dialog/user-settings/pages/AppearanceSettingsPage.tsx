@@ -3,7 +3,7 @@ import useInterval from 'react-use/lib/useInterval';
 
 import styled from 'styled-components';
 import { isFinite, isNumber, range } from 'lodash';
-import { contextMenu, Menu } from 'react-contexify';
+import { contextMenu } from 'react-contexify';
 import { useRef } from 'react';
 import { getAppDispatch } from '../../../../state/dispatch';
 
@@ -42,8 +42,7 @@ import { Flex } from '../../../basic/Flex';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 import { LucideIcon } from '../../../icon/LucideIcon';
 import { H9 } from '../../../basic/Heading';
-import { getMenuAnimation } from '../../../menu/MenuAnimation';
-import { MenuItem } from '../../../menu/items/MenuItem';
+import { Menu, MenuItem } from '../../../menu/items/MenuItem';
 import { ZOOM_FACTOR } from '../../../../session/constants';
 import { SessionContextMenuContainerItemsCentered } from '../../../SessionContextMenuContainer';
 import { UserSettingsModalContainer } from '../components/UserSettingsModalContainer';
@@ -281,7 +280,6 @@ const ZoomFactorMenuPicker = ({
     <SessionContextMenuContainerItemsCentered>
       <Menu
         id={zoomFactorMenuId}
-        animation={getMenuAnimation()}
         onVisibilityChange={handleShow}
         style={{
           zIndex: 400,

@@ -1,12 +1,13 @@
 import type { ReactNode, SessionDataTestId } from 'react';
 import styled from 'styled-components';
-import { Item, ItemProps, Submenu } from 'react-contexify';
+import { Item, ItemProps, Menu as MenuOriginal, Submenu, type MenuProps } from 'react-contexify';
 import { SessionLucideIconButton } from '../../icon/SessionIconButton';
 import { SpacerSM } from '../../basic/Text';
 import { isLucideIcon, LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 import { SessionIcon, type SessionIconType } from '../../icon';
 import { LucideIcon } from '../../icon/LucideIcon';
 import { Flex } from '../../basic/Flex';
+import { getMenuAnimation } from '../MenuAnimation';
 
 function isReactNode(
   iconType: LUCIDE_ICONS_UNICODE | SessionIconType | ReactNode | null
@@ -45,12 +46,17 @@ function MenuItemIcon({
   );
 }
 
-const StyledItemContainer = styled(Flex)`
+const StyledItemContainer = styled(Flex)<{ $isDangerAction: boolean }>`
   &:focus-visible {
-    outline: none;
-    box-shadow: var(--box-shadow-focus-visible-outset);
+    outline: ${props =>
+      props.$isDangerAction
+        ? '2px solid var(--danger-color)'
+        : '2px solid var(--text-primary-color)'};
+    box-shadow: none;
+    outline-offset: 5px;
   }
 `;
+
 export function MenuItem({
   children,
   dataTestId,
@@ -71,9 +77,10 @@ export function MenuItem({
       <StyledItemContainer
         $container={true}
         $alignItems="center"
-        tabIndex={0}
         $flexGrow={1}
         height="100%"
+        tabIndex={0}
+        $isDangerAction={isDangerAction}
       >
         <MenuItemIcon iconType={iconType} />
         {children}
@@ -113,12 +120,12 @@ export function SubMenuItem({
   label: string;
 }) {
   return (
-    <Submenu
-      label={SubMenuLabelWithIcon({ iconType, label })}
-      tabIndex={0}
-      style={{ '--focus-ring-size': '-2px' } as React.CSSProperties}
-    >
+    <Submenu label={SubMenuLabelWithIcon({ iconType, label })} tabIndex={0}>
       {children}
     </Submenu>
   );
+}
+
+export function Menu(opts: Omit<MenuProps, 'animation'>) {
+  return <MenuOriginal {...opts} animation={getMenuAnimation()} />;
 }

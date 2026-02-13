@@ -2,7 +2,7 @@
 import { Dispatch, type KeyboardEvent, type MouseEvent, useRef } from 'react';
 
 import { isNil, isNumber, isString } from 'lodash';
-import { Menu, MenuOnHideCallback, MenuOnShowCallback } from 'react-contexify';
+import { MenuOnHideCallback, MenuOnShowCallback } from 'react-contexify';
 import styled from 'styled-components';
 import { toNumber } from 'lodash/fp';
 import { getAppDispatch } from '../../../../state/dispatch';
@@ -25,8 +25,7 @@ import {
 import { SessionContextMenuContainer } from '../../../SessionContextMenuContainer';
 import { CopyAccountIdMenuItem } from '../../../menu/items/CopyAccountId/CopyAccountIdMenuItem';
 import { Localizer } from '../../../basic/Localizer';
-import { MenuItem } from '../../../menu/items/MenuItem';
-import { getMenuAnimation } from '../../../menu/MenuAnimation';
+import { Menu, MenuItem } from '../../../menu/items/MenuItem';
 import { WithMessageId } from '../../../../session/types/with';
 import { DeleteItem } from '../../../menu/items/DeleteMessage/DeleteMessageMenuItem';
 import { RetryItem } from '../../../menu/items/RetrySend/RetrySendMenuItem';
@@ -293,7 +292,7 @@ export const MessageContextMenu = (props: Props) => {
     return (
       <StyledMessageContextMenu>
         <SessionContextMenuContainer>
-          <Menu id={contextMenuId} animation={getMenuAnimation()}>
+          <Menu id={contextMenuId}>
             <SaveAttachmentMenuItem messageId={messageId} />
             <CopyBodyMenuItem messageId={messageId} />
             <MessageInfoMenuItem messageId={messageId} />
@@ -310,7 +309,6 @@ export const MessageContextMenu = (props: Props) => {
         <Menu
           ref={contextMenuRef}
           id={contextMenuId}
-          animation={getMenuAnimation()}
           onShow={onShow}
           onHide={onHide}
           viewportMargin={12}

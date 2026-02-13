@@ -1,5 +1,5 @@
 import { MouseEvent, useEffect, useState } from 'react';
-import { contextMenu, Menu } from 'react-contexify';
+import { contextMenu } from 'react-contexify';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 import { getAppDispatch } from '../../state/dispatch';
@@ -10,8 +10,7 @@ import { setFullScreenCall } from '../../state/ducks/call';
 import { getHasOngoingCallWithPubkey } from '../../state/selectors/call';
 import { DropDownAndToggleButton } from '../icon/DropDownAndToggleButton';
 import { SessionContextMenuContainer } from '../SessionContextMenuContainer';
-import { MenuItem } from '../menu/items/MenuItem';
-import { getMenuAnimation } from '../menu/MenuAnimation';
+import { Menu, MenuItem } from '../menu/items/MenuItem';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 
@@ -24,7 +23,7 @@ const VideoInputMenu = ({
 }) => {
   return (
     <SessionContextMenuContainer>
-      <Menu id={triggerId} animation={getMenuAnimation()}>
+      <Menu id={triggerId}>
         {camerasList.map(m => {
           return (
             <MenuItem
@@ -99,7 +98,7 @@ const AudioInputMenu = ({
 }) => {
   return (
     <SessionContextMenuContainer>
-      <Menu id={triggerId} animation={getMenuAnimation()}>
+      <Menu id={triggerId}>
         {audioInputsList.map(m => {
           return (
             <MenuItem
@@ -170,7 +169,7 @@ const AudioOutputMenu = ({
 }) => {
   return (
     <SessionContextMenuContainer>
-      <Menu id={triggerId} animation={getMenuAnimation()}>
+      <Menu id={triggerId}>
         {audioOutputsList.map(m => {
           return (
             <MenuItem

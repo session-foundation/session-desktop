@@ -1,10 +1,8 @@
-import { Menu } from 'react-contexify';
 import type { JSX } from 'react';
 
 import { SessionContextMenuContainer } from '../SessionContextMenuContainer';
 
-import { MenuItem } from './items/MenuItem';
-import { getMenuAnimation } from './MenuAnimation';
+import { MenuItem, Menu } from './items/MenuItem';
 import { tr } from '../../localization/localeTools';
 import { SettingsKey } from '../../data/settings-key';
 
@@ -33,7 +31,7 @@ export const MessageRequestBannerContextMenu = (props: PropsContextConversationI
 
   return (
     <SessionContextMenuContainer>
-      <Menu id={triggerId} animation={getMenuAnimation()}>
+      <Menu id={triggerId}>
         <HideBannerMenuItem />
       </Menu>
     </SessionContextMenuContainer>

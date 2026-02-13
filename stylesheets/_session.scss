@@ -55,39 +55,6 @@ div[role='textbox'] {
   background: var(--text-selection-color);
 }
 
-.overlay {
-  display: flex !important;
-  z-index: 1;
-}
-
-#main-view {
-  height: 100vh;
-  display: flex;
-  flex-grow: 1;
-  position: relative;
-}
-
-.button-group > div {
-  display: inline-flex;
-  margin-inline-start: 5px;
-  margin-inline-end: 5px;
-}
-
-.session-label {
-  font-weight: 700;
-  color: var(--white-color);
-  padding: var(--margins-sm);
-  width: 100%;
-  border-radius: 2px;
-  text-align: center;
-  &.primary {
-    background-color: var(--primary-color);
-  }
-  &.danger {
-    background-color: var(--danger-color);
-  }
-}
-
 .session-icon-button {
   cursor: pointer;
   display: inline-block;
