@@ -5,15 +5,15 @@ import { LucideIcon } from '../../icon/LucideIcon';
 import { useTheme } from '../../../state/theme/selectors/theme';
 import { PlusAvatarButton } from './PlusAvatarButton';
 import { createButtonOnKeyDownForClickEventHandler } from '../../../util/keyboardShortcuts';
+import { focusVisibleBoxShadowInset } from '../../../styles/focusVisible';
 
 const StyledUploadButton = styled.div`
   border-radius: 50%;
   overflow: hidden;
   padding: var(--margins-lg);
   aspect-ratio: 1;
-  &:focus-visible {
-    box-shadow: var(--box-shadow-focus-visible-inset);
-  }
+
+  ${focusVisibleBoxShadowInset()}
 `;
 
 export const UploadFirstImageButton = ({ onClick }: { onClick: () => void }) => {

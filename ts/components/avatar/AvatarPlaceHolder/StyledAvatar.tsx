@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import { focusVisibleOutline } from '../../../styles/focusVisible';
 
 export const StyledAvatar = styled.div<{ $diameter: number; $isClickable: boolean }>`
   width: ${({ $diameter }) => $diameter}px;
@@ -19,7 +20,5 @@ export const StyledAvatar = styled.div<{ $diameter: number; $isClickable: boolea
 
   ${({ $isClickable }) => $isClickable && 'cursor: pointer;'}
 
-  &:focus-visible {
-    outline: var(--outline-focus-visible-small);
-  }
+  ${focusVisibleOutline()}
 `;

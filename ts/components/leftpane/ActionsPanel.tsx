@@ -68,17 +68,14 @@ import { useFocusScope } from '../../state/focus';
 import { useOverlayChooseAction } from '../../hooks/useOverlayChooseAction';
 import { Flex } from '../basic/Flex';
 import { FlexSpacer } from '../basic/Text';
+import { focusVisibleOutline } from '../../styles/focusVisible';
 
 const StyledContainerAvatar = styled.button`
   position: relative;
   cursor: pointer;
   border-radius: 50%;
 
-  transition: var(--default-duration);
-
-  &:focus-visible {
-    box-shadow: var(--box-shadow-focus-visible-outset);
-  }
+  ${focusVisibleOutline()}
 `;
 
 function handleThemeSwitch() {

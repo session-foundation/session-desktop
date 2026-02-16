@@ -7,6 +7,7 @@ import { SpacerXS } from '../../basic/Text';
 import { Localizer } from '../../basic/Localizer';
 import type { TrArgs } from '../../../localization/localeTools';
 import { useIsDarkTheme } from '../../../state/theme/selectors/theme';
+import { focusVisibleBoxShadowInset } from '../../../styles/focusVisible';
 
 // NOTE Used for descendant components
 export const StyledContent = styled.div<{ disabled?: boolean; $rowReverse?: boolean }>`
@@ -155,9 +156,8 @@ export const StyledPanelButton = styled.button<{
       return 'color-mix(in srgb, var(--background-tertiary-color) 95%, black)';
     }};
   }
-  &:focus-visible {
-    box-shadow: var(--box-shadow-focus-visible-inset);
-  }
+
+  ${focusVisibleBoxShadowInset()}
 `;
 
 export type PanelButtonProps = {

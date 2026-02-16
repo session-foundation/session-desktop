@@ -37,6 +37,7 @@ export const Header = (props: HeaderProps) => {
     <Flex
       $container={true}
       width={'100%'}
+      $alignItems={'center'}
       $padding={`${paddingTop} var(--margins-lg) var(--margins-md)`}
     >
       <Flex

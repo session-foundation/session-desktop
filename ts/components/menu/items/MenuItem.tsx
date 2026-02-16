@@ -53,7 +53,7 @@ const StyledItemContainer = styled(Flex)<{ $isDangerAction: boolean }>`
         ? '2px solid var(--danger-color)'
         : '2px solid var(--text-primary-color)'};
     box-shadow: none;
-    outline-offset: 5px;
+    outline-offset: var(--margins-xs);
   }
 `;
 

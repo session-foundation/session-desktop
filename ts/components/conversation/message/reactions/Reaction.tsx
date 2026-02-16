@@ -13,6 +13,7 @@ import { ReactionPopup } from './ReactionPopup';
 import { SessionTooltip } from '../../../SessionTooltip';
 import { THEME_GLOBALS } from '../../../../themes/globals';
 import { createButtonOnKeyDownForClickEventHandler } from '../../../../util/keyboardShortcuts';
+import { focusVisibleOutline } from '../../../../styles/focusVisible';
 
 export const EMOJI_REACTION_HEIGHT = 24;
 
@@ -40,11 +41,7 @@ const StyledReaction = styled.button<{
 
   ${props => !props.onClick && 'cursor: not-allowed;'}
 
-  &:focus-visible {
-    // add an outline here as box-shadow is already set when we've reacted with the same reaction
-    outline: var(--outline-focus-visible-small);
-    outline-offset: var(--margins-xs);
-  }
+  ${focusVisibleOutline()}
 `;
 
 const StyledReactionContainer = styled.div<{

@@ -17,6 +17,7 @@ import { useIsMessageSelectionMode } from '../../state/selectors/selectedConvers
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { getAudioAutoplay } from '../../state/selectors/settings';
 import { LucideIcon } from '../icon/LucideIcon';
+import { focusVisibleBoxShadowOutset } from '../../styles/focusVisible';
 
 const StyledSpeedButton = styled.div`
   transition: none;
@@ -49,9 +50,7 @@ export const StyledH5AudioPlayer = styled(H5AudioPlayer)<{ dropShadow?: boolean 
     margin: 0 0 0 calc(10px + 1%);
     outline: none;
 
-    &:focus-visible {
-      box-shadow: var(--box-shadow-focus-visible-outset);
-    }
+    ${focusVisibleBoxShadowOutset()}
   }
 
   .rhap_current-time,

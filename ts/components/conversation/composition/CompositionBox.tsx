@@ -191,6 +191,11 @@ const StyledSendMessageInput = styled.div<{ dir?: HTMLDirection }>`
   }
 `;
 
+const StyledCompositionContainer = styled.div`
+  border-top: var(--default-borders);
+  z-index: 1;
+`;
+
 const StyledRightCompositionBoxButtonContainer = styled.div`
   position: absolute;
   inset-inline-end: var(--margins-md);
@@ -286,10 +291,10 @@ class CompositionBoxInner extends Component<Props, State> {
           )
         }
         {this.renderAttachmentsStaged()}
-        <div className="composition-container">
+        <StyledCompositionContainer>
           {showRecordingView ? this.renderRecordingView() : this.renderCompositionView()}
           <BlockedOverlayOnCompositionBox />
-        </div>
+        </StyledCompositionContainer>
       </Flex>
     );
   }

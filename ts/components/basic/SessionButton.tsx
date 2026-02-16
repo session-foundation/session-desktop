@@ -2,6 +2,7 @@ import type { CSSProperties, MouseEvent, ReactNode, RefObject, SessionDataTestId
 import styled from 'styled-components';
 import clsx from 'clsx';
 import { useIsDarkTheme } from '../../state/theme/selectors/theme';
+import { focusVisibleBoxShadowInset } from '../../styles/focusVisible';
 
 export enum SessionButtonType {
   Outline = 'outline',
@@ -107,9 +108,7 @@ const StyledOutlineButton = styled(StyledBaseButton)`
     }
   }
 
-  &:focus-visible {
-    box-shadow: var(--box-shadow-focus-visible-inset);
-  }
+  ${focusVisibleBoxShadowInset()}
 `;
 
 const StyledSolidButton = styled(StyledBaseButton)<{ $isDarkTheme: boolean }>`

@@ -184,6 +184,8 @@ fieldset {
     var(--focus-ring-color, var(--text-primary-color));
 
   --outline-focus-visible-small: var(--focus-outline-width, 2px) solid var(--text-primary-color);
+  --outline-focus-visible-small-offset: var(--margins-xs);
+
   // Note:
   // - we use box-shadow as we have some buttons with an outline (and having an outline here would override it)
   // - but for some rare case, we still fallback to the outline, via  --outline-focus-visible-small

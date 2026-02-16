@@ -15,6 +15,7 @@ import { AriaLabels } from '../../../../util/hardcodedAriaLabels';
 import { LucideIcon } from '../../../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 import { createButtonOnKeyDownForClickEventHandler } from '../../../../util/keyboardShortcuts';
+import { focusVisibleBoxShadowOutset } from '../../../../styles/focusVisible';
 
 export type MessageLinkPreviewSelectorProps = Pick<
   MessageRenderingProps,
@@ -127,9 +128,8 @@ const StyledMessageLinkPreview = styled.div<{ $direction: MessageModelType | und
       ? '--focus-ring-color: ;'
       : '--focus-ring-color: var(--text-primary-color);'}
 
-  &:focus-visible {
-    box-shadow: var(--box-shadow-focus-visible-outset);
-  }
+
+  ${focusVisibleBoxShadowOutset()}
 `;
 
 export const MessageLinkPreview = (props: Props) => {

@@ -12,6 +12,7 @@ import {
 } from './SessionInput';
 import { useUpdateInputValue } from './useUpdateInputValue';
 import { SpacerMD } from '../basic/Text';
+import { focusVisibleOutline } from '../../styles/focusVisible';
 
 export const StyledTextAreaContainer = styled(motion.div)<{
   $error: boolean;
@@ -56,11 +57,8 @@ export const StyledTextAreaContainer = styled(motion.div)<{
       color: var(--text-secondary-color);
     }
 
-    &:focus-visible {
-      outline: var(--outline-focus-visible-small);
-      box-shadow: none;
-      outline-offset: var(--margins-sm);
-    }
+    // we do not want --outline-focus-visible-small-offset to be applied here
+    ${focusVisibleOutline('var(--margins-sm)')}
   }
 `;
 

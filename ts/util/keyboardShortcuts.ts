@@ -12,7 +12,7 @@ export function debugKeyboardShortcutsLog(...args: Array<unknown>) {
 }
 
 export function isButtonClickKey(e: KeyboardEvent<HTMLElement>) {
-  return e.key === 'Enter' || e.code === 'Space';
+  return e && (e.key === 'Enter' || e.code === 'Space');
 }
 
 export function createButtonOnKeyDownForClickEventHandler(
@@ -62,7 +62,6 @@ const conversationNavigation = Object.fromEntries(
 
 // TODO: These should be user-editable. It should be simple to store custom user keybinds
 // in the database and its an often overlooked feature with little lift and massive UX gains.
-
 export const KbdShortcut = {
   ...conversationNavigation,
   keyboardShortcutModal: {

@@ -321,6 +321,8 @@ export function UpdateConversationDetailsDialog(props: WithConvoId) {
         </ModalActionsContainer>
       }
     >
+      {/* just some space for the focus-visible outset to be visible */}
+      <SpacerSM />
       {isPublic || isMe ? (
         avatarPath ? (
           <ProfileAvatar

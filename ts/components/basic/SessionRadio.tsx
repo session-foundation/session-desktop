@@ -3,12 +3,14 @@ import { SessionDataTestId, type KeyboardEvent, type MouseEvent } from 'react';
 import styled, { CSSProperties } from 'styled-components';
 import { Flex } from './Flex';
 import { createButtonOnKeyDownForClickEventHandler } from '../../util/keyboardShortcuts';
+import { focusVisibleBoxShadowInset } from '../../styles/focusVisible';
 
 const StyledContainer = styled.div<{ disabled: boolean }>`
   cursor: ${props => (props.disabled ? 'not-allowed' : 'pointer')};
   min-height: 30px;
   background-color: var(--transparent-color);
   padding-block: var(--margins-sm);
+  ${focusVisibleBoxShadowInset()}
 `;
 
 const StyledRadioOuter = styled.div<{
@@ -38,9 +40,7 @@ const StyledRadioOuter = styled.div<{
     pointer-events: none;
   }
 
-  &:focus-visible {
-    box-shadow: var(--box-shadow-focus-visible-inset);
-  }
+  ${focusVisibleBoxShadowInset()}
 `;
 
 /**

@@ -12,6 +12,7 @@ import type { SessionIconSize } from '../icon';
 import { tr } from '../../localization/localeTools';
 import { DURATION } from '../../session/constants';
 import { ModalBottomButtonWithBorder } from '../SessionWrapperModal';
+import { focusVisibleOutlineStr } from '../../styles/focusVisible';
 
 type CopyProps = {
   copyContent?: string;
@@ -107,6 +108,7 @@ export const CopyToClipboardIcon = (
       {...props}
       unicode={LUCIDE_ICONS_UNICODE.COPY}
       onClick={onClick}
+      focusVisibleEffect={focusVisibleOutlineStr('2px')}
     />
   );
 };

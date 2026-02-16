@@ -14,6 +14,7 @@ import { LUCIDE_ICONS_UNICODE } from './icon/lucide';
 import { LucideIcon } from './icon/LucideIcon';
 import { useKeyboardShortcut } from '../hooks/useKeyboardShortcut';
 import { KbdShortcut } from '../util/keyboardShortcuts';
+import { focusVisibleBoxShadowInset } from '../styles/focusVisible';
 
 const StyledSearchInput = styled.div`
   height: var(--search-input-height);
@@ -46,10 +47,7 @@ const StyledInput = styled.input`
     outline: none !important;
   }
 
-  &:focus-visible {
-    box-shadow: var(--box-shadow-focus-visible-inset);
-    border-radius: var(--border-radius);
-  }
+  ${focusVisibleBoxShadowInset('var(--border-radius)')}
 `;
 
 const doTheSearch = (dispatch: Dispatch<any>, searchOpts: DoSearchActionType) => {
@@ -140,9 +138,7 @@ export const SessionSearchInput = ({ searchType }: { searchType: SearchType }) =
           iconColor="var(--text-secondary-color)"
           iconSize={iconSize}
           unicode={LUCIDE_ICONS_UNICODE.X}
-          // NOTE: we dont want the clear button in the tab index list
-          // as we want the next tab after search to be the first result
-          tabIndex={-1}
+          tabIndex={0}
           onClick={() => {
             setCurrentSearchTerm('');
             dispatch(searchActions.clearSearch());

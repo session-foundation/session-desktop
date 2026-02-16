@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 
 import autoBind from 'auto-bind';
-import clsx from 'clsx';
 
 import MicRecorder from 'mic-recorder-to-mp3';
 import { Component } from 'react';
@@ -13,6 +12,7 @@ import { type SessionIconSize } from '../icon';
 import { useFormattedDuration } from '../../hooks/useFormattedDuration';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
+import { focusVisibleOutlineStr } from '../../styles/focusVisible';
 
 interface Props {
   onExitVoiceNoteView: () => void;
@@ -86,6 +86,20 @@ const StyledFlexWrapper = styled.div<StyledFlexWrapperProps>`
   }
 `;
 
+const StyledRecordingTimer = styled.div<{ $isRecording: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-default);
+  font-weight: bold;
+  font-size: 14px;
+  flex-shrink: 0;
+  animation: fadein var(--default-duration);
+
+  @media (-webkit-min-device-pixel-ratio: 1.6) {
+    ${({ $isRecording }) => !$isRecording && 'margin-left: auto'};
+  }
+`;
+
 function RecordingDurations({
   isRecording,
   displaySeconds,
@@ -99,9 +113,9 @@ function RecordingDurations({
   const remainingTimeString = useFormattedDuration(remainingSeconds, { forceHours: false });
 
   return (
-    <div className={clsx('session-recording--timer', !isRecording && 'playback-timer')}>
+    <StyledRecordingTimer $isRecording={isRecording}>
       {displayTimeString + (remainingTimeString ? ` / ${remainingTimeString}` : '')}
-    </div>
+    </StyledRecordingTimer>
   );
 }
 
@@ -109,12 +123,44 @@ function RecordingTimer({ displaySeconds }: { displaySeconds: number }) {
   const displayTimeString = useFormattedDuration(displaySeconds, { forceHours: false });
 
   return (
-    <div className={clsx('session-recording--timer')}>
+    <StyledRecordingTimer $isRecording={false}>
       {displayTimeString}
       <StyledRecordTimerLight />
-    </div>
+    </StyledRecordingTimer>
   );
 }
+
+const StyledRecordingActions = styled.div`
+  display: flex;
+  align-items: center;
+  width: var(--actions-element-size);
+  height: var(--actions-element-size);
+  border-radius: 50%;
+
+  .session-button {
+    animation: fadein var(--default-duration);
+  }
+
+  .session-icon-button {
+    animation: fadein var(--default-duration);
+    border-radius: 50%;
+    width: var(--actions-element-size);
+    height: var(--actions-element-size);
+  }
+`;
+
+const StyledRecording = styled.div`
+  height: var(--composition-container-height);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-grow: 1;
+  outline: none;
+  margin-left: var(--margins-md);
+  margin-right: var(--margins-md);
+
+  --actions-element-size: 30px;
+`;
 
 export class SessionRecording extends Component<Props, State> {
   private recorder?: any;
@@ -179,8 +225,8 @@ export class SessionRecording extends Component<Props, State> {
     const actionPauseFn = isPlaying ? this.pauseAudio : this.stopRecordingStream;
 
     return (
-      <div role="main" className="session-recording" tabIndex={0} onKeyDown={this.onKeyDown}>
-        <div className="session-recording--actions">
+      <StyledRecording role="main" onKeyDown={this.onKeyDown}>
+        <StyledRecordingActions>
           <StyledFlexWrapper $marginHorizontal="5px">
             {isRecording && (
               <SessionLucideIconButton
@@ -189,6 +235,7 @@ export class SessionRecording extends Component<Props, State> {
                 onClick={actionPauseFn}
                 iconSize={'large'}
                 dataTestId="end-voice-message"
+                focusVisibleEffect={focusVisibleOutlineStr()}
               />
             )}
             {actionPauseAudio && (
@@ -217,7 +264,7 @@ export class SessionRecording extends Component<Props, State> {
           {actionDefault && (
             <SessionLucideIconButton unicode={LUCIDE_ICONS_UNICODE.MIC} iconSize="large" />
           )}
-        </div>
+        </StyledRecordingActions>
 
         {hasRecording && !isRecording ? (
           <RecordingDurations
@@ -239,7 +286,7 @@ export class SessionRecording extends Component<Props, State> {
             />
           </div>
         )}
-      </div>
+      </StyledRecording>
     );
   }
 

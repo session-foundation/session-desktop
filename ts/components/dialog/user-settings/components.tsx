@@ -8,6 +8,7 @@ import { useCurrentUserHasExpiredPro, useCurrentUserHasPro } from '../../../hook
 import { ProIconButton } from '../../buttons/ProButton';
 import { AvatarQrCodeButton } from '../../buttons/avatar/AvatarQrCodeButton';
 import { createButtonOnKeyDownForClickEventHandler } from '../../../util/keyboardShortcuts';
+import { SpacerSM } from '../../basic/Text';
 
 type ProfileAvatarProps = {
   avatarPath: string | null;
@@ -67,6 +68,8 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
 
   return (
     <div>
+      {/* just some padding for the focus-visible */}
+      <SpacerSM />
       <StyledAvatarCenterInner>
         <ProfileAvatar
           avatarPath={avatarPath}

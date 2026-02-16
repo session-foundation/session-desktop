@@ -45,6 +45,8 @@ import {
   useProBackendProDetails,
   useProBackendRefetch,
 } from '../../../../state/selectors/proBackendData';
+import { focusVisibleBoxShadowOutsetStr } from '../../../../styles/focusVisible';
+import { createButtonOnKeyDownForClickEventHandler } from '../../../../util/keyboardShortcuts';
 
 const handleKeyQRMode = (mode: ProfileDialogModes, setMode: (mode: ProfileDialogModes) => void) => {
   switch (mode) {
@@ -288,7 +290,7 @@ const StyledVersionInfo = styled.div`
   font-size: var(--font-size-sm);
 `;
 
-const StyledSpanSessionInfo = styled.span<{ opacity?: number }>`
+const StyledButtonSessionInfo = styled.span<{ opacity?: number }>`
   opacity: ${props => props.opacity ?? 0.5};
   transition: var(--default-duration);
   user-select: text;
@@ -303,6 +305,21 @@ const SessionInfo = () => {
   const [clickCount, setClickCount] = useState(0);
 
   const dispatch = getAppDispatch();
+
+  const openVersion = createButtonOnKeyDownForClickEventHandler(() =>
+    showLinkVisitWarningDialog(
+      `https://github.com/session-foundation/session-desktop/releases/tag/v${window.versionInfo.version}`,
+      dispatch
+    )
+  );
+
+  const openCommit = createButtonOnKeyDownForClickEventHandler(() => {
+    setClickCount(clickCount + 1);
+    if (clickCount === 10) {
+      dispatch(setDebugMode(true));
+      setClickCount(0);
+    }
+  });
 
   return (
     <StyledVersionInfo>
@@ -321,27 +338,20 @@ const SessionInfo = () => {
         $alignItems="center"
         $flexGap="var(--margins-sm)"
       >
-        <StyledSpanSessionInfo
-          onClick={() => {
-            showLinkVisitWarningDialog(
-              `https://github.com/session-foundation/session-desktop/releases/tag/v${window.versionInfo.version}`,
-              dispatch
-            );
-          }}
+        <StyledButtonSessionInfo
+          onKeyDown={openVersion}
+          onClick={() => void openVersion(null as any)}
+          tabIndex={0}
         >
           v{window.versionInfo.version}
-        </StyledSpanSessionInfo>
-        <StyledSpanSessionInfo
-          onClick={() => {
-            setClickCount(clickCount + 1);
-            if (clickCount === 10) {
-              dispatch(setDebugMode(true));
-              setClickCount(0);
-            }
-          }}
+        </StyledButtonSessionInfo>
+        <StyledButtonSessionInfo
+          onKeyDown={openCommit}
+          onClick={() => void openCommit(null as any)}
+          tabIndex={0}
         >
           {window.versionInfo.commitHash?.slice(0, 8)}
-        </StyledSpanSessionInfo>
+        </StyledButtonSessionInfo>
       </Flex>
     </StyledVersionInfo>
   );
@@ -432,7 +442,7 @@ export const DefaultSettingPage = (modalState: UserSettingsModalState) => {
               onClick={copyAccountIdToClipboard}
               // some padding because the box-shadow does not look good otherwise
               padding="3px"
-              focusVisibleEffect="box-shadow: var(--box-shadow-focus-visible-outset);"
+              focusVisibleEffect={focusVisibleBoxShadowOutsetStr()}
             />
           }
           style={{
