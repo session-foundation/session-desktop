@@ -8,6 +8,7 @@ import { MessageModelType } from '../../../../models/messageType';
 import { LucideIcon } from '../../../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 import { MessageHighlighter } from './MessageHighlighter';
+import { getShortenedFilename } from './quote/QuoteText';
 
 const StyledGenericAttachmentContainer = styled.div<{
   selected: boolean;
@@ -33,13 +34,15 @@ export function MessageGenericAttachment({
 }) {
   const { fileName, fileSize } = attachment;
 
+  const shortenedFilename = getShortenedFilename(fileName);
+
   return (
-    <StyledGenericAttachmentContainer
-      selected={selected}
-      className={'module-message__generic-attachment'}
-      onClick={onClick}
-    >
-      <MessageHighlighter $highlight={highlight} onClick={onClick}>
+    <MessageHighlighter $highlight={highlight} onClick={onClick}>
+      <StyledGenericAttachmentContainer
+        selected={selected}
+        className={'module-message__generic-attachment'}
+        onClick={onClick}
+      >
         {pending ? (
           <div className="module-message__generic-attachment__spinner-container">
             <Spinner size="small" />
@@ -62,7 +65,7 @@ export function MessageGenericAttachment({
               `module-message__generic-attachment__file-name--${direction}`
             )}
           >
-            {fileName}
+            {shortenedFilename}
           </div>
           <div
             className={clsx(
@@ -73,7 +76,7 @@ export function MessageGenericAttachment({
             {fileSize}
           </div>
         </div>
-      </MessageHighlighter>
-    </StyledGenericAttachmentContainer>
+      </StyledGenericAttachmentContainer>
+    </MessageHighlighter>
   );
 }

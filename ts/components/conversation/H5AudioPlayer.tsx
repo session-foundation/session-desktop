@@ -18,6 +18,7 @@ import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { getAudioAutoplay } from '../../state/selectors/settings';
 import { LucideIcon } from '../icon/LucideIcon';
 import { focusVisibleBoxShadowOutset } from '../../styles/focusVisible';
+import { createButtonOnKeyDownForClickEventHandler } from '../../util/keyboardShortcuts';
 
 const StyledSpeedButton = styled.div`
   transition: none;
@@ -207,7 +208,10 @@ export const AudioPlayerWithEncryptedFile = (props: {
     ) {
       // NOTE we can't assign the value using dataset.testId because the result is data-test-id not data-testid which is our convention
       player.current.container.current.setAttribute('data-testid', dataTestId);
+      // The library hardcodes tabIndex={0} on the container, override it so only the buttons inside are tabbable
+      player.current.container.current.tabIndex = -1;
     }
+
     player.current?.progressBar.current?.addEventListener('mousedown', e => {
       if (e.button === 0) {
         contextMenu.hideAll();
@@ -235,6 +239,12 @@ export const AudioPlayerWithEncryptedFile = (props: {
     }
   }, [messageId, nextMessageToPlayId, player]);
 
+  const onChangeSpeed = () => {
+    setPlaybackSpeed(playbackSpeed === 1 ? 1.5 : playbackSpeed === 1.5 ? 2 : 1);
+  };
+
+  const onKeyDownSpeed = createButtonOnKeyDownForClickEventHandler(onChangeSpeed, false);
+
   return (
     <StyledH5AudioPlayer
       src={urlToLoad}
@@ -253,12 +263,10 @@ export const AudioPlayerWithEncryptedFile = (props: {
         // Note: we need to keep all of those in the customControlSections (and not split them in customProgressBarSection)
         // so that keyboard navigation works as expected
         RHAP_UI.MAIN_CONTROLS,
-        <StyledSpeedButton key="togglePlaybackSpeed">
+        <StyledSpeedButton key="togglePlaybackSpeed" onKeyDown={onKeyDownSpeed}>
           <SessionButton
             text={`${playbackSpeed}x`}
-            onClick={() => {
-              setPlaybackSpeed(playbackSpeed === 1 ? 1.5 : playbackSpeed === 1.5 ? 2 : 1);
-            }}
+            onClick={onChangeSpeed}
             buttonType={SessionButtonType.Simple}
           />
         </StyledSpeedButton>,

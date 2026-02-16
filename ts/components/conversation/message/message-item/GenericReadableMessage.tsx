@@ -128,6 +128,11 @@ export const GenericReadableMessage = (props: Props) => {
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (isButtonClickKey(e)) {
+      if (e.target instanceof HTMLElement && e.target.tagName === 'BUTTON') {
+        // If the target is a button, we don't want to open the context menu as this is
+        // handled by the button itself
+        return;
+      }
       const overrideTriggerPosition = getMessageContainerTriggerPosition();
       if (overrideTriggerPosition) {
         handleContextMenu(e, overrideTriggerPosition);
