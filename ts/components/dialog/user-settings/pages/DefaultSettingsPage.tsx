@@ -1,8 +1,7 @@
-import { type RefObject, useRef, useState } from 'react';
+import { useState } from 'react';
 import styled from 'styled-components';
 import useMount from 'react-use/lib/useMount';
 import { getAppDispatch } from '../../../../state/dispatch';
-import { useHotkey } from '../../../../hooks/useHotkey';
 import { useOurConversationUsername, useOurAvatarPath } from '../../../../hooks/useParamSelector';
 import { UserUtils, ToastUtils } from '../../../../session/utils';
 import { resetConversationExternal } from '../../../../state/ducks/conversations';
@@ -47,35 +46,6 @@ import {
 } from '../../../../state/selectors/proBackendData';
 import { focusVisibleBoxShadowOutsetStr } from '../../../../styles/focusVisible';
 import { createButtonOnKeyDownForClickEventHandler } from '../../../../util/keyboardShortcuts';
-
-const handleKeyQRMode = (mode: ProfileDialogModes, setMode: (mode: ProfileDialogModes) => void) => {
-  switch (mode) {
-    case 'default':
-      setMode('qr');
-      break;
-    case 'qr':
-      setMode('default');
-      break;
-    default:
-  }
-};
-
-const handleKeyCancel = (
-  mode: ProfileDialogModes,
-  setMode: (mode: ProfileDialogModes) => void,
-  inputRef: RefObject<HTMLInputElement | null>
-) => {
-  switch (mode) {
-    case 'qr':
-      if (inputRef.current !== null && document.activeElement === inputRef.current) {
-        return;
-      }
-      setMode('default');
-      break;
-    case 'default':
-    default:
-  }
-};
 
 function SessionIconForSettings(props: Omit<SessionIconProps, 'iconSize' | 'style'>) {
   return (
@@ -365,7 +335,6 @@ export const DefaultSettingPage = (modalState: UserSettingsModalState) => {
 
   const profileName = useOurConversationUsername() || '';
   const [enlargedImage, setEnlargedImage] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   const avatarPath = useOurAvatarPath() || '';
   const us = UserUtils.getOurPubKeyStrFromCache();
@@ -375,9 +344,6 @@ export const DefaultSettingPage = (modalState: UserSettingsModalState) => {
   const showUpdateProfileInformation = () => {
     dispatch(updateConversationDetailsModal({ conversationId: us }));
   };
-
-  useHotkey('v', () => handleKeyQRMode(mode, setMode));
-  useHotkey('Backspace', () => handleKeyCancel(mode, setMode, inputRef));
 
   function copyAccountIdToClipboard() {
     window.clipboard.writeText(us);

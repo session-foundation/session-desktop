@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
-import useKey from 'react-use/lib/useKey';
 import styled from 'styled-components';
 import { List, AutoSizer, ListRowProps } from 'react-virtualized';
 
@@ -32,6 +31,7 @@ import { NoContacts, NoResultsForSearch } from '../../search/NoResults';
 import { SimpleSessionTextarea } from '../../inputs/SimpleSessionTextarea';
 import { tr, tStripped } from '../../../localization/localeTools';
 import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
+import { useEscBlurThenHandler } from '../../../hooks/useKeyboardShortcut';
 
 const ROW_HEIGHT = 50;
 
@@ -136,7 +136,7 @@ export const OverlayClosedGroupV2 = () => {
     );
   }
 
-  useKey('Escape', goBack);
+  useEscBlurThenHandler(goBack);
 
   const noContactsForClosedGroup = isEmpty(searchTerm) && contactsToInvite.length === 0;
   const disableCreateButton = isCreatingGroup || (!selectedMemberIds.length && !groupName.length);

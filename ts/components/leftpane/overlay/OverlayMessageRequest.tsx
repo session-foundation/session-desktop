@@ -1,5 +1,4 @@
 import { useSelector } from 'react-redux';
-import useKey from 'react-use/lib/useKey';
 import styled from 'styled-components';
 import { getAppDispatch } from '../../../state/dispatch';
 import { declineConversationWithoutConfirm } from '../../../interactions/conversationInteractions';
@@ -13,6 +12,7 @@ import { ed25519Str } from '../../../session/utils/String';
 import { Localizer } from '../../basic/Localizer';
 import { sectionActions } from '../../../state/ducks/section';
 import { tr } from '../../../localization/localeTools';
+import { useEscBlurThenHandler } from '../../../hooks/useKeyboardShortcut';
 
 const MessageRequestListPlaceholder = styled.div`
   color: var(--text-secondary-color);
@@ -51,18 +51,13 @@ const StyledLeftPaneOverlay = styled.div`
 `;
 
 export const OverlayMessageRequest = () => {
-  useKey('Escape', closeOverlay);
   const dispatch = getAppDispatch();
 
-  function closeOverlay() {
-    dispatch(sectionActions.resetLeftOverlayMode());
-  }
+  useEscBlurThenHandler(() => dispatch(sectionActions.resetLeftOverlayMode()));
 
   const currentlySelectedConvo = useSelectedConversationKey();
   const messageRequests = useSelector(getConversationRequestsIds);
   const hasRequests = messageRequests.length;
-
-  const buttonText = tr('clearAll');
 
   /**
    * Blocks all message request conversations and synchronizes across linked devices
@@ -114,7 +109,7 @@ export const OverlayMessageRequest = () => {
           <SpacerLG />
           <SessionButton
             buttonColor={SessionButtonColor.Danger}
-            text={buttonText}
+            text={tr('clearAll')}
             onClick={handleClearAllRequestsClick}
           />
           <SpacerLG />

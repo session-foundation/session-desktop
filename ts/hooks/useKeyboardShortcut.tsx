@@ -57,7 +57,7 @@ export function useKeyboardShortcut({ shortcut, handler, disabled, scopeId }: Sh
       return false;
     }
 
-    if (shortcut.keys[0] === e.key.toLowerCase()) {
+    if (shortcut.keys[0].toLowerCase() === e.key.toLowerCase()) {
       e.preventDefault();
       e.stopPropagation();
       return true;
@@ -74,4 +74,52 @@ export function useKeyboardShortcut({ shortcut, handler, disabled, scopeId }: Sh
   };
 
   return useKey(predicate, _handler);
+}
+
+/**
+ * This is a shortcut to blur the active element and only if nothing is active, call the handler.
+ * This can be used to map escape to unfocus a textarea/input, and then close the component containing that item, for instance
+ */
+export function useEscBlurThenHandler(handler: () => void) {
+  useKeyboardShortcut({
+    shortcut: { name: 'Blur then handler', scope: 'global', keys: ['Escape'] },
+    handler: () => {
+      const active = document.activeElement;
+      if (active instanceof HTMLTextAreaElement || active instanceof HTMLInputElement) {
+        active.blur();
+        return;
+      }
+      handler();
+    },
+  });
+}
+
+export function useEscEmptyBlurThenHandler(handler: () => void, clearFn: () => void) {
+  useKeyboardShortcut({
+    shortcut: { name: 'Empty, blur then handler', scope: 'global', keys: ['Escape'] },
+    handler: () => {
+      const active = document.activeElement;
+      // if there are no active element, just call the handler
+      if (!active) {
+        handler();
+        return;
+      }
+
+      // if the active element is not an input/textarea, just call the handler
+      if (!(active instanceof HTMLTextAreaElement) && !(active instanceof HTMLInputElement)) {
+        handler();
+        return;
+      }
+
+      // if the active element is an input/textarea, and it is empty, just call the blur() on it.
+      // The next time Esc is pressed, the handler will be called
+      if (!active.value) {
+        active.blur();
+
+        return;
+      }
+
+      clearFn();
+    },
+  });
 }

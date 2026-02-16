@@ -87,7 +87,7 @@ export const StagedAttachmentList = (props: Props) => {
             unicode={LUCIDE_ICONS_UNICODE.X}
             onClick={onRemoveAllStaged}
             tabIndex={0}
-            padding="var(--margins-xs) var(--margins-xs) 0 0"
+            padding="var(--margins-xs)"
             style={{
               position: 'absolute',
               top: 0,

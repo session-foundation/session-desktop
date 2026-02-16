@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import useKey from 'react-use/lib/useKey';
 import styled from 'styled-components';
 
 import { motion } from 'framer-motion';
@@ -26,6 +25,7 @@ import { Localizer } from '../../basic/Localizer';
 import { SimpleSessionTextarea } from '../../inputs/SimpleSessionTextarea';
 import { tr } from '../../../localization/localeTools';
 import { useLeftOverlayMode } from '../../../state/selectors/section';
+import { useEscBlurThenHandler } from '../../../hooks/useKeyboardShortcut';
 
 const StyledDescriptionContainer = styled(motion.div)`
   margin: 0 auto;
@@ -73,7 +73,7 @@ export const OverlayMessage = () => {
     dispatch(sectionActions.setLeftOverlayMode({ type: 'choose-action', params: null }));
   }
 
-  useKey('Escape', goBack);
+  useEscBlurThenHandler(goBack);
 
   const overlayMode = useLeftOverlayMode();
   const overlayModeIsMessage = overlayMode?.type === 'message';
@@ -176,7 +176,6 @@ export const OverlayMessage = () => {
         value={pubkeyOrOns}
         onValueChanged={setPubkeyOrOns}
         providedError={pubkeyOrOnsError}
-        // centerText={true}
         disabled={loading}
         errorDataTestId="error-message"
         inputDataTestId="new-session-conversation"

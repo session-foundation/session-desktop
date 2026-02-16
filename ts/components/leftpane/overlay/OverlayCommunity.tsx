@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import { useState } from 'react';
-import useKey from 'react-use/lib/useKey';
 import { getAppDispatch } from '../../../state/dispatch';
 
 import { SessionJoinableRooms } from './SessionJoinableDefaultRooms';
@@ -24,6 +23,7 @@ import LIBSESSION_CONSTANTS from '../../../session/utils/libsession/libsession_c
 import { sectionActions } from '../../../state/ducks/section';
 import { SimpleSessionTextarea } from '../../inputs/SimpleSessionTextarea';
 import { tr } from '../../../localization/localeTools';
+import { useEscBlurThenHandler } from '../../../hooks/useKeyboardShortcut';
 
 async function joinOpenGroup(
   serverUrl: string,
@@ -98,7 +98,7 @@ export const OverlayCommunity = () => {
     dispatch(sectionActions.resetLeftOverlayMode());
   }
 
-  useKey('Escape', goBack);
+  useEscBlurThenHandler(goBack);
 
   return (
     <StyledLeftPaneOverlay

@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 
 import { isEmpty, isString } from 'lodash';
-import useKey from 'react-use/lib/useKey';
 import { getAppDispatch } from '../../../../state/dispatch';
 import { SpacerSM } from '../../../basic/Text';
 import { StyledLeftPaneOverlay } from '../OverlayMessage';
@@ -13,6 +12,7 @@ import { tr } from '../../../../localization/localeTools';
 import { useIsInScope } from '../../../../state/focus';
 import { useLeftOverlayModeType } from '../../../../state/selectors/section';
 import { useOverlayChooseAction } from '../../../../hooks/useOverlayChooseAction';
+import { useEscBlurThenHandler } from '../../../../hooks/useKeyboardShortcut';
 
 function useChooseActionOnPaste() {
   const { openNewMessage, openJoinCommunity } = useOverlayChooseAction();
@@ -63,7 +63,7 @@ export const OverlayChooseAction = () => {
     dispatch(sectionActions.resetLeftOverlayMode());
   }
 
-  useKey('Escape', closeOverlay);
+  useEscBlurThenHandler(closeOverlay);
 
   return (
     <StyledLeftPaneOverlay

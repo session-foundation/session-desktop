@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import useKey from 'react-use/lib/useKey';
 
 import useMount from 'react-use/lib/useMount';
@@ -51,15 +51,15 @@ export const LightboxGallery = (props: Props) => {
   const hasPrevious = currentIndex > firstIndex;
   const hasNext = currentIndex < lastIndex;
 
-  const onPrevious = useCallback(() => {
+  const onPrevious = () => {
     setCurrentIndex(Math.max(currentIndex - 1, 0));
-  }, [currentIndex]);
+  };
 
-  const onNext = useCallback(() => {
+  const onNext = () => {
     setCurrentIndex(Math.min(currentIndex + 1, lastIndex));
-  }, [currentIndex, lastIndex]);
+  };
 
-  const handleSave = useCallback(() => {
+  const handleSave = () => {
     const mediaItem = media[currentIndex];
 
     if (isDataBlob && mediaItem.objectURL) {
@@ -75,35 +75,20 @@ export const LightboxGallery = (props: Props) => {
 
       void saveAttachmentToDisk({ ...mediaItem, conversationId: selectedConversation });
     }
-  }, [currentIndex, isDataBlob, media, selectedConversation]);
+  };
 
-  useKey(
-    'ArrowRight',
-    () => {
-      onNext?.();
-    },
-    undefined,
-    [onNext, currentIndex]
-  );
-  useKey(
-    'ArrowLeft',
-    () => {
-      onPrevious?.();
-    },
-    undefined,
-    [onPrevious, currentIndex]
-  );
-  useKey(
-    'Escape',
-    () => {
-      if (onClose) {
-        onClose();
-      }
-      dispatch(updateLightBoxOptions(null));
-    },
-    undefined,
-    [currentIndex, updateLightBoxOptions, dispatch, onClose]
-  );
+  useKey('ArrowRight', () => {
+    onNext?.();
+  });
+  useKey('ArrowLeft', () => {
+    onPrevious?.();
+  });
+  useKey('Escape', () => {
+    if (onClose) {
+      onClose();
+    }
+    dispatch(updateLightBoxOptions(null));
+  });
 
   if (!isDataBlob && !selectedConversation) {
     return null;

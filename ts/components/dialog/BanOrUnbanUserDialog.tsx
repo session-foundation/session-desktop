@@ -1,5 +1,4 @@
 import { useRef, useState } from 'react';
-import useKey from 'react-use/lib/useKey';
 import { getAppDispatch } from '../../state/dispatch';
 
 import { useFocusMount } from '../../hooks/useFocusMount';
@@ -24,6 +23,7 @@ import { tr } from '../../localization/localeTools';
 import { SimpleSessionInput } from '../inputs/SessionInput';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
 import { ModalFlexContainer } from './shared/ModalFlexContainer';
+import { useKeyboardShortcut } from '../../hooks/useKeyboardShortcut';
 
 async function banOrUnBanUserCall(
   convo: ConversationModel,
@@ -124,7 +124,14 @@ export const BanOrUnBanUserDialog = (props: {
     dispatch(updateBanOrUnbanUserModal(null));
   };
 
-  useKey('Escape', onClose);
+  useKeyboardShortcut({
+    shortcut: {
+      keys: ['Escape'],
+      name: 'Close Ban Modal',
+      scope: 'banOrUnbanUserModal',
+    },
+    handler: onClose,
+  });
 
   const buttonText = isBan ? tr('banUser') : tr('banUnbanUser');
 

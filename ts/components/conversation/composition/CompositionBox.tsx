@@ -33,7 +33,6 @@ import {
   StagedAttachmentImportedType,
   StagedPreviewImportedType,
 } from '../../../util/attachment/attachmentsUtil';
-import { CaptionEditor } from '../../CaptionEditor';
 import { Flex } from '../../basic/Flex';
 import { getMediaPermissionsSettings } from '../../settings/SessionSettings';
 import { getDraftForConversation, updateDraftForConversation } from '../SessionConversationDrafts';
@@ -57,13 +56,13 @@ import { showLocalizedPopupDialog } from '../../dialog/LocalizedPopupDialog';
 import { formatNumber } from '../../../util/i18n/formatting/generics';
 import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { showSessionCTA } from '../../dialog/SessionCTA';
-import { tStripped } from '../../../localization/localeTools';
 import type { ProcessedLinkPreviewThumbnailType } from '../../../webworker/workers/node/image_processor/image_processor';
 import { CTAVariant } from '../../dialog/cta/types';
 import { selectWeAreProUser } from '../../../hooks/useHasPro';
 import { closeContextMenus } from '../../../util/contextMenu';
 import type { MessageAttributes } from '../../../models/messageType';
 import { ProWrapperActions } from '../../../webworker/workers/browser/libsession_worker_interface';
+import { updateOutgoingLightBoxOptions } from '../../../state/ducks/modalDialog';
 
 export interface ReplyingToMessageProps {
   convoId: string;
@@ -118,7 +117,6 @@ interface State {
   lastSelectedLength: number; // used for emoji panel replacement
   ignoredLink?: string; // set the ignored url when users closed the link preview
   stagedLinkPreview?: StagedLinkPreviewData;
-  showCaptionEditor?: AttachmentType;
 }
 
 const getDefaultState = (newConvoId?: string) => {
@@ -131,7 +129,6 @@ const getDefaultState = (newConvoId?: string) => {
     lastSelectedLength: 0,
     ignoredLink: undefined,
     stagedLinkPreview: undefined,
-    showCaptionEditor: undefined,
   };
 };
 
@@ -468,52 +465,36 @@ class CompositionBoxInner extends Component<Props, State> {
   }
 
   private onClickAttachment(attachment: AttachmentType) {
-    this.setState({ showCaptionEditor: attachment });
-  }
+    const stagedAttachment = this.props.stagedAttachments.find(a => a.url === attachment.url);
+    // For JPEG images, attachment.url is a low-quality thumbnail.
+    // Use the original file to get the full-quality image for the lightbox.
+    const fullUrl =
+      attachment.videoUrl ||
+      (stagedAttachment?.file ? URL.createObjectURL(stagedAttachment.file) : attachment.url);
 
-  private renderCaptionEditor(attachment?: AttachmentType) {
-    if (attachment) {
-      const onSave = (caption: string) => {
-        // eslint-disable-next-line no-param-reassign
-        attachment.caption = caption;
-        ToastUtils.pushToastInfo('saved', tStripped('saved'));
-        // close the light box on save
-        this.setState({
-          showCaptionEditor: undefined,
-        });
-      };
-
-      const url = attachment.videoUrl || attachment.url;
-      return (
-        <CaptionEditor
-          attachment={attachment}
-          url={url}
-          onSave={onSave}
-          caption={attachment.caption}
-          onClose={() => {
-            this.setState({
-              showCaptionEditor: undefined,
-            });
-          }}
-        />
-      );
-    }
-    return null;
+    window.inboxStore?.dispatch(
+      updateOutgoingLightBoxOptions({
+        attachment,
+        url: fullUrl,
+        onClose: () => {
+          if (stagedAttachment?.file && fullUrl !== attachment.url) {
+            URL.revokeObjectURL(fullUrl);
+          }
+          window.inboxStore?.dispatch(updateOutgoingLightBoxOptions(null));
+        },
+      })
+    );
   }
 
   private renderAttachmentsStaged() {
     const { stagedAttachments } = this.props;
-    const { showCaptionEditor } = this.state;
     if (stagedAttachments && stagedAttachments.length) {
       return (
-        <>
-          <StagedAttachmentList
-            attachments={stagedAttachments}
-            onClickAttachment={this.onClickAttachment}
-            onAddAttachment={this.onChooseAttachment}
-          />
-          {this.renderCaptionEditor(showCaptionEditor)}
-        </>
+        <StagedAttachmentList
+          attachments={stagedAttachments}
+          onClickAttachment={this.onClickAttachment}
+          onAddAttachment={this.onChooseAttachment}
+        />
       );
     }
     return null;

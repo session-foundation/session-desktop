@@ -5,7 +5,7 @@ import { EnterPasswordModalProps } from '../../components/dialog/EnterPasswordMo
 import { HideRecoveryPasswordDialogProps } from '../../components/dialog/HideRecoveryPasswordDialog';
 import { SessionConfirmDialogProps } from '../../components/dialog/SessionConfirm';
 import { MediaItemType } from '../../components/lightbox/LightboxGallery';
-import { AttachmentTypeWithPath } from '../../types/Attachment';
+import { AttachmentTypeWithPath, type AttachmentType } from '../../types/Attachment';
 import type {
   EditProfilePictureModalProps,
   PasswordAction,
@@ -126,6 +126,13 @@ export type LightBoxOptions = {
   onClose?: () => void;
 } | null;
 
+export type OutgoingLightBoxOptions = {
+  attachment: AttachmentType;
+  // the url here is required as it will be the link to the full image
+  url: string;
+  onClose: () => void;
+} | null;
+
 export type DebugMenuModalState = object | null;
 export type KeyboardShortcutsModalState = object | null;
 
@@ -164,6 +171,7 @@ export type ModalId =
   | 'localizedPopupDialog'
   | 'sessionProInfoModal'
   | 'lightBoxOptions'
+  | 'outgoingLightBoxOptions'
   | 'debugMenuModal'
   | 'keyboardShortcutsModal'
   | 'conversationSettingsModal';
@@ -191,6 +199,7 @@ export type ModalState = {
   localizedPopupDialog: LocalizedPopupDialogState;
   sessionProInfoModal: SessionCTAState;
   lightBoxOptions: LightBoxOptions;
+  outgoingLightBoxOptions: OutgoingLightBoxOptions;
   debugMenuModal: DebugMenuModalState;
   keyboardShortcutsModal: KeyboardShortcutsModalState;
   conversationSettingsModal: ConversationSettingsModalState;
@@ -221,6 +230,7 @@ export const initialModalState: ModalState = {
   localizedPopupDialog: null,
   sessionProInfoModal: null,
   lightBoxOptions: null,
+  outgoingLightBoxOptions: null,
   debugMenuModal: null,
   keyboardShortcutsModal: null,
   conversationSettingsModal: null,
@@ -353,6 +363,11 @@ const ModalSlice = createSlice({
       }
       return pushOrPopModal(state, 'lightBoxOptions', lightBoxOptions);
     },
+    updateOutgoingLightBoxOptions(state, action: PayloadAction<OutgoingLightBoxOptions>) {
+      const outgoingLightBoxOptions = action.payload;
+
+      return pushOrPopModal(state, 'outgoingLightBoxOptions', outgoingLightBoxOptions);
+    },
     updateDebugMenuModal(state, action: PayloadAction<DebugMenuModalState>) {
       return pushOrPopModal(state, 'debugMenuModal', action.payload);
     },
@@ -393,6 +408,7 @@ export const {
   updateLocalizedPopupDialog,
   updateSessionCTA,
   updateLightBoxOptions,
+  updateOutgoingLightBoxOptions,
   updateDebugMenuModal,
   updateKeyboardShortcutsMenuModal,
   updateConversationSettingsModal,

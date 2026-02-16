@@ -1,6 +1,5 @@
 import { compact, flatten, isEqual } from 'lodash';
 import { useEffect, useState } from 'react';
-import useKey from 'react-use/lib/useKey';
 import useInterval from 'react-use/lib/useInterval';
 import { getAppDispatch } from '../../../../state/dispatch';
 
@@ -20,6 +19,8 @@ import { Header, HeaderTitle, StyledScrollContainer } from './components';
 import { closeRightPanel } from '../../../../state/ducks/conversations';
 import { useConversationUsernameWithFallback } from '../../../../hooks/useParamSelector';
 import { PubKey } from '../../../../session/types';
+import { useKeyboardShortcut } from '../../../../hooks/useKeyboardShortcut';
+import { KbdShortcut } from '../../../../util/keyboardShortcuts';
 
 async function getMediaGalleryProps(conversationId: string): Promise<{
   documents: Array<MediaItemType>;
@@ -101,11 +102,14 @@ export const RightPanelMedia = () => {
   const isShowing = useIsRightPanelShowing();
   const displayName = useConversationUsernameWithFallback(false, selectedConvoKey);
 
-  const closePanel = () => {
+  const closePanelCb = () => {
     dispatch(closeRightPanel());
   };
 
-  useKey('Escape', closePanel);
+  useKeyboardShortcut({
+    shortcut: KbdShortcut.closeRightPanel,
+    handler: closePanelCb,
+  });
 
   useEffect(() => {
     let isCancelled = false;
@@ -158,7 +162,7 @@ export const RightPanelMedia = () => {
       <Flex $container={true} $flexDirection={'column'} $alignItems={'center'}>
         <Header
           hideCloseButton={false}
-          closeButtonOnClick={closePanel}
+          closeButtonOnClick={closePanelCb}
           paddingTop="var(--margins-2xl)"
         >
           <HeaderTitle>{displayName || PubKey.shorten(selectedConvoKey)}</HeaderTitle>

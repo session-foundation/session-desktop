@@ -24,6 +24,7 @@ import {
   useDebugMenuModal,
   useConversationSettingsModal,
   useKeyboardShortcutsModal,
+  useOutgoingLightBoxOptions,
 } from '../../state/selectors/modal';
 import { LightboxGallery } from '../lightbox/LightboxGallery';
 import { BanOrUnBanUserDialog } from './BanOrUnbanUserDialog';
@@ -50,6 +51,7 @@ import { SessionCTA } from './SessionCTA';
 import { LocalizedPopupDialog } from './LocalizedPopupDialog';
 import { UserSettingsDialog } from './user-settings/UserSettingsDialog';
 import { KeyboardShortcutsModal } from './KeyboardShortcutsModal';
+import { OutgoingLightBox } from '../OutgoingLightBox';
 
 export const ModalContainer = () => {
   const confirmModalState = useConfirmModal();
@@ -74,6 +76,7 @@ export const ModalContainer = () => {
   const localizedPopupDialogState = useLocalizedPopupDialog();
   const sessionProInfoState = useSessionProInfoModal();
   const lightBoxOptions = useLightBoxOptions();
+  const outgoingLightBoxOptions = useOutgoingLightBoxOptions();
   const debugMenuModalState = useDebugMenuModal();
   const keyboardShortcutsModalState = useKeyboardShortcutsModal();
   const conversationSettingsModalState = useConversationSettingsModal();
@@ -115,6 +118,8 @@ export const ModalContainer = () => {
       )}
       {localizedPopupDialogState && <LocalizedPopupDialog {...localizedPopupDialogState} />}
       {lightBoxOptions && <LightboxGallery {...lightBoxOptions} />}
+      {/* this is used to preview in fullscreen the staged attachments */}
+      {outgoingLightBoxOptions && <OutgoingLightBox {...outgoingLightBoxOptions} />}
       {openUrlModalState && <OpenUrlModal {...openUrlModalState} />}
       {sessionProInfoState && <SessionCTA {...sessionProInfoState} />}
       {keyboardShortcutsModalState && <KeyboardShortcutsModal {...keyboardShortcutsModalState} />}

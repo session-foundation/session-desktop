@@ -1,5 +1,4 @@
 import { useSelector } from 'react-redux';
-import useKey from 'react-use/lib/useKey';
 import styled from 'styled-components';
 import { getAppDispatch } from '../../state/dispatch';
 
@@ -20,6 +19,7 @@ import { tr } from '../../localization/localeTools';
 import { ContactName } from './ContactName/ContactName';
 import { QuoteText } from './message/message-content/quote/QuoteText';
 import { useSelectedConversationKey } from '../../state/selectors/selectedConversation';
+import { useEscBlurThenHandler } from '../../hooks/useKeyboardShortcut';
 
 const QuotedMessageComposition = styled(Flex)`
   border-top: var(--default-borders);
@@ -80,7 +80,7 @@ export const SessionQuotedMessageComposition = () => {
     dispatch(quoteMessage(undefined));
   };
 
-  useKey('Escape', removeQuotedMessage, undefined, []);
+  useEscBlurThenHandler(removeQuotedMessage);
 
   if (!author || !quotedMessageProps?.id) {
     return null;

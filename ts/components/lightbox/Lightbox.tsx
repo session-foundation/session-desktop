@@ -1,4 +1,4 @@
-import { CSSProperties, MouseEvent, MutableRefObject, useRef } from 'react';
+import { CSSProperties, MouseEvent, MutableRefObject, useRef, type Ref } from 'react';
 
 import { isUndefined } from 'lodash';
 import useUnmount from 'react-use/lib/useUnmount';
@@ -14,7 +14,9 @@ import { SessionIconSize } from '../icon';
 import { AriaLabels } from '../../util/hardcodedAriaLabels';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
-import { useHotkey } from '../../hooks/useHotkey';
+import { useKeyboardShortcut } from '../../hooks/useKeyboardShortcut';
+import { KbdShortcut } from '../../util/keyboardShortcuts';
+import { SessionFocusTrap } from '../SessionFocusTrap';
 
 type Props = {
   contentType: MIME.MIMEType | undefined;
@@ -136,14 +138,12 @@ interface IconButtonProps {
     | LUCIDE_ICONS_UNICODE.CHEVRON_LEFT
     | LUCIDE_ICONS_UNICODE.X
     | LUCIDE_ICONS_UNICODE.ARROW_DOWN_TO_LINE;
+  ref?: Ref<HTMLButtonElement>;
 }
 
-const IconButton = ({ onClick, unicode }: IconButtonProps) => {
-  const clickHandler = (): void => {
-    if (!onClick) {
-      return;
-    }
-    onClick();
+const IconButton = ({ onClick, unicode, ref }: IconButtonProps) => {
+  const clickHandler = () => {
+    onClick?.();
   };
 
   // default to huge, only download is bigger
@@ -164,6 +164,7 @@ const IconButton = ({ onClick, unicode }: IconButtonProps) => {
         // the lightbox has a dark background
         iconColor="var(--lightbox-icon-stroke-color)"
         onClick={clickHandler}
+        ref={ref}
       />
     </StyledIconButton>
   );
@@ -265,10 +266,11 @@ export const Lightbox = (props: Props) => {
     dispatch(updateLightBoxOptions(null));
   };
 
-  useHotkey('Escape', e => {
-    e.stopPropagation();
-    e.preventDefault();
-    dispatch(updateLightBoxOptions(null));
+  useKeyboardShortcut({
+    shortcut: KbdShortcut.closeLightbox,
+    handler: () => {
+      dispatch(updateLightBoxOptions(null));
+    },
   });
 
   const handleClose = () => {
@@ -278,6 +280,8 @@ export const Lightbox = (props: Props) => {
     dispatch(updateLightBoxOptions(null));
   };
 
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+
   const onContainerClick = (event: MouseEvent<HTMLDivElement>) => {
     if (renderedRef && event.target === renderedRef.current) {
       return;
@@ -286,48 +290,58 @@ export const Lightbox = (props: Props) => {
   };
 
   return (
-    <div style={styles.container} role="dialog" onClick={onContainerClick}>
-      <div style={styles.mainContainer}>
-        <div style={styles.controlsOffsetPlaceholder} />
-        <div style={styles.objectParentContainer} role="button">
-          <div style={styles.objectContainer}>
-            {!isUndefined(contentType) ? (
-              <LightboxObject
-                objectURL={objectURL}
-                contentType={contentType}
-                renderedRef={renderedRef}
-                onObjectClick={onObjectClick}
+    <SessionFocusTrap
+      initialFocus={() => {
+        return closeButtonRef.current;
+      }}
+    >
+      <div style={styles.container} role="dialog" onClick={onContainerClick}>
+        <div style={styles.mainContainer}>
+          <div style={styles.controlsOffsetPlaceholder} />
+          <div style={styles.objectParentContainer} role="button">
+            <div style={styles.objectContainer}>
+              {!isUndefined(contentType) ? (
+                <LightboxObject
+                  objectURL={objectURL}
+                  contentType={contentType}
+                  renderedRef={renderedRef}
+                  onObjectClick={onObjectClick}
+                />
+              ) : null}
+              {caption ? <div style={styles.caption}>{caption}</div> : null}
+            </div>
+          </div>
+          <div style={styles.controls}>
+            <Flex $container={true}>
+              <IconButton
+                unicode={LUCIDE_ICONS_UNICODE.X}
+                onClick={handleClose}
+                ref={closeButtonRef}
+              />
+            </Flex>
+
+            {onSave ? (
+              <IconButton
+                unicode={LUCIDE_ICONS_UNICODE.ARROW_DOWN_TO_LINE}
+                onClick={onSave}
+                style={styles.saveButton}
               />
             ) : null}
-            {caption ? <div style={styles.caption}>{caption}</div> : null}
           </div>
         </div>
-        <div style={styles.controls}>
-          <Flex $container={true}>
-            <IconButton unicode={LUCIDE_ICONS_UNICODE.X} onClick={handleClose} />
-          </Flex>
-
-          {onSave ? (
-            <IconButton
-              unicode={LUCIDE_ICONS_UNICODE.ARROW_DOWN_TO_LINE}
-              onClick={onSave}
-              style={styles.saveButton}
-            />
-          ) : null}
+        <div style={styles.navigationContainer as any}>
+          {onPrevious ? (
+            <IconButton unicode={LUCIDE_ICONS_UNICODE.CHEVRON_LEFT} onClick={onPrevious} />
+          ) : (
+            <IconButtonPlaceholder />
+          )}
+          {onNext ? (
+            <IconButton unicode={LUCIDE_ICONS_UNICODE.CHEVRON_RIGHT} onClick={onNext} />
+          ) : (
+            <IconButtonPlaceholder />
+          )}
         </div>
       </div>
-      <div style={styles.navigationContainer as any}>
-        {onPrevious ? (
-          <IconButton unicode={LUCIDE_ICONS_UNICODE.CHEVRON_LEFT} onClick={onPrevious} />
-        ) : (
-          <IconButtonPlaceholder />
-        )}
-        {onNext ? (
-          <IconButton unicode={LUCIDE_ICONS_UNICODE.CHEVRON_RIGHT} onClick={onNext} />
-        ) : (
-          <IconButtonPlaceholder />
-        )}
-      </div>
-    </div>
+    </SessionFocusTrap>
   );
 };

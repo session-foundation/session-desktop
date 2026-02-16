@@ -7,13 +7,11 @@ import { getAppDispatch } from '../state/dispatch';
 import { searchActions, type DoSearchActionType, type SearchType } from '../state/ducks/search';
 import { getConversationsCount } from '../state/selectors/conversations';
 import { useLeftOverlayModeType } from '../state/selectors/section';
-import { useHotkey } from '../hooks/useHotkey';
 import { tr } from '../localization/localeTools';
 import { SessionLucideIconButton } from './icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from './icon/lucide';
 import { LucideIcon } from './icon/LucideIcon';
-import { useKeyboardShortcut } from '../hooks/useKeyboardShortcut';
-import { KbdShortcut } from '../util/keyboardShortcuts';
+import { useEscEmptyBlurThenHandler } from '../hooks/useKeyboardShortcut';
 import { focusVisibleBoxShadowInset } from '../styles/focusVisible';
 
 const StyledSearchInput = styled.div`
@@ -76,25 +74,13 @@ export const SessionSearchInput = ({ searchType }: { searchType: SearchType }) =
 
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useHotkey('Escape', () => {
-    if (inputRef.current !== null && inputRef.current === document.activeElement) {
+  useEscEmptyBlurThenHandler(
+    () => {},
+    () => {
       setCurrentSearchTerm('');
       dispatch(searchActions.clearSearch());
     }
-  });
-
-  const isDisabled = () =>
-    !(inputRef.current !== null && inputRef.current !== document.activeElement);
-
-  useKeyboardShortcut({
-    shortcut: KbdShortcut.conversationListSearch,
-    handler: () => {
-      if (!isDisabled() && inputRef.current) {
-        inputRef.current.focus();
-      }
-    },
-    disabled: isDisabled,
-  });
+  );
 
   // just after onboard we only have a conversation with ourself
   if (convoCount <= 1) {

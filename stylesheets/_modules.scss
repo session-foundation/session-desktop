@@ -311,59 +311,6 @@
   background-color: rgba(0, 0, 0, 0.7);
 }
 
-// Module: Caption Editor
-.module-caption-editor {
-  background-color: rgba(0, 0, 0, 0.8);
-  z-index: 20;
-
-  position: fixed;
-  left: 0;
-  right: 0;
-  top: 0;
-  bottom: 0;
-
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-
-  .session-button {
-    margin-inline-start: 15px;
-  }
-}
-
-.module-caption-editor__media-container {
-  flex-grow: 1;
-  flex-shrink: 1;
-  text-align: center;
-  margin: 50px;
-  overflow: hidden;
-  height: 100%;
-}
-.module-caption-editor__image {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-
-  flex-grow: 1;
-  flex-shrink: 1;
-}
-.module-caption-editor__video {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-
-  flex-grow: 1;
-  flex-shrink: 1;
-}
-.module-caption-editor__placeholder {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-
-  flex-grow: 1;
-  flex-shrink: 1;
-}
-
 // Module: Left Pane
 
 // Module H5AudioPlayer

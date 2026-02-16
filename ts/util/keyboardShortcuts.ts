@@ -12,16 +12,36 @@ export function debugKeyboardShortcutsLog(...args: Array<unknown>) {
 }
 
 export function isButtonClickKey(e: KeyboardEvent<HTMLElement>) {
-  return e && (e.key === 'Enter' || e.code === 'Space');
+  return e && (e.key.toLowerCase() === 'enter' || e.code === 'Space');
+}
+
+export function isEscapeKey(e: KeyboardEvent<unknown>) {
+  return e && (e.key.toLowerCase() === 'escape' || e.key.toLowerCase() === 'esc');
 }
 
 export function createButtonOnKeyDownForClickEventHandler(
   callback: (e: KeyboardEvent<HTMLElement> | MouseEvent<HTMLElement>) => void,
-  allowPropagation?: boolean
+  allowPropagation: boolean = false
 ) {
   return (e: KeyboardEvent<HTMLElement>) => {
     debugKeyboardShortcutsLog(`createButtonOnKeyDownForClickEventHandler fn called with: `, e);
     if (isButtonClickKey(e)) {
+      if (!allowPropagation) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      callback(e);
+    }
+  };
+}
+
+export function createOnKeyDownForEscapeEventHandler(
+  callback: (e: KeyboardEvent<HTMLElement> | MouseEvent<HTMLElement>) => void,
+  allowPropagation: boolean
+) {
+  return (e: KeyboardEvent<HTMLElement>) => {
+    debugKeyboardShortcutsLog(`createOnKeyDownForEscapeEventHandler fn called with: `, e);
+    if (isEscapeKey(e)) {
       if (!allowPropagation) {
         e.preventDefault();
         e.stopPropagation();
@@ -108,10 +128,19 @@ export const KbdShortcut = {
     withCtrl: true,
     keys: ['f'],
   },
+
+  // Right Panel Shortcuts
+  closeRightPanel: { name: 'Close Panel', scope: 'rightPanel', keys: ['Escape'] },
+
   // Conversation Shortcuts
   conversationFocusTextArea: {
     name: 'Focus Text Area',
     scope: 'conversationList',
+    keys: ['Escape'],
+  },
+  closeLightbox: {
+    name: 'Close Light box',
+    scope: 'lightBoxOptions',
     keys: ['Escape'],
   },
   conversationUploadAttachment: {

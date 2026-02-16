@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { clipboard } from 'electron';
 import useTimeoutFn from 'react-use/lib/useTimeoutFn';
 
-import { useHotkey } from '../../hooks/useHotkey';
 import { ToastUtils } from '../../session/utils';
 import { SessionButtonProps, type SessionButtonColor } from '../basic/SessionButton';
 import { SessionIconButtonProps, SessionLucideIconButton } from '../icon/SessionIconButton';
@@ -17,23 +16,14 @@ import { focusVisibleOutlineStr } from '../../styles/focusVisible';
 type CopyProps = {
   copyContent?: string;
   onCopyComplete?: (copiedValue: string | undefined) => void;
-  hotkey?: boolean;
 } & { buttonColor: SessionButtonColor };
 
 type CopyToClipboardButtonProps = Omit<SessionButtonProps, 'children' | 'onClick' | 'buttonColor'> &
   CopyProps;
 
 export const CopyToClipboardButton = (props: CopyToClipboardButtonProps) => {
-  const {
-    copyContent,
-    onCopyComplete,
-    hotkey = false,
-    text,
-    buttonType,
-    buttonColor,
-    dataTestId,
-    disabled,
-  } = props;
+  const { copyContent, onCopyComplete, text, buttonType, buttonColor, dataTestId, disabled } =
+    props;
   const [copied, setCopied] = useState(false);
 
   // reset the copied state after 5 seconds
@@ -63,8 +53,6 @@ export const CopyToClipboardButton = (props: CopyToClipboardButtonProps) => {
     }
   };
 
-  useHotkey('c', onClick, !hotkey);
-
   return (
     <ModalBottomButtonWithBorder
       aria-label={'copy to clipboard button'}
@@ -87,7 +75,7 @@ type CopyToClipboardIconProps = Omit<
 export const CopyToClipboardIcon = (
   props: CopyToClipboardIconProps & { copyContent: string; iconSize: SessionIconSize }
 ) => {
-  const { copyContent, onCopyComplete, hotkey = false } = props;
+  const { copyContent, onCopyComplete } = props;
 
   const onClick = () => {
     clipboard.writeText(copyContent);
@@ -97,8 +85,6 @@ export const CopyToClipboardIcon = (
       onCopyComplete(copyContent);
     }
   };
-
-  useHotkey('c', onClick, !hotkey);
 
   return (
     <SessionLucideIconButton
