@@ -2,7 +2,7 @@ import { isEmpty } from 'lodash';
 import { useSelector } from 'react-redux';
 import { AutoSizer, List, ListRowProps } from 'react-virtualized';
 import styled from 'styled-components';
-import { useRef, type JSX } from 'react';
+import { type JSX } from 'react';
 import { getAppDispatch } from '../../state/dispatch';
 
 import { SearchResults } from '../search/SearchResults';
@@ -156,11 +156,9 @@ function useConversationList() {
   };
 }
 
-const ConversationList = () => {
+function ConversationList() {
   const { searchTerm, conversationIds } = useConversationList();
   useConversationListKeyboardShortcuts(conversationIds);
-  const ref = useRef<List>(null);
-  const isMouseFocusRef = useRef(false);
 
   if (!isEmpty(searchTerm)) {
     return <SearchResults />;
@@ -174,31 +172,29 @@ const ConversationList = () => {
 
   return (
     <StyledLeftPaneList
-      key={`conversation-list-0`}
-      onPointerDown={() => {
-        isMouseFocusRef.current = true;
+      key="conversation-list-0"
+      onPointerDown={e => {
+        e.currentTarget.dataset.mouseFocus = 'true';
       }}
       onFocusCapture={e => {
-        if (!isMouseFocusRef.current) {
+        // [react-compiler] is a pain. The good way would be to have two useRefs here, but for some reason the compiler doesn't like that.
+        // Hopefully a release of react will fix it.
+        if (e.currentTarget.dataset.mouseFocus !== 'true') {
           const container = e.currentTarget;
           // Only scroll to top when focus enters from outside the list
           if (!container.contains(e.relatedTarget as Node)) {
-            ref.current?.scrollToRow(0);
-            requestAnimationFrame(() => {
-              const firstItem = container.querySelector<HTMLElement>(
-                '.module-conversation-list-item'
-              );
-              firstItem?.focus();
-            });
+            container.querySelector<HTMLElement>('.ReactVirtualized__List')?.scrollTo(0, 0);
+            setTimeout(() => {
+              container.querySelector<HTMLElement>('.module-conversation-list-item')?.focus();
+            }, 100);
           }
         }
-        isMouseFocusRef.current = false;
+        delete e.currentTarget.dataset.mouseFocus;
       }}
     >
       <AutoSizer>
         {({ height, width }) => (
           <List
-            ref={ref}
             tabIndex={-1}
             height={height}
             rowCount={conversationIds.length}
@@ -213,9 +209,9 @@ const ConversationList = () => {
       </AutoSizer>
     </StyledLeftPaneList>
   );
-};
+}
 
-export const LeftPaneMessageSection = () => {
+export function LeftPaneMessageSection() {
   const leftOverlayMode = useLeftOverlayModeType();
   const dispatch = getAppDispatch();
 
@@ -239,4 +235,4 @@ export const LeftPaneMessageSection = () => {
       )}
     </StyledLeftPaneContent>
   );
-};
+}

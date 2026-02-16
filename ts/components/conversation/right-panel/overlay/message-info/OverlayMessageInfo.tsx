@@ -288,6 +288,8 @@ function useClosePanelIfMessageDeleted(sender?: string) {
   }, [sender, dispatch]);
 }
 
+const useKeyboardShortcutLocal = useKeyboardShortcut;
+
 export const OverlayMessageInfo = () => {
   const dispatch = getAppDispatch();
 
@@ -308,7 +310,7 @@ export const OverlayMessageInfo = () => {
 
   const closePanelCb = () => closePanel(dispatch);
 
-  useKeyboardShortcut({
+  useKeyboardShortcutLocal({
     shortcut: KbdShortcut.closeRightPanel,
     handler: closePanelCb,
   });

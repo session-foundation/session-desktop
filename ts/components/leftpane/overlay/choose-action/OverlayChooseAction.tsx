@@ -53,6 +53,8 @@ function useOverlayChooseActionWrapper() {
   return useOverlayChooseAction();
 }
 
+const useEscBlurThenHandlerLocal = useEscBlurThenHandler;
+
 export const OverlayChooseAction = () => {
   const dispatch = getAppDispatch();
   const { openNewMessage, openCreateGroup, openJoinCommunity, inviteAFriend } =
@@ -63,7 +65,7 @@ export const OverlayChooseAction = () => {
     dispatch(sectionActions.resetLeftOverlayMode());
   }
 
-  useEscBlurThenHandler(closeOverlay);
+  useEscBlurThenHandlerLocal(closeOverlay);
 
   return (
     <StyledLeftPaneOverlay

@@ -73,6 +73,8 @@ function useGroupNameError() {
   return { groupNameError, setGroupNameError };
 }
 
+const useEscBlurThenHandlerLocal = useEscBlurThenHandler;
+
 export const OverlayClosedGroupV2 = () => {
   const dispatch = getAppDispatch();
   const us = useOurPkStrInternal();
@@ -136,7 +138,7 @@ export const OverlayClosedGroupV2 = () => {
     );
   }
 
-  useEscBlurThenHandler(goBack);
+  useEscBlurThenHandlerLocal(goBack);
 
   const noContactsForClosedGroup = isEmpty(searchTerm) && contactsToInvite.length === 0;
   const disableCreateButton = isCreatingGroup || (!selectedMemberIds.length && !groupName.length);
