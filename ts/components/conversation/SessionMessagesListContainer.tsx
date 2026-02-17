@@ -1,5 +1,3 @@
-import { contextMenu } from 'react-contexify';
-
 import { connect } from 'react-redux';
 
 import autoBind from 'auto-bind';
@@ -30,6 +28,7 @@ import { TypingBubble } from './TypingBubble';
 import { StyledMessageBubble } from './message/message-content/MessageBubble';
 import { StyledMentionAnother } from './AddMentions';
 import { MessagesContainerRefContext } from '../../contexts/MessagesContainerRefContext';
+import { closeContextMenus } from '../../util/contextMenu';
 
 export type SessionMessageListProps = {
   messageContainerRef: RefObject<HTMLDivElement | null>;
@@ -160,7 +159,7 @@ class SessionMessagesListContainerInner extends Component<Props> {
   // ~~~~~~~~~~~~ SCROLLING METHODS ~~~~~~~~~~~~~
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   private handleScroll() {
-    contextMenu.hideAll();
+    closeContextMenus();
   }
 
   /**

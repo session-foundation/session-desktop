@@ -63,6 +63,7 @@ export const OverlayChooseAction = () => {
 
   function closeOverlay() {
     dispatch(sectionActions.resetLeftOverlayMode());
+    return true;
   }
 
   useEscBlurThenHandlerLocal(closeOverlay);

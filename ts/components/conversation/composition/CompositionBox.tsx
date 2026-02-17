@@ -63,6 +63,7 @@ import { closeContextMenus } from '../../../util/contextMenu';
 import type { MessageAttributes } from '../../../models/messageType';
 import { ProWrapperActions } from '../../../webworker/workers/browser/libsession_worker_interface';
 import { updateOutgoingLightBoxOptions } from '../../../state/ducks/modalDialog';
+import { isEscapeKey } from '../../../util/keyboardShortcuts';
 
 export interface ReplyingToMessageProps {
   convoId: string;
@@ -534,7 +535,7 @@ class CompositionBoxInner extends Component<Props, State> {
    * @param event - Keyboard event.
    */
   private async onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
-    if (event.key === 'Escape' && this.state.showEmojiPanel) {
+    if (isEscapeKey(event) && this.state.showEmojiPanel) {
       this.hideEmojiPanel();
       return;
     }

@@ -37,6 +37,7 @@ type SpacerProps = {
 const SpacerStyled = styled.div<SpacerProps>`
   width: ${props => `var(--margins-${props.size})`};
   height: ${props => `var(--margins-${props.size})`};
+  flex-shrink: 0;
 `;
 
 const Spacer = (props: SpacerProps) => {

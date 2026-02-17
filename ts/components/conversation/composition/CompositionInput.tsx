@@ -15,6 +15,7 @@ import { isUndefined } from 'lodash';
 import { useDebouncedSpellcheck } from '../../../hooks/useDebouncedSpellcheck';
 import { useDebouncedSelectAllOnTripleClickHandler } from '../../../hooks/useDebouncedSelectAllOnTripleClickHandler';
 import { useHistory } from '../../../hooks/useHistory';
+import { focusVisibleDisabled } from '../../../styles/focusVisible';
 
 enum DATA_ATTRIBUTE {
   NODE = 'data-con-node',
@@ -945,10 +946,7 @@ const CompositionInput = styled(UnstyledCompositionInput)<{
   }
 
   // the caret is already there to say that this is focused
-  &:focus-visible {
-    outline: none;
-    box-shadow: none;
-  }
+  ${focusVisibleDisabled()}
 `;
 
 export default CompositionInput;

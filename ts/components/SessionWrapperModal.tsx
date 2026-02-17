@@ -20,6 +20,7 @@ import {
   ModalHasActionButtonContext,
   useModalHasActionButtonContext,
 } from '../contexts/ModalHasActionButtonContext';
+import { isEscapeKey } from '../util/keyboardShortcuts';
 
 type WithExtraLeftButton = {
   /**
@@ -431,7 +432,7 @@ export const SessionWrapperModal = (props: SessionWrapperModalType & { onClose?:
     if (!isTopModal) {
       return false;
     }
-    return event.key === 'Esc' || event.key === 'Escape';
+    return isEscapeKey(event);
   }, onClose);
 
   const handleClick = (e: any) => {

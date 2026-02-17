@@ -27,7 +27,7 @@ const StyledMenuButton = styled.button`
   color: var(--menu-button-icon-color);
 
   &:hover,
-  &:focus {
+  &:focus-visible {
     background: var(--menu-button-background-hover-color);
     border-color: var(--menu-button-border-hover-color);
     color: var(--menu-button-icon-hover-color);

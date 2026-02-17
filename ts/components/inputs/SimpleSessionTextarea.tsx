@@ -12,7 +12,13 @@ import {
 } from './SessionInput';
 import { useUpdateInputValue } from './useUpdateInputValue';
 import { SpacerMD } from '../basic/Text';
-import { focusVisibleOutline } from '../../styles/focusVisible';
+import { focusVisibleDisabled } from '../../styles/focusVisible';
+import { isEscapeKey } from '../../util/keyboardShortcuts';
+
+const StyledTextArea = styled.textarea`
+  // the caret is already there to say that this is focused
+  ${focusVisibleDisabled()}
+`;
 
 export const StyledTextAreaContainer = styled(motion.div)<{
   $error: boolean;
@@ -56,9 +62,6 @@ export const StyledTextAreaContainer = styled(motion.div)<{
     &::placeholder {
       color: var(--text-secondary-color);
     }
-
-    // we do not want --outline-focus-visible-small-offset to be applied here
-    ${focusVisibleOutline('var(--margins-sm)')}
   }
 `;
 
@@ -156,14 +159,14 @@ export const SimpleSessionTextarea = (
     >
       <BorderWithErrorState hasError={hasError}>
         <StyledTextAreaContainer $error={hasError} $textSize={textSize} $padding={padding}>
-          <textarea
+          <StyledTextArea
             {...inputProps}
             placeholder={disabled ? value : placeholder}
             ref={ref}
             aria-label={ariaLabel}
             spellCheck={false} // maybe we should make this a prop, but it seems we never want spellcheck for those fields
             onKeyDown={e => {
-              if (e.key === 'Escape' && allowEscapeKeyPassthrough) {
+              if (isEscapeKey(e) && allowEscapeKeyPassthrough) {
                 return;
               }
               if (!props.singleLine) {

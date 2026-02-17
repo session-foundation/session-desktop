@@ -49,7 +49,7 @@ import LIBSESSION_CONSTANTS from '../../../session/utils/libsession/libsession_c
 import { Mention } from '../AddMentions';
 import { useDebugInputCommands } from '../../dialog/debug/hooks/useDebugInputCommands';
 import { useKeyboardShortcut } from '../../../hooks/useKeyboardShortcut';
-import { KbdShortcut } from '../../../util/keyboardShortcuts';
+import { isEscapeKey, KbdShortcut } from '../../../util/keyboardShortcuts';
 import { PopoverTriggerPosition } from '../../SessionTooltip';
 import { getAppDispatch } from '../../../state/dispatch';
 import { setIsCompositionTextAreaFocused } from '../../../state/ducks/conversations';
@@ -356,7 +356,7 @@ function useHandleKeyDown({
         return;
       }
 
-      if (e.key === 'Escape') {
+      if (isEscapeKey(e)) {
         // Exit mention mode and disable escape default behaviour
         e.preventDefault();
         handleMentionCleanup();

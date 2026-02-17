@@ -11,8 +11,9 @@ import { tr } from '../localization/localeTools';
 import { SessionLucideIconButton } from './icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from './icon/lucide';
 import { LucideIcon } from './icon/LucideIcon';
-import { useEscEmptyBlurThenHandler } from '../hooks/useKeyboardShortcut';
-import { focusVisibleBoxShadowInset } from '../styles/focusVisible';
+import { useKeyboardShortcut } from '../hooks/useKeyboardShortcut';
+import { focusVisibleDisabled } from '../styles/focusVisible';
+import { isEscapeKey, KbdShortcut } from '../util/keyboardShortcuts';
 
 const StyledSearchInput = styled.div`
   height: var(--search-input-height);
@@ -40,12 +41,8 @@ const StyledInput = styled.input`
   background: none;
   color: var(--text-secondary-color);
 
-  &:focus {
-    color: var(--text-primary-color);
-    outline: none !important;
-  }
-
-  ${focusVisibleBoxShadowInset('var(--border-radius)')}
+  // the caret is already there to say that this is focused
+  ${focusVisibleDisabled()}
 `;
 
 const doTheSearch = (dispatch: Dispatch<any>, searchOpts: DoSearchActionType) => {
@@ -74,13 +71,10 @@ export const SessionSearchInput = ({ searchType }: { searchType: SearchType }) =
 
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEscEmptyBlurThenHandler(
-    () => {},
-    () => {
-      setCurrentSearchTerm('');
-      dispatch(searchActions.clearSearch());
-    }
-  );
+  useKeyboardShortcut({
+    shortcut: KbdShortcut.conversationListSearch,
+    handler: () => inputRef.current?.focus(),
+  });
 
   // just after onboard we only have a conversation with ourself
   if (convoCount <= 1) {
@@ -119,6 +113,20 @@ export const SessionSearchInput = ({ searchType }: { searchType: SearchType }) =
         }}
         placeholder={placeholder}
         style={{ borderWidth: '0' }}
+        onKeyDown={e => {
+          if (isEscapeKey(e)) {
+            if (currentSearchTerm.length) {
+              setCurrentSearchTerm('');
+              dispatch(searchActions.clearSearch());
+              e.stopPropagation();
+              e.preventDefault();
+            } else {
+              inputRef.current?.blur();
+              e.stopPropagation();
+              e.preventDefault();
+            }
+          }
+        }}
       />
       {currentSearchTerm.length ? (
         <SessionLucideIconButton

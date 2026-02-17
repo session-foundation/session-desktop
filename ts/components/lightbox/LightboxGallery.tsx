@@ -77,12 +77,22 @@ export const LightboxGallery = (props: Props) => {
     }
   };
 
-  useKey('ArrowRight', () => {
-    onNext?.();
-  });
-  useKey('ArrowLeft', () => {
-    onPrevious?.();
-  });
+  useKey(
+    'ArrowRight',
+    () => {
+      onNext?.();
+    },
+    undefined,
+    [onNext]
+  );
+  useKey(
+    'ArrowLeft',
+    () => {
+      onPrevious?.();
+    },
+    undefined,
+    [onPrevious]
+  );
   useKey('Escape', () => {
     if (onClose) {
       onClose();

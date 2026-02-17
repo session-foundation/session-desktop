@@ -6,7 +6,7 @@ import { updateConfirmModal } from '../../../state/ducks/modalDialog';
 import { getConversationRequestsIds } from '../../../state/selectors/conversations';
 import { useSelectedConversationKey } from '../../../state/selectors/selectedConversation';
 import { SessionButton, SessionButtonColor } from '../../basic/SessionButton';
-import { SpacerLG } from '../../basic/Text';
+import { SpacerLG, SpacerSM } from '../../basic/Text';
 import { ConversationListItem } from '../conversation-list-item/ConversationListItem';
 import { ed25519Str } from '../../../session/utils/String';
 import { Localizer } from '../../basic/Localizer';
@@ -30,10 +30,11 @@ const MessageRequestListContainer = styled.div`
  * @returns List of message request items
  */
 const MessageRequestList = () => {
-  const conversationRequests = useSelector(getConversationRequestsIds);
+  const conversationRequestsIds = useSelector(getConversationRequestsIds);
+
   return (
     <MessageRequestListContainer>
-      {conversationRequests.map(conversationId => {
+      {conversationRequestsIds.map(conversationId => {
         return <ConversationListItem key={conversationId} conversationId={conversationId} />;
       })}
     </MessageRequestListContainer>
@@ -53,7 +54,10 @@ const StyledLeftPaneOverlay = styled.div`
 export const OverlayMessageRequest = () => {
   const dispatch = getAppDispatch();
 
-  useEscBlurThenHandler(() => dispatch(sectionActions.resetLeftOverlayMode()));
+  useEscBlurThenHandler(() => {
+    dispatch(sectionActions.resetLeftOverlayMode());
+    return true;
+  });
 
   const currentlySelectedConvo = useSelectedConversationKey();
   const messageRequests = useSelector(getConversationRequestsIds);
@@ -106,13 +110,13 @@ export const OverlayMessageRequest = () => {
       {hasRequests ? (
         <>
           <MessageRequestList />
-          <SpacerLG />
+          <SpacerSM />
           <SessionButton
             buttonColor={SessionButtonColor.Danger}
             text={tr('clearAll')}
             onClick={handleClearAllRequestsClick}
           />
-          <SpacerLG />
+          <SpacerSM />
         </>
       ) : (
         <>

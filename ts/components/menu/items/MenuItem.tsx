@@ -1,6 +1,13 @@
 import type { ReactNode, SessionDataTestId } from 'react';
 import styled from 'styled-components';
-import { Item, ItemProps, Menu as MenuOriginal, Submenu, type MenuProps } from 'react-contexify';
+import {
+  Item,
+  ItemProps,
+  Menu as MenuOriginal,
+  Submenu,
+  type ItemParams,
+  type MenuProps,
+} from 'react-contexify';
 import { SessionLucideIconButton } from '../../icon/SessionIconButton';
 import { SpacerSM } from '../../basic/Text';
 import { isLucideIcon, LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
@@ -8,6 +15,7 @@ import { SessionIcon, type SessionIconType } from '../../icon';
 import { LucideIcon } from '../../icon/LucideIcon';
 import { Flex } from '../../basic/Flex';
 import { getMenuAnimation } from '../MenuAnimation';
+import { closeContextMenus } from '../../../util/contextMenu';
 
 function isReactNode(
   iconType: LUCIDE_ICONS_UNICODE | SessionIconType | ReactNode | null
@@ -62,6 +70,7 @@ export function MenuItem({
   dataTestId,
   iconType,
   isDangerAction,
+  onClick,
   ...props
 }: Omit<ItemProps, 'data-testid'> & {
   dataTestId?: SessionDataTestId;
@@ -72,6 +81,12 @@ export function MenuItem({
     <Item
       data-testid={dataTestId || 'context-menu-item'}
       {...props}
+      onClick={(args: ItemParams) => {
+        if (onClick) {
+          onClick(args);
+          closeContextMenus();
+        }
+      }}
       className={isDangerAction ? 'danger' : ''}
     >
       <StyledItemContainer

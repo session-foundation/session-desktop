@@ -77,7 +77,9 @@ export const SessionQuotedMessageComposition = () => {
   const { author, attachments, text: quoteText } = quotedMessageProps || {};
 
   const removeQuotedMessage = () => {
+    const cancelPropagation = !!quotedMessageProps?.id;
     dispatch(quoteMessage(undefined));
+    return cancelPropagation;
   };
 
   useEscBlurThenHandler(removeQuotedMessage);

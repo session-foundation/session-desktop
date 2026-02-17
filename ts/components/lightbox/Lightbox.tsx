@@ -181,7 +181,7 @@ const LightboxObject = ({
   objectURL: string;
   contentType: MIME.MIMEType;
   renderedRef: MutableRefObject<any>;
-  onObjectClick: (event: any) => any;
+  onObjectClick: (e?: MouseEvent<HTMLButtonElement>) => void;
 }) => {
   const { urlToLoad } = useEncryptedFileFetch(objectURL, contentType, false);
 
@@ -261,8 +261,8 @@ export const Lightbox = (props: Props) => {
   const dispatch = getAppDispatch();
   const { caption, contentType, objectURL, onNext, onPrevious, onSave, onClose } = props;
 
-  const onObjectClick = (event: any) => {
-    event.stopPropagation();
+  const onObjectClick = (event?: MouseEvent<HTMLButtonElement>) => {
+    event?.stopPropagation();
     dispatch(updateLightBoxOptions(null));
   };
 

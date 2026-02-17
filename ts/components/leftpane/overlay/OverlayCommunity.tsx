@@ -96,6 +96,7 @@ export const OverlayCommunity = () => {
 
   function goBack() {
     dispatch(sectionActions.resetLeftOverlayMode());
+    return true;
   }
 
   useEscBlurThenHandler(goBack);

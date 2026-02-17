@@ -19,6 +19,8 @@ import { ShowHideButton, type ShowHideButtonProps } from './ShowHidePasswordButt
 import type { TrArgs } from '../../localization/localeTools';
 import { useUpdateInputValue } from './useUpdateInputValue';
 import { StyledTextAreaContainer } from './SimpleSessionTextarea';
+import { focusVisibleDisabled } from '../../styles/focusVisible';
+import { isEscapeKey } from '../../util/keyboardShortcuts';
 
 export type SessionInputTextSizes = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
@@ -101,6 +103,9 @@ const StyledInput = styled(motion.input)<{
     color: var(--text-secondary-color);
     ${props => props.$centerText && 'text-align: center;'}
   }
+
+  // the caret is already there to say that this is focused
+  ${focusVisibleDisabled()}
 `;
 
 export function BorderWithErrorState({
@@ -299,7 +304,7 @@ export const SimpleSessionInput = (props: SimpleSessionInputProps) => {
       event.preventDefault();
       onEnterPressed();
     }
-    if (event.key === 'Escape' && allowEscapeKeyPassthrough) {
+    if (isEscapeKey(event) && allowEscapeKeyPassthrough) {
       return;
     }
     event.stopPropagation();

@@ -1,19 +1,12 @@
 import type { JSX } from 'react';
-import { contextMenu } from 'react-contexify';
 import { useConvoIdFromContext } from '../../contexts/ConvoIdContext';
 import {
   useIsIncomingRequest,
   useIsPrivate,
-  useIsPrivateAndFriend,
   useNotificationSetting,
 } from '../../hooks/useParamSelector';
-import {
-  handleAcceptConversationRequestWithoutConfirm,
-  markAllReadByConvoId,
-} from '../../interactions/conversationInteractions';
-import { ConvoHub } from '../../session/conversations';
+import { handleAcceptConversationRequestWithoutConfirm } from '../../interactions/conversationInteractions';
 import { PubKey } from '../../session/types';
-import { useIsMessageRequestOverlayShown } from '../../state/selectors/section';
 import { MenuItem, SubMenuItem } from './items/MenuItem';
 import { NetworkTime } from '../../util/NetworkTime';
 import { useShowNotificationFor } from '../menuAndSettingsHooks/useShowNotificationFor';
@@ -34,7 +27,6 @@ import { useShowNoteToSelfCb } from '../menuAndSettingsHooks/useShowNoteToSelf';
 import { useShowUserDetailsCbFromConversation } from '../menuAndSettingsHooks/useShowUserDetailsCb';
 import { useDeclineMessageRequest } from '../menuAndSettingsHooks/useDeclineMessageRequest';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
-import { MailWithUnreadIcon } from '../icon/MailWithUnreadIcon';
 
 /** Menu items standardized */
 
@@ -50,32 +42,6 @@ export const InviteContactMenuItem = (): JSX.Element | null => {
         isDangerAction={false}
       >
         {tr('membersInvite')}
-      </MenuItem>
-    );
-  }
-  return null;
-};
-
-export const MarkConversationUnreadMenuItem = (): JSX.Element | null => {
-  const conversationId = useConvoIdFromContext();
-  const isPrivate = useIsPrivate(conversationId);
-  const isPrivateAndFriend = useIsPrivateAndFriend(conversationId);
-  const isMessageRequestShown = useIsMessageRequestOverlayShown();
-
-  if (!isMessageRequestShown && (!isPrivate || (isPrivate && isPrivateAndFriend))) {
-    const conversation = ConvoHub.use().get(conversationId);
-
-    const markUnread = () => {
-      void conversation?.markAsUnread(true);
-    };
-
-    return (
-      <MenuItem
-        onClick={markUnread}
-        iconType={<MailWithUnreadIcon iconSize="medium" />}
-        isDangerAction={false}
-      >
-        {tr('messageMarkUnread')}
       </MenuItem>
     );
   }
@@ -158,24 +124,6 @@ export const BanMenuItem = (): JSX.Element | null => {
       {tr('banUser')}
     </MenuItem>
   );
-};
-
-export const MarkAllReadMenuItem = (): JSX.Element | null => {
-  const convoId = useConvoIdFromContext();
-  const isIncomingRequest = useIsIncomingRequest(convoId);
-  if (!isIncomingRequest && !PubKey.isBlinded(convoId)) {
-    return (
-      <MenuItem
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        onClick={async () => markAllReadByConvoId(convoId)}
-        iconType={LUCIDE_ICONS_UNICODE.MAIL_OPEN}
-        isDangerAction={false}
-      >
-        {tr('messageMarkRead')}
-      </MenuItem>
-    );
-  }
-  return null;
 };
 
 export const BlockMenuItem = (): JSX.Element | null => {
@@ -396,7 +344,6 @@ export const NotificationForConvoMenuItem = (): JSX.Element | null => {
             key={item.value}
             onClick={() => {
               setNotificationFor(item.value);
-              contextMenu.hideAll();
             }}
             disabled={disabled}
             iconType={

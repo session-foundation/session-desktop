@@ -97,6 +97,7 @@ export const OverlayClosedGroupV2 = () => {
   function goBack() {
     dispatch(searchActions.clearSearch());
     dispatch(sectionActions.setLeftOverlayMode({ type: 'choose-action', params: null }));
+    return true;
   }
 
   function onValueChanged(value: string) {

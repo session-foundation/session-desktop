@@ -4,6 +4,8 @@ import { getFeatureFlag } from '../state/ducks/types/releasedFeaturesReduxTypes'
 import type { FocusScope } from '../state/focus';
 import { tr } from '../localization';
 
+type NeededKeyboardEventForIdentification = Pick<KeyboardEvent<unknown>, 'key' | 'code'>;
+
 export function debugKeyboardShortcutsLog(...args: Array<unknown>) {
   if (!getFeatureFlag('debugKeyboardShortcuts')) {
     return;
@@ -11,12 +13,24 @@ export function debugKeyboardShortcutsLog(...args: Array<unknown>) {
   window.log.debug('[debugKeyboardShortcuts]', ...args);
 }
 
-export function isButtonClickKey(e: KeyboardEvent<HTMLElement>) {
+export function isButtonClickKey(e: NeededKeyboardEventForIdentification) {
   return e && (e.key.toLowerCase() === 'enter' || e.code === 'Space');
 }
 
-export function isEscapeKey(e: KeyboardEvent<unknown>) {
+export function isEnterKey(e: NeededKeyboardEventForIdentification) {
+  return e && e.key.toLowerCase() === 'enter';
+}
+
+export function isEscapeKey(e: NeededKeyboardEventForIdentification) {
   return e && (e.key.toLowerCase() === 'escape' || e.key.toLowerCase() === 'esc');
+}
+
+export function isBackspace(e: NeededKeyboardEventForIdentification) {
+  return e && e.key.toLowerCase() === 'backspace';
+}
+
+export function isDeleteKey(e: NeededKeyboardEventForIdentification) {
+  return e && e.code.toLowerCase() === 'delete';
 }
 
 export function createButtonOnKeyDownForClickEventHandler(
@@ -26,22 +40,6 @@ export function createButtonOnKeyDownForClickEventHandler(
   return (e: KeyboardEvent<HTMLElement>) => {
     debugKeyboardShortcutsLog(`createButtonOnKeyDownForClickEventHandler fn called with: `, e);
     if (isButtonClickKey(e)) {
-      if (!allowPropagation) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-      callback(e);
-    }
-  };
-}
-
-export function createOnKeyDownForEscapeEventHandler(
-  callback: (e: KeyboardEvent<HTMLElement> | MouseEvent<HTMLElement>) => void,
-  allowPropagation: boolean
-) {
-  return (e: KeyboardEvent<HTMLElement>) => {
-    debugKeyboardShortcutsLog(`createOnKeyDownForEscapeEventHandler fn called with: `, e);
-    if (isEscapeKey(e)) {
       if (!allowPropagation) {
         e.preventDefault();
         e.stopPropagation();
@@ -144,7 +142,7 @@ export const KbdShortcut = {
     keys: ['Escape'],
   },
   conversationUploadAttachment: {
-    name: 'Add Attachment',
+    name: tr('attachmentsAdd'),
     scope: 'conversationList',
     withCtrl: true,
     keys: ['u'],

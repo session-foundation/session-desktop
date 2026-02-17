@@ -3,7 +3,6 @@ import { SessionDataTestId, useEffect, useRef, useState } from 'react';
 import H5AudioPlayer, { RHAP_UI } from 'react-h5-audio-player';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
-import { contextMenu } from 'react-contexify';
 import { getAppDispatch } from '../../state/dispatch';
 import { useEncryptedFileFetch } from '../../hooks/useEncryptedFileFetch';
 import { setNextMessageToPlayId } from '../../state/ducks/conversations';
@@ -19,6 +18,7 @@ import { getAudioAutoplay } from '../../state/selectors/settings';
 import { LucideIcon } from '../icon/LucideIcon';
 import { focusVisibleBoxShadowOutset } from '../../styles/focusVisible';
 import { createButtonOnKeyDownForClickEventHandler } from '../../util/keyboardShortcuts';
+import { closeContextMenus } from '../../util/contextMenu';
 
 const StyledSpeedButton = styled.div`
   transition: none;
@@ -214,7 +214,7 @@ export const AudioPlayerWithEncryptedFile = (props: {
 
     player.current?.progressBar.current?.addEventListener('mousedown', e => {
       if (e.button === 0) {
-        contextMenu.hideAll();
+        closeContextMenus();
 
         return;
       }

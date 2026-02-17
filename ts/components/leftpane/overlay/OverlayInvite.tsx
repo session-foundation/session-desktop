@@ -65,6 +65,7 @@ export const OverlayInvite = () => {
 
   function goBack() {
     dispatch(sectionActions.setLeftOverlayMode({ type: 'choose-action', params: null }));
+    return true;
   }
 
   useEscBlurThenHandler(goBack);

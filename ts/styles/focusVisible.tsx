@@ -39,3 +39,12 @@ export function focusVisibleBoxShadowInsetStr(borderRadius?: string) {
   return `box-shadow: var(--box-shadow-focus-visible-inset);
     ${borderRadius && `border-radius: ${borderRadius};`}`;
 }
+
+export function focusVisibleDisabled() {
+  return css`
+    &:focus-visible {
+      box-shadow: none;
+      outline: none;
+    }
+  `;
+}

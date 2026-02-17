@@ -15,8 +15,6 @@ import {
   DeletePrivateConversationMenuItem,
   HideNoteToSelfMenuItem,
   InviteContactMenuItem,
-  MarkAllReadMenuItem,
-  MarkConversationUnreadMenuItem,
   NotificationForConvoMenuItem,
   ShowNoteToSelfMenuItem,
   ShowUserProfileMenuItem,
@@ -35,6 +33,10 @@ import {
 import { tr } from '../../localization/localeTools';
 import { useTogglePinConversationHandler } from '../menuAndSettingsHooks/UseTogglePinConversationHandler';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
+import {
+  MarkAllReadMenuItem,
+  MarkConversationUnreadMenuItem,
+} from './items/MarkReadUnread/MarkReadUnreadMenuItem';
 
 export type PropsContextConversationItem = {
   triggerId: string;
