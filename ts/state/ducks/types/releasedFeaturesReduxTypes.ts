@@ -14,6 +14,7 @@ type SessionBaseBooleanFeatureFlags = {
   useDeterministicEncryption: boolean;
   useTestNet: boolean;
   useTestProBackend: boolean;
+  useDevCommunityActions: boolean;
   useClosedGroupV2QAButtons: boolean;
   alwaysShowRemainingChars: boolean;
   showPopoverAnchors: boolean;

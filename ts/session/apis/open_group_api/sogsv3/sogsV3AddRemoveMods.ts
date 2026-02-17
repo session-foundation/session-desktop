@@ -2,7 +2,7 @@
 
 import AbortController from 'abort-controller';
 import { PubKey } from '../../../types';
-import { batchFirstSubIsSuccess, sogsBatchSend } from './sogsV3BatchPoll';
+import { batchEverySubIsSuccess, batchFirstSubIsSuccess, sogsBatchSend } from './sogsV3BatchPoll';
 import { OpenGroupRequestCommonType } from '../../../../data/types';
 import { DURATION } from '../../../constants';
 
@@ -63,7 +63,7 @@ export const sogsV3RemoveAdmins = async (
     'batch',
     10 * DURATION.SECONDS
   );
-  const isSuccess = batchSendResponse?.body?.every(m => m?.code === 200) || false;
+  const isSuccess = batchEverySubIsSuccess(batchSendResponse);
   if (!isSuccess) {
     window.log.warn('remove mods failed with body', batchSendResponse?.body);
   }

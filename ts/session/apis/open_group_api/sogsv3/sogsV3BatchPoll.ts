@@ -11,6 +11,8 @@ import {
   OpenGroupRequestHeaders,
 } from '../opengroupV2/OpenGroupPollingUtils';
 import { addJsonContentTypeToHeaders } from './sogsV3SendMessage';
+import { OpenGroupPermissionType } from './sogsV3UserPermissions';
+import { hasDuplicates } from '../../../../shared/array_utils';
 import type {
   WithImageId,
   WithMessageId,
@@ -20,6 +22,13 @@ import type {
   WithSessionIds,
 } from './sogsWith';
 import { FetchDestination } from '../../../utils/InsecureNodeFetch';
+import {
+  isBan,
+  isServerBanUnban,
+  type BanUnbanRoomWideOnly,
+  type BanUnbanServerWideOnly,
+} from '../../../../state/ducks/modalDialog';
+import { ed25519Str } from '../../../utils/String';
 
 type BatchFetchRequestOptions = {
   method: 'POST' | 'PUT' | 'GET' | 'DELETE';
@@ -131,6 +140,10 @@ export function batchFirstSubIsSuccess(response?: BatchSogsResponse | null): boo
   return Boolean(status && isNumber(status) && status >= 200 && status <= 300);
 }
 
+export function batchEverySubIsSuccess(response?: BatchSogsResponse | null): boolean {
+  return response?.body?.every(m => isNumber(m.code) && m?.code >= 200 && m?.code <= 300) ?? false;
+}
+
 export type SubRequestCapabilitiesType = { type: 'capabilities' };
 
 export type SubRequestMessagesObjectType =
@@ -190,17 +203,34 @@ export type SubRequestAddRemoveModeratorType = {
 export type SubRequestBanUnbanUserType = {
   type: 'banUnbanUser';
   banUnbanUser: {
-    type: 'ban' | 'unban';
     sessionId: string; // can be blinded id or not
-    roomId: string;
-  };
+  } & (
+    | {
+        roomId: string;
+        type: BanUnbanRoomWideOnly;
+      }
+    | { type: BanUnbanServerWideOnly }
+  );
 };
+
+export function isServerBanUnbanAction(
+  action: SubRequestBanUnbanUserType['banUnbanUser']
+): action is Extract<SubRequestBanUnbanUserType['banUnbanUser'], { type: BanUnbanServerWideOnly }> {
+  return isServerBanUnban(action.type);
+}
 
 export type SubRequestDeleteAllUserPostsType = {
   type: 'deleteAllPosts';
   deleteAllPosts: {
     sessionId: string; // can be blinded id or not
     roomId: string;
+  };
+};
+
+export type SubRequestDeleteAllUserServerPostsType = {
+  type: 'deleteAllUserPosts';
+  deleteAllUserPosts: {
+    sessionId: string; // can be blinded id or not
   };
 };
 
@@ -215,12 +245,36 @@ export type SubRequestUpdateRoomType = {
     >;
 };
 
+export type SubRequestUpdateRoomPermsType = {
+  type: 'updateRoomPerms';
+  updateRoomPerms: {
+    roomId: string;
+    permsToSet: {
+      default_read?: boolean;
+      default_write?: boolean;
+      default_upload?: boolean;
+      default_accessible?: boolean;
+    };
+  };
+};
+
 export type SubRequestDeleteReactionType = {
   type: 'deleteReaction';
   deleteReaction: {
     reaction: string;
     messageId: number;
     roomId: string;
+  };
+};
+
+export type SubRequestUpdateUserRoomPermissionsType = {
+  type: 'updateRoomUserPerms';
+  updateUserRoomPerms: {
+    sessionId: string;
+    roomId: string;
+    permsToAdd?: Array<OpenGroupPermissionType>;
+    permsToRemove?: Array<OpenGroupPermissionType>;
+    permsToClear?: Array<OpenGroupPermissionType>;
   };
 };
 
@@ -234,13 +288,37 @@ export type OpenGroupBatchRow =
   | SubRequestAddRemoveModeratorType
   | SubRequestBanUnbanUserType
   | SubRequestDeleteAllUserPostsType
+  | SubRequestDeleteAllUserServerPostsType
   | SubRequestUpdateRoomType
-  | SubRequestDeleteReactionType;
+  | SubRequestDeleteReactionType
+  | SubRequestUpdateUserRoomPermissionsType
+  | SubRequestUpdateRoomPermsType;
+
+type OpenGroupPermissionSelection<Prefix extends string = ''> = Partial<
+  Record<`${Prefix}${OpenGroupPermissionType}`, boolean>
+>;
+
+function makePermissionSelection(
+  permissions: Array<OpenGroupPermissionType> | undefined,
+  choice: boolean,
+  prefix: string = ''
+): OpenGroupPermissionSelection {
+  return (
+    permissions?.reduce(
+      (aggregatePermissions, newPermission) => ({
+        ...aggregatePermissions,
+        [`${prefix}${newPermission}`]: choice,
+      }),
+      {}
+    ) ?? {}
+  );
+}
 
 /**
  *
  * @param options Array of subRequest options to be made.
  */
+// tslint:disable-next-line: cyclomatic-complexity
 const makeBatchRequestPayload = (
   options: OpenGroupBatchRow
 ): BatchSubRequest | Array<BatchSubRequest> | null => {
@@ -318,22 +396,42 @@ const makeBatchRequestPayload = (
         },
       }));
     case 'banUnbanUser':
-      const isBan = Boolean(options.banUnbanUser.type === 'ban');
+      const details = options.banUnbanUser;
+      const isBanAction = isBan(details.type);
+      const isServerWideAction = isServerBanUnbanAction(details);
+      window?.log?.info(
+        `banUnbanUser: ${ed25519Str(details.sessionId)}, server-wide: ${isServerWideAction}`
+      );
+      const path = `/user/${details.sessionId}/${isBanAction ? 'ban' : 'unban'}`;
+      if (isServerWideAction) {
+        // Issue server-wide (un)ban.
+        return {
+          method: 'POST',
+          path,
+          json: {
+            global: true,
+          },
+        };
+      }
+
+      // Issue room-wide (un)ban.
       return {
         method: 'POST',
-        path: `/user/${options.banUnbanUser.sessionId}/${isBan ? 'ban' : 'unban'}`,
+        path,
         json: {
-          rooms: [options.banUnbanUser.roomId],
-
+          rooms: [details.roomId],
           // watch out ban and unban user do not allow the same args
-          // global: false, // for now we do not support the global argument, rooms cannot be set if we use it
-          // timeout: null, // for now we do not support the timeout argument
         },
       };
     case 'deleteAllPosts':
       return {
         method: 'DELETE',
         path: `/room/${options.deleteAllPosts.roomId}/all/${options.deleteAllPosts.sessionId}`,
+      };
+    case 'deleteAllUserPosts':
+      return {
+        method: 'DELETE',
+        path: `/rooms/all/${options.deleteAllUserPosts.sessionId}`,
       };
     case 'updateRoom':
       if (
@@ -355,11 +453,35 @@ const makeBatchRequestPayload = (
         path: `/room/${options.updateRoom.roomId}`,
         json,
       };
-
+    case 'updateRoomPerms':
+      return {
+        method: 'PUT',
+        path: `/room/${options.updateRoomPerms.roomId}`,
+        json: { ...options.updateRoomPerms.permsToSet },
+      };
     case 'deleteReaction':
       return {
         method: 'DELETE',
         path: `/room/${options.deleteReaction.roomId}/reactions/${options.deleteReaction.messageId}/${options.deleteReaction.reaction}`,
+      };
+    case 'updateRoomUserPerms':
+      if (
+        hasDuplicates([
+          ...(options.updateUserRoomPerms.permsToAdd ?? []),
+          ...(options.updateUserRoomPerms.permsToRemove ?? []),
+          ...(options.updateUserRoomPerms.permsToClear ?? []),
+        ])
+      ) {
+        throw new Error('Cannot change the same permission in more than one way');
+      }
+      return {
+        method: 'POST',
+        path: `/room/${options.updateUserRoomPerms.roomId}/permissions/${options.updateUserRoomPerms.sessionId}`,
+        json: {
+          ...makePermissionSelection(options.updateUserRoomPerms.permsToAdd, true),
+          ...makePermissionSelection(options.updateUserRoomPerms.permsToRemove, false),
+          ...makePermissionSelection(options.updateUserRoomPerms.permsToClear, true, 'default_'),
+        },
       };
     default:
       assertUnreachable(type, 'Invalid batch request row');

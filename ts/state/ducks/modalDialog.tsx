@@ -18,7 +18,24 @@ import { CTAVariant } from '../../components/dialog/cta/types';
 import { CTAInteraction, registerCtaInteraction } from '../../util/ctaHistory';
 import { closeContextMenus } from '../../util/contextMenu';
 
-export type BanType = 'ban' | 'unban';
+export type BanType = 'ban' | 'unban' | 'server-ban' | 'server-unban';
+
+export type BanUnbanRoomWideOnly = Extract<BanType, 'ban' | 'unban'>;
+export type BanServerWideOrNot = Extract<BanType, 'ban' | 'server-ban'>;
+export type UnbanServerWideOrNot = Extract<BanType, 'unban' | 'server-unban'>;
+export type BanUnbanServerWideOnly = Extract<BanType, 'server-ban' | 'server-unban'>;
+
+export function isBan(banType: BanType): banType is BanServerWideOrNot {
+  return ['ban', 'server-ban'].includes(banType);
+}
+
+export function isUnban(banType: BanType): banType is UnbanServerWideOrNot {
+  return ['unban', 'server-unban'].includes(banType);
+}
+
+export function isServerBanUnban(banType: BanType): banType is BanUnbanServerWideOnly {
+  return ['server-ban', 'server-unban'].includes(banType);
+}
 
 export type UserSettingsPage =
   | 'default'
@@ -69,9 +86,12 @@ export type BanOrUnbanUserModalState =
       pubkey?: string;
     })
   | null;
+
 export type AddModeratorsModalState = InviteContactModalState;
 export type RemoveModeratorsModalState = InviteContactModalState;
 export type UpdateGroupMembersModalState = InviteContactModalState;
+// export type UpdateGroupNameModalState = WithConvoId | null;
+export type UpdateCommunityPermissionsModalState = InviteContactModalState;
 type UpdateConversationDetailsModalState = WithConvoId | null;
 export type ChangeNickNameModalState = InviteContactModalState;
 export type UserSettingsModalState = WithUserSettingsPage | null;
@@ -150,6 +170,7 @@ export type ModalId =
   | 'addModeratorsModal'
   | 'updateConversationDetailsModal'
   | 'groupMembersModal'
+  | 'communityPermissionsModal'
   | 'userProfileModal'
   | 'nickNameModal'
   | 'userSettingsModal'
@@ -177,6 +198,7 @@ export type ModalState = {
   addModeratorsModal: AddModeratorsModalState;
   updateConversationDetailsModal: UpdateConversationDetailsModalState;
   groupMembersModal: UpdateGroupMembersModalState;
+  communityPermissionsModal: UpdateCommunityPermissionsModalState;
   userProfileModal: UserProfileModalState;
   nickNameModal: ChangeNickNameModalState;
   userSettingsModal: UserSettingsModalState;
@@ -207,6 +229,7 @@ export const initialModalState: ModalState = {
   blockOrUnblockModal: null,
   updateConversationDetailsModal: null,
   groupMembersModal: null,
+  communityPermissionsModal: null,
   userProfileModal: null,
   nickNameModal: null,
   userSettingsModal: null,
@@ -277,6 +300,7 @@ const ModalSlice = createSlice({
     updateBanOrUnbanUserModal(state, action: PayloadAction<BanOrUnbanUserModalState | null>) {
       return pushOrPopModal(state, 'banOrUnbanUserModal', action.payload);
     },
+
     updateBlockOrUnblockModal(state, action: PayloadAction<BlockOrUnblockModalState | null>) {
       return pushOrPopModal(state, 'blockOrUnblockModal', action.payload);
     },
@@ -294,6 +318,12 @@ const ModalSlice = createSlice({
     },
     updateGroupMembersModal(state, action: PayloadAction<UpdateGroupMembersModalState | null>) {
       return pushOrPopModal(state, 'groupMembersModal', action.payload);
+    },
+    updateCommunityPermissionsModal(
+      state,
+      action: PayloadAction<UpdateCommunityPermissionsModalState | null>
+    ) {
+      return pushOrPopModal(state, 'communityPermissionsModal', action.payload);
     },
     updateUserProfileModal(state, action: PayloadAction<UserProfileModalState | null>) {
       return pushOrPopModal(state, 'userProfileModal', action.payload);
@@ -373,6 +403,7 @@ export const {
   updateRemoveModeratorsModal,
   updateConversationDetailsModal,
   updateGroupMembersModal,
+  updateCommunityPermissionsModal,
   updateUserProfileModal,
   changeNickNameModal,
   userSettingsModal,

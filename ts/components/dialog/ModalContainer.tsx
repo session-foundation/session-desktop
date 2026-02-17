@@ -1,4 +1,5 @@
 import {
+  useUpdateCommunityPermissionsModalState,
   useConfirmModal,
   useInviteContactModal,
   useAddModeratorsModal,
@@ -43,6 +44,7 @@ import { UpdateConversationDetailsDialog } from './UpdateConversationDetailsDial
 import { UserProfileModal } from './UserProfileModal';
 import { OpenUrlModal } from './OpenUrlModal';
 import { BlockOrUnblockDialog } from './blockOrUnblock/BlockOrUnblockDialog';
+import { UpdateCommunityPermissionsDialog } from './UpdateCommunityPermissionsDialog';
 import { DebugMenuModal } from './debug/DebugMenuModal';
 import { ConversationSettingsDialog } from './conversationSettings/conversationSettingsDialog';
 import { SessionConfirm } from './SessionConfirm';
@@ -57,6 +59,7 @@ export const ModalContainer = () => {
   const addModeratorsModalState = useAddModeratorsModal();
   const removeModeratorsModalState = useRemoveModeratorsModal();
   const updateGroupMembersModalState = useUpdateGroupMembersModal();
+  const updateCommunityPermissionsModalState = useUpdateCommunityPermissionsModalState();
   const updateConversationDetailsModalState = useUpdateConversationDetailsModal();
   const userProfileModalState = useUserProfileModal();
   const changeNicknameModal = useChangeNickNameDialog();
@@ -99,6 +102,9 @@ export const ModalContainer = () => {
       {removeModeratorsModalState && <RemoveModeratorsDialog {...removeModeratorsModalState} />}
       {updateGroupMembersModalState && (
         <UpdateGroupMembersDialog {...updateGroupMembersModalState} />
+      )}
+      {updateCommunityPermissionsModalState && (
+        <UpdateCommunityPermissionsDialog {...updateCommunityPermissionsModalState} />
       )}
       {updateConversationDetailsModalState && (
         <UpdateConversationDetailsDialog {...updateConversationDetailsModalState} />

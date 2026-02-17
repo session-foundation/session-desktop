@@ -28,7 +28,6 @@ import { useShowInviteContactToGroupCb } from '../../menuAndSettingsHooks/useSho
 import { useShowCopyAccountIdCb } from '../../menuAndSettingsHooks/useCopyAccountId';
 import { useShowCopyCommunityUrlCb } from '../../menuAndSettingsHooks/useCopyCommunityUrl';
 import { useBanUserCb } from '../../menuAndSettingsHooks/useBanUser';
-import { useUnbanUserCb } from '../../menuAndSettingsHooks/useUnbanUser';
 import { useAddModeratorsCb } from '../../menuAndSettingsHooks/useAddModerators';
 import { useRemoveModeratorsCb } from '../../menuAndSettingsHooks/useRemoveModerators';
 import { useShowLeaveCommunityCb } from '../../menuAndSettingsHooks/useShowLeaveCommunity';
@@ -40,6 +39,7 @@ import { useShowAttachments } from '../../menuAndSettingsHooks/useShowAttachment
 import { useGroupCommonNoShow } from '../../menuAndSettingsHooks/useGroupCommonNoShow';
 import { useShowConversationSettingsFor } from '../../menuAndSettingsHooks/useShowConversationSettingsFor';
 import { useShowNoteToSelfCb } from '../../menuAndSettingsHooks/useShowNoteToSelf';
+import { useChangeCommunityPermissionsCb } from '../../menuAndSettingsHooks/useChangeCommunityPermissions';
 import { useTogglePinConversationHandler } from '../../menuAndSettingsHooks/UseTogglePinConversationHandler';
 import { PLURAL_COUNT_OTHER } from '../../../localization/localeTools';
 
@@ -294,6 +294,22 @@ export function UpdateDisappearingMessagesButton({
   );
 }
 
+export function ChangeCommunityPermissionsButton({ conversationId }: WithConvoId) {
+  const cb = useChangeCommunityPermissionsCb(conversationId);
+
+  if (!cb) {
+    return null;
+  }
+  return (
+    <PanelIconButton
+      iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.LOCK_KEYHOLE} />}
+      text={{ token: 'communityChangePermissionsDev' }}
+      onClick={cb}
+      dataTestId="edit-community-permissions"
+    />
+  );
+}
+
 export function AddAdminCommunityButton({ conversationId }: WithConvoId) {
   const cb = useAddModeratorsCb(conversationId);
 
@@ -336,7 +352,7 @@ export function RemoveAdminCommunityButton({ conversationId }: WithConvoId) {
 }
 
 export function BanFromCommunityButton({ conversationId }: WithConvoId) {
-  const showBanUserCb = useBanUserCb(conversationId);
+  const showBanUserCb = useBanUserCb({ banType: 'ban', conversationId });
 
   if (!showBanUserCb) {
     return null;
@@ -352,7 +368,7 @@ export function BanFromCommunityButton({ conversationId }: WithConvoId) {
 }
 
 export function UnbanFromCommunityButton({ conversationId }: WithConvoId) {
-  const showUnbanUserCb = useUnbanUserCb(conversationId);
+  const showUnbanUserCb = useBanUserCb({ banType: 'unban', conversationId });
 
   if (!showUnbanUserCb) {
     return null;

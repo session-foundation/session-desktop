@@ -31,11 +31,14 @@ import { WithMessageId } from '../../../../session/types/with';
 import { DeleteItem } from '../../../menu/items/DeleteMessage/DeleteMessageMenuItem';
 import { RetryItem } from '../../../menu/items/RetrySend/RetrySendMenuItem';
 import { useBanUserCb } from '../../../menuAndSettingsHooks/useBanUser';
-import { useUnbanUserCb } from '../../../menuAndSettingsHooks/useUnbanUser';
 import { tr } from '../../../../localization/localeTools';
 import { sectionActions } from '../../../../state/ducks/section';
 import { useRemoveSenderFromCommunityAdmin } from '../../../menuAndSettingsHooks/useRemoveSenderFromCommunityAdmin';
 import { useAddSenderAsCommunityAdmin } from '../../../menuAndSettingsHooks/useAddSenderAsCommunityAdmin';
+import {
+  useAddUserPermissions,
+  useClearUserPermissions,
+} from '../../../menuAndSettingsHooks/useAddUserPermissions';
 import { showContextMenu } from '../../../../util/contextMenu';
 import { clampNumber } from '../../../../util/maths';
 import { PopoverTriggerPosition } from '../../../SessionTooltip';
@@ -128,8 +131,27 @@ const CommunityAdminActionItems = ({ messageId }: WithMessageId) => {
   const sender = useMessageSender(messageId);
   const isSenderAdmin = useMessageSenderIsAdmin(messageId);
 
-  const banUserCb = useBanUserCb(convoId, sender);
-  const unbanUserCb = useUnbanUserCb(convoId, sender);
+  const sharedBanUnbanProps = {
+    conversationId: convoId,
+    pubkey: sender,
+  };
+
+  const banUserCb = useBanUserCb({
+    banType: 'ban',
+    ...sharedBanUnbanProps,
+  });
+  const unbanUserCb = useBanUserCb({
+    banType: 'unban',
+    ...sharedBanUnbanProps,
+  });
+  const serverBanUser = useBanUserCb({
+    banType: 'server-ban',
+    ...sharedBanUnbanProps,
+  });
+  const serverUnbanUser = useBanUserCb({
+    banType: 'server-unban',
+    ...sharedBanUnbanProps,
+  });
 
   const removeSenderFromCommunityAdminCb = useRemoveSenderFromCommunityAdmin({
     conversationId: convoId,
@@ -140,6 +162,14 @@ const CommunityAdminActionItems = ({ messageId }: WithMessageId) => {
     conversationId: convoId,
     senderId: sender,
   });
+
+  const addUploadPermissionCb = useAddUserPermissions(sender, convoId, ['upload']);
+  const clearUploadPermissionCb = useClearUserPermissions(sender, convoId, ['upload']);
+
+  // Fixed to `true` as not currently exposed by the backend/tracked in session-desktop
+  const isRoomUploadRestricted = true;
+  const canSenderUpload = true;
+  const canSenderNotUpload = true;
 
   // Note: add/removeSenderFromCommunityAdminCb can be null if we are a moderator only, see below
   if (!convoId || !sender || !banUserCb || !unbanUserCb) {
@@ -182,6 +212,29 @@ const CommunityAdminActionItems = ({ messageId }: WithMessageId) => {
           {tr('adminPromoteToAdmin')}
         </ItemWithDataTestId>
       ) : null}
+
+      {serverBanUser ? (
+        <ItemWithDataTestId onClick={serverBanUser}>{tr('serverBanUserDev')}</ItemWithDataTestId>
+      ) : null}
+      {serverUnbanUser ? (
+        <ItemWithDataTestId onClick={serverUnbanUser}>
+          {tr('serverUnbanUserDev')}
+        </ItemWithDataTestId>
+      ) : null}
+      {!isSenderAdmin && isRoomUploadRestricted && (
+        <>
+          {canSenderUpload && addUploadPermissionCb ? (
+            <ItemWithDataTestId onClick={addUploadPermissionCb}>
+              {tr('addUploadPermissionDev')}
+            </ItemWithDataTestId>
+          ) : null}
+          {canSenderNotUpload && clearUploadPermissionCb ? (
+            <ItemWithDataTestId onClick={clearUploadPermissionCb}>
+              {tr('clearUploadPermissionDev')}
+            </ItemWithDataTestId>
+          ) : null}
+        </>
+      )}
     </>
   );
 };

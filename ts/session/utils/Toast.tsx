@@ -90,12 +90,20 @@ export function pushUserBanFailure() {
   pushToastError('userBanFailed', tStripped('banErrorFailed'));
 }
 
+export function pushGlobalUserBanFailure() {
+  pushToastError('globalUserBanFailed', tStripped('globalUserBanFailedDev'));
+}
+
 export function pushUserUnbanSuccess() {
   pushToastSuccess('userUnbanned', tStripped('banUnbanUserUnbanned'));
 }
 
 export function pushUserUnbanFailure() {
   pushToastError('userUnbanFailed', tStripped('banUnbanErrorFailed'));
+}
+
+export function pushGlobalUserUnbanFailure() {
+  pushToastError('globalUserUnbanFailed', tStripped('globalUserUnbanFailedDev'));
 }
 
 export function pushMessageDeleteForbidden() {
@@ -239,6 +247,14 @@ export function pushUserRemovedFromModerators(names: Array<string>) {
   }
 
   pushToastSuccess('adminRemovedUser', localizedString);
+}
+
+export function pushFailedToChangeUserPermissions() {
+  pushToastWarning('failedToChangeUserPermissions', tStripped('failedToChangeUserPermissionsDev'));
+}
+
+export function pushUserPermissionsChanged() {
+  pushToastSuccess('userPermissionsChanged', tStripped('userPermissionsChangedDev'));
 }
 
 export function pushInvalidPubKey() {

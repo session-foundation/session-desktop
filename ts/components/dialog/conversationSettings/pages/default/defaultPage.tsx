@@ -37,6 +37,7 @@ import {
   AddAdminCommunityButton,
   RemoveAdminCommunityButton,
   ShowNoteToSelfButton,
+  ChangeCommunityPermissionsButton,
   DeleteDestroyedOrKickedGroupButton,
 } from '../../conversationSettingsItems';
 import { useCloseActionFromPage, useTitleFromPage } from '../conversationSettingsHooks';
@@ -85,6 +86,7 @@ function CommunityAdminActions({ conversationId }: WithConvoId) {
       <SpacerSM />
       <AdminSettingsTitle />
       <PanelButtonGroup>
+        <ChangeCommunityPermissionsButton conversationId={conversationId} />
         <BanFromCommunityButton conversationId={conversationId} />
         <UnbanFromCommunityButton conversationId={conversationId} />
         <AddAdminCommunityButton conversationId={conversationId} />

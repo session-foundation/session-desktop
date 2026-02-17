@@ -1,0 +1,66 @@
+/**
+ * @file
+ * Add, remove, or clear certain per-room user permissions.
+ */
+
+import AbortController from 'abort-controller';
+import { PubKey } from '../../../types';
+import { OpenGroupRequestCommonType } from '../../../../data/types';
+import { batchEverySubIsSuccess, sogsBatchSend } from './sogsV3BatchPoll';
+import { DURATION } from '../../../constants';
+
+export type OpenGroupPermissionType = 'access' | 'read' | 'upload' | 'write';
+
+export const sogsV3AddPermissions = async (
+  usersToAddPermissionsTo: Array<PubKey>,
+  roomInfos: OpenGroupRequestCommonType,
+  permissions: Array<OpenGroupPermissionType>
+): Promise<boolean> => {
+  const batchSendResponse = await sogsBatchSend(
+    roomInfos.serverUrl,
+    new Set([roomInfos.roomId]),
+    new AbortController().signal,
+    usersToAddPermissionsTo.map(user => ({
+      type: 'updateRoomUserPerms',
+      updateUserRoomPerms: {
+        roomId: roomInfos.roomId,
+        sessionId: user.key,
+        permsToAdd: permissions,
+      },
+    })),
+    'batch',
+    10 * DURATION.SECONDS
+  );
+  const isSuccess = batchEverySubIsSuccess(batchSendResponse);
+  if (!isSuccess) {
+    window.log.warn('add permissions failed with body', batchSendResponse?.body);
+  }
+  return isSuccess;
+};
+
+export const sogsV3ClearPermissions = async (
+  usersToClearPermissionsFor: Array<PubKey>,
+  roomInfos: OpenGroupRequestCommonType,
+  permissions: Array<OpenGroupPermissionType>
+): Promise<boolean> => {
+  const batchSendResponse = await sogsBatchSend(
+    roomInfos.serverUrl,
+    new Set([roomInfos.roomId]),
+    new AbortController().signal,
+    usersToClearPermissionsFor.map(user => ({
+      type: 'updateRoomUserPerms',
+      updateUserRoomPerms: {
+        roomId: roomInfos.roomId,
+        sessionId: user.key,
+        permsToClear: permissions,
+      },
+    })),
+    'batch',
+    10 * DURATION.SECONDS
+  );
+  const isSuccess = batchEverySubIsSuccess(batchSendResponse);
+  if (!isSuccess) {
+    window.log.warn('add permissions failed with body', batchSendResponse?.body);
+  }
+  return isSuccess;
+};

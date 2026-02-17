@@ -23,6 +23,8 @@ import {
   ShowNoteToSelfMenuItem,
   ShowUserProfileMenuItem,
   UnbanMenuItem,
+  ServerBanMenuItem,
+  ServerUnbanMenuItem,
 } from './Menu';
 import { CopyCommunityUrlMenuItem } from './items/CopyCommunityUrl/CopyCommunityUrlMenuItem';
 import { CopyAccountIdMenuItem } from './items/CopyAccountId/CopyAccountIdMenuItem';
@@ -107,6 +109,8 @@ const ConversationListItemContextMenu = (props: PropsContextConversationItem) =>
         {/* Communities actions */}
         <BanMenuItem />
         <UnbanMenuItem />
+        <ServerBanMenuItem />
+        <ServerUnbanMenuItem />
         <InviteContactMenuItem />
         <DeleteMessagesMenuItem />
         <DeletePrivateConversationMenuItem />

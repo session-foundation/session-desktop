@@ -814,7 +814,6 @@ export class MessageModel extends Model<MessageAttributes> {
     // we can only send a single preview
     const firstPreviewWithData = previewWithData?.[0] || null;
 
-    // we want to go for the v1, if this is an OpenGroupV1 or not an open group at all
     if (conversation?.isOpenGroupV2()) {
       const openGroupV2 = conversation.toOpenGroupV2();
       attachmentPromise = uploadAttachmentsV3(finalAttachments, openGroupV2);

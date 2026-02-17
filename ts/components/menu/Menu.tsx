@@ -27,7 +27,6 @@ import { useShowDeletePrivateConversationCb } from '../menuAndSettingsHooks/useS
 import { useShowInviteContactToCommunity } from '../menuAndSettingsHooks/useShowInviteContactToCommunity';
 import { useAddModeratorsCb } from '../menuAndSettingsHooks/useAddModerators';
 import { useRemoveModeratorsCb } from '../menuAndSettingsHooks/useRemoveModerators';
-import { useUnbanUserCb } from '../menuAndSettingsHooks/useUnbanUser';
 import { useBanUserCb } from '../menuAndSettingsHooks/useBanUser';
 import { useSetNotificationsFor } from '../menuAndSettingsHooks/useSetNotificationsFor';
 import { Localizer } from '../basic/Localizer';
@@ -131,7 +130,10 @@ export const AddModeratorsMenuItem = (): JSX.Element | null => {
 
 export const UnbanMenuItem = (): JSX.Element | null => {
   const convoId = useConvoIdFromContext();
-  const showUnbanUserCb = useUnbanUserCb(convoId);
+  const showUnbanUserCb = useBanUserCb({
+    conversationId: convoId,
+    banType: 'unban',
+  });
 
   if (!showUnbanUserCb) {
     return null;
@@ -142,12 +144,49 @@ export const UnbanMenuItem = (): JSX.Element | null => {
 export const BanMenuItem = (): JSX.Element | null => {
   const convoId = useConvoIdFromContext();
 
-  const showBanUserCb = useBanUserCb(convoId);
+  const showBanUserCb = useBanUserCb({
+    conversationId: convoId,
+    banType: 'ban',
+  });
 
   if (!showBanUserCb) {
     return null;
   }
   return <ItemWithDataTestId onClick={showBanUserCb}>{tr('banUser')}</ItemWithDataTestId>;
+};
+
+export const ServerUnbanMenuItem = (): JSX.Element | null => {
+  const convoId = useConvoIdFromContext();
+  const showUnbanUserCb = useBanUserCb({
+    conversationId: convoId,
+    banType: 'server-unban',
+  });
+
+  if (showUnbanUserCb) {
+    return (
+      <ItemWithDataTestId onClick={showUnbanUserCb}>
+        <Localizer token="serverUnbanUserDev" />
+      </ItemWithDataTestId>
+    );
+  }
+  return null;
+};
+
+export const ServerBanMenuItem = (): JSX.Element | null => {
+  const convoId = useConvoIdFromContext();
+  const showUnbanUserCb = useBanUserCb({
+    conversationId: convoId,
+    banType: 'server-ban',
+  });
+
+  if (showUnbanUserCb) {
+    return (
+      <ItemWithDataTestId onClick={showUnbanUserCb}>
+        <Localizer token="serverBanUserDev" />
+      </ItemWithDataTestId>
+    );
+  }
+  return null;
 };
 
 export const MarkAllReadMenuItem = (): JSX.Element | null => {

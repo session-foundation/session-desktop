@@ -630,8 +630,11 @@ export const handleBatchPollResults = async (
         case 'deleteMessage':
         case 'banUnbanUser':
         case 'deleteAllPosts':
+        case 'deleteAllUserPosts':
         case 'updateRoom':
         case 'deleteReaction':
+        case 'updateRoomPerms':
+        case 'updateRoomUserPerms': // Could save new user permissions here
           // we do nothing for all of those, but let's make sure if we ever add something batch polled for, we include it's handling here.
           // the assertUnreachable will fail to compile every time we add a new batch poll endpoint without taking care of it.
           break;

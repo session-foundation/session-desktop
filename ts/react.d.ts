@@ -324,6 +324,7 @@ declare module 'react' {
     | 'disappearing-messages'
     | 'group-members'
     | 'edit-group-name'
+    | 'edit-community-permissions'
 
     // SessionRadioGroup & SessionRadio
     | 'password-input-confirm'

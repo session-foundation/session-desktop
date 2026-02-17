@@ -1,6 +1,7 @@
 import { useSelector } from 'react-redux';
 
-import { ModalState, type ModalId } from '../ducks/modalDialog';
+import { ModalState, ModalId } from '../ducks/modalDialog';
+
 import { StateType } from '../reducer';
 
 const getModal = (state: StateType): ModalState => {
@@ -35,6 +36,9 @@ export function useUpdateConversationDetailsModal() {
   return useSelector((state: StateType) => getModal(state).updateConversationDetailsModal);
 }
 
+export const getBlockOrUnblockUserModalState = (state: StateType) =>
+  getModal(state).blockOrUnblockModal;
+
 export function useUpdateGroupMembersModal() {
   return useSelector((state: StateType) => getModal(state).groupMembersModal);
 }
@@ -45,6 +49,10 @@ export function useUserProfileModal() {
 
 export function useChangeNickNameDialog() {
   return useSelector((state: StateType) => getModal(state).nickNameModal);
+}
+
+export function useUpdateCommunityPermissionsModalState() {
+  return useSelector((state: StateType) => getModal(state).communityPermissionsModal);
 }
 
 export function useUserSettingsModal() {
