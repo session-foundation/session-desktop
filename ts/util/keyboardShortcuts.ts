@@ -14,7 +14,11 @@ export function debugKeyboardShortcutsLog(...args: Array<unknown>) {
 }
 
 export function isButtonClickKey(e: NeededKeyboardEventForIdentification) {
-  return e && (e.key.toLowerCase() === 'enter' || e.code === 'Space');
+  return isEnterKey(e) || isSpaceKey(e);
+}
+
+export function isSpaceKey(e: NeededKeyboardEventForIdentification) {
+  return e && e.code === 'Space';
 }
 
 export function isEnterKey(e: NeededKeyboardEventForIdentification) {

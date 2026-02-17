@@ -14,7 +14,7 @@ import { useFormattedDuration } from '../../hooks/useFormattedDuration';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { focusVisibleOutlineStr } from '../../styles/focusVisible';
-import { isDeleteKey, isEnterKey, isEscapeKey } from '../../util/keyboardShortcuts';
+import { isDeleteKey, isEnterKey, isEscapeKey, isSpaceKey } from '../../util/keyboardShortcuts';
 
 interface Props {
   onExitVoiceNoteView: () => void;
@@ -213,6 +213,22 @@ function RecordingActions({
     },
     () => {
       void onDeleteVoiceMessage();
+    }
+  );
+
+  useKey(
+    (event: KeyboardEvent) => {
+      return isSpaceKey(event);
+    },
+    () => {
+      if (isRecording) {
+        return;
+      }
+      if (isPlaying) {
+        pauseAudio();
+        return;
+      }
+      playAudio();
     }
   );
 
