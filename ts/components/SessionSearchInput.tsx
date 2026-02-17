@@ -106,6 +106,7 @@ export const SessionSearchInput = ({ searchType }: { searchType: SearchType }) =
         unicode={LUCIDE_ICONS_UNICODE.SEARCH}
       />
       <StyledInput
+        data-testid="search-input"
         ref={inputRef}
         value={currentSearchTerm}
         onChange={e => {

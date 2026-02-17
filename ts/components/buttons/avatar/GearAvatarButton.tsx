@@ -14,7 +14,7 @@ export const GearAvatarButton = () => {
       dataTestId="settings-section"
       style={{
         position: 'absolute',
-        top: '54%',
+        bottom: '-10%',
         insetInlineEnd: '0',
         backgroundColor: 'var(--primary-color)',
         padding: 'var(--margins-xxs)',

@@ -78,7 +78,7 @@ export const StagedAttachmentList = (props: Props) => {
   const allVisualAttachments = areAllAttachmentsVisual(attachments);
 
   return (
-    <StyledAttachmentsContainer>
+    <StyledAttachmentsContainer data-testid="staged-attachments-container">
       {attachments.length > 1 ? (
         <StyledAttachmentHeader>
           <SessionLucideIconButton

@@ -201,7 +201,9 @@ export const MessageLinkPreview = (props: Props) => {
           </StyledIconContainer>
         )}
         <div>
-          <StyledLinkPreviewTitle>{first.title}</StyledLinkPreviewTitle>
+          <StyledLinkPreviewTitle data-testid="msg-link-preview-title">
+            {first.title}
+          </StyledLinkPreviewTitle>
           <StyledLinkPreviewLocation>{first.domain}</StyledLinkPreviewLocation>
         </div>
       </StyledPreviewContent>
