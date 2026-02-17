@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import { useEffect, useState } from 'react';
 import { MessageFrom } from '.';
 import {
   useMessageBody,
@@ -40,6 +41,7 @@ import { ProIconButton } from '../../../../../buttons/ProButton';
 import { assertUnreachable } from '../../../../../../types/sqlSharedTypes';
 import { ProMessageFeature } from '../../../../../../models/proMessageFeature';
 import { SessionButtonColor } from '../../../../../basic/SessionButton';
+import { ProWrapperActions } from '../../../../../../webworker/workers/browser/libsession_worker_interface';
 
 export const MessageInfoLabel = styled.label<{ color?: string }>`
   font-size: var(--font-size-lg);
@@ -100,34 +102,48 @@ const DebugMessageInfo = ({ messageId }: { messageId: string }) => {
   const serverTimestamp = useMessageServerTimestamp(messageId);
   const message = useMessageBody(messageId);
 
+  const [codepointCount, setCodepointCount] = useState(0);
+
+  useEffect(() => {
+    async function getCodepointCount() {
+      const { codepointCount: fromLibsession } = await ProWrapperActions.utf16Count({
+        utf16: message ?? '',
+      });
+      setCodepointCount(fromLibsession);
+    }
+    void getCodepointCount();
+  }, [message]);
+
   if (!isDevProd()) {
     return null;
   }
   // Note: the strings here are hardcoded because we do not share them with other platforms through crowdin
   return (
     <>
-      {convoId ? <LabelWithInfo label={`Conversation ID:`} info={convoId} /> : null}
-      {messageHash ? <LabelWithInfo label={`Message Hash:`} info={messageHash} /> : null}
-      {serverId ? <LabelWithInfo label={`Server ID:`} info={`${serverId}`} /> : null}
-      {timestamp ? <LabelWithInfo label={`Timestamp:`} info={String(timestamp)} /> : null}
+      {convoId ? <LabelWithInfo label={tr('conversationIdDev')} info={convoId} /> : null}
+      {messageHash ? <LabelWithInfo label={tr('messageHashDev')} info={messageHash} /> : null}
+      {serverId ? <LabelWithInfo label={tr('serverIdDev')} info={`${serverId}`} /> : null}
+      {timestamp ? <LabelWithInfo label={tr('timestampDev')} info={String(timestamp)} /> : null}
       {serverTimestamp ? (
-        <LabelWithInfo label={`Server Timestamp:`} info={String(serverTimestamp)} />
+        <LabelWithInfo label={tr('serverTimestampDev')} info={String(serverTimestamp)} />
       ) : null}
-      {expirationType ? <LabelWithInfo label={`Expiration Type:`} info={expirationType} /> : null}
+      {expirationType ? (
+        <LabelWithInfo label={tr('expirationTypeDev')} info={expirationType} />
+      ) : null}
       {expirationDurationMs ? (
         <LabelWithInfo
-          label={`Expiration Duration:`}
+          label={tr('expirationDurationDev')}
           info={formatTimeDurationMs(Math.floor(expirationDurationMs))}
         />
       ) : null}
       {expirationTimestamp ? (
         <LabelWithInfo
-          label={`Disappears:`}
+          label={tr('disappearsDev')}
           info={formatTimeDistanceToNow(Math.floor(expirationTimestamp / 1000))}
         />
       ) : null}
       {message ? (
-        <LabelWithInfo label={'Characters:'} info={formatNumber(message.length ?? 0)} />
+        <LabelWithInfo label={tr('codePointsDev')} info={formatNumber(codepointCount)} />
       ) : null}
     </>
   );
