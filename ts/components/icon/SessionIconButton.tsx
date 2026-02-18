@@ -7,6 +7,7 @@ import { StyledSessionIconButton } from './SessionIconButtonStyled';
 import { SessionIcon, SessionIconProps } from './SessionIcon';
 import { LucideIcon, type LucideIconProps } from './LucideIcon';
 import { useIsDarkTheme } from '../../state/theme/selectors/theme';
+import { isEnterKey } from '../../util/keyboardShortcuts';
 
 export type SessionIconButtonProps = SessionIconProps & {
   onClick?: (e?: MouseEvent<HTMLButtonElement>) => void;
@@ -59,7 +60,7 @@ const SessionIconButtonInner = forwardRef<HTMLButtonElement, SessionIconButtonPr
       }
     };
     const keyPressHandler = (e: KeyboardEvent<HTMLButtonElement>) => {
-      if (e.currentTarget.tabIndex > -1 && e.key === 'Enter' && !disabled && props.onClick) {
+      if (e.currentTarget.tabIndex > -1 && isEnterKey(e) && !disabled && props.onClick) {
         e.stopPropagation();
         props.onClick();
       }
@@ -158,12 +159,14 @@ export const SessionLucideIconButton = forwardRef<
   const clickHandler = (e: MouseEvent<HTMLButtonElement>) => {
     if (!disabled && onClick) {
       e.stopPropagation();
+      e.preventDefault();
       onClick(e);
     }
   };
   const keyPressHandler = (e: KeyboardEvent<HTMLButtonElement>) => {
-    if (e.currentTarget.tabIndex > -1 && e.key === 'Enter' && !disabled && onClick) {
+    if (e.currentTarget.tabIndex > -1 && isEnterKey(e) && !disabled && onClick) {
       e.stopPropagation();
+      e.preventDefault();
       onClick();
     }
   };

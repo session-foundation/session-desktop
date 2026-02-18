@@ -118,7 +118,7 @@ export const KbdShortcut = {
     keys: ['c'],
   },
   openNoteToSelf: {
-    name: 'Open Note To Self',
+    name: tr('noteToSelfOpen'),
     scope: 'global',
     withCtrl: true,
     withShift: true,
@@ -136,13 +136,8 @@ export const KbdShortcut = {
 
   // Conversation Shortcuts
   conversationFocusTextArea: {
-    name: 'Focus Text Area',
+    name: tr('focusTextArea'),
     scope: 'conversationList',
-    keys: ['Escape'],
-  },
-  closeLightbox: {
-    name: 'Close Light box',
-    scope: 'lightBoxOptions',
     keys: ['Escape'],
   },
   conversationUploadAttachment: {
@@ -152,25 +147,25 @@ export const KbdShortcut = {
     keys: ['u'],
   },
   conversationToggleEmojiPicker: {
-    name: 'Toggle Emoji Picker',
+    name: tr('toggleEmojiPicker'),
     scope: 'conversationList',
     withCtrl: true,
     keys: ['e'],
   },
   conversationSettingsModal: {
-    name: 'Conversation Settings',
+    name: tr('conversationSettings'),
     scope: 'global',
     withCtrl: true,
     keys: ['.'],
   },
   // Message Shortcuts
   messageToggleReactionBar: {
-    name: 'Toggle Reaction Bar for message',
+    name: tr('toggleReactionBarMessage'),
     scope: 'message',
     keys: ['e'],
   },
   messageToggleReply: {
-    name: 'Toggle Reply for message',
+    name: tr('toggleReplyMessage'),
     scope: 'message',
     keys: ['r'],
   },
@@ -181,14 +176,14 @@ export const KbdShortcut = {
     keys: ['c'],
   },
   messageSaveAttachment: {
-    name: 'Save message attachment',
+    name: tr('saveMessageAttachment'),
     scope: 'message',
     withCtrl: true,
     keys: ['s'],
   },
   // NOTE: these are currently dummy shortcuts, they are native or implemented differently
   messageOpenContextMenu: {
-    name: 'Open message context menu',
+    name: tr('openMessageContextMenu'),
     scope: 'message',
     keys: ['Enter'],
   },

@@ -14,8 +14,6 @@ import { SessionIconSize } from '../icon';
 import { AriaLabels } from '../../util/hardcodedAriaLabels';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
-import { useKeyboardShortcut } from '../../hooks/useKeyboardShortcut';
-import { KbdShortcut } from '../../util/keyboardShortcuts';
 import { SessionFocusTrap } from '../SessionFocusTrap';
 
 type Props = {
@@ -266,13 +264,6 @@ export const Lightbox = (props: Props) => {
     dispatch(updateLightBoxOptions(null));
   };
 
-  useKeyboardShortcut({
-    shortcut: KbdShortcut.closeLightbox,
-    handler: () => {
-      dispatch(updateLightBoxOptions(null));
-    },
-  });
-
   const handleClose = () => {
     if (onClose) {
       onClose();
@@ -294,6 +285,7 @@ export const Lightbox = (props: Props) => {
       initialFocus={() => {
         return closeButtonRef.current;
       }}
+      returnFocusOnDeactivate={false}
     >
       <div style={styles.container} role="dialog" onClick={onContainerClick}>
         <div style={styles.mainContainer}>

@@ -20,7 +20,7 @@ import type { TrArgs } from '../../localization/localeTools';
 import { useUpdateInputValue } from './useUpdateInputValue';
 import { StyledTextAreaContainer } from './SimpleSessionTextarea';
 import { focusVisibleDisabled } from '../../styles/focusVisible';
-import { isEscapeKey } from '../../util/keyboardShortcuts';
+import { isEnterKey, isEscapeKey } from '../../util/keyboardShortcuts';
 
 export type SessionInputTextSizes = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
@@ -300,7 +300,7 @@ export const SimpleSessionInput = (props: SimpleSessionInputProps) => {
     if (disabled) {
       return;
     }
-    if (event.key === 'Enter' && onEnterPressed) {
+    if (isEnterKey(event) && onEnterPressed) {
       event.preventDefault();
       onEnterPressed();
     }

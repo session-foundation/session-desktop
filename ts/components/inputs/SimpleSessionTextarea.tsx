@@ -13,7 +13,7 @@ import {
 import { useUpdateInputValue } from './useUpdateInputValue';
 import { SpacerMD } from '../basic/Text';
 import { focusVisibleDisabled } from '../../styles/focusVisible';
-import { isEscapeKey } from '../../util/keyboardShortcuts';
+import { isEnterKey, isEscapeKey } from '../../util/keyboardShortcuts';
 
 const StyledTextArea = styled.textarea`
   // the caret is already there to say that this is focused
@@ -173,7 +173,7 @@ export const SimpleSessionTextarea = (
                 e.stopPropagation();
                 return;
               }
-              if (e.key === 'Enter') {
+              if (isEnterKey(e)) {
                 e.preventDefault();
                 e.stopPropagation();
                 props?.onEnterPressed();

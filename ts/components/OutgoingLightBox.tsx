@@ -105,7 +105,11 @@ export const OutgoingLightBox = (props: NonNullable<OutgoingLightBoxOptions>) =>
   useKey('Escape', onClose);
 
   return (
-    <SessionFocusTrap initialFocus={() => ref.current} allowOutsideClick={true}>
+    <SessionFocusTrap
+      initialFocus={() => ref.current}
+      allowOutsideClick={true}
+      returnFocusOnDeactivate={false}
+    >
       <StyledCaptionEditor>
         <SessionLucideIconButton
           iconSize="huge"
