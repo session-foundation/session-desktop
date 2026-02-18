@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import useKey from 'react-use/lib/useKey';
-import { getAppDispatch } from '../../state/dispatch';
 
+import { getAppDispatch } from '../../state/dispatch';
 import { useFocusMount } from '../../hooks/useFocusMount';
 import { useConversationUsernameWithFallback } from '../../hooks/useParamSelector';
 import { ConversationModel } from '../../models/conversation';
@@ -116,6 +116,10 @@ export const BanOrUnBanUserDialog = (props: {
     await banOrUnBanUser(true);
   };
 
+  const startBanSequence = async () => {
+    await banOrUnBanUser(false);
+  };
+
   const onClose = () => {
     dispatch(updateBanOrUnbanUserModal(null));
   };
@@ -133,7 +137,7 @@ export const BanOrUnBanUserDialog = (props: {
         <ModalActionsContainer buttonType={SessionButtonType.Simple}>
           <SessionButton
             buttonType={SessionButtonType.Simple}
-            onClick={banOrUnBanUser}
+            onClick={startBanSequence}
             text={buttonText}
             disabled={inProgress}
             buttonColor={isBan && !hasPubkeyOnLoad ? SessionButtonColor.Danger : undefined}

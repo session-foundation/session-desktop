@@ -10,10 +10,8 @@ import {
   useSelectedConversationKey,
   useSelectedIsPublic,
 } from '../../../../state/selectors/selectedConversation';
-import { ItemWithDataTestId } from '../MenuItemWithDataTestId';
+import { MenuItem } from '../MenuItem';
 import { tr } from '../../../../localization/localeTools';
-import { SessionLucideIconButton } from '../../../icon/SessionIconButton';
-import { SpacerSM } from '../../../basic/Text';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 import { DURATION } from '../../../../session/constants';
 import { formatAbbreviatedExpireDoubleTimer } from '../../../../util/i18n/formatting/expirationTimer';
@@ -21,7 +19,6 @@ import { useMessageExpirationPropsById } from '../../../../hooks/useParamSelecto
 import { useMessageInteractions } from '../../../../hooks/useMessageInteractions';
 
 const StyledDeleteItemContent = styled.span`
-  color: var(--danger-color);
   display: flex;
   flex-direction: row;
 `;
@@ -32,7 +29,6 @@ const StyledTextContainer = styled.div`
 `;
 
 const StyledExpiresIn = styled.span`
-  color: var(--danger-color);
   font-size: var(--font-size-xs);
 `;
 
@@ -114,19 +110,13 @@ export const DeleteItem = ({ messageId }: { messageId: string }) => {
   }
 
   return (
-    <ItemWithDataTestId onClick={onClick}>
+    <MenuItem onClick={onClick} iconType={LUCIDE_ICONS_UNICODE.TRASH2} isDangerAction={true}>
       <StyledDeleteItemContent>
-        <SessionLucideIconButton
-          iconSize="medium"
-          iconColor="var(--danger-color)"
-          unicode={LUCIDE_ICONS_UNICODE.TRASH2}
-        />
-        <SpacerSM />
         <StyledTextContainer>
           {tr('delete')}
           <ExpiresInItem messageId={messageId} />
         </StyledTextContainer>
       </StyledDeleteItemContent>
-    </ItemWithDataTestId>
+    </MenuItem>
   );
 };

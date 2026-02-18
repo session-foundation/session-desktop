@@ -37,9 +37,18 @@ const StyledLocalVideoElement = styled.video<{ $isVideoMuted: boolean }>`
 `;
 
 export const CallInFullScreenContainer = () => {
-  const dispatch = getAppDispatch();
   const ongoingCallWithFocused = useSelector(getHasOngoingCallWithFocusedConvo);
   const hasOngoingCallFullScreen = useSelector(getCallIsInFullScreen);
+
+  // Split the component so that the useKey('Escape')  hook is only mounted when we do have an ongoing call
+  if (!ongoingCallWithFocused || !hasOngoingCallFullScreen) {
+    return null;
+  }
+  return <CallInFullScreenContainerInner />;
+};
+
+const CallInFullScreenContainerInner = () => {
+  const dispatch = getAppDispatch();
 
   const {
     remoteStream,
@@ -70,10 +79,6 @@ export const CallInFullScreenContainer = () => {
       dispatch(setFullScreenCall(false));
     }
   }, [remoteStreamVideoIsMuted, dispatch]);
-
-  if (!ongoingCallWithFocused || !hasOngoingCallFullScreen) {
-    return null;
-  }
 
   if (videoRefRemote?.current) {
     if (videoRefRemote.current.srcObject !== remoteStream) {

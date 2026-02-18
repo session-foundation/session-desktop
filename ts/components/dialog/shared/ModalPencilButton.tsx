@@ -1,3 +1,4 @@
+import { focusVisibleOutlineStr } from '../../../styles/focusVisible';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 import { SessionLucideIconButton } from '../../icon/SessionIconButton';
 
@@ -9,6 +10,7 @@ export function ModalPencilIcon(props: { onClick: () => void }) {
       iconSize="large"
       dataTestId="modal-pencil-button"
       iconColor="var(--text-primary-color)"
+      focusVisibleEffect={focusVisibleOutlineStr('var(--margins-xs)')}
     />
   );
 }

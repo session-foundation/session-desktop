@@ -1,7 +1,8 @@
 import type { JSX } from 'react';
 import { Localizer } from '../../../basic/Localizer';
 import { useShowCopyCommunityUrlCb } from '../../../menuAndSettingsHooks/useCopyCommunityUrl';
-import { ItemWithDataTestId } from '../MenuItemWithDataTestId';
+import { MenuItem } from '../MenuItem';
+import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 
 export const CopyCommunityUrlMenuItem = ({ convoId }: { convoId: string }): JSX.Element | null => {
   const copyCommunityUrlCb = useShowCopyCommunityUrlCb(convoId);
@@ -9,9 +10,13 @@ export const CopyCommunityUrlMenuItem = ({ convoId }: { convoId: string }): JSX.
   // we want to show the copyId for communities only
   if (copyCommunityUrlCb) {
     return (
-      <ItemWithDataTestId onClick={copyCommunityUrlCb}>
+      <MenuItem
+        onClick={copyCommunityUrlCb}
+        iconType={LUCIDE_ICONS_UNICODE.COPY}
+        isDangerAction={false}
+      >
         <Localizer token="communityUrlCopy" />
-      </ItemWithDataTestId>
+      </MenuItem>
     );
   }
   return null;

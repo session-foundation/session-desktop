@@ -5,7 +5,7 @@ import { EnterPasswordModalProps } from '../../components/dialog/EnterPasswordMo
 import { HideRecoveryPasswordDialogProps } from '../../components/dialog/HideRecoveryPasswordDialog';
 import { SessionConfirmDialogProps } from '../../components/dialog/SessionConfirm';
 import { MediaItemType } from '../../components/lightbox/LightboxGallery';
-import { AttachmentTypeWithPath } from '../../types/Attachment';
+import { AttachmentTypeWithPath, type AttachmentType } from '../../types/Attachment';
 import type {
   EditProfilePictureModalProps,
   PasswordAction,
@@ -126,8 +126,15 @@ export type LightBoxOptions = {
   onClose?: () => void;
 } | null;
 
+export type OutgoingLightBoxOptions = {
+  attachment: AttachmentType;
+  // the url here is required as it will be the link to the full image
+  url: string;
+  onClose: () => void;
+} | null;
+
 export type DebugMenuModalState = object | null;
-export type KeyboardShotcutsModalState = object | null;
+export type KeyboardShortcutsModalState = object | null;
 
 export type ConversationSettingsModalPage = 'default' | 'disappearing_message' | 'notifications';
 type SettingsPageThatCannotBeStandalone = Extract<ConversationSettingsModalPage, 'default'>;
@@ -164,6 +171,7 @@ export type ModalId =
   | 'localizedPopupDialog'
   | 'sessionProInfoModal'
   | 'lightBoxOptions'
+  | 'outgoingLightBoxOptions'
   | 'debugMenuModal'
   | 'keyboardShortcutsModal'
   | 'conversationSettingsModal';
@@ -191,8 +199,9 @@ export type ModalState = {
   localizedPopupDialog: LocalizedPopupDialogState;
   sessionProInfoModal: SessionCTAState;
   lightBoxOptions: LightBoxOptions;
+  outgoingLightBoxOptions: OutgoingLightBoxOptions;
   debugMenuModal: DebugMenuModalState;
-  keyboardShortcutsModal: KeyboardShotcutsModalState;
+  keyboardShortcutsModal: KeyboardShortcutsModalState;
   conversationSettingsModal: ConversationSettingsModalState;
   modalStack: Array<ModalId>;
 };
@@ -221,6 +230,7 @@ export const initialModalState: ModalState = {
   localizedPopupDialog: null,
   sessionProInfoModal: null,
   lightBoxOptions: null,
+  outgoingLightBoxOptions: null,
   debugMenuModal: null,
   keyboardShortcutsModal: null,
   conversationSettingsModal: null,
@@ -353,10 +363,19 @@ const ModalSlice = createSlice({
       }
       return pushOrPopModal(state, 'lightBoxOptions', lightBoxOptions);
     },
+    updateOutgoingLightBoxOptions(state, action: PayloadAction<OutgoingLightBoxOptions>) {
+      const outgoingLightBoxOptions = action.payload;
+
+      return pushOrPopModal(state, 'outgoingLightBoxOptions', outgoingLightBoxOptions);
+    },
     updateDebugMenuModal(state, action: PayloadAction<DebugMenuModalState>) {
       return pushOrPopModal(state, 'debugMenuModal', action.payload);
     },
-    updateKeyboardShortcutsMenuModal(state, action: PayloadAction<KeyboardShotcutsModalState>) {
+    updateKeyboardShortcutsMenuModal(state, action: PayloadAction<KeyboardShortcutsModalState>) {
+      // if we want to show the keyboard shortcuts modal, but the lightbox is opened, ignore the change
+      if (state.lightBoxOptions && action.payload) {
+        return state;
+      }
       return pushOrPopModal(state, 'keyboardShortcutsModal', action.payload);
     },
     updateConversationSettingsModal(state, action: PayloadAction<ConversationSettingsModalState>) {
@@ -389,6 +408,7 @@ export const {
   updateLocalizedPopupDialog,
   updateSessionCTA,
   updateLightBoxOptions,
+  updateOutgoingLightBoxOptions,
   updateDebugMenuModal,
   updateKeyboardShortcutsMenuModal,
   updateConversationSettingsModal,

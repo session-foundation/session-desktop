@@ -7,6 +7,7 @@ import { SpacerXS } from '../../basic/Text';
 import { Localizer } from '../../basic/Localizer';
 import type { TrArgs } from '../../../localization/localeTools';
 import { useIsDarkTheme } from '../../../state/theme/selectors/theme';
+import { focusVisibleBoxShadowInset } from '../../../styles/focusVisible';
 
 // NOTE Used for descendant components
 export const StyledContent = styled.div<{ disabled?: boolean; $rowReverse?: boolean }>`
@@ -84,6 +85,11 @@ const StyledRoundedPanelButtonGroup = styled.div<{
   padding: 0;
   width: -webkit-fill-available;
   border: ${props => (props.$withBorder ? 'var(--default-borders)' : 'none')};
+
+  & > div > button:focus-visible,
+  & > div > button:focus-visible {
+    --focus-border-radius: 16px;
+  }
 `;
 
 const PanelButtonContainer = styled.div`
@@ -139,8 +145,7 @@ export const StyledPanelButton = styled.button<{
   padding-block: var(--margins-sm);
   min-height: var(--panel-button-container-min-height);
 
-  &:hover,
-  &:focus {
+  &:hover {
     background-color: ${props => {
       if (props.disabled) {
         return 'transparent'; // let the PanelButtonGroup background be visible
@@ -151,6 +156,8 @@ export const StyledPanelButton = styled.button<{
       return 'color-mix(in srgb, var(--background-tertiary-color) 95%, black)';
     }};
   }
+
+  ${focusVisibleBoxShadowInset()}
 `;
 
 export type PanelButtonProps = {

@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import useKey from 'react-use/lib/useKey';
 import { getAppDispatch } from '../../state/dispatch';
 import { useLastMessage } from '../../hooks/useParamSelector';
 import { updateConversationInteractionState } from '../../interactions/conversationInteractions';
@@ -89,10 +88,6 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
       dispatch(updateConfirmModal(null));
     }
   };
-
-  useKey('Enter', () => {
-    void onClickOkHandler();
-  });
 
   useEffect(() => {
     if (isLoading) {

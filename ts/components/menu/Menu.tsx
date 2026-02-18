@@ -1,20 +1,13 @@
-import { Submenu } from 'react-contexify';
 import type { JSX } from 'react';
 import { useConvoIdFromContext } from '../../contexts/ConvoIdContext';
 import {
   useIsIncomingRequest,
   useIsPrivate,
-  useIsPrivateAndFriend,
   useNotificationSetting,
 } from '../../hooks/useParamSelector';
-import {
-  handleAcceptConversationRequestWithoutConfirm,
-  markAllReadByConvoId,
-} from '../../interactions/conversationInteractions';
-import { ConvoHub } from '../../session/conversations';
+import { handleAcceptConversationRequestWithoutConfirm } from '../../interactions/conversationInteractions';
 import { PubKey } from '../../session/types';
-import { useIsMessageRequestOverlayShown } from '../../state/selectors/section';
-import { ItemWithDataTestId } from './items/MenuItemWithDataTestId';
+import { MenuItem, SubMenuItem } from './items/MenuItem';
 import { NetworkTime } from '../../util/NetworkTime';
 import { useShowNotificationFor } from '../menuAndSettingsHooks/useShowNotificationFor';
 import { useLocalisedNotificationOptions } from '../menuAndSettingsHooks/useLocalisedNotificationFor';
@@ -25,8 +18,6 @@ import { useClearAllMessagesCb } from '../menuAndSettingsHooks/useClearAllMessag
 import { useHideNoteToSelfCb } from '../menuAndSettingsHooks/useHideNoteToSelf';
 import { useShowDeletePrivateConversationCb } from '../menuAndSettingsHooks/useShowDeletePrivateConversation';
 import { useShowInviteContactToCommunity } from '../menuAndSettingsHooks/useShowInviteContactToCommunity';
-import { useAddModeratorsCb } from '../menuAndSettingsHooks/useAddModerators';
-import { useRemoveModeratorsCb } from '../menuAndSettingsHooks/useRemoveModerators';
 import { useUnbanUserCb } from '../menuAndSettingsHooks/useUnbanUser';
 import { useBanUserCb } from '../menuAndSettingsHooks/useBanUser';
 import { useSetNotificationsFor } from '../menuAndSettingsHooks/useSetNotificationsFor';
@@ -35,6 +26,7 @@ import { useChangeNickname } from '../menuAndSettingsHooks/useChangeNickname';
 import { useShowNoteToSelfCb } from '../menuAndSettingsHooks/useShowNoteToSelf';
 import { useShowUserDetailsCbFromConversation } from '../menuAndSettingsHooks/useShowUserDetailsCb';
 import { useDeclineMessageRequest } from '../menuAndSettingsHooks/useDeclineMessageRequest';
+import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 
 /** Menu items standardized */
 
@@ -44,26 +36,14 @@ export const InviteContactMenuItem = (): JSX.Element | null => {
 
   if (showInviteContactCb) {
     return (
-      <ItemWithDataTestId onClick={showInviteContactCb}>{tr('membersInvite')}</ItemWithDataTestId>
+      <MenuItem
+        onClick={showInviteContactCb}
+        iconType={LUCIDE_ICONS_UNICODE.USER_ROUND_PLUS}
+        isDangerAction={false}
+      >
+        {tr('membersInvite')}
+      </MenuItem>
     );
-  }
-  return null;
-};
-
-export const MarkConversationUnreadMenuItem = (): JSX.Element | null => {
-  const conversationId = useConvoIdFromContext();
-  const isPrivate = useIsPrivate(conversationId);
-  const isPrivateAndFriend = useIsPrivateAndFriend(conversationId);
-  const isMessageRequestShown = useIsMessageRequestOverlayShown();
-
-  if (!isMessageRequestShown && (!isPrivate || (isPrivate && isPrivateAndFriend))) {
-    const conversation = ConvoHub.use().get(conversationId);
-
-    const markUnread = () => {
-      void conversation?.markAsUnread(true);
-    };
-
-    return <ItemWithDataTestId onClick={markUnread}>{tr('messageMarkUnread')}</ItemWithDataTestId>;
   }
   return null;
 };
@@ -83,9 +63,9 @@ export const DeletePrivateContactMenuItem = () => {
   }
 
   return (
-    <ItemWithDataTestId onClick={showDeletePrivateContactCb}>
+    <MenuItem onClick={showDeletePrivateContactCb} iconType="removeUser" isDangerAction={true}>
       {tr('contactDelete')}
-    </ItemWithDataTestId>
+    </MenuItem>
   );
 };
 
@@ -96,37 +76,17 @@ export const ShowUserProfileMenuItem = () => {
 
   if (showUserDetailsCb) {
     return (
-      <ItemWithDataTestId onClick={showUserDetailsCb}>
+      <MenuItem
+        onClick={showUserDetailsCb}
+        iconType={LUCIDE_ICONS_UNICODE.INFO}
+        isDangerAction={false}
+      >
         {tr('contactUserDetails')}
-      </ItemWithDataTestId>
+      </MenuItem>
     );
   }
 
   return null;
-};
-
-export const RemoveModeratorsMenuItem = (): JSX.Element | null => {
-  const convoId = useConvoIdFromContext();
-  const showRemoveModeratorsCb = useRemoveModeratorsCb(convoId);
-
-  if (!showRemoveModeratorsCb) {
-    return null;
-  }
-  return (
-    <ItemWithDataTestId onClick={showRemoveModeratorsCb}>{tr('adminRemove')}</ItemWithDataTestId>
-  );
-};
-
-export const AddModeratorsMenuItem = (): JSX.Element | null => {
-  const convoId = useConvoIdFromContext();
-  const addRemoveModeratorsCb = useAddModeratorsCb(convoId);
-
-  if (!addRemoveModeratorsCb) {
-    return null;
-  }
-  return (
-    <ItemWithDataTestId onClick={addRemoveModeratorsCb}>{tr('adminPromote')}</ItemWithDataTestId>
-  );
 };
 
 export const UnbanMenuItem = (): JSX.Element | null => {
@@ -136,7 +96,15 @@ export const UnbanMenuItem = (): JSX.Element | null => {
   if (!showUnbanUserCb) {
     return null;
   }
-  return <ItemWithDataTestId onClick={showUnbanUserCb}>{tr('banUnbanUser')}</ItemWithDataTestId>;
+  return (
+    <MenuItem
+      onClick={showUnbanUserCb}
+      iconType={LUCIDE_ICONS_UNICODE.USER_ROUND_CHECK}
+      isDangerAction={true}
+    >
+      {tr('banUnbanUser')}
+    </MenuItem>
+  );
 };
 
 export const BanMenuItem = (): JSX.Element | null => {
@@ -147,21 +115,15 @@ export const BanMenuItem = (): JSX.Element | null => {
   if (!showBanUserCb) {
     return null;
   }
-  return <ItemWithDataTestId onClick={showBanUserCb}>{tr('banUser')}</ItemWithDataTestId>;
-};
-
-export const MarkAllReadMenuItem = (): JSX.Element | null => {
-  const convoId = useConvoIdFromContext();
-  const isIncomingRequest = useIsIncomingRequest(convoId);
-  if (!isIncomingRequest && !PubKey.isBlinded(convoId)) {
-    return (
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      <ItemWithDataTestId onClick={async () => markAllReadByConvoId(convoId)}>
-        {tr('messageMarkRead')}
-      </ItemWithDataTestId>
-    );
-  }
-  return null;
+  return (
+    <MenuItem
+      onClick={showBanUserCb}
+      iconType={LUCIDE_ICONS_UNICODE.USER_ROUND_X}
+      isDangerAction={true}
+    >
+      {tr('banUser')}
+    </MenuItem>
+  );
 };
 
 export const BlockMenuItem = (): JSX.Element | null => {
@@ -173,9 +135,13 @@ export const BlockMenuItem = (): JSX.Element | null => {
   }
 
   return (
-    <ItemWithDataTestId onClick={showBlockUnblock.cb}>
+    <MenuItem
+      onClick={showBlockUnblock.cb}
+      iconType={showBlockUnblock.icon}
+      isDangerAction={showBlockUnblock.token === 'block'}
+    >
       {tr(showBlockUnblock.token)}
-    </ItemWithDataTestId>
+    </MenuItem>
   );
 };
 
@@ -188,9 +154,13 @@ export const ChangeNicknameMenuItem = () => {
     return null;
   }
   return (
-    <ItemWithDataTestId onClick={changeNicknameCb}>
+    <MenuItem
+      onClick={changeNicknameCb}
+      iconType={LUCIDE_ICONS_UNICODE.USER_ROUND_PEN}
+      isDangerAction={false}
+    >
       <Localizer token="nicknameSet" />
-    </ItemWithDataTestId>
+    </MenuItem>
   );
 };
 
@@ -207,10 +177,10 @@ export const DeleteMessagesMenuItem = () => {
     return null;
   }
   return (
-    <ItemWithDataTestId onClick={clearAllMessagesCb}>
+    <MenuItem onClick={clearAllMessagesCb} iconType="messageTrash" isDangerAction={true}>
       {/* just more than 1 to have the string Delete Messages */}
       {tr('clearMessages')}
-    </ItemWithDataTestId>
+    </MenuItem>
   );
 };
 
@@ -229,13 +199,15 @@ export const DeletePrivateConversationMenuItem = () => {
   }
 
   return (
-    <ItemWithDataTestId
+    <MenuItem
       onClick={() => {
         showDeleteConversationContactCb();
       }}
+      iconType={LUCIDE_ICONS_UNICODE.TRASH2}
+      isDangerAction={true}
     >
       {tr('conversationsDelete')}
-    </ItemWithDataTestId>
+    </MenuItem>
   );
 };
 
@@ -249,13 +221,15 @@ export const HideNoteToSelfMenuItem = () => {
   }
 
   return (
-    <ItemWithDataTestId
+    <MenuItem
       onClick={() => {
         showHideNoteToSelfCb();
       }}
+      iconType={LUCIDE_ICONS_UNICODE.EYE_OFF}
+      isDangerAction={false}
     >
       {tr('noteToSelfHide')}
-    </ItemWithDataTestId>
+    </MenuItem>
   );
 };
 
@@ -269,13 +243,15 @@ export const ShowNoteToSelfMenuItem = () => {
   }
 
   return (
-    <ItemWithDataTestId
+    <MenuItem
       onClick={() => {
         showShowNoteToSelfCb();
       }}
+      iconType={LUCIDE_ICONS_UNICODE.EYE}
+      isDangerAction={false}
     >
       {tr('showNoteToSelf')}
-    </ItemWithDataTestId>
+    </MenuItem>
   );
 };
 
@@ -286,7 +262,7 @@ export const AcceptMsgRequestMenuItem = () => {
 
   if (isRequest && (isPrivate || PubKey.is03Pubkey(convoId))) {
     return (
-      <ItemWithDataTestId
+      <MenuItem
         onClick={() => {
           void handleAcceptConversationRequestWithoutConfirm({
             convoId,
@@ -294,9 +270,11 @@ export const AcceptMsgRequestMenuItem = () => {
           });
         }}
         dataTestId="accept-menu-item"
+        iconType={LUCIDE_ICONS_UNICODE.USER_ROUND_CHECK}
+        isDangerAction={false}
       >
         {tr('accept')}
-      </ItemWithDataTestId>
+      </MenuItem>
     );
   }
   return null;
@@ -311,9 +289,14 @@ export const DeclineMsgRequestMenuItem = () => {
   }
 
   return (
-    <ItemWithDataTestId onClick={declineCb} dataTestId="delete-menu-item">
+    <MenuItem
+      onClick={declineCb}
+      dataTestId="delete-menu-item"
+      iconType={LUCIDE_ICONS_UNICODE.TRASH2}
+      isDangerAction={true}
+    >
       {tr('delete')}
-    </ItemWithDataTestId>
+    </MenuItem>
   );
 };
 
@@ -326,9 +309,14 @@ export const DeclineAndBlockMsgRequestMenuItem = () => {
     return null;
   }
   return (
-    <ItemWithDataTestId onClick={declineAndBlockCb} dataTestId="block-menu-item">
+    <MenuItem
+      onClick={declineAndBlockCb}
+      dataTestId="block-menu-item"
+      iconType={LUCIDE_ICONS_UNICODE.USER_ROUND_X}
+      isDangerAction={true}
+    >
       {tr('block')}
-    </ItemWithDataTestId>
+    </MenuItem>
   );
 };
 
@@ -345,30 +333,33 @@ export const NotificationForConvoMenuItem = (): JSX.Element | null => {
   if (!showNotificationFor) {
     return null;
   }
-  // const isrtlMode = isRtlBody();
 
   return (
-    // Remove the && false to make context menu work with RTL support
-    <Submenu
-      label={tr('sessionNotifications')}
-      // rtl={isRtlMode && false}
-    >
+    <SubMenuItem label={tr('sessionNotifications')} iconType={LUCIDE_ICONS_UNICODE.VOLUME_2}>
       {(notificationForConvoOptions || []).map(item => {
         const disabled = item.value === currentNotificationSetting;
 
         return (
-          <ItemWithDataTestId
+          <MenuItem
             key={item.value}
             onClick={() => {
               setNotificationFor(item.value);
             }}
             disabled={disabled}
+            iconType={
+              item.value === 'all'
+                ? LUCIDE_ICONS_UNICODE.VOLUME_2
+                : item.value === 'disabled'
+                  ? LUCIDE_ICONS_UNICODE.VOLUME_OFF
+                  : 'bell'
+            }
+            isDangerAction={false}
           >
             {tr(item.token)}
-          </ItemWithDataTestId>
+          </MenuItem>
         );
       })}
-    </Submenu>
+    </SubMenuItem>
   );
 
   return null;

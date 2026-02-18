@@ -120,7 +120,6 @@ export const UserProfileModal = ({
               buttonColor={SessionButtonColor.PrimaryDark}
               dataTestId="copy-button-account-id"
               buttonType={SessionButtonType.Outline}
-              hotkey={true}
             />
           )}
         </ModalActionsContainer>

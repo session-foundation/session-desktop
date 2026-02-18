@@ -1,13 +1,16 @@
-import { SessionDataTestId, type MouseEventHandler } from 'react';
+import { SessionDataTestId, type KeyboardEvent, type MouseEvent } from 'react';
 
 import styled, { CSSProperties } from 'styled-components';
 import { Flex } from './Flex';
+import { createButtonOnKeyDownForClickEventHandler } from '../../util/keyboardShortcuts';
+import { focusVisibleBoxShadowInset } from '../../styles/focusVisible';
 
 const StyledContainer = styled.div<{ disabled: boolean }>`
   cursor: ${props => (props.disabled ? 'not-allowed' : 'pointer')};
   min-height: 30px;
   background-color: var(--transparent-color);
   padding-block: var(--margins-sm);
+  ${focusVisibleBoxShadowInset()}
 `;
 
 const StyledRadioOuter = styled.div<{
@@ -17,7 +20,7 @@ const StyledRadioOuter = styled.div<{
 }>`
   width: ${props => props.$diameterRadioBorder}px;
   height: ${props => props.$diameterRadioBorder}px;
-  border: 1px solid var(--text-primary-color);
+  border: 1px solid var(--radio-border-color, var(--text-primary-color));
   border-radius: 50%;
 
   cursor: ${props => (props.$disabled ? 'not-allowed' : 'pointer')};
@@ -36,6 +39,8 @@ const StyledRadioOuter = styled.div<{
     transition: opacity 0.3s ease;
     pointer-events: none;
   }
+
+  ${focusVisibleBoxShadowInset()}
 `;
 
 /**
@@ -50,21 +55,24 @@ export function RadioDot({
   diameterRadioBorder,
   style,
   ariaLabel,
+  tabIndex = 1,
 }: {
   selected: boolean;
-  onClick: MouseEventHandler<HTMLDivElement>;
+  onClick: (e: KeyboardEvent<HTMLElement> | MouseEvent<HTMLElement>) => void;
   disabled: boolean;
   dataTestId: SessionDataTestId | undefined;
   diameterRadioBorder: number;
   style?: CSSProperties;
   ariaLabel?: string;
+  tabIndex?: number;
 }) {
+  const onKeyDown = createButtonOnKeyDownForClickEventHandler(onClick);
   // clickHandler is on the parent button, so we need to skip this input while pressing Tab
   return (
     <StyledRadioOuter
       onClick={onClick}
       $disabled={disabled}
-      tabIndex={-1}
+      tabIndex={tabIndex}
       data-testid={dataTestId}
       $diameterRadioBorder={diameterRadioBorder}
       style={style}
@@ -72,6 +80,7 @@ export function RadioDot({
       data-checked={selected}
       data-disabled={disabled}
       $selected={selected}
+      onKeyDown={onKeyDown}
     />
   );
 }
@@ -95,6 +104,7 @@ type SessionRadioProps = {
   style?: CSSProperties;
   labelDataTestId?: SessionDataTestId;
   inputDataTestId?: SessionDataTestId;
+  tabIndex?: number;
 };
 
 export const SessionRadio = (props: SessionRadioProps) => {
@@ -107,6 +117,7 @@ export const SessionRadio = (props: SessionRadioProps) => {
     style,
     labelDataTestId,
     inputDataTestId,
+    tabIndex = -1,
   } = props;
 
   const clickHandler = (e: React.MouseEvent<any> | React.KeyboardEvent<any>) => {
@@ -118,16 +129,14 @@ export const SessionRadio = (props: SessionRadioProps) => {
   };
 
   const diameterRadioBorder = 26;
+  const onKeyDown = createButtonOnKeyDownForClickEventHandler(clickHandler);
 
   return (
     <StyledContainer
-      onKeyDown={e => {
-        if (e.code === 'Space') {
-          clickHandler(e);
-        }
-      }}
+      onKeyDown={onKeyDown}
       onClick={clickHandler}
       disabled={disabled}
+      tabIndex={tabIndex}
     >
       <Flex
         $container={true}
@@ -153,6 +162,7 @@ export const SessionRadio = (props: SessionRadioProps) => {
           disabled={disabled}
           dataTestId={inputDataTestId}
           diameterRadioBorder={diameterRadioBorder}
+          tabIndex={-1}
         />
       </Flex>
     </StyledContainer>

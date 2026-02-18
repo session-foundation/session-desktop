@@ -49,7 +49,7 @@ import LIBSESSION_CONSTANTS from '../../../session/utils/libsession/libsession_c
 import { Mention } from '../AddMentions';
 import { useDebugInputCommands } from '../../dialog/debug/hooks/useDebugInputCommands';
 import { useKeyboardShortcut } from '../../../hooks/useKeyboardShortcut';
-import { KbdShortcut } from '../../../util/keyboardShortcuts';
+import { isEnterKey, isEscapeKey, KbdShortcut } from '../../../util/keyboardShortcuts';
 import { PopoverTriggerPosition } from '../../SessionTooltip';
 import { getAppDispatch } from '../../../state/dispatch';
 import { setIsCompositionTextAreaFocused } from '../../../state/ducks/conversations';
@@ -356,7 +356,7 @@ function useHandleKeyDown({
         return;
       }
 
-      if (e.key === 'Escape') {
+      if (isEscapeKey(e)) {
         // Exit mention mode and disable escape default behaviour
         e.preventDefault();
         handleMentionCleanup();
@@ -384,7 +384,7 @@ function useHandleKeyDown({
         const dirModifier = htmlDirection === 'ltr' ? 1 : -1;
         const delta = (e.key === 'ArrowRight' ? 1 : -1) * dirModifier;
         handleMentionCheck(draft, pos + delta);
-      } else if (e.key === 'Enter' || e.key === 'Tab') {
+      } else if (isEnterKey(e) || e.key === 'Tab') {
         /**
          *  Exit mention mode and hand off control to the parent onKeyDown if there are no mention results.
          *  We can't use `mention.content` to define this behaviour because for user mentions we count
@@ -480,6 +480,7 @@ export function CompositionTextArea(props: Props) {
   useEffect(() => {
     handleMentionCleanup();
     inputRef.current?.resetState(initialDraft);
+    inputRef.current?.focus();
   }, [handleMentionCleanup, initialDraft, inputRef, selectedConversationKey]);
 
   const results = useMentionResults(mention);
@@ -608,7 +609,7 @@ export function CompositionTextArea(props: Props) {
         onKeyUp={handleKeyUp}
         spellCheck={true}
         disabled={!typingEnabled}
-        autoFocus={true}
+        autoFocus={false}
         ref={inputRef}
         $scrollbarPadding={140}
         autoCorrect="off"

@@ -1,3 +1,4 @@
+import { focusVisibleBoxShadowOutsetStr } from '../../../styles/focusVisible';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 import { SessionLucideIconButton } from '../../icon/SessionIconButton';
 
@@ -10,6 +11,7 @@ export function AvatarExitQrCodeButton({ onExitQrCodeView }: { onExitQrCodeView:
       iconColor="var(--black-color)"
       padding="var(--margins-xs)"
       onClick={onExitQrCodeView}
+      focusVisibleEffect={focusVisibleBoxShadowOutsetStr()}
       style={{
         position: 'absolute',
         top: '-15px',

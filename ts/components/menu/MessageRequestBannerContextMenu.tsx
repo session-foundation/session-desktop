@@ -1,10 +1,8 @@
-import { Menu } from 'react-contexify';
 import type { JSX } from 'react';
 
 import { SessionContextMenuContainer } from '../SessionContextMenuContainer';
 
-import { ItemWithDataTestId } from './items/MenuItemWithDataTestId';
-import { getMenuAnimation } from './MenuAnimation';
+import { MenuItem, Menu } from './items/MenuItem';
 import { tr } from '../../localization/localeTools';
 import { SettingsKey } from '../../data/settings-key';
 
@@ -18,9 +16,13 @@ async function hideMessageRequestsBanner() {
 
 const HideBannerMenuItem = (): JSX.Element => {
   return (
-    <ItemWithDataTestId onClick={() => void hideMessageRequestsBanner()}>
+    <MenuItem
+      onClick={() => void hideMessageRequestsBanner()}
+      iconType={null}
+      isDangerAction={false}
+    >
       {tr('hide')}
-    </ItemWithDataTestId>
+    </MenuItem>
   );
 };
 
@@ -29,7 +31,7 @@ export const MessageRequestBannerContextMenu = (props: PropsContextConversationI
 
   return (
     <SessionContextMenuContainer>
-      <Menu id={triggerId} animation={getMenuAnimation()}>
+      <Menu id={triggerId}>
         <HideBannerMenuItem />
       </Menu>
     </SessionContextMenuContainer>

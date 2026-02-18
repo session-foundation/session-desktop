@@ -157,6 +157,7 @@ import {
 } from '../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 import { ProRevocationCache } from '../session/revocation_list/pro_revocation_list';
 import { uuidV4 } from '../util/uuid';
+import { pushQuotedMessageToStoreIfNeeded } from '../receiver/queuedJob';
 
 type InMemoryConvoInfos = {
   mentionedUs: boolean;
@@ -862,7 +863,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
       utf16: undefined,
     });
     const messageRequestResponseParams: MessageRequestResponseParams = {
-      createAtNetworkTimestamp: NetworkTime.now(),
+      createAtNetworkTimestamp: msg.get('sent_at') ?? NetworkTime.now(),
       userProfile: await UserUtils.getOurProfile(),
       outgoingProMessageDetails,
       dbMessageIdentifier: msg.id,
@@ -1003,6 +1004,14 @@ export class ConversationModel extends Model<ConversationAttributes> {
       await this.commit();
 
       return;
+    }
+
+    // await messageModel.commit();
+    if (quote) {
+      await pushQuotedMessageToStoreIfNeeded({
+        author: quote.author,
+        id: quote.timestamp,
+      });
     }
 
     this.setLastMessage(messageModel.getNotificationText());
@@ -1425,6 +1434,8 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
     // otherwise, do it the slow and expensive way
     await this.markConversationReadBouncy({ newestUnreadDate: Date.now() });
+    await this.markAsUnread(false, false);
+    await this.commit();
   }
 
   public getUsInThatConversation() {
@@ -2421,7 +2432,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
       // handleAcceptConversationRequestWithoutConfirm will take care of sending response depending on the type of conversation
       await handleAcceptConversationRequestWithoutConfirm({
         convoId: this.id,
-        approvalMessageTimestamp: NetworkTime.now() - 100,
+        approvalMessageTimestamp: networkTimestamp - 100,
       });
 
       if (this.isOpenGroupV2()) {
@@ -2944,7 +2955,8 @@ export class ConversationModel extends Model<ConversationAttributes> {
   private async getQuoteAttachment(attachments: any, preview: any) {
     try {
       if (attachments?.length) {
-        return Promise.all(
+        // Note: the await is needed for the catch to work
+        return await Promise.all(
           attachments
             .filter(
               (attachment: any) =>
@@ -2971,7 +2983,8 @@ export class ConversationModel extends Model<ConversationAttributes> {
       }
 
       if (preview?.length) {
-        return Promise.all(
+        // Note: the await is needed for the catch to work
+        return await Promise.all(
           preview
             .filter((attachment: any) => attachment?.image?.path) // loadAttachmentData throws if the image.path is not set
             .slice(0, 1)

@@ -1,4 +1,3 @@
-import useKey from 'react-use/lib/useKey';
 import styled from 'styled-components';
 
 import { useState } from 'react';
@@ -15,6 +14,7 @@ import { LucideIcon } from '../../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 import { tr } from '../../../localization/localeTools';
 import { SessionIDNotEditable } from '../../basic/SessionIdNotEditable';
+import { useEscBlurThenHandler } from '../../../hooks/useKeyboardShortcut';
 
 const StyledHeadingContainer = styled(Flex)`
   gap: var(--margins-xs);
@@ -63,11 +63,12 @@ export const OverlayInvite = () => {
 
   const dispatch = getAppDispatch();
 
-  function closeOverlay() {
-    dispatch(sectionActions.resetLeftOverlayMode());
+  function goBack() {
+    dispatch(sectionActions.setLeftOverlayMode({ type: 'choose-action', params: null }));
+    return true;
   }
 
-  useKey('Escape', closeOverlay);
+  useEscBlurThenHandler(goBack);
 
   return (
     <StyledLeftPaneOverlay
@@ -98,7 +99,6 @@ export const OverlayInvite = () => {
               buttonColor={SessionButtonColor.PrimaryDark}
               copyContent={ourSessionID}
               onCopyComplete={() => setIdCopied(true)}
-              hotkey={true}
               dataTestId="copy-button-account-id"
             />
           </StyledButtonContainer>

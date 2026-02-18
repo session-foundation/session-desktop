@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import styled from 'styled-components';
 import { Flex } from './Flex';
+import { createButtonOnKeyDownForClickEventHandler } from '../../util/keyboardShortcuts';
 
 type PillContainerProps = {
   children: ReactNode;
@@ -46,8 +47,17 @@ const StyledPillInner = styled.div<PillContainerProps>`
 `;
 
 export const PillContainerHoverable = (props: Omit<PillContainerProps, '$disableHover'>) => {
+  const onKeyDown = props.onClick
+    ? createButtonOnKeyDownForClickEventHandler(props.onClick)
+    : undefined;
   return (
-    <StyledPillInner {...props} $disableHover={!props.onClick}>
+    <StyledPillInner
+      {...props}
+      $disableHover={!props.onClick}
+      role={props.onClick ? 'button' : undefined}
+      tabIndex={props.onClick ? 0 : -1}
+      onKeyDown={onKeyDown}
+    >
       {props.children}
     </StyledPillInner>
   );

@@ -7,13 +7,13 @@ import { getAppDispatch } from '../state/dispatch';
 import { searchActions, type DoSearchActionType, type SearchType } from '../state/ducks/search';
 import { getConversationsCount } from '../state/selectors/conversations';
 import { useLeftOverlayModeType } from '../state/selectors/section';
-import { useHotkey } from '../hooks/useHotkey';
 import { tr } from '../localization/localeTools';
 import { SessionLucideIconButton } from './icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from './icon/lucide';
 import { LucideIcon } from './icon/LucideIcon';
 import { useKeyboardShortcut } from '../hooks/useKeyboardShortcut';
-import { KbdShortcut } from '../util/keyboardShortcuts';
+import { focusVisibleDisabled } from '../styles/focusVisible';
+import { isEscapeKey, KbdShortcut } from '../util/keyboardShortcuts';
 
 const StyledSearchInput = styled.div`
   height: var(--search-input-height);
@@ -41,10 +41,8 @@ const StyledInput = styled.input`
   background: none;
   color: var(--text-secondary-color);
 
-  &:focus {
-    color: var(--text-primary-color);
-    outline: none !important;
-  }
+  // the caret is already there to say that this is focused
+  ${focusVisibleDisabled()}
 `;
 
 const doTheSearch = (dispatch: Dispatch<any>, searchOpts: DoSearchActionType) => {
@@ -73,24 +71,9 @@ export const SessionSearchInput = ({ searchType }: { searchType: SearchType }) =
 
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useHotkey('Escape', () => {
-    if (inputRef.current !== null && inputRef.current === document.activeElement) {
-      setCurrentSearchTerm('');
-      dispatch(searchActions.clearSearch());
-    }
-  });
-
-  const isDisabled = () =>
-    !(inputRef.current !== null && inputRef.current !== document.activeElement);
-
   useKeyboardShortcut({
     shortcut: KbdShortcut.conversationListSearch,
-    handler: () => {
-      if (!isDisabled() && inputRef.current) {
-        inputRef.current.focus();
-      }
-    },
-    disabled: isDisabled,
+    handler: () => inputRef.current?.focus(),
   });
 
   // just after onboard we only have a conversation with ourself
@@ -117,6 +100,7 @@ export const SessionSearchInput = ({ searchType }: { searchType: SearchType }) =
         unicode={LUCIDE_ICONS_UNICODE.SEARCH}
       />
       <StyledInput
+        data-testid="search-input"
         ref={inputRef}
         value={currentSearchTerm}
         onChange={e => {
@@ -129,21 +113,33 @@ export const SessionSearchInput = ({ searchType }: { searchType: SearchType }) =
         }}
         placeholder={placeholder}
         style={{ borderWidth: '0' }}
+        onKeyDown={e => {
+          if (isEscapeKey(e)) {
+            if (currentSearchTerm.length) {
+              setCurrentSearchTerm('');
+              dispatch(searchActions.clearSearch());
+              e.stopPropagation();
+              e.preventDefault();
+            } else {
+              inputRef.current?.blur();
+              e.stopPropagation();
+              e.preventDefault();
+            }
+          }
+        }}
       />
-      {Boolean(currentSearchTerm.length) && (
+      {currentSearchTerm.length ? (
         <SessionLucideIconButton
           iconColor="var(--text-secondary-color)"
           iconSize={iconSize}
           unicode={LUCIDE_ICONS_UNICODE.X}
-          // NOTE: we dont want the clear button in the tab index list
-          // as we want the next tab after search to be the first result
-          tabIndex={-1}
+          tabIndex={0}
           onClick={() => {
             setCurrentSearchTerm('');
             dispatch(searchActions.clearSearch());
           }}
         />
-      )}
+      ) : null}
     </StyledSearchInput>
   );
 };

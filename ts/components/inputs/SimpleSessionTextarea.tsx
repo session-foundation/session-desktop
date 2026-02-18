@@ -12,6 +12,13 @@ import {
 } from './SessionInput';
 import { useUpdateInputValue } from './useUpdateInputValue';
 import { SpacerMD } from '../basic/Text';
+import { focusVisibleDisabled } from '../../styles/focusVisible';
+import { isEnterKey, isEscapeKey } from '../../util/keyboardShortcuts';
+
+const StyledTextArea = styled.textarea`
+  // the caret is already there to say that this is focused
+  ${focusVisibleDisabled()}
+`;
 
 export const StyledTextAreaContainer = styled(motion.div)<{
   $error: boolean;
@@ -108,7 +115,7 @@ export const SimpleSessionTextarea = (
   const hasError = !isEmpty(providedError);
   const hasValue = !isEmpty(value);
 
-  const ref = useRef<HTMLInputElement | null>(null);
+  const ref = useRef<HTMLTextAreaElement>(null);
 
   const updateInputValue = useUpdateInputValue(onValueChanged, disabled);
 
@@ -152,21 +159,21 @@ export const SimpleSessionTextarea = (
     >
       <BorderWithErrorState hasError={hasError}>
         <StyledTextAreaContainer $error={hasError} $textSize={textSize} $padding={padding}>
-          <textarea
+          <StyledTextArea
             {...inputProps}
             placeholder={disabled ? value : placeholder}
             ref={ref}
             aria-label={ariaLabel}
             spellCheck={false} // maybe we should make this a prop, but it seems we never want spellcheck for those fields
             onKeyDown={e => {
-              if (e.key === 'Escape' && allowEscapeKeyPassthrough) {
+              if (isEscapeKey(e) && allowEscapeKeyPassthrough) {
                 return;
               }
               if (!props.singleLine) {
                 e.stopPropagation();
                 return;
               }
-              if (e.key === 'Enter') {
+              if (isEnterKey(e)) {
                 e.preventDefault();
                 e.stopPropagation();
                 props?.onEnterPressed();

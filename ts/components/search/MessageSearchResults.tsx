@@ -54,7 +54,7 @@ const StyledSearchResults = styled.div`
   cursor: pointer;
 
   &:hover,
-  &:focus {
+  &:focus-visible {
     background-color: var(--conversation-tab-background-hover-color);
   }
 `;

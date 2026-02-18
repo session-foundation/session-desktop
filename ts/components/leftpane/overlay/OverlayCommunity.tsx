@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import { useState } from 'react';
-import useKey from 'react-use/lib/useKey';
 import { getAppDispatch } from '../../../state/dispatch';
 
 import { SessionJoinableRooms } from './SessionJoinableDefaultRooms';
@@ -24,6 +23,7 @@ import LIBSESSION_CONSTANTS from '../../../session/utils/libsession/libsession_c
 import { sectionActions } from '../../../state/ducks/section';
 import { SimpleSessionTextarea } from '../../inputs/SimpleSessionTextarea';
 import { tr } from '../../../localization/localeTools';
+import { useEscBlurThenHandler } from '../../../hooks/useKeyboardShortcut';
 
 async function joinOpenGroup(
   serverUrl: string,
@@ -74,6 +74,10 @@ export const OverlayCommunity = () => {
     }
   }
 
+  async function onTryJoinRoomFromInput() {
+    return onTryJoinRoom();
+  }
+
   function joinSogsUICallback(args: JoinSogsRoomUICallbackArgs) {
     setLoading(args.loadingState === 'started');
     if (args.conversationKey) {
@@ -90,7 +94,12 @@ export const OverlayCommunity = () => {
     }
   }
 
-  useKey('Escape', closeOverlay);
+  function goBack() {
+    dispatch(sectionActions.resetLeftOverlayMode());
+    return true;
+  }
+
+  useEscBlurThenHandler(goBack);
 
   return (
     <StyledLeftPaneOverlay
@@ -108,7 +117,7 @@ export const OverlayCommunity = () => {
         onValueChanged={setGroupUrl}
         singleLine={true}
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        onEnterPressed={onTryJoinRoom}
+        onEnterPressed={onTryJoinRoomFromInput}
         providedError={groupUrlError}
         disabled={loading}
         // - 1 for null terminator
@@ -116,12 +125,13 @@ export const OverlayCommunity = () => {
         textSize="md"
         inputDataTestId="join-community-conversation"
         errorDataTestId="error-message"
+        allowEscapeKeyPassthrough={true}
       />
       <Spacer2XL />
       <SessionButton
         text={tr('join')}
         disabled={!groupUrl || loading}
-        onClick={onTryJoinRoom}
+        onClick={onTryJoinRoomFromInput}
         dataTestId="join-community-button"
         buttonColor={SessionButtonColor.PrimaryDark}
       />

@@ -13,6 +13,7 @@ import { useIsMessageSelectionMode } from '../../state/selectors/selectedConvers
 import { PlusAvatarButton } from '../buttons/avatar/PlusAvatarButton';
 import { StyledAvatar } from './AvatarPlaceHolder/StyledAvatar';
 import { CrownIcon } from './CrownIcon';
+import { createButtonOnKeyDownForClickEventHandler } from '../../util/keyboardShortcuts';
 
 export enum AvatarSize {
   XS = 28,
@@ -37,6 +38,7 @@ type Props = {
    * This will be the callback to call on click on that `+` button.
    */
   onPlusAvatarClick?: () => void;
+  tabIndex?: number;
 };
 
 const Identicon = (props: Pick<Props, 'forcedName' | 'pubkey' | 'size'>) => {
@@ -102,6 +104,7 @@ const AvatarInner = (props: Props) => {
     onAvatarClick,
     onPlusAvatarClick,
     showCrown,
+    tabIndex = -1,
   } = props;
   const [imageBroken, setImageBroken] = useState(false);
 
@@ -132,6 +135,11 @@ const AvatarInner = (props: Props) => {
     (base64Data || ((forcedAvatarPath || avatarPath) && urlToLoad)) && !imageBroken
   );
 
+  const onKeyDown =
+    tabIndex >= 0 && onAvatarClick
+      ? createButtonOnKeyDownForClickEventHandler(onAvatarClick)
+      : undefined;
+
   return (
     <StyledAvatar
       $diameter={size}
@@ -150,6 +158,8 @@ const AvatarInner = (props: Props) => {
       }}
       role="button"
       data-testid={dataTestId}
+      tabIndex={tabIndex}
+      onKeyDown={onKeyDown}
     >
       {hasImage ? (
         <AvatarImage

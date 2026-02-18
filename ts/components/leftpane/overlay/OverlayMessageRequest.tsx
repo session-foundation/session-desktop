@@ -1,5 +1,4 @@
 import { useSelector } from 'react-redux';
-import useKey from 'react-use/lib/useKey';
 import styled from 'styled-components';
 import { getAppDispatch } from '../../../state/dispatch';
 import { declineConversationWithoutConfirm } from '../../../interactions/conversationInteractions';
@@ -7,12 +6,13 @@ import { updateConfirmModal } from '../../../state/ducks/modalDialog';
 import { getConversationRequestsIds } from '../../../state/selectors/conversations';
 import { useSelectedConversationKey } from '../../../state/selectors/selectedConversation';
 import { SessionButton, SessionButtonColor } from '../../basic/SessionButton';
-import { SpacerLG } from '../../basic/Text';
+import { SpacerLG, SpacerSM } from '../../basic/Text';
 import { ConversationListItem } from '../conversation-list-item/ConversationListItem';
 import { ed25519Str } from '../../../session/utils/String';
 import { Localizer } from '../../basic/Localizer';
 import { sectionActions } from '../../../state/ducks/section';
 import { tr } from '../../../localization/localeTools';
+import { useEscBlurThenHandler } from '../../../hooks/useKeyboardShortcut';
 
 const MessageRequestListPlaceholder = styled.div`
   color: var(--text-secondary-color);
@@ -30,10 +30,11 @@ const MessageRequestListContainer = styled.div`
  * @returns List of message request items
  */
 const MessageRequestList = () => {
-  const conversationRequests = useSelector(getConversationRequestsIds);
+  const conversationRequestsIds = useSelector(getConversationRequestsIds);
+
   return (
     <MessageRequestListContainer>
-      {conversationRequests.map(conversationId => {
+      {conversationRequestsIds.map(conversationId => {
         return <ConversationListItem key={conversationId} conversationId={conversationId} />;
       })}
     </MessageRequestListContainer>
@@ -51,18 +52,16 @@ const StyledLeftPaneOverlay = styled.div`
 `;
 
 export const OverlayMessageRequest = () => {
-  useKey('Escape', closeOverlay);
   const dispatch = getAppDispatch();
 
-  function closeOverlay() {
+  useEscBlurThenHandler(() => {
     dispatch(sectionActions.resetLeftOverlayMode());
-  }
+    return true;
+  });
 
   const currentlySelectedConvo = useSelectedConversationKey();
   const messageRequests = useSelector(getConversationRequestsIds);
   const hasRequests = messageRequests.length;
-
-  const buttonText = tr('clearAll');
 
   /**
    * Blocks all message request conversations and synchronizes across linked devices
@@ -111,12 +110,13 @@ export const OverlayMessageRequest = () => {
       {hasRequests ? (
         <>
           <MessageRequestList />
-          <SpacerLG />
+          <SpacerSM />
           <SessionButton
             buttonColor={SessionButtonColor.Danger}
-            text={buttonText}
+            text={tr('clearAll')}
             onClick={handleClearAllRequestsClick}
           />
+          <SpacerSM />
         </>
       ) : (
         <>

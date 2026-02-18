@@ -3,6 +3,7 @@ import type { SessionDataTestId } from 'react';
 import { SessionLucideIconButton } from '../../icon/SessionIconButton';
 import { AvatarSize } from '../../avatar/Avatar';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
+import { focusVisibleOutlineStr } from '../../../styles/focusVisible';
 
 export function isAvatarActionSupportedAvatarSize(
   avatarSize: AvatarSize
@@ -98,6 +99,7 @@ export const PlusAvatarButton = ({
         ...hardcodedPosition,
         boxShadow: '0px 0px 3px 2px var(--borders-color)',
       }}
+      focusVisibleEffect={focusVisibleOutlineStr()}
     />
   );
 };

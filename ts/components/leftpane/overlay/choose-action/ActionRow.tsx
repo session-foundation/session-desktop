@@ -4,19 +4,6 @@ import { Flex } from '../../../basic/Flex';
 import { LucideIcon } from '../../../icon/LucideIcon';
 import type { WithLucideUnicode } from '../../../icon/lucide';
 
-const StyledActionRow = styled.button`
-  border: none;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  transition-duration: var(--default-duration);
-  width: 100%;
-
-  &:hover {
-    background: var(--conversation-tab-background-hover-color);
-  }
-`;
-
 export const StyledChooseActionTitle = styled.span`
   color: var(--text-primary-color);
   font-size: 18px;
@@ -35,6 +22,24 @@ const StyledHR = styled.hr`
   border: 0.5px solid var(--borders-color);
   padding: 0;
   margin: 0;
+`;
+
+const StyledActionRow = styled.button`
+  border: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  transition-duration: var(--default-duration);
+  width: 100%;
+
+  &:hover {
+    background: var(--conversation-tab-background-hover-color);
+  }
+
+  &:focus-visible ${StyledHR} {
+    // hide the border so the focus-visible looks better
+    border-color: var(--transparent-color);
+  }
 `;
 
 export const StyledActionRowContainer = styled(Flex)`

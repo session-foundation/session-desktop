@@ -183,13 +183,8 @@ crashReporter.start({
   compress: true,
 });
 
-const windowFromUserConfig = userConfig.get('window');
 const windowFromEphemeral = ephemeralConfig.get('window');
-let windowConfig = windowFromEphemeral || windowFromUserConfig;
-if (windowFromUserConfig) {
-  userConfig.set('window', null);
-  ephemeralConfig.set('window', windowConfig);
-}
+let windowConfig = windowFromEphemeral;
 
 import { readFile } from 'fs-extra';
 import { getAppRootPath } from '../node/getRootPath';
@@ -413,6 +408,9 @@ async function createWindow() {
     }
     mainWindow.reload();
   });
+  const isWayland = Boolean(
+    process.env.WAYLAND_DISPLAY || process.env.XDG_SESSION_TYPE === 'wayland'
+  );
 
   function captureAndSaveWindowStats() {
     if (!mainWindow) {
@@ -428,9 +426,9 @@ async function createWindow() {
       autoHideMenuBar: mainWindow.isMenuBarAutoHide(),
       width: size[0],
       height: size[1],
-      x: position[0],
-
-      y: position[1],
+      // On Wayland, getPosition() returns 0,0 as it considers it manages our position
+      x: isWayland ? undefined : position[0],
+      y: isWayland ? undefined : position[1],
       fullscreen: false as boolean | undefined,
     };
 
@@ -446,6 +444,7 @@ async function createWindow() {
 
   const debouncedCaptureStats = _.debounce(captureAndSaveWindowStats, 500);
   mainWindow?.on('resize', debouncedCaptureStats);
+  // Note: on wayland, 'move' is never called as wayland never tells us about the change
   mainWindow?.on('move', debouncedCaptureStats);
 
   mainWindow?.on('focus', () => {

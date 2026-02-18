@@ -33,6 +33,7 @@ import { searchActions } from '../../state/ducks/search';
 import { ToastUtils } from '../../session/utils';
 import { StyledContactListInModal } from '../list/StyledContactList';
 import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
+import { isEnterKey } from '../../util/keyboardShortcuts';
 
 type Props = {
   conversationId: string;
@@ -171,7 +172,7 @@ const InviteContactsDialogInner = (props: Props) => {
   };
 
   useKey((event: KeyboardEvent) => {
-    return event.key === 'Enter';
+    return isEnterKey(event);
   }, onClickOK);
 
   const hasContacts = contactsToInvite.length > 0;

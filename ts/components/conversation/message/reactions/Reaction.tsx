@@ -13,6 +13,7 @@ import { ReactionPopup } from './ReactionPopup';
 import { SessionTooltip } from '../../../SessionTooltip';
 import { THEME_GLOBALS } from '../../../../themes/globals';
 import { createButtonOnKeyDownForClickEventHandler } from '../../../../util/keyboardShortcuts';
+import { focusVisibleOutline } from '../../../../styles/focusVisible';
 
 export const EMOJI_REACTION_HEIGHT = 24;
 
@@ -39,6 +40,8 @@ const StyledReaction = styled.button<{
   }
 
   ${props => !props.onClick && 'cursor: not-allowed;'}
+
+  ${focusVisibleOutline()}
 `;
 
 const StyledReactionContainer = styled.div<{

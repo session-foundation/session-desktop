@@ -33,7 +33,7 @@ export const QuoteAuthor = (props: QuoteAuthorProps) => {
   }
 
   return (
-    <StyledQuoteAuthor $isIncoming={isIncoming}>
+    <StyledQuoteAuthor $isIncoming={isIncoming} data-testid="quote-author">
       <ContactName
         pubkey={author}
         contactNameContext="quote-author"

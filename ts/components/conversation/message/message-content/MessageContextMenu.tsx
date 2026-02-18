@@ -2,7 +2,7 @@
 import { Dispatch, type KeyboardEvent, type MouseEvent, useRef } from 'react';
 
 import { isNil, isNumber, isString } from 'lodash';
-import { Menu, MenuOnHideCallback, MenuOnShowCallback } from 'react-contexify';
+import { MenuOnHideCallback, MenuOnShowCallback } from 'react-contexify';
 import styled from 'styled-components';
 import { toNumber } from 'lodash/fp';
 import { getAppDispatch } from '../../../../state/dispatch';
@@ -25,8 +25,7 @@ import {
 import { SessionContextMenuContainer } from '../../../SessionContextMenuContainer';
 import { CopyAccountIdMenuItem } from '../../../menu/items/CopyAccountId/CopyAccountIdMenuItem';
 import { Localizer } from '../../../basic/Localizer';
-import { ItemWithDataTestId } from '../../../menu/items/MenuItemWithDataTestId';
-import { getMenuAnimation } from '../../../menu/MenuAnimation';
+import { Menu, MenuItem } from '../../../menu/items/MenuItem';
 import { WithMessageId } from '../../../../session/types/with';
 import { DeleteItem } from '../../../menu/items/DeleteMessage/DeleteMessageMenuItem';
 import { RetryItem } from '../../../menu/items/RetrySend/RetrySendMenuItem';
@@ -39,10 +38,7 @@ import { useAddSenderAsCommunityAdmin } from '../../../menuAndSettingsHooks/useA
 import { showContextMenu } from '../../../../util/contextMenu';
 import { clampNumber } from '../../../../util/maths';
 import { PopoverTriggerPosition } from '../../../SessionTooltip';
-import { SessionLucideIconButton } from '../../../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
-import { SpacerSM } from '../../../basic/Text';
-import { SessionIcon } from '../../../icon';
 import { useMessageInteractions } from '../../../../hooks/useMessageInteractions';
 
 export type MessageContextMenuSelectorProps = Pick<
@@ -148,39 +144,39 @@ const CommunityAdminActionItems = ({ messageId }: WithMessageId) => {
 
   return (
     <>
-      <ItemWithDataTestId onClick={banUserCb}>
-        <SessionLucideIconButton
-          iconSize="medium"
-          iconColor="inherit"
-          unicode={LUCIDE_ICONS_UNICODE.USER_ROUND_X}
-        />
-        <SpacerSM />
+      <MenuItem
+        onClick={banUserCb}
+        iconType={LUCIDE_ICONS_UNICODE.USER_ROUND_X}
+        isDangerAction={true}
+      >
         {tr('banUser')}
-      </ItemWithDataTestId>
-      <ItemWithDataTestId onClick={unbanUserCb}>
-        <SessionLucideIconButton
-          iconSize="medium"
-          iconColor="inherit"
-          unicode={LUCIDE_ICONS_UNICODE.USER_ROUND_CHECK}
-        />
-        <SpacerSM />
+      </MenuItem>
+      <MenuItem
+        onClick={unbanUserCb}
+        iconType={LUCIDE_ICONS_UNICODE.USER_ROUND_CHECK}
+        isDangerAction={true}
+      >
         {tr('banUnbanUser')}
-      </ItemWithDataTestId>
+      </MenuItem>
       {/* only an admin can promote/remove moderators from a community. Another moderator cannot. */}
       {isSenderAdmin ? (
         removeSenderFromCommunityAdminCb ? (
-          <ItemWithDataTestId onClick={removeSenderFromCommunityAdminCb}>
-            <SessionIcon iconType="deleteModerator" iconSize="medium" iconColor="inherit" />
-            <SpacerSM />
+          <MenuItem
+            onClick={removeSenderFromCommunityAdminCb}
+            iconType="deleteModerator"
+            isDangerAction={true}
+          >
             {tr('adminRemoveAsAdmin')}
-          </ItemWithDataTestId>
+          </MenuItem>
         ) : null
       ) : addSenderAsCommunityAdminCb ? (
-        <ItemWithDataTestId onClick={addSenderAsCommunityAdminCb}>
-          <SessionIcon iconType="addModerator" iconSize="medium" iconColor="inherit" />
-          <SpacerSM />
+        <MenuItem
+          onClick={addSenderAsCommunityAdminCb}
+          iconType="addModerator"
+          isDangerAction={true}
+        >
           {tr('adminPromoteToAdmin')}
-        </ItemWithDataTestId>
+        </MenuItem>
       ) : null}
     </>
   );
@@ -208,19 +204,57 @@ export const showMessageInfoOverlay = async ({
   }
 };
 
+function SaveAttachmentMenuItem({ messageId }: { messageId: string }) {
+  const attachments = useMessageAttachments(messageId);
+  const { saveAttachment } = useMessageInteractions(messageId);
+
+  return attachments?.length && attachments.every(m => !m.pending && m.path) ? (
+    <MenuItem
+      onClick={saveAttachment}
+      iconType={LUCIDE_ICONS_UNICODE.ARROW_DOWN_TO_LINE}
+      isDangerAction={false}
+    >
+      {tr('save')}
+    </MenuItem>
+  ) : null;
+}
+
+function MessageInfoMenuItem({ messageId }: { messageId: string }) {
+  const dispatch = getAppDispatch();
+
+  return (
+    <MenuItem
+      onClick={() => {
+        void showMessageInfoOverlay({ messageId, dispatch });
+      }}
+      iconType={LUCIDE_ICONS_UNICODE.INFO}
+      isDangerAction={false}
+    >
+      <Localizer token="info" />
+    </MenuItem>
+  );
+}
+
+function CopyBodyMenuItem({ messageId }: { messageId: string }) {
+  const { copyText } = useMessageInteractions(messageId);
+
+  return (
+    <MenuItem onClick={copyText} iconType={LUCIDE_ICONS_UNICODE.COPY} isDangerAction={false}>
+      {tr('copy')}
+    </MenuItem>
+  );
+}
+
 export const MessageContextMenu = (props: Props) => {
   const { messageId, contextMenuId, setTriggerPosition } = props;
 
-  const { copyText, saveAttachment, reply, select } = useMessageInteractions(messageId);
-
-  const dispatch = getAppDispatch();
+  const { reply, select } = useMessageInteractions(messageId);
 
   const isLegacyGroup = useSelectedIsLegacyGroup();
   const convoId = useSelectedConversationKey();
   const direction = useMessageDirection(messageId);
   const status = useMessageStatus(messageId);
   const isDeletable = useMessageIsDeletable(messageId);
-  const attachments = useMessageAttachments(messageId);
   const sender = useMessageSender(messageId);
 
   const isOutgoing = direction === 'outgoing';
@@ -233,7 +267,7 @@ export const MessageContextMenu = (props: Props) => {
     const triggerWidth = contextMenuRef.current?.clientWidth ?? 0;
 
     // FIXME: there is a bug with react-contexify where the position is just the event position,
-    // it doesnt include changes to prevent the menu from overflowing the window. This temporary
+    // it does not include changes to prevent the menu from overflowing the window. This temporary
     // fix resolves this by mirroring the y-offset adjustment.
     const yClamped = clampNumber(y, 0, window.innerHeight - triggerHeight);
     setTriggerPosition({
@@ -258,19 +292,11 @@ export const MessageContextMenu = (props: Props) => {
     return (
       <StyledMessageContextMenu>
         <SessionContextMenuContainer>
-          <Menu id={contextMenuId} animation={getMenuAnimation()}>
-            {attachments?.length && attachments.every(m => !m.pending && m.path) ? (
-              <ItemWithDataTestId onClick={saveAttachment}>{tr('save')}</ItemWithDataTestId>
-            ) : null}
-            <ItemWithDataTestId onClick={copyText}>{tr('copy')}</ItemWithDataTestId>
-            <ItemWithDataTestId
-              onClick={() => {
-                void showMessageInfoOverlay({ messageId, dispatch });
-              }}
-            >
-              <Localizer token="info" />
-            </ItemWithDataTestId>
-            {sender ? <CopyAccountIdMenuItem pubkey={sender} /> : null}
+          <Menu id={contextMenuId}>
+            <SaveAttachmentMenuItem messageId={messageId} />
+            <CopyBodyMenuItem messageId={messageId} />
+            <MessageInfoMenuItem messageId={messageId} />
+            <CopyAccountIdMenuItem pubkey={sender} messageId={messageId} />
           </Menu>
         </SessionContextMenuContainer>
       </StyledMessageContextMenu>
@@ -283,68 +309,29 @@ export const MessageContextMenu = (props: Props) => {
         <Menu
           ref={contextMenuRef}
           id={contextMenuId}
-          animation={getMenuAnimation()}
           onShow={onShow}
           onHide={onHide}
           viewportMargin={12}
         >
-          {attachments?.length && attachments.every(m => !m.pending && m.path) ? (
-            <ItemWithDataTestId onClick={saveAttachment}>
-              <SessionLucideIconButton
-                iconSize="medium"
-                iconColor="inherit"
-                unicode={LUCIDE_ICONS_UNICODE.ARROW_DOWN_TO_LINE}
-              />
-              <SpacerSM />
-              {tr('save')}
-            </ItemWithDataTestId>
-          ) : null}
-          <ItemWithDataTestId onClick={copyText}>
-            <SessionLucideIconButton
-              iconSize="medium"
-              iconColor="inherit"
-              unicode={LUCIDE_ICONS_UNICODE.COPY}
-            />
-            <SpacerSM />
-            {tr('copy')}
-          </ItemWithDataTestId>
-          {(isSent || !isOutgoing) && (
-            <ItemWithDataTestId onClick={reply}>
-              <SessionLucideIconButton
-                iconSize="medium"
-                iconColor="inherit"
-                unicode={LUCIDE_ICONS_UNICODE.REPLY}
-              />
-              <SpacerSM />
-              {tr('reply')}
-            </ItemWithDataTestId>
-          )}
-          <ItemWithDataTestId
-            onClick={() => {
-              void showMessageInfoOverlay({ messageId, dispatch });
-            }}
-          >
-            <SessionLucideIconButton
-              iconSize="medium"
-              iconColor="inherit"
-              unicode={LUCIDE_ICONS_UNICODE.INFO}
-            />
-            <SpacerSM />
-            <Localizer token="messageInfo" />
-          </ItemWithDataTestId>
-          {sender && !isOutgoing ? <CopyAccountIdMenuItem pubkey={sender} /> : null}
           <RetryItem messageId={messageId} />
+          <SaveAttachmentMenuItem messageId={messageId} />
+          {(isSent || !isOutgoing) && (
+            <MenuItem onClick={reply} iconType={LUCIDE_ICONS_UNICODE.REPLY} isDangerAction={false}>
+              {tr('reply')}
+            </MenuItem>
+          )}
+          <CopyBodyMenuItem messageId={messageId} />
+          <MessageInfoMenuItem messageId={messageId} />
           {isDeletable ? (
-            <ItemWithDataTestId onClick={select}>
-              <SessionLucideIconButton
-                iconSize="medium"
-                iconColor="inherit"
-                unicode={LUCIDE_ICONS_UNICODE.CIRCLE_CHECK}
-              />
-              <SpacerSM />
+            <MenuItem
+              onClick={select}
+              iconType={LUCIDE_ICONS_UNICODE.CIRCLE_CHECK}
+              isDangerAction={false}
+            >
               <Localizer token="select" />
-            </ItemWithDataTestId>
+            </MenuItem>
           ) : null}
+          <CopyAccountIdMenuItem pubkey={sender} messageId={messageId} />
           <DeleteItem messageId={messageId} />
           <CommunityAdminActionItems messageId={messageId} />
         </Menu>

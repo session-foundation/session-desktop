@@ -107,6 +107,7 @@ const ContactListItemSection = () => {
               width={leftPaneListWidth}
               autoHeight={false}
               style={{ outline: 'none' }}
+              tabIndex={-1}
             />
           );
         }}

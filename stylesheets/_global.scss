@@ -166,7 +166,7 @@ a {
   position: relative;
 }
 
-// overwrite sanitize.css default padding for buttons and fieldsets
+// overwrite sanitize.css default padding for buttons and field sets
 button,
 fieldset {
   padding: 0;
@@ -175,7 +175,19 @@ fieldset {
 *:focus-visible {
   // The FocusTrap we use adds a border around the focused element, even if TAB has not been pressed yet
   // This hides the outline altogether. We might consider adding a new variable linked to a theme setting to fix this, for all users
-  outline: 2px solid var(--primary-color);
-  outline-offset: 2px;
-  border-radius: 2px;
+  outline: 0px solid var(--transparent-color);
+  border-radius: var(--focus-border-radius, 2px);
+
+  --box-shadow-focus-visible-inset: inset 0px 0px 0px 2px
+    var(--focus-ring-color, var(--text-primary-color));
+  --box-shadow-focus-visible-outset: 0px 0px 0px 2px
+    var(--focus-ring-color, var(--text-primary-color));
+
+  --outline-focus-visible-small: var(--focus-outline-width, 2px) solid var(--text-primary-color);
+  --outline-focus-visible-small-offset: var(--margins-xs);
+
+  // Note:
+  // - we use box-shadow as we have some buttons with an outline (and having an outline here would override it)
+  // - but for some rare case, we still fallback to the outline, via  --outline-focus-visible-small
+  box-shadow: var(--box-shadow-focus-visible-inset);
 }

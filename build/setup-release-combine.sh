@@ -4,7 +4,7 @@ set -e
 
 IDENTIFIER=$1
 PLATFORM=$2
-RELEASE_DIR="./dist"
+RELEASE_DIR="./release"
 OUTPUT_FILE="$RELEASE_DIR/latest-$PLATFORM.yml"
 
 PARTIAL_FILES=()
@@ -20,6 +20,14 @@ else
   echo "Unsupported platform: $PLATFORM"
   exit 1
 fi
+
+# Check if all partial files exist
+for PARTIAL_FILE in "${PARTIAL_FILES[@]}"; do
+  if [[ ! -f "$PARTIAL_FILE" ]]; then
+    echo "Error: Required partial file not found: $PARTIAL_FILE"
+    exit 1
+  fi
+done
 
 BASE_FILE="${PARTIAL_FILES[0]}"
 

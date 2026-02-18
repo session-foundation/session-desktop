@@ -1,6 +1,6 @@
 import { MouseEvent } from 'react';
-import { contextMenu } from 'react-contexify';
 import styled from 'styled-components';
+import { closeContextMenus } from '../../util/contextMenu';
 
 type SProps = {
   onArrowClick: (e: MouseEvent<HTMLDivElement>) => void;
@@ -91,7 +91,7 @@ export const DropDownAndToggleButton = (props: SProps) => {
 
   const mainButtonClickHandler = (e: MouseEvent<HTMLDivElement>) => {
     e.stopPropagation();
-    contextMenu.hideAll();
+    closeContextMenus();
     onMainButtonClick(e);
   };
   const iconToRender =

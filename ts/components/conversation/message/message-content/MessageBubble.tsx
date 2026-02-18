@@ -34,7 +34,7 @@ const ReadMoreButton = styled.button`
   cursor: pointer;
   padding: 0;
   &:hover,
-  &:focus {
+  &:focus-visible {
     text-decoration: underline;
   }
 `;

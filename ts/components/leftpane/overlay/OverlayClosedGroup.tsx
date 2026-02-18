@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
-import useKey from 'react-use/lib/useKey';
 import styled from 'styled-components';
 import { List, AutoSizer, ListRowProps } from 'react-virtualized';
 
@@ -32,6 +31,7 @@ import { NoContacts, NoResultsForSearch } from '../../search/NoResults';
 import { SimpleSessionTextarea } from '../../inputs/SimpleSessionTextarea';
 import { tr, tStripped } from '../../../localization/localeTools';
 import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
+import { useEscBlurThenHandler } from '../../../hooks/useKeyboardShortcut';
 
 const ROW_HEIGHT = 50;
 
@@ -73,6 +73,8 @@ function useGroupNameError() {
   return { groupNameError, setGroupNameError };
 }
 
+const useEscBlurThenHandlerLocal = useEscBlurThenHandler;
+
 export const OverlayClosedGroupV2 = () => {
   const dispatch = getAppDispatch();
   const us = useOurPkStrInternal();
@@ -92,9 +94,10 @@ export const OverlayClosedGroupV2 = () => {
     dispatch(groupInfoActions.removeSelectedGroupMember({ memberToRemove: member }));
   };
 
-  function closeOverlay() {
+  function goBack() {
     dispatch(searchActions.clearSearch());
-    dispatch(sectionActions.resetLeftOverlayMode());
+    dispatch(sectionActions.setLeftOverlayMode({ type: 'choose-action', params: null }));
+    return true;
   }
 
   function onValueChanged(value: string) {
@@ -136,7 +139,7 @@ export const OverlayClosedGroupV2 = () => {
     );
   }
 
-  useKey('Escape', closeOverlay);
+  useEscBlurThenHandlerLocal(goBack);
 
   const noContactsForClosedGroup = isEmpty(searchTerm) && contactsToInvite.length === 0;
   const disableCreateButton = isCreatingGroup || (!selectedMemberIds.length && !groupName.length);
@@ -190,6 +193,7 @@ export const OverlayClosedGroupV2 = () => {
           textSize="md"
           inputDataTestId="new-closed-group-name"
           errorDataTestId="error-message"
+          allowEscapeKeyPassthrough={true}
         />
         <SpacerMD />
         {getFeatureFlag('useClosedGroupV2QAButtons') && (
@@ -236,6 +240,7 @@ export const OverlayClosedGroupV2 = () => {
                 // NOTE: These are passed as props to trigger a re-render when they change
                 selectedMemberIds={selectedMemberIds}
                 isCreatingGroup={isCreatingGroup}
+                tabIndex={-1}
               />
             )}
           </AutoSizer>

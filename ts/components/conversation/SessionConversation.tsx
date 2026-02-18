@@ -279,9 +279,7 @@ export class SessionConversation extends Component<Props, State> {
             <div
               // if you change the class name, also update it on onKeyDown
               className={clsx('conversation-content', selectionMode && 'selection-mode')}
-              tabIndex={0}
               onKeyDown={this.onKeyDown}
-              role="navigation"
             >
               <div className="conversation-messages">
                 <NoMessageInConversation />
@@ -342,6 +340,7 @@ export class SessionConversation extends Component<Props, State> {
       }
       messageContainer.scrollTop = messageContainer.scrollHeight - messageContainer.clientHeight;
       const targetElement = document.getElementById(`msg-${mostRecentMessage.id}`);
+
       if (!targetElement) {
         await openConversationToSpecificMessage({
           conversationKey,

@@ -7,6 +7,7 @@ export const LeftPaneSectionContainer = styled.div`
   align-items: center;
   overflow-y: auto;
   flex-shrink: 0;
+  padding: var(--margins-lg) 0 var(--margins-lg) 0;
 
   .session-icon-button {
     padding: 30px 20px;

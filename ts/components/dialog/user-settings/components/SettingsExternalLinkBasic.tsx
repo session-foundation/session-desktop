@@ -4,9 +4,9 @@ import {
   GenericPanelButtonWithAction,
   type GenericPanelButtonProps,
 } from '../../../buttons/panel/GenericPanelButtonWithAction';
-import { SessionLucideIconButton } from '../../../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 import type { TrArgs } from '../../../../localization/localeTools';
+import { LucideIcon } from '../../../icon/LucideIcon';
 
 const PanelExternalLinkButton = (
   props: Pick<GenericPanelButtonProps, 'textElement'> & {
@@ -22,7 +22,7 @@ const PanelExternalLinkButton = (
       rowDataTestId={`${baseDataTestId}-settings-row`}
       textElement={textElement}
       actionElement={
-        <SessionLucideIconButton
+        <LucideIcon
           dataTestId={`${baseDataTestId}-settings-chevron`}
           unicode={LUCIDE_ICONS_UNICODE.EXTERNAL_LINK_ICON}
           iconSize="medium"

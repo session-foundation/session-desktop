@@ -258,6 +258,7 @@ declare module 'react' {
     | 'messages-container'
     | 'decline-and-block-message-request'
     | 'session-dropdown'
+    | 'staged-attachments-container'
     | 'path-light-container'
     | 'end-call'
     | 'end-voice-message'
@@ -272,6 +273,9 @@ declare module 'react' {
     | 'reveal-blocked-user-settings'
     | `${Sections}-section`
     | `${SettingsToggles | SettingsInlineButtons | SettingsRadio | SettingsChevron | SettingsExternalLinkButtons | 'zoom-factor'}-settings-${'text' | 'sub-text' | 'toggle' | 'radio' | 'button' | 'chevron' | 'row'}`
+
+    // quote components
+    | `quote-${'icon-container' | 'container' | 'icon' | 'image' | 'text' | 'author'}`
 
     // Buttons
     | `${Buttons}-button`
@@ -406,6 +410,7 @@ declare module 'react' {
     | 'mentions-container-row'
     | 'session-id-signup'
     | 'search-contacts-field'
+    | 'search-input'
     | 'three-dot-loading-animation'
     | 'new-session-conversation'
     | 'new-closed-group-name'
@@ -414,6 +419,7 @@ declare module 'react' {
     | 'conversation-options-avatar'
     | 'copy-sender-from-details'
     | 'copy-msg-from-details'
+    | 'msg-link-preview-title'
     | 'modal-heading'
     | 'modal-description'
     | 'error-message'

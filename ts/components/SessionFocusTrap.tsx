@@ -8,11 +8,13 @@ import type { CSSProperties } from 'styled-components';
 export function SessionFocusTrap({
   children,
   allowOutsideClick = true,
+  returnFocusOnDeactivate,
   initialFocus,
   containerDivStyle,
 }: {
   children: ReactNode;
   allowOutsideClick?: boolean;
+  returnFocusOnDeactivate?: boolean;
   initialFocus: () => HTMLElement | null;
   containerDivStyle?: CSSProperties;
 }) {
@@ -22,6 +24,7 @@ export function SessionFocusTrap({
       focusTrapOptions={{
         initialFocus,
         allowOutsideClick,
+        returnFocusOnDeactivate,
       }}
     >
       {/* Note:  not too sure why, but without this div, the focus trap doesn't work */}

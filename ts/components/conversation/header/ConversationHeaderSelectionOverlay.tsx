@@ -20,6 +20,7 @@ import { SessionFocusTrap } from '../../SessionFocusTrap';
 import { tr } from '../../../localization/localeTools';
 import { SessionLucideIconButton } from '../../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
+import { isBackspace, isDeleteKey, isEscapeKey } from '../../../util/keyboardShortcuts';
 
 export const SelectionOverlay = () => {
   const selectedMessageIds = useSelector(getSelectedMessageIds);
@@ -37,12 +38,8 @@ export const SelectionOverlay = () => {
    * and handle them depending on what is visible, but that's not part of this PR
    */
   useKey(
-    shouldProcess => {
-      return (
-        shouldProcess.code === 'Escape' ||
-        shouldProcess.code === 'Backspace' ||
-        shouldProcess.code === 'Delete'
-      );
+    e => {
+      return isEscapeKey(e) || isBackspace(e) || isDeleteKey(e);
     },
     event => {
       const selectionMode = !!selectedMessageIds.length;

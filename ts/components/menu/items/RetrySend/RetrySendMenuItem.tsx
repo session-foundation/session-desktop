@@ -1,11 +1,9 @@
 import useAsyncFn from 'react-use/lib/useAsyncFn';
 import { WithMessageId } from '../../../../session/types/with';
 import { useMessageDirection, useMessageStatus } from '../../../../state/selectors';
-import { ItemWithDataTestId } from '../MenuItemWithDataTestId';
+import { MenuItem } from '../MenuItem';
 import { Data } from '../../../../data/data';
 import { tr } from '../../../../localization/localeTools';
-import { SessionLucideIconButton } from '../../../icon/SessionIconButton';
-import { SpacerSM } from '../../../basic/Text';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 
 export const RetryItem = ({ messageId }: WithMessageId) => {
@@ -24,15 +22,13 @@ export const RetryItem = ({ messageId }: WithMessageId) => {
   }, [messageId]);
 
   return showRetry ? (
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    <ItemWithDataTestId onClick={() => doResend()}>
-      <SessionLucideIconButton
-        iconSize="medium"
-        iconColor="inherit"
-        unicode={LUCIDE_ICONS_UNICODE.REPLY}
-      />
-      <SpacerSM />
+    <MenuItem
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      onClick={() => doResend()}
+      iconType={LUCIDE_ICONS_UNICODE.REPLY}
+      isDangerAction={false}
+    >
       {tr('resend')}
-    </ItemWithDataTestId>
+    </MenuItem>
   ) : null;
 };

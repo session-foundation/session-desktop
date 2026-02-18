@@ -1,7 +1,10 @@
-import type { KeyboardEvent } from 'react';
+import type { KeyboardEvent, MouseEvent } from 'react';
 import { isMacOS } from '../OS';
 import { getFeatureFlag } from '../state/ducks/types/releasedFeaturesReduxTypes';
 import type { FocusScope } from '../state/focus';
+import { tr } from '../localization';
+
+type NeededKeyboardEventForIdentification = Pick<KeyboardEvent<unknown>, 'key' | 'code'>;
 
 export function debugKeyboardShortcutsLog(...args: Array<unknown>) {
   if (!getFeatureFlag('debugKeyboardShortcuts')) {
@@ -10,13 +13,33 @@ export function debugKeyboardShortcutsLog(...args: Array<unknown>) {
   window.log.debug('[debugKeyboardShortcuts]', ...args);
 }
 
-export function isButtonClickKey(e: KeyboardEvent<HTMLElement>) {
-  return e.key === 'Enter' || e.code === 'Space';
+export function isButtonClickKey(e: NeededKeyboardEventForIdentification) {
+  return isEnterKey(e) || isSpaceKey(e);
+}
+
+export function isSpaceKey(e: NeededKeyboardEventForIdentification) {
+  return e && e.code === 'Space';
+}
+
+export function isEnterKey(e: NeededKeyboardEventForIdentification) {
+  return e && e.key.toLowerCase() === 'enter';
+}
+
+export function isEscapeKey(e: NeededKeyboardEventForIdentification) {
+  return e && (e.key.toLowerCase() === 'escape' || e.key.toLowerCase() === 'esc');
+}
+
+export function isBackspace(e: NeededKeyboardEventForIdentification) {
+  return e && e.key.toLowerCase() === 'backspace';
+}
+
+export function isDeleteKey(e: NeededKeyboardEventForIdentification) {
+  return e && e.code.toLowerCase() === 'delete';
 }
 
 export function createButtonOnKeyDownForClickEventHandler(
-  callback: () => void,
-  allowPropagation?: boolean
+  callback: (e: KeyboardEvent<HTMLElement> | MouseEvent<HTMLElement>) => void,
+  allowPropagation: boolean = false
 ) {
   return (e: KeyboardEvent<HTMLElement>) => {
     debugKeyboardShortcutsLog(`createButtonOnKeyDownForClickEventHandler fn called with: `, e);
@@ -25,7 +48,7 @@ export function createButtonOnKeyDownForClickEventHandler(
         e.preventDefault();
         e.stopPropagation();
       }
-      callback();
+      callback(e);
     }
   };
 }
@@ -60,8 +83,7 @@ const conversationNavigation = Object.fromEntries(
 ) as Record<ConversationNavKeys, typeof baseConversationNavigation>;
 
 // TODO: These should be user-editable. It should be simple to store custom user keybinds
-// in the database and its an often overlocked feature with little lift and massive UX gains.
-
+// in the database and its an often overlooked feature with little lift and massive UX gains.
 export const KbdShortcut = {
   ...conversationNavigation,
   keyboardShortcutModal: {
@@ -70,94 +92,98 @@ export const KbdShortcut = {
     withCtrl: true,
     keys: ['/'],
   },
-  zoomIn: { name: 'Zoom In', scope: 'global', withCtrl: true, keys: ['+'] },
-  zoomOut: { name: 'Zoom Out', scope: 'global', withCtrl: true, keys: ['-'] },
+  zoomIn: { name: tr('appearanceZoomIn'), scope: 'global', withCtrl: true, keys: ['+'] },
+  zoomOut: { name: tr('appearanceZoomOut'), scope: 'global', withCtrl: true, keys: ['-'] },
   userSettingsModal: { name: 'User Settings', scope: 'global', withCtrl: true, keys: [','] },
-  newConversation: { name: 'New Conversation', scope: 'global', withCtrl: true, keys: ['n'] },
+  newConversation: { name: tr('conversationsNew'), scope: 'global', withCtrl: true, keys: ['n'] },
   newMessage: {
-    name: 'New Message',
+    name: tr('messageNew', { count: 1 }),
     scope: 'global',
     withCtrl: true,
     withShift: true,
     keys: ['m'],
   },
   createGroup: {
-    name: 'Create Group',
+    name: tr('groupCreate'),
     scope: 'global',
     withCtrl: true,
     withShift: true,
     keys: ['g'],
   },
   joinCommunity: {
-    name: 'Join Community',
+    name: tr('communityJoin'),
     scope: 'global',
     withCtrl: true,
     withShift: true,
     keys: ['c'],
   },
   openNoteToSelf: {
-    name: 'Open Note To Self',
+    name: tr('noteToSelfOpen'),
     scope: 'global',
     withCtrl: true,
     withShift: true,
     keys: ['n'],
   },
   conversationListSearch: {
-    name: 'Search',
+    name: tr('search'),
     scope: 'conversationList',
     withCtrl: true,
     keys: ['f'],
   },
+
+  // Right Panel Shortcuts
+  closeRightPanel: { name: 'Close Panel', scope: 'rightPanel', keys: ['Escape'] },
+
   // Conversation Shortcuts
   conversationFocusTextArea: {
-    name: 'Focus Text Area',
+    name: tr('focusTextArea'),
     scope: 'conversationList',
     keys: ['Escape'],
   },
   conversationUploadAttachment: {
-    name: 'Add Attachment',
+    name: tr('attachmentsAdd'),
     scope: 'conversationList',
     withCtrl: true,
     keys: ['u'],
   },
   conversationToggleEmojiPicker: {
-    name: 'Toggle Emoji Picker',
+    name: tr('toggleEmojiPicker'),
     scope: 'conversationList',
     withCtrl: true,
     keys: ['e'],
   },
   conversationSettingsModal: {
-    name: 'Conversation Settings',
+    name: tr('conversationSettings'),
     scope: 'global',
     withCtrl: true,
     keys: ['.'],
   },
   // Message Shortcuts
   messageToggleReactionBar: {
-    name: 'Toggle Reaction Bar for message',
+    name: tr('toggleReactionBarMessage'),
     scope: 'message',
     keys: ['e'],
   },
   messageToggleReply: {
-    name: 'Toggle Reply for message',
+    name: tr('toggleReplyMessage'),
     scope: 'message',
     keys: ['r'],
   },
   messageCopyText: {
-    name: 'Copy message text',
+    name: tr('messageCopy'),
     scope: 'message',
     withCtrl: true,
     keys: ['c'],
   },
   messageSaveAttachment: {
-    name: 'Save message attachment',
+    name: tr('saveMessageAttachment'),
     scope: 'message',
     withCtrl: true,
     keys: ['s'],
   },
   // NOTE: these are currently dummy shortcuts, they are native or implemented differently
   messageOpenContextMenu: {
-    name: 'Open message context menu',
+    name: tr('openMessageContextMenu'),
     scope: 'message',
     keys: ['Enter'],
   },
