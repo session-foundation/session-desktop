@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 // tslint:disable-next-line: no-submodule-imports
-import useKey from 'react-use/lib/useKey';
 import { clipboard } from 'electron';
 import { getAppDispatch } from '../../../../../state/dispatch';
 import { PropsForAttachment, closeRightPanel } from '../../../../../state/ducks/conversations';
@@ -54,6 +53,8 @@ import { sectionActions } from '../../../../../state/ducks/section';
 import { useIsIncomingRequest } from '../../../../../hooks/useParamSelector';
 import { tr } from '../../../../../localization/localeTools';
 import { AppDispatch } from '../../../../../state/createStore';
+import { useKeyboardShortcut } from '../../../../../hooks/useKeyboardShortcut';
+import { KbdShortcut } from '../../../../../util/keyboardShortcuts';
 
 // NOTE we override the default max-widths when in the detail isDetailView
 const StyledMessageBody = styled.div`
@@ -219,6 +220,10 @@ function CopyMessageBodyButton({ messageId }: WithMessageIdOpt) {
   );
 }
 
+function closePanel(dispatch: AppDispatch) {
+  dispatch(closeRightPanel());
+}
+
 function ReplyToMessageButton({ messageId }: WithMessageIdOpt) {
   const dispatch = getAppDispatch();
   if (!messageId) {
@@ -232,19 +237,13 @@ function ReplyToMessageButton({ messageId }: WithMessageIdOpt) {
         // eslint-disable-next-line more/no-then
         void replyToMessage(messageId).then(foundIt => {
           if (foundIt) {
-            dispatch(closeRightPanel());
-            dispatch(sectionActions.resetRightOverlayMode());
+            closePanel(dispatch);
           }
         });
       }}
       dataTestId="reply-to-msg-from-details"
     />
   );
-}
-
-function closePanel(dispatch: AppDispatch) {
-  dispatch(closeRightPanel());
-  dispatch(sectionActions.resetRightOverlayMode());
 }
 
 function useMessageId() {
@@ -289,6 +288,8 @@ function useClosePanelIfMessageDeleted(sender?: string) {
   }, [sender, dispatch]);
 }
 
+const useKeyboardShortcutLocal = useKeyboardShortcut;
+
 export const OverlayMessageInfo = () => {
   const dispatch = getAppDispatch();
 
@@ -309,7 +310,10 @@ export const OverlayMessageInfo = () => {
 
   const closePanelCb = () => closePanel(dispatch);
 
-  useKey('Escape', closePanelCb);
+  useKeyboardShortcutLocal({
+    shortcut: KbdShortcut.closeRightPanel,
+    handler: closePanelCb,
+  });
 
   useClosePanelIfMessageDeleted(sender);
 
@@ -399,7 +403,6 @@ export const OverlayMessageInfo = () => {
                 onClick={() => {
                   void resendMessage(messageId);
                   dispatch(closeRightPanel());
-                  dispatch(sectionActions.resetRightOverlayMode());
                 }}
                 dataTestId="resend-msg-from-details"
               />

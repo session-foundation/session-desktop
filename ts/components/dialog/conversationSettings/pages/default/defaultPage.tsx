@@ -37,6 +37,7 @@ import {
   AddAdminCommunityButton,
   RemoveAdminCommunityButton,
   ShowNoteToSelfButton,
+  DeleteDestroyedOrKickedGroupButton,
 } from '../../conversationSettingsItems';
 import { useCloseActionFromPage, useTitleFromPage } from '../conversationSettingsHooks';
 import type { ConversationSettingsModalState } from '../../../../../state/ducks/modalDialog';
@@ -44,6 +45,7 @@ import { LUCIDE_ICONS_UNICODE } from '../../../../icon/lucide';
 import { SessionLucideIconButton } from '../../../../icon/SessionIconButton';
 import { useChangeNickname } from '../../../../menuAndSettingsHooks/useChangeNickname';
 import { useShowUpdateGroupOrCommunityDetailsCb } from '../../../../menuAndSettingsHooks/useShowUpdateGroupNameDescription';
+import { focusVisibleOutlineStr } from '../../../../../styles/focusVisible';
 
 function AdminSettingsTitle() {
   return <PanelLabelWithDescription title={{ token: 'adminSettings' }} />;
@@ -108,6 +110,7 @@ function DestructiveActions({ conversationId }: WithConvoId) {
         <>
           <LeaveGroupPanelButton conversationId={conversationId} />
           <DeleteGroupPanelButton conversationId={conversationId} />
+          <DeleteDestroyedOrKickedGroupButton conversationId={conversationId} />
           <LeaveCommunityPanelButton conversationId={conversationId} />
         </>
       )}
@@ -243,6 +246,7 @@ function EditGenericButton({
       onClick={cb}
       dataTestId={dataTestId}
       iconColor="var(--text-primary-color)"
+      focusVisibleEffect={focusVisibleOutlineStr('var(--margins-xs)')}
     />
   );
 }

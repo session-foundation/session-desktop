@@ -58,6 +58,7 @@ export const SessionRadioGroup = (props: Props) => {
               props.onClick(value);
             }}
             style={{ textAlign: 'start' }}
+            tabIndex={0}
           />
         );
       })}

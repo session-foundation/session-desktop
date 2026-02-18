@@ -289,6 +289,13 @@ export function useGroupAdmins(convoId?: string) {
   return convoProps?.groupAdmins || [];
 }
 
+export function useWeAreLastAdmin(convoId?: string) {
+  const groupAdmins = useGroupAdmins(convoId);
+  const us = useOurPkStrInternal();
+
+  return groupAdmins.length === 1 && groupAdmins?.includes(us);
+}
+
 export function useExpireTimer(convoId?: string) {
   const convoProps = useConversationPropsById(convoId);
   return convoProps && convoProps.expireTimer;

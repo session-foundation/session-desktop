@@ -1,5 +1,6 @@
 import { ipcRenderer } from 'electron';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { debounce } from 'lodash';
 
 import { useSelector } from 'react-redux';
 import useInterval from 'react-use/lib/useInterval';
@@ -23,6 +24,7 @@ import { DURATION } from '../../session/constants';
 import {
   onionPathModal,
   updateDebugMenuModal,
+  updateKeyboardShortcutsMenuModal,
   userSettingsModal,
 } from '../../state/ducks/modalDialog';
 
@@ -46,17 +48,34 @@ import { GearAvatarButton } from '../buttons/avatar/GearAvatarButton';
 import { useZoomShortcuts } from '../../hooks/useZoomingShortcut';
 import { OnionStatusLight } from '../dialog/OnionStatusPathDialog';
 import { AvatarReupload } from '../../session/utils/job_runners/jobs/AvatarReuploadJob';
-import { useDebugMenuModal } from '../../state/selectors/modal';
-import { getFeatureFlagMemo } from '../../state/ducks/types/releasedFeaturesReduxTypes';
+import {
+  useDebugMenuModal,
+  useKeyboardShortcutsModal,
+  useUserSettingsModal,
+} from '../../state/selectors/modal';
+import {
+  getFeatureFlagMemo,
+  setFeatureFlag,
+} from '../../state/ducks/types/releasedFeaturesReduxTypes';
 import { useDebugKey } from '../../hooks/useDebugKey';
 import { UpdateProRevocationList } from '../../session/utils/job_runners/jobs/UpdateProRevocationListJob';
 import { getIsProAvailableMemo } from '../../hooks/useIsProAvailable';
 import { SettingsKey } from '../../data/settings-key';
+import { useKeyboardShortcut } from '../../hooks/useKeyboardShortcut';
+import { KbdShortcut } from '../../util/keyboardShortcuts';
+import { useNewConversationCallback } from '../buttons/MenuButton';
+import { useFocusScope } from '../../state/focus';
+import { useOverlayChooseAction } from '../../hooks/useOverlayChooseAction';
+import { Flex } from '../basic/Flex';
+import { FlexSpacer } from '../basic/Text';
+import { focusVisibleOutline } from '../../styles/focusVisible';
 
-const StyledContainerAvatar = styled.div`
-  padding: var(--margins-lg);
+const StyledContainerAvatar = styled.button`
   position: relative;
   cursor: pointer;
+  border-radius: 50%;
+
+  ${focusVisibleOutline()}
 `;
 
 function handleThemeSwitch() {
@@ -75,6 +94,7 @@ function handleThemeSwitch() {
     dispatch: window.inboxStore?.dispatch,
   });
 }
+const debouncedHandleThemeSwitch = debounce(handleThemeSwitch, 100);
 
 const cleanUpMediasInterval = DURATION.MINUTES * 60;
 
@@ -111,12 +131,60 @@ function usePeriodicFetchRevocationList() {
   );
 }
 
+function useKeyboardShortcutsModalKeyboardShortcut() {
+  const dispatch = getAppDispatch();
+  const modalState = useKeyboardShortcutsModal();
+  return useKeyboardShortcut({
+    shortcut: KbdShortcut.keyboardShortcutModal,
+    handler: () => dispatch(updateKeyboardShortcutsMenuModal(modalState ? null : {})),
+  });
+}
+
+function useUserSettingsModalKeyboardShortcut() {
+  const dispatch = getAppDispatch();
+  const modalState = useUserSettingsModal();
+  return useKeyboardShortcut({
+    shortcut: KbdShortcut.userSettingsModal,
+    handler: () => dispatch(userSettingsModal(modalState ? null : { userSettingsPage: 'default' })),
+  });
+}
+
+function useNewConversationKeyboardShortcut() {
+  const { openNewMessage, openCreateGroup, openJoinCommunity } = useOverlayChooseAction();
+  const newConversation = useNewConversationCallback();
+
+  useKeyboardShortcut({ shortcut: KbdShortcut.newConversation, handler: () => newConversation() });
+  useKeyboardShortcut({ shortcut: KbdShortcut.newMessage, handler: () => openNewMessage() });
+  useKeyboardShortcut({ shortcut: KbdShortcut.createGroup, handler: () => openCreateGroup() });
+  useKeyboardShortcut({ shortcut: KbdShortcut.joinCommunity, handler: () => openJoinCommunity() });
+}
+
 function useDebugThemeSwitch() {
   useDebugKey({
     withCtrl: true,
     key: 't',
-    callback: handleThemeSwitch,
+    callback: debouncedHandleThemeSwitch,
   });
+}
+
+function useDebugToggleLocalizerKeys() {
+  const enabled = getFeatureFlagMemo('replaceLocalizedStringsWithKeys');
+  useDebugKey({
+    withCtrl: true,
+    key: 'l',
+    callback: () => setFeatureFlag('replaceLocalizedStringsWithKeys', !enabled),
+  });
+}
+
+function useDebugFocusScope() {
+  const debugFocusScope = getFeatureFlagMemo('debugFocusScope');
+  const focusScope = useFocusScope();
+
+  useEffect(() => {
+    if (debugFocusScope) {
+      window.log.debug(`[debugFocusScope] focus scope changed to`, focusScope);
+    }
+  }, [debugFocusScope, focusScope]);
 }
 
 function DebugMenuModalButton() {
@@ -134,7 +202,7 @@ function DebugMenuModalButton() {
   return (
     <SessionLucideIconButton
       iconSize="medium"
-      padding="var(--margins-lg)"
+      padding="var(--margins-md)"
       unicode={LUCIDE_ICONS_UNICODE.SQUARE_CODE}
       dataTestId="debug-menu-section"
       onClick={() => {
@@ -187,8 +255,13 @@ export const ActionsPanel = () => {
 
   const fsTTL30sEnabled = getFeatureFlagMemo('fsTTL30s');
   useDebugThemeSwitch();
+  useDebugToggleLocalizerKeys();
+  useDebugFocusScope();
   useUpdateBadgeCount();
   usePeriodicFetchRevocationList();
+  useKeyboardShortcutsModalKeyboardShortcut();
+  useUserSettingsModalKeyboardShortcut();
+  useNewConversationKeyboardShortcut();
 
   useInterval(() => {
     if (!ourPrimaryConversation) {
@@ -233,36 +306,50 @@ export const ActionsPanel = () => {
   return (
     <>
       <LeftPaneSectionContainer data-testid="leftpane-section-container">
-        <StyledContainerAvatar
-          onClick={() => {
-            dispatch(userSettingsModal({ userSettingsPage: 'default' }));
-          }}
+        <Flex
+          $container={true}
+          $alignItems="center"
+          $flexGap="var(--margins-lg)"
+          $flexDirection="column"
         >
-          <Avatar
-            size={AvatarSize.S}
-            pubkey={ourNumber}
-            dataTestId="leftpane-primary-avatar"
-            imageDataTestId={`img-leftpane-primary-avatar`}
+          <StyledContainerAvatar
+            onClick={() => {
+              dispatch(userSettingsModal({ userSettingsPage: 'default' }));
+            }}
+            tabIndex={0}
+          >
+            <Avatar
+              size={AvatarSize.S}
+              pubkey={ourNumber}
+              dataTestId="leftpane-primary-avatar"
+              imageDataTestId={`img-leftpane-primary-avatar`}
+            />
+            <GearAvatarButton />
+          </StyledContainerAvatar>
+          {showDebugMenu ? <DebugMenuModalButton /> : null}
+        </Flex>
+        <FlexSpacer />
+        <Flex
+          $container={true}
+          $alignItems="center"
+          $flexGap="var(--margins-lg)"
+          $flexDirection="column"
+        >
+          <OnionStatusLight
+            handleClick={() => {
+              dispatch(onionPathModal({}));
+            }}
+            inActionPanel={true}
           />
-          <GearAvatarButton />
-        </StyledContainerAvatar>
-        {showDebugMenu ? <DebugMenuModalButton /> : null}
-        <OnionStatusLight
-          handleClick={() => {
-            dispatch(onionPathModal({}));
-          }}
-          inActionPanel={true}
-        />
-        <SessionLucideIconButton
-          margin="0 0 0 0"
-          iconSize="medium"
-          padding="var(--margins-lg)"
-          unicode={isDarkTheme ? LUCIDE_ICONS_UNICODE.MOON : LUCIDE_ICONS_UNICODE.SUN_MEDIUM}
-          dataTestId="theme-section"
-          onClick={() => {
-            void handleThemeSwitch();
-          }}
-        />
+          <SessionLucideIconButton
+            margin="0 0 0 0"
+            iconSize="medium"
+            padding="var(--margins-md)"
+            unicode={isDarkTheme ? LUCIDE_ICONS_UNICODE.MOON : LUCIDE_ICONS_UNICODE.SUN_MEDIUM}
+            dataTestId="theme-section"
+            onClick={debouncedHandleThemeSwitch}
+          />
+        </Flex>
       </LeftPaneSectionContainer>
     </>
   );

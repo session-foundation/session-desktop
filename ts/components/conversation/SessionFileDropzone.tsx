@@ -13,7 +13,7 @@ const DropZoneContainer = styled.div`
 
 const DropZoneWithBorder = styled.div`
   border: dashed 4px var(--file-dropzone-border-color);
-  background-color: var(--file-dropzone-background-color);
+  background-color: var(--message-link-preview-background-color);
   position: absolute;
   top: 0;
   bottom: 0;

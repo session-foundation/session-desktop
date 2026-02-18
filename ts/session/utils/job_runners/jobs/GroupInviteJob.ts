@@ -1,6 +1,5 @@
 import { GroupPubkeyType, PubkeyType } from 'libsession_util_nodejs';
 import { debounce, difference, isNumber } from 'lodash';
-import { v4 } from 'uuid';
 import AbortController from 'abort-controller';
 import { MessageUtils, ToastUtils, UserUtils } from '../..';
 import { groupInfoActions } from '../../../../state/ducks/metaGroups';
@@ -32,6 +31,7 @@ import { DURATION } from '../../../constants';
 import { timeoutWithAbort } from '../../Promise';
 import { StoreGroupRequestFactory } from '../../../apis/snode_api/factories/StoreGroupRequestFactory';
 import { tr } from '../../../../localization/localeTools';
+import { uuidV4 } from '../../../../util/uuid';
 
 const defaultMsBetweenRetries = 10000;
 const defaultMaxAttempts = 1;
@@ -154,7 +154,7 @@ class GroupInviteJob extends PersistedJob<GroupInvitePersistedData> {
     >) {
     super({
       jobType: 'GroupInviteJobType',
-      identifier: identifier || v4(),
+      identifier: identifier || uuidV4(),
       member,
       groupPk,
       inviteAsAdmin,

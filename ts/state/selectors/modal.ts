@@ -95,12 +95,20 @@ export function useLightBoxOptions() {
   return useSelector((state: StateType) => getModal(state).lightBoxOptions);
 }
 
+export function useOutgoingLightBoxOptions() {
+  return useSelector((state: StateType) => getModal(state).outgoingLightBoxOptions);
+}
+
 export function useBanOrUnbanUserModal() {
   return useSelector((state: StateType) => getModal(state).banOrUnbanUserModal);
 }
 
 export function useDebugMenuModal() {
   return useSelector((state: StateType) => getModal(state).debugMenuModal);
+}
+
+export function useKeyboardShortcutsModal() {
+  return useSelector((state: StateType) => getModal(state).keyboardShortcutsModal);
 }
 
 export function useConversationSettingsModal() {
@@ -116,11 +124,23 @@ export function useConversationSettingsModalIsStandalone() {
   );
 }
 
-export function useModalStack() {
+function useModalStack() {
   return useSelector((state: StateType) => state.modals?.modalStack ?? []); // that [] is needed for the password window
 }
 
-export function useIsTopModal(modalId: ModalId) {
+/**
+ * Return true if at least one modal is visible
+ */
+export function useHasModalVisible() {
+  return useModalStack().length > 0;
+}
+
+export function useTopModalId() {
   const modalStack = useModalStack();
-  return !modalStack?.length || modalStack[modalStack.length - 1] === modalId;
+  return modalStack?.length ? modalStack[modalStack.length - 1] : null;
+}
+
+export function useIsTopModal(modalId: ModalId) {
+  const topModalId = useTopModalId();
+  return topModalId === modalId;
 }

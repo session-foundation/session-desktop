@@ -10,10 +10,11 @@ import { LUCIDE_ICONS_UNICODE } from './icon/lucide';
 const SessionScrollButtonDiv = styled.div`
   position: fixed;
   right: 60px;
+  margin-bottom: 20px;
   animation: fadein var(--default-duration);
 `;
 
-export const SessionScrollButton = (props: { onClickScrollBottom: () => void }) => {
+export const SessionScrollButton = (props: { onClickScrollBottom: () => Promise<unknown> }) => {
   const show = useSelector(getShowScrollButton);
   const unreadCount = useSelectedUnreadCount();
 
@@ -23,9 +24,9 @@ export const SessionScrollButton = (props: { onClickScrollBottom: () => void }) 
         <SessionLucideIconButton
           unicode={LUCIDE_ICONS_UNICODE.CHEVRON_DOWN}
           iconSize={'large'}
-          onClick={props.onClickScrollBottom}
+          onClick={() => void props.onClickScrollBottom()}
           dataTestId="scroll-to-bottom-button"
-          backgroundColor="var(--message-bubbles-received-background-color)"
+          backgroundColor="var(--message-bubble-incoming-background-color)"
           padding="var(--margins-xs)"
           style={{
             boxShadow: 'var(--scroll-button-shadow)',

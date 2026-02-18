@@ -154,7 +154,7 @@ export const ConversationSettingsHeader = ({ conversationId }: WithConvoId) => {
       >
         {mode === 'qr' ? (
           <QRView
-            sessionID={(isPublic && fullUrlWithPubkey && fullUrlWithPubkey) || conversationId}
+            sessionID={(isPublic && fullUrlWithPubkey) || conversationId}
             onExit={() => setMode('default')}
           />
         ) : (

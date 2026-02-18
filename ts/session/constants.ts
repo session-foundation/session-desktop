@@ -1,3 +1,5 @@
+import { isTestIntegration } from '../shared/env_vars';
+
 const seconds = 1000;
 const minutes = seconds * 60;
 const hours = minutes * 60;
@@ -52,11 +54,11 @@ export const TTL_DEFAULT = {
 
 export const SWARM_POLLING_TIMEOUT = {
   /** 5 seconds */
-  ACTIVE: DURATION.SECONDS * 5,
+  ACTIVE: isTestIntegration() ? DURATION.SECONDS * 1 : DURATION.SECONDS * 5,
   /** 1 minute */
-  MEDIUM_ACTIVE: DURATION.SECONDS * 60,
+  MEDIUM_ACTIVE: isTestIntegration() ? DURATION.SECONDS * 1 : DURATION.SECONDS * 60,
   /** 2 minutes */
-  INACTIVE: DURATION.SECONDS * 120,
+  INACTIVE: isTestIntegration() ? DURATION.SECONDS * 1 : DURATION.SECONDS * 120,
 };
 
 export const PROTOCOLS = {

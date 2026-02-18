@@ -107,6 +107,7 @@ const ContactListItemSection = () => {
               width={leftPaneListWidth}
               autoHeight={false}
               style={{ outline: 'none' }}
+              tabIndex={-1}
             />
           );
         }}
@@ -120,7 +121,7 @@ export const ContactsListWithBreaks = () => {
 
   return (
     <StyledContactSection>
-      <StyledContactsTitle tabIndex={0}>{tr('contactContacts')}</StyledContactsTitle>
+      <StyledContactsTitle>{tr('contactContacts')}</StyledContactsTitle>
       {contactsCount > 0 ? (
         <ContactListItemSection />
       ) : (

@@ -3,7 +3,6 @@ import { SessionDataTestId, useEffect, useRef, useState } from 'react';
 import H5AudioPlayer, { RHAP_UI } from 'react-h5-audio-player';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
-import { contextMenu } from 'react-contexify';
 import { getAppDispatch } from '../../state/dispatch';
 import { useEncryptedFileFetch } from '../../hooks/useEncryptedFileFetch';
 import { setNextMessageToPlayId } from '../../state/ducks/conversations';
@@ -17,9 +16,11 @@ import { useIsMessageSelectionMode } from '../../state/selectors/selectedConvers
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { getAudioAutoplay } from '../../state/selectors/settings';
 import { LucideIcon } from '../icon/LucideIcon';
+import { focusVisibleBoxShadowOutset } from '../../styles/focusVisible';
+import { createButtonOnKeyDownForClickEventHandler } from '../../util/keyboardShortcuts';
+import { closeContextMenus } from '../../util/contextMenu';
 
 const StyledSpeedButton = styled.div`
-  padding: var(--margins-xs);
   transition: none;
 
   .session-button {
@@ -49,6 +50,8 @@ export const StyledH5AudioPlayer = styled(H5AudioPlayer)<{ dropShadow?: boolean 
   .rhap_progress-container {
     margin: 0 0 0 calc(10px + 1%);
     outline: none;
+
+    ${focusVisibleBoxShadowOutset()}
   }
 
   .rhap_current-time,
@@ -58,35 +61,16 @@ export const StyledH5AudioPlayer = styled(H5AudioPlayer)<{ dropShadow?: boolean 
     flex-shrink: 0;
   }
 
-  .rhap_play-pause-button {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-
-  .rhap_volume-bar {
-    display: none;
-  }
-
-  .rhap_volume-button {
-    .module-message__container--incoming & {
-      color: var(--message-bubbles-received-text-color);
-    }
-    .module-message__container--outgoing & {
-      color: var(--message-bubbles-sent-text-color);
-    }
-  }
-
   .rhap_volume-container div[role='progressbar'] {
     display: none;
   }
 
   .rhap_time {
     .module-message__container--incoming & {
-      color: var(--message-bubbles-received-text-color);
+      color: var(--message-bubble-incoming-text-color);
     }
     .module-message__container--outgoing & {
-      color: var(--message-bubbles-sent-text-color);
+      color: var(--message-bubble-outgoing-text-color);
     }
 
     font-size: 12px;
@@ -99,6 +83,7 @@ export const StyledH5AudioPlayer = styled(H5AudioPlayer)<{ dropShadow?: boolean 
     width: 100%;
     height: 5px;
     border-radius: 2px;
+    min-width: 100px;
   }
 
   .rhap_progress-filled {
@@ -121,12 +106,6 @@ export const StyledH5AudioPlayer = styled(H5AudioPlayer)<{ dropShadow?: boolean 
     box-shadow: rgba(0, 0, 0, 0.5) 0 0 5px !important;
   }
 
-  .rhap_controls-section {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
   .rhap_additional-controls {
     display: none;
   }
@@ -134,18 +113,24 @@ export const StyledH5AudioPlayer = styled(H5AudioPlayer)<{ dropShadow?: boolean 
   .rhap_play-pause-button {
     width: unset;
     height: unset;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    padding: 7px;
   }
 
   .rhap_controls-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     flex: unset;
     justify-content: flex-start;
+    margin-top: 0;
   }
 
-  .rhap_volume-button {
-    font-size: 20px;
-    width: 20px;
-    height: 20px;
-    margin-right: 0px;
+  .rhap_main-controls-button {
+    margin: 0;
   }
 
   ${props => props.dropShadow && 'box-shadow: var(--drop-shadow);'}
@@ -170,8 +155,8 @@ export const AudioPlayerWithEncryptedFile = (props: {
   const direction = useMessageDirection(messageId);
   const iconColor =
     direction === 'incoming'
-      ? 'var(--message-bubbles-received-text-color)'
-      : 'var(--message-bubbles-sent-text-color)';
+      ? 'var(--message-bubble-incoming-text-color)'
+      : 'var(--message-bubble-outgoing-text-color)';
   const dataTestId: SessionDataTestId = 'audio-player';
 
   const triggerPlayNextMessageIfNeeded = (endedMessageId: string) => {
@@ -223,10 +208,13 @@ export const AudioPlayerWithEncryptedFile = (props: {
     ) {
       // NOTE we can't assign the value using dataset.testId because the result is data-test-id not data-testid which is our convention
       player.current.container.current.setAttribute('data-testid', dataTestId);
+      // The library hardcodes tabIndex={0} on the container, override it so only the buttons inside are tabbable
+      player.current.container.current.tabIndex = -1;
     }
+
     player.current?.progressBar.current?.addEventListener('mousedown', e => {
       if (e.button === 0) {
-        contextMenu.hideAll();
+        closeContextMenus();
 
         return;
       }
@@ -251,12 +239,18 @@ export const AudioPlayerWithEncryptedFile = (props: {
     }
   }, [messageId, nextMessageToPlayId, player]);
 
+  const onChangeSpeed = () => {
+    setPlaybackSpeed(playbackSpeed === 1 ? 1.5 : playbackSpeed === 1.5 ? 2 : 1);
+  };
+
+  const onKeyDownSpeed = createButtonOnKeyDownForClickEventHandler(onChangeSpeed, false);
+
   return (
     <StyledH5AudioPlayer
       src={urlToLoad}
       preload="metadata"
       style={{ pointerEvents: multiSelectMode ? 'none' : 'inherit' }}
-      layout="horizontal-reverse"
+      layout="stacked"
       showSkipControls={false}
       autoPlay={false}
       autoPlayAfterSrcChange={false}
@@ -266,24 +260,30 @@ export const AudioPlayerWithEncryptedFile = (props: {
       onEnded={onEnded}
       ref={player}
       customControlsSection={[
+        // Note: we need to keep all of those in the customControlSections (and not split them in customProgressBarSection)
+        // so that keyboard navigation works as expected
         RHAP_UI.MAIN_CONTROLS,
-        <StyledSpeedButton key="togglePlaybackSpeed">
+        <StyledSpeedButton key="togglePlaybackSpeed" onKeyDown={onKeyDownSpeed}>
           <SessionButton
             text={`${playbackSpeed}x`}
-            onClick={() => {
-              setPlaybackSpeed(playbackSpeed === 1 ? 1.5 : 1);
-            }}
+            onClick={onChangeSpeed}
             buttonType={SessionButtonType.Simple}
           />
         </StyledSpeedButton>,
+        RHAP_UI.CURRENT_LEFT_TIME,
+        RHAP_UI.PROGRESS_BAR,
       ]}
-      customProgressBarSection={[RHAP_UI.CURRENT_LEFT_TIME, RHAP_UI.PROGRESS_BAR]}
+      customProgressBarSection={[]}
       customIcons={{
         play: (
-          <LucideIcon unicode={LUCIDE_ICONS_UNICODE.PLAY} iconSize="medium" iconColor={iconColor} />
+          <LucideIcon // already wrapped by h5 into a button
+            unicode={LUCIDE_ICONS_UNICODE.PLAY}
+            iconSize="medium"
+            iconColor={iconColor}
+          />
         ),
         pause: (
-          <LucideIcon
+          <LucideIcon // already wrapped by h5 into a button
             unicode={LUCIDE_ICONS_UNICODE.PAUSE}
             iconSize="medium"
             iconColor={iconColor}

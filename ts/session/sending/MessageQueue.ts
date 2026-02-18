@@ -94,7 +94,7 @@ export class MessageQueueCl {
         throw new Error(`Invalid serverId returned by server: ${serverId}`);
       }
 
-      await MessageSentHandler.handlePublicMessageSentSuccess(message.identifier, {
+      await MessageSentHandler.handlePublicMessageSentSuccess(message.dbMessageIdentifier, {
         serverId,
         serverTimestamp: sentTimestamp,
       });
@@ -134,7 +134,7 @@ export class MessageQueueCl {
       if (!serverId || serverId === -1) {
         throw new Error(`Invalid serverId returned by server: ${serverId}`);
       }
-      await MessageSentHandler.handlePublicMessageSentSuccess(message.identifier, {
+      await MessageSentHandler.handlePublicMessageSentSuccess(message.dbMessageIdentifier, {
         serverId,
         serverTimestamp,
       });
@@ -271,12 +271,12 @@ export class MessageQueueCl {
       });
       window.log.debug(`sendSingleMessage took ${Date.now() - start}ms`);
 
-      const cb = this.pendingMessageCache.callbacks.get(rawMessage.identifier);
+      const cb = this.pendingMessageCache.callbacks.get(rawMessage.dbMessageIdentifier);
 
       if (cb) {
         await cb(rawMessage);
       }
-      this.pendingMessageCache.callbacks.delete(rawMessage.identifier);
+      this.pendingMessageCache.callbacks.delete(rawMessage.dbMessageIdentifier);
 
       return effectiveTimestamp;
     } catch (error) {
@@ -286,7 +286,7 @@ export class MessageQueueCl {
       );
 
       await MessageSentHandler.handleSwarmMessageSentFailure(
-        { device: rawMessage.device, identifier: rawMessage.identifier },
+        { device: rawMessage.device, dbMessageIdentifier: rawMessage.dbMessageIdentifier },
         error
       );
 
@@ -307,7 +307,7 @@ export class MessageQueueCl {
     const jobQueue = this.getJobQueue(device);
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     messages.forEach(async message => {
-      const messageId = message.identifier;
+      const messageId = message.dbMessageIdentifier;
 
       if (!jobQueue.has(messageId)) {
         // We put the event handling inside this job to avoid sending duplicate events

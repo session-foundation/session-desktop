@@ -1,6 +1,5 @@
 /* eslint-disable no-await-in-loop */
 import { compact, isEmpty, isNumber, uniq } from 'lodash';
-import { v4 } from 'uuid';
 import { Data } from '../../../../data/data';
 import { READ_MESSAGE_STATE } from '../../../../models/conversationAttributes';
 import { MessageModel } from '../../../../models/message';
@@ -14,6 +13,7 @@ import {
   PersistedJob,
   RunJobResult,
 } from '../PersistedJob';
+import { uuidV4 } from '../../../../util/uuid';
 
 class FetchMsgExpirySwarmJob extends PersistedJob<FetchMsgExpirySwarmPersistedData> {
   constructor({
@@ -31,7 +31,7 @@ class FetchMsgExpirySwarmJob extends PersistedJob<FetchMsgExpirySwarmPersistedDa
     Pick<FetchMsgExpirySwarmPersistedData, 'msgIds'>) {
     super({
       jobType: 'FetchMsgExpirySwarmJobType',
-      identifier: identifier || v4(),
+      identifier: identifier || uuidV4(),
       delayBetweenRetries: 2000,
       maxAttempts: isNumber(maxAttempts) ? maxAttempts : 2,
       currentRetry: isNumber(currentRetry) ? currentRetry : 0,

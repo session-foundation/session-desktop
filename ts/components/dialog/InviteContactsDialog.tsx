@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import useKey from 'react-use/lib/useKey';
 import { clone } from 'lodash';
+import styled from 'styled-components';
 
 import { PubkeyType } from 'libsession_util_nodejs';
 import { getAppDispatch } from '../../state/dispatch';
@@ -32,6 +33,7 @@ import { searchActions } from '../../state/ducks/search';
 import { ToastUtils } from '../../session/utils';
 import { StyledContactListInModal } from '../list/StyledContactList';
 import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
+import { isEnterKey } from '../../util/keyboardShortcuts';
 
 type Props = {
   conversationId: string;
@@ -75,6 +77,10 @@ async function submitForOpenGroup(convoId: string, pubkeys: Array<string>) {
   }
 }
 
+const StyledNoContacts = styled.p`
+  text-align: center;
+`;
+
 function ContactsToInvite({
   validContactsForInvite,
   selectedContacts,
@@ -102,9 +108,9 @@ function ContactsToInvite({
   ) : (
     <>
       <SpacerLG />
-      <p className="no-contacts">
+      <StyledNoContacts>
         <Localizer token="contactNone" />
-      </p>
+      </StyledNoContacts>
       <SpacerLG />
     </>
   );
@@ -166,7 +172,7 @@ const InviteContactsDialogInner = (props: Props) => {
   };
 
   useKey((event: KeyboardEvent) => {
-    return event.key === 'Enter';
+    return isEnterKey(event);
   }, onClickOK);
 
   const hasContacts = contactsToInvite.length > 0;

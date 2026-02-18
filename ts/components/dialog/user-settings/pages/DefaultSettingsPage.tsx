@@ -1,8 +1,7 @@
-import { type RefObject, useRef, useState } from 'react';
+import { useState } from 'react';
 import styled from 'styled-components';
 import useMount from 'react-use/lib/useMount';
 import { getAppDispatch } from '../../../../state/dispatch';
-import { useHotkey } from '../../../../hooks/useHotkey';
 import { useOurConversationUsername, useOurAvatarPath } from '../../../../hooks/useParamSelector';
 import { UserUtils, ToastUtils } from '../../../../session/utils';
 import { resetConversationExternal } from '../../../../state/ducks/conversations';
@@ -45,35 +44,8 @@ import {
   useProBackendProDetails,
   useProBackendRefetch,
 } from '../../../../state/selectors/proBackendData';
-
-const handleKeyQRMode = (mode: ProfileDialogModes, setMode: (mode: ProfileDialogModes) => void) => {
-  switch (mode) {
-    case 'default':
-      setMode('qr');
-      break;
-    case 'qr':
-      setMode('default');
-      break;
-    default:
-  }
-};
-
-const handleKeyCancel = (
-  mode: ProfileDialogModes,
-  setMode: (mode: ProfileDialogModes) => void,
-  inputRef: RefObject<HTMLInputElement | null>
-) => {
-  switch (mode) {
-    case 'qr':
-      if (inputRef.current !== null && document.activeElement === inputRef.current) {
-        return;
-      }
-      setMode('default');
-      break;
-    case 'default':
-    default:
-  }
-};
+import { focusVisibleBoxShadowOutsetStr } from '../../../../styles/focusVisible';
+import { createButtonOnKeyDownForClickEventHandler } from '../../../../util/keyboardShortcuts';
 
 function SessionIconForSettings(props: Omit<SessionIconProps, 'iconSize' | 'style'>) {
   return (
@@ -152,7 +124,7 @@ function MiscSection() {
       />
       <PanelIconButton
         iconElement={
-          <div style={{ width: 'var(--user-settings-icon-min-width)' }}>
+          <div style={{ width: 'var(--user-settings-icon-min-width)', justifyItems: 'center' }}>
             <OnionStatusLight inActionPanel={false} handleClick={undefined} />
           </div>
         }
@@ -219,7 +191,7 @@ function SettingsSection() {
         }
         text={{ token: 'sessionMessageRequests' }}
         onClick={() => {
-          dispatch(sectionActions.setLeftOverlayMode('message-requests'));
+          dispatch(sectionActions.setLeftOverlayMode({ type: 'message-requests', params: null }));
           dispatch(userSettingsModal(null));
           dispatch(resetConversationExternal());
         }}
@@ -288,7 +260,7 @@ const StyledVersionInfo = styled.div`
   font-size: var(--font-size-sm);
 `;
 
-const StyledSpanSessionInfo = styled.span<{ opacity?: number }>`
+const StyledButtonSessionInfo = styled.span<{ opacity?: number }>`
   opacity: ${props => props.opacity ?? 0.5};
   transition: var(--default-duration);
   user-select: text;
@@ -303,6 +275,21 @@ const SessionInfo = () => {
   const [clickCount, setClickCount] = useState(0);
 
   const dispatch = getAppDispatch();
+
+  const openVersion = createButtonOnKeyDownForClickEventHandler(() =>
+    showLinkVisitWarningDialog(
+      `https://github.com/session-foundation/session-desktop/releases/tag/v${window.versionInfo.version}`,
+      dispatch
+    )
+  );
+
+  const openCommit = createButtonOnKeyDownForClickEventHandler(() => {
+    setClickCount(clickCount + 1);
+    if (clickCount === 10) {
+      dispatch(setDebugMode(true));
+      setClickCount(0);
+    }
+  });
 
   return (
     <StyledVersionInfo>
@@ -321,27 +308,20 @@ const SessionInfo = () => {
         $alignItems="center"
         $flexGap="var(--margins-sm)"
       >
-        <StyledSpanSessionInfo
-          onClick={() => {
-            showLinkVisitWarningDialog(
-              `https://github.com/session-foundation/session-desktop/releases/tag/v${window.versionInfo.version}`,
-              dispatch
-            );
-          }}
+        <StyledButtonSessionInfo
+          onKeyDown={openVersion}
+          onClick={() => void openVersion(null as any)}
+          tabIndex={0}
         >
           v{window.versionInfo.version}
-        </StyledSpanSessionInfo>
-        <StyledSpanSessionInfo
-          onClick={() => {
-            setClickCount(clickCount + 1);
-            if (clickCount === 10) {
-              dispatch(setDebugMode(true));
-              setClickCount(0);
-            }
-          }}
+        </StyledButtonSessionInfo>
+        <StyledButtonSessionInfo
+          onKeyDown={openCommit}
+          onClick={() => void openCommit(null as any)}
+          tabIndex={0}
         >
           {window.versionInfo.commitHash?.slice(0, 8)}
-        </StyledSpanSessionInfo>
+        </StyledButtonSessionInfo>
       </Flex>
     </StyledVersionInfo>
   );
@@ -355,7 +335,6 @@ export const DefaultSettingPage = (modalState: UserSettingsModalState) => {
 
   const profileName = useOurConversationUsername() || '';
   const [enlargedImage, setEnlargedImage] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   const avatarPath = useOurAvatarPath() || '';
   const us = UserUtils.getOurPubKeyStrFromCache();
@@ -365,9 +344,6 @@ export const DefaultSettingPage = (modalState: UserSettingsModalState) => {
   const showUpdateProfileInformation = () => {
     dispatch(updateConversationDetailsModal({ conversationId: us }));
   };
-
-  useHotkey('v', () => handleKeyQRMode(mode, setMode));
-  useHotkey('Backspace', () => handleKeyCancel(mode, setMode, inputRef));
 
   function copyAccountIdToClipboard() {
     window.clipboard.writeText(us);
@@ -428,8 +404,11 @@ export const DefaultSettingPage = (modalState: UserSettingsModalState) => {
             <SessionLucideIconButton
               iconSize="small"
               unicode={LUCIDE_ICONS_UNICODE.COPY}
-              iconColor="var(--renderer-span-primary)"
+              iconColor="var(--renderer-span-primary-color)"
               onClick={copyAccountIdToClipboard}
+              // some padding because the box-shadow does not look good otherwise
+              padding="3px"
+              focusVisibleEffect={focusVisibleBoxShadowOutsetStr()}
             />
           }
           style={{

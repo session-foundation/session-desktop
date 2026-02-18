@@ -2,6 +2,7 @@ import type { SessionDataTestId } from 'react';
 import { alignButtonEndAbsoluteButtonStyle } from './sharedStyles';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
+import { focusVisibleOutlineStr } from '../../styles/focusVisible';
 
 type ShowHideButtonStrings<T extends string> = { hide: T; show: T };
 
@@ -27,6 +28,8 @@ export const ShowHideButton = (props: ShowHideButtonProps) => {
       onClick={toggleForceShow}
       style={style}
       dataTestId={forceShow ? dataTestIds.hide : dataTestIds.show}
+      // just some padding for the focus-visible to look good
+      focusVisibleEffect={focusVisibleOutlineStr('2px')}
     />
   );
 };

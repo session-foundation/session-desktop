@@ -22,7 +22,7 @@ import {
   getCurrentlySelectedConversationOutsideRedux,
   getLeftPaneConversationIdsCount,
 } from '../../state/selectors/conversations';
-import { assertUnreachable, stringify } from '../../types/sqlSharedTypes';
+import { stringify } from '../../types/sqlSharedTypes';
 import {
   MetaGroupWrapperActions,
   UserGroupsWrapperActions,
@@ -46,7 +46,7 @@ import { DisappearingMessages } from '../disappearing_messages';
 import { StoreGroupRequestFactory } from '../apis/snode_api/factories/StoreGroupRequestFactory';
 import { ConversationTypeEnum } from '../../models/types';
 import { NetworkTime } from '../../util/NetworkTime';
-import { timeoutWithAbort } from '../utils/Promise';
+import { processBatch, timeoutWithAbort } from '../utils/Promise';
 import { DURATION } from '../constants';
 import { isSignWithRecoveryPhrase } from '../../util/storage';
 import {
@@ -54,6 +54,7 @@ import {
   getShowRecoveryPhrasePrompt,
 } from '../../state/selectors/settings';
 import { SettingsKey } from '../../data/settings-key';
+import { uuidV4 } from '../../util/uuid';
 
 let instance: ConvoController | null;
 
@@ -538,44 +539,40 @@ class ConvoController {
 
         const convoModels = await Data.getAllConversations();
         this.conversations.push(...convoModels);
+        window.log.debug(
+          `ConvoController::load: got ${convoModels.length} conversations in ${Date.now() - startLoad}ms`
+        );
 
-        const start = Date.now();
-        const numberOfVariants = LibSessionUtil.requiredUserVariants.length;
-        for (let index = 0; index < convoModels.length; index++) {
-          const convo = convoModels[index];
-          for (let wrapperIndex = 0; wrapperIndex < numberOfVariants; wrapperIndex++) {
-            const variant = LibSessionUtil.requiredUserVariants[wrapperIndex];
+        const refreshStart = Date.now();
 
-            switch (variant) {
-              case 'UserConfig':
-              case 'UserGroupsConfig':
-                break;
-              case 'ContactsConfig':
-                if (SessionUtilContact.isContactToStoreInWrapper(convo)) {
-                  await SessionUtilContact.refreshMappedValue(convo.id, true);
-                }
-                break;
-              case 'ConvoInfoVolatileConfig':
-                if (SessionUtilConvoInfoVolatile.isConvoToStoreInWrapper(convo)) {
-                  await SessionUtilConvoInfoVolatile.refreshConvoVolatileCached(
-                    convo.id,
-                    Boolean(convo.isClosedGroup() && convo.id.startsWith('05')),
-                    true
-                  );
+        // Filter conversations by what actually needs processing
+        const contactsToProcess = convoModels.filter(c =>
+          SessionUtilContact.isContactToStoreInWrapper(c)
+        );
+        const volatileToProcess = convoModels.filter(c =>
+          SessionUtilConvoInfoVolatile.isConvoToStoreInWrapper(c)
+        );
 
-                  await convo.refreshInMemoryDetails();
-                }
-                break;
+        window.log.info(
+          `Processing ${contactsToProcess.length} contacts and ${volatileToProcess.length} volatile convos`
+        );
 
-              default:
-                assertUnreachable(
-                  variant,
-                  `ConversationController: load() unhandled case "${variant}"`
-                );
-            }
-          }
-        }
-        window.log.info(`refreshAllWrappersMappedValues took ${Date.now() - start}ms`);
+        // Process contacts in batches
+        await processBatch(contactsToProcess, 500, async convo => {
+          await SessionUtilContact.refreshMappedValue(convo.id, true);
+        });
+
+        // Process volatile in batches
+        await processBatch(volatileToProcess, 500, async convo => {
+          await SessionUtilConvoInfoVolatile.refreshConvoVolatileCached(
+            convo.id,
+            Boolean(convo.isClosedGroup() && convo.id.startsWith('05')),
+            true
+          );
+          await convo.refreshInMemoryDetails();
+        });
+
+        window.log.info(`refreshAllWrappersMappedValues took ${Date.now() - refreshStart}ms`);
 
         this._initialFetchComplete = true;
         window?.log?.info(
@@ -734,11 +731,13 @@ async function leaveClosedGroup(groupPk: GroupPubkeyType, fromSyncMessage: boole
     groupPk,
     expirationType: 'unknown', // we keep that one **not** expiring
     expireTimer: 0,
+    dbMessageIdentifier: uuidV4(),
   });
 
   const ourLeavingNotificationMessage = new GroupUpdateMemberLeftNotificationMessage({
     createAtNetworkTimestamp,
     groupPk,
+    dbMessageIdentifier: uuidV4(),
     ...DisappearingMessages.getExpireDetailsForOutgoingMessage(convo, createAtNetworkTimestamp), // this one should be expiring with the convo expiring details
   });
 

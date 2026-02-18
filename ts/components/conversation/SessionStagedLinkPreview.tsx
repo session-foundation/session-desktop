@@ -273,7 +273,7 @@ const StyledStagedLinkPreview = styled(Flex)`
   position: relative;
   /* Same height as a loaded Image Attachment */
   min-height: 132px;
-  border-top: 1px solid var(--border-color);
+  border-top: var(--default-borders);
 `;
 
 const StyledImage = styled.div`

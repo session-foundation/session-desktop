@@ -13,11 +13,13 @@ import {
 import { DisappearingMessageMode } from '../../../../session/disappearing_messages/types';
 import { TestUtils } from '../../../test-utils';
 import { longOrNumberToNumber } from '../../../../types/long/longOrNumberToNumber';
+import { uuidV4 } from '../../../../util/uuid';
 
 const sharedNoExpire = {
   expirationType: DisappearingMessageMode[0],
   expireTimer: 0,
   outgoingProMessageDetails: null,
+  dbMessageIdentifier: uuidV4(),
 };
 
 describe('VisibleMessage', () => {
@@ -89,7 +91,7 @@ describe('VisibleMessage', () => {
   });
 
   it('can create message with a quote without attachments', () => {
-    const quote: Quote = { id: 1234, author: 'author' };
+    const quote: Quote = { timestamp: 1234, author: 'author' };
     const message = new VisibleMessage({
       createAtNetworkTimestamp: Date.now(),
       quote,
@@ -159,13 +161,16 @@ describe('VisibleMessage', () => {
     expect(message.ttl()).to.equal(Constants.TTL_DEFAULT.CONTENT_MESSAGE);
   });
 
-  it('has an identifier', () => {
+  it('has a dbMessageIdentifier', () => {
     const message = new VisibleMessage({
       createAtNetworkTimestamp: Date.now(),
       ...sharedNoExpire,
       userProfile: null,
     });
-    expect(message.identifier).to.not.equal(null, 'identifier cannot be null');
-    expect(message.identifier).to.not.equal(undefined, 'identifier cannot be undefined');
+    expect(message.dbMessageIdentifier).to.not.equal(null, 'dbMessageIdentifier cannot be null');
+    expect(message.dbMessageIdentifier).to.not.equal(
+      undefined,
+      'dbMessageIdentifier cannot be undefined'
+    );
   });
 });

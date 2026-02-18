@@ -31,6 +31,8 @@ export enum LUCIDE_ICONS_UNICODE {
   LINK = '',
   LOCK_KEYHOLE = '',
   LOG_OUT = '',
+  MAIL = '',
+  MAIL_OPEN = '',
   MAXIMIZE = '',
   MESSAGE_SQUARE = '',
   MESSAGE_SQUARE_WARNING = '',
@@ -118,6 +120,8 @@ export function isIconToMirrorRtl(unicode: LUCIDE_ICONS_UNICODE) {
     case LUCIDE_ICONS_UNICODE.LINK:
     case LUCIDE_ICONS_UNICODE.LOCK_KEYHOLE:
     case LUCIDE_ICONS_UNICODE.LOG_OUT:
+    case LUCIDE_ICONS_UNICODE.MAIL:
+    case LUCIDE_ICONS_UNICODE.MAIL_OPEN:
     case LUCIDE_ICONS_UNICODE.MAXIMIZE:
     case LUCIDE_ICONS_UNICODE.MIC:
     case LUCIDE_ICONS_UNICODE.MOON:
@@ -162,4 +166,10 @@ export function isIconToMirrorRtl(unicode: LUCIDE_ICONS_UNICODE) {
       assertUnreachable(unicode, 'isIconToMirrorRtl: unknown case');
       throw new Error('isIconToMirrorRtl: unknown case'); // just to make the compiler happy
   }
+}
+
+const lucideIconValues: Set<string> = new Set(Object.values(LUCIDE_ICONS_UNICODE));
+
+export function isLucideIcon(unicode: string): unicode is LUCIDE_ICONS_UNICODE {
+  return lucideIconValues.has(unicode);
 }

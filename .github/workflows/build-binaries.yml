@@ -1,7 +1,3 @@
-# There is a fair bit of duplication here, but it is the best to save our github free minutes for now.
-# We could save and restore cache to different jobs but that takes roughly 3 minutes to save,
-# so better run them in parrallel instead.
-
 name: Session Desktop
 
 on:
@@ -10,14 +6,14 @@ on:
       - master
       - dev
       - "release/**"
+      - "feature/**"
       - "ci/**"
-      - feat/pro-libsession
   pull_request:
     branches:
       - dev
       - "release/**"
+      - "feature/**"
       - "ci/**"
-      - feat/pro-libsession
   workflow_dispatch:
     inputs:
       target_branch:
@@ -35,7 +31,7 @@ concurrency:
 
 jobs:
   create_draft_release_if_needed:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       # we only want to publish on "push to master" or alpha releases. When we don't want to publish, we want to upload artefacts
@@ -48,7 +44,7 @@ jobs:
       version_tag: ${{ steps.get_version.outputs.VERSION_TAG }}
     steps:
       - name: Checkout git repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         if: ${{ env.SHOULD_PUBLISH == 'true' || env.SHOULD_PUBLISH_ALPHA == 'true' }}
         # We only need a few files in this run, no point cloning everything
         with:
@@ -83,9 +79,44 @@ jobs:
           omitBodyDuringUpdate: true
           omitNameDuringUpdate: true
 
-  build_linux:
+  lint:
     runs-on: ubuntu-22.04
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout git repo
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target_branch || github.ref  }}
+          submodules: "recursive"
+
+      - name: Setup
+        uses: ./actions/setup
+        with:
+          cache_suffix: "linux_x64"
+
+      - name: Setup ESLint cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: .eslintcache
+          key: eslint-${{ hashFiles('pnpm-lock.yaml', 'patches/**', '.eslintrc.js', '.eslint/**') }}
+          restore-keys: |
+            eslint-
+
+      - name: Ensure pnpm-lock.yaml has no duplicates
+        run: pnpm dedupe --check
+
+      - name: Format & Lint
+        run: pnpm run lint
+
+      - name: Validate formatting & linting changed no files
+        run: git diff --exit-code
+
+  build_linux:
+    # We want to run the linux builds at the same time as linting for faster dev iteration
     needs: [create_draft_release_if_needed]
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -93,29 +124,24 @@ jobs:
         include:
           - identifier: deb
             electron_target: deb
-            cache_suffix: linux-deb
             is_qa: false
             generate_release_metadata: true
           - identifier: rpm
             electron_target: rpm
-            cache_suffix: linux-rpm
             is_qa: false
             generate_release_metadata: true
           - identifier: AppImage
             electron_target: AppImage
-            cache_suffix: linux-AppImage
             is_qa: false
             generate_release_metadata: true
           - identifier: freebsd
             electron_target: freebsd
-            cache_suffix: linux-freebsd
             is_qa: false
             generate_release_metadata: false
           # Note: this deb-qa is currently broken. The deb and deb-qa are currently overwriting each others
           # during build-release-publish and maybe the upload-artefact too.
           # - identifier: deb-qa
           #   electron_target: deb
-          #   cache_suffix: linux-deb
           #   is_qa: true
           #   generate_release_metadata: false
     name: "${{ matrix.identifier }}"
@@ -125,39 +151,34 @@ jobs:
       USE_HARD_LINKS: false # see https://github.com/electron-userland/electron-builder/issues/7093
 
     steps:
-      - run: git config --global core.autocrlf false
-
       - name: Checkout git repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target_branch || github.ref  }}
-          submodules: 'recursive'
+          submodules: "recursive"
+
+      - name: Setup
+        uses: ./actions/setup
+        with:
+          # All the x64 linux build run on the same machine so the setup cache is the same
+          cache_suffix: "linux_x64"
 
       - name: Custom build for QA if needed
         if: ${{ matrix.is_qa == true }}
         uses: ./actions/sed_for_qa
 
-      - name: Setup & Build
-        uses: ./actions/setup_and_build
-        with:
-          cache_suffix: ${{ matrix.cache_suffix }}
-
-      - name: Lint Files
-        # no need to lint files on all platforms
-        run: yarn lint
-
-      - name: Enforce yarn.lock has no duplicates
-        uses: ./actions/deduplicate_fail
+      - name: Build
+        run: pnpm run build
 
         # we want to test on all platforms since some are testing the rendered menus (and are dependent on the platform)
       - name: Unit Test
-        run: yarn test
+        run: pnpm run test
 
       - name: Make release build but do not publish ${{ matrix.identifier }}
         # we do want this part to run only when version_tag is unset (i.e. we are not making a release)
         if: ${{ needs.create_draft_release_if_needed.outputs.version_tag == ''  }}
         run: |
-          sed -i 's/"target": "deb"/"target": "${{ matrix.electron_target }}"/g' package.json && yarn build-release
+          sed -i 's/"target": "deb"/"target": "${{ matrix.electron_target }}"/g' package.json && pnpm run build-release
 
       - name: Upload artefacts ${{ matrix.identifier }}
         # we do want this part to run only when version_tag is unset (i.e. we are not making a release)
@@ -169,7 +190,7 @@ jobs:
       - name: Make release build & publish ${{ matrix.identifier }}
         if: ${{ needs.create_draft_release_if_needed.outputs.version_tag != '' }}
         run: |
-          sed -i 's/"target": "deb"/"target": "${{ matrix.electron_target }}"/g' package.json && yarn build-release-publish
+          sed -i 's/"target": "deb"/"target": "${{ matrix.electron_target }}"/g' package.json && pnpm run build-release-publish
 
       - name: Backup release metadata
         # only run this on "push" to "master" or alpha releases
@@ -197,7 +218,7 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout git repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         # We only need a few files in this run, no point cloning everything
         with:
           sparse-checkout: |
@@ -233,32 +254,41 @@ jobs:
 
   build_windows:
     runs-on: windows-2022
-    needs: [create_draft_release_if_needed]
+    needs: [create_draft_release_if_needed, lint]
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     name: "windows x64"
     steps:
       - run: git config --global core.autocrlf false
+      - run: git config --global core.eol lf
+
+      # Not having this will break the windows build because the PATH won't be set by msbuild.
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v2
+        if: runner.os == 'Windows'
 
       - name: Checkout git repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target_branch || github.ref  }}
-          submodules: 'recursive'
+          submodules: "recursive"
 
-      - name: Setup & Build
-        uses: ./actions/setup_and_build
+      - name: Setup
+        uses: ./actions/setup
         with:
           cache_suffix: "windows_x64"
 
+      - name: Build
+        run: pnpm run build
+
         # we want to test on all platforms since some are testing the rendered menus (and are dependent on the platform)
       - name: Unit Test
-        run: yarn test
+        run: pnpm run test-hoisted
 
       - name: Make release build but do not publish
         # always run this, except on "push" to "master" or alpha releases
         if: ${{ needs.create_draft_release_if_needed.outputs.version_tag == ''  }}
-        run: yarn build-release
+        run: pnpm run build-release
 
       - name: Upload artefacts
         # we do want this part to run only when version_tag is unset (i.e. we are not making a release)
@@ -269,7 +299,7 @@ jobs:
 
       - name: Make release build & publish
         if: ${{ needs.create_draft_release_if_needed.outputs.version_tag != '' }}
-        run: yarn build-release-publish # No other args needed for windows publish
+        run: pnpm run build-release-publish # No other args needed for windows publish
 
   # We want both arm64 and intel mac builds, and according to this https://docs.github.com/en/actions/using-github-hosted-runners/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources macos-14 and above is always arm64 and macos-15 is the last intel runner
   # NOTE x64 builds made on an arm64 host will not bundle the native modules correctly https://github.com/electron-userland/electron-builder/issues/8646
@@ -287,7 +317,7 @@ jobs:
     runs-on: ${{ matrix.runner }}
     name: "${{ matrix.architecture }}"
 
-    needs: [create_draft_release_if_needed]
+    needs: [create_draft_release_if_needed, lint]
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       MAC_CERTIFICATE: ${{ secrets.MAC_CERTIFICATE }}
@@ -299,19 +329,22 @@ jobs:
       - run: git config --global core.autocrlf false
 
       - name: Checkout git repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target_branch || github.ref  }}
-          submodules: 'recursive'
+          submodules: "recursive"
 
-      - name: Setup & Build
-        uses: ./actions/setup_and_build
+      - name: Setup
+        uses: ./actions/setup
         with:
           cache_suffix: ${{ matrix.cache_suffix }}
 
+      - name: Build
+        run: pnpm run build
+
         # we want to test on all platforms since some are testing the rendered menus (and are dependent on the platform)
       - name: Unit Test
-        run: yarn test
+        run: pnpm run test
 
       - name: Make release build ${{ matrix.architecture }}
         uses: ./actions/make_release_build
@@ -327,7 +360,7 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout git repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         # We only need a few files in this run, no point cloning everything
         with:
           sparse-checkout: |

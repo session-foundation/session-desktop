@@ -1,19 +1,20 @@
 import { useConvoIdFromContext } from '../../../../contexts/ConvoIdContext';
-import { ItemWithDataTestId } from '../MenuItemWithDataTestId';
+import { MenuItem } from '../MenuItem';
 import { Localizer } from '../../../basic/Localizer';
-import { useShowLeaveGroupCb } from '../../../menuAndSettingsHooks/useShowLeaveGroup';
+import { useShowLeaveOrDeleteGroupCb } from '../../../menuAndSettingsHooks/useShowLeaveGroup';
+import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 
 export const LeaveGroupMenuItem = () => {
   const convoId = useConvoIdFromContext();
-  const cb = useShowLeaveGroupCb(convoId);
+  const cb = useShowLeaveOrDeleteGroupCb('leave', convoId);
 
   if (!cb) {
     return null;
   }
 
   return (
-    <ItemWithDataTestId onClick={cb}>
+    <MenuItem onClick={cb} iconType={LUCIDE_ICONS_UNICODE.LOG_OUT} isDangerAction={true}>
       <Localizer token="groupLeave" />
-    </ItemWithDataTestId>
+    </MenuItem>
   );
 };

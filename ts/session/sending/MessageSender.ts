@@ -92,7 +92,7 @@ type EncryptedMessageDetails = Pick<
   EncryptAndWrapMessageResults,
   | 'namespace'
   | 'encryptedAndWrappedData'
-  | 'identifier'
+  | 'dbMessageIdentifier'
   | 'ttl'
   | 'networkTimestamp'
   | 'plainTextBuffer'
@@ -103,7 +103,7 @@ async function messageToRequest05({
   encryptedAndWrapped: {
     namespace,
     encryptedAndWrappedData,
-    identifier,
+    dbMessageIdentifier,
     ttl,
     networkTimestamp,
     plainTextBuffer,
@@ -114,7 +114,7 @@ async function messageToRequest05({
 }): Promise<StoreRequest05> {
   const shared05Arguments = {
     encryptedData: encryptedAndWrappedData,
-    dbMessageIdentifier: identifier || null,
+    dbMessageIdentifier: dbMessageIdentifier || null,
     ttlMs: ttl,
     destination,
     namespace,
@@ -140,12 +140,18 @@ async function messageToRequest05({
 
 async function messageToRequest03({
   destination,
-  encryptedAndWrapped: { namespace, encryptedAndWrappedData, identifier, ttl, networkTimestamp },
+  encryptedAndWrapped: {
+    namespace,
+    encryptedAndWrappedData,
+    dbMessageIdentifier,
+    ttl,
+    networkTimestamp,
+  },
 }: {
   destination: GroupPubkeyType;
   encryptedAndWrapped: Pick<
     EncryptAndWrapMessageResults,
-    'namespace' | 'encryptedAndWrappedData' | 'identifier' | 'ttl' | 'networkTimestamp'
+    'namespace' | 'encryptedAndWrappedData' | 'dbMessageIdentifier' | 'ttl' | 'networkTimestamp'
   >;
 }): Promise<StoreRequest03> {
   const group = UserGroupsWrapperActions.getCachedGroup(destination);
@@ -160,7 +166,7 @@ async function messageToRequest03({
     namespace,
     ttlMs: ttl,
     groupPk: destination,
-    dbMessageIdentifier: identifier || null,
+    dbMessageIdentifier: dbMessageIdentifier || null,
     createdAtNetworkTimestamp: networkTimestamp,
     getNow: NetworkTime.now,
     ...group,
@@ -253,7 +259,7 @@ async function sendSingleMessage({
             plainTextBuffer: message.plainTextBuffer,
             namespace: message.namespace,
             ttl: message.ttl,
-            identifier: message.identifier,
+            dbMessageIdentifier: message.dbMessageIdentifier,
             networkTimestamp: message.networkTimestampCreated,
             isSyncMessage: Boolean(isSyncMessage),
           },
@@ -262,7 +268,7 @@ async function sendSingleMessage({
         // make sure to update the local sent_at timestamp, because sometimes, we will get the just pushed message in the receiver side
         // before we return from the await below.
         // and the isDuplicate messages relies on sent_at timestamp to be valid.
-        const found = await Data.getMessageById(encryptedAndWrapped.identifier);
+        const found = await Data.getMessageById(encryptedAndWrapped.dbMessageIdentifier);
 
         // make sure to not update the sent timestamp if this a currently syncing message
         if (found && !found.get('sentSync')) {
@@ -565,7 +571,7 @@ async function sendEncryptedDataToSnode<T extends GroupPubkeyType | PubkeyType>(
       if (request.dbMessageIdentifier) {
         // eslint-disable-next-line no-await-in-loop
         await MessageSentHandler.handleSwarmMessageSentFailure(
-          { device: destination, identifier: request.dbMessageIdentifier },
+          { device: destination, dbMessageIdentifier: request.dbMessageIdentifier },
           e
         );
       }
@@ -701,7 +707,7 @@ async function handleBatchResultWithSubRequests({
           await MessageSentHandler.handleSwarmMessageSentSuccess({
             device: subRequest.destination,
             isDestinationClosedGroup: MessageSender.destinationIsClosedGroup(destination),
-            identifier: subRequest.dbMessageIdentifier,
+            dbMessageIdentifier: subRequest.dbMessageIdentifier,
             plainTextBuffer:
               subRequest instanceof StoreUserMessageSubRequest ? subRequest.plainTextBuffer : null,
             // Note: we cannot override this effective timestamp, as this is the one used as an id for

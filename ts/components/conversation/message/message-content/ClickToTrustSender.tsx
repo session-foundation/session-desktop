@@ -19,7 +19,7 @@ const StyledTrustSenderUI = styled.div`
   width: fit-content;
 
   border-radius: var(--border-radius-message-box);
-  background-color: var(--message-bubbles-received-background-color);
+  background-color: var(--message-bubble-incoming-background-color);
   height: 35px;
   margin-left: var(--margins-xs);
 `;

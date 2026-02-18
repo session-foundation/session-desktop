@@ -9,7 +9,7 @@ const StyledKnob = styled.div<{ $active: boolean }>`
   height: 24px;
   width: 24px;
   border-radius: 28px;
-  background-color: var(--toggle-switch-ball-color);
+  background-color: var(--white-color);
   box-shadow: ${props =>
     props.$active
       ? '-2px 1px 3px var(--toggle-switch-ball-shadow-color);'
@@ -34,13 +34,9 @@ const StyledSessionToggle = styled.div<{ $active: boolean; disabled: boolean }>`
   flex-shrink: 0;
 
   background-color: ${props =>
-    props.$active
-      ? 'var(--toggle-switch-on-background-color)'
-      : 'var(--toggle-switch-off-background-color)'};
+    props.$active ? 'var(--primary-color)' : 'var(--transparent-color)'};
   border-color: ${props =>
-    props.$active
-      ? 'var(--toggle-switch-on-border-color)'
-      : 'var(--toggle-switch-off-border-color)'};
+    props.$active ? 'var(--transparent-color)' : 'var(--toggle-switch-off-border-color)'};
 `;
 
 export const SessionToggle = ({

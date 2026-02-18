@@ -6,7 +6,9 @@ import BUILD_CONFIG from './buildConfig';
 const { APP_DIR } = BUILD_CONFIG;
 const PROJECT_ROOT = path.join(__dirname, '..');
 
-// This is required to make the unit test run, as for some reason fs.copyFile corrupts the bins
+// NOTE: This is required to make the unit test run on windows as we need to
+// use node-linker hoisted. This allows any node-linker hoisted install to
+// run things in the node_moudles/.bin from the app directory
 async function copyBinDirectory() {
   const sourceBinPath = path.join(PROJECT_ROOT, 'node_modules', '.bin');
   const destNodeModulesPath = path.join(APP_DIR, 'node_modules');

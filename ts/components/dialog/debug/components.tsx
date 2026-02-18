@@ -314,6 +314,7 @@ export const LoggingDebugSection = ({ forceUpdate }: { forceUpdate: () => void }
       <FlagToggle forceUpdate={forceUpdate} flag="debugSnodePool" />
       <FlagToggle forceUpdate={forceUpdate} flag="debugOnlineState" />
       <FlagToggle forceUpdate={forceUpdate} flag="debugInsecureNodeFetch" />
+      <FlagToggle forceUpdate={forceUpdate} flag="debugKeyboardShortcuts" />
       <i>"Debug Insecure Node Fetch" will log every single request/response!</i>
     </DebugMenuSection>
   );

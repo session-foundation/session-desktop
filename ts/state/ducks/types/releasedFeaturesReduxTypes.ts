@@ -43,6 +43,8 @@ export type SessionDebugBooleanFeatureFlags = {
   debugOnionRequests: boolean;
   debugInsecureNodeFetch: boolean;
   debugOnlineState: boolean;
+  debugKeyboardShortcuts: boolean;
+  debugFocusScope: boolean;
 };
 
 export type SessionBooleanFeatureFlags = SessionBaseBooleanFeatureFlags &
@@ -78,6 +80,7 @@ export type SessionDataFeatureFlags = {
   mockProBadgesSent: number | null;
   mockProGroupsUpgraded: number | null;
   mockNetworkPageNodeCount: number | null;
+  fakeAvatarPickerColor: string | null; // defaults to defaultAvatarPickerColor
 };
 
 export type SessionBooleanFeatureFlagKeys = keyof SessionBooleanFeatureFlags;

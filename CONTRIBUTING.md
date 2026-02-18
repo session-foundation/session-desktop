@@ -27,7 +27,7 @@ If you use other node versions you might have or need a node version manager.
 
 - [nvm](https://github.com/nvm-sh/nvm) - you can run `nvm use` in the project directory and it will use the node version specified in `.nvmrc`.
 - Some node version management tools can read from the `.nvmrc` file and automatically make the change. If you use [asdf](https://asdf-vm.com/) you can make a [config change](https://asdf-vm.com/guide/getting-started.html#using-existing-tool-version-files) to support the `.nvmrc` file.
-- We use [Yarn Classic](https://classic.yarnpkg.com) as our package manager. You can install it by running `npm install --global yarn`.
+- We use [pnpm](https://pnpm.io/installation) as our package manager. You can install it by running `npm install --global pnpm`, but you should read the installation instructions as other methods are better.
 
 ### Strings & Localization
 
@@ -86,10 +86,11 @@ See [node-gyp installation instructions](https://github.com/nodejs/node-gyp#inst
 
   You can get the current `<version>` from the [`.nvmrc`](.nvmrc).
 
-- Install [Yarn Classic](https://classic.yarnpkg.com/en/docs/install/#mac-stable)
+- Install [pnpm](https://pnpm.io/installation)
 
+  The simplest way to do this is via npm, but you should read the installation instructons
   ```sh
-  npm install --global yarn
+  npm install --global pnpm
   ```
 
 ## macOS
@@ -118,10 +119,11 @@ See [node-gyp installation instructions](https://github.com/nodejs/node-gyp#inst
 
   You can get the current `<version>` from the [`.nvmrc`](.nvmrc).
 
-- Install [Yarn Classic](https://classic.yarnpkg.com/en/docs/install/#mac-stable)
+- Install [pnpm](https://pnpm.io/installation)
 
+  The simplest way to do this is via npm, but you should read the installation instructons
   ```sh
-  npm install --global yarn
+  npm install --global pnpm
   ```
 
 ## Windows
@@ -207,13 +209,14 @@ Setup instructions for Windows using Chocolatey:
   choco install nodejs --version <version>
   ```
 
-- Install [Yarn Classic](https://classic.yarnpkg.com/en/docs/install/#windows-stable)
+- Install [pnpm](https://pnpm.io/installation)
 
+  The simplest way to do this is via npm, but you should read the installation instructons
   ```sh
-  npm install --global yarn
+  npm install --global pnpm
   ```
 
-  You'll likely encounter an issue with windows preventing you from running scripts when you run the `yarn` command, See: [Exclusion Policies](https:/go.microsoft.com/fwlink/?LinkID=135170). If you do, you can fix it by running the following command:
+  You'll likely encounter an issue with windows preventing you from running scripts when you run the `pnpm` command, See: [Exclusion Policies](https:/go.microsoft.com/fwlink/?LinkID=135170). If you do, you can fix it by running the following command:
 
   ```PowerShell
   Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
@@ -227,11 +230,12 @@ Now, run these commands in your preferred terminal in a good directory for devel
 git clone https://github.com/session-foundation/session-desktop.git
 cd session-desktop
 git submodule update --init --recursive # Initialize and fetch submodules
-npm install --global yarn               # (only if you don’t already have `yarn`)
-yarn install --frozen-lockfile          # Install and build dependencies (this will take a while)
-yarn build
-yarn test                               # A good idea to make sure tests run first
-yarn start-prod                         # Start Session!
+npm install --global pnpm               # (only if you don’t already have `pnpm`)
+pnpm install                            # Install and build dependencies (this will take a while)
+pnpm build
+# NOTE: on windows you need to use pnpm test-hoisted
+pnpm test                               # A good idea to make sure tests run first
+pnpm start-prod                         # Start Session!
 ```
 
 This will build the project and start the application in production mode.
@@ -244,7 +248,7 @@ This will build the project and start the application in production mode.
 This error is caused by the [Electron](https://www.electronjs.org/) sandbox not being able to run. This is a security feature and not a bug. You can run the application with the `--no-sandbox` flag to disable this behavior.
 
 ```sh
-yarn start-prod --no-sandbox   # Start Session!
+pnpm start-prod --no-sandbox   # Start Session!
 ```
 
 </details>
@@ -271,22 +275,7 @@ is no automatic restart mechanism for the entire application.
 You can keep the developer tools open (`View > Toggle Developer Tools`) and press <kbd>Cmd</kbd> + <kbd>R</kbd> (macOS) or <kbd>Ctrl</kbd> + <kbd>R</kbd> (Windows & Linux) to reload the application frontend.
 
 ```sh
-# Runs until you stop it, re-generating built assets on file changes.
-
-# Once this command is waiting for changes, you will need to run in another terminal
-# `yarn build:workers` to fix the "exports undefined" error on start.
-
-# Terminal A
-yarn watch # this process will keep running until you stop it
-
-# Terminal B
-yarn build:workers
-
-# If you change any SASS files while running "yarn watch" it won't be detected.
-# You will need to run the sass build command.
-
-# Terminal B
-yarn sass
+pnpm watch # this process will keep running until you stop it
 ```
 
 ## Running multiple instances
@@ -297,10 +286,10 @@ To run a new instance, you can set the `MULTI` environment variable to a unique 
 
 ```sh
 # Terminal A
-yarn start-prod # Start Session!
+pnpm start-prod # Start Session!
 
 # Terminal B
-MULTI=1 yarn start-prod # Start another instance of Session!
+MULTI=1 pnpm start-prod # Start another instance of Session!
 ```
 
 ## Storage profile locations
@@ -315,10 +304,10 @@ For example, running:
 
 ```sh
 # Terminal A
-MULTI=alice yarn start-prod
+MULTI=alice pnpm start-prod
 
 # Terminal B
-MULTI=bob yarn start-prod
+MULTI=bob pnpm start-prod
 ```
 
 Will run the development environment with the `alice` and `bob` instances and thus create separate storage profiles. The storage profiles will be stored at `[PROFILE_PATH]/Session-devalice` and `[PROFILE_PATH]/Session-devbob`.
@@ -334,7 +323,8 @@ Please write tests! Our testing framework is
 [mocha](http://mochajs.org/) and our assertion library is
 [chai](http://chaijs.com/api/assert/).
 
-The easiest way to run all tests at once is `yarn test`.
+The easiest way to run all tests at once is `pnpm test`.
+If you are on windows, you'll need to run `pnpm test-hoisted`.
 
 ## Commit your changes
 
@@ -350,7 +340,7 @@ Commit messages will be checked using [husky](https://typicode.github.io/husky/#
 
 So you wanna make a pull request? Please observe the following guidelines.
 
-- First, make sure that your `yarn ready` run passes - it's very similar to what our
+- First, make sure that your `pnpm ready` run passes - it's very similar to what our
   Continuous Integration servers do to test the app.
 - Never use plain strings right in the source code - all of the user facing strings
   are managed via our Localization Platform. See [Strings & Localization](#strings-localization).
@@ -393,8 +383,8 @@ see how they did things.
 You can build a production binary by running the following:
 
 ```sh
-yarn build
-yarn build-release
+pnpm build
+pnpm build-release
 ```
 
 The binaries will be placed inside the `release/` folder.

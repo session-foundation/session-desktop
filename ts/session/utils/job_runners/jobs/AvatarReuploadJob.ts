@@ -1,6 +1,5 @@
 import { from_hex } from 'libsodium-wrappers-sumo';
 import { isNumber } from 'lodash';
-import { v4 } from 'uuid';
 import { UserUtils } from '../..';
 import { ConvoHub } from '../../../conversations';
 import { ed25519Str } from '../../String';
@@ -27,6 +26,7 @@ import { DURATION, DURATION_SECONDS } from '../../../constants';
 import { uploadAndSetOurAvatarShared } from '../../../../interactions/avatar-interactions/nts-avatar-interactions';
 import { FS } from '../../../apis/file_server_api/FileServerTarget';
 import { getFeatureFlag } from '../../../../state/ducks/types/releasedFeaturesReduxTypes';
+import { uuidV4 } from '../../../../util/uuid';
 
 const defaultMsBetweenRetries = 10000;
 const defaultMaxAttempts = 3;
@@ -116,7 +116,7 @@ class AvatarReuploadJob extends PersistedJob<AvatarReuploadPersistedData> {
     >) {
     super({
       jobType: 'AvatarReuploadJobType',
-      identifier: identifier || v4(),
+      identifier: identifier || uuidV4(),
       conversationId,
       delayBetweenRetries: defaultMsBetweenRetries,
       maxAttempts: isNumber(maxAttempts) ? maxAttempts : defaultMaxAttempts,

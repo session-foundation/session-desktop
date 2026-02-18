@@ -81,7 +81,7 @@ const Svg = memo(styled.svg<StyledSvgProps>`
   border-radius: ${props => props.borderRadius};
   background-color: ${props =>
     props.backgroundColor ? props.backgroundColor : 'var(--button-icon-background-color)'};
-  fill: ${props => (props.$iconColor ? props.$iconColor : 'var(--button-icon-stroke-color)')};
+  fill: ${props => (props.$iconColor ? props.$iconColor : 'var(--text-secondary-color)')};
   padding: ${props => (props.$iconPadding ? props.$iconPadding : '')};
   transition: inherit;
 `);
@@ -94,7 +94,7 @@ const SessionSvg = (
     dataTestId?: SessionDataTestId;
   }
 ) => {
-  const colorSvg = props.$iconColor ? props.$iconColor : 'var(--button-icon-stroke-color)';
+  const colorSvg = props.$iconColor ? props.$iconColor : 'var(--text-secondary-color)';
   const pathArray = props.path instanceof Array ? props.path : [props.path];
   const propsToPick = {
     width: props.width,

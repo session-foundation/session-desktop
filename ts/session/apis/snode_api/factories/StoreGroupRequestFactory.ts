@@ -65,7 +65,7 @@ async function makeGroupMessageSubRequest(
       encryptedData: encryptedData[index],
       groupPk,
       ttlMs: message.ttl(),
-      dbMessageIdentifier: message.identifier,
+      dbMessageIdentifier: message.dbMessageIdentifier,
 
       ...group,
       createdAtNetworkTimestamp: message.createAtNetworkTimestamp,

@@ -1,8 +1,6 @@
-import { isNil, isString, toNumber } from 'lodash';
-import { MouseEvent, useCallback, useEffect, useState } from 'react';
+import { type MouseEvent, type KeyboardEvent, useCallback, useRef, useMemo, useState } from 'react';
 import clsx from 'clsx';
 
-import { contextMenu } from 'react-contexify';
 import { useSelector } from 'react-redux';
 import styled, { keyframes } from 'styled-components';
 import { useIsDetailMessageView } from '../../../../contexts/isDetailViewContext';
@@ -17,6 +15,12 @@ import {
   useIsMessageSelectionMode,
   useSelectedIsBlocked,
 } from '../../../../state/selectors/selectedConversation';
+import { isButtonClickKey, KbdShortcut } from '../../../../util/keyboardShortcuts';
+import { showMessageContextMenu } from '../message-content/MessageContextMenu';
+import { getAppDispatch } from '../../../../state/dispatch';
+import { setFocusedMessageId } from '../../../../state/ducks/conversations';
+import { PopoverTriggerPosition } from '../../../SessionTooltip';
+import { useKeyboardShortcut } from '../../../../hooks/useKeyboardShortcut';
 
 export type GenericReadableMessageSelectorProps = Pick<
   MessageRenderingProps,
@@ -41,7 +45,6 @@ const highlightedMessageAnimation = keyframes`
 const StyledReadableMessage = styled.div<{
   selected: boolean;
   $isDetailView: boolean;
-  $isRightClicked: boolean;
 }>`
   display: flex;
   align-items: center;
@@ -57,81 +60,110 @@ const StyledReadableMessage = styled.div<{
     margin-top: var(--margins-xs);
   }
 
-  ${props =>
-    !props.selected &&
-    props.$isRightClicked &&
-    `background-color: var(--conversation-tab-background-selected-color);`}
+  &:focus-visible {
+    background-color: var(--conversation-tab-background-selected-color);
+  }
 `;
 
 export const GenericReadableMessage = (props: Props) => {
   const isDetailView = useIsDetailMessageView();
+  const dispatch = getAppDispatch();
 
   const { ctxMenuID, messageId } = props;
-
-  const [enableReactions, setEnableReactions] = useState(true);
 
   const msgProps = useSelector((state: StateType) =>
     getGenericReadableMessageSelectorProps(state, props.messageId)
   );
-
   const isMessageSelected = useMessageSelected(props.messageId);
   const selectedIsBlocked = useSelectedIsBlocked();
 
   const multiSelectMode = useIsMessageSelectionMode();
 
-  const [isRightClicked, setIsRightClicked] = useState(false);
-  const onMessageLoseFocus = useCallback(() => {
-    if (isRightClicked) {
-      setIsRightClicked(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const pointerDownRef = useRef(false);
+  const keyboardFocusedRef = useRef(false);
+  const [triggerPosition, setTriggerPosition] = useState<PopoverTriggerPosition | null>(null);
+
+  const getMessageContainerTriggerPosition = (): PopoverTriggerPosition | null => {
+    if (!ref.current) {
+      return null;
     }
-  }, [isRightClicked]);
+    const rect = ref.current.getBoundingClientRect();
+    const halfWidth = rect.width / 2;
+    return {
+      x: rect.left,
+      // NOTE: y needs to be clamped to the parent otherwise it can overflow the container
+      y: rect.top,
+      height: rect.height,
+      width: rect.width,
+      offsetX: msgProps?.direction === 'incoming' ? -halfWidth : halfWidth,
+    };
+  };
 
   const handleContextMenu = useCallback(
-    (e: MouseEvent<HTMLElement>) => {
-      // this is quite dirty but considering that we want the context menu of the message to show on click on the attachment
-      // and the context menu save attachment item to save the right attachment I did not find a better way for now.
-
-      // Note: If you change this, also make sure to update the `saveAttachment()` in MessageContextMenu.tsx
-      const enableContextMenu =
-        !selectedIsBlocked && !multiSelectMode && !msgProps?.isKickedFromGroup;
-      const attachmentIndexStr = (e?.target as any)?.parentElement?.getAttribute?.(
-        'data-attachmentindex'
-      );
-      const attachmentIndex =
-        isString(attachmentIndexStr) && !isNil(toNumber(attachmentIndexStr))
-          ? toNumber(attachmentIndexStr)
-          : 0;
-      if (enableContextMenu) {
-        contextMenu.hideAll();
-        contextMenu.show({
+    (
+      e: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>,
+      overridePosition?: { x: number; y: number }
+    ) => {
+      if (!selectedIsBlocked && !multiSelectMode && !msgProps?.isKickedFromGroup) {
+        showMessageContextMenu({
           id: ctxMenuID,
           event: e,
-          props: {
-            dataAttachmentIndex: attachmentIndex,
-          },
+          triggerPosition: overridePosition,
         });
       }
-      setIsRightClicked(enableContextMenu);
     },
     [selectedIsBlocked, ctxMenuID, multiSelectMode, msgProps?.isKickedFromGroup]
   );
 
-  useEffect(() => {
+  const convoReactionsEnabled = useMemo(() => {
     if (msgProps?.convoId) {
       const conversationModel = ConvoHub.use().get(msgProps?.convoId);
       if (conversationModel) {
-        setEnableReactions(conversationModel.hasReactions());
+        return conversationModel.hasReactions();
       }
     }
+    return true;
   }, [msgProps?.convoId]);
 
-  useEffect(() => {
-    document.addEventListener('click', onMessageLoseFocus);
+  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (isButtonClickKey(e)) {
+      if (e.target instanceof HTMLElement && e.target.tagName === 'BUTTON') {
+        // If the target is a button, we don't want to open the context menu as this is
+        // handled by the button itself
+        return;
+      }
+      const overrideTriggerPosition = getMessageContainerTriggerPosition();
+      if (overrideTriggerPosition) {
+        handleContextMenu(e, overrideTriggerPosition);
+      }
+    }
+  };
 
-    return () => {
-      document.removeEventListener('click', onMessageLoseFocus);
-    };
-  }, [onMessageLoseFocus]);
+  const onFocus = () => {
+    dispatch(setFocusedMessageId(messageId));
+  };
+
+  const onBlur = () => {
+    dispatch(setFocusedMessageId(null));
+  };
+
+  const toggleEmojiReactionBarWithKeyboard = () => {
+    if (triggerPosition) {
+      setTriggerPosition(null);
+    } else {
+      const pos = getMessageContainerTriggerPosition();
+      if (pos) {
+        setTriggerPosition(pos);
+      }
+    }
+  };
+
+  useKeyboardShortcut({
+    shortcut: KbdShortcut.messageToggleReactionBar,
+    handler: toggleEmojiReactionBarWithKeyboard,
+    scopeId: messageId,
+  });
 
   if (!msgProps) {
     return null;
@@ -141,18 +173,38 @@ export const GenericReadableMessage = (props: Props) => {
 
   return (
     <StyledReadableMessage
+      ref={ref}
       selected={selected}
       $isDetailView={isDetailView}
-      $isRightClicked={isRightClicked}
       className={clsx(selected ? 'message-selected' : undefined)}
       onContextMenu={handleContextMenu}
       key={`readable-message-${messageId}`}
+      onKeyDown={onKeyDown}
+      tabIndex={0}
+      onPointerDown={() => {
+        pointerDownRef.current = true;
+      }}
+      onFocus={() => {
+        if (!pointerDownRef.current) {
+          keyboardFocusedRef.current = true;
+          onFocus();
+        }
+        pointerDownRef.current = false;
+      }}
+      onBlur={() => {
+        if (keyboardFocusedRef.current) {
+          keyboardFocusedRef.current = false;
+          onBlur();
+        }
+      }}
     >
       <MessageContentWithStatuses
         ctxMenuID={ctxMenuID}
         messageId={messageId}
         dataTestId={'message-content'}
-        enableReactions={enableReactions}
+        convoReactionsEnabled={convoReactionsEnabled}
+        triggerPosition={triggerPosition}
+        setTriggerPosition={setTriggerPosition}
       />
     </StyledReadableMessage>
   );

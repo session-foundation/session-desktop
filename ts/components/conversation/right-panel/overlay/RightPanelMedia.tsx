@@ -19,7 +19,8 @@ import { Header, HeaderTitle, StyledScrollContainer } from './components';
 import { closeRightPanel } from '../../../../state/ducks/conversations';
 import { useConversationUsernameWithFallback } from '../../../../hooks/useParamSelector';
 import { PubKey } from '../../../../session/types';
-import { sectionActions } from '../../../../state/ducks/section';
+import { useKeyboardShortcut } from '../../../../hooks/useKeyboardShortcut';
+import { KbdShortcut } from '../../../../util/keyboardShortcuts';
 
 async function getMediaGalleryProps(conversationId: string): Promise<{
   documents: Array<MediaItemType>;
@@ -101,10 +102,14 @@ export const RightPanelMedia = () => {
   const isShowing = useIsRightPanelShowing();
   const displayName = useConversationUsernameWithFallback(false, selectedConvoKey);
 
-  const closePanel = () => {
+  const closePanelCb = () => {
     dispatch(closeRightPanel());
-    dispatch(sectionActions.resetRightOverlayMode());
   };
+
+  useKeyboardShortcut({
+    shortcut: KbdShortcut.closeRightPanel,
+    handler: closePanelCb,
+  });
 
   useEffect(() => {
     let isCancelled = false;
@@ -157,7 +162,7 @@ export const RightPanelMedia = () => {
       <Flex $container={true} $flexDirection={'column'} $alignItems={'center'}>
         <Header
           hideCloseButton={false}
-          closeButtonOnClick={closePanel}
+          closeButtonOnClick={closePanelCb}
           paddingTop="var(--margins-2xl)"
         >
           <HeaderTitle>{displayName || PubKey.shorten(selectedConvoKey)}</HeaderTitle>

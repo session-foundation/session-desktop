@@ -1,8 +1,8 @@
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 import { getAppDispatch } from '../../state/dispatch';
-import { LeftOverlayMode, sectionActions } from '../../state/ducks/section';
-import { useLeftOverlayMode } from '../../state/selectors/section';
+import { LeftOverlayType, sectionActions } from '../../state/ducks/section';
+import { useLeftOverlayModeType } from '../../state/selectors/section';
 import {
   getShowRecoveryPhrasePrompt,
   useHideRecoveryPasswordEnabled,
@@ -38,7 +38,7 @@ const StyledProgressBarContainer = styled.div`
   width: 100%;
   height: 5px;
   flex-direction: row;
-  background: var(--border-color);
+  background: var(--borders-color);
 `;
 
 const StyledProgressBarInner = styled.div`
@@ -79,10 +79,10 @@ const StyledLeftPaneBanner = styled.div`
   background: var(--background-secondary-color);
   display: flex;
   flex-direction: column;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: var(--default-borders);
 `;
 
-function getLeftPaneHeaderLabel(leftOverlayMode: LeftOverlayMode | undefined): string {
+function getLeftPaneHeaderLabel(leftOverlayMode: LeftOverlayType | undefined): string {
   let label = '';
 
   switch (leftOverlayMode) {
@@ -163,7 +163,7 @@ const LeftPaneBanner = () => {
 };
 
 export const LeftPaneSectionHeader = () => {
-  const leftOverlayMode = useLeftOverlayMode();
+  const leftOverlayMode = useLeftOverlayModeType();
   const noOverlayMode = !leftOverlayMode;
   const showRecoveryPhrasePrompt = useSelector(getShowRecoveryPhrasePrompt);
 
@@ -184,11 +184,11 @@ export const LeftPaneSectionHeader = () => {
     }
     if (leftOverlayMode === 'closed-group') {
       dispatch(searchActions.clearSearch());
-      dispatch(sectionActions.setLeftOverlayMode('choose-action'));
+      dispatch(sectionActions.setLeftOverlayMode({ type: 'choose-action', params: null }));
 
       return;
     }
-    dispatch(sectionActions.setLeftOverlayMode('choose-action'));
+    dispatch(sectionActions.setLeftOverlayMode({ type: 'choose-action', params: null }));
   };
 
   const label = getLeftPaneHeaderLabel(leftOverlayMode);
@@ -218,7 +218,6 @@ export const LeftPaneSectionHeader = () => {
         </SectionTitle>
         {!leftOverlayMode && <MenuButton />}
       </StyledLeftPaneSectionHeader>
-
       {noOverlayMode && showRecoveryPhrasePrompt ? <LeftPaneBanner /> : null}
       {noOverlayMode ? <LeftPaneAnnouncements /> : null}
     </Flex>

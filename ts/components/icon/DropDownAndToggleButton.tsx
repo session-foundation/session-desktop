@@ -1,6 +1,6 @@
 import { MouseEvent } from 'react';
-import { contextMenu } from 'react-contexify';
 import styled from 'styled-components';
+import { closeContextMenus } from '../../util/contextMenu';
 
 type SProps = {
   onArrowClick: (e: MouseEvent<HTMLDivElement>) => void;
@@ -24,7 +24,7 @@ const StyledRoundedButton = styled.div<{ isFullScreen: boolean; isMuted: boolean
     props.isMuted
       ? 'var(--call-buttons-icon-disabled-color)'
       : props.isFullScreen
-        ? 'var(--call-buttons-action-icon-color)'
+        ? 'var(--black-color)'
         : 'var(--call-buttons-icon-color)'};
 
   ${props => props.isFullScreen && 'opacity: 0.4;'}
@@ -34,9 +34,7 @@ const StyledRoundedButton = styled.div<{ isFullScreen: boolean; isMuted: boolean
         ? 'var(--call-buttons-action-background-hover-color)'
         : 'var(--call-buttons-background-hover-color)'};
     color: ${props =>
-      props.isFullScreen
-        ? 'var(--call-buttons-action-icon-color)'
-        : 'var(--call-buttons-icon-color)'};
+      props.isFullScreen ? 'var(--black-color)' : 'var(--call-buttons-icon-color)'};
     ${props => props.isFullScreen && 'opacity: 1;'}
   }
 `;
@@ -58,8 +56,8 @@ const StyledArrowIcon = styled(StyledRoundedButton)`
   top: -35%;
   right: -65%;
   background-color: var(--call-buttons-background-color);
-  color: var(--call-buttons-dropdown-color);
-  box-shadow: var(--call-buttons-dropdown-shadow);
+  color: var(--text-primary-color);
+  box-shadow: 0 0 4px 0 var(--grey-color);
 
   &:hover {
     background-color: var(--call-buttons-background-hover-color);
@@ -93,7 +91,7 @@ export const DropDownAndToggleButton = (props: SProps) => {
 
   const mainButtonClickHandler = (e: MouseEvent<HTMLDivElement>) => {
     e.stopPropagation();
-    contextMenu.hideAll();
+    closeContextMenus();
     onMainButtonClick(e);
   };
   const iconToRender =

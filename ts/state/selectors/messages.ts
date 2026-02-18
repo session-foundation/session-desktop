@@ -4,7 +4,6 @@ import { MessageModelType } from '../../models/messageType';
 import {
   MessageModelPropsWithConvoProps,
   PropsForAttachment,
-  PropsForQuote,
   ReduxConversationType,
 } from '../ducks/conversations';
 import { StateType } from '../reducer';
@@ -155,7 +154,7 @@ export function useMessageBody(messageId: string | undefined) {
   return useMessagePropsByMessageId(messageId)?.propsForMessage.text;
 }
 
-export const useMessageQuote = (messageId: string | undefined): PropsForQuote | undefined => {
+export const useMessageQuote = (messageId: string | undefined) => {
   return useMessagePropsByMessageId(messageId)?.propsForMessage.quote;
 };
 

@@ -113,6 +113,19 @@ function toLocation(
 
 window.onerror = (event, source, line, column, error) => {
   const errorInfo = Errors.toString(error);
+  if (errorInfo.startsWith('Error: write EPIPE')) {
+    /**
+     * During testing we sometimes get this error when an sql call is messed up and the app is closed.
+     * The app enters a zombie state where the renderer is still alive, and you can start a second instance of Session.
+     * When that second isntance starts, I think it locks the pino logger file, and that makes the first instance (the zombie) crash with this error
+     * `Error: write EPIPE`.
+     * To handle this, we send a force-exit message to the main process, which will exit the first instance of the app.
+     * Note: this is not graceful at all, but app.quit() doesn't work.
+     */
+    ipc.send('force-exit');
+    return;
+  }
+
   log.error(`Top-level unhandled error: ${errorInfo}`, toLocation(event, source, line, column));
 };
 

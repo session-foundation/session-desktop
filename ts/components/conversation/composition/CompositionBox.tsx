@@ -1,4 +1,4 @@
-import _, { debounce, isEmpty, isUndefined } from 'lodash';
+import _, { debounce, isEmpty } from 'lodash';
 
 import { connect } from 'react-redux';
 import styled from 'styled-components';
@@ -33,7 +33,6 @@ import {
   StagedAttachmentImportedType,
   StagedPreviewImportedType,
 } from '../../../util/attachment/attachmentsUtil';
-import { CaptionEditor } from '../../CaptionEditor';
 import { Flex } from '../../basic/Flex';
 import { getMediaPermissionsSettings } from '../../settings/SessionSettings';
 import { getDraftForConversation, updateDraftForConversation } from '../SessionConversationDrafts';
@@ -57,10 +56,14 @@ import { showLocalizedPopupDialog } from '../../dialog/LocalizedPopupDialog';
 import { formatNumber } from '../../../util/i18n/formatting/generics';
 import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { showSessionCTA } from '../../dialog/SessionCTA';
-import { tStripped } from '../../../localization/localeTools';
 import type { ProcessedLinkPreviewThumbnailType } from '../../../webworker/workers/node/image_processor/image_processor';
 import { CTAVariant } from '../../dialog/cta/types';
 import { selectWeAreProUser } from '../../../hooks/useHasPro';
+import { closeContextMenus } from '../../../util/contextMenu';
+import type { MessageAttributes } from '../../../models/messageType';
+import { ProWrapperActions } from '../../../webworker/workers/browser/libsession_worker_interface';
+import { updateOutgoingLightBoxOptions } from '../../../state/ducks/modalDialog';
+import { isEnterKey, isEscapeKey } from '../../../util/keyboardShortcuts';
 
 export interface ReplyingToMessageProps {
   convoId: string;
@@ -83,12 +86,11 @@ export type StagedAttachmentType = AttachmentType & {
   path?: string; // a bit hacky, but this is the only way to make our sending audio message be playable, this must be used only for those message
 };
 
-export type SendMessageType = {
+export type SendMessageType = Pick<MessageAttributes, 'quote'> & {
   conversationId: string;
   body: string;
   attachments: Array<StagedAttachmentImportedType> | undefined;
-  quote: any | undefined;
-  preview: any | undefined;
+  preview: Array<StagedPreviewImportedType> | undefined;
   groupInvitation: { url: string | undefined; name: string } | undefined;
 };
 
@@ -108,17 +110,14 @@ interface Props {
 interface State {
   showRecordingView: boolean;
   initialDraft: string;
+  /**
+   * This is an html draft (not a plain text draft. It contains html elements)
+   */
   draft: string;
   showEmojiPanel: boolean;
   lastSelectedLength: number; // used for emoji panel replacement
   ignoredLink?: string; // set the ignored url when users closed the link preview
   stagedLinkPreview?: StagedLinkPreviewData;
-  showCaptionEditor?: AttachmentType;
-  characterCount?: number;
-}
-
-function getSendableTextLength(v: string): number {
-  return v.trim().replace(/^\n+|\n+$/g, '').length;
 }
 
 const getDefaultState = (newConvoId?: string) => {
@@ -131,8 +130,6 @@ const getDefaultState = (newConvoId?: string) => {
     lastSelectedLength: 0,
     ignoredLink: undefined,
     stagedLinkPreview: undefined,
-    showCaptionEditor: undefined,
-    characterCount: getSendableTextLength(draft),
   };
 };
 
@@ -157,7 +154,7 @@ const StyledSendMessageInput = styled.div<{ dir?: HTMLDirection }>`
 
   .mention-container {
     border-radius: var(--border-radius);
-    box-shadow: var(--suggestions-shadow);
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
     background-color: var(--suggestions-background-color);
     z-index: 3;
     min-width: 100px;
@@ -180,7 +177,7 @@ const StyledSendMessageInput = styled.div<{ dir?: HTMLDirection }>`
         padding-top: var(--margins-xs);
         padding-bottom: var(--margins-xs);
         background-color: var(--suggestions-background-color);
-        color: var(--suggestions-text-color);
+        color: var(--text-primary-color);
         transition: var(--default-duration);
 
         &:hover,
@@ -190,6 +187,11 @@ const StyledSendMessageInput = styled.div<{ dir?: HTMLDirection }>`
       }
     }
   }
+`;
+
+const StyledCompositionContainer = styled.div`
+  border-top: var(--default-borders);
+  z-index: 1;
 `;
 
 const StyledRightCompositionBoxButtonContainer = styled.div`
@@ -287,10 +289,10 @@ class CompositionBoxInner extends Component<Props, State> {
           )
         }
         {this.renderAttachmentsStaged()}
-        <div className="composition-container">
+        <StyledCompositionContainer>
           {showRecordingView ? this.renderRecordingView() : this.renderCompositionView()}
           <BlockedOverlayOnCompositionBox />
-        </div>
+        </StyledCompositionContainer>
       </Flex>
     );
   }
@@ -343,6 +345,7 @@ class CompositionBoxInner extends Component<Props, State> {
     document.addEventListener('mousedown', this.handleClick, false);
     this.setState({ lastSelectedLength: window.getSelection()?.toString().length ?? 0 });
 
+    closeContextMenus();
     this.setState({
       showEmojiPanel: true,
     });
@@ -360,7 +363,7 @@ class CompositionBoxInner extends Component<Props, State> {
   }
 
   private setDraft(draft: string) {
-    this.setState({ draft, characterCount: this.getSendableText().length });
+    this.setState({ draft });
   }
 
   private setStagedLinkPreview(linkPreview: StagedLinkPreviewData) {
@@ -386,7 +389,7 @@ class CompositionBoxInner extends Component<Props, State> {
   }
 
   private renderCompositionView() {
-    const { showEmojiPanel, characterCount } = this.state;
+    const { showEmojiPanel } = this.state;
     const { typingEnabled, isBlocked } = this.props;
 
     // we can only send a message if the conversation allows writing in it AND
@@ -453,62 +456,46 @@ class CompositionBoxInner extends Component<Props, State> {
               ref={this.emojiPanel}
               show={showEmojiPanel}
               onEmojiClicked={this.onEmojiClick}
-              onKeyDown={this.onKeyDown}
+              onClose={this.hideEmojiPanel}
             />
           </StyledEmojiPanelContainer>
         ) : null}
-        {!isUndefined(characterCount) ? <CharacterCount count={characterCount} /> : null}
+        <CharacterCount text={this.getSendableTextFromDraft()} />
       </StyledCompositionBoxContainer>
     );
   }
 
   private onClickAttachment(attachment: AttachmentType) {
-    this.setState({ showCaptionEditor: attachment });
-  }
+    const stagedAttachment = this.props.stagedAttachments.find(a => a.url === attachment.url);
+    // For JPEG images, attachment.url is a low-quality thumbnail.
+    // Use the original file to get the full-quality image for the lightbox.
+    const fullUrl =
+      attachment.videoUrl ||
+      (stagedAttachment?.file ? URL.createObjectURL(stagedAttachment.file) : attachment.url);
 
-  private renderCaptionEditor(attachment?: AttachmentType) {
-    if (attachment) {
-      const onSave = (caption: string) => {
-        // eslint-disable-next-line no-param-reassign
-        attachment.caption = caption;
-        ToastUtils.pushToastInfo('saved', tStripped('saved'));
-        // close the light box on save
-        this.setState({
-          showCaptionEditor: undefined,
-        });
-      };
-
-      const url = attachment.videoUrl || attachment.url;
-      return (
-        <CaptionEditor
-          attachment={attachment}
-          url={url}
-          onSave={onSave}
-          caption={attachment.caption}
-          onClose={() => {
-            this.setState({
-              showCaptionEditor: undefined,
-            });
-          }}
-        />
-      );
-    }
-    return null;
+    window.inboxStore?.dispatch(
+      updateOutgoingLightBoxOptions({
+        attachment,
+        url: fullUrl,
+        onClose: () => {
+          if (stagedAttachment?.file && fullUrl !== attachment.url) {
+            URL.revokeObjectURL(fullUrl);
+          }
+          window.inboxStore?.dispatch(updateOutgoingLightBoxOptions(null));
+        },
+      })
+    );
   }
 
   private renderAttachmentsStaged() {
     const { stagedAttachments } = this.props;
-    const { showCaptionEditor } = this.state;
     if (stagedAttachments && stagedAttachments.length) {
       return (
-        <>
-          <StagedAttachmentList
-            attachments={stagedAttachments}
-            onClickAttachment={this.onClickAttachment}
-            onAddAttachment={this.onChooseAttachment}
-          />
-          {this.renderCaptionEditor(showCaptionEditor)}
-        </>
+        <StagedAttachmentList
+          attachments={stagedAttachments}
+          onClickAttachment={this.onClickAttachment}
+          onAddAttachment={this.onChooseAttachment}
+        />
       );
     }
     return null;
@@ -548,17 +535,24 @@ class CompositionBoxInner extends Component<Props, State> {
    * @param event - Keyboard event.
    */
   private async onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (isEscapeKey(event) && this.state.showEmojiPanel) {
+      this.hideEmojiPanel();
+      return;
+    }
+    if (event.key === 'e' && (event.ctrlKey || event.metaKey)) {
+      this.toggleEmojiPanel();
+      return;
+    }
     const isShiftSendEnabled = !!window.getSettingValue(SettingsKey.hasShiftSendEnabled);
     if (
       !event.nativeEvent.isComposing &&
-      event.key === 'Enter' &&
+      isEnterKey(event) &&
       isShiftSendEnabled === event.shiftKey
     ) {
       event.preventDefault();
       event.stopPropagation();
       await this.onSendMessage();
     }
-    // TODO: Add support for closing the emoji panel, probably should pass an onClose function to it
 
     // TODO: fix the bug with the pageup/down keys popping out the right panel when the box has text in it.
     if (this.state.draft.length && (event.key === 'PageUp' || event.key === 'PageDown')) {
@@ -571,30 +565,27 @@ class CompositionBoxInner extends Component<Props, State> {
     }
   }
 
-  private getSendableText(): string {
-    const input = this.inputRef.current;
-
-    if (!input) {
-      return '';
-    }
-
-    return input
-      .getRawValue(nodeTree =>
-        nodeTree.querySelectorAll('span[data-user-id]').forEach(span => {
-          const id = span.getAttribute('data-user-id');
-          // eslint-disable-next-line no-param-reassign -- intentional mutation of the clone to replace display with id
-          span.textContent = id ? `@${id}` : span.textContent;
-        })
-      )
-      .trim()
-      .replace(/^\n+|\n+$/g, '');
+  /**
+   * Our draft contains html elements to render mentions and custom actions.
+   * Before sending and to check the character count, we need to remove those html elements and replace those with
+   * the correct content.
+   * This is what this function does.
+   */
+  private getSendableTextFromDraft(): string {
+    const { draft } = this.state;
+    const doc = new DOMParser().parseFromString(`<div>${draft}</div>`, 'text/html');
+    doc.querySelectorAll('span[data-user-id]').forEach(span => {
+      const id = span.getAttribute('data-user-id');
+      // eslint-disable-next-line no-param-reassign
+      span.textContent = id ? `@${id}` : span.textContent;
+    });
+    const cleaned = doc.body.textContent?.trim().replace(/^\n+|\n+$/g, '') ?? '';
+    return cleaned;
   }
 
-  /**
-   * This is a significantly cheaper version of calling @see {@link getSendableText} and getting the length
-   */
-  private isTextSendable(): boolean {
-    return getSendableTextLength(this.state.draft) > 0;
+  private isTextSendable() {
+    const text = this.getSendableTextFromDraft();
+    return text.length > 0;
   }
 
   private async onSendMessage() {
@@ -624,9 +615,11 @@ class CompositionBoxInner extends Component<Props, State> {
       ? Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_PRO
       : Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_STANDARD;
 
-    const text = this.getSendableText();
+    const text = this.getSendableTextFromDraft();
 
-    if (text.length > charLimit) {
+    const { codepointCount } = await ProWrapperActions.utf16Count({ utf16: text });
+
+    if (codepointCount > charLimit) {
       const dispatch = window.inboxStore?.dispatch;
       if (dispatch) {
         if (isProAvailable && !hasPro) {
@@ -665,13 +658,6 @@ class CompositionBoxInner extends Component<Props, State> {
     }
 
     // Send message
-    const extractedQuotedMessageProps = _.pick(
-      quotedMessageProps,
-      'id',
-      'author',
-      'text',
-      'attachments'
-    );
 
     // we consider that a link preview without a title at least is not a preview
     const linkPreview =
@@ -686,7 +672,9 @@ class CompositionBoxInner extends Component<Props, State> {
         conversationId: selectedConversationKey,
         body: text.trim(),
         attachments: attachments || [],
-        quote: extractedQuotedMessageProps,
+        quote: quotedMessageProps
+          ? { author: quotedMessageProps.author, timestamp: quotedMessageProps.timestamp }
+          : undefined,
         preview: previews,
         groupInvitation: undefined,
       });
@@ -702,7 +690,6 @@ class CompositionBoxInner extends Component<Props, State> {
         stagedLinkPreview: undefined,
         ignoredLink: undefined,
         draft: '',
-        characterCount: 0,
       });
       updateDraftForConversation({
         conversationKey: selectedConversationKey,

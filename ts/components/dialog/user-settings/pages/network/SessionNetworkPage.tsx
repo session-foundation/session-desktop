@@ -21,6 +21,7 @@ import {
 import type { UserSettingsModalState } from '../../../../../state/ducks/modalDialog';
 import { ModalBackButton } from '../../../shared/ModalBackButton';
 import { UserSettingsModalContainer } from '../../components/UserSettingsModalContainer';
+import { focusVisibleOutlineStr } from '../../../../../styles/focusVisible';
 
 function ReloadButton({ loading }: { loading: boolean }) {
   const dispatch = getAppDispatch();
@@ -32,6 +33,7 @@ function ReloadButton({ loading }: { loading: boolean }) {
       dataTestId="refresh-button"
       iconColor="var(--text-primary-color)"
       disabled={loading}
+      focusVisibleEffect={focusVisibleOutlineStr('var(--margins-xs)')}
       onClick={() => {
         if (loading) {
           return;

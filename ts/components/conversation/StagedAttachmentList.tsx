@@ -48,7 +48,7 @@ const StyledAttachmentHeader = styled.div`
 `;
 
 const StyledAttachmentsContainer = styled.div`
-  border-top: 1px solid var(--border-color);
+  border-top: var(--default-borders);
 `;
 
 export const StagedAttachmentList = (props: Props) => {
@@ -78,7 +78,7 @@ export const StagedAttachmentList = (props: Props) => {
   const allVisualAttachments = areAllAttachmentsVisual(attachments);
 
   return (
-    <StyledAttachmentsContainer>
+    <StyledAttachmentsContainer data-testid="staged-attachments-container">
       {attachments.length > 1 ? (
         <StyledAttachmentHeader>
           <SessionLucideIconButton
@@ -86,7 +86,8 @@ export const StagedAttachmentList = (props: Props) => {
             iconColor="var(--text-primary-color)"
             unicode={LUCIDE_ICONS_UNICODE.X}
             onClick={onRemoveAllStaged}
-            padding="var(--margins-xs) var(--margins-xs) 0 0"
+            tabIndex={0}
+            padding="var(--margins-xs)"
             style={{
               position: 'absolute',
               top: 0,

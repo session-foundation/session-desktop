@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import useKey from 'react-use/lib/useKey';
 import styled from 'styled-components';
 
 import { motion } from 'framer-motion';
@@ -25,6 +24,8 @@ import { ConversationTypeEnum } from '../../../models/types';
 import { Localizer } from '../../basic/Localizer';
 import { SimpleSessionTextarea } from '../../inputs/SimpleSessionTextarea';
 import { tr } from '../../../localization/localeTools';
+import { useLeftOverlayMode } from '../../../state/selectors/section';
+import { useEscBlurThenHandler } from '../../../hooks/useKeyboardShortcut';
 
 const StyledDescriptionContainer = styled(motion.div)`
   margin: 0 auto;
@@ -68,9 +69,18 @@ export const OverlayMessage = () => {
   function closeOverlay() {
     dispatch(sectionActions.resetLeftOverlayMode());
   }
+  function goBack() {
+    dispatch(sectionActions.setLeftOverlayMode({ type: 'choose-action', params: null }));
+    return true;
+  }
 
-  useKey('Escape', closeOverlay);
-  const [pubkeyOrOns, setPubkeyOrOns] = useState('');
+  useEscBlurThenHandler(goBack);
+
+  const overlayMode = useLeftOverlayMode();
+  const overlayModeIsMessage = overlayMode?.type === 'message';
+  const [pubkeyOrOns, setPubkeyOrOns] = useState<string>(
+    overlayModeIsMessage ? overlayMode.params.initialInputValue : ''
+  );
   const [pubkeyOrOnsError, setPubkeyOrOnsError] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(false);
 
@@ -167,13 +177,13 @@ export const OverlayMessage = () => {
         value={pubkeyOrOns}
         onValueChanged={setPubkeyOrOns}
         providedError={pubkeyOrOnsError}
-        // centerText={true}
         disabled={loading}
         errorDataTestId="error-message"
         inputDataTestId="new-session-conversation"
         singleLine={true}
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onEnterPressed={handleMessageButtonClick}
+        allowEscapeKeyPassthrough={true}
       />
       <SpacerMD />
       <SessionSpinner $loading={loading} />
@@ -191,7 +201,7 @@ export const OverlayMessage = () => {
             </SessionIDDescription>
             <HelpDeskButton
               iconSize="small"
-              style={{ display: 'inline-flex', paddingInline: 'var(--margins-xs)' }}
+              style={{ display: 'inline-flex', marginInline: 'var(--margins-xs)' }}
               iconColor="var(--text-secondary-color)"
             />
           </StyledDescriptionContainer>

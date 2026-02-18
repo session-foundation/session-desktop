@@ -71,7 +71,7 @@ const StyledSessionMemberItem = styled.button<{
   ${props =>
     props.$withBorder &&
     `&:not(button:last-child) {
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: var(--default-borders);
   }`}
 
   ${props =>

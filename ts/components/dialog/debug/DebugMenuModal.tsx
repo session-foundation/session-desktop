@@ -27,7 +27,6 @@ import {
   ProDebugSection,
 } from './FeatureFlags';
 import { ReleaseChannel } from './ReleaseChannel';
-import { useHotkey } from '../../../hooks/useHotkey';
 import { PopoverPlaygroundPage } from './playgrounds/PopoverPlaygroundPage';
 import { ProPlaygroundPage } from './playgrounds/ProPlaygroundPage';
 import { ModalBackButton } from '../shared/ModalBackButton';
@@ -170,27 +169,6 @@ export function DebugMenuModal() {
   const onClose = () => {
     dispatch(updateDebugMenuModal(null));
   };
-
-  const makeTogglesActive = (query: string, active: boolean) => {
-    const elements = document.querySelectorAll(query);
-    for (let i = 0; i < elements.length; i++) {
-      const toggleElement = elements[i] as any; // See SessionToggle
-      if (active && toggleElement.getAttribute('data-active') === 'false') {
-        toggleElement.click();
-      }
-      if (!active && toggleElement.getAttribute('data-active') === 'true') {
-        toggleElement.click();
-      }
-    }
-  };
-
-  useHotkey('d', () => {
-    makeTogglesActive('[id*="feature-flag-toggle-debug-debug"] > [role="button"]', true);
-  });
-
-  useHotkey('s', () => {
-    makeTogglesActive('[id*="feature-flag-toggle-debug-debug"] > [role="button"]', false);
-  });
 
   return (
     <SessionWrapperModal

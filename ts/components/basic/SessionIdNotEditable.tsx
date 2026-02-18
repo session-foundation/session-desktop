@@ -20,6 +20,12 @@ const StyledSessionIDNotEditable = styled.div`
   }
 `;
 
+const TooltipContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-self: center;
+`;
+
 export const SessionIDNotEditable = ({
   sessionId,
   dataTestId,
@@ -62,7 +68,7 @@ export const SessionIDNotEditable = ({
         onClick={onClick}
       >
         {shortenedSessionId}
-        {tooltipNode}
+        {tooltipNode ? <TooltipContainer>{tooltipNode}</TooltipContainer> : null}
       </StyledSessionIDNotEditable>
     );
   }
@@ -82,7 +88,7 @@ export const SessionIDNotEditable = ({
         {secondLine}
         <br />
         {thirdLine}
-        {tooltipNode}
+        {tooltipNode ? <TooltipContainer>{tooltipNode}</TooltipContainer> : null}
       </StyledSessionIDNotEditable>
     );
   }

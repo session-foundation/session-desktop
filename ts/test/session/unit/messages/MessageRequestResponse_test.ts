@@ -1,6 +1,5 @@
 import { expect } from 'chai';
 import { from_hex } from 'libsodium-wrappers-sumo';
-import { v4 } from 'uuid';
 import Sinon from 'sinon';
 
 import { SignalService } from '../../../../protobuf';
@@ -8,6 +7,7 @@ import { Constants } from '../../../../session';
 import { MessageRequestResponse } from '../../../../session/messages/outgoing/controlMessage/MessageRequestResponse';
 import { OutgoingUserProfile } from '../../../../types/message';
 import { TestUtils } from '../../../test-utils';
+import { uuidV4 } from '../../../../util/uuid';
 
 describe('MessageRequestResponse', () => {
   let message: MessageRequestResponse | undefined;
@@ -19,32 +19,25 @@ describe('MessageRequestResponse', () => {
       createAtNetworkTimestamp: Date.now(),
       userProfile: null,
       outgoingProMessageDetails: null,
+      dbMessageIdentifier: uuidV4(),
     });
 
     expect(message.ttl()).to.equal(Constants.TTL_DEFAULT.CONTENT_MESSAGE);
   });
 
-  it('has an identifier', () => {
+  it('has a dbMessageIdentifier matching if given', () => {
+    const dbMessageIdentifier = uuidV4();
     message = new MessageRequestResponse({
       createAtNetworkTimestamp: Date.now(),
+      dbMessageIdentifier,
       userProfile: null,
       outgoingProMessageDetails: null,
     });
 
-    expect(message.identifier).to.not.equal(null, 'identifier cannot be null');
-    expect(message.identifier).to.not.equal(undefined, 'identifier cannot be undefined');
-  });
-
-  it('has an identifier matching if given', () => {
-    const identifier = v4();
-    message = new MessageRequestResponse({
-      createAtNetworkTimestamp: Date.now(),
-      identifier,
-      userProfile: null,
-      outgoingProMessageDetails: null,
-    });
-
-    expect(message.identifier).to.not.equal(identifier, 'identifier should match');
+    expect(message.dbMessageIdentifier).to.equal(
+      dbMessageIdentifier,
+      'dbMessageIdentifier should match'
+    );
   });
 
   it('isApproved is always true', () => {
@@ -52,6 +45,7 @@ describe('MessageRequestResponse', () => {
       createAtNetworkTimestamp: Date.now(),
       userProfile: null,
       outgoingProMessageDetails: null,
+      dbMessageIdentifier: uuidV4(),
     });
     const plainText = message.plainTextBuffer();
     const decoded = SignalService.Content.decode(plainText);
@@ -65,6 +59,7 @@ describe('MessageRequestResponse', () => {
       createAtNetworkTimestamp: Date.now(),
       userProfile: null,
       outgoingProMessageDetails: null,
+      dbMessageIdentifier: uuidV4(),
     });
     const plainText = message.plainTextBuffer();
     const decoded = SignalService.Content.decode(plainText);
@@ -82,6 +77,7 @@ describe('MessageRequestResponse', () => {
         updatedAtSeconds: 1,
       }),
       outgoingProMessageDetails: null,
+      dbMessageIdentifier: uuidV4(),
     });
     const plainText = message.plainTextBuffer();
     const decoded = SignalService.Content.decode(plainText);
@@ -100,6 +96,7 @@ describe('MessageRequestResponse', () => {
         updatedAtSeconds: 1,
       }),
       outgoingProMessageDetails: null,
+      dbMessageIdentifier: uuidV4(),
     });
     const plainText = message.plainTextBuffer();
     const decoded = SignalService.Content.decode(plainText);
@@ -125,6 +122,7 @@ describe('MessageRequestResponse', () => {
       createAtNetworkTimestamp: Date.now(),
       userProfile,
       outgoingProMessageDetails: null,
+      dbMessageIdentifier: uuidV4(),
     });
     const plainText = message.plainTextBuffer();
     const decoded = SignalService.Content.decode(plainText);
@@ -149,6 +147,7 @@ describe('MessageRequestResponse', () => {
         updatedAtSeconds: 1,
       }),
       outgoingProMessageDetails: null,
+      dbMessageIdentifier: uuidV4(),
     });
     const plainText = message.plainTextBuffer();
     const decoded = SignalService.Content.decode(plainText);
@@ -172,6 +171,7 @@ describe('MessageRequestResponse', () => {
         updatedAtSeconds: 1,
       }),
       outgoingProMessageDetails: null,
+      dbMessageIdentifier: uuidV4(),
     });
     const plainText = message.plainTextBuffer();
     const decoded = SignalService.Content.decode(plainText);

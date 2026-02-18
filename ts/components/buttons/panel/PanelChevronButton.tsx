@@ -1,11 +1,11 @@
 import type { SettingsChevron } from 'react';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
-import { SessionLucideIconButton } from '../../icon/SessionIconButton';
 import {
   GenericPanelButtonWithAction,
   type GenericPanelButtonProps,
 } from './GenericPanelButtonWithAction';
 import { AnimatedSpinnerIcon } from '../../loading/spinner/AnimatedSpinnerIcon';
+import { LucideIcon } from '../../icon/LucideIcon';
 
 type PanelChevronButtonProps = Pick<GenericPanelButtonProps, 'textElement'> & {
   onClick?: (...args: Array<any>) => void;
@@ -26,8 +26,7 @@ export const PanelChevronButton = (props: PanelChevronButtonProps) => {
         showAnimatedSpinnerIcon ? (
           <AnimatedSpinnerIcon size="huge" />
         ) : (
-          <SessionLucideIconButton
-            disabled={disabled}
+          <LucideIcon
             dataTestId={`${baseDataTestId}-settings-chevron`}
             unicode={LUCIDE_ICONS_UNICODE.CHEVRON_RIGHT}
             iconSize="medium"

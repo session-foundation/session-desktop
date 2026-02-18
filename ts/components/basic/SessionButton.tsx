@@ -1,7 +1,8 @@
-import type { CSSProperties, ReactNode, RefObject, SessionDataTestId } from 'react';
+import type { CSSProperties, MouseEvent, ReactNode, RefObject, SessionDataTestId } from 'react';
 import styled from 'styled-components';
 import clsx from 'clsx';
 import { useIsDarkTheme } from '../../state/theme/selectors/theme';
+import { focusVisibleBoxShadowInset } from '../../styles/focusVisible';
 
 export enum SessionButtonType {
   Outline = 'outline',
@@ -73,7 +74,7 @@ export const StyledBaseButton = styled.button<StyledButtonProps>`
   &.disabled {
     cursor: not-allowed;
     outline: none;
-    color: ${props => `var(--button-${props.$buttonType}-disabled-color)`};
+    color: var(--disabled-color);
   }
 
   &:not(.disabled) {
@@ -92,7 +93,7 @@ const StyledOutlineButton = styled(StyledBaseButton)`
     }`};
 
   &.disabled {
-    border: 1px solid var(--button-outline-disabled-color);
+    border: 1px solid var(--disabled-color);
   }
 
   &:not(.disabled) {
@@ -106,6 +107,8 @@ const StyledOutlineButton = styled(StyledBaseButton)`
           props.color ? `var(--${props.color}-color)` : 'var(--button-outline-border-hover-color)'};
     }
   }
+
+  ${focusVisibleBoxShadowInset()}
 `;
 
 const StyledSolidButton = styled(StyledBaseButton)<{ $isDarkTheme: boolean }>`
@@ -121,7 +124,7 @@ const StyledSolidButton = styled(StyledBaseButton)<{ $isDarkTheme: boolean }>`
 
   &.disabled {
     background-color: var(--transparent-color);
-    border: 1px solid var(--button-solid-disabled-color);
+    border: 1px solid var(--disabled-color);
   }
 
   &:not(.disabled) {
@@ -144,7 +147,9 @@ export type SessionButtonProps = {
   buttonType?: SessionButtonType;
   buttonShape?: SessionButtonShape;
   buttonColor?: SessionButtonColor; // will override theme
-  onClick?: any;
+  onClick?:
+    | ((e: MouseEvent<HTMLButtonElement> | undefined) => void)
+    | ((e: MouseEvent<HTMLButtonElement> | undefined) => Promise<void>);
   children?: ReactNode;
   fontWeight?: number;
   width?: string;
@@ -153,6 +158,7 @@ export type SessionButtonProps = {
   reference?: RefObject<HTMLButtonElement | null>;
   className?: string;
   style?: CSSProperties;
+  tabIndex?: number;
 };
 
 export const SessionButton = (props: SessionButtonProps) => {
@@ -173,16 +179,19 @@ export const SessionButton = (props: SessionButtonProps) => {
     width,
     margin,
     style,
+    tabIndex = 0,
   } = props;
 
-  const clickHandler = (e: any) => {
+  const clickHandler = (e: MouseEvent<HTMLButtonElement> | undefined) => {
     if (onClick) {
-      e.stopPropagation();
-      onClick();
+      e?.stopPropagation();
+      onClick(e);
     }
   };
 
-  const onClickFn = disabled ? () => null : clickHandler;
+  const onClickFn = disabled
+    ? (_e: MouseEvent<HTMLButtonElement> | undefined) => null
+    : clickHandler;
 
   const Comp =
     buttonType === SessionButtonType.Outline
@@ -213,6 +222,7 @@ export const SessionButton = (props: SessionButtonProps) => {
       $fontWeight={fontWeight}
       width={width}
       style={{ ...style, margin }}
+      tabIndex={tabIndex}
     >
       {props.children || text}
     </Comp>

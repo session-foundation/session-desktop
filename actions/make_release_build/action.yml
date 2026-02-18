@@ -18,7 +18,7 @@ runs:
       shell: bash
       run: |
         source ./build/setup-mac-certificate.sh
-        yarn build-release --config.mac.bundleVersion=${{ github.ref }}
+        pnpm run build-release --config.mac.bundleVersion=${{ github.ref }}
 
     - name: Upload artefacts
       # always run this, except on "push" to "master" or alpha releases
@@ -33,7 +33,7 @@ runs:
       shell: bash
       run: |
         source ./build/setup-mac-certificate.sh
-        yarn build-release-publish --config.mac.bundleVersion=${{ github.ref }}
+        pnpm run build-release-publish --config.mac.bundleVersion=${{ github.ref }}
 
       # Note: We need to backup the latest.yml file because other jobs can overwrite it when they are complete e.g. macOS arm64 and x64
     - name: Backup release metadata

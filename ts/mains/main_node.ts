@@ -183,25 +183,19 @@ crashReporter.start({
   compress: true,
 });
 
-const windowFromUserConfig = userConfig.get('window');
 const windowFromEphemeral = ephemeralConfig.get('window');
-let windowConfig = windowFromEphemeral || windowFromUserConfig;
-if (windowFromUserConfig) {
-  userConfig.set('window', null);
-  ephemeralConfig.set('window', windowConfig);
-}
+let windowConfig = windowFromEphemeral;
 
 import { readFile } from 'fs-extra';
 import { getAppRootPath } from '../node/getRootPath';
 import { setLatestRelease } from '../node/latest_desktop_release';
 import { isDevProd, isTestIntegration } from '../shared/env_vars';
-import { classicDark } from '../themes';
 
 import { isSessionLocaleSet, getCrowdinLocale, keepFullLocalePart } from '../util/i18n/shared';
 import { loadLocalizedDictionary } from '../node/locale';
 import LIBSESSION_CONSTANTS from '../session/utils/libsession/libsession_constants';
 import { isReleaseChannel } from '../updater/types';
-import { canAutoUpdate, checkForUpdates, isLinuxDebInstall } from '../updater/updater';
+import { canAutoUpdate, checkForUpdates } from '../updater/updater';
 import { initializeMainProcessLogger } from '../util/logger/main_process_logging';
 
 import * as log from '../util/logger/log';
@@ -209,6 +203,7 @@ import { DURATION } from '../session/constants';
 import { getSimpleStringNoArgs, tr } from '../localization/localeTools';
 
 import { logCrash } from '../node/crash/log_crash';
+import { THEMES } from '../themes/constants/colors';
 
 function prepareURL(pathSegments: Array<string>, moreKeys?: { theme: any }) {
   const urlObject: url.UrlObject = {
@@ -328,7 +323,7 @@ async function createWindow() {
     minHeight,
     fullscreen: false as boolean | undefined,
     // Default theme is Classic Dark
-    backgroundColor: classicDark['--background-primary-color'],
+    backgroundColor: THEMES.CLASSIC_DARK.COLOR1,
     webPreferences: {
       nodeIntegration: true,
       enableRemoteModule: true,
@@ -413,6 +408,9 @@ async function createWindow() {
     }
     mainWindow.reload();
   });
+  const isWayland = Boolean(
+    process.env.WAYLAND_DISPLAY || process.env.XDG_SESSION_TYPE === 'wayland'
+  );
 
   function captureAndSaveWindowStats() {
     if (!mainWindow) {
@@ -428,9 +426,9 @@ async function createWindow() {
       autoHideMenuBar: mainWindow.isMenuBarAutoHide(),
       width: size[0],
       height: size[1],
-      x: position[0],
-
-      y: position[1],
+      // On Wayland, getPosition() returns 0,0 as it considers it manages our position
+      x: isWayland ? undefined : position[0],
+      y: isWayland ? undefined : position[1],
       fullscreen: false as boolean | undefined,
     };
 
@@ -445,10 +443,11 @@ async function createWindow() {
   }
 
   const debouncedCaptureStats = _.debounce(captureAndSaveWindowStats, 500);
-  mainWindow.on('resize', debouncedCaptureStats);
-  mainWindow.on('move', debouncedCaptureStats);
+  mainWindow?.on('resize', debouncedCaptureStats);
+  // Note: on wayland, 'move' is never called as wayland never tells us about the change
+  mainWindow?.on('move', debouncedCaptureStats);
 
-  mainWindow.on('focus', () => {
+  mainWindow?.on('focus', () => {
     if (!mainWindow) {
       return;
     }
@@ -461,21 +460,24 @@ async function createWindow() {
 
   const urlToLoad = prepareURL([getAppRootPath(), 'background.html']);
 
-  await mainWindow.loadURL(urlToLoad);
+  await mainWindow?.loadURL(urlToLoad).catch(err => {
+    console.error('Failed to load background.html:', err);
+    mainWindow = null;
+    app.quit();
+    console.error('Closed app and mainWindow.');
+  });
   if (openDevToolsTestIntegration()) {
     setTimeout(() => {
-      if (mainWindow && mainWindow.webContents) {
-        mainWindow.webContents.openDevTools({
-          mode: 'bottom',
-          activate: false,
-        });
-      }
+      mainWindow?.webContents.openDevTools({
+        mode: 'bottom',
+        activate: false,
+      });
     }, 5000);
   }
 
   if (isDevProd() && !isTestIntegration()) {
     // Open the DevTools.
-    mainWindow.webContents.openDevTools({
+    mainWindow?.webContents.openDevTools({
       mode: 'bottom',
       activate: false,
     });
@@ -486,7 +488,7 @@ async function createWindow() {
   // Emitted when the window is about to be closed.
   // Note: We do most of our shutdown logic here because all windows are closed by
   //   Electron before the app quits.
-  mainWindow.on('close', async e => {
+  mainWindow?.on('close', async e => {
     console.log('close event', {
       readyForShutdown: mainWindow ? readyForShutdown : null,
       shouldQuit: windowShouldQuit(),
@@ -519,7 +521,7 @@ async function createWindow() {
   });
 
   // Emitted when the window is closed.
-  mainWindow.on('closed', () => {
+  mainWindow?.on('closed', () => {
     // Dereference the window object, usually you would store windows
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
@@ -627,7 +629,7 @@ async function showPasswordWindow() {
     minHeight,
     autoHideMenuBar: false,
     // Default theme is Classic Dark
-    backgroundColor: classicDark['--background-primary-color'],
+    backgroundColor: THEMES.CLASSIC_DARK.COLOR1,
     webPreferences: {
       nodeIntegration: true,
       enableRemoteModule: true,
@@ -646,6 +648,7 @@ async function showPasswordWindow() {
   await passwordWindow.loadURL(prepareURL([getAppRootPath(), 'password.html'])).catch(e => {
     console.warn('failed to load password window.', e.message);
     passwordWindow = null;
+    app.quit();
   });
 
   captureClicks(passwordWindow);
@@ -684,7 +687,7 @@ async function showAbout() {
     resizeable: true,
     title: tr('about'),
     autoHideMenuBar: true,
-    backgroundColor: classicDark['--background-primary-color'],
+    backgroundColor: THEMES.CLASSIC_DARK.COLOR1,
     show: false,
     webPreferences: {
       nodeIntegration: true,
@@ -700,14 +703,17 @@ async function showAbout() {
 
   captureClicks(aboutWindow);
 
-  await aboutWindow.loadURL(prepareURL([getAppRootPath(), 'about.html'], { theme }));
+  await aboutWindow.loadURL(prepareURL([getAppRootPath(), 'about.html'], { theme })).catch(e => {
+    console.warn('failed to load about window.', e.message);
+    aboutWindow = null;
+  });
 
   aboutWindow.on('closed', () => {
     aboutWindow = null;
   });
 
   aboutWindow.once('ready-to-show', () => {
-    aboutWindow?.setBackgroundColor(classicDark['--background-primary-color']);
+    aboutWindow?.setBackgroundColor(THEMES.CLASSIC_DARK.COLOR1);
   });
 
   // looks like sometimes ready-to-show is not fired by electron.
@@ -963,6 +969,11 @@ ipc.on('draw-attention', () => {
 ipc.on('restart', () => {
   app.relaunch();
   app.quit();
+});
+
+ipc.on('force-exit', () => {
+  console.log('Force app exit requested from renderer process');
+  app.exit(1);
 });
 
 ipc.on('resetDatabase', async () => {
@@ -1228,8 +1239,4 @@ ipc.on('media-access', async () => {
 
 ipc.handle('get-storage-profile', async (): Promise<string> => {
   return app.getPath('userData');
-});
-
-ipc.handle('is-deb-install', async (): Promise<boolean> => {
-  return isLinuxDebInstall();
 });

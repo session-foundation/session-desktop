@@ -33,13 +33,13 @@ function StrengthCriteria(opts: { isMet: boolean } & WithTrArgs) {
   const theme = useTheme();
   const criteriaMetColor = theme.includes('classic') ? 'var(--green-color)' : 'var(--blue-color)';
   return (
-    <Flex $container={true} $alignItems="flex-start" $flexGap="var(--margins-xs)">
-      <Localizer {...opts.trArgs} />
+    <Flex $container={true} $alignItems="flex-start" $flexGap="var(--margins-sm)">
       <LucideIcon
         iconColor={opts.isMet ? criteriaMetColor : 'var(--danger-color)'}
         unicode={opts.isMet ? LUCIDE_ICONS_UNICODE.CIRCLE_CHECK : LUCIDE_ICONS_UNICODE.CIRCLE_X}
         iconSize="small"
       />
+      <Localizer {...opts.trArgs} />
     </Flex>
   );
 }
@@ -207,11 +207,13 @@ export function EditPasswordSettingsPage(modalState: {
   const [secondPassword, setSecondPassword] = useState('');
   const [thirdPassword, setThirdPassword] = useState('');
 
-  const hasLengthStrength = firstPassword.length > 12;
-  const hasNumber = !!firstPassword.match(/[0-9]/);
-  const hasUppercase = !!firstPassword.match(/[A-Z]/);
-  const hasLowercase = !!firstPassword.match(/[a-z]/);
-  const hasSymbol = !!firstPassword.match(/[!@#$%^&*(),.?":{}|<>_\-\\[\]`~;'/+=]/);
+  const pwToConsiderForStrength = isChange ? secondPassword : firstPassword;
+
+  const hasLengthStrength = pwToConsiderForStrength.length > 12;
+  const hasNumber = !!pwToConsiderForStrength.match(/[0-9]/);
+  const hasUppercase = !!pwToConsiderForStrength.match(/[A-Z]/);
+  const hasLowercase = !!pwToConsiderForStrength.match(/[a-z]/);
+  const hasSymbol = !!pwToConsiderForStrength.match(/[!@#$%^&*(),.?":{}|<>_\-\\[\]`~;'/+=]/);
 
   const sharedInputProps = {
     type: 'password',
@@ -361,6 +363,7 @@ export function EditPasswordSettingsPage(modalState: {
               style={{
                 backgroundColor: 'var(--modal-background-content-color)',
                 borderRadius: 'var(--border-radius)',
+                gap: 'var(--margins-xs)',
               }}
             >
               <StrengthCriteria

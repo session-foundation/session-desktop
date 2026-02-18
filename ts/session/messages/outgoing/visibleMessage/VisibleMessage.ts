@@ -55,8 +55,8 @@ export interface QuotedAttachmentWithUrl extends QuotedAttachmentCommon {
 }
 
 export interface Quote {
-  id: number;
   author: string;
+  timestamp: number;
 }
 
 export type OutgoingProMessageDetailsOrProto =
@@ -77,7 +77,7 @@ export type VisibleMessageParams = ExpirableMessageParams &
   WithProMessageDetailsOrProto & {
     attachments?: Array<AttachmentPointerWithUrl>;
     body?: string;
-    quote?: Quote;
+    quote?: Quote | null;
     preview?: Array<PreviewWithAttachmentUrl>;
     reaction?: Reaction;
     syncTarget?: string; // undefined means it is not a synced message
@@ -99,7 +99,7 @@ export class VisibleMessage extends DataMessageWithProfile {
   constructor(params: VisibleMessageParams) {
     super({
       createAtNetworkTimestamp: params.createAtNetworkTimestamp,
-      identifier: params.identifier,
+      dbMessageIdentifier: params.dbMessageIdentifier,
       expirationType: params.expirationType,
       expireTimer: params.expireTimer,
       outgoingProMessageDetails: params.outgoingProMessageDetails,
@@ -110,7 +110,7 @@ export class VisibleMessage extends DataMessageWithProfile {
       deprecatedId: attachmentIdAsLongFromUrl(attachment.url),
     }));
     this.body = params.body;
-    this.quote = params.quote;
+    this.quote = params.quote ?? undefined;
 
     this.preview = params.preview?.map(attachment => ({
       ...attachment,
@@ -146,7 +146,7 @@ export class VisibleMessage extends DataMessageWithProfile {
     if (this.quote) {
       dataMessage.quote = new SignalService.DataMessage.Quote();
 
-      dataMessage.quote.id = this.quote.id;
+      dataMessage.quote.id = this.quote.timestamp;
       dataMessage.quote.author = this.quote.author;
     }
 
@@ -172,7 +172,7 @@ export class VisibleMessage extends DataMessageWithProfile {
 
   public isEqual(comparator: VisibleMessage): boolean {
     return (
-      this.identifier === comparator.identifier &&
+      this.dbMessageIdentifier === comparator.dbMessageIdentifier &&
       this.createAtNetworkTimestamp === comparator.createAtNetworkTimestamp
     );
   }

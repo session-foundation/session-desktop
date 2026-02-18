@@ -57,8 +57,8 @@ export const QuoteIcon = (props: WithLucideUnicode) => {
   const { unicode } = props;
 
   return (
-    <StyledQuoteIconContainer>
-      <StyledQuoteIcon>
+    <StyledQuoteIconContainer data-testid="quote-icon-container">
+      <StyledQuoteIcon data-testid="quote-icon">
         <StyledQuoteIconBackground>
           <LucideIcon unicode={unicode} iconSize="medium" iconColor="currentColor" />
         </StyledQuoteIconBackground>

@@ -1,5 +1,4 @@
 import { isNumber } from 'lodash';
-import { v4 } from 'uuid';
 import { processNewAttachment } from '../../../../types/MessageAttachment';
 import { ConvoHub } from '../../../conversations';
 import { runners } from '../JobRunner';
@@ -17,6 +16,7 @@ import {
   SessionProfileResetAvatarPrivate,
   SessionProfileSetAvatarDownloadedAny,
 } from '../../../../models/profile';
+import { uuidV4 } from '../../../../util/uuid';
 
 const defaultMsBetweenRetries = 10000;
 const defaultMaxAttempts = 3;
@@ -79,7 +79,7 @@ class AvatarMigrateJob extends PersistedJob<AvatarMigratePersistedData> {
     >) {
     super({
       jobType: 'AvatarMigrateJobType',
-      identifier: identifier || v4(),
+      identifier: identifier || uuidV4(),
       conversationId,
       delayBetweenRetries: defaultMsBetweenRetries,
       maxAttempts: isNumber(maxAttempts) ? maxAttempts : defaultMaxAttempts,

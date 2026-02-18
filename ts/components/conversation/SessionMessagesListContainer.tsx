@@ -1,5 +1,3 @@
-import { contextMenu } from 'react-contexify';
-
 import { connect } from 'react-redux';
 
 import autoBind from 'auto-bind';
@@ -30,6 +28,7 @@ import { TypingBubble } from './TypingBubble';
 import { StyledMessageBubble } from './message/message-content/MessageBubble';
 import { StyledMentionAnother } from './AddMentions';
 import { MessagesContainerRefContext } from '../../contexts/MessagesContainerRefContext';
+import { closeContextMenus } from '../../util/contextMenu';
 
 export type SessionMessageListProps = {
   messageContainerRef: RefObject<HTMLDivElement | null>;
@@ -42,17 +41,16 @@ type Props = SessionMessageListProps & {
 
   conversation?: ReduxConversationType;
   animateQuotedMessageId: string | undefined;
-  scrollToNow: () => Promise<void>;
+  scrollToNow: () => Promise<unknown>;
 };
 
 const StyledMessagesContainer = styled.div`
   display: flex;
-  flex-grow: 1;
   gap: var(--margins-sm);
-  flex-direction: column-reverse;
+  flex-direction: column;
+  justify-items: end;
   position: relative;
   overflow-x: hidden;
-  min-width: 370px;
   scrollbar-width: 4px;
   padding-top: var(--margins-sm);
   padding-bottom: var(--margins-xl);
@@ -99,9 +97,6 @@ class SessionMessagesListContainerInner extends Component<Props> {
   }
 
   public componentDidUpdate(prevProps: Props, _prevState: any) {
-    // // If you want to mess with this, be my guest.
-    // // just make sure you don't remove that as a bug in chrome makes the column-reverse do bad things
-    // // https://bugs.chromium.org/p/chromium/issues/detail?id=1189195&q=column-reverse&can=2#makechanges
     const isSameConvo = prevProps.conversationKey === this.props.conversationKey;
 
     if (
@@ -130,14 +125,6 @@ class SessionMessagesListContainerInner extends Component<Props> {
           ref={this.props.messageContainerRef}
           data-testid="messages-container"
         >
-          <StyledTypingBubbleContainer>
-            <TypingBubble
-              conversationType={conversation.type}
-              isTyping={!!conversation.isTyping}
-              key="typing-bubble"
-            />
-          </StyledTypingBubbleContainer>
-
           <ScrollToLoadedMessageContext.Provider value={this.scrollToLoadedMessage}>
             <SessionMessagesList
               scrollAfterLoadMore={(
@@ -152,13 +139,18 @@ class SessionMessagesListContainerInner extends Component<Props> {
               onEndPressed={this.scrollEnd}
             />
           </ScrollToLoadedMessageContext.Provider>
-
-          <SessionScrollButton
-            // eslint-disable-next-line @typescript-eslint/no-misused-promises
-            onClickScrollBottom={this.props.scrollToNow}
-            key="scroll-down-button"
-          />
+          <StyledTypingBubbleContainer>
+            <TypingBubble
+              conversationType={conversation.type}
+              isTyping={!!conversation.isTyping}
+              key="typing-bubble"
+            />
+          </StyledTypingBubbleContainer>
         </StyledMessagesContainer>
+        <SessionScrollButton
+          onClickScrollBottom={this.props.scrollToNow}
+          key="scroll-down-button"
+        />
       </MessagesContainerRefContext.Provider>
     );
   }
@@ -167,7 +159,7 @@ class SessionMessagesListContainerInner extends Component<Props> {
   // ~~~~~~~~~~~~ SCROLLING METHODS ~~~~~~~~~~~~~
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   private handleScroll() {
-    contextMenu.hideAll();
+    closeContextMenus();
   }
 
   /**
@@ -283,7 +275,7 @@ class SessionMessagesListContainerInner extends Component<Props> {
       return;
     }
 
-    messageContainer.scrollTo(0, 0);
+    messageContainer.scrollTo(0, messageContainer.scrollHeight);
   }
 
   private scrollToLoadedMessage(loadedMessageToScrollTo: string, reason: ScrollToLoadedReasons) {

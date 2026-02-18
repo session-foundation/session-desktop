@@ -6,8 +6,8 @@ import { QuoteProps } from './Quote';
 const StyledQuoteAuthor = styled.div<{ $isIncoming: boolean }>`
   color: ${props =>
     props.$isIncoming
-      ? 'var(--message-bubbles-received-text-color)'
-      : 'var(--message-bubbles-sent-text-color)'};
+      ? 'var(--message-bubble-incoming-text-color)'
+      : 'var(--message-bubble-outgoing-text-color)'};
   font-size: var(--font-size-md);
   font-weight: bold;
   line-height: 18px;
@@ -33,7 +33,7 @@ export const QuoteAuthor = (props: QuoteAuthorProps) => {
   }
 
   return (
-    <StyledQuoteAuthor $isIncoming={isIncoming}>
+    <StyledQuoteAuthor $isIncoming={isIncoming} data-testid="quote-author">
       <ContactName
         pubkey={author}
         contactNameContext="quote-author"

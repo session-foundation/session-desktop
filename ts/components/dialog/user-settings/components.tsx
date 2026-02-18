@@ -7,6 +7,8 @@ import { useProBadgeOnClickCb } from '../../menuAndSettingsHooks/useProBadgeOnCl
 import { useCurrentUserHasExpiredPro, useCurrentUserHasPro } from '../../../hooks/useHasPro';
 import { ProIconButton } from '../../buttons/ProButton';
 import { AvatarQrCodeButton } from '../../buttons/avatar/AvatarQrCodeButton';
+import { createButtonOnKeyDownForClickEventHandler } from '../../../util/keyboardShortcuts';
+import { SpacerSM } from '../../basic/Text';
 
 type ProfileAvatarProps = {
   avatarPath: string | null;
@@ -36,6 +38,7 @@ export const ProfileAvatar = (props: ProfileAvatarProps) => {
       onAvatarClick={onAvatarClick}
       onPlusAvatarClick={onPlusAvatarClick ?? undefined}
       dataTestId={dataTestId}
+      tabIndex={0}
     />
   );
 };
@@ -65,6 +68,8 @@ export const ProfileHeader = (props: ProfileHeaderProps) => {
 
   return (
     <div>
+      {/* just some padding for the focus-visible */}
+      <SpacerSM />
       <StyledAvatarCenterInner>
         <ProfileAvatar
           avatarPath={avatarPath}
@@ -112,10 +117,16 @@ export const ProfileName = (props: { profileName: string; onClick: () => void })
     context: 'show-our-profile-dialog',
     args: { currentUserHasPro, currentUserHasExpiredPro, providedCb: onClick },
   });
+  const onKeyDown = createButtonOnKeyDownForClickEventHandler(onClick);
 
   return (
     <StyledProfileName $container={true} $justifyContent="center" $alignItems="center">
-      <StyledName data-testid="your-profile-name" onClick={onClick}>
+      <StyledName
+        data-testid="your-profile-name"
+        onClick={onClick}
+        tabIndex={0}
+        onKeyDown={onKeyDown}
+      >
         {profileName}
         {showPro.show ? (
           <ProIconButton

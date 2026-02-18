@@ -1,5 +1,3 @@
-import { v4 as uuid } from 'uuid';
-
 import { SignalService } from '../../../../protobuf';
 import { SnodeNamespaces } from '../../../apis/snode_api/namespaces';
 import { ConvoHub } from '../../../conversations';
@@ -9,6 +7,7 @@ import { UserUtils } from '../../../utils';
 import { ExpirableMessageNoProfile, ExpirableMessageParams } from '../ExpirableMessage';
 import { NetworkTime } from '../../../../util/NetworkTime';
 import { MessageQueue } from '../../../sending';
+import { uuidV4 } from '../../../../util/uuid';
 
 type DataExtractionNotificationMessageParams = ExpirableMessageParams & {
   referencedAttachmentTimestamp: number;
@@ -71,7 +70,7 @@ export const sendDataExtractionNotification = async (
   // but also expire on the recipient's side (and synced) once read.
   const dataExtractionNotificationMessage = new DataExtractionNotificationMessage({
     referencedAttachmentTimestamp,
-    identifier: uuid(),
+    dbMessageIdentifier: uuidV4(),
     createAtNetworkTimestamp: NetworkTime.now(),
     expirationType,
     expireTimer,

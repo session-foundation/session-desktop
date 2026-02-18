@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 
 import autoBind from 'auto-bind';
-import clsx from 'clsx';
-
+import useKey from 'react-use/lib/useKey';
 import MicRecorder from 'mic-recorder-to-mp3';
 import { Component } from 'react';
 import styled, { keyframes } from 'styled-components';
+
 import { Constants } from '../../session';
 import { MAX_ATTACHMENT_FILESIZE_BYTES } from '../../session/constants';
 import { ToastUtils } from '../../session/utils';
@@ -13,6 +13,8 @@ import { type SessionIconSize } from '../icon';
 import { useFormattedDuration } from '../../hooks/useFormattedDuration';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
+import { focusVisibleOutlineStr } from '../../styles/focusVisible';
+import { isDeleteKey, isEnterKey, isEscapeKey, isSpaceKey } from '../../util/keyboardShortcuts';
 
 interface Props {
   onExitVoiceNoteView: () => void;
@@ -86,6 +88,20 @@ const StyledFlexWrapper = styled.div<StyledFlexWrapperProps>`
   }
 `;
 
+const StyledRecordingTimer = styled.div<{ $isRecording: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-default);
+  font-weight: bold;
+  font-size: 14px;
+  flex-shrink: 0;
+  animation: fadein var(--default-duration);
+
+  @media (-webkit-min-device-pixel-ratio: 1.6) {
+    ${({ $isRecording }) => !$isRecording && 'margin-left: auto'};
+  }
+`;
+
 function RecordingDurations({
   isRecording,
   displaySeconds,
@@ -99,9 +115,9 @@ function RecordingDurations({
   const remainingTimeString = useFormattedDuration(remainingSeconds, { forceHours: false });
 
   return (
-    <div className={clsx('session-recording--timer', !isRecording && 'playback-timer')}>
+    <StyledRecordingTimer $isRecording={isRecording}>
       {displayTimeString + (remainingTimeString ? ` / ${remainingTimeString}` : '')}
-    </div>
+    </StyledRecordingTimer>
   );
 }
 
@@ -109,15 +125,194 @@ function RecordingTimer({ displaySeconds }: { displaySeconds: number }) {
   const displayTimeString = useFormattedDuration(displaySeconds, { forceHours: false });
 
   return (
-    <div className={clsx('session-recording--timer')}>
+    <StyledRecordingTimer $isRecording={false}>
       {displayTimeString}
       <StyledRecordTimerLight />
-    </div>
+    </StyledRecordingTimer>
+  );
+}
+
+const StyledRecordingActions = styled.div`
+  display: flex;
+  align-items: center;
+  width: var(--actions-element-size);
+  height: var(--actions-element-size);
+  border-radius: 50%;
+
+  .session-button {
+    animation: fadein var(--default-duration);
+  }
+
+  .session-icon-button {
+    animation: fadein var(--default-duration);
+    border-radius: 50%;
+    width: var(--actions-element-size);
+    height: var(--actions-element-size);
+  }
+`;
+
+const StyledRecording = styled.div`
+  height: var(--composition-container-height);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-grow: 1;
+  outline: none;
+  margin-left: var(--margins-md);
+  margin-right: var(--margins-md);
+
+  --actions-element-size: 30px;
+`;
+
+function RecordingActions({
+  isPlaying,
+  isPaused,
+  isRecording,
+  startTimestamp,
+  nowTimestamp,
+  pauseAudio,
+  stopRecordingStream,
+  audioElement,
+  playAudio,
+  onDeleteVoiceMessage,
+  onSendVoiceMessage,
+}: {
+  isPlaying: boolean;
+  isPaused: boolean;
+  isRecording: boolean;
+  startTimestamp: number;
+  nowTimestamp: number;
+  pauseAudio: () => void;
+  stopRecordingStream: () => void;
+  audioElement?: HTMLAudioElement | null;
+  playAudio: () => void;
+  onDeleteVoiceMessage: () => void;
+  onSendVoiceMessage: () => void;
+}) {
+  const hasRecordingAndPaused = !isRecording && !isPlaying;
+  const hasRecording = !!audioElement?.duration && audioElement?.duration > 0;
+  const actionPauseAudio = !isRecording && !isPaused && isPlaying;
+  const actionDefault = !isRecording && !hasRecordingAndPaused && !actionPauseAudio;
+
+  // if we are recording, we base the time recording on our state values
+  // if we are playing ( audioElement?.currentTime is !== 0, use that instead)
+  // if we are not playing but we have an audioElement, display its duration
+  // otherwise display 0
+  const displayTimeMs = isRecording
+    ? (nowTimestamp - startTimestamp) * 1000
+    : (audioElement?.currentTime && (audioElement.currentTime * 1000 || audioElement?.duration)) ||
+      0;
+
+  const recordingDurationMs = audioElement?.duration ? audioElement.duration * 1000 : 1;
+
+  const actionPauseFn = isPlaying ? pauseAudio : stopRecordingStream;
+
+  useKey(
+    (event: KeyboardEvent) => {
+      return isEscapeKey(event) || isDeleteKey(event);
+    },
+    () => {
+      void onDeleteVoiceMessage();
+    }
+  );
+
+  useKey(
+    (event: KeyboardEvent) => {
+      return isSpaceKey(event);
+    },
+    () => {
+      if (isRecording) {
+        return;
+      }
+      if (isPlaying) {
+        pauseAudio();
+        return;
+      }
+      playAudio();
+    }
+  );
+
+  useKey(
+    (event: KeyboardEvent) => {
+      return isEnterKey(event);
+    },
+    () => {
+      if (isRecording) {
+        void stopRecordingStream();
+      } else {
+        void onSendVoiceMessage();
+      }
+    }
+  );
+
+  return (
+    <>
+      <StyledRecordingActions>
+        <StyledFlexWrapper $marginHorizontal="5px">
+          {isRecording && (
+            <SessionLucideIconButton
+              iconColor={'var(--danger-color)'}
+              unicode={LUCIDE_ICONS_UNICODE.SQUARE}
+              onClick={actionPauseFn}
+              iconSize={'large'}
+              dataTestId="end-voice-message"
+              focusVisibleEffect={focusVisibleOutlineStr()}
+            />
+          )}
+          {actionPauseAudio && (
+            <SessionLucideIconButton
+              unicode={LUCIDE_ICONS_UNICODE.PAUSE}
+              {...sharedButtonProps}
+              onClick={actionPauseFn}
+            />
+          )}
+          {hasRecordingAndPaused && (
+            <SessionLucideIconButton
+              unicode={LUCIDE_ICONS_UNICODE.PLAY}
+              {...sharedButtonProps}
+              onClick={playAudio}
+            />
+          )}
+          {hasRecording && (
+            <SessionLucideIconButton
+              unicode={LUCIDE_ICONS_UNICODE.TRASH2}
+              onClick={onDeleteVoiceMessage}
+              {...sharedButtonProps}
+            />
+          )}
+        </StyledFlexWrapper>
+
+        {actionDefault && (
+          <SessionLucideIconButton unicode={LUCIDE_ICONS_UNICODE.MIC} iconSize="large" />
+        )}
+      </StyledRecordingActions>
+
+      {hasRecording && !isRecording ? (
+        <RecordingDurations
+          isRecording={isRecording}
+          displaySeconds={Math.floor(displayTimeMs / 1000)}
+          remainingSeconds={Math.floor(recordingDurationMs / 1000)}
+        />
+      ) : null}
+
+      {isRecording ? <RecordingTimer displaySeconds={Math.floor(displayTimeMs / 1000)} /> : null}
+
+      {!isRecording && (
+        <div>
+          <SessionLucideIconButton
+            unicode={LUCIDE_ICONS_UNICODE.ARROW_UP}
+            onClick={onSendVoiceMessage}
+            dataTestId="send-message-button"
+            {...sharedButtonProps}
+          />
+        </div>
+      )}
+    </>
   );
 }
 
 export class SessionRecording extends Component<Props, State> {
-  private recorder?: any;
+  private recorder?: typeof MicRecorder;
   private audioBlobMp3?: Blob;
   private audioElement?: HTMLAudioElement | null;
   private updateTimerInterval?: NodeJS.Timeout;
@@ -154,92 +349,28 @@ export class SessionRecording extends Component<Props, State> {
     if (this.updateTimerInterval) {
       clearInterval(this.updateTimerInterval);
     }
+    void this.stopRecordingStream();
   }
 
   public render() {
     const { isPlaying, isPaused, isRecording, startTimestamp, nowTimestamp } = this.state;
 
-    const hasRecordingAndPaused = !isRecording && !isPlaying;
-    const hasRecording = !!this.audioElement?.duration && this.audioElement?.duration > 0;
-    const actionPauseAudio = !isRecording && !isPaused && isPlaying;
-    const actionDefault = !isRecording && !hasRecordingAndPaused && !actionPauseAudio;
-
-    // if we are recording, we base the time recording on our state values
-    // if we are playing ( audioElement?.currentTime is !== 0, use that instead)
-    // if we are not playing but we have an audioElement, display its duration
-    // otherwise display 0
-    const displayTimeMs = isRecording
-      ? (nowTimestamp - startTimestamp) * 1000
-      : (this.audioElement?.currentTime &&
-          (this.audioElement.currentTime * 1000 || this.audioElement?.duration)) ||
-        0;
-
-    const recordingDurationMs = this.audioElement?.duration ? this.audioElement.duration * 1000 : 1;
-
-    const actionPauseFn = isPlaying ? this.pauseAudio : this.stopRecordingStream;
-
     return (
-      <div role="main" className="session-recording" tabIndex={0} onKeyDown={this.onKeyDown}>
-        <div className="session-recording--actions">
-          <StyledFlexWrapper $marginHorizontal="5px">
-            {isRecording && (
-              <SessionLucideIconButton
-                iconColor={'var(--danger-color)'}
-                unicode={LUCIDE_ICONS_UNICODE.SQUARE}
-                onClick={actionPauseFn}
-                iconSize={'large'}
-                dataTestId="end-voice-message"
-              />
-            )}
-            {actionPauseAudio && (
-              <SessionLucideIconButton
-                unicode={LUCIDE_ICONS_UNICODE.PAUSE}
-                {...sharedButtonProps}
-                onClick={actionPauseFn}
-              />
-            )}
-            {hasRecordingAndPaused && (
-              <SessionLucideIconButton
-                unicode={LUCIDE_ICONS_UNICODE.PLAY}
-                {...sharedButtonProps}
-                onClick={this.playAudio}
-              />
-            )}
-            {hasRecording && (
-              <SessionLucideIconButton
-                unicode={LUCIDE_ICONS_UNICODE.TRASH2}
-                onClick={this.onDeleteVoiceMessage}
-                {...sharedButtonProps}
-              />
-            )}
-          </StyledFlexWrapper>
-
-          {actionDefault && (
-            <SessionLucideIconButton unicode={LUCIDE_ICONS_UNICODE.MIC} iconSize="large" />
-          )}
-        </div>
-
-        {hasRecording && !isRecording ? (
-          <RecordingDurations
-            isRecording={isRecording}
-            displaySeconds={Math.floor(displayTimeMs / 1000)}
-            remainingSeconds={Math.floor(recordingDurationMs / 1000)}
-          />
-        ) : null}
-
-        {isRecording ? <RecordingTimer displaySeconds={Math.floor(displayTimeMs / 1000)} /> : null}
-
-        {!isRecording && (
-          <div>
-            <SessionLucideIconButton
-              unicode={LUCIDE_ICONS_UNICODE.ARROW_UP}
-              onClick={this.onSendVoiceMessage}
-              dataTestId="send-message-button"
-              {...sharedButtonProps}
-            />
-          </div>
-        )}
-      </div>
+      <StyledRecording role="main">
+        <RecordingActions
+          isPlaying={isPlaying}
+          isPaused={isPaused}
+          isRecording={isRecording}
+          startTimestamp={startTimestamp}
+          nowTimestamp={nowTimestamp}
+          pauseAudio={this.pauseAudio}
+          stopRecordingStream={this.stopRecordingStream}
+          audioElement={this.audioElement}
+          playAudio={this.playAudio}
+          onDeleteVoiceMessage={this.onDeleteVoiceMessage}
+          onSendVoiceMessage={this.onSendVoiceMessage}
+        />
+      </StyledRecording>
     );
   }
 
@@ -403,11 +534,5 @@ export class SessionRecording extends Component<Props, State> {
         await this.audioElement?.play();
       }
     };
-  }
-
-  private async onKeyDown(event: any) {
-    if (event.key === 'Escape') {
-      await this.onDeleteVoiceMessage();
-    }
   }
 }

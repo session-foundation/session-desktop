@@ -7,8 +7,8 @@ const StyledToastContainer = styled(ToastContainer)`
   }
   .Toastify__toast {
     background: var(--toast-background-color);
-    color: var(--toast-text-color);
-    border-left: 4px solid var(--toast-color-strip-color);
+    color: var(--text-primary-color);
+    border-left: 4px solid var(--primary-color);
   }
   .Toastify__toast--error {
   }
@@ -20,10 +20,10 @@ const StyledToastContainer = styled(ToastContainer)`
     line-height: 1.4;
   }
   .Toastify__progress-bar {
-    background-color: var(--toast-progress-color);
+    background-color: rgba(0, 0, 0, 0.1);
   }
   .Toastify__close-button {
-    color: var(--toast-text-color);
+    color: var(--text-primary-color);
   }
 `;
 

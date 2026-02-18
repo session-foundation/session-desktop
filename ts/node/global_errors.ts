@@ -1,5 +1,7 @@
 import { app, dialog, clipboard } from 'electron';
 import os from 'node:os';
+import { isObject } from 'lodash';
+
 import { reallyJsonStringify } from '../util/reallyJsonStringify';
 import { Errors } from '../types/Errors';
 import { redactAll } from '../util/privacy';
@@ -63,6 +65,10 @@ export const addHandler = (): void => {
   // (but also ignore the valid death like on restart/quit)
   process.on('uncaughtException', (reason: unknown) => {
     try {
+      if (isObject(reason) && 'message' in reason && reason.message === 'write EPIPE') {
+        return;
+      }
+
       logCrash('main', { reason: 'uncaughtException', error: reason });
 
       handleError('Unhandled Error', _getError(reason));

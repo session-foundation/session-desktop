@@ -16,19 +16,20 @@ import { OpenGroupVisibleMessage } from '../../../session/messages/outgoing/visi
 import { VisibleMessage } from '../../../session/messages/outgoing/visibleMessage/VisibleMessage';
 import { OpenGroupReaction } from '../../../types/Reaction';
 import { OpenGroupRequestCommonType } from '../../../data/types';
+import { uuidV4 } from '../../../util/uuid';
 
 const loremIpsum = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit';
 
 export function generateVisibleMessage({
-  identifier,
+  dbMessageIdentifier,
   timestamp,
 }: {
-  identifier?: string;
+  dbMessageIdentifier?: string;
   timestamp?: number;
 } = {}): VisibleMessage {
   return new VisibleMessage({
     body: loremIpsum,
-    identifier: identifier ?? uuid(),
+    dbMessageIdentifier: dbMessageIdentifier ?? uuid(),
     createAtNetworkTimestamp: timestamp || Date.now(),
     attachments: undefined,
     quote: undefined,
@@ -81,6 +82,7 @@ export function generateOpenGroupVisibleMessage(): OpenGroupVisibleMessage {
     createAtNetworkTimestamp: Date.now(),
     userProfile: null,
     outgoingProMessageDetails: null,
+    dbMessageIdentifier: uuidV4(),
   });
 }
 
@@ -127,13 +129,13 @@ export function generateFakeIncomingOpenGroupMessageV4({
 }
 
 export function generateDisappearingVisibleMessage({
-  identifier,
+  dbMessageIdentifier,
   timestamp,
   expirationType,
   expireTimer,
   expirationTimerUpdate,
 }: {
-  identifier?: string;
+  dbMessageIdentifier?: string;
   timestamp?: number;
   expirationType?: DisappearingMessageType;
   expireTimer?: number;
@@ -141,7 +143,7 @@ export function generateDisappearingVisibleMessage({
 } = {}): ExpirationTimerUpdateMessage | VisibleMessage {
   if (!isEmpty(expirationTimerUpdate)) {
     return new ExpirationTimerUpdateMessage({
-      identifier: identifier ?? uuid(),
+      dbMessageIdentifier: dbMessageIdentifier ?? uuid(),
       createAtNetworkTimestamp: timestamp || Date.now(),
       expirationType: expirationTimerUpdate.expirationType || null,
       expireTimer: expirationTimerUpdate.expireTimer,
@@ -150,7 +152,7 @@ export function generateDisappearingVisibleMessage({
 
   return new VisibleMessage({
     body: loremIpsum,
-    identifier: identifier ?? uuid(),
+    dbMessageIdentifier: dbMessageIdentifier ?? uuid(),
     createAtNetworkTimestamp: timestamp || Date.now(),
     attachments: undefined,
     quote: undefined,

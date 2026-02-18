@@ -3,7 +3,6 @@ import styled from 'styled-components';
 import { getAppDispatch } from '../../../../../state/dispatch';
 import { closeRightPanel } from '../../../../../state/ducks/conversations';
 import { Flex } from '../../../../basic/Flex';
-import { sectionActions } from '../../../../../state/ducks/section';
 import { SessionLucideIconButton } from '../../../../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../../../../icon/lucide';
 
@@ -38,6 +37,7 @@ export const Header = (props: HeaderProps) => {
     <Flex
       $container={true}
       width={'100%'}
+      $alignItems={'center'}
       $padding={`${paddingTop} var(--margins-lg) var(--margins-md)`}
     >
       <Flex
@@ -59,7 +59,6 @@ export const Header = (props: HeaderProps) => {
               closeButtonOnClick();
             } else {
               dispatch(closeRightPanel());
-              dispatch(sectionActions.resetRightOverlayMode());
             }
           }}
         />

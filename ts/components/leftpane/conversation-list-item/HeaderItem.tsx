@@ -22,6 +22,7 @@ import { Timestamp } from '../../conversation/Timestamp';
 import { SessionIcon } from '../../icon';
 import { UserItem } from './UserItem';
 import type { WithConvoId } from '../../../session/types/with';
+import { MailWithUnreadIcon } from '../../icon/MailWithUnreadIcon';
 
 const NotificationSettingIcon = () => {
   const convoId = useConvoIdFromContext();
@@ -34,7 +35,7 @@ const NotificationSettingIcon = () => {
       return (
         <SessionIcon
           iconType="mute"
-          iconColor={'var(--conversation-tab-text-color)'}
+          iconColor="currentColor"
           iconSize="small"
           style={{ flexShrink: 0 }}
         />
@@ -43,7 +44,7 @@ const NotificationSettingIcon = () => {
       return (
         <SessionIcon
           iconType="bell"
-          iconColor={'var(--conversation-tab-text-color)'}
+          iconColor="currentColor"
           iconSize="small"
           style={{ flexShrink: 0 }}
         />
@@ -57,6 +58,7 @@ const StyledConversationListItemIconWrapper = styled.div`
   display: flex;
   flex-direction: row;
   gap: var(--margins-xs);
+  align-items: center;
 `;
 
 const PinIcon = () => {
@@ -67,7 +69,7 @@ const PinIcon = () => {
   return isPinned ? (
     <SessionIcon
       iconType="pin"
-      iconColor={'var(--conversation-tab-text-color)'}
+      iconColor="currentColor"
       iconSize="small"
       style={{ flexShrink: 0 }}
     />
@@ -92,8 +94,8 @@ const ListItemIcons = ({ conversationId }: WithConvoId) => {
 };
 
 const MentionAtSymbol = styled.span`
-  background: var(--unread-messages-alert-background-color);
-  color: var(--unread-messages-alert-text-color);
+  background: var(--primary-color);
+  color: var(--black-color);
   text-align: center;
   margin-top: 0px;
   margin-bottom: 0px;
@@ -157,7 +159,7 @@ const AtSymbol = ({ conversationId }: WithConvoId) => {
 };
 
 const StyledUnreadCount = styled.p`
-  background-color: var(--unread-messages-alert-background-color);
+  background-color: var(--primary-color);
   text-align: center;
   padding-top: 1px;
   font-size: var(--font-size-xs);
@@ -166,7 +168,7 @@ const StyledUnreadCount = styled.p`
   min-width: 16px;
   line-height: 16px;
   border-radius: 8px;
-  color: var(--unread-messages-alert-text-color);
+  color: var(--black-color);
   font-weight: 700;
   margin: 0px;
   padding-inline: 3px;
@@ -182,10 +184,15 @@ const UnreadCount = ({ conversationId }: WithConvoId) => {
       ? `${Constants.CONVERSATION.MAX_CONVO_UNREAD_COUNT}+`
       : unreadMsgCount || ' ';
 
-  // TODO would be good to merge the style of this with SessionNotificationCount or SessionUnreadCount at some point.
-  return unreadMsgCount > 0 || forcedUnread ? (
-    <StyledUnreadCount>{unreadWithOverflow}</StyledUnreadCount>
-  ) : null;
+  if (forcedUnread) {
+    return <MailWithUnreadIcon iconSize="small" style={{ maxHeight: '100%' }} />;
+  }
+
+  if (unreadMsgCount <= 0) {
+    return null;
+  }
+
+  return <StyledUnreadCount>{unreadWithOverflow}</StyledUnreadCount>;
 };
 
 export const ConversationListItemHeaderItem = () => {

@@ -2,14 +2,6 @@ import type { DecodedPro } from 'libsession_util_nodejs';
 import { isNil } from 'lodash';
 import { ProRevocationCache } from '../session/revocation_list/pro_revocation_list';
 
-export interface Quote {
-  id: number; // this is in fact a uint64 so we will have an issue
-  author: string;
-  attachments: Array<any> | null;
-  text: string | null;
-  referencedMessageNotFound: boolean;
-}
-
 type DecodedProConstructorArgs = {
   id: string;
   source: string;

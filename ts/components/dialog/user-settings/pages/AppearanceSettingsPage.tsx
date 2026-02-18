@@ -3,7 +3,7 @@ import useInterval from 'react-use/lib/useInterval';
 
 import styled from 'styled-components';
 import { isFinite, isNumber, range } from 'lodash';
-import { contextMenu, Menu } from 'react-contexify';
+import { contextMenu } from 'react-contexify';
 import { useRef } from 'react';
 import { getAppDispatch } from '../../../../state/dispatch';
 
@@ -42,8 +42,7 @@ import { Flex } from '../../../basic/Flex';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 import { LucideIcon } from '../../../icon/LucideIcon';
 import { H9 } from '../../../basic/Heading';
-import { getMenuAnimation } from '../../../menu/MenuAnimation';
-import { ItemWithDataTestId } from '../../../menu/items/MenuItemWithDataTestId';
+import { Menu, MenuItem } from '../../../menu/items/MenuItem';
 import { ZOOM_FACTOR } from '../../../../session/constants';
 import { SessionContextMenuContainerItemsCentered } from '../../../SessionContextMenuContainer';
 import { UserSettingsModalContainer } from '../components/UserSettingsModalContainer';
@@ -69,7 +68,7 @@ function PrimaryColorSwitcher() {
       {getPrimaryColors().map(item => {
         const overriddenColorsVars = {
           '--primary-color': item.color,
-          '--text-primary-color': item.id === selectedPrimaryColor ? undefined : 'transparent',
+          '--radio-border-color': item.id === selectedPrimaryColor ? undefined : 'transparent',
         } as React.CSSProperties;
         return (
           <RadioDot
@@ -83,6 +82,7 @@ function PrimaryColorSwitcher() {
             diameterRadioBorder={diameterRadioBorder}
             style={overriddenColorsVars}
             ariaLabel={item.ariaLabel}
+            tabIndex={0}
           />
         );
       })}
@@ -185,7 +185,7 @@ function ChatBubblePreview() {
         height="74"
         x="15.74"
         y="15"
-        fill="var(--message-bubbles-received-background-color)"
+        fill="var(--message-bubble-incoming-background-color)"
         rx="16"
       />
       <mask id="a" fill="var(--text-primary-color)">
@@ -197,11 +197,11 @@ function ChatBubblePreview() {
         height="39"
         x="140.74"
         y="104"
-        fill="var(--message-bubbles-sent-background-color)"
+        fill="var(--message-bubble-outgoing-background-color)"
         rx="16"
       />
       <text
-        fill="var(--message-bubbles-received-text-color)"
+        fill="var(--message-bubble-incoming-text-color)"
         x="40px"
         y="37px"
         style={{ letterSpacing: '0.43', fontWeight: 'bold' }}
@@ -209,7 +209,7 @@ function ChatBubblePreview() {
         You
       </text>
       <text
-        fill="var(--message-bubbles-received-text-color)"
+        fill="var(--message-bubble-incoming-text-color)"
         x="40px"
         y="54px"
         style={{ letterSpacing: '0.43' }}
@@ -217,7 +217,7 @@ function ChatBubblePreview() {
         What are you doing this week?
       </text>
       <text
-        fill="var(--message-bubbles-received-text-color)"
+        fill="var(--message-bubble-incoming-text-color)"
         x="30px"
         y="75px"
         style={{ letterSpacing: '0.43' }}
@@ -226,7 +226,7 @@ function ChatBubblePreview() {
       </text>
 
       <text
-        fill="var(--message-bubbles-sent-text-color)"
+        fill="var(--message-bubble-outgoing-text-color)"
         x="155px"
         y="130px"
         style={{ letterSpacing: '0.43' }}
@@ -280,7 +280,6 @@ const ZoomFactorMenuPicker = ({
     <SessionContextMenuContainerItemsCentered>
       <Menu
         id={zoomFactorMenuId}
-        animation={getMenuAnimation()}
         onVisibilityChange={handleShow}
         style={{
           zIndex: 400,
@@ -294,7 +293,7 @@ const ZoomFactorMenuPicker = ({
       >
         {zoomFactorValues.map(m => {
           return (
-            <ItemWithDataTestId
+            <MenuItem
               key={m}
               onClick={() => {
                 void setZoomFactor(m, forceUpdate);
@@ -302,9 +301,11 @@ const ZoomFactorMenuPicker = ({
               style={{
                 backgroundColor: m === currentZoomFactor ? 'var(--primary-color)' : 'unset',
               }}
+              iconType={null}
+              isDangerAction={false}
             >
               <div ref={m === currentZoomFactor ? selectedRef : undefined}>{m}%</div>
-            </ItemWithDataTestId>
+            </MenuItem>
           );
         })}
       </Menu>

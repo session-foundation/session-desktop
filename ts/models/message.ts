@@ -1,7 +1,17 @@
 import autoBind from 'auto-bind';
 import { filesize } from 'filesize';
 import { GroupPubkeyType, PubkeyType } from 'libsession_util_nodejs';
-import { debounce, isEmpty, isEqual, isString, size as lodashSize, uniq } from 'lodash';
+import {
+  debounce,
+  isEmpty,
+  isEqual,
+  isFinite,
+  isNumber,
+  isObject,
+  isString,
+  size as lodashSize,
+  uniq,
+} from 'lodash';
 import { SignalService } from '../protobuf';
 import { ConvoHub } from '../session/conversations';
 import { ContentMessageNoProfile } from '../session/messages/outgoing';
@@ -37,6 +47,7 @@ import {
 import {
   VisibleMessage,
   VisibleMessageParams,
+  type Quote,
 } from '../session/messages/outgoing/visibleMessage/VisibleMessage';
 import { uploadAttachmentsV3, uploadLinkPreviewsV3 } from '../session/utils/AttachmentsV2';
 import { isUsFromCache } from '../session/utils/User';
@@ -55,7 +66,6 @@ import {
   PropsForGroupUpdateName,
   PropsForGroupUpdatePromoted,
   PropsForMessageWithoutConvoProps,
-  PropsForQuote,
   messagesChanged,
 } from '../state/ducks/conversations';
 import { AttachmentTypeWithPath, isVoiceMessage } from '../types/Attachment';
@@ -117,10 +127,6 @@ export class MessageModel extends Model<MessageAttributes> {
       void this.setToExpire();
     }
     autoBind(this);
-
-    if (window) {
-      window.contextMenuShown = false;
-    }
 
     this.getMessageModelProps();
   }
@@ -662,7 +668,7 @@ export class MessageModel extends Model<MessageAttributes> {
     if (reacts && Object.keys(reacts).length) {
       props.reacts = reacts;
     }
-    const quote = this.getPropsForQuote();
+    const quote = this.getQuotedMessage();
     if (quote) {
       props.quote = quote;
     }
@@ -708,8 +714,22 @@ export class MessageModel extends Model<MessageAttributes> {
     return this.get('reacts') || null;
   }
 
-  private getPropsForQuote(): PropsForQuote | null {
-    return this.get('quote') || null;
+  private getQuotedMessage() {
+    const quote = this.get('quote');
+    if (
+      quote &&
+      isObject(quote) &&
+      isNumber(quote.timestamp) &&
+      isFinite(quote.timestamp) &&
+      quote.author &&
+      isString(quote.author)
+    ) {
+      return {
+        timestamp: quote.timestamp,
+        author: quote.author,
+      };
+    }
+    return null;
   }
 
   public getPropsForAttachment(attachment: AttachmentTypeWithPath): PropsForAttachment | null {
@@ -833,9 +853,37 @@ export class MessageModel extends Model<MessageAttributes> {
       body,
       attachments,
       preview,
-      quote: this.get('quote'),
+      quote: this.getQuotedMessage(),
       fileIdsToLink: uniq(fileIdsToLink),
     };
+  }
+
+  /**
+   * Warning: this fetches from the DB so it is quite slow.
+   */
+  public async getQuotedMessageAuthorIsUs() {
+    const quote = this.getQuotedMessage();
+    if (!quote) {
+      return false;
+    }
+
+    const convoId = this.getConversationId();
+    if (!convoId) {
+      return false;
+    }
+    const foundBySentAtAndConvoId = await Data.getMessagesByConvoIdAndSentAt([
+      { convoId, sentAt: quote.timestamp },
+    ]);
+    if (!foundBySentAtAndConvoId || !foundBySentAtAndConvoId.length) {
+      return false;
+    }
+    const foundBySentAt = foundBySentAtAndConvoId[0];
+    if (!foundBySentAt.attributes.source) {
+      return false;
+    }
+    const isUS = UserUtils.isUsFromCache(foundBySentAt.attributes.source);
+    const isUsAny = isUS || isUsAnySogsFromCache(foundBySentAt.attributes.source);
+    return isUsAny;
   }
 
   /**
@@ -892,7 +940,7 @@ export class MessageModel extends Model<MessageAttributes> {
 
       if (conversation.isOpenGroupV2()) {
         const openGroupParams: OpenGroupVisibleMessageParams = {
-          identifier: this.id,
+          dbMessageIdentifier: this.id,
           createAtNetworkTimestamp: NetworkTime.now(),
           userProfile: await UserUtils.getOurProfile(),
           outgoingProMessageDetails: await UserUtils.getOutgoingProMessageDetails({
@@ -922,7 +970,7 @@ export class MessageModel extends Model<MessageAttributes> {
       const createAtNetworkTimestamp = NetworkTime.now();
 
       const chatParams: VisibleMessageParams = {
-        identifier: this.id,
+        dbMessageIdentifier: this.id,
         body,
         createAtNetworkTimestamp,
         attachments,
@@ -992,19 +1040,6 @@ export class MessageModel extends Model<MessageAttributes> {
 
   public getConversationId(): string | undefined {
     return this.get('conversationId');
-  }
-
-  public getQuoteContact() {
-    const quote = this.get('quote');
-    if (!quote) {
-      return null;
-    }
-    const { author } = quote;
-    if (!author) {
-      return null;
-    }
-
-    return ConvoHub.use().get(author);
   }
 
   public getSource() {
@@ -1240,12 +1275,8 @@ export class MessageModel extends Model<MessageAttributes> {
     }
   }
 
-  public deleteAttributes(attrsToDelete: 'quote_attachments' | 'preview_image') {
+  public deleteAttributes(attrsToDelete: 'preview_image') {
     switch (attrsToDelete) {
-      case 'quote_attachments':
-        delete this.attributes.quote.attachments;
-        break;
-
       case 'preview_image':
         delete this.attributes.preview[0].image;
 
@@ -1296,12 +1327,8 @@ export class MessageModel extends Model<MessageAttributes> {
     this.set({ reactsIndex: index });
   }
 
-  public getQuote() {
-    return this.get('quote');
-  }
-
-  public setQuote(quote: any) {
-    if (isEqual(quote, this.getQuote())) {
+  public setQuote(quote: Quote | undefined) {
+    if (isEqual(quote, this.getQuotedMessage())) {
       return;
     }
     this.set({ quote });

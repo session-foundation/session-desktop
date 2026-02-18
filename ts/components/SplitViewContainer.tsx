@@ -13,13 +13,14 @@ const StyledSplitView = styled.div`
   display: flex;
   flex-grow: 1;
   flex-direction: column;
+  justify-content: end;
 `;
 
 const Divider = styled.div`
   width: 100%;
   cursor: row-resize;
   height: 5px;
-  background-color: var(--in-call-container-background-color);
+  background-color: var(--background-primary-color);
   padding-top: 2px;
 `;
 
@@ -38,7 +39,7 @@ const StyledTop = styled.div`
   display: flex;
   flex-direction: column;
   flex-grow: 1;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: var(--default-borders);
 `;
 
 const TopSplitViewPanel = ({

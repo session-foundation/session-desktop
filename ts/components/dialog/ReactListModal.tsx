@@ -31,7 +31,7 @@ const StyledReactListContainer = styled(Flex)`
 
 const StyledReactionsContainer = styled.div`
   background-color: var(--modal-background-content-color);
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: var(--default-borders);
   width: 100%;
   overflow-x: auto;
   padding: 12px 8px 0;

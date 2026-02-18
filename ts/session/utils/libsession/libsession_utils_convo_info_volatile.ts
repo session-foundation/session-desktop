@@ -207,6 +207,7 @@ async function refreshConvoVolatileCached(
     switch (convoType) {
       case '1o1':
         const fromWrapper1o1 = await ConvoInfoVolatileWrapperActions.get1o1(convoId);
+
         if (fromWrapper1o1) {
           mapped1o1WrapperValues.set(convoId, fromWrapper1o1);
         }

@@ -28,22 +28,27 @@ const StyledQuoteText = styled.div<{ $isIncoming: boolean }>`
 
   color: ${props =>
     props.$isIncoming
-      ? 'var(--message-bubbles-received-text-color)'
-      : 'var(--message-bubbles-sent-text-color)'};
+      ? 'var(--message-bubble-incoming-text-color)'
+      : 'var(--message-bubble-outgoing-text-color)'};
   a {
     color: ${props =>
       props.$isIncoming
         ? 'var(--color-received-message-text)'
-        : 'var(--message-bubbles-sent-text-color)'};
+        : 'var(--message-bubble-outgoing-text-color)'};
   }
 `;
 
 function getTypeLabel({
   contentType,
   isVoiceMessage,
+  fileName,
 }: {
   contentType: MIME.MIMEType;
   isVoiceMessage: boolean;
+  /**
+   * The name of the file, if any. Only used for documents
+   */
+  fileName?: string;
 }): string | undefined {
   if (GoogleChrome.isVideoTypeSupported(contentType)) {
     return tr('video');
@@ -57,7 +62,22 @@ function getTypeLabel({
   if (MIME.isAudio(contentType)) {
     return tr('audio');
   }
-  return tr('document');
+  if (!fileName) {
+    return tr('document');
+  }
+  return getShortenedFilename(fileName);
+}
+
+export function getShortenedFilename(fileName: string) {
+  if (!fileName) {
+    return '';
+  }
+  if (fileName?.length < 20) {
+    return fileName;
+  }
+  const charsAround = 15;
+
+  return `${fileName.slice(0, charsAround)} … ${fileName.slice(-charsAround)}`;
 }
 
 export const QuoteText = (
@@ -69,16 +89,16 @@ export const QuoteText = (
   const isPublic = useSelectedIsPublic();
 
   if (!referencedMessageNotFound && attachment && !isEmpty(attachment)) {
-    const { contentType, isVoiceMessage } = attachment;
+    const { contentType, isVoiceMessage, fileName } = attachment;
 
-    const typeLabel = getTypeLabel({ contentType, isVoiceMessage });
+    const typeLabel = getTypeLabel({ contentType, fileName, isVoiceMessage });
     if (typeLabel && !text) {
-      return <div>{typeLabel}</div>;
+      return <div style={{ WebkitLineClamp: 1 }}>{typeLabel}</div>;
     }
   }
 
   return (
-    <StyledQuoteText $isIncoming={isIncoming} dir="auto">
+    <StyledQuoteText $isIncoming={isIncoming} dir="auto" data-testid="quote-text">
       <MessageBody
         text={text || tr('messageErrorOriginal')}
         disableRichContent={true}

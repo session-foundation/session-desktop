@@ -33,8 +33,8 @@ import { useAddModeratorsCb } from '../../menuAndSettingsHooks/useAddModerators'
 import { useRemoveModeratorsCb } from '../../menuAndSettingsHooks/useRemoveModerators';
 import { useShowLeaveCommunityCb } from '../../menuAndSettingsHooks/useShowLeaveCommunity';
 import {
-  useShowDeleteGroupCb,
-  useShowLeaveGroupCb,
+  useDeleteDestroyedOrKickedGroupCb,
+  useShowLeaveOrDeleteGroupCb,
 } from '../../menuAndSettingsHooks/useShowLeaveGroup';
 import { useShowAttachments } from '../../menuAndSettingsHooks/useShowAttachments';
 import { useGroupCommonNoShow } from '../../menuAndSettingsHooks/useGroupCommonNoShow';
@@ -64,7 +64,7 @@ export const LeaveCommunityPanelButton = ({ conversationId }: WithConvoId) => {
 };
 
 export const DeleteGroupPanelButton = ({ conversationId }: WithConvoId) => {
-  const cb = useShowDeleteGroupCb(conversationId);
+  const cb = useShowLeaveOrDeleteGroupCb('delete', conversationId);
 
   if (!cb || !conversationId) {
     return null;
@@ -81,8 +81,26 @@ export const DeleteGroupPanelButton = ({ conversationId }: WithConvoId) => {
   );
 };
 
+export function DeleteDestroyedOrKickedGroupButton({ conversationId }: WithConvoId) {
+  const cb = useDeleteDestroyedOrKickedGroupCb(conversationId);
+
+  if (!cb) {
+    return null;
+  }
+
+  return (
+    <PanelIconButton
+      iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.TRASH2} />}
+      text={{ token: 'groupDelete' }}
+      onClick={cb}
+      dataTestId="delete-conversation-menu-option"
+      color="var(--danger-color)"
+    />
+  );
+}
+
 export const LeaveGroupPanelButton = ({ conversationId }: WithConvoId) => {
-  const cb = useShowLeaveGroupCb(conversationId);
+  const cb = useShowLeaveOrDeleteGroupCb('leave', conversationId);
 
   if (!conversationId || !cb) {
     return null;
@@ -157,7 +175,10 @@ export const AttachmentsButton = (_props: WithConvoId) => {
 };
 
 export const CopyAccountIdButton = ({ conversationId }: WithConvoId) => {
-  const showCopyAccountId = useShowCopyAccountIdCb(conversationId);
+  const showCopyAccountId = useShowCopyAccountIdCb({
+    sender: conversationId,
+    messageId: undefined,
+  });
 
   if (!showCopyAccountId) {
     return null;
@@ -287,7 +308,7 @@ export function AddAdminCommunityButton({ conversationId }: WithConvoId) {
       iconElement={
         <PanelIconSessionLegacyIcon
           iconType={'addModerator'}
-          iconColor="var(--text-primary-color"
+          iconColor="var(--text-primary-color)"
         />
       }
       text={{ token: 'addAdmin', count: PLURAL_COUNT_OTHER }}
@@ -307,7 +328,7 @@ export function RemoveAdminCommunityButton({ conversationId }: WithConvoId) {
       iconElement={
         <PanelIconSessionLegacyIcon
           iconType={'deleteModerator'}
-          iconColor="var(--text-primary-color"
+          iconColor="var(--text-primary-color)"
         />
       }
       text={{ token: 'adminRemove' }}

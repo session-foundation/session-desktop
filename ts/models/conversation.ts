@@ -17,7 +17,6 @@ import {
 } from 'lodash';
 
 import { DisappearingMessageConversationModeType } from 'libsession_util_nodejs';
-import { v4 } from 'uuid';
 import { SignalService } from '../protobuf';
 import { ConvoHub } from '../session/conversations';
 import { ClosedGroupV2VisibleMessage } from '../session/messages/outgoing/visibleMessage/ClosedGroupVisibleMessage';
@@ -30,7 +29,10 @@ import { MessageAttributesOptionals, type MessageAttributes } from './messageTyp
 import { Data } from '../data/data';
 import { OpenGroupUtils } from '../session/apis/open_group_api/utils';
 import { getOpenGroupV2FromConversationId } from '../session/apis/open_group_api/utils/OpenGroupUtils';
-import { ExpirationTimerUpdateMessage } from '../session/messages/outgoing/controlMessage/ExpirationTimerUpdateMessage';
+import {
+  ExpirationTimerUpdateMessage,
+  type ExpirationTimerUpdateMessageParams,
+} from '../session/messages/outgoing/controlMessage/ExpirationTimerUpdateMessage';
 import { TypingMessage } from '../session/messages/outgoing/controlMessage/TypingMessage';
 import { CommunityInvitationMessage } from '../session/messages/outgoing/visibleMessage/CommunityInvitationMessage';
 import { OpenGroupVisibleMessage } from '../session/messages/outgoing/visibleMessage/OpenGroupVisibleMessage';
@@ -117,7 +119,7 @@ import {
   getSubscriberCountOutsideRedux,
 } from '../state/selectors/sogsRoomInfo'; // decide it it makes sense to move this to a redux slice?
 
-import { handleAcceptConversationRequest } from '../interactions/conversationInteractions';
+import { handleAcceptConversationRequestWithoutConfirm } from '../interactions/conversationInteractions';
 import { DisappearingMessages } from '../session/disappearing_messages';
 import { GroupUpdateInfoChangeMessage } from '../session/messages/outgoing/controlMessage/group_v2/to_group/GroupUpdateInfoChangeMessage';
 import { FetchMsgExpirySwarm } from '../session/utils/job_runners/jobs/FetchMsgExpirySwarmJob';
@@ -154,6 +156,8 @@ import {
   UserConfigWrapperActions,
 } from '../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 import { ProRevocationCache } from '../session/revocation_list/pro_revocation_list';
+import { uuidV4 } from '../util/uuid';
+import { pushQuotedMessageToStoreIfNeeded } from '../receiver/queuedJob';
 
 type InMemoryConvoInfos = {
   mentionedUs: boolean;
@@ -691,6 +695,8 @@ export class ConversationModel extends Model<ConversationAttributes> {
         }),
         expirationType,
         expireTimer,
+        // we have a custom logic for the reacts and send the two messages separately
+        dbMessageIdentifier: uuidV4(),
       };
 
       if (PubKey.isBlinded(this.id)) {
@@ -699,8 +705,8 @@ export class ConversationModel extends Model<ConversationAttributes> {
         return;
       }
 
-      // handleAcceptConversationRequest will take care of sending response depending on the type of conversation, if needed
-      await handleAcceptConversationRequest({
+      // handleAcceptConversationRequestWithoutConfirm will take care of sending response depending on the type of conversation, if needed
+      await handleAcceptConversationRequestWithoutConfirm({
         convoId: this.id,
         approvalMessageTimestamp: NetworkTime.now() - 100,
       });
@@ -814,7 +820,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
   /**
    * When you have accepted another users message request
-   * Note: you shouldn't need to use this directly. Instead use `handleAcceptConversationRequest()`
+   * Note: you shouldn't need to use this directly. Instead use `handleAcceptConversationRequestWithoutConfirm()`
    */
   public async addOutgoingApprovalMessage(timestamp: number) {
     const msg = await this.addSingleOutgoingMessage({
@@ -846,7 +852,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
   /**
    * Sends an accepted message request response to a private chat
    * Currently, we never send anything for denied message requests.
-   * Note: you shouldn't need to use this directly. Instead use `handleAcceptConversationRequest()`
+   * Note: you shouldn't need to use this directly. Instead use `handleAcceptConversationRequestWithoutConfirm()`
    */
   public async sendMessageRequestResponse(msg: MessageModel) {
     if (!this.isPrivate()) {
@@ -857,9 +863,10 @@ export class ConversationModel extends Model<ConversationAttributes> {
       utf16: undefined,
     });
     const messageRequestResponseParams: MessageRequestResponseParams = {
-      createAtNetworkTimestamp: NetworkTime.now(),
+      createAtNetworkTimestamp: msg.get('sent_at') ?? NetworkTime.now(),
       userProfile: await UserUtils.getOurProfile(),
       outgoingProMessageDetails,
+      dbMessageIdentifier: msg.id,
     };
 
     await msg.applyProFeatures(outgoingProMessageDetails);
@@ -997,6 +1004,14 @@ export class ConversationModel extends Model<ConversationAttributes> {
       await this.commit();
 
       return;
+    }
+
+    // await messageModel.commit();
+    if (quote) {
+      await pushQuotedMessageToStoreIfNeeded({
+        author: quote.author,
+        id: quote.timestamp,
+      });
     }
 
     this.setLastMessage(messageModel.getNotificationText());
@@ -1174,7 +1189,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     message.setExpireTimer(expireTimer);
 
     if (!message.id) {
-      message.setId(v4());
+      message.setId(uuidV4());
     }
 
     if (this.isActive()) {
@@ -1222,8 +1237,8 @@ export class ConversationModel extends Model<ConversationAttributes> {
     // Below is the "sending the update to the conversation" part.
     // We would have returned if that message sending part was not needed
     //
-    const expireUpdate = {
-      identifier: message.id,
+    const expireUpdate: ExpirationTimerUpdateMessageParams = {
+      dbMessageIdentifier: message.id,
       createAtNetworkTimestamp,
       expirationType,
       expireTimer,
@@ -1272,7 +1287,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
             typeOfChange: SignalService.GroupUpdateInfoChangeMessage.Type.DISAPPEARING_MESSAGES,
             ...expireUpdate,
             groupPk: this.id,
-            identifier: message.id,
+            dbMessageIdentifier: message.id,
             sodium: await getSodiumRenderer(),
             secretKey: group.secretKey,
             updatedExpirationSeconds: expireUpdate.expireTimer,
@@ -1419,6 +1434,8 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
     // otherwise, do it the slow and expensive way
     await this.markConversationReadBouncy({ newestUnreadDate: Date.now() });
+    await this.markAsUnread(false, false);
+    await this.commit();
   }
 
   public getUsInThatConversation() {
@@ -1443,6 +1460,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     const receiptMessage = new ReadReceiptMessage({
       createAtNetworkTimestamp: NetworkTime.now(),
       timestamps,
+      dbMessageIdentifier: uuidV4(),
     });
 
     const device = new PubKey(this.id);
@@ -2226,11 +2244,9 @@ export class ConversationModel extends Model<ConversationAttributes> {
       const mentions = text?.match(regex) || ([] as Array<string>);
       const mentionMe = mentions && mentions.some(m => isUsAnySogsFromCache(m.slice(1)));
 
-      const quotedMessageAuthor = message.get('quote')?.author;
+      const quotedMessageAuthorIsUs = await message.getQuotedMessageAuthorIsUs();
 
-      const isReplyToOurMessage =
-        quotedMessageAuthor && UserUtils.isUsFromCache(quotedMessageAuthor);
-      if (!mentionMe && !isReplyToOurMessage) {
+      if (!mentionMe && !quotedMessageAuthorIsUs) {
         window?.log?.info(
           'notifications disabled for non mentions or reply for convo',
           conversationId
@@ -2394,7 +2410,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
       // an OpenGroupV2 message is just a visible message
       const chatMessageParams: VisibleMessageParams = {
         body,
-        identifier: id,
+        dbMessageIdentifier: id,
         createAtNetworkTimestamp: networkTimestamp,
         attachments,
         expirationType: message.getExpirationType() ?? 'unknown', // Note we assume that the caller used a setting allowed for that conversation when building it. Here we just send it.
@@ -2413,10 +2429,10 @@ export class ConversationModel extends Model<ConversationAttributes> {
         return;
       }
 
-      // handleAcceptConversationRequest will take care of sending response depending on the type of conversation
-      await handleAcceptConversationRequest({
+      // handleAcceptConversationRequestWithoutConfirm will take care of sending response depending on the type of conversation
+      await handleAcceptConversationRequestWithoutConfirm({
         convoId: this.id,
-        approvalMessageTimestamp: NetworkTime.now() - 100,
+        approvalMessageTimestamp: networkTimestamp - 100,
       });
 
       if (this.isOpenGroupV2()) {
@@ -2457,7 +2473,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
         if (communityInvitation && communityInvitation.url) {
           const communityInviteMessage = new CommunityInvitationMessage({
-            identifier: id,
+            dbMessageIdentifier: id,
             createAtNetworkTimestamp: networkTimestamp,
             name: communityInvitation.name,
             url: communityInvitation.url,
@@ -2567,9 +2583,9 @@ export class ConversationModel extends Model<ConversationAttributes> {
     if (!encryptedData[0]) {
       throw new Error('MultiEncryptWrapperActions.encryptForCommunityInbox failed');
     }
-    if (!messageParams.identifier) {
+    if (!messageParams.dbMessageIdentifier) {
       throw new Error(
-        'MultiEncryptWrapperActions.encryptForCommunityInbox messageParams needs an identifier'
+        'MultiEncryptWrapperActions.encryptForCommunityInbox messageParams needs a dbMessageIdentifier'
       );
     }
 
@@ -2868,6 +2884,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
       createAtNetworkTimestamp: NetworkTime.now(),
       isTyping,
       typingTimestamp: NetworkTime.now(),
+      dbMessageIdentifier: uuidV4(),
     };
     const typingMessage = new TypingMessage(typingParams);
 
@@ -2936,56 +2953,62 @@ export class ConversationModel extends Model<ConversationAttributes> {
   }
 
   private async getQuoteAttachment(attachments: any, preview: any) {
-    if (attachments?.length) {
-      return Promise.all(
-        attachments
-          .filter(
-            (attachment: any) =>
-              attachment && attachment.contentType && !attachment.pending && !attachment.error
-          )
-          .slice(0, 1)
-          .map(async (attachment: any) => {
-            const { fileName, thumbnail, contentType } = attachment;
+    try {
+      if (attachments?.length) {
+        // Note: the await is needed for the catch to work
+        return await Promise.all(
+          attachments
+            .filter(
+              (attachment: any) =>
+                attachment && attachment.contentType && !attachment.pending && !attachment.error
+            )
+            .slice(0, 1)
+            .map(async (attachment: any) => {
+              const { fileName, thumbnail, contentType } = attachment;
 
-            return {
-              contentType,
-              // Our proto library complains about this field being undefined, so we
-              //   force it to null
-              fileName: fileName || null,
-              thumbnail: attachment?.thumbnail?.path // loadAttachmentData throws if the thumbnail.path is not set
-                ? {
-                    ...(await loadAttachmentData(thumbnail)),
-                    objectUrl: getAbsoluteAttachmentPath(thumbnail.path),
-                  }
-                : null,
-            };
-          })
-      );
-    }
+              return {
+                contentType,
+                // Our proto library complains about this field being undefined, so we
+                //   force it to null
+                fileName: fileName || null,
+                thumbnail: attachment?.thumbnail?.path // loadAttachmentData throws if the thumbnail.path is not set
+                  ? {
+                      ...(await loadAttachmentData(thumbnail)),
+                      objectUrl: getAbsoluteAttachmentPath(thumbnail.path),
+                    }
+                  : null,
+              };
+            })
+        );
+      }
 
-    if (preview?.length) {
-      return Promise.all(
-        preview
-          .filter((attachment: any) => attachment?.image?.path) // loadAttachmentData throws if the image.path is not set
-          .slice(0, 1)
-          .map(async (attachment: any) => {
-            const { image } = attachment;
-            const { contentType } = image;
+      if (preview?.length) {
+        // Note: the await is needed for the catch to work
+        return await Promise.all(
+          preview
+            .filter((attachment: any) => attachment?.image?.path) // loadAttachmentData throws if the image.path is not set
+            .slice(0, 1)
+            .map(async (attachment: any) => {
+              const { image } = attachment;
+              const { contentType } = image;
 
-            return {
-              contentType,
-              // Our proto library complains about this field being undefined, so we
-              //   force it to null
-              fileName: null,
-              thumbnail: image
-                ? {
-                    ...(await loadAttachmentData(image)),
-                    objectUrl: getAbsoluteAttachmentPath(image.path),
-                  }
-                : null,
-            };
-          })
-      );
+              return {
+                contentType,
+                // Our proto library complains about this field being undefined, so we
+                //   force it to null
+                fileName: null,
+                thumbnail: image
+                  ? {
+                      ...(await loadAttachmentData(image)),
+                      objectUrl: getAbsoluteAttachmentPath(image.path),
+                    }
+                  : null,
+              };
+            })
+        );
+      }
+    } catch (e) {
+      window.log.warn('getQuoteAttachment failed with', e.message);
     }
 
     return [];

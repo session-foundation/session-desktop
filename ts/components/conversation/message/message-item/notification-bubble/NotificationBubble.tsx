@@ -5,7 +5,7 @@ import { LucideIcon } from '../../../../icon/LucideIcon';
 
 const NotificationBubbleFlex = styled.div`
   display: flex;
-  background: var(--message-bubbles-received-background-color);
+  background: var(--message-bubble-incoming-background-color);
   color: var(--text-primary-color);
   width: 90%;
   max-width: 700px;

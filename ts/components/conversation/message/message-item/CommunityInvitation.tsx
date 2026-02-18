@@ -16,15 +16,15 @@ import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 import { tr } from '../../../../localization/localeTools';
 
 const StyledCommunityInvitation = styled.div`
-  background-color: var(--message-bubbles-received-background-color);
+  background-color: var(--message-bubble-incoming-background-color);
 
   &.invitation-outgoing {
-    background-color: var(--message-bubbles-sent-background-color);
+    background-color: var(--message-bubble-outgoing-background-color);
     align-self: flex-end;
 
     .contents {
       .group-details {
-        color: var(--message-bubbles-sent-text-color);
+        color: var(--message-bubble-outgoing-text-color);
       }
       .session-icon-button {
         background-color: var(--transparent-color);
@@ -55,7 +55,7 @@ const StyledCommunityInvitation = styled.div`
     .group-details {
       display: inline-flex;
       flex-direction: column;
-      color: var(--message-bubbles-received-text-color);
+      color: var(--message-bubble-incoming-text-color);
 
       padding: 0px 12px;
       .group-name {
@@ -119,8 +119,8 @@ export const CommunityInvitation = ({ messageId }: WithMessageId) => {
             <SessionLucideIconButton
               iconColor={
                 messageDirection === 'outgoing'
-                  ? 'var(--message-bubbles-sent-text-color)'
-                  : 'var(--message-bubbles-received-text-color)'
+                  ? 'var(--message-bubble-outgoing-text-color)'
+                  : 'var(--message-bubble-incoming-text-color)'
               }
               unicode={LUCIDE_ICONS_UNICODE.GLOBE}
               iconSize={'large'}

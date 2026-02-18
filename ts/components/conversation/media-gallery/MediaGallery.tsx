@@ -5,6 +5,7 @@ import { MediaItemType } from '../../lightbox/LightboxGallery';
 import { AttachmentSection } from './AttachmentSection';
 import { EmptyState } from './EmptyState';
 import { tr } from '../../../localization/localeTools';
+import { createButtonOnKeyDownForClickEventHandler } from '../../../util/keyboardShortcuts';
 
 type Props = {
   documents: Array<MediaItemType>;
@@ -79,8 +80,15 @@ const Tab = ({
   label: string;
   onSelect: () => void;
 }) => {
+  const onKeyDown = createButtonOnKeyDownForClickEventHandler(onSelect);
   return (
-    <StyledMediaGalleryTab $active={isSelected} onClick={onSelect} role="tab">
+    <StyledMediaGalleryTab
+      $active={isSelected}
+      onClick={onSelect}
+      role="tab"
+      tabIndex={0}
+      onKeyDown={onKeyDown}
+    >
       {label}
     </StyledMediaGalleryTab>
   );

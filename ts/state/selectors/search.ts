@@ -17,6 +17,9 @@ export const getSearch = (state: StateType): SearchStateType => state.search;
 
 export const getQuery = (state: StateType): string => getSearch(state).query;
 
+export const getRequestedSnippetIds = (state: StateType): Array<string> =>
+  getSearch(state).requestedSnippetIds;
+
 const getIsSearching = (state: StateType) => {
   return !!getSearch(state)?.query?.trim();
 };
@@ -25,9 +28,13 @@ const getSearchResults = createSelector(
   [getSearch, getConversationLookup],
   (searchState: SearchStateType, lookup: ConversationLookupType) => {
     return {
-      contactsAndGroups: compact(
-        searchState.contactsAndGroups
+      searchResultContactsAndGroups: compact(
+        searchState.searchResultContactsAndGroups
           .filter(id => {
+            // Note, if the user is searching for themselves, we always want to show it
+            if (id === UserUtils.getOurPubKeyStrFromCache()) {
+              return true;
+            }
             const value = lookup[id];
 
             // on some edges cases, we have an id but no corresponding convo because it matches a query but the conversation was removed.
@@ -41,7 +48,7 @@ const getSearchResults = createSelector(
           })
           .map(id => lookup[id])
       ),
-      messages: compact(searchState.messages),
+      searchResultMessages: searchState.searchResultMessages ?? [],
       searchTerm: searchState.query,
       searchType: searchState.searchType,
     };
@@ -62,13 +69,16 @@ export const useSearchTermForType = (searchType: SearchType) => {
 export const getSearchResultsIdsOnly = createSelector([getSearchResults], searchState => {
   return {
     ...searchState,
-    contactsAndGroupsIds: searchState.contactsAndGroups.map(m => m.id),
+    searchResultContactsAndGroupsIds: searchState.searchResultContactsAndGroups.map(m => m.id),
   };
 });
 
 const getHasSearchResults = (state: StateType) => {
   const searchState = getSearch(state);
-  return !isEmpty(searchState.contactsAndGroups) || !isEmpty(searchState.messages);
+  return (
+    !isEmpty(searchState.searchResultContactsAndGroups) ||
+    !isEmpty(searchState.searchResultMessages)
+  );
 };
 
 const getSearchType = (state: StateType) => {
@@ -83,7 +93,7 @@ export const useHasSearchResultsForSearchType = (searchType: SearchType) => {
 };
 
 export const getSearchResultsContactOnly = createSelector([getSearchResults], searchState => {
-  return searchState.contactsAndGroups.filter(m => m.isPrivate).map(m => m.id);
+  return searchState.searchResultContactsAndGroups.filter(m => m.isPrivate).map(m => m.id);
 });
 
 /**
@@ -98,11 +108,11 @@ export type SearchResultsMergedListItem =
   | MessageResultProps;
 
 export const getSearchResultsList = createSelector([getSearchResults], searchState => {
-  const { contactsAndGroups, messages } = searchState;
+  const { searchResultContactsAndGroups, searchResultMessages } = searchState;
   const builtList = [];
 
-  if (contactsAndGroups.length) {
-    const contactsWithNameAndType = contactsAndGroups.map(m => ({
+  if (searchResultContactsAndGroups.length) {
+    const contactsWithNameAndType = searchResultContactsAndGroups.map(m => ({
       contactConvoId: m.id,
       displayName: m.nickname || m.displayNameInProfile,
       type: m.type,
@@ -137,9 +147,9 @@ export const getSearchResultsList = createSelector([getSearchResults], searchSta
     builtList.unshift(tr('sessionConversations'));
   }
 
-  if (messages.length) {
+  if (searchResultMessages.length) {
     builtList.push(tr('messages'));
-    builtList.push(...messages);
+    builtList.push(...searchResultMessages);
   }
 
   return builtList;

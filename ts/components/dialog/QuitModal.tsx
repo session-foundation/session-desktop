@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import useKey from 'react-use/lib/useKey';
 import { getAppDispatch } from '../../state/dispatch';
 import { updateQuitModal, type QuitModalProps } from '../../state/onboarding/ducks/modals';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
@@ -44,10 +43,6 @@ export const QuitModal = (props: QuitModalProps) => {
   const onClickClose = () => {
     dispatch(updateQuitModal(null));
   };
-
-  useKey('Enter', () => {
-    void onClickOkHandler();
-  });
 
   return (
     <SessionWrapperModal

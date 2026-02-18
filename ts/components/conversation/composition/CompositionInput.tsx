@@ -15,6 +15,7 @@ import { isUndefined } from 'lodash';
 import { useDebouncedSpellcheck } from '../../../hooks/useDebouncedSpellcheck';
 import { useDebouncedSelectAllOnTripleClickHandler } from '../../../hooks/useDebouncedSelectAllOnTripleClickHandler';
 import { useHistory } from '../../../hooks/useHistory';
+import { focusVisibleDisabled } from '../../../styles/focusVisible';
 
 enum DATA_ATTRIBUTE {
   NODE = 'data-con-node',
@@ -72,7 +73,7 @@ function setCaretAtHtmlIndex(el: HTMLElement, idx: number) {
     }
     marker.parentNode?.removeChild(marker);
   }
-  el.focus();
+  refocus(el);
 }
 
 /**
@@ -170,8 +171,12 @@ function replaceCaret(el: HTMLElement) {
       sel.removeAllRanges();
       sel.addRange(range);
     }
-    el.focus();
+    refocus(el);
   }
+}
+
+function refocus(el: HTMLElement) {
+  el.focus();
 }
 
 function ConSpan(props: ConvoSpanProps) {
@@ -236,7 +241,6 @@ export type ContentEditableEvent = ContentEditableEventWithoutTarget & {
 };
 
 export interface CompositionInputRef {
-  /** Focus the input */
   focus: () => void;
   getCaretCoordinates: () => { left: number; top: number } | null;
   /**
@@ -940,6 +944,9 @@ const CompositionInput = styled(UnstyledCompositionInput)<{
     color: var(--text-secondary-color);
     font-size: inherit;
   }
+
+  // the caret is already there to say that this is focused
+  ${focusVisibleDisabled()}
 `;
 
 export default CompositionInput;

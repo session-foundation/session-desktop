@@ -1,3 +1,4 @@
+import { focusVisibleOutlineStr } from '../../../styles/focusVisible';
 import { AvatarSize } from '../../avatar/Avatar';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 import { SessionLucideIconButton } from '../../icon/SessionIconButton';
@@ -22,13 +23,15 @@ export function AvatarQrCodeButton({
       onClick={onQRClick}
       backgroundColor="var(--primary-color)"
       padding="var(--margins-xs)"
+      // outline because this button has a boxShadow (see below)
+      focusVisibleEffect={focusVisibleOutlineStr()}
       style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         borderRadius: '50%',
         transition: 'filter var(--default-duration)',
-        boxShadow: '0px 0px 3px 2px var(--border-color)',
+        boxShadow: '0px 0px 3px 2px var(--borders-color)',
 
         ...hardcodedPosition,
       }}

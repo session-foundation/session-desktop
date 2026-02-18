@@ -10,6 +10,9 @@ import { AriaLabels } from '../../../util/hardcodedAriaLabels';
 import { PlayButtonCenteredAbsolute } from '../../buttons/PlayButton';
 import { LucideIcon } from '../../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
+import { createButtonOnKeyDownForClickEventHandler } from '../../../util/keyboardShortcuts';
+import { getAppDispatch } from '../../../state/dispatch';
+import { focusVisibleBoxShadowOutset } from '../../../styles/focusVisible';
 
 type Props = {
   mediaItem: MediaItemType;
@@ -22,6 +25,8 @@ const StyledMediaGridItem = styled.div`
   position: relative;
   width: 100%;
   height: 100%;
+
+  ${focusVisibleBoxShadowOutset()}
 `;
 
 const StyledMediaGridItemImage = styled.img`
@@ -61,7 +66,7 @@ const MediaGridItemContent = (props: Props) => {
     if (imageBroken || !srcData) {
       return (
         <LucideIcon
-          iconColor="var(--button-icon-stroke-color)"
+          iconColor="var(--text-secondary-color)"
           iconSize="small"
           unicode={LUCIDE_ICONS_UNICODE.IMAGE}
         />
@@ -81,7 +86,7 @@ const MediaGridItemContent = (props: Props) => {
     if (imageBroken || !srcData) {
       return (
         <LucideIcon
-          iconColor="var(--button-icon-stroke-color)"
+          iconColor="var(--text-secondary-color)"
           iconSize="small"
           unicode={LUCIDE_ICONS_UNICODE.CLAPERBOARD}
         />
@@ -105,18 +110,18 @@ const MediaGridItemContent = (props: Props) => {
 };
 
 export const MediaGridItem = (props: Props) => {
-  return (
-    <StyledMediaGridItem
-      role="button"
-      onClick={() => {
-        const lightBoxOptions: LightBoxOptions = {
-          media: props.mediaItems,
-          attachment: props.mediaItem.attachment,
-        };
+  const dispatch = getAppDispatch();
+  const onClick = () => {
+    const lightBoxOptions: LightBoxOptions = {
+      media: props.mediaItems,
+      attachment: props.mediaItem.attachment,
+    };
 
-        window.inboxStore?.dispatch(updateLightBoxOptions(lightBoxOptions));
-      }}
-    >
+    dispatch(updateLightBoxOptions(lightBoxOptions));
+  };
+  const onKeyDown = createButtonOnKeyDownForClickEventHandler(onClick);
+  return (
+    <StyledMediaGridItem role="button" onClick={onClick} tabIndex={0} onKeyDown={onKeyDown}>
       <MediaGridItemContent {...props} />
     </StyledMediaGridItem>
   );

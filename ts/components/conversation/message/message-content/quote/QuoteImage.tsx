@@ -40,7 +40,7 @@ export const QuoteImage = (props: {
   const srcData = !loading ? urlToLoad : '';
 
   return !isEmpty(srcData) && !imageBroken ? (
-    <StyledQuoteImage>
+    <StyledQuoteImage data-testid="quote-image">
       <img
         src={srcData}
         onDragStart={disableDrag}

@@ -23,11 +23,9 @@ import { SettingsPanelButtonInlineBasic } from '../components/SettingsPanelButto
 import { useHideRecoveryPasswordEnabled } from '../../../../state/selectors/settings';
 import { tr } from '../../../../localization/localeTools';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../../../basic/SessionButton';
-import { useHotkey } from '../../../../hooks/useHotkey';
 import { useIconToImageURL } from '../../../../hooks/useIconToImageURL';
 import { usePasswordModal } from '../../../../hooks/usePasswordModal';
 import { mnDecode } from '../../../../session/crypto/mnemonic';
-import { useIsTopModal } from '../../../../state/selectors/modal';
 import { THEME_GLOBALS } from '../../../../themes/globals';
 import { getCurrentRecoveryPhrase } from '../../../../util/storage';
 import { SessionQRCode, type QRCodeLogoProps } from '../../../SessionQRCode';
@@ -68,8 +66,6 @@ export function RecoveryPasswordSettingsPage(modalState: UserSettingsModalState)
   const hexEncodedSeed = mnDecode(recoveryPhrase, 'english');
   const [isQRVisible, setIsQRVisible] = useState(false);
 
-  const isModalVisible = useIsTopModal('userSettingsModal');
-
   const { dataURL, iconSize, iconColor, backgroundColor, loading } = useIconToImageURL(qrLogoProps);
 
   const dispatch = getAppDispatch();
@@ -83,16 +79,6 @@ export function RecoveryPasswordSettingsPage(modalState: UserSettingsModalState)
   if (recoveryPasswordHidden) {
     throw new Error('SettingsCategoryRecoveryPassword recovery password is hidden');
   }
-
-  useHotkey(
-    'v',
-    () => {
-      if (!isModalVisible) {
-        setIsQRVisible(!isQRVisible);
-      }
-    },
-    hasPassword && !passwordValid
-  );
 
   if (hasPassword && !passwordValid) {
     return null;

@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
-import { getAppDispatch } from '../../state/dispatch';
+import useKey from 'react-use/lib/useKey';
 
+import { getAppDispatch } from '../../state/dispatch';
 import { useFocusMount } from '../../hooks/useFocusMount';
 import { useConversationUsernameWithFallback } from '../../hooks/useParamSelector';
 import { ConversationModel } from '../../models/conversation';
@@ -115,9 +116,15 @@ export const BanOrUnBanUserDialog = (props: {
     await banOrUnBanUser(true);
   };
 
+  const startBanSequence = async () => {
+    await banOrUnBanUser(false);
+  };
+
   const onClose = () => {
     dispatch(updateBanOrUnbanUserModal(null));
   };
+
+  useKey('Escape', onClose);
 
   const buttonText = isBan ? tr('banUser') : tr('banUnbanUser');
 
@@ -130,7 +137,7 @@ export const BanOrUnBanUserDialog = (props: {
         <ModalActionsContainer buttonType={SessionButtonType.Simple}>
           <SessionButton
             buttonType={SessionButtonType.Simple}
-            onClick={banOrUnBanUser}
+            onClick={startBanSequence}
             text={buttonText}
             disabled={inProgress}
             buttonColor={isBan && !hasPubkeyOnLoad ? SessionButtonColor.Danger : undefined}
@@ -181,6 +188,7 @@ export const BanOrUnBanUserDialog = (props: {
           // don't do anything on enter as we don't know if the user wants to ban or ban-delete-all
           onEnterPressed={() => {}}
           inputDataTestId={isBan ? 'ban-user-input' : 'unban-user-input'}
+          allowEscapeKeyPassthrough={true}
         />
         <SessionSpinner $loading={inProgress} />
       </ModalFlexContainer>

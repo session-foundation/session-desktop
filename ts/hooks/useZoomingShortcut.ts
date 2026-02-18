@@ -1,6 +1,5 @@
 import useKey from 'react-use/lib/useKey';
 import { ZOOM_FACTOR } from '../session/constants';
-import { isMacOS } from '../OS';
 
 const changeZoom = async (
   change: { typeOfChange: 'delta'; delta: number } | { typeOfChange: 'reset' }
@@ -22,8 +21,8 @@ const changeZoom = async (
 export function useZoomShortcuts() {
   useKey(
     event =>
-      // macos + is accessible through shift only, so we need to allow `=` for macos
-      (event.ctrlKey || event.metaKey) && (event.key === '+' || (isMacOS() && event.key === '=')),
+      // macos and users in general are used to be able to press the non-numeric += to zoom in and -_ to zoom out (without shift being pressed)
+      (event.ctrlKey || event.metaKey) && (event.key === '+' || event.key === '='),
     event => {
       event.preventDefault();
       void changeZoom({ typeOfChange: 'delta', delta: ZOOM_FACTOR.STEP });
@@ -31,7 +30,8 @@ export function useZoomShortcuts() {
   );
 
   useKey(
-    event => (event.ctrlKey || event.metaKey) && event.key === '-', // macos - is accessible without shift
+    // macos and users in general are used to be able to press the non-numeric += to zoom in and -_ to zoom out (without shift being pressed)
+    event => (event.ctrlKey || event.metaKey) && (event.key === '-' || event.key === '_'),
     event => {
       event.preventDefault();
       void changeZoom({ typeOfChange: 'delta', delta: -ZOOM_FACTOR.STEP });

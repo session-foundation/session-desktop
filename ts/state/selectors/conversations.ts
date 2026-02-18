@@ -7,11 +7,9 @@ import { useSelector } from 'react-redux';
 import {
   ConversationLookupType,
   ConversationsStateType,
-  lookupQuote,
+  lookupQuoteInStore,
   MessageModelPropsWithConvoProps,
   MessageModelPropsWithoutConvoProps,
-  PropsForQuote,
-  QuoteLookupType,
   ReduxConversationType,
   SortedMessageModelProps,
   type PropsForMessageWithoutConvoProps,
@@ -42,6 +40,7 @@ import { getModeratorsOutsideRedux, useModerators } from './sogsRoomInfo';
 import type { SessionSuggestionDataItem } from '../../components/conversation/composition/types';
 import { useIsPublic, useWeAreAdmin } from '../../hooks/useParamSelector';
 import { tr } from '../../localization/localeTools';
+import type { QuoteProps } from '../../components/conversation/message/message-content/quote/Quote';
 
 export const getConversations = (state: StateType): ConversationsStateType => state.conversations;
 
@@ -74,8 +73,8 @@ export function usePinnedConversationsCount() {
   return useSelector(getPinnedConversationsCount);
 }
 
-const getConversationQuotes = (state: StateType): QuoteLookupType | undefined => {
-  return state.conversations.quotes;
+const getConversationQuotes = (state: StateType) => {
+  return state.conversations.quotedMessages;
 };
 
 export const getOurPrimaryConversation = createSelector(
@@ -124,7 +123,7 @@ export const hasSelectedConversationOutgoingMessages = createSelector(
   }
 );
 
-export const getFirstUnreadMessageId = (state: StateType): string | undefined => {
+export const getFirstUnreadMessageId = (state: StateType): string | null => {
   return state.conversations.firstUnreadMessageId;
 };
 
@@ -534,6 +533,12 @@ export const getSelectedMessageIds = (state: StateType): Array<string> =>
 export const getIsMessageSelectionMode = (state: StateType): boolean =>
   Boolean(getSelectedMessageIds(state).length);
 
+export const getFocusedMessageId = (state: StateType): string | null =>
+  state.conversations.focusedMessageId;
+
+export const getIsCompositionTextAreaFocused = (state: StateType): boolean =>
+  state.conversations.isCompositionTextAreaFocused;
+
 export const getQuotedMessage = (state: StateType): ReplyingToMessageProps | undefined =>
   state.conversations.quotedMessage;
 
@@ -554,6 +559,14 @@ export const getNextMessageToPlayId = (state: StateType): string | undefined =>
 
 export const getMentionsInput = (state: StateType): Array<SessionSuggestionDataItem> =>
   state.conversations.mentionMembers;
+
+export function useFocusedMessageId() {
+  return useSelector(getFocusedMessageId);
+}
+
+export function useIsCompositionTextAreaFocused() {
+  return useSelector(getIsCompositionTextAreaFocused);
+}
 
 /**
  * Returns true if the props are not corresponding to a visible message.
@@ -665,10 +678,6 @@ export const getYoungestMessageId = createSelector(
 
 function getMessagesFromState(state: StateType) {
   return state.conversations.messages;
-}
-
-export function getLoadedMessagesLength(state: StateType) {
-  return getMessagesFromState(state).length;
 }
 
 export function useSelectedHasMessages(): boolean {
@@ -807,33 +816,62 @@ export const getMessageReactsProps = createSelector(
   }
 );
 
+function quoteNotFoundWithDetails(author: string, timestamp: number) {
+  return {
+    referencedMessageNotFound: true as const,
+    timestamp,
+    author,
+  };
+}
+
+type QuotePropsAlwaysThere = Pick<QuoteProps, 'author'> & {
+  /**
+   *  this is the quoted message timestamp
+   */
+  timestamp: number;
+};
+
+type QuotePropsNotFound = QuotePropsAlwaysThere & {
+  referencedMessageNotFound: true;
+};
+type QuotePropsFound = QuotePropsAlwaysThere & {
+  referencedMessageNotFound: false;
+  id: string;
+  convoId: string;
+} & Pick<QuoteProps, 'isFromMe' | 'text' | 'attachment'>;
+
 export const getMessageQuoteProps = createSelector(
   getConversationLookup,
-  getMessagesOfSelectedConversation,
   getConversationQuotes,
   getMessagePropsByMessageId,
   (
     conversationLookup,
-    messagesProps,
-    quotesProps,
+    quotesInStore,
     msgGlobalProps
-  ): { quote: PropsForQuote } | undefined => {
+  ): QuotePropsNotFound | QuotePropsFound | null => {
     if (!msgGlobalProps || isEmpty(msgGlobalProps)) {
-      return undefined;
+      return null;
     }
 
     const msgProps = msgGlobalProps.propsForMessage;
 
     if (!msgProps.quote || isEmpty(msgProps.quote)) {
-      return undefined;
+      return null;
     }
 
-    const { id } = msgProps.quote;
+    const { timestamp } = msgProps.quote;
     let { author } = msgProps.quote;
 
-    if (!id || !author) {
-      return undefined;
+    if (!timestamp) {
+      return null;
     }
+
+    // NOTE: if the message is not found, we still want to render the quote
+
+    const { foundProps } = lookupQuoteInStore({
+      timestamp: toNumber(timestamp),
+      quotedMessagesInStore: quotesInStore,
+    });
 
     const isFromMe = isUsAnySogsFromCache(author) || false;
 
@@ -842,38 +880,24 @@ export const getMessageQuoteProps = createSelector(
       author = UserUtils.getOurPubKeyStrFromCache();
     }
 
-    // NOTE: if the message is not found, we still want to render the quote
-    const quoteNotFound = {
-      quote: {
-        id,
-        author,
-        isFromMe,
-        referencedMessageNotFound: true,
-      },
-    };
-
-    if (!quotesProps || isEmpty(quotesProps)) {
-      return quoteNotFound;
+    if (!foundProps) {
+      return quoteNotFoundWithDetails(author, timestamp);
     }
 
-    const sourceMessage = lookupQuote(quotesProps, messagesProps, toNumber(id), author);
-    if (!sourceMessage) {
-      return quoteNotFound;
-    }
-
-    const sourceMsgProps = sourceMessage.propsForMessage;
+    const sourceMsgProps = foundProps.propsForMessage;
     if (!sourceMsgProps || sourceMsgProps.isDeleted) {
-      return quoteNotFound;
+      return quoteNotFoundWithDetails(author, timestamp);
     }
 
     const convo = conversationLookup[sourceMsgProps.convoId];
+
     if (!convo) {
-      return quoteNotFound;
+      return quoteNotFoundWithDetails(author, timestamp);
     }
 
     const attachment = sourceMsgProps.attachments && sourceMsgProps.attachments[0];
 
-    const quote: PropsForQuote = {
+    return {
       text: sourceMsgProps.text,
       attachment: attachment ? processQuoteAttachment(attachment) : undefined,
       isFromMe,
@@ -881,10 +905,7 @@ export const getMessageQuoteProps = createSelector(
       id: sourceMsgProps.id,
       referencedMessageNotFound: false,
       convoId: convo.id,
-    };
-
-    return {
-      quote,
+      timestamp: toNumber(timestamp),
     };
   }
 );
