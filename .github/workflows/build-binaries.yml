@@ -167,6 +167,9 @@ jobs:
         if: ${{ matrix.is_qa == true }}
         uses: ./actions/sed_for_qa
 
+      - name: Custom build for QA if needed
+        uses: ./actions/enforce_static_builds
+
       - name: Build
         run: pnpm run build
 
