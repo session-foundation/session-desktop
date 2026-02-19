@@ -20,11 +20,11 @@ jobs:
           submodules: true
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Update submodule to latest feature/update-crowdin-translations
+      - name: Update submodule to latest main
         run: |
           cd ts/localization
-          git fetch origin feature/update-crowdin-translations
-          git checkout origin/feature/update-crowdin-translations
+          git fetch origin main
+          git checkout FETCH_HEAD
           cd ../..
 
       - name: Check for changes
