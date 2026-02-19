@@ -13,7 +13,7 @@ runs:
         fi
 
         if ! find . -name 'libsession_util_nodejs.node' | grep -q .; then
-            echo -e "\n\n\n\n\e[31;1mNo libsession_util_nodejs.node file found\e[0m\n\n\n"
+            echo -e "\nNo libsession_util_nodejs.node file found\n"
             exit 1
         fi
 
@@ -25,24 +25,27 @@ runs:
         bad=
 
         while IFS= read -r node_file; do
+            echo "--- Checking: $node_file ---"
             if [ "$RUNNER_OS" == "macOS" ]; then
+                otool -L "$node_file"
                 if otool -L "$node_file" | \
-                    grep -Ev '^.*\.node:|^\t(/usr/lib/lib(System\.|c\+\+|objc))|/System/Library/Frameworks/(CoreFoundation|NetworkExtension|Foundation|Network)\.framework'; then
+                    grep -Ev '\.node:|@rpath/libsession_util_nodejs|/usr/lib/libc\+\+|/usr/lib/libSystem'; then
                     bad=1
                 fi
             elif [ "$RUNNER_OS" == "Linux" ]; then
-                if ldd "$node_file" | grep -Ev '(linux-vdso|ld-linux-(x86-64|armhf|aarch64)|lib(pthread|dl|rt|stdc\+\+|gcc_s|c|m))\.so'; then
+                ldd "$node_file"
+                if ldd "$node_file" | grep -Ev 'linux-vdso|ld-linux|libstdc\+\+|libgcc_s|libc\.so|libm\.so'; then
                     bad=1
                 fi
             else
-                echo -e "\n\n\n\n\e[31;1mDon't know how to check linked libs on $RUNNER_OS\e[0m\n\n\n"
+                echo -e "\nDon't know how to check linked libs on $RUNNER_OS\n"
                 exit 1
             fi
         done < <(find . -name 'libsession_util_nodejs.node')
 
         if [ -n "$bad" ]; then
-            echo -e "\n\n\n\n\e[31;1mlibsession-util-nodejs links to unexpected libraries\e[0m\n\n\n"
+            echo -e "\nlibsession-util-nodejs links to unexpected libraries\n"
             exit 1
         fi
 
-        echo -e "\n\n\n\n\e[32;1mNo unexpected linked libraries found\e[0m\n\n\n"
+        echo -e "\nNo unexpected linked libraries found\n"
