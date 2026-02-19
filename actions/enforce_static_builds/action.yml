@@ -34,7 +34,7 @@ runs:
                 fi
             elif [ "$RUNNER_OS" == "Linux" ]; then
                 ldd "$node_file"
-                if ldd "$node_file" | grep -Ev 'linux-vdso|ld-linux|libstdc\+\+|libgcc_s|libc\.so|libm\.so'; then
+                if ldd "$node_file" | grep -Ev '(linux-vdso\.so\.[0-9]+|ld-linux-(x86-64|armhf|aarch64)\.so\.[0-9]+|lib(stdc\+\+|gcc_s|c|m)\.so\.[0-9]+)'; then
                     bad=1
                 fi
             else
