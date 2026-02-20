@@ -7,7 +7,13 @@
 
 export type PasswordAction = 'set' | 'change' | 'remove';
 
-export type ProNonOriginatingPageVariant = 'upgrade' | 'update' | 'cancel' | 'refund' | 'renew';
+export type ProNonOriginatingPageVariant =
+  | 'upgrade'
+  | 'update'
+  | 'cancel'
+  | 'refund'
+  | 'refundRequested'
+  | 'renew';
 
 export type EditProfilePictureModalProps = {
   conversationId: string;
