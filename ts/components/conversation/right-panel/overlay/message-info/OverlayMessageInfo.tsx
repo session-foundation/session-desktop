@@ -17,12 +17,10 @@ import {
   replyToMessage,
   resendMessage,
 } from '../../../../../interactions/conversationInteractions';
-import { deleteMessagesById } from '../../../../../interactions/conversations/unsendingInteractions';
 import {
   useMessageAttachments,
   useMessageBody,
   useMessageDirection,
-  useMessageIsDeletable,
   useMessageQuote,
   useMessageSender,
   useMessageServerTimestamp,
@@ -43,7 +41,6 @@ import { GoogleChrome } from '../../../../../util';
 import { saveAttachmentToDisk } from '../../../../../util/attachment/attachmentsUtil';
 import { SpacerLG, SpacerMD, SpacerXL } from '../../../../basic/Text';
 import { PanelButtonGroup, PanelIconButton } from '../../../../buttons';
-import { Message } from '../../../message/message-item/Message';
 import { AttachmentInfo, MessageInfo } from './components';
 import { AttachmentCarousel } from './components/AttachmentCarousel';
 import { ToastUtils } from '../../../../../session/utils';
@@ -55,6 +52,8 @@ import { tr } from '../../../../../localization/localeTools';
 import { AppDispatch } from '../../../../../state/createStore';
 import { useKeyboardShortcut } from '../../../../../hooks/useKeyboardShortcut';
 import { KbdShortcut } from '../../../../../util/keyboardShortcuts';
+import { useDeleteMessagesCb } from '../../../../menuAndSettingsHooks/useDeleteMessagesCb';
+import { GenericReadableMessage } from '../../../message/message-item/GenericReadableMessage';
 
 // NOTE we override the default max-widths when in the detail isDetailView
 const StyledMessageBody = styled.div`
@@ -87,7 +86,7 @@ const MessageBody = ({
   return (
     <IsDetailMessageViewContext.Provider value={true}>
       <StyledMessageBody>
-        <Message messageId={messageId} />
+        <GenericReadableMessage messageId={messageId} />
       </StyledMessageBody>
     </IsDetailMessageViewContext.Provider>
   );
@@ -253,7 +252,6 @@ function useMessageId() {
 // NOTE: [react-compiler] this has to live here for the hook to be identified as static
 function useMessageDetailsInternal(messageId?: string) {
   const rightOverlayMode = useRightOverlayMode();
-  const isDeletable = useMessageIsDeletable(messageId);
   const direction = useMessageDirection(messageId);
   const timestamp = useMessageTimestamp(messageId);
   const serverTimestamp = useMessageServerTimestamp(messageId);
@@ -267,7 +265,6 @@ function useMessageDetailsInternal(messageId?: string) {
 
   return {
     rightOverlayMode,
-    isDeletable,
     direction,
     timestamp,
     serverTimestamp,
@@ -288,17 +285,20 @@ function useClosePanelIfMessageDeleted(sender?: string) {
   }, [sender, dispatch]);
 }
 
-const useKeyboardShortcutLocal = useKeyboardShortcut;
+const useKeyboardShortcutInternal = useKeyboardShortcut;
+const useDeleteMessagesCbInternal = useDeleteMessagesCb;
+const useSelectedConversationKeyInternal = useSelectedConversationKey;
 
 export const OverlayMessageInfo = () => {
   const dispatch = getAppDispatch();
 
   const messageId = useMessageId();
   const messageInfo = useMessageInfo(messageId);
+  const selectedConversationKey = useSelectedConversationKeyInternal();
+  const deleteMessagesCb = useDeleteMessagesCbInternal(selectedConversationKey);
 
   const {
     rightOverlayMode,
-    isDeletable,
     direction,
     timestamp,
     serverTimestamp,
@@ -310,7 +310,7 @@ export const OverlayMessageInfo = () => {
 
   const closePanelCb = () => closePanel(dispatch);
 
-  useKeyboardShortcutLocal({
+  useKeyboardShortcutInternal({
     shortcut: KbdShortcut.closeRightPanel,
     handler: closePanelCb,
   });
@@ -430,14 +430,14 @@ export const OverlayMessageInfo = () => {
               />
             )}
             {/* Deleting messages sends a "delete message" message so it must be disabled for message requests. */}
-            {isDeletable && !isLegacyGroup && !isIncomingMessageRequest && (
+            {!isLegacyGroup && !isIncomingMessageRequest && deleteMessagesCb && (
               <PanelIconButton
                 text={{ token: 'delete' }}
                 iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.TRASH2} />}
                 color={'var(--danger-color)'}
                 dataTestId="delete-from-details"
                 onClick={() => {
-                  void deleteMessagesById([messageId], convoId);
+                  void deleteMessagesCb?.(messageId);
                 }}
               />
             )}

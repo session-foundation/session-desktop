@@ -13,30 +13,35 @@ import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/S
 import { SessionRadioGroup, SessionRadioItems } from '../basic/SessionRadioGroup';
 import { SessionSpinner } from '../loading';
 import { ModalDescription } from './shared/ModalDescriptionContainer';
-import { tr, type TrArgs } from '../../localization/localeTools';
+import { messageArgsToArgsOnly, tr, type TrArgs } from '../../localization/localeTools';
 import { ModalFlexContainer } from './shared/ModalFlexContainer';
+import { ModalWarning } from './shared/ModalWarning';
 
 export type SessionConfirmDialogProps = {
   i18nMessage?: TrArgs;
-  title?: string;
+  title?: TrArgs;
+  /**
+   * Warning message to display in the modal
+   */
+  warningMessage?: TrArgs;
   radioOptions?: SessionRadioItems;
   onClose?: any;
 
   /**
-   * function to run on ok click. Closes modal after execution by default
-   * sometimes the callback might need arguments when using radioOptions
+   * Callback to run on ok click. Closes modal after execution by default
+   * If we have radioOptions rendered, the args will be the value of the selected radio option
    */
-  onClickOk?: (...args: Array<any>) => Promise<void> | void;
+  onClickOk?: (chosenOptionValue?: string) => Promise<unknown> | unknown;
 
-  onClickClose?: () => any;
+  onClickClose?: () => Promise<unknown> | unknown;
 
   /**
-   * function to run on close click. Closes modal after execution by default
+   * Callback to run on close click. Closes modal after execution by default
    */
-  onClickCancel?: () => any;
+  onClickCancel?: () => Promise<unknown> | unknown;
 
-  okText: string;
-  cancelText?: string;
+  okText: TrArgs;
+  cancelText?: TrArgs;
   hideCancel?: boolean;
   okTheme?: SessionButtonColor;
   /**
@@ -70,8 +75,9 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
     radioOptions?.length ? radioOptions[0].value : ''
   );
 
-  const okText = props.okText;
-  const cancelText = props.cancelText || tr('cancel');
+  const cancelText = props.cancelText
+    ? tr(props.cancelText.token, messageArgsToArgsOnly(props.cancelText))
+    : tr('cancel');
 
   const onClickOkHandler = async () => {
     if (onClickOk) {
@@ -105,20 +111,29 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
    * Performs specified on close action then removes the modal.
    */
   const onClickCancelHandler = () => {
-    onClickCancel?.();
-    onClickClose?.();
+    void onClickCancel?.();
+    void onClickClose?.();
     window.inboxStore?.dispatch(updateConfirmModal(null));
   };
 
   return (
     <SessionWrapperModal
       modalId="confirmModal"
-      headerChildren={title ? <ModalBasicHeader title={title} showExitIcon={showExitIcon} /> : null}
-      onClose={onClickClose}
+      headerChildren={
+        title ? (
+          <ModalBasicHeader
+            title={tr(title.token, messageArgsToArgsOnly(title))}
+            showExitIcon={showExitIcon}
+          />
+        ) : null
+      }
+      onClose={() => {
+        void onClickClose?.();
+      }}
       buttonChildren={
         <ModalActionsContainer buttonType={SessionButtonType.Simple}>
           <SessionButton
-            text={okText}
+            text={tr(props.okText.token, messageArgsToArgsOnly(props.okText))}
             buttonColor={okTheme}
             buttonType={SessionButtonType.Simple}
             fontWeight={500}
@@ -143,6 +158,10 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
       <ModalFlexContainer>
         {i18nMessage ? (
           <ModalDescription dataTestId="modal-description" localizerProps={i18nMessage} />
+        ) : null}
+
+        {props.warningMessage ? (
+          <ModalWarning dataTestId="modal-warning" localizerProps={props.warningMessage} />
         ) : null}
         {radioOptions && chosenOption !== '' ? (
           <SessionRadioGroup

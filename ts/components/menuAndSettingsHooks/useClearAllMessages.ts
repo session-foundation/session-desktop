@@ -95,12 +95,12 @@ export function useClearAllMessagesCb({ conversationId }: { conversationId: stri
   const cb = () =>
     dispatch(
       updateConfirmModal({
-        title: tr('clearMessages'),
+        title: { token: 'clearMessages' },
         i18nMessage,
         onClickOk,
         okTheme: SessionButtonColor.Danger,
         onClickClose,
-        okText: tr('clear'),
+        okText: { token: 'clear' },
         radioOptions: isGroupV2AndAdmin
           ? [
               {

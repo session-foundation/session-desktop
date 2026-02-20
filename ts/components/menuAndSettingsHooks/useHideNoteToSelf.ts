@@ -1,5 +1,4 @@
 import { useIsHidden, useIsMe } from '../../hooks/useParamSelector';
-import { tr } from '../../localization/localeTools';
 import { ConvoHub } from '../../session/conversations';
 import { getAppDispatch } from '../../state/dispatch';
 import { updateConfirmModal } from '../../state/ducks/modalDialog';
@@ -20,8 +19,6 @@ export function useHideNoteToSelfCb({ conversationId }: { conversationId: string
     return null;
   }
 
-  const menuItemText = tr('noteToSelfHide');
-
   const onClickClose = () => {
     dispatch(updateConfirmModal(null));
   };
@@ -29,7 +26,7 @@ export function useHideNoteToSelfCb({ conversationId }: { conversationId: string
   const showConfirmationModal = () => {
     dispatch(
       updateConfirmModal({
-        title: menuItemText,
+        title: { token: 'noteToSelfHide' },
         i18nMessage: { token: 'noteToSelfHideDescription' },
         onClickClose,
         okTheme: SessionButtonColor.Danger,
@@ -41,7 +38,7 @@ export function useHideNoteToSelfCb({ conversationId }: { conversationId: string
           });
           // Note: We don't want to close the modal for the hide NTS action.
         },
-        okText: tr('hide'),
+        okText: { token: 'hide' },
       })
     );
   };

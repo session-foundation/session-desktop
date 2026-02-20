@@ -20,7 +20,7 @@ const acceptOpenGroupInvitationV2 = (completeUrl: string, roomName?: string) => 
 
   window.inboxStore?.dispatch(
     updateConfirmModal({
-      title: tr('communityJoin'),
+      title: { token: 'communityJoin' },
       i18nMessage: {
         token: 'communityJoinDescription',
         community_name: roomName || tr('unknown'),
@@ -30,7 +30,7 @@ const acceptOpenGroupInvitationV2 = (completeUrl: string, roomName?: string) => 
       },
 
       onClickClose,
-      okText: tr('join'),
+      okText: { token: 'join' },
     })
   );
   // this function does not throw, and will showToasts if anything happens

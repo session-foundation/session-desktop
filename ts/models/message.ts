@@ -84,7 +84,7 @@ import { Storage } from '../util/storage';
 import { ConversationModel } from './conversation';
 import { READ_MESSAGE_STATE } from './conversationAttributes';
 import { ConversationInteractionStatus, ConversationInteractionType } from '../interactions/types';
-import { LastMessageStatusType, type PropsForCallNotification } from '../state/ducks/types';
+import { LastMessageStatusType } from '../state/ducks/types';
 import {
   getGroupDisplayPictureChangeStr,
   getGroupNameChangeStr,
@@ -139,39 +139,62 @@ export class MessageModel extends Model<MessageAttributes> {
     const isMessageResponse = this.isMessageRequestResponse();
     const callNotificationType = this.get('callNotificationType');
     const interactionNotification = this.getInteractionNotification();
+    const propsForMessage = this.getPropsForMessage();
+
+    const byType = propsForDataExtractionNotification
+      ? ({
+          messageType: 'data-extraction-notification',
+          propsForDataExtractionNotification,
+          isControlMessage: true,
+        } as const)
+      : propsForCommunityInvitation
+        ? ({
+            messageType: 'community-invitation',
+            propsForCommunityInvitation,
+            isControlMessage: false,
+          } as const)
+        : propsForGroupUpdateMessage
+          ? ({
+              messageType: 'group-update-notification',
+              propsForGroupUpdateMessage,
+              isControlMessage: true,
+            } as const)
+          : propsForTimerNotification
+            ? ({
+                messageType: 'timer-update-notification',
+                propsForTimerNotification,
+                isControlMessage: true,
+              } as const)
+            : callNotificationType
+              ? ({
+                  messageType: 'call-notification',
+                  propsForCallNotification: {
+                    messageId: this.id,
+                    notificationType: callNotificationType,
+                  },
+                  isControlMessage: true,
+                } as const)
+              : interactionNotification
+                ? ({
+                    messageType: 'interaction-notification',
+                    propsForInteractionNotification: { notificationType: interactionNotification },
+                    isControlMessage: true,
+                  } as const)
+                : isMessageResponse
+                  ? ({
+                      messageType: 'message-request-response',
+                      propsForMessageRequestResponse: {},
+                      isControlMessage: true,
+                    } as const)
+                  : ({
+                      messageType: 'regular-message',
+                      isControlMessage: false,
+                    } as const);
 
     const messageProps: MessageModelPropsWithoutConvoProps = {
-      propsForMessage: this.getPropsForMessage(),
+      propsForMessage,
+      ...byType,
     };
-    if (propsForDataExtractionNotification) {
-      messageProps.propsForDataExtractionNotification = propsForDataExtractionNotification;
-    }
-    if (isMessageResponse) {
-      messageProps.propsForMessageRequestResponse = {};
-    }
-    if (propsForCommunityInvitation) {
-      messageProps.propsForCommunityInvitation = propsForCommunityInvitation;
-    }
-    if (propsForGroupUpdateMessage) {
-      messageProps.propsForGroupUpdateMessage = propsForGroupUpdateMessage;
-    }
-    if (propsForTimerNotification) {
-      messageProps.propsForTimerNotification = propsForTimerNotification;
-    }
-
-    if (callNotificationType) {
-      const propsForCallNotification: PropsForCallNotification = {
-        messageId: this.id,
-        notificationType: callNotificationType,
-      };
-      messageProps.propsForCallNotification = propsForCallNotification;
-    }
-
-    if (interactionNotification) {
-      messageProps.propsForInteractionNotification = {
-        notificationType: interactionNotification,
-      };
-    }
 
     return messageProps;
   }
@@ -189,7 +212,9 @@ export class MessageModel extends Model<MessageAttributes> {
       this.isExpirationTimerUpdate() ||
       this.isDataExtractionNotification() ||
       this.isMessageRequestResponse() ||
-      this.isGroupUpdate()
+      this.isGroupUpdate() ||
+      this.isCallNotification() ||
+      this.isInteractionNotification()
     );
   }
 
@@ -890,10 +915,12 @@ export class MessageModel extends Model<MessageAttributes> {
    * Marks the message as deleted to show the author has deleted this message for everyone.
    * Sets isDeleted property to true. Set message body text to deletion placeholder for conversation list items.
    */
-  public async markAsDeleted() {
+  public async markAsDeleted(deletedLocallyOnly: boolean) {
     this.set({
       isDeleted: true,
-      body: tr('deleteMessageDeletedGlobally'),
+      body: deletedLocallyOnly
+        ? tr('deleteMessageDeletedLocally')
+        : tr('deleteMessageDeletedGlobally'),
       quote: undefined,
       groupInvitation: undefined,
       dataExtractionNotification: undefined,
@@ -908,6 +935,8 @@ export class MessageModel extends Model<MessageAttributes> {
       interactionNotification: undefined,
       reaction: undefined,
       messageRequestResponse: undefined,
+      errors: undefined,
+      unread: undefined,
     });
     // we can ignore the result of that markMessageReadNoCommit as it would only be used
     // to refresh the expiry of it(but it is already marked as "deleted", so we don't care)

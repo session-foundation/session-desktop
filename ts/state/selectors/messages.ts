@@ -116,10 +116,6 @@ export const useMessageSenderIsAdmin = (messageId: string | undefined): boolean 
   return useMessagePropsByMessageId(messageId)?.propsForMessage.isSenderAdmin || false;
 };
 
-export const useMessageIsDeletable = (messageId: string | undefined): boolean => {
-  return useMessagePropsByMessageId(messageId)?.propsForMessage.isDeletable || false;
-};
-
 export const useMessageStatus = (
   messageId: string | undefined
 ): LastMessageStatusType | undefined => {
@@ -130,8 +126,8 @@ export function useMessageSender(messageId: string | undefined) {
   return useMessagePropsByMessageId(messageId)?.propsForMessage.sender;
 }
 
-export function useMessageIsDeletableForEveryone(messageId: string | undefined) {
-  return useMessagePropsByMessageId(messageId)?.propsForMessage.isDeletableForEveryone;
+export function useMessageIsControlMessage(messageId: string | undefined) {
+  return useMessagePropsByMessageId(messageId)?.isControlMessage;
 }
 
 export function useMessageServerTimestamp(messageId: string | undefined) {
@@ -178,6 +174,10 @@ export const useMessageServerId = (messageId: string | undefined) => {
   return useMessagePropsByMessageId(messageId)?.propsForMessage.serverId;
 };
 
+export function useMessageType(messageId: string | undefined) {
+  return useMessagePropsByMessageId(messageId)?.messageType;
+}
+
 export const useMessageText = (messageId: string | undefined): string | undefined => {
   return useMessagePropsByMessageId(messageId)?.propsForMessage.text;
 };
@@ -206,18 +206,29 @@ export function useMessageSentWithProFeatures(messageId?: string) {
  *  ==================================================
  */
 
+function useCommunityInvitationProps(messageId: string | undefined) {
+  const props = useMessagePropsByMessageId(messageId);
+  if (!props) {
+    return null;
+  }
+  if (props.messageType !== 'community-invitation') {
+    throw new Error('useCommunityInvitationProps: messageType is not community-invitation');
+  }
+  return props?.propsForCommunityInvitation;
+}
+
 /**
  * Return the full url needed to join a community through a community invitation message
  */
 export function useMessageCommunityInvitationFullUrl(messageId: string) {
-  return useMessagePropsByMessageId(messageId)?.propsForCommunityInvitation?.fullUrl;
+  return useCommunityInvitationProps(messageId)?.fullUrl;
 }
 
 /**
  * Return the community display name to have a guess of what a community is about
  */
 export function useMessageCommunityInvitationCommunityName(messageId: string) {
-  return useMessagePropsByMessageId(messageId)?.propsForCommunityInvitation?.serverName;
+  return useCommunityInvitationProps(messageId)?.serverName;
 }
 
 /**
@@ -230,7 +241,14 @@ export function useMessageCommunityInvitationCommunityName(messageId: string) {
  * Return the call notification type linked to the specified message
  */
 export function useMessageCallNotificationType(messageId: string) {
-  return useMessagePropsByMessageId(messageId)?.propsForCallNotification?.notificationType;
+  const props = useMessagePropsByMessageId(messageId);
+  if (!props) {
+    return null;
+  }
+  if (props.messageType !== 'call-notification') {
+    throw new Error('useCommunityInvitationProps: messageType is not call-notification');
+  }
+  return props.propsForCallNotification?.notificationType;
 }
 
 /**
@@ -243,7 +261,16 @@ export function useMessageCallNotificationType(messageId: string) {
  * Return the data extraction type linked to the specified message
  */
 export function useMessageDataExtractionType(messageId: string) {
-  return useMessagePropsByMessageId(messageId)?.propsForDataExtractionNotification?.type;
+  const props = useMessagePropsByMessageId(messageId);
+  if (!props) {
+    return null;
+  }
+  if (props.messageType !== 'data-extraction-notification') {
+    throw new Error(
+      'useMessageDataExtractionType: messageType is not data-extraction-notification'
+    );
+  }
+  return props?.propsForDataExtractionNotification?.type;
 }
 
 /**
@@ -256,7 +283,14 @@ export function useMessageDataExtractionType(messageId: string) {
  * Return the interaction notification type linked to the specified message
  */
 export function useMessageInteractionNotification(messageId: string) {
-  return useMessagePropsByMessageId(messageId)?.propsForInteractionNotification?.notificationType;
+  const props = useMessagePropsByMessageId(messageId);
+  if (!props) {
+    return null;
+  }
+  if (props.messageType !== 'interaction-notification') {
+    throw new Error('useMessageDataExtractionType: messageType is not interaction-notification');
+  }
+  return props?.propsForInteractionNotification?.notificationType;
 }
 
 /**
@@ -265,11 +299,22 @@ export function useMessageInteractionNotification(messageId: string) {
  *  ================================================
  */
 
+function useExpirationTimerUpdateProps(messageId: string | undefined) {
+  const props = useMessagePropsByMessageId(messageId);
+  if (!props) {
+    return null;
+  }
+  if (props.messageType !== 'timer-update-notification') {
+    throw new Error('useExpirationTimerUpdateProps: messageType is not timer-update-notification');
+  }
+  return props?.propsForTimerNotification;
+}
+
 /**
  * Return the expiration update mode linked to the specified message
  */
 export function useMessageExpirationUpdateMode(messageId: string) {
-  return useMessagePropsByMessageId(messageId)?.propsForTimerNotification?.expirationMode || 'off';
+  return useExpirationTimerUpdateProps(messageId)?.expirationMode || 'off';
 }
 
 /**
@@ -284,14 +329,14 @@ export function useMessageExpirationUpdateDisabled(messageId: string) {
  * Return the timespan in seconds to which this expiration timer update is set
  */
 export function useMessageExpirationUpdateTimespanSeconds(messageId: string) {
-  return useMessagePropsByMessageId(messageId)?.propsForTimerNotification?.timespanSeconds;
+  return useExpirationTimerUpdateProps(messageId)?.timespanSeconds;
 }
 
 /**
  * Return the timespan in text (localised) built from the field timespanSeconds
  */
 export function useMessageExpirationUpdateTimespanText(messageId: string) {
-  return useMessagePropsByMessageId(messageId)?.propsForTimerNotification?.timespanText || '';
+  return useExpirationTimerUpdateProps(messageId)?.timespanText || '';
 }
 
 /**
@@ -304,5 +349,12 @@ export function useMessageExpirationUpdateTimespanText(messageId: string) {
  * Return the group change corresponding to this message's group update
  */
 export function useMessageGroupUpdateChange(messageId: string) {
-  return useMessagePropsByMessageId(messageId)?.propsForGroupUpdateMessage?.change;
+  const props = useMessagePropsByMessageId(messageId);
+  if (!props) {
+    return undefined;
+  }
+  if (props.messageType !== 'group-update-notification') {
+    throw new Error('useExpirationTimerUpdateProps: messageType is not group-update-notification');
+  }
+  return props?.propsForGroupUpdateMessage?.change;
 }

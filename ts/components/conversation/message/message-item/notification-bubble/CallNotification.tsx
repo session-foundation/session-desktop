@@ -5,9 +5,10 @@ import { ExpirableReadableMessage } from '../ExpirableReadableMessage';
 import { NotificationBubble } from './NotificationBubble';
 import { Localizer } from '../../../../basic/Localizer';
 import { MergedLocalizerTokens } from '../../../../../localization/localeTools';
-import type { WithMessageId } from '../../../../../session/types/with';
+import type { WithContextMenuId, WithMessageId } from '../../../../../session/types/with';
 import { useMessageCallNotificationType } from '../../../../../state/selectors';
 import { LUCIDE_ICONS_UNICODE } from '../../../../icon/lucide';
+import type { WithPopoverPosition, WithSetPopoverPosition } from '../../../../SessionTooltip';
 
 type StyleType = Record<
   CallNotificationType,
@@ -32,10 +33,10 @@ const style = {
   },
 } satisfies StyleType;
 
-export const CallNotification = (props: WithMessageId) => {
-  const { messageId } = props;
-
-  const notificationType = useMessageCallNotificationType(messageId);
+export const CallNotification = (
+  props: WithMessageId & WithPopoverPosition & WithSetPopoverPosition & WithContextMenuId
+) => {
+  const notificationType = useMessageCallNotificationType(props.messageId);
 
   const name = useSelectedNicknameOrProfileNameOrShortenedPubkey();
 
@@ -47,10 +48,11 @@ export const CallNotification = (props: WithMessageId) => {
 
   return (
     <ExpirableReadableMessage
-      messageId={messageId}
-      key={`readable-message-${messageId}`}
+      messageId={props.messageId}
+      contextMenuId={props.contextMenuId}
+      setTriggerPosition={props.setTriggerPosition}
+      key={`readable-message-${props.messageId}`}
       dataTestId={`call-notification-${notificationType}`}
-      isControlMessage={true}
     >
       <NotificationBubble unicode={unicode} iconColor={iconColor}>
         {notificationTextKey === 'callsInProgress' ? (

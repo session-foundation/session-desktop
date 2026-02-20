@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
   useEffect,
+  type Dispatch,
 } from 'react';
 import styled, { type CSSProperties } from 'styled-components';
 import useDebounce from 'react-use/lib/useDebounce';
@@ -45,6 +46,11 @@ export type PopoverTriggerPosition = {
   width: number;
   height: number;
   offsetX?: number;
+};
+
+export type WithPopoverPosition = { triggerPosition: PopoverTriggerPosition | null };
+export type WithSetPopoverPosition = {
+  setTriggerPosition: Dispatch<PopoverTriggerPosition | null>;
 };
 
 export const defaultTriggerPos: PopoverTriggerPosition = { x: 0, y: 0, width: 0, height: 0 };

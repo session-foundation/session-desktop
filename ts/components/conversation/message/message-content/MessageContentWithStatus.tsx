@@ -1,43 +1,29 @@
-import { SessionDataTestId, MouseEvent, useCallback, Dispatch } from 'react';
-import { useSelector } from 'react-redux';
+import { MouseEvent, useMemo } from 'react';
 import { clsx } from 'clsx';
 import styled from 'styled-components';
 import { getAppDispatch } from '../../../../state/dispatch';
 import { useIsDetailMessageView } from '../../../../contexts/isDetailViewContext';
-import { MessageRenderingProps } from '../../../../models/messageType';
-import { toggleSelectedMessageId } from '../../../../state/ducks/conversations';
 import { updateReactListModal } from '../../../../state/ducks/modalDialog';
-import { StateType } from '../../../../state/reducer';
-import { useHideAvatarInMsgList, useMessageStatus } from '../../../../state/selectors';
-import { getMessageContentWithStatusesSelectorProps } from '../../../../state/selectors/conversations';
+import {
+  useHideAvatarInMsgList,
+  useMessageDirection,
+  useMessageStatus,
+} from '../../../../state/selectors';
 import { Flex } from '../../../basic/Flex';
 import { ExpirableReadableMessage } from '../message-item/ExpirableReadableMessage';
 import { MessageAuthorText } from './MessageAuthorText';
 import { MessageContent } from './MessageContent';
-import { MessageContextMenu } from './MessageContextMenu';
 import { MessageReactions } from './MessageReactions';
 import { MessageStatus } from './MessageStatus';
 import {
-  useIsMessageSelectionMode,
+  useSelectedConversationKey,
   useSelectedIsLegacyGroup,
 } from '../../../../state/selectors/selectedConversation';
 import { SessionEmojiReactBarPopover } from '../../SessionEmojiReactBarPopover';
-import { PopoverTriggerPosition } from '../../../SessionTooltip';
-import { useMessageInteractions } from '../../../../hooks/useMessageInteractions';
-
-export type MessageContentWithStatusSelectorProps = { isGroup: boolean } & Pick<
-  MessageRenderingProps,
-  'conversationType' | 'direction' | 'isDeleted'
->;
-
-type Props = {
-  messageId: string;
-  ctxMenuID: string;
-  dataTestId: SessionDataTestId;
-  convoReactionsEnabled: boolean;
-  triggerPosition: PopoverTriggerPosition | null;
-  setTriggerPosition: Dispatch<PopoverTriggerPosition | null>;
-};
+import { type WithPopoverPosition, type WithSetPopoverPosition } from '../../../SessionTooltip';
+import { useReactToMessage, useReply } from '../../../../hooks/useMessageInteractions';
+import { ConvoHub } from '../../../../session/conversations';
+import type { WithContextMenuId, WithMessageId } from '../../../../session/types/with';
 
 const StyledMessageContentContainer = styled.div<{ $isIncoming: boolean; $isDetailView: boolean }>`
   display: flex;
@@ -57,40 +43,24 @@ const StyledMessageWithAuthor = styled.div`
   gap: var(--margins-xs);
 `;
 
-export const MessageContentWithStatuses = (props: Props) => {
-  const {
-    messageId,
-    ctxMenuID,
-    dataTestId,
-    convoReactionsEnabled,
-    triggerPosition,
-    setTriggerPosition,
-  } = props;
+export const MessageContentWithStatuses = (
+  props: WithMessageId & WithContextMenuId & WithPopoverPosition & WithSetPopoverPosition
+) => {
+  const { messageId, contextMenuId, triggerPosition, setTriggerPosition } = props;
   const dispatch = getAppDispatch();
-  const contentProps = useSelector((state: StateType) =>
-    getMessageContentWithStatusesSelectorProps(state, messageId)
-  );
-  const { reactToMessage, reply } = useMessageInteractions(messageId);
+  const _direction = useMessageDirection(messageId);
+  const reactToMessage = useReactToMessage(messageId);
+  const reply = useReply(messageId);
   const hideAvatar = useHideAvatarInMsgList(messageId);
   const isDetailView = useIsDetailMessageView();
-  const multiSelectMode = useIsMessageSelectionMode();
   const isLegacyGroup = useSelectedIsLegacyGroup();
-  const status = useMessageStatus(props.messageId);
-  const isSent = status === 'sent' || status === 'read'; // a read message should be reactable
 
-  const onClickOnMessageOuterContainer = useCallback(
-    (event: MouseEvent<HTMLDivElement>) => {
-      if (multiSelectMode && props?.messageId) {
-        event.preventDefault();
-        event.stopPropagation();
-        dispatch(toggleSelectedMessageId(props?.messageId));
-      }
-    },
-    [dispatch, props?.messageId, multiSelectMode]
-  );
+  const status = useMessageStatus(props.messageId);
+  const convoId = useSelectedConversationKey();
+  const isSent = status === 'sent' || status === 'read'; // a read message can be reacted to
 
   const onDoubleClickReplyToMessage = (e: MouseEvent<HTMLDivElement>) => {
-    if (isLegacyGroup) {
+    if (isLegacyGroup || !reply) {
       return;
     }
     const currentSelection = window.getSelection();
@@ -111,17 +81,25 @@ export const MessageContentWithStatuses = (props: Props) => {
     }
   };
 
-  if (!contentProps) {
+  const convoReactionsEnabled = useMemo(() => {
+    if (convoId) {
+      const conversationModel = ConvoHub.use().get(convoId);
+      if (conversationModel) {
+        return conversationModel.hasReactions();
+      }
+    }
+    return true;
+  }, [convoId]);
+
+  if (!messageId) {
     return null;
   }
 
-  const { direction: _direction, isDeleted } = contentProps;
   // NOTE we want messages on the left in the message detail view regardless of direction
   const direction = isDetailView ? 'incoming' : _direction;
   const isIncoming = direction === 'incoming';
 
-  const enableReactions = convoReactionsEnabled && !isDeleted && (isSent || isIncoming);
-  const enableContextMenu = !isDeleted;
+  const enableReactions = convoReactionsEnabled && (isSent || isIncoming);
 
   const handlePopupClick = (emoji: string) => {
     dispatch(
@@ -142,9 +120,10 @@ export const MessageContentWithStatuses = (props: Props) => {
         messageId={messageId}
         className={clsx('module-message', `module-message--${direction}`)}
         role={'button'}
-        onClick={onClickOnMessageOuterContainer}
         onDoubleClickCapture={onDoubleClickReplyToMessage}
-        dataTestId={dataTestId}
+        dataTestId="message-content"
+        contextMenuId={contextMenuId}
+        setTriggerPosition={setTriggerPosition}
       >
         <Flex
           $container={true}
@@ -168,15 +147,8 @@ export const MessageContentWithStatuses = (props: Props) => {
             onClickAwayFromReactionBar={closeReactionBar}
           />
         ) : null}
-        {enableContextMenu ? (
-          <MessageContextMenu
-            messageId={messageId}
-            contextMenuId={ctxMenuID}
-            setTriggerPosition={setTriggerPosition}
-          />
-        ) : null}
       </ExpirableReadableMessage>
-      {!isDetailView && enableReactions ? (
+      {!isDetailView && enableReactions && !!reactToMessage ? (
         <MessageReactions
           messageId={messageId}
           // eslint-disable-next-line @typescript-eslint/no-misused-promises

@@ -10,10 +10,11 @@ import {
   useMessageCommunityInvitationCommunityName,
   useMessageDirection,
 } from '../../../../state/selectors';
-import type { WithMessageId } from '../../../../session/types/with';
+import type { WithContextMenuId, WithMessageId } from '../../../../session/types/with';
 import { SessionLucideIconButton } from '../../../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 import { tr } from '../../../../localization/localeTools';
+import type { WithPopoverPosition, WithSetPopoverPosition } from '../../../SessionTooltip';
 
 const StyledCommunityInvitation = styled.div`
   background-color: var(--message-bubble-incoming-background-color);
@@ -77,12 +78,14 @@ const StyledIconContainer = styled.div`
   border-radius: 100%;
 `;
 
-export const CommunityInvitation = ({ messageId }: WithMessageId) => {
-  const messageDirection = useMessageDirection(messageId);
+export const CommunityInvitation = (
+  props: WithMessageId & WithPopoverPosition & WithSetPopoverPosition & WithContextMenuId
+) => {
+  const messageDirection = useMessageDirection(props.messageId);
   const classes = ['group-invitation'];
 
-  const fullUrl = useMessageCommunityInvitationFullUrl(messageId);
-  const communityName = useMessageCommunityInvitationCommunityName(messageId);
+  const fullUrl = useMessageCommunityInvitationFullUrl(props.messageId);
+  const communityName = useMessageCommunityInvitationCommunityName(props.messageId);
 
   const hostname = useMemo(() => {
     try {
@@ -104,8 +107,10 @@ export const CommunityInvitation = ({ messageId }: WithMessageId) => {
 
   return (
     <ExpirableReadableMessage
-      messageId={messageId}
-      key={`readable-message-${messageId}`}
+      messageId={props.messageId}
+      contextMenuId={props.contextMenuId}
+      setTriggerPosition={props.setTriggerPosition}
+      key={`readable-message-${props.messageId}`}
       dataTestId="control-message"
     >
       <StyledCommunityInvitation

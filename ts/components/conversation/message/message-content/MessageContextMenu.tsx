@@ -13,7 +13,8 @@ import { openRightPanel, showMessageInfoView } from '../../../../state/ducks/con
 import {
   useMessageAttachments,
   useMessageDirection,
-  useMessageIsDeletable,
+  useMessageIsControlMessage,
+  useMessageIsDeleted,
   useMessageSender,
   useMessageSenderIsAdmin,
   useMessageStatus,
@@ -26,7 +27,7 @@ import { SessionContextMenuContainer } from '../../../SessionContextMenuContaine
 import { CopyAccountIdMenuItem } from '../../../menu/items/CopyAccountId/CopyAccountIdMenuItem';
 import { Localizer } from '../../../basic/Localizer';
 import { Menu, MenuItem } from '../../../menu/items/MenuItem';
-import { WithMessageId } from '../../../../session/types/with';
+import { WithMessageId, type WithContextMenuId } from '../../../../session/types/with';
 import { DeleteItem } from '../../../menu/items/DeleteMessage/DeleteMessageMenuItem';
 import { RetryItem } from '../../../menu/items/RetrySend/RetrySendMenuItem';
 import { useBanUserCb } from '../../../menuAndSettingsHooks/useBanUser';
@@ -37,27 +38,17 @@ import { useRemoveSenderFromCommunityAdmin } from '../../../menuAndSettingsHooks
 import { useAddSenderAsCommunityAdmin } from '../../../menuAndSettingsHooks/useAddSenderAsCommunityAdmin';
 import { showContextMenu } from '../../../../util/contextMenu';
 import { clampNumber } from '../../../../util/maths';
-import { PopoverTriggerPosition } from '../../../SessionTooltip';
+import { type WithSetPopoverPosition } from '../../../SessionTooltip';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
-import { useMessageInteractions } from '../../../../hooks/useMessageInteractions';
+import { SelectMessageMenuItem } from '../../../menu/items/SelectMessage/SelectMessageMenuItem';
+import { useCopyText, useReply, useSaveAttachment } from '../../../../hooks/useMessageInteractions';
 
 export type MessageContextMenuSelectorProps = Pick<
   MessageRenderingProps,
-  | 'sender'
-  | 'direction'
-  | 'status'
-  | 'isDeletable'
-  | 'isSenderAdmin'
-  | 'text'
-  | 'serverTimestamp'
-  | 'timestamp'
+  'sender' | 'direction' | 'status' | 'isSenderAdmin' | 'text' | 'serverTimestamp' | 'timestamp'
 >;
 
-type Props = {
-  messageId: string;
-  contextMenuId: string;
-  setTriggerPosition: Dispatch<PopoverTriggerPosition | null>;
-};
+type Props = WithMessageId & WithContextMenuId & WithSetPopoverPosition;
 
 const CONTEXTIFY_MENU_WIDTH_PX = 200;
 const SCREEN_RIGHT_MARGIN_PX = 104;
@@ -206,7 +197,11 @@ export const showMessageInfoOverlay = async ({
 
 function SaveAttachmentMenuItem({ messageId }: { messageId: string }) {
   const attachments = useMessageAttachments(messageId);
-  const { saveAttachment } = useMessageInteractions(messageId);
+  const saveAttachment = useSaveAttachment(messageId);
+
+  if (!saveAttachment) {
+    return null;
+  }
 
   return attachments?.length && attachments.every(m => !m.pending && m.path) ? (
     <MenuItem
@@ -236,7 +231,11 @@ function MessageInfoMenuItem({ messageId }: { messageId: string }) {
 }
 
 function CopyBodyMenuItem({ messageId }: { messageId: string }) {
-  const { copyText } = useMessageInteractions(messageId);
+  const copyText = useCopyText(messageId);
+
+  if (!copyText) {
+    return null;
+  }
 
   return (
     <MenuItem onClick={copyText} iconType={LUCIDE_ICONS_UNICODE.COPY} isDangerAction={false}>
@@ -248,14 +247,15 @@ function CopyBodyMenuItem({ messageId }: { messageId: string }) {
 export const MessageContextMenu = (props: Props) => {
   const { messageId, contextMenuId, setTriggerPosition } = props;
 
-  const { reply, select } = useMessageInteractions(messageId);
+  const reply = useReply(messageId);
 
   const isLegacyGroup = useSelectedIsLegacyGroup();
   const convoId = useSelectedConversationKey();
   const direction = useMessageDirection(messageId);
   const status = useMessageStatus(messageId);
-  const isDeletable = useMessageIsDeletable(messageId);
+  const isDeleted = useMessageIsDeleted(messageId);
   const sender = useMessageSender(messageId);
+  const isControlMessage = useMessageIsControlMessage(messageId);
 
   const isOutgoing = direction === 'outgoing';
   const isSent = status === 'sent' || status === 'read'; // a read message should be replyable
@@ -288,19 +288,22 @@ export const MessageContextMenu = (props: Props) => {
     return null;
   }
 
-  if (isLegacyGroup) {
+  if (isDeleted || isControlMessage) {
     return (
       <StyledMessageContextMenu>
         <SessionContextMenuContainer>
           <Menu id={contextMenuId}>
-            <SaveAttachmentMenuItem messageId={messageId} />
-            <CopyBodyMenuItem messageId={messageId} />
-            <MessageInfoMenuItem messageId={messageId} />
-            <CopyAccountIdMenuItem pubkey={sender} messageId={messageId} />
+            <SelectMessageMenuItem messageId={messageId} />
+            <DeleteItem messageId={messageId} />
           </Menu>
         </SessionContextMenuContainer>
       </StyledMessageContextMenu>
     );
+  }
+
+  if (isLegacyGroup) {
+    // legacy groups are deprecated
+    return null;
   }
 
   return (
@@ -315,22 +318,14 @@ export const MessageContextMenu = (props: Props) => {
         >
           <RetryItem messageId={messageId} />
           <SaveAttachmentMenuItem messageId={messageId} />
-          {(isSent || !isOutgoing) && (
+          {(isSent || !isOutgoing) && !!reply && (
             <MenuItem onClick={reply} iconType={LUCIDE_ICONS_UNICODE.REPLY} isDangerAction={false}>
               {tr('reply')}
             </MenuItem>
           )}
           <CopyBodyMenuItem messageId={messageId} />
           <MessageInfoMenuItem messageId={messageId} />
-          {isDeletable ? (
-            <MenuItem
-              onClick={select}
-              iconType={LUCIDE_ICONS_UNICODE.CIRCLE_CHECK}
-              isDangerAction={false}
-            >
-              <Localizer token="select" />
-            </MenuItem>
-          ) : null}
+          <SelectMessageMenuItem messageId={messageId} />
           <CopyAccountIdMenuItem pubkey={sender} messageId={messageId} />
           <DeleteItem messageId={messageId} />
           <CommunityAdminActionItems messageId={messageId} />

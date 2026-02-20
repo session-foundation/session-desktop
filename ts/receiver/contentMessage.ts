@@ -491,7 +491,7 @@ async function handleUnsendMessage(
       return;
     }
     if (messageToDelete.getSource() === UserUtils.getOurPubKeyStrFromCache()) {
-      // a message we sent is completely removed when we get a unsend request
+      // a message we sent is completely removed when we get a unsend request for it
       void deleteMessagesFromSwarmAndCompletelyLocally(conversation, [messageToDelete]);
     } else {
       void deleteMessagesFromSwarmAndMarkAsDeletedLocally(conversation, [messageToDelete]);
