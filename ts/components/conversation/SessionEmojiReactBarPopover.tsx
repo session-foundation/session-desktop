@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import useClickAway from 'react-use/lib/useClickAway';
-import type { PopoverTriggerPosition } from '../SessionTooltip';
+import { useTriggerPosition, type PopoverTriggerPosition } from '../SessionTooltip';
 import { SessionPopoverContent } from '../SessionPopover';
 import { MessageReactBar } from './message/message-content/MessageReactBar';
 import { THEME_GLOBALS } from '../../themes/globals';
@@ -22,6 +22,7 @@ export function SessionEmojiReactBarPopover({
   onClickAwayFromReactionBar: () => void;
 }) {
   const emojiPanelTriggerRef = useRef<HTMLButtonElement>(null);
+  const emojiPanelTriggerPos = useTriggerPosition(emojiPanelTriggerRef);
   const emojiPanelRef = useRef<HTMLDivElement>(null);
   const emojiReactionBarRef = useRef<HTMLDivElement>(null);
   const [showEmojiPanel, setShowEmojiPanel] = useState<boolean>(false);
@@ -29,7 +30,6 @@ export function SessionEmojiReactBarPopover({
   const focusedMessageId = useFocusedMessageId();
 
   const closeEmojiPanel = () => {
-    closeContextMenus();
     setShowEmojiPanel(false);
   };
 
@@ -66,7 +66,7 @@ export function SessionEmojiReactBarPopover({
     <>
       <SessionEmojiPanelPopover
         emojiPanelRef={emojiPanelRef}
-        triggerRef={emojiPanelTriggerRef}
+        triggerPos={emojiPanelTriggerPos}
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onEmojiClicked={onEmojiClick}
         open={showEmojiPanel}

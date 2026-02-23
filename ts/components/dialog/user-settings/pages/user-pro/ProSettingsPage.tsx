@@ -464,12 +464,18 @@ function ProSettings({ state }: SectionProps) {
               title: { token: 'proAccessLoading' },
               description: { token: 'proAccessLoadingDescription' },
             })
-          : userSettingsModal({
-              userSettingsPage: 'proNonOriginating',
-              nonOriginatingVariant: 'update',
-              overrideBackAction: returnToThisModalAction,
-              centerAlign,
-            })
+          : data.isProcessingRefund
+            ? userSettingsModal({
+                userSettingsPage: 'proNonOriginating',
+                nonOriginatingVariant: 'refundRequested',
+                overrideBackAction: state.returnToThisModalAction,
+              })
+            : userSettingsModal({
+                userSettingsPage: 'proNonOriginating',
+                nonOriginatingVariant: 'update',
+                overrideBackAction: returnToThisModalAction,
+                centerAlign,
+              })
     );
   };
 
@@ -481,29 +487,43 @@ function ProSettings({ state }: SectionProps) {
     return null;
   }
 
+  let subText: TrArgs;
+  if (isError) {
+    subText = { token: 'errorLoadingProAccess' };
+  } else if (isLoading) {
+    subText = { token: 'proAccessLoadingEllipsis' };
+  } else if (data.isProcessingRefund) {
+    subText = { token: 'processingRefundRequest', platform: data.providerConstants.platform };
+  } else if (data.inGracePeriod) {
+    subText = { token: 'proRenewalUnsuccessful' };
+  } else if (data.autoRenew) {
+    subText = { token: 'proAutoRenewTime', time: data.expiryTimeRelativeString };
+  } else {
+    subText = { token: 'proExpiringTime', time: data.expiryTimeRelativeString };
+  }
+
   return (
     <SectionFlexContainer>
       <PanelLabelWithDescription title={{ token: 'proSettings' }} />
       <PanelButtonGroup>
-        <SettingsChevronBasic
-          baseDataTestId="update-access"
-          text={{ token: 'updateAccess' }}
-          subText={{
-            token: isError
-              ? 'errorLoadingProAccess'
-              : isLoading
-                ? 'proAccessLoadingEllipsis'
-                : data.inGracePeriod
-                  ? 'proRenewalUnsuccessful'
-                  : data.autoRenew
-                    ? 'proAutoRenewTime'
-                    : 'proExpiringTime',
-            time: data.expiryTimeRelativeString,
-          }}
-          onClick={handleUpdateAccessClick}
-          loading={isLoading}
-          subTextColor={isError || data.inGracePeriod ? 'var(--warning-color)' : undefined}
-        />
+        {data.isProcessingRefund ? (
+          <PanelIconButton
+            text={{ token: 'proRequestedRefund' }}
+            dataTestId="update-access-settings-button"
+            onClick={handleUpdateAccessClick}
+            iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.CIRCLE_ALERT} />}
+            rowReverse
+          />
+        ) : (
+          <SettingsChevronBasic
+            baseDataTestId="update-access"
+            text={{ token: 'updateAccess' }}
+            subText={subText}
+            onClick={handleUpdateAccessClick}
+            loading={isLoading}
+            subTextColor={isError || data.inGracePeriod ? 'var(--warning-color)' : undefined}
+          />
+        )}
         <SettingsToggleBasic
           baseDataTestId="pro-badge-visible"
           text={{ token: 'proBadge' }}

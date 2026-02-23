@@ -133,6 +133,7 @@ type ProAccessDetails = {
   currentStatus: ProStatus;
   autoRenew: boolean;
   inGracePeriod: boolean;
+  isProcessingRefund: boolean;
   variant: ProAccessVariant;
   variantString: string;
   expiryTimeMs: number;
@@ -225,11 +226,14 @@ function processProBackendData({
     inGracePeriod = autoRenew && now >= beginAutoRenew && now < expiryTimeMs;
   }
 
+  const isProcessingRefund = !!data?.refund_requested_unix_ts_ms;
+
   return {
     data: {
       currentStatus: data?.status ?? defaultProAccessDetailsSourceData.currentStatus,
       autoRenew,
       inGracePeriod,
+      isProcessingRefund,
       variant,
       variantString: proAccessVariantToString(variant),
       expiryTimeMs,

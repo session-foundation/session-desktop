@@ -1,0 +1,51 @@
+name: 'Enforce static builds link only to system libs'
+description: 'Enforce that the libsession-util-nodejs.node is only linking to system libraries'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Check static library linkage
+      shell: bash
+      run: |
+        if [ "$RUNNER_OS" == "Windows" ]; then
+            echo "Skipping library check on Windows"
+            exit 0
+        fi
+
+        if ! find . -name 'libsession_util_nodejs.node' | grep -q .; then
+            echo -e "\nNo libsession_util_nodejs.node file found\n"
+            exit 1
+        fi
+
+        echo "Found files:"
+        find . -name 'libsession_util_nodejs.node' | while IFS= read -r f; do
+            echo "  $f"
+        done
+
+        bad=
+
+        while IFS= read -r node_file; do
+            echo "--- Checking: $node_file ---"
+            if [ "$RUNNER_OS" == "macOS" ]; then
+                otool -L "$node_file"
+                if otool -L "$node_file" | \
+                    grep -Ev '\.node:|@rpath/libsession_util_nodejs|/usr/lib/libc\+\+|/usr/lib/libSystem'; then
+                    bad=1
+                fi
+            elif [ "$RUNNER_OS" == "Linux" ]; then
+                ldd "$node_file"
+                if ldd "$node_file" | grep -Ev '(linux-vdso\.so\.[0-9]+|ld-linux-(x86-64|armhf|aarch64)\.so\.[0-9]+|lib(stdc\+\+|gcc_s|c|m)\.so\.[0-9]+)'; then
+                    bad=1
+                fi
+            else
+                echo -e "\nDon't know how to check linked libs on $RUNNER_OS\n"
+                exit 1
+            fi
+        done < <(find . -name 'libsession_util_nodejs.node')
+
+        if [ -n "$bad" ]; then
+            echo -e "\nlibsession-util-nodejs links to unexpected libraries\n"
+            exit 1
+        fi
+
+        echo -e "\nNo unexpected linked libraries found\n"

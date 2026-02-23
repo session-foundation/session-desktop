@@ -211,6 +211,7 @@ declare module 'react' {
     | 'pro-open-platform-website'
     | 'pro-backend-error-retry'
     | 'pro-backend-error-support'
+    | 'pro-refund-return'
     | `${ConfirmButtons}-confirm`
     | `${CancelButtons}-cancel`
     | `clear-${ClearButtons}`

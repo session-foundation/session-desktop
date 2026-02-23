@@ -26,6 +26,7 @@ import {
   useProBackendProDetails,
   type ProcessedProDetails,
 } from '../../../../../state/selectors/proBackendData';
+import { userSettingsModal } from '../../../../../state/ducks/modalDialog';
 
 type VariantPageProps = {
   variant: ProNonOriginatingPageVariant;
@@ -69,6 +70,8 @@ function ProPageHero({ variant }: VariantPageProps) {
       return <ProHeroImage heroText={tr('proCancelSorry')} noColors={true} />;
     case 'refund':
       return <ProHeroImage heroText={tr('proRefundDescription')} noColors={true} />;
+    case 'refundRequested':
+      return <ProHeroImage heroText={tr('proRequestedRefund')} noColors={true} />;
     default:
       return assertUnreachable(variant, `Unknown pro non originating page variant: ${variant}`);
   }
@@ -404,16 +407,16 @@ const ProInfoBlockRefundTitle = styled.div`
   font-weight: 700;
   padding-top: var(--margins-xs);
 `;
+const containerStyle = {
+  paddingBlock: 'var(--margins-md)',
+  paddingInline: 'var(--margins-lg)',
+  gap: 'var(--margins-sm)',
+  lineHeight: '120%',
+};
 
 function ProInfoBlockRefundSessionSupport() {
   return (
-    <PanelButtonGroup
-      containerStyle={{
-        paddingBlock: 'var(--margins-md)',
-        paddingInline: 'var(--margins-lg)',
-        gap: 'var(--margins-sm)',
-      }}
-    >
+    <PanelButtonGroup containerStyle={containerStyle}>
       <ProInfoBlockRefundTitle>
         <Localizer token="proRefunding" />
       </ProInfoBlockRefundTitle>
@@ -429,13 +432,7 @@ function ProInfoBlockRefundSessionSupport() {
 function ProInfoBlockRefundGooglePlay() {
   const { data } = useProBackendProDetailsLocal();
   return (
-    <PanelButtonGroup
-      containerStyle={{
-        paddingBlock: 'var(--margins-md)',
-        paddingInline: 'var(--margins-lg)',
-        gap: 'var(--margins-sm)',
-      }}
-    >
+    <PanelButtonGroup containerStyle={containerStyle}>
       <ProInfoBlockRefundTitle>
         <Localizer token="proRefunding" />
       </ProInfoBlockRefundTitle>
@@ -508,6 +505,36 @@ function ProInfoBlockRefund() {
   }
 }
 
+function ProInfoBlockRefundRequested() {
+  const { data } = useProBackendProDetailsLocal();
+  const dispatch = getAppDispatch();
+
+  return (
+    <PanelButtonGroup containerStyle={containerStyle}>
+      <ProInfoBlockRefundTitle>
+        <Localizer token="nextSteps" />
+      </ProInfoBlockRefundTitle>
+
+      <Localizer token="proRefundNextSteps" platform={data.providerConstants.platform} />
+      <ProInfoBlockRefundTitle>
+        <Localizer token="helpSupport" />
+      </ProInfoBlockRefundTitle>
+      <ProInfoBlockDescription
+        onClick={() =>
+          showLinkVisitWarningDialog(data.providerConstants.refund_status_url, dispatch)
+        }
+        style={{ cursor: 'pointer' }}
+      >
+        <Localizer
+          token="proRefundSupport"
+          platform={data.providerConstants.platform}
+          icon={LUCIDE_ICONS_UNICODE.EXTERNAL_LINK_ICON}
+        />
+      </ProInfoBlockDescription>
+    </PanelButtonGroup>
+  );
+}
+
 function ProInfoBlock({ variant }: VariantPageProps) {
   switch (variant) {
     case 'upgrade':
@@ -518,6 +545,8 @@ function ProInfoBlock({ variant }: VariantPageProps) {
       return <ProInfoBlockCancel />;
     case 'refund':
       return <ProInfoBlockRefund />;
+    case 'refundRequested':
+      return <ProInfoBlockRefundRequested />;
     case 'renew':
       return <ProInfoBlockRenew />;
     default:
@@ -589,6 +618,27 @@ function ProPageButtonRefund() {
   );
 }
 
+function ProPageButtonRefundRequested() {
+  const dispatch = getAppDispatch();
+
+  return (
+    <SessionButton
+      {...proButtonProps}
+      buttonColor={SessionButtonColor.Primary}
+      onClick={() => {
+        dispatch(
+          userSettingsModal({
+            userSettingsPage: 'pro',
+          })
+        );
+      }}
+      dataTestId="pro-refund-return-button"
+    >
+      <Localizer token="theReturn" />
+    </SessionButton>
+  );
+}
+
 function ProPageButton({ variant }: VariantPageProps) {
   switch (variant) {
     case 'upgrade':
@@ -600,6 +650,8 @@ function ProPageButton({ variant }: VariantPageProps) {
       return <ProPageButtonCancel />;
     case 'refund':
       return <ProPageButtonRefund />;
+    case 'refundRequested':
+      return <ProPageButtonRefundRequested />;
     default:
       return assertUnreachable(variant, `Unknown pro non originating page variant: ${variant}`);
   }

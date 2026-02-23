@@ -167,6 +167,9 @@ jobs:
         if: ${{ matrix.is_qa == true }}
         uses: ./actions/sed_for_qa
 
+      - name: Enforce static builds for libsession-util-nodejs
+        uses: ./actions/enforce_static_builds
+
       - name: Build
         run: pnpm run build
 
@@ -338,6 +341,9 @@ jobs:
         uses: ./actions/setup
         with:
           cache_suffix: ${{ matrix.cache_suffix }}
+
+      - name: Enforce static builds for libsession-util-nodejs
+        uses: ./actions/enforce_static_builds
 
       - name: Build
         run: pnpm run build
