@@ -181,10 +181,10 @@ export const GenericReadableMessage = (props: Props) => {
   });
 
   useEffect(() => {
-    if (isAnotherMessageFocused && triggerPosition) {
+    if (isAnotherMessageFocused) {
       setTriggerPosition(null);
     }
-  }, [isAnotherMessageFocused, triggerPosition]);
+  }, [isAnotherMessageFocused]);
 
   if (!msgProps) {
     return null;
