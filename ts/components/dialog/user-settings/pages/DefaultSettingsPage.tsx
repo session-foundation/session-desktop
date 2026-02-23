@@ -289,7 +289,10 @@ const SessionInfo = () => {
     setClickCount(n => {
       if (n === 9) {
         dispatch(setDebugMode(!inDebugMode));
-        ToastUtils.pushToastSuccess('toggle-debug-mode', `Debug mode ${inDebugMode ? 'disabled' : 'enabled'}!`);
+        ToastUtils.pushToastSuccess(
+          'toggle-debug-mode',
+          `Debug mode ${inDebugMode ? 'disabled' : 'enabled'}!`
+        );
         return 0;
       }
       return n + 1;
