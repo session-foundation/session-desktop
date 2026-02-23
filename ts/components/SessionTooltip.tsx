@@ -66,9 +66,12 @@ export const getTriggerPositionFromId = (id: string): PopoverTriggerPosition => 
   return getTriggerPositionFromBoundingClientRect(el.getBoundingClientRect());
 };
 
-export const useTriggerPosition = (ref: RefObject<HTMLElement | null>): PopoverTriggerPosition => {
+// Returns null if the ref is null
+export const useTriggerPosition = (
+  ref: RefObject<HTMLElement | null>
+): PopoverTriggerPosition | null => {
   if (!ref.current) {
-    return defaultTriggerPos;
+    return null;
   }
   return getTriggerPositionFromBoundingClientRect(ref.current.getBoundingClientRect());
 };

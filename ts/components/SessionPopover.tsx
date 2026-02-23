@@ -2,7 +2,7 @@ import styled from 'styled-components';
 import { type ReactNode, useMemo, useRef } from 'react';
 import { getFeatureFlagMemo } from '../state/ducks/types/releasedFeaturesReduxTypes';
 import { clampNumber } from '../util/maths';
-import { defaultTriggerPos, PopoverTriggerPosition } from './SessionTooltip';
+import { PopoverTriggerPosition } from './SessionTooltip';
 
 const TIP_LENGTH = 18;
 const VIEWPORT_MARGIN = 4;
@@ -95,7 +95,7 @@ const StyledPopover = styled.div<{
 export type PopoverProps = {
   children: ReactNode;
   pointerOffset?: number;
-  triggerPosition: PopoverTriggerPosition;
+  triggerPosition: PopoverTriggerPosition | null;
   open: boolean;
   loading?: boolean;
   maxWidth?: string;
@@ -124,7 +124,7 @@ export const SessionPopoverContent = (props: PopoverProps) => {
     loading,
     maxWidth,
     onClick,
-    triggerPosition = defaultTriggerPos,
+    triggerPosition,
     isTooltip,
     contentMargin = 0,
     containerMarginTop = VIEWPORT_MARGIN,
@@ -146,8 +146,10 @@ export const SessionPopoverContent = (props: PopoverProps) => {
   const viewportWidth = window.innerWidth;
   const viewportHeight = window.innerHeight;
 
+  const show = open && !loading && !!triggerPosition;
+
   const { x, y, pointerOffset, anchorX, finalVerticalPos, bounds } = useMemo(() => {
-    if (!open || loading) {
+    if (!show) {
       return {
         x: 0,
         y: 0,
@@ -217,15 +219,10 @@ export const SessionPopoverContent = (props: PopoverProps) => {
       bounds: { x1: minX, y1: minY, x2: maxX, y2: maxY },
     };
   }, [
-    open,
-    loading,
+    show,
     contentWidth,
     isTooltip,
-    triggerPosition.x,
-    triggerPosition.y,
-    triggerPosition.width,
-    triggerPosition.height,
-    triggerPosition.offsetX,
+    triggerPosition,
     horizontalPosition,
     viewportWidth,
     verticalPosition,
@@ -244,7 +241,7 @@ export const SessionPopoverContent = (props: PopoverProps) => {
     <>
       <StyledPopover
         ref={ref}
-        $readyToShow={open && !loading}
+        $readyToShow={show}
         onClick={onClick}
         x={x}
         y={y}
@@ -257,7 +254,7 @@ export const SessionPopoverContent = (props: PopoverProps) => {
       >
         {children}
       </StyledPopover>
-      {showPopoverAnchors && open ? (
+      {showPopoverAnchors && show ? (
         // NOTE: these are only rendered when the debug option is enabled
         <>
           <StyledCoordinateRectangleMarker title="allowedArea" $bounds={bounds} />
