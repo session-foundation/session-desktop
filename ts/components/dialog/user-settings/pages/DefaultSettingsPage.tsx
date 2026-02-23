@@ -46,6 +46,7 @@ import {
 } from '../../../../state/selectors/proBackendData';
 import { focusVisibleBoxShadowOutsetStr } from '../../../../styles/focusVisible';
 import { createButtonOnKeyDownForClickEventHandler } from '../../../../util/keyboardShortcuts';
+import { useDebugMode } from '../../../../state/selectors/debug';
 
 function SessionIconForSettings(props: Omit<SessionIconProps, 'iconSize' | 'style'>) {
   return (
@@ -272,33 +273,37 @@ const StyledButtonSessionInfo = styled.span<{ opacity?: number }>`
 `;
 
 const SessionInfo = () => {
-  const [clickCount, setClickCount] = useState(0);
-
+  const [, setClickCount] = useState(0);
   const dispatch = getAppDispatch();
+  const inDebugMode = useDebugMode();
 
-  const openVersion = createButtonOnKeyDownForClickEventHandler(() =>
+  const onClickLogo = () => showLinkVisitWarningDialog('https://token.getsession.org/', dispatch);
+
+  const onClickVersion = () =>
     showLinkVisitWarningDialog(
       `https://github.com/session-foundation/session-desktop/releases/tag/v${window.versionInfo.version}`,
       dispatch
-    )
-  );
+    );
 
-  const openCommit = createButtonOnKeyDownForClickEventHandler(() => {
-    setClickCount(clickCount + 1);
-    if (clickCount === 10) {
-      dispatch(setDebugMode(true));
-      setClickCount(0);
-    }
-  });
+  const onClickCommit = () =>
+    setClickCount(n => {
+      if (n === 9) {
+        dispatch(setDebugMode(!inDebugMode));
+        ToastUtils.pushToastSuccess('toggle-debug-mode', `Debug mode ${inDebugMode ? 'disabled' : 'enabled'}!`);
+        return 0;
+      }
+      return n + 1;
+    });
+
+  const onKeyDownVersion = createButtonOnKeyDownForClickEventHandler(onClickVersion);
+  const onKeyDownCommit = createButtonOnKeyDownForClickEventHandler(onClickCommit);
 
   return (
     <StyledVersionInfo>
       <SessionIconButton
         iconSize="medium"
         iconType="sessionTokenLogoWithText"
-        onClick={() => {
-          showLinkVisitWarningDialog('https://token.getsession.org/', dispatch);
-        }}
+        onClick={onClickLogo}
         // disable transition here as the transition does the opposite that usual (hovering makes it more opaque/bright)
         style={{ transition: 'none' }}
       />
@@ -308,18 +313,10 @@ const SessionInfo = () => {
         $alignItems="center"
         $flexGap="var(--margins-sm)"
       >
-        <StyledButtonSessionInfo
-          onKeyDown={openVersion}
-          onClick={() => void openVersion(null as any)}
-          tabIndex={0}
-        >
+        <StyledButtonSessionInfo onKeyDown={onKeyDownVersion} onClick={onClickVersion} tabIndex={0}>
           v{window.versionInfo.version}
         </StyledButtonSessionInfo>
-        <StyledButtonSessionInfo
-          onKeyDown={openCommit}
-          onClick={() => void openCommit(null as any)}
-          tabIndex={0}
-        >
+        <StyledButtonSessionInfo onKeyDown={onKeyDownCommit} onClick={onClickCommit} tabIndex={0}>
           {window.versionInfo.commitHash?.slice(0, 8)}
         </StyledButtonSessionInfo>
       </Flex>
