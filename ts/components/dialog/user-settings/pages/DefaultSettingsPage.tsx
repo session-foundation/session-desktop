@@ -291,7 +291,7 @@ const SessionInfo = () => {
         dispatch(setDebugMode(!inDebugMode));
         ToastUtils.pushToastSuccess(
           'toggle-debug-mode',
-          `Debug mode ${inDebugMode ? 'disabled' : 'enabled'}!`
+          tr(inDebugMode ? 'debugModeDisabledToastDev' : 'debugModeEnabledToastDev')
         );
         return 0;
       }
