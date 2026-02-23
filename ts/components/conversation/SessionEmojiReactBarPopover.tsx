@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import useClickAway from 'react-use/lib/useClickAway';
+import useKey from 'react-use/lib/useKey';
 import { useTriggerPosition, type PopoverTriggerPosition } from '../SessionTooltip';
 import { SessionPopoverContent } from '../SessionPopover';
 import { MessageReactBar } from './message/message-content/MessageReactBar';
@@ -61,6 +62,8 @@ export function SessionEmojiReactBarPopover({
       onClickAwayFromReactionBar();
     }
   }, [focusedMessageId, messageId, onClickAwayFromReactionBar]);
+
+  useKey('Escape', onClickAwayFromReactionBar);
 
   return (
     <>

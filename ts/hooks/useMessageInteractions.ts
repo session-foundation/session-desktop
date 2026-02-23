@@ -13,6 +13,7 @@ import { Reactions } from '../util/reactions';
 import {
   useMessageAttachments,
   useMessageBody,
+  useMessageDirection,
   useMessageSender,
   useMessageServerTimestamp,
   useMessageStatus,
@@ -67,6 +68,12 @@ function useCopyText(messageId?: string) {
 
 function useReply(messageId?: string) {
   const isSelectedBlocked = useSelectedIsBlocked();
+  const direction = useMessageDirection(messageId);
+  const status = useMessageStatus(messageId);
+
+  const isOutgoing = direction === 'outgoing';
+  const isSent = status === 'sent' || status === 'read'; // a read message should be replyable
+
   return () => {
     if (!messageId) {
       return;
@@ -75,7 +82,10 @@ function useReply(messageId?: string) {
       pushUnblockToSend();
       return;
     }
-    void replyToMessage(messageId);
+    if (isSent || !isOutgoing) {
+      void replyToMessage(messageId);
+    }
+    // NOTE: we dont want to reply to failed to send messages
   };
 }
 
