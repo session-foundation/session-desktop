@@ -314,7 +314,7 @@ export const ReactListModal = (props: Props) => {
             hasReactLimit={false}
             inModal={true}
             onSelected={handleSelectedReaction}
-            onClick={handleReactionClick}
+            onEmojiClick={handleReactionClick}
             noAvatar={true}
           />
         </StyledReactionsContainer>

@@ -31,7 +31,6 @@ const StyledReaction = styled.button<{
   border-radius: var(--border-radius-message-box);
   box-sizing: border-box;
   padding: 0 7px;
-  margin: 0 4px var(--margins-sm);
   height: ${EMOJI_REACTION_HEIGHT}px;
   min-width: ${props => (props.$showCount ? 2 * EMOJI_REACTION_HEIGHT : EMOJI_REACTION_HEIGHT)}px;
 
@@ -42,6 +41,11 @@ const StyledReaction = styled.button<{
   ${props => !props.onClick && 'cursor: not-allowed;'}
 
   ${focusVisibleOutline()}
+  // box-shadow needs to be re-added in focus-visible for the selected state to show while focused
+  &:focus-visible {
+    box-shadow: 0 0 0 1px
+      ${props => (props.selected ? 'var(--primary-color)' : 'var(--transparent-color)')};
+  }
 `;
 
 const StyledReactionContainer = styled.div<{

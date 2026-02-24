@@ -95,6 +95,8 @@ export const GenericReadableMessage = (props: Props) => {
   const ref = useRef<HTMLDivElement>(null);
   const pointerDownRef = useRef(false);
   const [triggerPosition, setTriggerPosition] = useState<PopoverTriggerPosition | null>(null);
+  const [autoFocusReactionBarFirstEmoji, setAutoFocusReactionBarFirstEmoji] =
+    useState<boolean>(false);
   const isInFocusScope = useIsInScope({ scope: 'message', scopeId: messageId });
   const { focusedMessageId } = useFocusScope();
   const isAnotherMessageFocused = focusedMessageId && !isInFocusScope;
@@ -150,6 +152,7 @@ export const GenericReadableMessage = (props: Props) => {
       }
       const overrideTriggerPosition = getMessageContainerTriggerPosition();
       if (overrideTriggerPosition) {
+        setAutoFocusReactionBarFirstEmoji(true);
         handleContextMenu(e, overrideTriggerPosition);
       }
     }
@@ -161,6 +164,7 @@ export const GenericReadableMessage = (props: Props) => {
 
   const onBlur = () => {
     dispatch(setFocusedMessageId(null));
+    setAutoFocusReactionBarFirstEmoji(false);
   };
 
   const toggleEmojiReactionBarWithKeyboard = () => {
@@ -169,6 +173,7 @@ export const GenericReadableMessage = (props: Props) => {
     } else {
       const pos = getMessageContainerTriggerPosition();
       if (pos) {
+        setAutoFocusReactionBarFirstEmoji(true);
         setTriggerPosition(pos);
       }
     }
@@ -219,6 +224,7 @@ export const GenericReadableMessage = (props: Props) => {
         convoReactionsEnabled={convoReactionsEnabled}
         triggerPosition={triggerPosition}
         setTriggerPosition={setTriggerPosition}
+        autoFocusReactionBarFirstEmoji={autoFocusReactionBarFirstEmoji}
       />
     </StyledReadableMessage>
   );

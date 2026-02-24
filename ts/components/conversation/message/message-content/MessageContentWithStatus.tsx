@@ -17,13 +17,11 @@ import { MessageContent } from './MessageContent';
 import { MessageContextMenu } from './MessageContextMenu';
 import { MessageReactions } from './MessageReactions';
 import { MessageStatus } from './MessageStatus';
-import {
-  useIsMessageSelectionMode,
-  useSelectedIsLegacyGroup,
-} from '../../../../state/selectors/selectedConversation';
+import { useIsMessageSelectionMode } from '../../../../state/selectors/selectedConversation';
 import { SessionEmojiReactBarPopover } from '../../SessionEmojiReactBarPopover';
 import { PopoverTriggerPosition } from '../../../SessionTooltip';
-import { useMessageInteractions } from '../../../../hooks/useMessageInteractions';
+import { trimWhitespace } from '../../../../session/utils/String';
+import { useMessageReact, useMessageReply } from '../../../../hooks/useMessageInteractions';
 
 export type MessageContentWithStatusSelectorProps = { isGroup: boolean } & Pick<
   MessageRenderingProps,
@@ -37,6 +35,7 @@ type Props = {
   convoReactionsEnabled: boolean;
   triggerPosition: PopoverTriggerPosition | null;
   setTriggerPosition: Dispatch<PopoverTriggerPosition | null>;
+  autoFocusReactionBarFirstEmoji?: boolean;
 };
 
 const StyledMessageContentContainer = styled.div<{ $isIncoming: boolean; $isDetailView: boolean }>`
@@ -65,51 +64,45 @@ export const MessageContentWithStatuses = (props: Props) => {
     convoReactionsEnabled,
     triggerPosition,
     setTriggerPosition,
+    autoFocusReactionBarFirstEmoji,
   } = props;
   const dispatch = getAppDispatch();
   const contentProps = useSelector((state: StateType) =>
     getMessageContentWithStatusesSelectorProps(state, messageId)
   );
-  const { reactToMessage, reply } = useMessageInteractions(messageId);
+  const reply = useMessageReply(messageId);
+  const reactToMessage = useMessageReact(messageId);
   const hideAvatar = useHideAvatarInMsgList(messageId);
   const isDetailView = useIsDetailMessageView();
   const multiSelectMode = useIsMessageSelectionMode();
-  const isLegacyGroup = useSelectedIsLegacyGroup();
   const status = useMessageStatus(props.messageId);
   const isSent = status === 'sent' || status === 'read'; // a read message should be reactable
 
   const onClickOnMessageOuterContainer = useCallback(
     (event: MouseEvent<HTMLDivElement>) => {
-      if (multiSelectMode && props?.messageId) {
+      if (multiSelectMode && messageId) {
         event.preventDefault();
         event.stopPropagation();
-        dispatch(toggleSelectedMessageId(props?.messageId));
+        dispatch(toggleSelectedMessageId(messageId));
       }
     },
-    [dispatch, props?.messageId, multiSelectMode]
+    [dispatch, messageId, multiSelectMode]
   );
 
-  const onDoubleClickReplyToMessage = (e: MouseEvent<HTMLDivElement>) => {
-    if (isLegacyGroup) {
-      return;
-    }
-    const currentSelection = window.getSelection();
-    const currentSelectionString = currentSelection?.toString() || undefined;
+  const onDoubleClickReplyToMessage = reply
+    ? (e: MouseEvent<HTMLDivElement>) => {
+        const currentSelection = window.getSelection();
+        const currentSelectionString = currentSelection?.toString() || undefined;
 
-    if ((e.target as any).localName !== 'em-emoji-picker') {
-      if (
-        !currentSelectionString ||
-        currentSelectionString.length === 0 ||
-        !/\s/.test(currentSelectionString)
-      ) {
-        // if multiple word are selected, consider that this double click was actually NOT used to reply to
-        // but to select
-        void reply();
-        currentSelection?.empty();
-        e.preventDefault();
+        if (
+          (!currentSelectionString || trimWhitespace(currentSelectionString).length === 0) &&
+          (e.target as any).localName !== 'em-emoji-picker'
+        ) {
+          e.preventDefault();
+          void reply();
+        }
       }
-    }
-  };
+    : undefined;
 
   if (!contentProps) {
     return null;
@@ -166,6 +159,7 @@ export const MessageContentWithStatuses = (props: Props) => {
             open={!!triggerPosition}
             triggerPos={triggerPosition}
             onClickAwayFromReactionBar={closeReactionBar}
+            autoFocusFirstEmoji={autoFocusReactionBarFirstEmoji}
           />
         ) : null}
         {enableContextMenu ? (
@@ -179,8 +173,7 @@ export const MessageContentWithStatuses = (props: Props) => {
       {!isDetailView && enableReactions ? (
         <MessageReactions
           messageId={messageId}
-          // eslint-disable-next-line @typescript-eslint/no-misused-promises
-          onClick={reactToMessage}
+          onEmojiClick={reactToMessage ? emoji => void reactToMessage(emoji) : undefined}
           onPopupClick={handlePopupClick}
           noAvatar={hideAvatar}
         />

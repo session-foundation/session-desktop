@@ -11,14 +11,14 @@ const EMOJI_PANEL_HEIGHT_PX = 435;
 export function SessionEmojiPanelPopover({
   triggerPos,
   emojiPanelRef,
-  onEmojiClicked,
+  onEmojiClick,
   open,
   onClose,
 }: {
   triggerPos: PopoverTriggerPosition | null;
   open: boolean;
   emojiPanelRef: RefObject<HTMLDivElement | null>;
-  onEmojiClicked: (emoji: FixedBaseEmoji) => void;
+  onEmojiClick: (emoji: FixedBaseEmoji) => Promise<void>;
   onClose: () => void;
 }) {
   const _open = open && !!triggerPos;
@@ -36,7 +36,7 @@ export function SessionEmojiPanelPopover({
         <SessionEmojiPanel
           ref={emojiPanelRef}
           show={true}
-          onEmojiClicked={onEmojiClicked}
+          onEmojiClicked={emoji => void onEmojiClick(emoji)}
           onClose={onClose}
           isModal={true}
         />
