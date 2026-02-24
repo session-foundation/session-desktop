@@ -1,4 +1,11 @@
-import { type MouseEvent, type KeyboardEvent, useCallback, useRef, useState } from 'react';
+import {
+  type MouseEvent,
+  type KeyboardEvent,
+  useCallback,
+  useRef,
+  useState,
+  useEffect,
+} from 'react';
 import clsx from 'clsx';
 
 import styled, { keyframes } from 'styled-components';
@@ -31,6 +38,7 @@ import { GroupUpdateMessage } from './GroupUpdateMessage';
 import { CallNotification } from './notification-bubble/CallNotification';
 import { InteractionNotification } from './InteractionNotification';
 import { MessageRequestResponse } from './MessageRequestResponse';
+import { useFocusScope, useIsInScope } from '../../../../state/focus';
 
 export type GenericReadableMessageSelectorProps = Pick<
   MessageRenderingProps,
@@ -44,6 +52,7 @@ const highlightedMessageAnimation = keyframes`
 const StyledReadableMessage = styled.div<{
   selected: boolean;
   $isDetailView: boolean;
+  $focusedKeyboard: boolean;
 }>`
   display: flex;
   align-items: center;
@@ -59,9 +68,12 @@ const StyledReadableMessage = styled.div<{
     margin-top: var(--margins-xs);
   }
 
-  &:focus-visible {
+  ${props =>
+    props.$focusedKeyboard
+      ? `&:focus-visible {
     background-color: var(--conversation-tab-background-selected-color);
-  }
+  }`
+      : ''}
 `;
 
 function getMessageComponent(messageType: UIMessageType) {
@@ -104,8 +116,10 @@ export const GenericReadableMessage = ({ messageId }: WithMessageId) => {
 
   const ref = useRef<HTMLDivElement>(null);
   const pointerDownRef = useRef(false);
-  const keyboardFocusedRef = useRef(false);
   const [triggerPosition, setTriggerPosition] = useState<PopoverTriggerPosition | null>(null);
+  const isInFocusScope = useIsInScope({ scope: 'message', scopeId: messageId });
+  const { focusedMessageId } = useFocusScope();
+  const isAnotherMessageFocused = focusedMessageId && !isInFocusScope;
 
   const getMessageContainerTriggerPosition = (): PopoverTriggerPosition | null => {
     if (!ref.current) {
@@ -180,6 +194,12 @@ export const GenericReadableMessage = ({ messageId }: WithMessageId) => {
 
   const messageType = useMessageType(messageId);
 
+  useEffect(() => {
+    if (isAnotherMessageFocused) {
+      setTriggerPosition(null);
+    }
+  }, [isAnotherMessageFocused]);
+
   if (!convoId || !messageId || !messageType) {
     return null;
   }
@@ -200,23 +220,16 @@ export const GenericReadableMessage = ({ messageId }: WithMessageId) => {
       onContextMenu={handleContextMenu}
       key={`readable-message-${messageId}`}
       onKeyDown={onKeyDown}
+      $focusedKeyboard={!pointerDownRef.current}
       tabIndex={0}
       onPointerDown={() => {
         pointerDownRef.current = true;
       }}
       onFocus={() => {
-        if (!pointerDownRef.current) {
-          keyboardFocusedRef.current = true;
-          onFocus();
-        }
+        onFocus();
         pointerDownRef.current = false;
       }}
-      onBlur={() => {
-        if (keyboardFocusedRef.current) {
-          keyboardFocusedRef.current = false;
-          onBlur();
-        }
-      }}
+      onBlur={onBlur}
     >
       <CmpToRender
         contextMenuId={ctxMenuID}

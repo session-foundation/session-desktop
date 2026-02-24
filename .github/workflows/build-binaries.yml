@@ -78,6 +78,7 @@ jobs:
           makeLatest: false
           omitBodyDuringUpdate: true
           omitNameDuringUpdate: true
+          commit: master # needed so that the "target" of the release is correct on github
 
   lint:
     runs-on: ubuntu-22.04
