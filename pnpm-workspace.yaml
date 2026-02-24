@@ -6,3 +6,5 @@ onlyBuiltDependencies:
   - libsession_util_nodejs
   - protobufjs
   - sharp
+publicHoistPattern:
+  - '@img/*'
