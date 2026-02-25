@@ -228,6 +228,14 @@ declare module 'react' {
     | 'name'
     | 'count';
 
+  type ConversationItemFlagsIds =
+    | 'conversation-item-muted'
+    | 'conversation-item-pinned'
+    | 'conversation-item-mentions-only'
+    | 'conversation-item-forced-unread'
+    | 'conversation-item-unread-count'
+    | 'conversation-item-mentioned-us';
+
   type SessionDataTestId =
     | 'group-member-status-text'
     | 'loading-spinner'
@@ -280,6 +288,9 @@ declare module 'react' {
 
     // Buttons
     | `${Buttons}-button`
+
+    // Conversation Item Flags
+    | ConversationItemFlagsIds
 
     // settings menu item types
     | `${MenuItems}-menu-item`
