@@ -25,6 +25,7 @@ import type { StateType } from '../state/reducer';
 import { isUsFromCache } from '../session/utils/User';
 import { isUsAnySogsFromCache } from '../session/apis/open_group_api/sogsv3/knownBlindedkeys';
 import { ProWrapperActions } from '../webworker/workers/browser/libsession_worker_interface';
+import { notifyNewMessage, getConversationType } from '../mcp/messageEventHook';
 
 export async function pushQuotedMessageToStoreIfNeeded(quoteDetails: {
   id: Long | number;
@@ -453,6 +454,37 @@ export async function handleMessageJob(
     await markConvoAsReadIfOutgoingMessage(conversation, messageModel);
     if (messageModel.get('unread')) {
       conversation.throttledNotify(messageModel);
+    }
+
+    // MCP: Notify about new message for webhook dispatch
+    try {
+      const msgProps = messageModel.getMessageModelProps
+        ? messageModel.getMessageModelProps()
+        : messageModel.attributes;
+      notifyNewMessage(
+        {
+          id: messageModel.id || '',
+          conversationId: conversation.id,
+          source: (msgProps as any).source || decodedEnvelope.getAuthor() || '',
+          sourceName: (msgProps as any).senderName || undefined,
+          timestamp: messageModel.get('sent_at') || Date.now(),
+          body: messageModel.get('body') || undefined,
+          attachments: messageModel.get('attachments') || [],
+          type: messageModel.get('type') || 'incoming',
+          direction: messageModel.get('direction') || 'incoming',
+          read: Boolean((msgProps as any).read),
+          expiresAt: (msgProps as any).expiresAt,
+          quote: messageModel.get('quote'),
+        },
+        {
+          id: conversation.id,
+          name: conversation.getNickname?.() || conversation.get('displayNameInProfile') || undefined,
+          type: getConversationType(conversation),
+        }
+      );
+    } catch (mcpError) {
+      // Don't let MCP errors break message handling
+      window?.log?.warn('[MCP] Error notifying new message:', mcpError);
     }
   } catch (error) {
     const errorForLog = error && error.stack ? error.stack : error;

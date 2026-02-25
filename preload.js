@@ -259,6 +259,10 @@ window.nodeSetImmediate = setImmediate;
 const data = require('./ts/data/dataInit');
 data.initData();
 
+// Initialize MCP renderer handlers for AI agent integration
+const { initMcpRendererHandlers } = require('./ts/mcp/rendererHandlers');
+initMcpRendererHandlers();
+
 const { ConvoHub } = require('./ts/session/conversations/ConversationController');
 
 const {
