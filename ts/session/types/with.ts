@@ -26,7 +26,7 @@ export type WithMessageId = { messageId: string };
 export type WithContextMenuId = { contextMenuId: string };
 
 export type WithLocalMessageDeletionType = {
-  deletionType: 'complete' | 'markDeleted' | 'marDeletedLocally';
+  deletionType: 'complete' | 'markDeleted' | 'markDeletedThisDevice';
 };
 export type ShortenOrExtend = 'extend' | 'shorten' | '';
 export type WithShortenOrExtend = { shortenOrExtend: ShortenOrExtend };

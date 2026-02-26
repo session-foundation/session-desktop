@@ -109,6 +109,7 @@ import { privateSet, privateSetKey } from './modelFriends';
 import { getFeatureFlag } from '../state/ducks/types/releasedFeaturesReduxTypes';
 import type { OutgoingProMessageDetails } from '../types/message/OutgoingProMessageDetails';
 import { longOrNumberToBigInt } from '../types/Bigint';
+import { toSqliteBoolean } from '../node/database_utility';
 
 // tslint:disable: cyclomatic-complexity
 
@@ -587,15 +588,6 @@ export class MessageModel extends Model<MessageAttributes> {
       return undefined;
     }
 
-    // some incoming legacy group updates are outgoing, but when synced to our other devices have just the received_at field set.
-    // when that is the case, we don't want to render the spinning 'sending' state
-    if (
-      (this.isExpirationTimerUpdate() || this.isDataExtractionNotification()) &&
-      this.get('received_at')
-    ) {
-      return undefined;
-    }
-
     if (
       this.isDataExtractionNotification() ||
       this.isCallNotification() ||
@@ -616,6 +608,36 @@ export class MessageModel extends Model<MessageAttributes> {
     }
 
     return 'sending';
+  }
+
+  /**
+   * Returns true if
+   * - the message is an incoming message (i.e. we've fetched it from the server/swarm)
+   * - the message is outgoing and marked as sent (i.e. we've sent it to the server/swarm and its status is "sent" or "read")
+   *
+   * @see useMessageIsOnline() that uses the same logic, redux side
+   */
+  public isOnline() {
+    const status = this.getMessagePropStatus();
+    const isIncoming = this.isIncoming();
+
+    if (isIncoming) {
+      return true;
+    }
+    switch (status) {
+      case 'sent':
+      case 'read':
+        // once a message is read by the recipient, the status is "read" so we display the "eye" status icon.
+        // but such a message was still sent in the first place
+        return true;
+      case 'sending':
+      case 'error':
+      case undefined:
+        return false;
+      default:
+        assertUnreachable(status, `wasSent: invalid msg status "${status}"`);
+        return false; // to make tsc happy
+    }
   }
 
   public getPropsForMessage(): PropsForMessageWithoutConvoProps {
@@ -936,7 +958,7 @@ export class MessageModel extends Model<MessageAttributes> {
       reaction: undefined,
       messageRequestResponse: undefined,
       errors: undefined,
-      unread: undefined,
+      unread: toSqliteBoolean(false),
     });
     // we can ignore the result of that markMessageReadNoCommit as it would only be used
     // to refresh the expiry of it(but it is already marked as "deleted", so we don't care)
@@ -946,6 +968,7 @@ export class MessageModel extends Model<MessageAttributes> {
     // getNextExpiringMessage is used on app start to clean already expired messages which should have been removed already, but are not
     await this.setToExpire();
     await this.getConversation()?.refreshInMemoryDetails();
+    this.getConversation()?.updateLastMessage();
   }
 
   // One caller today: event handler for the 'Retry Send' entry on right click of a failed send message
@@ -1598,7 +1621,6 @@ export class MessageModel extends Model<MessageAttributes> {
     return forcedArrayUpdate;
   }
 
-  // #region Start of getters
   public getExpirationType() {
     return this.get('expirationType');
   }
@@ -1626,8 +1648,6 @@ export class MessageModel extends Model<MessageAttributes> {
   public getExpirationTimerUpdate() {
     return this.get('expirationTimerUpdate');
   }
-
-  // #endregion
 }
 
 const throttledAllMessagesDispatch = debounce(

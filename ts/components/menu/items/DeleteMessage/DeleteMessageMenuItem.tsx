@@ -90,7 +90,6 @@ export const DeleteItem = ({ messageId }: { messageId: string }) => {
   const convoId = useSelectedConversationKey();
 
   const deleteMessagesCb = useDeleteMessagesCb(convoId);
-  console.warn('fixme allow ot delete a message to a sogs that failed to send');
 
   if (!deleteMessagesCb || !messageId) {
     return null;

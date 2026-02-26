@@ -122,6 +122,22 @@ export const useMessageStatus = (
   return useMessagePropsByMessageId(messageId)?.propsForMessage.status;
 };
 
+/**
+ * Returns true if
+ *  - the message is incoming (i.e. we've fetched it from the server/swarm)
+ *  - the message was sent or already read by the recipient, false otherwise.
+ *
+ * @see MessageModel.isOnline()
+ */
+export const useMessageIsOnline = (messageId: string | undefined): boolean => {
+  const status = useMessageStatus(messageId);
+  const direction = useMessageDirection(messageId);
+  if (direction === 'incoming') {
+    return true;
+  }
+  return status === 'sent' || status === 'read';
+};
+
 export function useMessageSender(messageId: string | undefined) {
   return useMessagePropsByMessageId(messageId)?.propsForMessage.sender;
 }

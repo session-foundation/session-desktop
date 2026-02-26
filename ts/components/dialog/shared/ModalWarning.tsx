@@ -9,7 +9,8 @@ const StyledModalWarningContainer = styled.div`
   max-width: 500px;
   line-height: 1.2;
   text-align: center;
-  font-size: var(--font-size-md);
+  font-size: var(--font-size-sm);
+  color: var(--warning-color);
 `;
 
 export function ModalWarning(props: {

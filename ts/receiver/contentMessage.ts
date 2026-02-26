@@ -481,9 +481,7 @@ async function handleUnsendMessage(
     ])
   )?.[0];
   const messageHash = messageToDelete?.get('messageHash');
-  // #endregion
 
-  // #region executing deletion
   if (messageHash && messageToDelete) {
     window.log.info('handleUnsendMessage: got a request to delete ', messageHash);
     const conversation = ConvoHub.use().get(messageToDelete.get('conversationId'));

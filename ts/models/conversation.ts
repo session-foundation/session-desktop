@@ -3029,7 +3029,6 @@ export class ConversationModel extends Model<ConversationAttributes> {
     return success;
   }
 
-  // #region Start of getters
   public getExpirationMode() {
     return this.get('expirationMode');
   }
@@ -3041,8 +3040,6 @@ export class ConversationModel extends Model<ConversationAttributes> {
   public getIsExpired03Group() {
     return PubKey.is03Pubkey(this.id) && !!this.get('isExpired03Group');
   }
-
-  // #endregion
 }
 
 export const Convo = { commitConversationAndRefreshWrapper };

@@ -1645,7 +1645,6 @@ function updateToSessionSchemaVersion34(currentVersion: number, db: Database) {
   console.log(`updateToSessionSchemaVersion${targetVersion}: starting...`);
   db.transaction(() => {
     try {
-      // #region v34 Disappearing Messages Database Model Changes
       // Conversation changes
       db.prepare(
         `ALTER TABLE ${CONVERSATIONS_TABLE} ADD COLUMN expirationMode TEXT DEFAULT "off";`
@@ -1658,8 +1657,6 @@ function updateToSessionSchemaVersion34(currentVersion: number, db: Database) {
       db.prepare(`ALTER TABLE ${MESSAGES_TABLE} ADD COLUMN flags INTEGER;`).run();
       db.prepare(`UPDATE ${MESSAGES_TABLE} SET flags = json_extract(json, '$.flags');`);
 
-      // #endregion
-
       const loggedInUser = getLoggedInUserConvoDuringMigration(db);
 
       if (!loggedInUser || !loggedInUser.ourKeys) {
@@ -1668,7 +1665,6 @@ function updateToSessionSchemaVersion34(currentVersion: number, db: Database) {
 
       const { privateEd25519, publicKeyHex } = loggedInUser.ourKeys;
 
-      // #region v34 Disappearing Messages Note to Self
       const noteToSelfInfo = db
         .prepare(
           `UPDATE ${CONVERSATIONS_TABLE} SET
@@ -1717,9 +1713,6 @@ function updateToSessionSchemaVersion34(currentVersion: number, db: Database) {
         }
       }
 
-      // #endregion
-
-      // #region v34 Disappearing Messages Private Conversations
       const privateConversationsInfo = db
         .prepare(
           `UPDATE ${CONVERSATIONS_TABLE} SET
@@ -1793,9 +1786,6 @@ function updateToSessionSchemaVersion34(currentVersion: number, db: Database) {
         }
       }
 
-      // #endregion
-
-      // #region v34 Disappearing Messages Groups
       const groupConversationsInfo = db
         .prepare(
           `UPDATE ${CONVERSATIONS_TABLE} SET
@@ -1866,8 +1856,6 @@ function updateToSessionSchemaVersion34(currentVersion: number, db: Database) {
           }
         }
       }
-
-      // #endregion
     } catch (e) {
       console.error(
         `Failed to migrate to disappearing messages v2. Might just not have a logged in user yet? `,

@@ -7,7 +7,7 @@ import { updateReactListModal } from '../../../../state/ducks/modalDialog';
 import {
   useHideAvatarInMsgList,
   useMessageDirection,
-  useMessageStatus,
+  useMessageIsOnline,
 } from '../../../../state/selectors';
 import { Flex } from '../../../basic/Flex';
 import { ExpirableReadableMessage } from '../message-item/ExpirableReadableMessage';
@@ -55,9 +55,8 @@ export const MessageContentWithStatuses = (
   const isDetailView = useIsDetailMessageView();
   const isLegacyGroup = useSelectedIsLegacyGroup();
 
-  const status = useMessageStatus(props.messageId);
   const convoId = useSelectedConversationKey();
-  const isSent = status === 'sent' || status === 'read'; // a read message can be reacted to
+  const msgIsOnline = useMessageIsOnline(messageId);
 
   const onDoubleClickReplyToMessage = (e: MouseEvent<HTMLDivElement>) => {
     if (isLegacyGroup || !reply) {
@@ -99,7 +98,7 @@ export const MessageContentWithStatuses = (
   const direction = isDetailView ? 'incoming' : _direction;
   const isIncoming = direction === 'incoming';
 
-  const enableReactions = convoReactionsEnabled && (isSent || isIncoming);
+  const enableReactions = convoReactionsEnabled && msgIsOnline;
 
   const handlePopupClick = (emoji: string) => {
     dispatch(

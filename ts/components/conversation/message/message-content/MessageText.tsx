@@ -15,7 +15,6 @@ import {
 import type { WithMessageId } from '../../../../session/types/with';
 import { LucideIcon } from '../../../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
-import { tr } from '../../../../localization/localeTools';
 import { MessageBubble } from './MessageBubble';
 
 type Props = WithMessageId;
@@ -38,7 +37,10 @@ export const MessageText = ({ messageId }: Props) => {
   const text = useMessageText(messageId);
   const isOpenOrClosedGroup = useSelectedIsGroupOrCommunity();
   const isPublic = useSelectedIsPublic();
-  const contents = isDeleted ? tr('deleteMessageDeletedGlobally') : text?.trim();
+  // Note the body is overridden with `deleteMessageDeletedLocally` or `deleteMessageDeletedGlobally`
+  // depending on the `isDeleted` value, when the message is marked as deleted
+
+  const contents = text?.trim();
 
   if (!contents) {
     return null;

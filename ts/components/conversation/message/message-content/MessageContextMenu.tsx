@@ -12,12 +12,11 @@ import { MessageRenderingProps } from '../../../../models/messageType';
 import { openRightPanel, showMessageInfoView } from '../../../../state/ducks/conversations';
 import {
   useMessageAttachments,
-  useMessageDirection,
   useMessageIsControlMessage,
   useMessageIsDeleted,
   useMessageSender,
   useMessageSenderIsAdmin,
-  useMessageStatus,
+  useMessageIsOnline,
 } from '../../../../state/selectors';
 import {
   useSelectedConversationKey,
@@ -251,14 +250,11 @@ export const MessageContextMenu = (props: Props) => {
 
   const isLegacyGroup = useSelectedIsLegacyGroup();
   const convoId = useSelectedConversationKey();
-  const direction = useMessageDirection(messageId);
-  const status = useMessageStatus(messageId);
   const isDeleted = useMessageIsDeleted(messageId);
   const sender = useMessageSender(messageId);
   const isControlMessage = useMessageIsControlMessage(messageId);
-
-  const isOutgoing = direction === 'outgoing';
-  const isSent = status === 'sent' || status === 'read'; // a read message should be replyable
+  // we should be able to reply to a sent or read message
+  const msgIsOnline = useMessageIsOnline(messageId);
 
   const contextMenuRef = useRef<HTMLDivElement | null>(null);
 
@@ -318,7 +314,7 @@ export const MessageContextMenu = (props: Props) => {
         >
           <RetryItem messageId={messageId} />
           <SaveAttachmentMenuItem messageId={messageId} />
-          {(isSent || !isOutgoing) && !!reply && (
+          {msgIsOnline && !!reply && (
             <MenuItem onClick={reply} iconType={LUCIDE_ICONS_UNICODE.REPLY} isDangerAction={false}>
               {tr('reply')}
             </MenuItem>

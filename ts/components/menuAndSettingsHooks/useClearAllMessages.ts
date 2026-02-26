@@ -15,6 +15,7 @@ import {
 } from '../../hooks/useParamSelector';
 import { ToastUtils } from '../../session/utils';
 import { groupInfoActions } from '../../state/ducks/metaGroups';
+import type { RadioOptions } from '../dialog/SessionConfirm';
 
 export function useClearAllMessagesCb({ conversationId }: { conversationId: string }) {
   const dispatch = getAppDispatch();
@@ -92,6 +93,26 @@ export function useClearAllMessagesCb({ conversationId }: { conversationId: stri
     throw new Error('useClearAllMessagesCb: invalid case');
   }
 
+  const radioOptions: RadioOptions | undefined = isGroupV2AndAdmin
+    ? {
+        items: [
+          {
+            value: 'clearOnThisDevice',
+            label: tr('clearOnThisDevice'),
+            inputDataTestId: 'clear-device-radio-option',
+            labelDataTestId: 'clear-device-radio-option-label',
+          },
+          {
+            value: clearMessagesForEveryone,
+            label: tr(clearMessagesForEveryone),
+            inputDataTestId: 'clear-everyone-radio-option',
+            labelDataTestId: 'clear-everyone-radio-option-label',
+          },
+        ] as const,
+        defaultSelectedValue: 'clearOnThisDevice',
+      }
+    : undefined;
+
   const cb = () =>
     dispatch(
       updateConfirmModal({
@@ -101,22 +122,7 @@ export function useClearAllMessagesCb({ conversationId }: { conversationId: stri
         okTheme: SessionButtonColor.Danger,
         onClickClose,
         okText: { token: 'clear' },
-        radioOptions: isGroupV2AndAdmin
-          ? [
-              {
-                value: 'clearOnThisDevice',
-                label: tr('clearOnThisDevice'),
-                inputDataTestId: 'clear-device-radio-option',
-                labelDataTestId: 'clear-device-radio-option-label',
-              },
-              {
-                value: clearMessagesForEveryone,
-                label: tr(clearMessagesForEveryone),
-                inputDataTestId: 'clear-everyone-radio-option',
-                labelDataTestId: 'clear-everyone-radio-option-label',
-              },
-            ]
-          : undefined,
+        radioOptions,
       })
     );
 

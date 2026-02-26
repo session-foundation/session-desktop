@@ -17,6 +17,8 @@ import { messageArgsToArgsOnly, tr, type TrArgs } from '../../localization/local
 import { ModalFlexContainer } from './shared/ModalFlexContainer';
 import { ModalWarning } from './shared/ModalWarning';
 
+export type RadioOptions = { items: SessionRadioItems; defaultSelectedValue: string | undefined };
+
 export type SessionConfirmDialogProps = {
   i18nMessage?: TrArgs;
   title?: TrArgs;
@@ -24,7 +26,7 @@ export type SessionConfirmDialogProps = {
    * Warning message to display in the modal
    */
   warningMessage?: TrArgs;
-  radioOptions?: SessionRadioItems;
+  radioOptions?: RadioOptions;
   onClose?: any;
 
   /**
@@ -71,8 +73,21 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
   const lastMessage = useLastMessage(conversationId);
 
   const [isLoading, setIsLoading] = useState(false);
-  const [chosenOption, setChosenOption] = useState(
-    radioOptions?.length ? radioOptions[0].value : ''
+
+  const defaultSelectedOption = radioOptions?.defaultSelectedValue
+    ? radioOptions?.items.find(item => item.value === radioOptions?.defaultSelectedValue)
+    : undefined;
+
+  const defaultSelectedIsDisabled = defaultSelectedOption?.disabled ?? false;
+  const firstItemNotDisabled = radioOptions?.items.find(item => !item.disabled);
+
+  const [chosenOption, setChosenOption] = useState<string | undefined>(
+    // If a defaultSelected is provided and it is not disabled, use that.
+    // Otherwise use the first item that is not disabled.
+    //
+    defaultSelectedOption && !defaultSelectedIsDisabled
+      ? defaultSelectedOption.value
+      : firstItemNotDisabled?.value
   );
 
   const cancelText = props.cancelText
@@ -163,11 +178,11 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
         {props.warningMessage ? (
           <ModalWarning dataTestId="modal-warning" localizerProps={props.warningMessage} />
         ) : null}
-        {radioOptions && chosenOption !== '' ? (
+        {!!radioOptions?.items.length && chosenOption !== '' ? (
           <SessionRadioGroup
             group="session-confirm-radio-group"
-            initialItem={chosenOption}
-            items={radioOptions}
+            initialItem={chosenOption ?? ''}
+            items={radioOptions.items}
             onClick={value => {
               if (value) {
                 setChosenOption(value);
