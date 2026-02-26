@@ -1,22 +1,17 @@
 import styled from 'styled-components';
-import { type RefObject, type KeyboardEvent, useRef } from 'react';
-import useMount from 'react-use/lib/useMount';
+import { type RefObject } from 'react';
 import { nativeEmojiData } from '../../../../util/emoji';
 import { getRecentReactions } from '../../../../util/storage';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 import { SessionLucideIconButton } from '../../../icon/SessionIconButton';
-import {
-  createButtonOnKeyDownForClickEventHandler,
-  isEscapeKey,
-} from '../../../../util/keyboardShortcuts';
+import { createButtonOnKeyDownForClickEventHandler } from '../../../../util/keyboardShortcuts';
 
 type Props = {
   ref?: RefObject<HTMLDivElement | null>;
   emojiPanelTriggerRef: RefObject<HTMLButtonElement | null>;
-  autoFocusFirstEmoji?: boolean;
-  onEmojiClick: (emoji: string) => Promise<void>;
+  firstEmojiRef?: RefObject<HTMLSpanElement | null>;
+  onEmojiClick: (emoji: string) => void;
   onPlusButtonClick: () => void;
-  closeReactionBar: () => void;
 };
 
 const StyledMessageReactBar = styled.div`
@@ -59,41 +54,24 @@ const StyledContainer = styled.div`
 
 export const MessageReactBar = ({
   ref,
+  emojiPanelTriggerRef,
+  firstEmojiRef,
   onEmojiClick,
   onPlusButtonClick,
-  emojiPanelTriggerRef,
-  closeReactionBar,
-  autoFocusFirstEmoji,
 }: Props) => {
   const recentReactions = getRecentReactions();
-  const firstEmojiRef = useRef<HTMLSpanElement>(null);
-
-  useMount(() => {
-    // NOTE: this allows the fist emoji to be focused when the
-    // reaction bar appears if auto focus is enabled
-    if (autoFocusFirstEmoji) {
-      firstEmojiRef?.current?.focus();
-    }
-  });
 
   return (
     <StyledContainer ref={ref}>
       <StyledMessageReactBar>
         {recentReactions.map((emoji, i) => {
-          const onClick = () => void onEmojiClick(emoji);
-          const onKeyDownButtonClickHandler = createButtonOnKeyDownForClickEventHandler(onClick);
-          const onKeyDown = (e: KeyboardEvent<HTMLElement>) => {
-            if (isEscapeKey(e)) {
-              closeReactionBar();
-            } else {
-              onKeyDownButtonClickHandler(e);
-            }
-          };
+          const onClick = () => onEmojiClick(emoji);
+          const onKeyDown = createButtonOnKeyDownForClickEventHandler(onClick);
           const ariaLabel = nativeEmojiData?.ariaLabels?.[emoji];
 
           return (
             <ReactButton
-              ref={autoFocusFirstEmoji && i === 0 ? firstEmojiRef : undefined}
+              ref={i === 0 ? firstEmojiRef : undefined}
               key={emoji}
               role="button"
               tabIndex={0}
@@ -110,6 +88,7 @@ export const MessageReactBar = ({
           iconColor={'var(--text-primary-color)'}
           iconSize={'large'}
           unicode={LUCIDE_ICONS_UNICODE.PLUS}
+          dataTestId="reaction-emoji-panel-button"
           onClick={onPlusButtonClick}
           backgroundColor="var(--emoji-reaction-bar-icon-background-color)"
           // NOTE: these magic numbers align the plus icon with the emoji buttons

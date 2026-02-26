@@ -1,4 +1,4 @@
-import { SessionDataTestId, MouseEvent, useCallback, Dispatch } from 'react';
+import { SessionDataTestId, MouseEvent, useCallback, Dispatch, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { clsx } from 'clsx';
 import styled from 'styled-components';
@@ -22,6 +22,7 @@ import { SessionEmojiReactBarPopover } from '../../SessionEmojiReactBarPopover';
 import { PopoverTriggerPosition } from '../../../SessionTooltip';
 import { trimWhitespace } from '../../../../session/utils/String';
 import { useMessageReact, useMessageReply } from '../../../../hooks/useMessageInteractions';
+import { SessionFocusTrap } from '../../../SessionFocusTrap';
 
 export type MessageContentWithStatusSelectorProps = { isGroup: boolean } & Pick<
   MessageRenderingProps,
@@ -64,7 +65,6 @@ export const MessageContentWithStatuses = (props: Props) => {
     convoReactionsEnabled,
     triggerPosition,
     setTriggerPosition,
-    autoFocusReactionBarFirstEmoji,
   } = props;
   const dispatch = getAppDispatch();
   const contentProps = useSelector((state: StateType) =>
@@ -77,6 +77,8 @@ export const MessageContentWithStatuses = (props: Props) => {
   const multiSelectMode = useIsMessageSelectionMode();
   const status = useMessageStatus(props.messageId);
   const isSent = status === 'sent' || status === 'read'; // a read message should be reactable
+
+  const reactBarFirstEmojiRef = useRef<HTMLSpanElement>(null);
 
   const onClickOnMessageOuterContainer = useCallback(
     (event: MouseEvent<HTMLDivElement>) => {
@@ -129,6 +131,8 @@ export const MessageContentWithStatuses = (props: Props) => {
     setTriggerPosition(null);
   };
 
+  const active = !!triggerPosition && !!reactBarFirstEmojiRef.current;
+
   return (
     <StyledMessageContentContainer $isIncoming={isIncoming} $isDetailView={isDetailView}>
       <ExpirableReadableMessage
@@ -153,22 +157,27 @@ export const MessageContentWithStatuses = (props: Props) => {
           </StyledMessageWithAuthor>
           <MessageStatus dataTestId="msg-status" messageId={messageId} />
         </Flex>
-        {enableReactions ? (
-          <SessionEmojiReactBarPopover
-            messageId={messageId}
-            open={!!triggerPosition}
-            triggerPos={triggerPosition}
-            onClickAwayFromReactionBar={closeReactionBar}
-            autoFocusFirstEmoji={autoFocusReactionBarFirstEmoji}
-          />
-        ) : null}
-        {enableContextMenu ? (
-          <MessageContextMenu
-            messageId={messageId}
-            contextMenuId={ctxMenuID}
-            setTriggerPosition={setTriggerPosition}
-          />
-        ) : null}
+        <SessionFocusTrap
+          active={active}
+          initialFocus={() => reactBarFirstEmojiRef.current ?? false}
+          onDeactivate={closeReactionBar}
+          clickOutsideDeactivates={true}
+        >
+          {enableReactions ? (
+            <SessionEmojiReactBarPopover
+              messageId={messageId}
+              triggerPos={triggerPosition}
+              reactBarFirstEmojiRef={reactBarFirstEmojiRef}
+            />
+          ) : null}
+          {enableContextMenu ? (
+            <MessageContextMenu
+              messageId={messageId}
+              contextMenuId={ctxMenuID}
+              setTriggerPosition={setTriggerPosition}
+            />
+          ) : null}
+        </SessionFocusTrap>
       </ExpirableReadableMessage>
       {!isDetailView && enableReactions ? (
         <MessageReactions

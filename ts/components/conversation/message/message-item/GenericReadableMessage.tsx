@@ -30,6 +30,7 @@ import { setFocusedMessageId } from '../../../../state/ducks/conversations';
 import { PopoverTriggerPosition } from '../../../SessionTooltip';
 import { useKeyboardShortcut } from '../../../../hooks/useKeyboardShortcut';
 import { useFocusScope, useIsInScope } from '../../../../state/focus';
+import { closeContextMenus } from '../../../../util/contextMenu';
 
 export type GenericReadableMessageSelectorProps = Pick<
   MessageRenderingProps,
@@ -55,6 +56,7 @@ const StyledReadableMessage = styled.div<{
   selected: boolean;
   $isDetailView: boolean;
   $focusedKeyboard: boolean;
+  $forceFocusedMessageBackground: boolean;
 }>`
   display: flex;
   align-items: center;
@@ -76,6 +78,11 @@ const StyledReadableMessage = styled.div<{
     background-color: var(--conversation-tab-background-selected-color);
   }`
       : ''}
+
+  ${props =>
+    props.$forceFocusedMessageBackground
+      ? 'background-color: var(--conversation-tab-background-selected-color);'
+      : ''}
 `;
 
 export const GenericReadableMessage = (props: Props) => {
@@ -95,11 +102,21 @@ export const GenericReadableMessage = (props: Props) => {
   const ref = useRef<HTMLDivElement>(null);
   const pointerDownRef = useRef(false);
   const [triggerPosition, setTriggerPosition] = useState<PopoverTriggerPosition | null>(null);
-  const [autoFocusReactionBarFirstEmoji, setAutoFocusReactionBarFirstEmoji] =
-    useState<boolean>(false);
   const isInFocusScope = useIsInScope({ scope: 'message', scopeId: messageId });
   const { focusedMessageId } = useFocusScope();
   const isAnotherMessageFocused = focusedMessageId && !isInFocusScope;
+
+  const focusMessageId = () => {
+    dispatch(setFocusedMessageId(messageId));
+  };
+
+  const onFocus = () => {
+    focusMessageId();
+  };
+
+  const onBlur = () => {
+    dispatch(setFocusedMessageId(null));
+  };
 
   const getMessageContainerTriggerPosition = (): PopoverTriggerPosition | null => {
     if (!ref.current) {
@@ -152,28 +169,18 @@ export const GenericReadableMessage = (props: Props) => {
       }
       const overrideTriggerPosition = getMessageContainerTriggerPosition();
       if (overrideTriggerPosition) {
-        setAutoFocusReactionBarFirstEmoji(true);
         handleContextMenu(e, overrideTriggerPosition);
       }
     }
   };
 
-  const onFocus = () => {
-    dispatch(setFocusedMessageId(messageId));
-  };
-
-  const onBlur = () => {
-    dispatch(setFocusedMessageId(null));
-    setAutoFocusReactionBarFirstEmoji(false);
-  };
-
   const toggleEmojiReactionBarWithKeyboard = () => {
     if (triggerPosition) {
+      closeContextMenus();
       setTriggerPosition(null);
     } else {
       const pos = getMessageContainerTriggerPosition();
       if (pos) {
-        setAutoFocusReactionBarFirstEmoji(true);
         setTriggerPosition(pos);
       }
     }
@@ -207,6 +214,9 @@ export const GenericReadableMessage = (props: Props) => {
       key={`readable-message-${messageId}`}
       onKeyDown={onKeyDown}
       $focusedKeyboard={!pointerDownRef.current}
+      $forceFocusedMessageBackground={
+        /** FIXME: sss */ !!triggerPosition && !pointerDownRef.current
+      }
       tabIndex={0}
       onPointerDown={() => {
         pointerDownRef.current = true;
@@ -224,7 +234,6 @@ export const GenericReadableMessage = (props: Props) => {
         convoReactionsEnabled={convoReactionsEnabled}
         triggerPosition={triggerPosition}
         setTriggerPosition={setTriggerPosition}
-        autoFocusReactionBarFirstEmoji={autoFocusReactionBarFirstEmoji}
       />
     </StyledReadableMessage>
   );

@@ -5,6 +5,7 @@ import { isNil, isNumber, isString } from 'lodash';
 import { MenuOnHideCallback, MenuOnShowCallback } from 'react-contexify';
 import styled from 'styled-components';
 import { toNumber } from 'lodash/fp';
+import { useSelector } from 'react-redux';
 import { getAppDispatch } from '../../../../state/dispatch';
 import { Data } from '../../../../data/data';
 
@@ -12,6 +13,7 @@ import { MessageRenderingProps } from '../../../../models/messageType';
 import { openRightPanel, showMessageInfoView } from '../../../../state/ducks/conversations';
 import { useMessageSender, useMessageSenderIsAdmin } from '../../../../state/selectors';
 import {
+  getSelectedCanWrite,
   useSelectedConversationKey,
   useSelectedIsLegacyGroup,
 } from '../../../../state/selectors/selectedConversation';
@@ -35,7 +37,7 @@ import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 import {
   useMessageCopyText,
   useMessageReply,
-  useMessageSaveAttachement,
+  useMessageSaveAttachment,
   useMessageSelect,
 } from '../../../../hooks/useMessageInteractions';
 
@@ -203,7 +205,7 @@ export const showMessageInfoOverlay = async ({
 };
 
 function SaveAttachmentMenuItem({ messageId }: { messageId: string }) {
-  const saveAttachment = useMessageSaveAttachement(messageId);
+  const saveAttachment = useMessageSaveAttachment(messageId);
 
   return saveAttachment ? (
     <MenuItem
@@ -244,8 +246,9 @@ function CopyBodyMenuItem({ messageId }: { messageId: string }) {
 
 function MessageReplyMenuItem({ messageId }: { messageId: string }) {
   const reply = useMessageReply(messageId);
+  const canWrite = useSelector(getSelectedCanWrite);
 
-  return reply ? (
+  return reply && canWrite ? (
     <MenuItem onClick={reply} iconType={LUCIDE_ICONS_UNICODE.REPLY} isDangerAction={false}>
       {tr('reply')}
     </MenuItem>

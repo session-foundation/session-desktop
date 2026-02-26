@@ -9,22 +9,22 @@ const EMOJI_PANEL_WIDTH_PX = 354;
 const EMOJI_PANEL_HEIGHT_PX = 435;
 
 export function SessionEmojiPanelPopover({
-  triggerPos,
   emojiPanelRef,
+  triggerPosition,
   onEmojiClick,
   open,
   onClose,
 }: {
-  triggerPos: PopoverTriggerPosition | null;
-  open: boolean;
   emojiPanelRef: RefObject<HTMLDivElement | null>;
-  onEmojiClick: (emoji: FixedBaseEmoji) => Promise<void>;
+  triggerPosition: PopoverTriggerPosition | null;
+  open: boolean;
+  onEmojiClick: (emoji: FixedBaseEmoji) => void;
   onClose: () => void;
 }) {
-  const _open = open && !!triggerPos;
+  const _open = open && !!triggerPosition;
   return (
     <SessionPopoverContent
-      triggerPosition={triggerPos}
+      triggerPosition={triggerPosition}
       open={_open}
       isTooltip={false}
       verticalPosition="bottom"
@@ -32,15 +32,13 @@ export function SessionEmojiPanelPopover({
       fallbackContentWidth={EMOJI_PANEL_WIDTH_PX}
       fallbackContentHeight={EMOJI_PANEL_HEIGHT_PX}
     >
-      {_open ? (
-        <SessionEmojiPanel
-          ref={emojiPanelRef}
-          show={true}
-          onEmojiClicked={emoji => void onEmojiClick(emoji)}
-          onClose={onClose}
-          isModal={true}
-        />
-      ) : null}
+      <SessionEmojiPanel
+        ref={emojiPanelRef}
+        onEmojiClicked={onEmojiClick}
+        onClose={onClose}
+        isModal={true}
+        show={_open}
+      />
     </SessionPopoverContent>
   );
 }

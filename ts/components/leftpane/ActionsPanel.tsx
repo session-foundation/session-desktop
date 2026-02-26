@@ -180,6 +180,12 @@ function useDebugFocusScope() {
   const debugFocusScope = getFeatureFlagMemo('debugFocusScope');
   const focusScope = useFocusScope();
 
+  useMount(() => {
+    document.addEventListener('focusin', event => {
+      window.log.warn('Element focused:', event.target);
+    });
+  });
+
   useEffect(() => {
     if (debugFocusScope) {
       window.log.debug(`[debugFocusScope] focus scope changed to`, focusScope);

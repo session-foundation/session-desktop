@@ -23,7 +23,7 @@ import {
 import { saveAttachmentToDisk } from '../util/attachment/attachmentsUtil';
 import { deleteMessagesForX } from '../interactions/conversations/unsendingInteractions';
 
-export function useMessageSaveAttachement(messageId?: string) {
+export function useMessageSaveAttachment(messageId?: string) {
   const convoId = useSelectedConversationKey();
   const attachments = useMessageAttachments(messageId);
   const timestamp = useMessageTimestamp(messageId);
