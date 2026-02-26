@@ -1,5 +1,6 @@
 import { Slide, ToastContainer, ToastContainerProps } from 'react-toastify';
 import styled from 'styled-components';
+import { isTestIntegration } from '../shared/env_vars';
 
 // NOTE: https://styled-components.com/docs/faqs#how-can-i-override-styles-with-higher-specificity
 const StyledToastContainer = styled(ToastContainer)`
@@ -40,7 +41,7 @@ export const SessionToastContainer = () => {
   return (
     <WrappedToastContainer
       position="bottom-right"
-      autoClose={5000}
+      autoClose={isTestIntegration() ? 1000 : 5000}
       hideProgressBar={true}
       newestOnTop={true}
       closeOnClick={true}

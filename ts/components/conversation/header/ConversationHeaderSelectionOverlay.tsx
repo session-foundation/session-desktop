@@ -3,13 +3,9 @@ import { useSelector } from 'react-redux';
 import useKey from 'react-use/lib/useKey';
 import { getAppDispatch } from '../../../state/dispatch';
 
-import { deleteMessagesForX } from '../../../interactions/conversations/unsendingInteractions';
 import { resetSelectedMessageIds } from '../../../state/ducks/conversations';
 import { getSelectedMessageIds } from '../../../state/selectors/conversations';
-import {
-  useSelectedConversationKey,
-  useSelectedIsPublic,
-} from '../../../state/selectors/selectedConversation';
+import { useSelectedConversationKey } from '../../../state/selectors/selectedConversation';
 import {
   SessionButton,
   SessionButtonColor,
@@ -21,11 +17,12 @@ import { tr } from '../../../localization/localeTools';
 import { SessionLucideIconButton } from '../../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 import { isBackspace, isDeleteKey, isEscapeKey } from '../../../util/keyboardShortcuts';
+import { useDeleteMessagesCb } from '../../menuAndSettingsHooks/useDeleteMessagesCb';
 
 export const SelectionOverlay = () => {
   const selectedMessageIds = useSelector(getSelectedMessageIds);
   const selectedConversationKey = useSelectedConversationKey();
-  const isPublic = useSelectedIsPublic();
+  const deleteMessagesCb = useDeleteMessagesCb(selectedConversationKey);
   const dispatch = getAppDispatch();
   const ref = useRef(null);
 
@@ -51,8 +48,8 @@ export const SelectionOverlay = () => {
           return true;
         case 'Backspace':
         case 'Delete':
-          if (selectionMode && selectedConversationKey) {
-            void deleteMessagesForX(selectedMessageIds, selectedConversationKey, isPublic);
+          if (selectionMode) {
+            void deleteMessagesCb?.(selectedMessageIds);
           }
           return true;
         default:
@@ -60,12 +57,6 @@ export const SelectionOverlay = () => {
       return false;
     }
   );
-
-  // `enforceDeleteServerSide` should check for message statuses too, but when we have multiple selected,
-  // some might be sent and some in an error state. We default to trying to delete all of them server side first,
-  // which might fail. If that fails, the user will need to do a delete for all the ones sent already, and a manual delete
-  // for each ones which is in an error state.
-  const enforceDeleteServerSide = isPublic;
 
   return (
     <SessionFocusTrap
@@ -96,14 +87,8 @@ export const SelectionOverlay = () => {
         buttonShape={SessionButtonShape.Square}
         buttonType={SessionButtonType.Solid}
         text={tr('delete')}
-        onClick={async () => {
-          if (selectedConversationKey) {
-            await deleteMessagesForX(
-              selectedMessageIds,
-              selectedConversationKey,
-              enforceDeleteServerSide
-            );
-          }
+        onClick={() => {
+          void deleteMessagesCb?.(selectedMessageIds);
         }}
       />
     </SessionFocusTrap>

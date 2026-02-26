@@ -44,7 +44,7 @@ export const ClickToTrustSender = (props: { messageId: string }) => {
     const convo = ConvoHub.use().get(sender);
     window.inboxStore?.dispatch(
       updateConfirmModal({
-        title: tr('attachmentsAutoDownloadModalTitle'),
+        title: { token: 'attachmentsAutoDownloadModalTitle' },
         i18nMessage: {
           token: 'attachmentsAutoDownloadModalDescription',
           conversation_name: convo.getNicknameOrRealUsernameOrPlaceholder(),
@@ -114,8 +114,8 @@ export const ClickToTrustSender = (props: { messageId: string }) => {
         onClickClose: () => {
           window.inboxStore?.dispatch(updateConfirmModal(null));
         },
-        okText: tr('yes'),
-        cancelText: tr('no'),
+        okText: { token: 'yes' },
+        cancelText: { token: 'no' },
       })
     );
   };

@@ -1,16 +1,18 @@
 import { useConversationUsernameWithFallback } from '../../../../hooks/useParamSelector';
-import type { WithMessageId } from '../../../../session/types/with';
-import { useMessageAuthorIsUs, useMessageIsUnread } from '../../../../state/selectors';
+import type { WithContextMenuId, WithMessageId } from '../../../../session/types/with';
+import { useMessageAuthorIsUs } from '../../../../state/selectors';
 import { useSelectedConversationKey } from '../../../../state/selectors/selectedConversation';
 import { Flex } from '../../../basic/Flex';
 import { Localizer } from '../../../basic/Localizer';
 import { SpacerSM, TextWithChildren } from '../../../basic/Text';
-import { ReadableMessage } from './ReadableMessage';
+import type { WithPopoverPosition, WithSetPopoverPosition } from '../../../SessionTooltip';
+import { ExpirableReadableMessage } from './ExpirableReadableMessage';
 
-// Note: this should not respond to the disappearing message conversation setting so we use the ReadableMessage directly
-export const MessageRequestResponse = ({ messageId }: WithMessageId) => {
+export const MessageRequestResponse = ({
+  messageId,
+  ...props
+}: WithMessageId & WithPopoverPosition & WithSetPopoverPosition & WithContextMenuId) => {
   const conversationId = useSelectedConversationKey();
-  const isUnread = useMessageIsUnread(messageId) || false;
   const isUs = useMessageAuthorIsUs(messageId);
 
   const name = useConversationUsernameWithFallback(true, conversationId);
@@ -20,9 +22,10 @@ export const MessageRequestResponse = ({ messageId }: WithMessageId) => {
   }
 
   return (
-    <ReadableMessage
+    <ExpirableReadableMessage
       messageId={messageId}
-      isUnread={isUnread}
+      contextMenuId={props.contextMenuId}
+      setTriggerPosition={props.setTriggerPosition}
       dataTestId="message-request-response-message"
       key={`readable-message-${messageId}`}
     >
@@ -43,6 +46,6 @@ export const MessageRequestResponse = ({ messageId }: WithMessageId) => {
           )}
         </TextWithChildren>
       </Flex>
-    </ReadableMessage>
+    </ExpirableReadableMessage>
   );
 };

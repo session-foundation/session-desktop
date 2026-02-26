@@ -6,8 +6,8 @@ import { MessageReactBar } from './message/message-content/MessageReactBar';
 import { THEME_GLOBALS } from '../../themes/globals';
 import { SessionEmojiPanelPopover } from './SessionEmojiPanelPopover';
 import { closeContextMenus } from '../../util/contextMenu';
-import { useMessageInteractions } from '../../hooks/useMessageInteractions';
 import { useFocusedMessageId } from '../../state/selectors/conversations';
+import { useReactToMessage } from '../../hooks/useMessageInteractions';
 
 export function SessionEmojiReactBarPopover({
   messageId,
@@ -26,7 +26,7 @@ export function SessionEmojiReactBarPopover({
   const emojiPanelRef = useRef<HTMLDivElement>(null);
   const emojiReactionBarRef = useRef<HTMLDivElement>(null);
   const [showEmojiPanel, setShowEmojiPanel] = useState<boolean>(false);
-  const { reactToMessage } = useMessageInteractions(messageId);
+  const reactToMessage = useReactToMessage(messageId);
   const focusedMessageId = useFocusedMessageId();
 
   const closeEmojiPanel = () => {
@@ -41,7 +41,7 @@ export function SessionEmojiReactBarPopover({
   const onEmojiClick = async (args: any) => {
     const emoji = args.native ?? args;
     closeEmojiPanel();
-    await reactToMessage(emoji);
+    await reactToMessage?.(emoji);
   };
 
   useClickAway(emojiPanelRef, () => {

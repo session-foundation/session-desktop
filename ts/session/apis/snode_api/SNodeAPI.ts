@@ -21,7 +21,7 @@ import { ReduxOnionSelectors } from '../../../state/selectors/onions';
 export const ERROR_CODE_NO_CONNECT = 'ENETUNREACH: No network connection.';
 
 // TODO we should merge those two functions together as they are almost exactly the same
-const forceNetworkDeletion = async (): Promise<Array<string> | null> => {
+async function forceNetworkDeletion(): Promise<Array<string> | null> {
   const sodium = await getSodiumRenderer();
   const usPk = UserUtils.getOurPubKeyStrFromCache();
 
@@ -154,18 +154,18 @@ const forceNetworkDeletion = async (): Promise<Array<string> | null> => {
     window?.log?.warn(`failed to ${request.method} everything on network:`, e);
     return null;
   }
-};
+}
 
 const getMinTimeout = () => 500;
 
 /**
  * Delete the specified message hashes from our own swarm only.
- * Note: legacy groups does not support this
+ * Note: legacy groups are not supported
  */
-const networkDeleteMessageOurSwarm = async (
+async function networkDeleteMessageOurSwarm(
   messagesHashes: Set<string>,
   pubkey: PubkeyType
-): Promise<boolean> => {
+): Promise<boolean> {
   const sodium = await getSodiumRenderer();
   if (!PubKey.is05Pubkey(pubkey) || pubkey !== UserUtils.getOurPubKeyStrFromCache()) {
     throw new Error('networkDeleteMessageOurSwarm with 05 pk can only for our own swarm');
@@ -272,7 +272,6 @@ const networkDeleteMessageOurSwarm = async (
               return null;
             })
           );
-
           return isEmpty(results);
         } catch (e) {
           throw new Error(
@@ -283,7 +282,7 @@ const networkDeleteMessageOurSwarm = async (
         }
       },
       {
-        retries: 5,
+        retries: 2,
         minTimeout: SnodeAPI.getMinTimeout(),
         onFailedAttempt: e => {
           window?.log?.warn(
@@ -301,7 +300,7 @@ const networkDeleteMessageOurSwarm = async (
     );
     return false;
   }
-};
+}
 
 /**
  * Delete the specified message hashes from the 03-group's swarm.
@@ -311,10 +310,10 @@ const networkDeleteMessageOurSwarm = async (
  *  - if one of the hashes was already not found in the swarm,
  *  - if the request failed too many times
  */
-const networkDeleteMessagesForGroup = async (
+async function networkDeleteMessagesForGroup(
   messagesHashes: Set<string>,
   groupPk: GroupPubkeyType
-): Promise<boolean> => {
+): Promise<boolean> {
   if (!PubKey.is03Pubkey(groupPk)) {
     throw new Error('networkDeleteMessagesForGroup with 05 pk can only delete for ourself');
   }
@@ -379,7 +378,7 @@ const networkDeleteMessagesForGroup = async (
     window?.log?.warn(`networkDeleteMessagesForGroup: failed to delete messages on network:`, e);
     return false;
   }
-};
+}
 
 export const SnodeAPI = {
   getMinTimeout,

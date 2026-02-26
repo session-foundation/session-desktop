@@ -1,5 +1,5 @@
 import { declineConversationWithoutConfirm } from '../../interactions/conversationInteractions';
-import { tr, type TrArgs } from '../../localization';
+import { type TrArgs } from '../../localization';
 import { updateConfirmModal } from '../../state/ducks/modalDialog';
 import { SessionButtonColor } from '../basic/SessionButton';
 import { getAppDispatch } from '../../state/dispatch';
@@ -52,9 +52,9 @@ export const useDeclineMessageRequest = ({
 
     dispatch(
       updateConfirmModal({
-        okText: alsoBlock ? tr('block') : tr('delete'),
-        cancelText: tr('cancel'),
-        title: alsoBlock ? tr('block') : tr('delete'),
+        okText: alsoBlock ? { token: 'block' } : { token: 'delete' },
+        cancelText: { token: 'cancel' },
+        title: alsoBlock ? { token: 'block' } : { token: 'delete' },
         i18nMessage,
         okTheme: SessionButtonColor.Danger,
         onClickOk: async () => {

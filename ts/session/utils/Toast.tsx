@@ -264,3 +264,7 @@ export function pushNoMediaUntilApproved() {
 export function pushRateLimitHitReactions() {
   pushToastInfo('reactRateLimit', tStripped('emojiReactsCoolDown'));
 }
+
+export function pushGenericError() {
+  pushToastError('errorGeneric', tStripped('errorGeneric'));
+}

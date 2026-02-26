@@ -481,9 +481,7 @@ async function handleUnsendMessage(
     ])
   )?.[0];
   const messageHash = messageToDelete?.get('messageHash');
-  // #endregion
 
-  // #region executing deletion
   if (messageHash && messageToDelete) {
     window.log.info('handleUnsendMessage: got a request to delete ', messageHash);
     const conversation = ConvoHub.use().get(messageToDelete.get('conversationId'));
@@ -491,7 +489,7 @@ async function handleUnsendMessage(
       return;
     }
     if (messageToDelete.getSource() === UserUtils.getOurPubKeyStrFromCache()) {
-      // a message we sent is completely removed when we get a unsend request
+      // a message we sent is completely removed when we get a unsend request for it
       void deleteMessagesFromSwarmAndCompletelyLocally(conversation, [messageToDelete]);
     } else {
       void deleteMessagesFromSwarmAndMarkAsDeletedLocally(conversation, [messageToDelete]);

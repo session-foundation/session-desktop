@@ -39,10 +39,10 @@ const toggleCallMediaPermissions = async (triggerUIUpdate: () => void) => {
   if (!currentValue) {
     window.inboxStore?.dispatch(
       updateConfirmModal({
-        title: tr('callsVoiceAndVideoBeta'),
+        title: { token: 'callsVoiceAndVideoBeta' },
         i18nMessage: { token: 'callsVoiceAndVideoModalDescription' },
         okTheme: SessionButtonColor.Danger,
-        okText: tr('theContinue'),
+        okText: { token: 'theContinue' },
         onClickOk: async () => {
           await window.toggleCallMediaPermissionsTo(true);
           triggerUIUpdate();
@@ -54,7 +54,7 @@ const toggleCallMediaPermissions = async (triggerUIUpdate: () => void) => {
           triggerUIUpdate();
           onClose();
         },
-        onClickClose: onClose,
+        onClickClose: onClose ? void onClose() : undefined,
       })
     );
   } else {
@@ -67,10 +67,10 @@ async function toggleLinkPreviews(isToggleOn: boolean, forceUpdate: () => void) 
   if (!isToggleOn) {
     window.inboxStore?.dispatch(
       updateConfirmModal({
-        title: tr('linkPreviewsSend'),
+        title: { token: 'linkPreviewsSend' },
         i18nMessage: { token: 'linkPreviewsSendModalDescription' },
         okTheme: SessionButtonColor.Danger,
-        okText: tr('theContinue'),
+        okText: { token: 'theContinue' },
         onClickOk: async () => {
           const newValue = !isToggleOn;
           await window.setSettingValue(SettingsKey.settingsLinkPreview, newValue);

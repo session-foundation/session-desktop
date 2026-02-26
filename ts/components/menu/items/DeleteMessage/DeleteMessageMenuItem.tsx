@@ -2,21 +2,14 @@ import styled from 'styled-components';
 import { isEmpty } from 'lodash';
 import useUpdate from 'react-use/lib/useUpdate';
 import useInterval from 'react-use/lib/useInterval';
-import {
-  useMessageIsDeletable,
-  useMessageIsDeletableForEveryone,
-} from '../../../../state/selectors';
-import {
-  useSelectedConversationKey,
-  useSelectedIsPublic,
-} from '../../../../state/selectors/selectedConversation';
+import { useSelectedConversationKey } from '../../../../state/selectors/selectedConversation';
 import { MenuItem } from '../MenuItem';
 import { tr } from '../../../../localization/localeTools';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 import { DURATION } from '../../../../session/constants';
 import { formatAbbreviatedExpireDoubleTimer } from '../../../../util/i18n/formatting/expirationTimer';
 import { useMessageExpirationPropsById } from '../../../../hooks/useParamSelector';
-import { useMessageInteractions } from '../../../../hooks/useMessageInteractions';
+import { useDeleteMessagesCb } from '../../../menuAndSettingsHooks/useDeleteMessagesCb';
 
 const StyledDeleteItemContent = styled.span`
   display: flex;
@@ -95,22 +88,19 @@ const ExpiresInItem = ({ messageId }: { messageId: string }) => {
 
 export const DeleteItem = ({ messageId }: { messageId: string }) => {
   const convoId = useSelectedConversationKey();
-  const isPublic = useSelectedIsPublic();
 
-  const isDeletable = useMessageIsDeletable(messageId);
-  const isDeletableForEveryone = useMessageIsDeletableForEveryone(messageId);
+  const deleteMessagesCb = useDeleteMessagesCb(convoId);
 
-  const { deleteFromConvo } = useMessageInteractions(messageId);
-  const onClick = () => {
-    deleteFromConvo(isPublic, convoId);
-  };
-
-  if (!convoId || (isPublic && !isDeletableForEveryone) || (!isPublic && !isDeletable)) {
+  if (!deleteMessagesCb || !messageId) {
     return null;
   }
 
   return (
-    <MenuItem onClick={onClick} iconType={LUCIDE_ICONS_UNICODE.TRASH2} isDangerAction={true}>
+    <MenuItem
+      onClick={() => void deleteMessagesCb(messageId)}
+      iconType={LUCIDE_ICONS_UNICODE.TRASH2}
+      isDangerAction={true}
+    >
       <StyledDeleteItemContent>
         <StyledTextContainer>
           {tr('delete')}

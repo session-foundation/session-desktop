@@ -3,49 +3,47 @@ import {
   type KeyboardEvent,
   useCallback,
   useRef,
-  useMemo,
   useState,
   useEffect,
 } from 'react';
 import clsx from 'clsx';
 
-import { useSelector } from 'react-redux';
 import styled, { keyframes } from 'styled-components';
 import { useIsDetailMessageView } from '../../../../contexts/isDetailViewContext';
 import { MessageRenderingProps } from '../../../../models/messageType';
-import { ConvoHub } from '../../../../session/conversations';
-import { StateType } from '../../../../state/reducer';
-import { useMessageSelected } from '../../../../state/selectors';
-import { getGenericReadableMessageSelectorProps } from '../../../../state/selectors/conversations';
+import {
+  useMessageDirection,
+  useMessageSelected,
+  useMessageType,
+} from '../../../../state/selectors';
 import { MessageContentWithStatuses } from '../message-content/MessageContentWithStatus';
 import { StyledMessageReactionsContainer } from '../message-content/MessageReactions';
 import {
   useIsMessageSelectionMode,
+  useSelectedConversationKey,
   useSelectedIsBlocked,
+  useSelectedIsKickedFromGroup,
 } from '../../../../state/selectors/selectedConversation';
 import { isButtonClickKey, KbdShortcut } from '../../../../util/keyboardShortcuts';
 import { showMessageContextMenu } from '../message-content/MessageContextMenu';
 import { getAppDispatch } from '../../../../state/dispatch';
-import { setFocusedMessageId } from '../../../../state/ducks/conversations';
+import { setFocusedMessageId, type UIMessageType } from '../../../../state/ducks/conversations';
 import { PopoverTriggerPosition } from '../../../SessionTooltip';
 import { useKeyboardShortcut } from '../../../../hooks/useKeyboardShortcut';
+import type { WithMessageId } from '../../../../session/types/with';
+import { CommunityInvitation } from './CommunityInvitation';
+import { DataExtractionNotification } from './DataExtractionNotification';
+import { TimerNotification } from '../../TimerNotification';
+import { GroupUpdateMessage } from './GroupUpdateMessage';
+import { CallNotification } from './notification-bubble/CallNotification';
+import { InteractionNotification } from './InteractionNotification';
+import { MessageRequestResponse } from './MessageRequestResponse';
 import { useFocusScope, useIsInScope } from '../../../../state/focus';
 
 export type GenericReadableMessageSelectorProps = Pick<
   MessageRenderingProps,
-  | 'direction'
-  | 'conversationType'
-  | 'receivedAt'
-  | 'isUnread'
-  | 'convoId'
-  | 'isDeleted'
-  | 'isKickedFromGroup'
+  'direction' | 'convoId' | 'isKickedFromGroup'
 >;
-
-type Props = {
-  messageId: string;
-  ctxMenuID: string;
-};
 
 const highlightedMessageAnimation = keyframes`
   1% { background-color: var(--primary-color); }
@@ -78,19 +76,43 @@ const StyledReadableMessage = styled.div<{
       : ''}
 `;
 
-export const GenericReadableMessage = (props: Props) => {
+function getMessageComponent(messageType: UIMessageType) {
+  switch (messageType) {
+    case 'community-invitation':
+      return CommunityInvitation;
+    case 'data-extraction-notification':
+      return DataExtractionNotification;
+    case 'timer-update-notification':
+      return TimerNotification;
+    case 'group-update-notification':
+      return GroupUpdateMessage;
+    case 'call-notification':
+      return CallNotification;
+    case 'interaction-notification':
+      return InteractionNotification;
+    case 'message-request-response':
+      return MessageRequestResponse;
+    case 'regular-message':
+      return MessageContentWithStatuses;
+    default:
+      return null;
+  }
+}
+
+export const GenericReadableMessage = ({ messageId }: WithMessageId) => {
   const isDetailView = useIsDetailMessageView();
   const dispatch = getAppDispatch();
 
-  const { ctxMenuID, messageId } = props;
+  const ctxMenuID = `ctx-menu-message-${messageId}`;
 
-  const msgProps = useSelector((state: StateType) =>
-    getGenericReadableMessageSelectorProps(state, props.messageId)
-  );
-  const isMessageSelected = useMessageSelected(props.messageId);
+  const isMessageSelected = useMessageSelected(messageId);
   const selectedIsBlocked = useSelectedIsBlocked();
 
   const multiSelectMode = useIsMessageSelectionMode();
+
+  const convoId = useSelectedConversationKey();
+  const direction = useMessageDirection(messageId);
+  const isKickedFromGroup = useSelectedIsKickedFromGroup();
 
   const ref = useRef<HTMLDivElement>(null);
   const pointerDownRef = useRef(false);
@@ -111,7 +133,7 @@ export const GenericReadableMessage = (props: Props) => {
       y: rect.top,
       height: rect.height,
       width: rect.width,
-      offsetX: msgProps?.direction === 'incoming' ? -halfWidth : halfWidth,
+      offsetX: direction === 'incoming' ? -halfWidth : halfWidth,
     };
   };
 
@@ -120,7 +142,7 @@ export const GenericReadableMessage = (props: Props) => {
       e: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>,
       overridePosition?: { x: number; y: number }
     ) => {
-      if (!selectedIsBlocked && !multiSelectMode && !msgProps?.isKickedFromGroup) {
+      if (!selectedIsBlocked && !multiSelectMode && !isKickedFromGroup) {
         showMessageContextMenu({
           id: ctxMenuID,
           event: e,
@@ -128,18 +150,8 @@ export const GenericReadableMessage = (props: Props) => {
         });
       }
     },
-    [selectedIsBlocked, ctxMenuID, multiSelectMode, msgProps?.isKickedFromGroup]
+    [selectedIsBlocked, ctxMenuID, multiSelectMode, isKickedFromGroup]
   );
-
-  const convoReactionsEnabled = useMemo(() => {
-    if (msgProps?.convoId) {
-      const conversationModel = ConvoHub.use().get(msgProps?.convoId);
-      if (conversationModel) {
-        return conversationModel.hasReactions();
-      }
-    }
-    return true;
-  }, [msgProps?.convoId]);
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (isButtonClickKey(e)) {
@@ -180,17 +192,24 @@ export const GenericReadableMessage = (props: Props) => {
     scopeId: messageId,
   });
 
+  const messageType = useMessageType(messageId);
+
   useEffect(() => {
     if (isAnotherMessageFocused) {
       setTriggerPosition(null);
     }
   }, [isAnotherMessageFocused]);
 
-  if (!msgProps) {
+  if (!convoId || !messageId || !messageType) {
     return null;
   }
 
   const selected = isMessageSelected || false;
+  const CmpToRender = getMessageComponent(messageType);
+
+  if (!CmpToRender) {
+    throw new Error(`Couldn't find a component for message type ${messageType}`);
+  }
 
   return (
     <StyledReadableMessage
@@ -212,11 +231,9 @@ export const GenericReadableMessage = (props: Props) => {
       }}
       onBlur={onBlur}
     >
-      <MessageContentWithStatuses
-        ctxMenuID={ctxMenuID}
+      <CmpToRender
+        contextMenuId={ctxMenuID}
         messageId={messageId}
-        dataTestId={'message-content'}
-        convoReactionsEnabled={convoReactionsEnabled}
         triggerPosition={triggerPosition}
         setTriggerPosition={setTriggerPosition}
       />

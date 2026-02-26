@@ -19,8 +19,6 @@ import { StateType } from '../reducer';
 import { ReplyingToMessageProps } from '../../components/conversation/composition/CompositionBox';
 import { MessageAttachmentSelectorProps } from '../../components/conversation/message/message-content/MessageAttachment';
 import { MessageContentSelectorProps } from '../../components/conversation/message/message-content/MessageContent';
-import { MessageContentWithStatusSelectorProps } from '../../components/conversation/message/message-content/MessageContentWithStatus';
-import { GenericReadableMessageSelectorProps } from '../../components/conversation/message/message-item/GenericReadableMessage';
 import { hasValidIncomingRequestValues } from '../../models/conversation';
 import { isOpenOrClosedGroup } from '../../models/conversationAttributes';
 import { ConvoHub } from '../../session/conversations';
@@ -36,7 +34,7 @@ import { isUsAnySogsFromCache } from '../../session/apis/open_group_api/sogsv3/k
 import { PubKey } from '../../session/types';
 import { UserGroupsWrapperActions } from '../../webworker/workers/browser/libsession_worker_interface';
 import { getSelectedConversationKey } from './selectedConversation';
-import { getModeratorsOutsideRedux, useModerators } from './sogsRoomInfo';
+import { useModerators } from './sogsRoomInfo';
 import type { SessionSuggestionDataItem } from '../../components/conversation/composition/types';
 import { useIsPublic, useWeAreAdmin } from '../../hooks/useParamSelector';
 import { tr } from '../../localization/localeTools';
@@ -127,16 +125,6 @@ export const getFirstUnreadMessageId = (state: StateType): string | null => {
   return state.conversations.firstUnreadMessageId;
 };
 
-export type MessagePropsType =
-  | 'group-notification'
-  | 'group-invitation'
-  | 'data-extraction'
-  | 'message-request-response'
-  | 'timer-notification'
-  | 'regular-message'
-  | 'call-notification'
-  | 'interaction-notification';
-
 export const getSortedMessagesTypesOfSelectedConversation = createSelector(
   getSortedMessagesOfSelectedConversation,
   getFirstUnreadMessageId,
@@ -166,27 +154,8 @@ export const getSortedMessagesTypesOfSelectedConversation = createSelector(
         messageId: msg.propsForMessage.id,
       };
 
-      const messageType: MessagePropsType = msg.propsForDataExtractionNotification
-        ? ('data-extraction' as const)
-        : msg.propsForMessageRequestResponse
-          ? ('message-request-response' as const)
-          : msg.propsForCommunityInvitation
-            ? ('group-invitation' as const)
-            : msg.propsForGroupUpdateMessage
-              ? ('group-notification' as const)
-              : msg.propsForTimerNotification
-                ? ('timer-notification' as const)
-                : msg.propsForCallNotification
-                  ? ('call-notification' as const)
-                  : msg.propsForInteractionNotification
-                    ? ('interaction-notification' as const)
-                    : ('regular-message' as const);
-
       return {
         ...common,
-        message: {
-          messageType,
-        },
       };
     });
   }
@@ -745,21 +714,6 @@ export const getMessagePropsByMessageId = createSelector(
     const groupAdmins = (isGroup && selectedConvo.groupAdmins) || [];
     const weAreAdmin = groupAdmins.includes(ourPubkey) || false;
 
-    const weAreModerator =
-      (isPublic && getModeratorsOutsideRedux(selectedConvo.id).includes(ourPubkey)) || false;
-    // A message is deletable if
-    // either we sent it,
-    // or the convo is not a public one (in this case, we will only be able to delete for us)
-    // or the convo is public and we are an admin or moderator
-    const isDeletable =
-      sender === ourPubkey || !isPublic || (isPublic && (weAreAdmin || weAreModerator));
-
-    // A message is deletable for everyone if
-    // either we sent it no matter what the conversation type,
-    // or the convo is public and we are an admin or moderator
-    const isDeletableForEveryone =
-      sender === ourPubkey || (isPublic && (weAreAdmin || weAreModerator)) || false;
-
     const isSenderAdmin = groupAdmins.includes(sender);
 
     const messageProps: MessageModelPropsWithConvoProps = {
@@ -769,8 +723,6 @@ export const getMessagePropsByMessageId = createSelector(
         isBlocked: !!selectedConvo.isBlocked,
         isPublic: !!isPublic,
         isSenderAdmin,
-        isDeletable,
-        isDeletableForEveryone,
         weAreAdmin,
         conversationType: selectedConvo.type,
         sender,
@@ -941,9 +893,7 @@ export const getIsMessageSelected = createSelector(
       return false;
     }
 
-    const { id } = props.propsForMessage;
-
-    return selectedIds.includes(id);
+    return selectedIds.includes(props.propsForMessage.id);
   }
 );
 
@@ -969,50 +919,6 @@ export const getMessageContentSelectorProps = createSelector(
     return msgProps;
   }
 );
-
-export const getMessageContentWithStatusesSelectorProps = createSelector(
-  getMessagePropsByMessageId,
-  (props): MessageContentWithStatusSelectorProps | undefined => {
-    if (!props || isEmpty(props)) {
-      return undefined;
-    }
-
-    const isGroup =
-      props.propsForMessage.conversationType !== 'private' && !props.propsForMessage.isPublic;
-
-    const msgProps: MessageContentWithStatusSelectorProps = {
-      ...pick(props.propsForMessage, ['conversationType', 'direction', 'isDeleted']),
-      isGroup,
-    };
-
-    return msgProps;
-  }
-);
-
-export const getGenericReadableMessageSelectorProps = createSelector(
-  getMessagePropsByMessageId,
-  (props): GenericReadableMessageSelectorProps | undefined => {
-    if (!props || isEmpty(props)) {
-      return undefined;
-    }
-
-    const msgProps: GenericReadableMessageSelectorProps = pick(props.propsForMessage, [
-      'convoId',
-      'direction',
-      'conversationType',
-      'expirationDurationMs',
-      'expirationTimestamp',
-      'isExpired',
-      'isUnread',
-      'receivedAt',
-      'isDeleted',
-      'isKickedFromGroup',
-    ]);
-
-    return msgProps;
-  }
-);
-
 export const getOldTopMessageId = (state: StateType): string | null =>
   state.conversations.oldTopMessageId || null;
 
