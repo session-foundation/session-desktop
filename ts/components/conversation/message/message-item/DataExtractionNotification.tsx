@@ -6,11 +6,8 @@ import { useConversationUsernameWithFallback } from '../../../../hooks/useParamS
 import type { WithContextMenuId, WithMessageId } from '../../../../session/types/with';
 import { SignalService } from '../../../../protobuf';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
-import type { WithPopoverPosition, WithSetPopoverPosition } from '../../../SessionTooltip';
 
-export const DataExtractionNotification = (
-  props: WithMessageId & WithPopoverPosition & WithSetPopoverPosition & WithContextMenuId
-) => {
+export const DataExtractionNotification = (props: WithMessageId & WithContextMenuId) => {
   const { messageId } = props;
   const author = useMessageAuthor(messageId);
   const authorName = useConversationUsernameWithFallback(true, author);
@@ -25,7 +22,6 @@ export const DataExtractionNotification = (
     <ExpirableReadableMessage
       messageId={messageId}
       contextMenuId={props.contextMenuId}
-      setTriggerPosition={props.setTriggerPosition}
       dataTestId="data-extraction-notification"
       key={`readable-message-${messageId}`}
     >

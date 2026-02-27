@@ -133,7 +133,11 @@ export const SessionSearchInput = ({ searchType }: { searchType: SearchType }) =
           iconColor="var(--text-secondary-color)"
           iconSize={iconSize}
           unicode={LUCIDE_ICONS_UNICODE.X}
-          tabIndex={0}
+          // NOTE: we don't want this clear button in the tab index list
+          // as the Escape key already does the clear action for keyboard
+          // users and we want the next tab after the search input to
+          // be the first search result
+          tabIndex={-1}
           onClick={() => {
             setCurrentSearchTerm('');
             dispatch(searchActions.clearSearch());

@@ -15,8 +15,8 @@ import { IsDetailMessageViewContext } from '../../contexts/isDetailViewContext';
 import { SessionLastSeenIndicator } from './SessionLastSeenIndicator';
 import { useKeyboardShortcut } from '../../hooks/useKeyboardShortcut';
 import { KbdShortcut } from '../../util/keyboardShortcuts';
-import { GenericReadableMessage } from './message/message-item/GenericReadableMessage';
-import { useCopyText, useReply } from '../../hooks/useMessageInteractions';
+import { useMessageCopyText, useMessageReply } from '../../hooks/useMessageInteractions';
+import { GenericReadableInteractableMessage } from './message/message-item/GenericReadableInteractableMessage';
 
 function isNotTextboxEvent(e: KeyboardEvent) {
   return (e?.target as any)?.type === undefined;
@@ -41,8 +41,8 @@ export const SessionMessagesList = (props: {
   const oldTopMessageId = useSelector(getOldTopMessageId);
   const oldBottomMessageId = useSelector(getOldBottomMessageId);
   const focusedMessageId = useFocusedMessageId() ?? undefined;
-  const reply = useReply(focusedMessageId);
-  const copyText = useCopyText(focusedMessageId);
+  const reply = useMessageReply(focusedMessageId);
+  const copyText = useMessageCopyText(focusedMessageId);
 
   useKeyboardShortcut({ shortcut: KbdShortcut.messageToggleReply, handler: reply, scopeId: 'all' });
   useKeyboardShortcut({ shortcut: KbdShortcut.messageCopyText, handler: copyText, scopeId: 'all' });
@@ -115,7 +115,7 @@ export const SessionMessagesList = (props: {
           return [
             dateBreak,
             unreadIndicator,
-            <GenericReadableMessage key={messageId} messageId={messageId} />,
+            <GenericReadableInteractableMessage key={messageId} messageId={messageId} />,
           ];
         })
         // TODO: check if we reverse this upstream, we might be reversing twice

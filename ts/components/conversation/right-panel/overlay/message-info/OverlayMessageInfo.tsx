@@ -10,13 +10,8 @@ import { getMessageInfoId } from '../../../../../state/selectors/conversations';
 import { Flex } from '../../../../basic/Flex';
 import { Header, HeaderTitle, StyledScrollContainer } from '../components';
 
-import { IsDetailMessageViewContext } from '../../../../../contexts/isDetailViewContext';
 import { Data } from '../../../../../data/data';
 import { useRightOverlayMode } from '../../../../../hooks/useUI';
-import {
-  replyToMessage,
-  resendMessage,
-} from '../../../../../interactions/conversationInteractions';
 import {
   useMessageAttachments,
   useMessageBody,
@@ -52,8 +47,10 @@ import { tr } from '../../../../../localization/localeTools';
 import { AppDispatch } from '../../../../../state/createStore';
 import { useKeyboardShortcut } from '../../../../../hooks/useKeyboardShortcut';
 import { KbdShortcut } from '../../../../../util/keyboardShortcuts';
+import { useMessageReply } from '../../../../../hooks/useMessageInteractions';
 import { useDeleteMessagesCb } from '../../../../menuAndSettingsHooks/useDeleteMessagesCb';
 import { GenericReadableMessage } from '../../../message/message-item/GenericReadableMessage';
+import { resendMessage } from '../../../../../interactions/conversationInteractions';
 
 // NOTE we override the default max-widths when in the detail isDetailView
 const StyledMessageBody = styled.div`
@@ -84,11 +81,9 @@ const MessageBody = ({
   }
 
   return (
-    <IsDetailMessageViewContext.Provider value={true}>
-      <StyledMessageBody>
-        <GenericReadableMessage messageId={messageId} />
-      </StyledMessageBody>
-    </IsDetailMessageViewContext.Provider>
+    <StyledMessageBody>
+      <GenericReadableMessage messageId={messageId} />
+    </StyledMessageBody>
   );
 };
 
@@ -225,7 +220,8 @@ function closePanel(dispatch: AppDispatch) {
 
 function ReplyToMessageButton({ messageId }: WithMessageIdOpt) {
   const dispatch = getAppDispatch();
-  if (!messageId) {
+  const replyToMessage = useMessageReply(messageId);
+  if (!messageId || !replyToMessage) {
     return null;
   }
   return (
@@ -233,12 +229,8 @@ function ReplyToMessageButton({ messageId }: WithMessageIdOpt) {
       text={{ token: 'reply' }}
       iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.REPLY} />}
       onClick={() => {
-        // eslint-disable-next-line more/no-then
-        void replyToMessage(messageId).then(foundIt => {
-          if (foundIt) {
-            closePanel(dispatch);
-          }
-        });
+        replyToMessage();
+        closePanel(dispatch);
       }}
       dataTestId="reply-to-msg-from-details"
     />

@@ -1,8 +1,9 @@
-import { MouseEvent, useMemo } from 'react';
+import { useMemo } from 'react';
 import { clsx } from 'clsx';
 import styled from 'styled-components';
 import { getAppDispatch } from '../../../../state/dispatch';
 import { useIsDetailMessageView } from '../../../../contexts/isDetailViewContext';
+import { MessageRenderingProps } from '../../../../models/messageType';
 import { updateReactListModal } from '../../../../state/ducks/modalDialog';
 import {
   useHideAvatarInMsgList,
@@ -15,15 +16,18 @@ import { MessageAuthorText } from './MessageAuthorText';
 import { MessageContent } from './MessageContent';
 import { MessageReactions } from './MessageReactions';
 import { MessageStatus } from './MessageStatus';
-import {
-  useSelectedConversationKey,
-  useSelectedIsLegacyGroup,
-} from '../../../../state/selectors/selectedConversation';
-import { SessionEmojiReactBarPopover } from '../../SessionEmojiReactBarPopover';
-import { type WithPopoverPosition, type WithSetPopoverPosition } from '../../../SessionTooltip';
-import { useReactToMessage, useReply } from '../../../../hooks/useMessageInteractions';
+import { useMessageReact } from '../../../../hooks/useMessageInteractions';
+import { useSelectedConversationKey } from '../../../../state/selectors/selectedConversation';
 import { ConvoHub } from '../../../../session/conversations';
 import type { WithContextMenuId, WithMessageId } from '../../../../session/types/with';
+import { WithReactionBarOptions } from '../../SessionEmojiReactBarPopover';
+
+export type MessageContentWithStatusSelectorProps = { isGroup: boolean } & Pick<
+  MessageRenderingProps,
+  'conversationType' | 'direction' | 'isDeleted'
+>;
+
+type Props = WithMessageId & WithContextMenuId & WithReactionBarOptions;
 
 const StyledMessageContentContainer = styled.div<{ $isIncoming: boolean; $isDetailView: boolean }>`
   display: flex;
@@ -43,42 +47,17 @@ const StyledMessageWithAuthor = styled.div`
   gap: var(--margins-xs);
 `;
 
-export const MessageContentWithStatuses = (
-  props: WithMessageId & WithContextMenuId & WithPopoverPosition & WithSetPopoverPosition
-) => {
-  const { messageId, contextMenuId, triggerPosition, setTriggerPosition } = props;
+export const MessageContentWithStatuses = (props: Props) => {
+  const { messageId, contextMenuId, reactionBarOptions } = props;
   const dispatch = getAppDispatch();
-  const _direction = useMessageDirection(messageId);
-  const reactToMessage = useReactToMessage(messageId);
-  const reply = useReply(messageId);
+  const reactToMessage = useMessageReact(messageId);
   const hideAvatar = useHideAvatarInMsgList(messageId);
   const isDetailView = useIsDetailMessageView();
-  const isLegacyGroup = useSelectedIsLegacyGroup();
+
+  const _direction = useMessageDirection(messageId);
 
   const convoId = useSelectedConversationKey();
   const msgIsOnline = useMessageIsOnline(messageId);
-
-  const onDoubleClickReplyToMessage = (e: MouseEvent<HTMLDivElement>) => {
-    if (isLegacyGroup || !reply) {
-      return;
-    }
-    const currentSelection = window.getSelection();
-    const currentSelectionString = currentSelection?.toString() || undefined;
-
-    if ((e.target as any).localName !== 'em-emoji-picker') {
-      if (
-        !currentSelectionString ||
-        currentSelectionString.length === 0 ||
-        !/\s/.test(currentSelectionString)
-      ) {
-        // if multiple word are selected, consider that this double click was actually NOT used to reply to
-        // but to select
-        void reply();
-        currentSelection?.empty();
-        e.preventDefault();
-      }
-    }
-  };
 
   const convoReactionsEnabled = useMemo(() => {
     if (convoId) {
@@ -109,20 +88,14 @@ export const MessageContentWithStatuses = (
     );
   };
 
-  const closeReactionBar = () => {
-    setTriggerPosition(null);
-  };
-
   return (
     <StyledMessageContentContainer $isIncoming={isIncoming} $isDetailView={isDetailView}>
       <ExpirableReadableMessage
         messageId={messageId}
         className={clsx('module-message', `module-message--${direction}`)}
-        role={'button'}
-        onDoubleClickCapture={onDoubleClickReplyToMessage}
         dataTestId="message-content"
         contextMenuId={contextMenuId}
-        setTriggerPosition={setTriggerPosition}
+        reactionBarOptions={enableReactions ? reactionBarOptions : undefined}
       >
         <Flex
           $container={true}
@@ -138,20 +111,11 @@ export const MessageContentWithStatuses = (
           </StyledMessageWithAuthor>
           <MessageStatus dataTestId="msg-status" messageId={messageId} />
         </Flex>
-        {enableReactions ? (
-          <SessionEmojiReactBarPopover
-            messageId={messageId}
-            open={!!triggerPosition}
-            triggerPos={triggerPosition}
-            onClickAwayFromReactionBar={closeReactionBar}
-          />
-        ) : null}
       </ExpirableReadableMessage>
-      {!isDetailView && enableReactions && !!reactToMessage ? (
+      {!isDetailView && enableReactions ? (
         <MessageReactions
           messageId={messageId}
-          // eslint-disable-next-line @typescript-eslint/no-misused-promises
-          onClick={reactToMessage}
+          onEmojiClick={reactToMessage ? emoji => void reactToMessage(emoji) : undefined}
           onPopupClick={handlePopupClick}
           noAvatar={hideAvatar}
         />

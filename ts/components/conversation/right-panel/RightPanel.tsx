@@ -9,6 +9,7 @@ import { THEME_GLOBALS } from '../../../themes/globals';
 import { sectionActions } from '../../../state/ducks/section';
 import { getAppDispatch } from '../../../state/dispatch';
 import { removeMessageInfoId } from '../../../state/ducks/conversations';
+import { IsDetailMessageViewContext } from '../../../contexts/isDetailViewContext';
 
 const StyledRightPanelContainer = styled(motion.div)`
   position: absolute;
@@ -50,30 +51,32 @@ export const RightPanel = ({ open }: { open: boolean }) => {
 
   return (
     <AnimatePresence onExitComplete={onExitComplete}>
-      {open && (
-        <StyledRightPanelContainer
-          initial={{ x: '100%' }}
-          animate={{ x: 0 }}
-          exit={{ x: '100%' }}
-          transition={{
-            type: 'tween',
-            ease: 'linear',
-            duration: THEME_GLOBALS['--duration-right-panel-seconds'],
-          }}
-        >
-          <StyledRightPanel
-            $container={true}
-            $flexDirection={'column'}
-            $alignItems={'center'}
-            width={'var(--right-panel-width)'}
-            height={'var(--right-panel-height)'}
-            className="right-panel"
-            style={{ direction: isRtlMode ? 'rtl' : 'initial' }}
+      {open ? (
+        <IsDetailMessageViewContext.Provider value={true}>
+          <StyledRightPanelContainer
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{
+              type: 'tween',
+              ease: 'linear',
+              duration: THEME_GLOBALS['--duration-right-panel-seconds'],
+            }}
           >
-            <ClosableOverlay />
-          </StyledRightPanel>
-        </StyledRightPanelContainer>
-      )}
+            <StyledRightPanel
+              $container={true}
+              $flexDirection={'column'}
+              $alignItems={'center'}
+              width={'var(--right-panel-width)'}
+              height={'var(--right-panel-height)'}
+              className="right-panel"
+              style={{ direction: isRtlMode ? 'rtl' : 'initial' }}
+            >
+              <ClosableOverlay />
+            </StyledRightPanel>
+          </StyledRightPanelContainer>
+        </IsDetailMessageViewContext.Provider>
+      ) : null}
     </AnimatePresence>
   );
 };

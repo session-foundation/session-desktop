@@ -20,6 +20,8 @@ export const StyledMessageReactionsContainer = styled(Flex)<{
 `;
 
 export const StyledMessageReactions = styled(Flex)<{ $fullWidth: boolean }>`
+  gap: var(--margins-sm) 8px;
+  margin: 0 4px var(--margins-sm);
   ${props => (props.$fullWidth ? '' : 'max-width: 640px;')}
 `;
 
@@ -30,8 +32,6 @@ const StyledReactionOverflow = styled.button`
   align-items: center;
 
   border: none;
-  margin-right: 4px;
-  margin-bottom: var(--margins-sm);
 
   span {
     background-color: var(--message-bubble-incoming-background-color);
@@ -116,7 +116,7 @@ const ExpandedReactions = (props: ExpandReactionsProps) => {
   const onKeyDown = createButtonOnKeyDownForClickEventHandler(handleExpand);
 
   return (
-    <Flex $container={true} $flexDirection={'column'} $alignItems={'center'} $margin="4px 0 0">
+    <Flex $container={true} $flexDirection={'column'} $alignItems={'center'}>
       <Reactions {...props} />
       <StyledReadLess onClick={handleExpand} role="button" tabIndex={0} onKeyDown={onKeyDown}>
         <LucideIcon
@@ -138,50 +138,43 @@ export type MessageReactsSelectorProps = Pick<
 type Props = {
   messageId: string;
   hasReactLimit?: boolean;
-  onClick: (emoji: string) => void;
-  onPopupClick?: (emoji: string) => void;
   inModal?: boolean;
-  onSelected?: (emoji: string) => boolean;
   noAvatar: boolean;
+  onEmojiClick?: (emoji: string) => void;
+  onPopupClick?: (emoji: string) => void;
+  onSelected?: (emoji: string) => boolean;
 };
 
-export const MessageReactions = (props: Props) => {
+export const MessageReactions = ({
+  messageId,
+  hasReactLimit = true,
+  onPopupClick,
+  inModal = false,
+  onSelected,
+  noAvatar,
+  onEmojiClick,
+}: Props) => {
   const isDetailView = useIsDetailMessageView();
-
-  const {
-    messageId,
-    hasReactLimit = true,
-    onClick,
-    onPopupClick,
-    inModal = false,
-    onSelected,
-    noAvatar,
-  } = props;
-
-  const [isExpanded, setIsExpanded] = useState(false);
-  const handleExpand = () => {
-    setIsExpanded(!isExpanded);
-  };
-
-  const msgProps = useMessageReactsPropsById(messageId);
-
   const inGroup = useSelectedIsGroupOrCommunity();
+  const msgProps = useMessageReactsPropsById(messageId);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   if (!msgProps) {
     return null;
   }
 
-  const reactionsProps = {
-    messageId,
-    reactions: msgProps.sortedReacts ?? [],
-    inModal,
-    inGroup,
-    onClick: !isDetailView ? onClick : undefined,
-    onSelected,
-    handlePopupClick: onPopupClick,
+  const reactions = msgProps.sortedReacts ?? [];
+  const onClick = !isDetailView && onEmojiClick ? onEmojiClick : undefined;
+  const handleExpand = () => {
+    setIsExpanded(expanded => !expanded);
   };
 
-  const ExtendedReactions = isExpanded ? ExpandedReactions : CompressedReactions;
+  const ReactionsComp =
+    !hasReactLimit || reactions.length <= REACT_LIMIT
+      ? Reactions
+      : isExpanded
+        ? ExpandedReactions
+        : CompressedReactions;
 
   return (
     <StyledMessageReactionsContainer
@@ -191,12 +184,17 @@ export const MessageReactions = (props: Props) => {
       $alignItems={inModal ? 'flex-start' : 'center'}
       $noAvatar={noAvatar}
     >
-      {reactionsProps.reactions.length ? (
-        !hasReactLimit || reactionsProps.reactions.length <= REACT_LIMIT ? (
-          <Reactions {...reactionsProps} />
-        ) : (
-          <ExtendedReactions handleExpand={handleExpand} {...reactionsProps} />
-        )
+      {reactions.length ? (
+        <ReactionsComp
+          messageId={messageId}
+          reactions={reactions}
+          inModal={inModal}
+          inGroup={inGroup}
+          onClick={onClick}
+          onSelected={onSelected}
+          handlePopupClick={onPopupClick}
+          handleExpand={handleExpand}
+        />
       ) : null}
     </StyledMessageReactionsContainer>
   );

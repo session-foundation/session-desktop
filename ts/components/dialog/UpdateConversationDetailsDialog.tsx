@@ -376,7 +376,7 @@ export function UpdateConversationDetailsDialog(props: WithConvoId) {
           errorDataTestId="error-message"
           providedError={errorStringDescription}
           autoFocus={false}
-          tabIndex={1}
+          tabIndex={0}
           required={false}
           singleLine={false}
           allowEscapeKeyPassthrough={true}

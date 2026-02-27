@@ -34,7 +34,6 @@ import {
   useMessageExpirationUpdateTimespanText,
 } from '../../state/selectors';
 import { tr, type TrArgs } from '../../localization/localeTools';
-import type { WithPopoverPosition, WithSetPopoverPosition } from '../SessionTooltip';
 
 const FollowSettingButton = styled.button`
   color: var(--primary-color);
@@ -148,9 +147,7 @@ const FollowSettingsButton = ({ messageId }: WithMessageId) => {
   );
 };
 
-export const TimerNotification = (
-  props: WithMessageId & WithPopoverPosition & WithSetPopoverPosition & WithContextMenuId
-) => {
+export const TimerNotification = (props: WithMessageId & WithContextMenuId) => {
   const { messageId } = props;
   const timespanSeconds = useMessageExpirationUpdateTimespanSeconds(messageId);
   const expirationMode = useMessageExpirationUpdateMode(messageId);
@@ -179,7 +176,6 @@ export const TimerNotification = (
   return (
     <ExpirableReadableMessage
       contextMenuId={props.contextMenuId}
-      setTriggerPosition={props.setTriggerPosition}
       messageId={messageId}
       key={`readable-message-${messageId}`}
       dataTestId={'disappear-control-message'}

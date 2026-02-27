@@ -5,20 +5,20 @@ import { isNil, isNumber, isString } from 'lodash';
 import { MenuOnHideCallback, MenuOnShowCallback } from 'react-contexify';
 import styled from 'styled-components';
 import { toNumber } from 'lodash/fp';
+import { useSelector } from 'react-redux';
 import { getAppDispatch } from '../../../../state/dispatch';
 import { Data } from '../../../../data/data';
 
 import { MessageRenderingProps } from '../../../../models/messageType';
 import { openRightPanel, showMessageInfoView } from '../../../../state/ducks/conversations';
 import {
-  useMessageAttachments,
   useMessageIsControlMessage,
   useMessageIsDeleted,
   useMessageSender,
   useMessageSenderIsAdmin,
-  useMessageIsOnline,
 } from '../../../../state/selectors';
 import {
+  getSelectedCanWrite,
   useSelectedConversationKey,
   useSelectedIsLegacyGroup,
 } from '../../../../state/selectors/selectedConversation';
@@ -27,7 +27,6 @@ import { CopyAccountIdMenuItem } from '../../../menu/items/CopyAccountId/CopyAcc
 import { Localizer } from '../../../basic/Localizer';
 import { Menu, MenuItem } from '../../../menu/items/MenuItem';
 import { WithMessageId, type WithContextMenuId } from '../../../../session/types/with';
-import { DeleteItem } from '../../../menu/items/DeleteMessage/DeleteMessageMenuItem';
 import { RetryItem } from '../../../menu/items/RetrySend/RetrySendMenuItem';
 import { useBanUserCb } from '../../../menuAndSettingsHooks/useBanUser';
 import { useUnbanUserCb } from '../../../menuAndSettingsHooks/useUnbanUser';
@@ -37,17 +36,22 @@ import { useRemoveSenderFromCommunityAdmin } from '../../../menuAndSettingsHooks
 import { useAddSenderAsCommunityAdmin } from '../../../menuAndSettingsHooks/useAddSenderAsCommunityAdmin';
 import { showContextMenu } from '../../../../util/contextMenu';
 import { clampNumber } from '../../../../util/maths';
-import { type WithSetPopoverPosition } from '../../../SessionTooltip';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
+import {
+  useMessageCopyText,
+  useMessageReply,
+  useMessageSaveAttachment,
+} from '../../../../hooks/useMessageInteractions';
 import { SelectMessageMenuItem } from '../../../menu/items/SelectMessage/SelectMessageMenuItem';
-import { useCopyText, useReply, useSaveAttachment } from '../../../../hooks/useMessageInteractions';
+import { DeleteItem } from '../../../menu/items/DeleteMessage/DeleteMessageMenuItem';
+import { WithReactionBarOptions } from '../../SessionEmojiReactBarPopover';
 
 export type MessageContextMenuSelectorProps = Pick<
   MessageRenderingProps,
   'sender' | 'direction' | 'status' | 'isSenderAdmin' | 'text' | 'serverTimestamp' | 'timestamp'
 >;
 
-type Props = WithMessageId & WithContextMenuId & WithSetPopoverPosition;
+type Props = WithMessageId & WithContextMenuId & WithReactionBarOptions;
 
 const CONTEXTIFY_MENU_WIDTH_PX = 200;
 const SCREEN_RIGHT_MARGIN_PX = 104;
@@ -195,14 +199,9 @@ export const showMessageInfoOverlay = async ({
 };
 
 function SaveAttachmentMenuItem({ messageId }: { messageId: string }) {
-  const attachments = useMessageAttachments(messageId);
-  const saveAttachment = useSaveAttachment(messageId);
+  const saveAttachment = useMessageSaveAttachment(messageId);
 
-  if (!saveAttachment) {
-    return null;
-  }
-
-  return attachments?.length && attachments.every(m => !m.pending && m.path) ? (
+  return saveAttachment ? (
     <MenuItem
       onClick={saveAttachment}
       iconType={LUCIDE_ICONS_UNICODE.ARROW_DOWN_TO_LINE}
@@ -230,33 +229,35 @@ function MessageInfoMenuItem({ messageId }: { messageId: string }) {
 }
 
 function CopyBodyMenuItem({ messageId }: { messageId: string }) {
-  const copyText = useCopyText(messageId);
+  const copyText = useMessageCopyText(messageId);
 
-  if (!copyText) {
-    return null;
-  }
-
-  return (
+  return copyText ? (
     <MenuItem onClick={copyText} iconType={LUCIDE_ICONS_UNICODE.COPY} isDangerAction={false}>
       {tr('copy')}
     </MenuItem>
-  );
+  ) : null;
+}
+
+function MessageReplyMenuItem({ messageId }: { messageId: string }) {
+  const reply = useMessageReply(messageId);
+  const canWrite = useSelector(getSelectedCanWrite);
+
+  return reply && canWrite ? (
+    <MenuItem onClick={reply} iconType={LUCIDE_ICONS_UNICODE.REPLY} isDangerAction={false}>
+      {tr('reply')}
+    </MenuItem>
+  ) : null;
 }
 
 export const MessageContextMenu = (props: Props) => {
-  const { messageId, contextMenuId, setTriggerPosition } = props;
+  const { messageId, contextMenuId, reactionBarOptions } = props;
 
-  const reply = useReply(messageId);
-
+  const contextMenuRef = useRef<HTMLDivElement | null>(null);
   const isLegacyGroup = useSelectedIsLegacyGroup();
   const convoId = useSelectedConversationKey();
   const isDeleted = useMessageIsDeleted(messageId);
   const sender = useMessageSender(messageId);
   const isControlMessage = useMessageIsControlMessage(messageId);
-  // we should be able to reply to a sent or read message
-  const msgIsOnline = useMessageIsOnline(messageId);
-
-  const contextMenuRef = useRef<HTMLDivElement | null>(null);
 
   const onShow: MenuOnShowCallback = (_, { x, y }) => {
     const triggerHeight = contextMenuRef.current?.clientHeight ?? 0;
@@ -266,18 +267,20 @@ export const MessageContextMenu = (props: Props) => {
     // it does not include changes to prevent the menu from overflowing the window. This temporary
     // fix resolves this by mirroring the y-offset adjustment.
     const yClamped = clampNumber(y, 0, window.innerHeight - triggerHeight);
-    setTriggerPosition({
-      x,
-      // Changes the x-anchor from the center to the far left
-      offsetX: -triggerWidth / 2,
-      y: yClamped,
-      height: triggerHeight,
-      width: triggerWidth,
-    });
+    if (reactionBarOptions) {
+      reactionBarOptions.setTriggerPosition({
+        x,
+        // Changes the x-anchor from the center to the far left
+        offsetX: -triggerWidth / 2,
+        y: yClamped,
+        height: triggerHeight,
+        width: triggerWidth,
+      });
+    }
   };
 
   const onHide: MenuOnHideCallback = () => {
-    setTriggerPosition(null);
+    reactionBarOptions?.setTriggerPosition(null);
   };
 
   if (!convoId) {
@@ -314,11 +317,7 @@ export const MessageContextMenu = (props: Props) => {
         >
           <RetryItem messageId={messageId} />
           <SaveAttachmentMenuItem messageId={messageId} />
-          {msgIsOnline && !!reply && (
-            <MenuItem onClick={reply} iconType={LUCIDE_ICONS_UNICODE.REPLY} isDangerAction={false}>
-              {tr('reply')}
-            </MenuItem>
-          )}
+          <MessageReplyMenuItem messageId={messageId} />
           <CopyBodyMenuItem messageId={messageId} />
           <MessageInfoMenuItem messageId={messageId} />
           <SelectMessageMenuItem messageId={messageId} />

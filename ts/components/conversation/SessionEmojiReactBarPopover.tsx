@@ -1,100 +1,99 @@
-import { useEffect, useRef, useState } from 'react';
-import useClickAway from 'react-use/lib/useClickAway';
-import { useTriggerPosition, type PopoverTriggerPosition } from '../SessionTooltip';
+import { type RefObject, useRef, useState } from 'react';
+import {
+  getTriggerPosition,
+  WithPopoverPosition,
+  WithSetPopoverPosition,
+  type PopoverTriggerPosition,
+} from '../SessionTooltip';
 import { SessionPopoverContent } from '../SessionPopover';
 import { MessageReactBar } from './message/message-content/MessageReactBar';
 import { THEME_GLOBALS } from '../../themes/globals';
 import { SessionEmojiPanelPopover } from './SessionEmojiPanelPopover';
 import { closeContextMenus } from '../../util/contextMenu';
-import { useFocusedMessageId } from '../../state/selectors/conversations';
-import { useReactToMessage } from '../../hooks/useMessageInteractions';
+import { useMessageReact } from '../../hooks/useMessageInteractions';
+
+export type ReactionBarOptions = WithPopoverPosition & WithSetPopoverPosition;
+export type WithReactionBarOptions = {
+  reactionBarOptions?: ReactionBarOptions;
+};
 
 export function SessionEmojiReactBarPopover({
   messageId,
-  open,
   triggerPos,
-  onClickAwayFromReactionBar,
+  reactBarFirstEmojiRef,
 }: {
   messageId: string;
   // this can be null as we want the emoji panel to stay when the reaction bar closes
   triggerPos: PopoverTriggerPosition | null;
-  open: boolean;
-  onClickAwayFromReactionBar: () => void;
+  reactBarFirstEmojiRef?: RefObject<HTMLSpanElement | null>;
 }) {
   const emojiPanelTriggerRef = useRef<HTMLButtonElement>(null);
-  const emojiPanelTriggerPos = useTriggerPosition(emojiPanelTriggerRef);
   const emojiPanelRef = useRef<HTMLDivElement>(null);
   const emojiReactionBarRef = useRef<HTMLDivElement>(null);
-  const [showEmojiPanel, setShowEmojiPanel] = useState<boolean>(false);
-  const reactToMessage = useReactToMessage(messageId);
-  const focusedMessageId = useFocusedMessageId();
+  const [emojiPanelTriggerPos, setEmojiPanelTriggerPos] = useState<PopoverTriggerPosition | null>(
+    null
+  );
+  const reactToMessage = useMessageReact(messageId);
+
+  const barOpen = !!triggerPos;
+  const panelOpen = !!emojiPanelTriggerPos;
 
   const closeEmojiPanel = () => {
-    setShowEmojiPanel(false);
+    setEmojiPanelTriggerPos(null);
   };
 
   const openEmojiPanel = () => {
     closeContextMenus();
-    setShowEmojiPanel(true);
+    const pos = getTriggerPosition(emojiPanelTriggerRef);
+    if (pos) {
+      setEmojiPanelTriggerPos(pos);
+    } else {
+      window.log.warn(
+        `[SessionEmojiReactBarPopover] getTriggerPosition for the emojiPanelTriggerRef returned null for message ${messageId}`
+      );
+    }
   };
 
-  const onEmojiClick = async (args: any) => {
+  const onEmojiClick = (args: any) => {
     const emoji = args.native ?? args;
     closeEmojiPanel();
-    await reactToMessage?.(emoji);
+    if (reactToMessage) {
+      void reactToMessage(emoji);
+    } else {
+      window.log.warn(
+        `[SessionEmojiReactBarPopover] reactToMessage undefined for message ${messageId}`
+      );
+    }
   };
-
-  useClickAway(emojiPanelRef, () => {
-    if (showEmojiPanel) {
-      closeEmojiPanel();
-    }
-  });
-
-  useClickAway(emojiReactionBarRef, () => {
-    if (open) {
-      onClickAwayFromReactionBar();
-    }
-  });
-
-  useEffect(() => {
-    if (focusedMessageId && messageId && focusedMessageId !== messageId) {
-      onClickAwayFromReactionBar();
-    }
-  }, [focusedMessageId, messageId, onClickAwayFromReactionBar]);
 
   return (
     <>
       <SessionEmojiPanelPopover
         emojiPanelRef={emojiPanelRef}
-        triggerPos={emojiPanelTriggerPos}
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        onEmojiClicked={onEmojiClick}
-        open={showEmojiPanel}
+        triggerPosition={emojiPanelTriggerPos}
+        open={panelOpen}
+        onEmojiClick={onEmojiClick}
         onClose={closeEmojiPanel}
       />
-      {triggerPos ? (
-        <SessionPopoverContent
-          triggerPosition={triggerPos}
-          open={open}
-          isTooltip={false}
-          verticalPosition="top"
-          horizontalPosition="right"
-          fallbackContentHeight={48}
-          fallbackContentWidth={295}
-          containerMarginTop={THEME_GLOBALS['--main-view-header-height-number']}
-          contentMargin={12}
-        >
-          {open ? (
-            <MessageReactBar
-              ref={emojiReactionBarRef}
-              // eslint-disable-next-line @typescript-eslint/no-misused-promises
-              action={onEmojiClick}
-              additionalAction={openEmojiPanel}
-              emojiPanelTriggerRef={emojiPanelTriggerRef}
-            />
-          ) : null}
-        </SessionPopoverContent>
-      ) : null}
+      <SessionPopoverContent
+        triggerPosition={triggerPos}
+        open={barOpen}
+        isTooltip={false}
+        verticalPosition="top"
+        horizontalPosition="right"
+        fallbackContentHeight={48}
+        fallbackContentWidth={295}
+        containerMarginTop={THEME_GLOBALS['--main-view-header-height-number']}
+        contentMargin={12}
+      >
+        <MessageReactBar
+          ref={emojiReactionBarRef}
+          onEmojiClick={onEmojiClick}
+          onPlusButtonClick={openEmojiPanel}
+          emojiPanelTriggerRef={emojiPanelTriggerRef}
+          firstEmojiRef={reactBarFirstEmojiRef}
+        />
+      </SessionPopoverContent>
     </>
   );
 }

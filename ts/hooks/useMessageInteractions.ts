@@ -14,16 +14,16 @@ import {
 import {
   useMessageAttachments,
   useMessageBody,
-  useMessageDirection,
+  useMessageIsControlMessage,
+  useMessageIsOnline,
   useMessageSender,
   useMessageServerTimestamp,
-  useMessageStatus,
   useMessageTimestamp,
 } from '../state/selectors';
 import { saveAttachmentToDisk } from '../util/attachment/attachmentsUtil';
 import { Reactions } from '../util/reactions';
 
-export function useSaveAttachment(messageId?: string) {
+export function useMessageSaveAttachment(messageId?: string) {
   const convoId = useSelectedConversationKey();
   const attachments = useMessageAttachments(messageId);
   const timestamp = useMessageTimestamp(messageId);
@@ -61,7 +61,7 @@ export function useSaveAttachment(messageId?: string) {
       };
 }
 
-export function useCopyText(messageId?: string) {
+export function useMessageCopyText(messageId?: string) {
   const text = useMessageBody(messageId);
 
   const cannotCopy = !messageId;
@@ -71,21 +71,17 @@ export function useCopyText(messageId?: string) {
     : () => {
         const selection = window.getSelection();
         const selectedText = selection?.toString().trim();
-        // Note: we want to allow to copy through the "Copy" menu item the currently selected text, if any.
+        // NOTE: the copy action should copy selected text (if any) then fallback to the whole message
         MessageInteraction.copyBodyToClipboard(selectedText || text);
       };
 }
 
-export function useReply(messageId?: string) {
+export function useMessageReply(messageId?: string) {
   const isSelectedBlocked = useSelectedIsBlocked();
-  const direction = useMessageDirection(messageId);
-  const status = useMessageStatus(messageId);
+  const isControlMessage = useMessageIsControlMessage(messageId);
+  const msgIsOnline = useMessageIsOnline(messageId);
 
-  const isOutgoing = direction === 'outgoing';
-  const isSendingOrError = status === 'sending' || status === 'error';
-
-  // NOTE: we dont want to allow to reply to outgoing messages that failed to send or is sending
-  const cannotReply = !messageId || (isOutgoing && isSendingOrError);
+  const cannotReply = !messageId || !msgIsOnline || isControlMessage;
 
   return cannotReply
     ? null
@@ -98,7 +94,7 @@ export function useReply(messageId?: string) {
       };
 }
 
-export function useReactToMessage(messageId?: string) {
+export function useMessageReact(messageId?: string) {
   const cannotReact = !messageId;
 
   return cannotReact

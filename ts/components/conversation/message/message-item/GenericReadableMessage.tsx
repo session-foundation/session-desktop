@@ -1,36 +1,12 @@
-import {
-  type MouseEvent,
-  type KeyboardEvent,
-  useCallback,
-  useRef,
-  useState,
-  useEffect,
-} from 'react';
+import type { HTMLProps } from 'react';
 import clsx from 'clsx';
-
 import styled, { keyframes } from 'styled-components';
-import { useIsDetailMessageView } from '../../../../contexts/isDetailViewContext';
 import { MessageRenderingProps } from '../../../../models/messageType';
-import {
-  useMessageDirection,
-  useMessageSelected,
-  useMessageType,
-} from '../../../../state/selectors';
+import { useMessageType } from '../../../../state/selectors';
 import { MessageContentWithStatuses } from '../message-content/MessageContentWithStatus';
 import { StyledMessageReactionsContainer } from '../message-content/MessageReactions';
-import {
-  useIsMessageSelectionMode,
-  useSelectedConversationKey,
-  useSelectedIsBlocked,
-  useSelectedIsKickedFromGroup,
-} from '../../../../state/selectors/selectedConversation';
-import { isButtonClickKey, KbdShortcut } from '../../../../util/keyboardShortcuts';
-import { showMessageContextMenu } from '../message-content/MessageContextMenu';
-import { getAppDispatch } from '../../../../state/dispatch';
-import { setFocusedMessageId, type UIMessageType } from '../../../../state/ducks/conversations';
-import { PopoverTriggerPosition } from '../../../SessionTooltip';
-import { useKeyboardShortcut } from '../../../../hooks/useKeyboardShortcut';
-import type { WithMessageId } from '../../../../session/types/with';
+import { type UIMessageType } from '../../../../state/ducks/conversations';
+import type { WithContextMenuId, WithMessageId } from '../../../../session/types/with';
 import { CommunityInvitation } from './CommunityInvitation';
 import { DataExtractionNotification } from './DataExtractionNotification';
 import { TimerNotification } from '../../TimerNotification';
@@ -38,7 +14,8 @@ import { GroupUpdateMessage } from './GroupUpdateMessage';
 import { CallNotification } from './notification-bubble/CallNotification';
 import { InteractionNotification } from './InteractionNotification';
 import { MessageRequestResponse } from './MessageRequestResponse';
-import { useFocusScope, useIsInScope } from '../../../../state/focus';
+import { WithReactionBarOptions } from '../../SessionEmojiReactBarPopover';
+import { useIsDetailMessageView } from '../../../../contexts/isDetailViewContext';
 
 export type GenericReadableMessageSelectorProps = Pick<
   MessageRenderingProps,
@@ -49,11 +26,14 @@ const highlightedMessageAnimation = keyframes`
   1% { background-color: var(--primary-color); }
 `;
 
-const StyledReadableMessage = styled.div<{
-  selected: boolean;
-  $isDetailView: boolean;
-  $focusedKeyboard: boolean;
-}>`
+type StyledReadableMessageProps = {
+  selected?: boolean;
+  // TODO: remove this, we can add styles to the message list
+  $isDetailView?: boolean;
+  $focusedKeyboard?: boolean;
+};
+
+const StyledReadableMessage = styled.div<StyledReadableMessageProps>`
   display: flex;
   align-items: center;
   width: 100%;
@@ -99,112 +79,29 @@ function getMessageComponent(messageType: UIMessageType) {
   }
 }
 
-export const GenericReadableMessage = ({ messageId }: WithMessageId) => {
-  const isDetailView = useIsDetailMessageView();
-  const dispatch = getAppDispatch();
+type GenericReadableMessageProps = Partial<
+  HTMLProps<HTMLDivElement> &
+    Omit<StyledReadableMessageProps, '$isDetailView'> &
+    WithMessageId &
+    WithContextMenuId &
+    WithReactionBarOptions
+>;
 
-  const ctxMenuID = `ctx-menu-message-${messageId}`;
-
-  const isMessageSelected = useMessageSelected(messageId);
-  const selectedIsBlocked = useSelectedIsBlocked();
-
-  const multiSelectMode = useIsMessageSelectionMode();
-
-  const convoId = useSelectedConversationKey();
-  const direction = useMessageDirection(messageId);
-  const isKickedFromGroup = useSelectedIsKickedFromGroup();
-
-  const ref = useRef<HTMLDivElement>(null);
-  const pointerDownRef = useRef(false);
-  const [triggerPosition, setTriggerPosition] = useState<PopoverTriggerPosition | null>(null);
-  const isInFocusScope = useIsInScope({ scope: 'message', scopeId: messageId });
-  const { focusedMessageId } = useFocusScope();
-  const isAnotherMessageFocused = focusedMessageId && !isInFocusScope;
-
-  const getMessageContainerTriggerPosition = (): PopoverTriggerPosition | null => {
-    if (!ref.current) {
-      return null;
-    }
-    const rect = ref.current.getBoundingClientRect();
-    const halfWidth = rect.width / 2;
-    return {
-      x: rect.left,
-      // NOTE: y needs to be clamped to the parent otherwise it can overflow the container
-      y: rect.top,
-      height: rect.height,
-      width: rect.width,
-      offsetX: direction === 'incoming' ? -halfWidth : halfWidth,
-    };
-  };
-
-  const handleContextMenu = useCallback(
-    (
-      e: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>,
-      overridePosition?: { x: number; y: number }
-    ) => {
-      if (!selectedIsBlocked && !multiSelectMode && !isKickedFromGroup) {
-        showMessageContextMenu({
-          id: ctxMenuID,
-          event: e,
-          triggerPosition: overridePosition,
-        });
-      }
-    },
-    [selectedIsBlocked, ctxMenuID, multiSelectMode, isKickedFromGroup]
-  );
-
-  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    if (isButtonClickKey(e)) {
-      if (e.target instanceof HTMLElement && e.target.tagName === 'BUTTON') {
-        // If the target is a button, we don't want to open the context menu as this is
-        // handled by the button itself
-        return;
-      }
-      const overrideTriggerPosition = getMessageContainerTriggerPosition();
-      if (overrideTriggerPosition) {
-        handleContextMenu(e, overrideTriggerPosition);
-      }
-    }
-  };
-
-  const onFocus = () => {
-    dispatch(setFocusedMessageId(messageId));
-  };
-
-  const onBlur = () => {
-    dispatch(setFocusedMessageId(null));
-  };
-
-  const toggleEmojiReactionBarWithKeyboard = () => {
-    if (triggerPosition) {
-      setTriggerPosition(null);
-    } else {
-      const pos = getMessageContainerTriggerPosition();
-      if (pos) {
-        setTriggerPosition(pos);
-      }
-    }
-  };
-
-  useKeyboardShortcut({
-    shortcut: KbdShortcut.messageToggleReactionBar,
-    handler: toggleEmojiReactionBarWithKeyboard,
-    scopeId: messageId,
-  });
-
+export const GenericReadableMessage = ({
+  ref,
+  messageId,
+  selected,
+  contextMenuId,
+  reactionBarOptions,
+  ...rest
+}: GenericReadableMessageProps) => {
   const messageType = useMessageType(messageId);
+  const isDetailView = useIsDetailMessageView();
 
-  useEffect(() => {
-    if (isAnotherMessageFocused) {
-      setTriggerPosition(null);
-    }
-  }, [isAnotherMessageFocused]);
-
-  if (!convoId || !messageId || !messageType) {
+  if (!messageId || !messageType) {
     return null;
   }
 
-  const selected = isMessageSelected || false;
   const CmpToRender = getMessageComponent(messageType);
 
   if (!CmpToRender) {
@@ -214,28 +111,16 @@ export const GenericReadableMessage = ({ messageId }: WithMessageId) => {
   return (
     <StyledReadableMessage
       ref={ref}
-      selected={selected}
-      $isDetailView={isDetailView}
       className={clsx(selected ? 'message-selected' : undefined)}
-      onContextMenu={handleContextMenu}
-      key={`readable-message-${messageId}`}
-      onKeyDown={onKeyDown}
-      $focusedKeyboard={!pointerDownRef.current}
-      tabIndex={0}
-      onPointerDown={() => {
-        pointerDownRef.current = true;
-      }}
-      onFocus={() => {
-        onFocus();
-        pointerDownRef.current = false;
-      }}
-      onBlur={onBlur}
+      selected={selected}
+      {...rest}
+      $isDetailView={isDetailView}
     >
       <CmpToRender
-        contextMenuId={ctxMenuID}
+        // FIXME:: move context menu out of here
+        contextMenuId={contextMenuId ?? ''}
         messageId={messageId}
-        triggerPosition={triggerPosition}
-        setTriggerPosition={setTriggerPosition}
+        reactionBarOptions={reactionBarOptions}
       />
     </StyledReadableMessage>
   );

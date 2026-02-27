@@ -71,7 +71,7 @@ const baseConversationNavigation = {
   name: 'Navigate to Conversation',
   withCtrl: true,
   keys: ['1-9'],
-  scope: 'conversationList',
+  scope: 'mainScreen',
 } satisfies KbdShortcutOptions;
 type ConversationNavKeys = `conversationNavigation${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9}`;
 
@@ -95,38 +95,43 @@ export const KbdShortcut = {
   zoomIn: { name: tr('appearanceZoomIn'), scope: 'global', withCtrl: true, keys: ['+'] },
   zoomOut: { name: tr('appearanceZoomOut'), scope: 'global', withCtrl: true, keys: ['-'] },
   userSettingsModal: { name: 'User Settings', scope: 'global', withCtrl: true, keys: [','] },
-  newConversation: { name: tr('conversationsNew'), scope: 'global', withCtrl: true, keys: ['n'] },
+  newConversation: {
+    name: tr('conversationsNew'),
+    scope: 'mainScreen',
+    withCtrl: true,
+    keys: ['n'],
+  },
   newMessage: {
     name: tr('messageNew', { count: 1 }),
-    scope: 'global',
+    scope: 'mainScreen',
     withCtrl: true,
     withShift: true,
     keys: ['m'],
   },
   createGroup: {
     name: tr('groupCreate'),
-    scope: 'global',
+    scope: 'mainScreen',
     withCtrl: true,
     withShift: true,
     keys: ['g'],
   },
   joinCommunity: {
     name: tr('communityJoin'),
-    scope: 'global',
+    scope: 'mainScreen',
     withCtrl: true,
     withShift: true,
     keys: ['c'],
   },
   openNoteToSelf: {
     name: tr('noteToSelfOpen'),
-    scope: 'global',
+    scope: 'mainScreen',
     withCtrl: true,
     withShift: true,
     keys: ['n'],
   },
   conversationListSearch: {
     name: tr('search'),
-    scope: 'conversationList',
+    scope: 'mainScreen',
     withCtrl: true,
     keys: ['f'],
   },
@@ -137,24 +142,24 @@ export const KbdShortcut = {
   // Conversation Shortcuts
   conversationFocusTextArea: {
     name: tr('focusTextArea'),
-    scope: 'conversationList',
+    scope: 'mainScreen',
     keys: ['Escape'],
   },
   conversationUploadAttachment: {
     name: tr('attachmentsAdd'),
-    scope: 'conversationList',
+    scope: 'mainScreen',
     withCtrl: true,
     keys: ['u'],
   },
   conversationToggleEmojiPicker: {
     name: tr('toggleEmojiPicker'),
-    scope: 'conversationList',
+    scope: 'mainScreen',
     withCtrl: true,
     keys: ['e'],
   },
   conversationSettingsModal: {
     name: tr('conversationSettings'),
-    scope: 'global',
+    scope: 'mainScreen',
     withCtrl: true,
     keys: ['.'],
   },

@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import {
   useCallback,
   useLayoutEffect,
+  useRef,
   useState,
   type AriaRole,
   type MouseEvent,
@@ -30,7 +31,6 @@ import { ExpireTimer } from '../../ExpireTimer';
 import { Data } from '../../../../data/data';
 import { ConvoHub } from '../../../../session/conversations';
 import { MessageContextMenu } from '../message-content/MessageContextMenu';
-import type { WithSetPopoverPosition } from '../../../SessionTooltip';
 import type { WithContextMenuId, WithConvoId, WithMessageId } from '../../../../session/types/with';
 import { useScrollToLoadedMessage } from '../../../../contexts/ScrollToLoadedMessage';
 import {
@@ -45,6 +45,11 @@ import { getIsAppFocused } from '../../../../state/selectors/section';
 import { useSelectedConversationKey } from '../../../../state/selectors/selectedConversation';
 import { useMessageType } from '../../../../state/selectors';
 import { useSelectMessageViaClick } from '../../../../hooks/useMessageInteractions';
+import {
+  SessionEmojiReactBarPopover,
+  type WithReactionBarOptions,
+} from '../../SessionEmojiReactBarPopover';
+import { SessionFocusTrap } from '../../../SessionFocusTrap';
 
 const EXPIRATION_CHECK_MINIMUM = 2000;
 
@@ -293,7 +298,7 @@ const ReadableMessage = (
 export type ExpirableReadableMessageProps = Omit<ReadableMessageProps, 'isUnread' | 'onClick'> &
   WithMessageId &
   WithContextMenuId &
-  WithSetPopoverPosition;
+  WithReactionBarOptions;
 
 function ExpireTimerControlMessage({
   expirationTimestamp,
@@ -316,14 +321,61 @@ const useIsDetailMessageViewInternal = useIsDetailMessageView;
 const useSelectMessageViaClickInternal = useSelectMessageViaClick;
 const useMessageTypeInternal = useMessageType;
 
-export const ExpirableReadableMessage = (props: ExpirableReadableMessageProps) => {
-  const selected = useMessageExpirationPropsByIdInternal(props.messageId);
+function SessionMessageInteractables({
+  messageId,
+  contextMenuId,
+  reactionBarOptions,
+}: WithMessageId & WithContextMenuId & WithReactionBarOptions) {
+  const reactionBarFirstEmojiRef = useRef<HTMLSpanElement>(null);
   const isDetailView = useIsDetailMessageViewInternal();
-  const selectViaClick = useSelectMessageViaClickInternal(props.messageId);
 
-  const { onDoubleClickCapture, role, dataTestId, contextMenuId, setTriggerPosition, messageId } =
-    props;
+  if (isDetailView) {
+    return null;
+  }
 
+  const closeReactionBar = reactionBarOptions
+    ? () => {
+        reactionBarOptions.setTriggerPosition(null);
+      }
+    : undefined;
+
+  const reactionBarFocusTrapActive =
+    !!reactionBarOptions?.triggerPosition && !!reactionBarFirstEmojiRef.current;
+  return (
+    <SessionFocusTrap
+      active={reactionBarFocusTrapActive}
+      initialFocus={() => reactionBarFirstEmojiRef.current ?? false}
+      onDeactivate={closeReactionBar}
+      clickOutsideDeactivates={true}
+    >
+      {reactionBarOptions ? (
+        <SessionEmojiReactBarPopover
+          messageId={messageId}
+          triggerPos={reactionBarOptions.triggerPosition}
+          reactBarFirstEmojiRef={reactionBarFirstEmojiRef}
+        />
+      ) : null}
+      <MessageContextMenu
+        messageId={messageId}
+        contextMenuId={contextMenuId}
+        reactionBarOptions={reactionBarOptions}
+      />
+    </SessionFocusTrap>
+  );
+}
+
+export const ExpirableReadableMessage = ({
+  onDoubleClickCapture,
+  role,
+  dataTestId,
+  contextMenuId,
+  messageId,
+  reactionBarOptions,
+  children,
+}: ExpirableReadableMessageProps) => {
+  const selected = useMessageExpirationPropsByIdInternal(messageId);
+  const isDetailView = useIsDetailMessageViewInternal();
+  const selectViaClick = useSelectMessageViaClickInternal(messageId);
   const messageType = useMessageTypeInternal(messageId);
 
   const { isExpired } = useIsExpired({
@@ -377,12 +429,12 @@ export const ExpirableReadableMessage = (props: ExpirableReadableMessageProps) =
           expirationTimestamp={expirationTimestamp}
         />
       ) : null}
-      <MessageContextMenu
+      <SessionMessageInteractables
         messageId={messageId}
         contextMenuId={contextMenuId}
-        setTriggerPosition={setTriggerPosition}
+        reactionBarOptions={reactionBarOptions}
       />
-      {props.children}
+      {children}
     </ReadableMessage>
   );
 };
