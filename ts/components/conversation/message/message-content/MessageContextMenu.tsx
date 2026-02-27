@@ -76,9 +76,11 @@ export function showMessageContextMenu({
   // this is quite dirty but considering that we want the context menu of the message to show on click on the attachment
   // and the context menu save attachment item to save the right attachment I did not find a better way for now.
   // NOTE: If you change this, also make sure to update the `saveAttachment()`
-  const attachmentIndexStr = (event?.target as any)?.parentElement?.getAttribute?.(
-    'data-attachmentindex'
-  );
+  const target = event?.target;
+  const attachmentIndexStr =
+    target instanceof Element
+      ? target.closest('[data-attachmentindex]')?.getAttribute('data-attachmentindex')
+      : undefined;
   const attachmentIndex =
     isString(attachmentIndexStr) && !isNil(toNumber(attachmentIndexStr))
       ? toNumber(attachmentIndexStr)
