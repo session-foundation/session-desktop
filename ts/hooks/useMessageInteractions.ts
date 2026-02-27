@@ -14,6 +14,7 @@ import {
 import {
   useMessageAttachments,
   useMessageBody,
+  useMessageIsControlMessage,
   useMessageIsOnline,
   useMessageSender,
   useMessageServerTimestamp,
@@ -77,9 +78,10 @@ export function useMessageCopyText(messageId?: string) {
 
 export function useMessageReply(messageId?: string) {
   const isSelectedBlocked = useSelectedIsBlocked();
+  const isControlMessage = useMessageIsControlMessage(messageId);
   const msgIsOnline = useMessageIsOnline(messageId);
 
-  const cannotReply = !messageId || !msgIsOnline;
+  const cannotReply = !messageId || !msgIsOnline || isControlMessage;
 
   return cannotReply
     ? null

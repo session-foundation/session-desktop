@@ -16,17 +16,15 @@ import type { WithContextMenuId, WithMessageId } from '../../../../session/types
 import { tr } from '../../../../localization/localeTools';
 import { useConversationUsernameWithFallback } from '../../../../hooks/useParamSelector';
 import { ExpirableReadableMessage } from './ExpirableReadableMessage';
-import type { WithPopoverPosition, WithSetPopoverPosition } from '../../../SessionTooltip';
 
 const StyledFailText = styled.div`
   color: var(--danger-color);
 `;
 
-export const InteractionNotification = (
-  props: WithMessageId & WithPopoverPosition & WithSetPopoverPosition & WithContextMenuId
-) => {
-  const { messageId } = props;
-
+export const InteractionNotification = ({
+  messageId,
+  contextMenuId,
+}: WithMessageId & WithContextMenuId) => {
   const convoId = useSelectedConversationKey();
   const displayName = useConversationUsernameWithFallback(true, convoId);
   const isGroup = !useSelectedIsPrivate();
@@ -76,8 +74,7 @@ export const InteractionNotification = (
   return (
     <ExpirableReadableMessage
       messageId={messageId}
-      contextMenuId={props.contextMenuId}
-      setTriggerPosition={props.setTriggerPosition}
+      contextMenuId={contextMenuId}
       key={`readable-message-${messageId}`}
       dataTestId="interaction-notification"
     >

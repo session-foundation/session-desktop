@@ -1,11 +1,21 @@
 import { type RefObject, useRef, useState } from 'react';
-import { getTriggerPosition, type PopoverTriggerPosition } from '../SessionTooltip';
+import {
+  getTriggerPosition,
+  WithPopoverPosition,
+  WithSetPopoverPosition,
+  type PopoverTriggerPosition,
+} from '../SessionTooltip';
 import { SessionPopoverContent } from '../SessionPopover';
 import { MessageReactBar } from './message/message-content/MessageReactBar';
 import { THEME_GLOBALS } from '../../themes/globals';
 import { SessionEmojiPanelPopover } from './SessionEmojiPanelPopover';
 import { closeContextMenus } from '../../util/contextMenu';
 import { useMessageReact } from '../../hooks/useMessageInteractions';
+
+export type ReactionBarOptions = WithPopoverPosition & WithSetPopoverPosition;
+export type WithReactionBarOptions = {
+  reactionBarOptions?: ReactionBarOptions;
+};
 
 export function SessionEmojiReactBarPopover({
   messageId,

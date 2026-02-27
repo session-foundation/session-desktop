@@ -21,21 +21,16 @@ import {
   useSelectedConversationKey,
   useSelectedIsLegacyGroup,
 } from '../../../../state/selectors/selectedConversation';
-import { type WithPopoverPosition, type WithSetPopoverPosition } from '../../../SessionTooltip';
 import { ConvoHub } from '../../../../session/conversations';
 import type { WithContextMenuId, WithMessageId } from '../../../../session/types/with';
+import { WithReactionBarOptions } from '../../SessionEmojiReactBarPopover';
 
 export type MessageContentWithStatusSelectorProps = { isGroup: boolean } & Pick<
   MessageRenderingProps,
   'conversationType' | 'direction' | 'isDeleted'
 >;
 
-type Props = WithMessageId &
-  WithContextMenuId &
-  WithPopoverPosition &
-  WithSetPopoverPosition & {
-    autoFocusReactionBarFirstEmoji?: boolean;
-  };
+type Props = WithMessageId & WithContextMenuId & WithReactionBarOptions;
 
 const StyledMessageContentContainer = styled.div<{ $isIncoming: boolean; $isDetailView: boolean }>`
   display: flex;
@@ -56,7 +51,7 @@ const StyledMessageWithAuthor = styled.div`
 `;
 
 export const MessageContentWithStatuses = (props: Props) => {
-  const { messageId, contextMenuId, triggerPosition, setTriggerPosition } = props;
+  const { messageId, contextMenuId, reactionBarOptions } = props;
   const dispatch = getAppDispatch();
   const reactToMessage = useMessageReact(messageId);
   const reply = useMessageReply(messageId);
@@ -129,9 +124,7 @@ export const MessageContentWithStatuses = (props: Props) => {
         onDoubleClickCapture={onDoubleClickReplyToMessage}
         dataTestId="message-content"
         contextMenuId={contextMenuId}
-        setTriggerPosition={setTriggerPosition}
-        triggerPosition={triggerPosition}
-        enableReactions={enableReactions}
+        reactionBarOptions={enableReactions ? reactionBarOptions : undefined}
       >
         <Flex
           $container={true}

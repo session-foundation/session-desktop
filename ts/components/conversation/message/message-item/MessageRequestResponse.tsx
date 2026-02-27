@@ -5,13 +5,12 @@ import { useSelectedConversationKey } from '../../../../state/selectors/selected
 import { Flex } from '../../../basic/Flex';
 import { Localizer } from '../../../basic/Localizer';
 import { SpacerSM, TextWithChildren } from '../../../basic/Text';
-import type { WithPopoverPosition, WithSetPopoverPosition } from '../../../SessionTooltip';
 import { ExpirableReadableMessage } from './ExpirableReadableMessage';
 
 export const MessageRequestResponse = ({
   messageId,
-  ...props
-}: WithMessageId & WithPopoverPosition & WithSetPopoverPosition & WithContextMenuId) => {
+  contextMenuId,
+}: WithMessageId & WithContextMenuId) => {
   const conversationId = useSelectedConversationKey();
   const isUs = useMessageAuthorIsUs(messageId);
 
@@ -24,8 +23,7 @@ export const MessageRequestResponse = ({
   return (
     <ExpirableReadableMessage
       messageId={messageId}
-      contextMenuId={props.contextMenuId}
-      setTriggerPosition={props.setTriggerPosition}
+      contextMenuId={contextMenuId}
       dataTestId="message-request-response-message"
       key={`readable-message-${messageId}`}
     >

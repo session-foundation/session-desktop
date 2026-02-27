@@ -10,7 +10,6 @@ import { getMessageInfoId } from '../../../../../state/selectors/conversations';
 import { Flex } from '../../../../basic/Flex';
 import { Header, HeaderTitle, StyledScrollContainer } from '../components';
 
-import { IsDetailMessageViewContext } from '../../../../../contexts/isDetailViewContext';
 import { Data } from '../../../../../data/data';
 import { useRightOverlayMode } from '../../../../../hooks/useUI';
 import {
@@ -82,11 +81,9 @@ const MessageBody = ({
   }
 
   return (
-    <IsDetailMessageViewContext.Provider value={true}>
-      <StyledMessageBody>
-        <GenericReadableMessage messageId={messageId} />
-      </StyledMessageBody>
-    </IsDetailMessageViewContext.Provider>
+    <StyledMessageBody>
+      <GenericReadableMessage messageId={messageId} />
+    </StyledMessageBody>
   );
 };
 

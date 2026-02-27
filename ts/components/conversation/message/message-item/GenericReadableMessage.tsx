@@ -280,8 +280,7 @@ export const GenericReadableMessage = ({ messageId }: WithMessageId) => {
       <CmpToRender
         contextMenuId={ctxMenuID}
         messageId={messageId}
-        triggerPosition={triggerPosition}
-        setTriggerPosition={setTriggerPosition}
+        reactionBarOptions={{ triggerPosition, setTriggerPosition }}
       />
     </StyledReadableMessage>
   );

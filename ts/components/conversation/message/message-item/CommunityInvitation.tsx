@@ -14,7 +14,6 @@ import type { WithContextMenuId, WithMessageId } from '../../../../session/types
 import { SessionLucideIconButton } from '../../../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 import { tr } from '../../../../localization/localeTools';
-import type { WithPopoverPosition, WithSetPopoverPosition } from '../../../SessionTooltip';
 
 const StyledCommunityInvitation = styled.div`
   background-color: var(--message-bubble-incoming-background-color);
@@ -78,9 +77,7 @@ const StyledIconContainer = styled.div`
   border-radius: 100%;
 `;
 
-export const CommunityInvitation = (
-  props: WithMessageId & WithPopoverPosition & WithSetPopoverPosition & WithContextMenuId
-) => {
+export const CommunityInvitation = (props: WithMessageId & WithContextMenuId) => {
   const messageDirection = useMessageDirection(props.messageId);
   const classes = ['group-invitation'];
 
@@ -109,7 +106,6 @@ export const CommunityInvitation = (
     <ExpirableReadableMessage
       messageId={props.messageId}
       contextMenuId={props.contextMenuId}
-      setTriggerPosition={props.setTriggerPosition}
       key={`readable-message-${props.messageId}`}
       dataTestId="control-message"
     >

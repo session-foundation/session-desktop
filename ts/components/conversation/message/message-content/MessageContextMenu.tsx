@@ -36,7 +36,6 @@ import { useRemoveSenderFromCommunityAdmin } from '../../../menuAndSettingsHooks
 import { useAddSenderAsCommunityAdmin } from '../../../menuAndSettingsHooks/useAddSenderAsCommunityAdmin';
 import { showContextMenu } from '../../../../util/contextMenu';
 import { clampNumber } from '../../../../util/maths';
-import { type WithSetPopoverPosition } from '../../../SessionTooltip';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 import {
   useMessageCopyText,
@@ -45,13 +44,14 @@ import {
 } from '../../../../hooks/useMessageInteractions';
 import { SelectMessageMenuItem } from '../../../menu/items/SelectMessage/SelectMessageMenuItem';
 import { DeleteItem } from '../../../menu/items/DeleteMessage/DeleteMessageMenuItem';
+import { WithReactionBarOptions } from '../../SessionEmojiReactBarPopover';
 
 export type MessageContextMenuSelectorProps = Pick<
   MessageRenderingProps,
   'sender' | 'direction' | 'status' | 'isSenderAdmin' | 'text' | 'serverTimestamp' | 'timestamp'
 >;
 
-type Props = WithMessageId & WithContextMenuId & WithSetPopoverPosition;
+type Props = WithMessageId & WithContextMenuId & WithReactionBarOptions;
 
 const CONTEXTIFY_MENU_WIDTH_PX = 200;
 const SCREEN_RIGHT_MARGIN_PX = 104;
@@ -250,7 +250,7 @@ function MessageReplyMenuItem({ messageId }: { messageId: string }) {
 }
 
 export const MessageContextMenu = (props: Props) => {
-  const { messageId, contextMenuId, setTriggerPosition } = props;
+  const { messageId, contextMenuId, reactionBarOptions } = props;
 
   const contextMenuRef = useRef<HTMLDivElement | null>(null);
   const isLegacyGroup = useSelectedIsLegacyGroup();
@@ -267,18 +267,20 @@ export const MessageContextMenu = (props: Props) => {
     // it does not include changes to prevent the menu from overflowing the window. This temporary
     // fix resolves this by mirroring the y-offset adjustment.
     const yClamped = clampNumber(y, 0, window.innerHeight - triggerHeight);
-    setTriggerPosition({
-      x,
-      // Changes the x-anchor from the center to the far left
-      offsetX: -triggerWidth / 2,
-      y: yClamped,
-      height: triggerHeight,
-      width: triggerWidth,
-    });
+    if (reactionBarOptions) {
+      reactionBarOptions.setTriggerPosition({
+        x,
+        // Changes the x-anchor from the center to the far left
+        offsetX: -triggerWidth / 2,
+        y: yClamped,
+        height: triggerHeight,
+        width: triggerWidth,
+      });
+    }
   };
 
   const onHide: MenuOnHideCallback = () => {
-    setTriggerPosition(null);
+    reactionBarOptions?.setTriggerPosition(null);
   };
 
   if (!convoId) {
