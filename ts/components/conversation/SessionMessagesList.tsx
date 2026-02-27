@@ -16,7 +16,7 @@ import { SessionLastSeenIndicator } from './SessionLastSeenIndicator';
 import { useKeyboardShortcut } from '../../hooks/useKeyboardShortcut';
 import { KbdShortcut } from '../../util/keyboardShortcuts';
 import { useMessageCopyText, useMessageReply } from '../../hooks/useMessageInteractions';
-import { GenericReadableMessage } from './message/message-item/GenericReadableMessage';
+import { GenericReadableInteractableMessage } from './message/message-item/GenericReadableInteractableMessage';
 
 function isNotTextboxEvent(e: KeyboardEvent) {
   return (e?.target as any)?.type === undefined;
@@ -115,7 +115,7 @@ export const SessionMessagesList = (props: {
           return [
             dateBreak,
             unreadIndicator,
-            <GenericReadableMessage key={messageId} messageId={messageId} />,
+            <GenericReadableInteractableMessage key={messageId} messageId={messageId} />,
           ];
         })
         // TODO: check if we reverse this upstream, we might be reversing twice

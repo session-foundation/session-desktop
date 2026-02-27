@@ -1,4 +1,4 @@
-import { type MouseEvent, useMemo } from 'react';
+import { useMemo } from 'react';
 import { clsx } from 'clsx';
 import styled from 'styled-components';
 import { getAppDispatch } from '../../../../state/dispatch';
@@ -16,11 +16,8 @@ import { MessageAuthorText } from './MessageAuthorText';
 import { MessageContent } from './MessageContent';
 import { MessageReactions } from './MessageReactions';
 import { MessageStatus } from './MessageStatus';
-import { useMessageReact, useMessageReply } from '../../../../hooks/useMessageInteractions';
-import {
-  useSelectedConversationKey,
-  useSelectedIsLegacyGroup,
-} from '../../../../state/selectors/selectedConversation';
+import { useMessageReact } from '../../../../hooks/useMessageInteractions';
+import { useSelectedConversationKey } from '../../../../state/selectors/selectedConversation';
 import { ConvoHub } from '../../../../session/conversations';
 import type { WithContextMenuId, WithMessageId } from '../../../../session/types/with';
 import { WithReactionBarOptions } from '../../SessionEmojiReactBarPopover';
@@ -54,37 +51,13 @@ export const MessageContentWithStatuses = (props: Props) => {
   const { messageId, contextMenuId, reactionBarOptions } = props;
   const dispatch = getAppDispatch();
   const reactToMessage = useMessageReact(messageId);
-  const reply = useMessageReply(messageId);
   const hideAvatar = useHideAvatarInMsgList(messageId);
   const isDetailView = useIsDetailMessageView();
 
   const _direction = useMessageDirection(messageId);
-  const isLegacyGroup = useSelectedIsLegacyGroup();
 
   const convoId = useSelectedConversationKey();
   const msgIsOnline = useMessageIsOnline(messageId);
-
-  const onDoubleClickReplyToMessage = (e: MouseEvent<HTMLDivElement>) => {
-    if (isLegacyGroup || !reply) {
-      return;
-    }
-    const currentSelection = window.getSelection();
-    const currentSelectionString = currentSelection?.toString() || undefined;
-
-    if ((e.target as any).localName !== 'em-emoji-picker') {
-      if (
-        !currentSelectionString ||
-        currentSelectionString.length === 0 ||
-        !/\s/.test(currentSelectionString)
-      ) {
-        // if multiple word are selected, consider that this double click was actually NOT used to reply to
-        // but to select
-        void reply();
-        currentSelection?.empty();
-        e.preventDefault();
-      }
-    }
-  };
 
   const convoReactionsEnabled = useMemo(() => {
     if (convoId) {
@@ -120,8 +93,6 @@ export const MessageContentWithStatuses = (props: Props) => {
       <ExpirableReadableMessage
         messageId={messageId}
         className={clsx('module-message', `module-message--${direction}`)}
-        role={'button'}
-        onDoubleClickCapture={onDoubleClickReplyToMessage}
         dataTestId="message-content"
         contextMenuId={contextMenuId}
         reactionBarOptions={enableReactions ? reactionBarOptions : undefined}
