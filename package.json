@@ -4,7 +4,7 @@
   "name": "session-desktop",
   "productName": "Session",
   "description": "Private messaging from your desktop",
-  "version": "1.17.12",
+  "version": "1.17.12-mcp",
   "license": "GPL-3.0",
   "author": {
     "name": "Session Foundation",
@@ -74,6 +74,7 @@
     "@emoji-mart/react": "https://github.com/session-foundation/session-emoji-mart/releases/download/v5.6.0/emoji-mart-react-v1.1.1.tgz",
     "@emotion/is-prop-valid": "1.2.2",
     "@emotion/memoize": "0.8.1",
+    "@modelcontextprotocol/sdk": "^1.27.0",
     "@reduxjs/toolkit": "^2.11.1",
     "@signalapp/sqlcipher": "3.1.0",
     "abort-controller": "3.0.0",
@@ -104,6 +105,7 @@
     "mic-recorder-to-mp3": "^2.2.2",
     "node-fetch": "^2.7.0",
     "os-locale": "5.0.0",
+    "human-signals": "1.1.1",
     "p-retry": "^4.6.2",
     "p-timeout": "4.1.0",
     "pino": "^9.6.0",
@@ -285,7 +287,7 @@
     },
     "linux": {
       "category": "Network;InstantMessaging;Chat",
-      "target": "deb",
+      "target": ["deb", "flatpak"],
       "icon": "build/icon-linux.icns",
       "files": [
         "node_modules/@img/sharp-libvips*",

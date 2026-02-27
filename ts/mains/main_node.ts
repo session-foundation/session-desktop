@@ -98,6 +98,17 @@ import { createTrayIcon } from '../node/tray_icon';
 import { windowMarkShouldQuit, windowShouldQuit } from '../node/window_state';
 import { SettingsKey } from '../data/settings-key';
 
+// MCP Server imports
+import { startMcpServer, setupMcpIpcHandlers, webhookManager } from '../mcp';
+import { MCP_IPC_CHANNELS } from '../mcp/types';
+
+// MCP Background mode detection
+const isMcpBackgroundMode =
+  process.argv.includes('--background') || process.env.SESSION_MCP_BACKGROUND === '1';
+
+// MCP Server instance (exported for potential cleanup/shutdown use)
+export let mcpServerInstance: { server: any; httpServer: any } | null = null;
+
 let appStartInitialSpellcheckSetting = true;
 
 function openDevToolsTestIntegration() {
@@ -290,8 +301,13 @@ function isVisible(window: { x: number; y: number; width: number }, bounds: any)
 
 function getStartInTray() {
   const startInTray =
-    process.argv.some(arg => arg === '--start-in-tray') || userConfig.get('startInTray');
-  const usingTrayIcon = startInTray || process.argv.some(arg => arg === '--use-tray-icon');
+    process.argv.some(arg => arg === '--start-in-tray') ||
+    userConfig.get('startInTray') ||
+    isMcpBackgroundMode;
+  const usingTrayIcon =
+    startInTray ||
+    process.argv.some(arg => arg === '--use-tray-icon') ||
+    isMcpBackgroundMode;
   return { usingTrayIcon, startInTray };
 }
 
@@ -318,7 +334,7 @@ async function createWindow() {
   }
 
   const windowOptions = {
-    show: true,
+    show: !isMcpBackgroundMode, // Hide window in MCP background mode
     minWidth,
     minHeight,
     fullscreen: false as boolean | undefined,
@@ -838,6 +854,16 @@ async function showMainWindow(sqlKey: string, passwordAttempt = false) {
 
   ready = true;
 
+  // Set up MCP IPC handlers before creating window
+  setupMcpIpcHandlers(ipcMain);
+
+  // Handle new message events from renderer for webhook dispatch
+  ipcMain.on(MCP_IPC_CHANNELS.NEW_MESSAGE_EVENT, (_event, { message, conversation }) => {
+    webhookManager.triggerNewMessage(message, conversation).catch(err => {
+      console.error('[MCP] Error triggering webhook:', err);
+    });
+  });
+
   await createWindow();
 
   if (getStartInTray().usingTrayIcon) {
@@ -845,6 +871,30 @@ async function showMainWindow(sqlKey: string, passwordAttempt = false) {
   }
 
   setupMenu();
+
+  // Start MCP server after everything is initialized
+  try {
+    const mcpPort = parseInt(process.env.SESSION_MCP_PORT || '6274', 10);
+    const mcpHost = process.env.SESSION_MCP_HOST || '127.0.0.1';
+    const mcpToken = process.env.SESSION_MCP_TOKEN;
+
+    mcpServerInstance = await startMcpServer(
+      {
+        port: mcpPort,
+        host: mcpHost,
+        enableAuth: !!mcpToken,
+        authToken: mcpToken,
+      },
+      ipcMain
+    );
+
+    if (isMcpBackgroundMode) {
+      console.log('🚀 Session running in BACKGROUND + MCP mode');
+      console.log(`   MCP Server: http://${mcpHost}:${mcpPort}/mcp/sse`);
+    }
+  } catch (error) {
+    console.error('[MCP] Failed to start MCP server:', error);
+  }
 }
 
 function setupMenu() {
@@ -922,7 +972,8 @@ app.on('before-quit', () => {
 app.on('window-all-closed', () => {
   // On OS X it is common for applications and their menu bar
   // to stay active until the user quits explicitly with Cmd + Q
-  if (process.platform !== 'darwin') {
+  // In MCP background mode, don't quit when windows are closed
+  if (process.platform !== 'darwin' && !isMcpBackgroundMode) {
     app.quit();
   }
 });
