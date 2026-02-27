@@ -1,11 +1,10 @@
-import { SessionDataTestId, MouseEvent, useCallback, Dispatch, useRef } from 'react';
+import { SessionDataTestId, Dispatch, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { clsx } from 'clsx';
 import styled from 'styled-components';
 import { getAppDispatch } from '../../../../state/dispatch';
 import { useIsDetailMessageView } from '../../../../contexts/isDetailViewContext';
 import { MessageRenderingProps } from '../../../../models/messageType';
-import { toggleSelectedMessageId } from '../../../../state/ducks/conversations';
 import { updateReactListModal } from '../../../../state/ducks/modalDialog';
 import { StateType } from '../../../../state/reducer';
 import { useHideAvatarInMsgList, useMessageStatus } from '../../../../state/selectors';
@@ -17,11 +16,9 @@ import { MessageContent } from './MessageContent';
 import { MessageContextMenu } from './MessageContextMenu';
 import { MessageReactions } from './MessageReactions';
 import { MessageStatus } from './MessageStatus';
-import { useIsMessageSelectionMode } from '../../../../state/selectors/selectedConversation';
 import { SessionEmojiReactBarPopover } from '../../SessionEmojiReactBarPopover';
 import { PopoverTriggerPosition } from '../../../SessionTooltip';
-import { trimWhitespace } from '../../../../session/utils/String';
-import { useMessageReact, useMessageReply } from '../../../../hooks/useMessageInteractions';
+import { useMessageReact } from '../../../../hooks/useMessageInteractions';
 import { SessionFocusTrap } from '../../../SessionFocusTrap';
 
 export type MessageContentWithStatusSelectorProps = { isGroup: boolean } & Pick<
@@ -70,41 +67,13 @@ export const MessageContentWithStatuses = (props: Props) => {
   const contentProps = useSelector((state: StateType) =>
     getMessageContentWithStatusesSelectorProps(state, messageId)
   );
-  const reply = useMessageReply(messageId);
   const reactToMessage = useMessageReact(messageId);
   const hideAvatar = useHideAvatarInMsgList(messageId);
   const isDetailView = useIsDetailMessageView();
-  const multiSelectMode = useIsMessageSelectionMode();
   const status = useMessageStatus(props.messageId);
   const isSent = status === 'sent' || status === 'read'; // a read message should be reactable
 
   const reactBarFirstEmojiRef = useRef<HTMLSpanElement>(null);
-
-  const onClickOnMessageOuterContainer = useCallback(
-    (event: MouseEvent<HTMLDivElement>) => {
-      if (multiSelectMode && messageId) {
-        event.preventDefault();
-        event.stopPropagation();
-        dispatch(toggleSelectedMessageId(messageId));
-      }
-    },
-    [dispatch, messageId, multiSelectMode]
-  );
-
-  const onDoubleClickReplyToMessage = reply
-    ? (e: MouseEvent<HTMLDivElement>) => {
-        const currentSelection = window.getSelection();
-        const currentSelectionString = currentSelection?.toString() || undefined;
-
-        if (
-          (!currentSelectionString || trimWhitespace(currentSelectionString).length === 0) &&
-          (e.target as any).localName !== 'em-emoji-picker'
-        ) {
-          e.preventDefault();
-          void reply();
-        }
-      }
-    : undefined;
 
   if (!contentProps) {
     return null;
@@ -139,8 +108,6 @@ export const MessageContentWithStatuses = (props: Props) => {
         messageId={messageId}
         className={clsx('module-message', `module-message--${direction}`)}
         role={'button'}
-        onClick={onClickOnMessageOuterContainer}
-        onDoubleClickCapture={onDoubleClickReplyToMessage}
         dataTestId={dataTestId}
       >
         <Flex
