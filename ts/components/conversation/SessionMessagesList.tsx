@@ -1,4 +1,4 @@
-import { useLayoutEffect, useState, type FC } from 'react';
+import { useLayoutEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import useKey from 'react-use/lib/useKey';
@@ -7,42 +7,22 @@ import {
   getOldTopMessageId,
   getSortedMessagesTypesOfSelectedConversation,
   useFocusedMessageId,
-  type MessagePropsType,
 } from '../../state/selectors/conversations';
 import { useSelectedConversationKey } from '../../state/selectors/selectedConversation';
 import { MessageDateBreak } from './message/message-item/DateBreak';
-import { CommunityInvitation } from './message/message-item/CommunityInvitation';
-import { GroupUpdateMessage } from './message/message-item/GroupUpdateMessage';
-import { Message } from './message/message-item/Message';
-import { MessageRequestResponse } from './message/message-item/MessageRequestResponse';
-import { CallNotification } from './message/message-item/notification-bubble/CallNotification';
 
 import { IsDetailMessageViewContext } from '../../contexts/isDetailViewContext';
 import { SessionLastSeenIndicator } from './SessionLastSeenIndicator';
-import { TimerNotification } from './TimerNotification';
-import { DataExtractionNotification } from './message/message-item/DataExtractionNotification';
-import { InteractionNotification } from './message/message-item/InteractionNotification';
-import type { WithMessageId } from '../../session/types/with';
 import { useKeyboardShortcut } from '../../hooks/useKeyboardShortcut';
 import { KbdShortcut } from '../../util/keyboardShortcuts';
 import { useMessageCopyText, useMessageReply } from '../../hooks/useMessageInteractions';
+import { GenericReadableMessage } from './message/message-item/GenericReadableMessage';
 
 function isNotTextboxEvent(e: KeyboardEvent) {
   return (e?.target as any)?.type === undefined;
 }
 
 let previousRenderedConvo: string | undefined;
-
-const componentForMessageType: Record<MessagePropsType, FC<WithMessageId>> = {
-  'group-notification': GroupUpdateMessage,
-  'group-invitation': CommunityInvitation,
-  'message-request-response': MessageRequestResponse,
-  'data-extraction': DataExtractionNotification,
-  'timer-notification': TimerNotification,
-  'call-notification': CallNotification,
-  'interaction-notification': InteractionNotification,
-  'regular-message': Message,
-};
 
 export const SessionMessagesList = (props: {
   scrollAfterLoadMore: (
@@ -60,9 +40,9 @@ export const SessionMessagesList = (props: {
   const [didScroll, setDidScroll] = useState(false);
   const oldTopMessageId = useSelector(getOldTopMessageId);
   const oldBottomMessageId = useSelector(getOldBottomMessageId);
-  const focusedMessageId = useFocusedMessageId();
-  const reply = useMessageReply(focusedMessageId ?? undefined);
-  const copyText = useMessageCopyText(focusedMessageId ?? undefined);
+  const focusedMessageId = useFocusedMessageId() ?? undefined;
+  const reply = useMessageReply(focusedMessageId);
+  const copyText = useMessageCopyText(focusedMessageId);
 
   useKeyboardShortcut({ shortcut: KbdShortcut.messageToggleReply, handler: reply, scopeId: 'all' });
   useKeyboardShortcut({ shortcut: KbdShortcut.messageCopyText, handler: copyText, scopeId: 'all' });
@@ -114,8 +94,6 @@ export const SessionMessagesList = (props: {
         .map(messageProps => {
           const { messageId } = messageProps;
 
-          const ComponentToRender = componentForMessageType[messageProps.message.messageType];
-
           const unreadIndicator = messageProps.showUnreadIndicator ? (
             <SessionLastSeenIndicator
               key={'unread-indicator'}
@@ -137,7 +115,7 @@ export const SessionMessagesList = (props: {
           return [
             dateBreak,
             unreadIndicator,
-            <ComponentToRender key={messageId} messageId={messageId} />,
+            <GenericReadableMessage key={messageId} messageId={messageId} />,
           ];
         })
         // TODO: check if we reverse this upstream, we might be reversing twice

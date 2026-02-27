@@ -3,7 +3,6 @@ import { useIsHidden, useIsMe } from '../../hooks/useParamSelector';
 import { ConvoHub } from '../../session/conversations';
 import { updateConfirmModal } from '../../state/ducks/modalDialog';
 import { SessionButtonColor } from '../basic/SessionButton';
-import { tr } from '../../localization/localeTools';
 
 function useShowNoteToSelf({ conversationId }: { conversationId: string }) {
   const isMe = useIsMe(conversationId);
@@ -23,7 +22,7 @@ export function useShowNoteToSelfCb({ conversationId }: { conversationId: string
   const showConfirmationModal = () => {
     dispatch(
       updateConfirmModal({
-        title: tr('showNoteToSelf'),
+        title: { token: 'showNoteToSelf' },
         i18nMessage: { token: 'showNoteToSelfDescription' },
         onClickClose,
         closeTheme: SessionButtonColor.TextPrimary,
@@ -32,7 +31,7 @@ export function useShowNoteToSelfCb({ conversationId }: { conversationId: string
           await convo.unhideIfNeeded(true);
           // Note: We don't want to close the modal for the show NTS action.
         },
-        okText: tr('show'),
+        okText: { token: 'show' },
       })
     );
   };

@@ -10,8 +10,6 @@ export const initialReleasedFeaturesState = {
   refreshedAt: Date.now(),
 };
 
-// #region - Async Thunks
-
 // NOTE as features are released in production they will be removed from this list
 const resetExperiments = createAsyncThunk(
   'releasedFeatures/resetExperiments',
@@ -25,7 +23,6 @@ const resetExperiments = createAsyncThunk(
     ToastUtils.pushToastInfo('releasedFeatures/resetExperiments', 'Reset experiments!');
   }
 );
-// #endregion
 
 const releasedFeaturesSlice = createSlice({
   name: 'releasedFeatures',

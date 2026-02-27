@@ -1,3 +1,4 @@
+import { type MouseEvent } from 'react';
 import { ItemParams } from 'react-contexify';
 import { isNumber } from 'lodash';
 import { MessageInteraction } from '../interactions';
@@ -6,22 +7,20 @@ import { pushUnblockToSend } from '../session/utils/Toast';
 import { getAppDispatch } from '../state/dispatch';
 import { toggleSelectedMessageId } from '../state/ducks/conversations';
 import {
+  useIsMessageSelectionMode,
   useSelectedConversationKey,
   useSelectedIsBlocked,
 } from '../state/selectors/selectedConversation';
-import { Reactions } from '../util/reactions';
 import {
   useMessageAttachments,
   useMessageBody,
-  useMessageDirection,
-  useMessageIsDeletable,
+  useMessageIsOnline,
   useMessageSender,
   useMessageServerTimestamp,
-  useMessageStatus,
   useMessageTimestamp,
 } from '../state/selectors';
 import { saveAttachmentToDisk } from '../util/attachment/attachmentsUtil';
-import { deleteMessagesForX } from '../interactions/conversations/unsendingInteractions';
+import { Reactions } from '../util/reactions';
 
 export function useMessageSaveAttachment(messageId?: string) {
   const convoId = useSelectedConversationKey();
@@ -78,14 +77,9 @@ export function useMessageCopyText(messageId?: string) {
 
 export function useMessageReply(messageId?: string) {
   const isSelectedBlocked = useSelectedIsBlocked();
-  const direction = useMessageDirection(messageId);
-  const status = useMessageStatus(messageId);
+  const msgIsOnline = useMessageIsOnline(messageId);
 
-  const isOutgoing = direction === 'outgoing';
-  const isSendingOrError = status === 'sending' || status === 'error';
-
-  // NOTE: we don't want to allow replying to outgoing messages that failed to send or messages currently sending
-  const cannotReply = !messageId || (isOutgoing && isSendingOrError);
+  const cannotReply = !messageId || !msgIsOnline;
 
   return cannotReply
     ? null
@@ -98,32 +92,6 @@ export function useMessageReply(messageId?: string) {
       };
 }
 
-export function useMessageDelete(messageId?: string) {
-  const messageStatus = useMessageStatus(messageId);
-  const cannotDelete = !messageId;
-
-  return cannotDelete
-    ? null
-    : (isPublic: boolean, convoId?: string) => {
-        if (convoId) {
-          const enforceDeleteServerSide = isPublic && messageStatus !== 'error';
-          void deleteMessagesForX([messageId], convoId, enforceDeleteServerSide);
-        }
-      };
-}
-
-export function useMessageSelect(messageId?: string) {
-  const dispatch = getAppDispatch();
-  const isDeletable = useMessageIsDeletable(messageId);
-  const cannotSelect = !messageId || !isDeletable;
-
-  return cannotSelect
-    ? null
-    : () => {
-        dispatch(toggleSelectedMessageId(messageId));
-      };
-}
-
 export function useMessageReact(messageId?: string) {
   const cannotReact = !messageId;
 
@@ -132,4 +100,41 @@ export function useMessageReact(messageId?: string) {
     : async (emoji: string) => {
         await Reactions.sendMessageReaction(messageId, emoji);
       };
+}
+
+/**
+ * Cb to invoke when a manual click to "select" in the msg context menu is done.
+ * i.e. starts the Multi selection mode
+ * @see `useSelectMessageViaClick`
+ */
+export function useSelectMessageViaMenuCb(messageId?: string | null) {
+  const dispatch = getAppDispatch();
+  const multiSelectMode = useIsMessageSelectionMode();
+
+  if (!messageId || multiSelectMode) {
+    return null;
+  }
+
+  return () => {
+    dispatch(toggleSelectedMessageId(messageId));
+  };
+}
+
+/**
+ * Cb to invite when we are in multi select mode and a message is clicked
+ */
+export function useSelectMessageViaClick(messageId?: string | null) {
+  const dispatch = getAppDispatch();
+  const multiSelectMode = useIsMessageSelectionMode();
+
+  // we can only select via click on msg once multi select mode is already on
+  if (!messageId || !multiSelectMode) {
+    return null;
+  }
+
+  return (event: MouseEvent<unknown>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    dispatch(toggleSelectedMessageId(messageId));
+  };
 }

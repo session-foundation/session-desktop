@@ -1,3 +1,4 @@
+import type { SessionDataTestId } from 'react';
 import { PubkeyType } from 'libsession_util_nodejs';
 import { Snode } from '../../data/types';
 
@@ -22,8 +23,11 @@ export type WithGetNow = { getNow: () => number };
 
 export type WithConvoId = { conversationId: string };
 export type WithMessageId = { messageId: string };
+export type WithContextMenuId = { contextMenuId: string };
 
-export type WithLocalMessageDeletionType = { deletionType: 'complete' | 'markDeleted' };
+export type WithLocalMessageDeletionType = {
+  deletionType: 'complete' | 'markDeleted' | 'markDeletedThisDevice';
+};
 export type ShortenOrExtend = 'extend' | 'shorten' | '';
 export type WithShortenOrExtend = { shortenOrExtend: ShortenOrExtend };
 export type WithMessagesHashes = { messagesHashes: Array<string> };
@@ -37,3 +41,5 @@ export type WithGuardNode = { guardNode: Snode };
 export type WithSymmetricKey = { symmetricKey: ArrayBuffer };
 
 export type WithReason = { reason: string };
+
+export type WithDataTestId = { dataTestId: SessionDataTestId };

@@ -37,16 +37,73 @@ import { handleTriggeredCTAs } from '../../components/dialog/SessionCTA';
 import { getFeatureFlag } from './types/releasedFeaturesReduxTypes';
 import type { Quote } from '../../session/messages/outgoing/visibleMessage/VisibleMessage';
 
+export type UIMessageType =
+  | 'community-invitation'
+  | 'data-extraction-notification'
+  | 'timer-update-notification'
+  | 'group-update-notification'
+  | 'call-notification'
+  | 'interaction-notification'
+  | 'message-request-response'
+  | 'regular-message';
+
+type MessageTypeIsControlMessage<T extends UIMessageType> = Extract<
+  T,
+  | 'data-extraction-notification'
+  | 'timer-update-notification'
+  | 'group-update-notification'
+  | 'call-notification'
+  | 'interaction-notification'
+  | 'message-request-response'
+>;
+
+type WithMessageTypeDetails<T extends UIMessageType> = {
+  messageType: T;
+  isControlMessage: T extends MessageTypeIsControlMessage<T> ? true : false;
+};
+
+type WithCommunityInvitation = WithMessageTypeDetails<'community-invitation'> & {
+  propsForCommunityInvitation: PropsForCommunityInvitation;
+};
+
+type WithDataExtractionNotification = WithMessageTypeDetails<'data-extraction-notification'> & {
+  propsForDataExtractionNotification: PropsForDataExtractionNotification;
+};
+
+type WithExpirationTimerUpdate = WithMessageTypeDetails<'timer-update-notification'> & {
+  propsForTimerNotification: PropsForExpirationTimer;
+};
+
+type WithGroupUpdateNotification = WithMessageTypeDetails<'group-update-notification'> & {
+  propsForGroupUpdateMessage: PropsForGroupUpdate;
+};
+
+type WithCallNotification = WithMessageTypeDetails<'call-notification'> & {
+  propsForCallNotification: PropsForCallNotification;
+};
+
+type WithInteractionNotification = WithMessageTypeDetails<'interaction-notification'> & {
+  propsForInteractionNotification: PropsForInteractionNotification;
+};
+
+type WithMessageRequestResponse = WithMessageTypeDetails<'message-request-response'> & {
+  propsForMessageRequestResponse: PropsForMessageRequestResponse;
+};
+
+type WithRegularMessage = WithMessageTypeDetails<'regular-message'>;
+
 export type MessageModelPropsWithoutConvoProps = {
   propsForMessage: PropsForMessageWithoutConvoProps;
-  propsForCommunityInvitation?: PropsForCommunityInvitation;
-  propsForTimerNotification?: PropsForExpirationTimer;
-  propsForDataExtractionNotification?: PropsForDataExtractionNotification;
-  propsForGroupUpdateMessage?: PropsForGroupUpdate;
-  propsForCallNotification?: PropsForCallNotification;
-  propsForMessageRequestResponse?: PropsForMessageRequestResponse;
-  propsForInteractionNotification?: PropsForInteractionNotification;
-};
+} & (
+  | WithCallNotification
+  | WithCommunityInvitation
+  | WithDataExtractionNotification
+  | WithExpirationTimerUpdate
+  | WithMessageRequestResponse
+  | WithInteractionNotification
+  | WithRegularMessage
+  | WithGroupUpdateNotification
+);
 
 export type MessageModelPropsWithConvoProps = SortedMessageModelProps & {
   propsForMessage: PropsForMessageWithConvoProps;
@@ -180,8 +237,6 @@ export type PropsForMessageWithConvoProps = PropsForMessageWithoutConvoProps & {
   isKickedFromGroup: boolean;
   weAreAdmin: boolean;
   isSenderAdmin: boolean;
-  isDeletable: boolean;
-  isDeletableForEveryone: boolean;
   isBlocked: boolean;
   isDeleted?: boolean;
 };
@@ -663,20 +718,6 @@ const conversationsSlice = createSlice({
     removeMessageInfoId(state: ConversationsStateType) {
       return { ...state, messageInfoId: undefined };
     },
-    addMessageIdToSelection(state: ConversationsStateType, action: PayloadAction<string>) {
-      if (state.selectedMessageIds.some(id => id === action.payload)) {
-        return state;
-      }
-      return { ...state, selectedMessageIds: [...state.selectedMessageIds, action.payload] };
-    },
-    removeMessageIdFromSelection(state: ConversationsStateType, action: PayloadAction<string>) {
-      const index = state.selectedMessageIds.findIndex(id => id === action.payload);
-
-      if (index === -1) {
-        return state;
-      }
-      return { ...state, selectedMessageIds: state.selectedMessageIds.splice(index, 1) };
-    },
     toggleSelectedMessageId(state: ConversationsStateType, action: PayloadAction<string>) {
       const index = state.selectedMessageIds.findIndex(id => id === action.payload);
 
@@ -1120,7 +1161,6 @@ export const {
   openRightPanel,
   closeRightPanel,
   removeMessageInfoId,
-  addMessageIdToSelection,
   resetSelectedMessageIds,
   setFocusedMessageId,
   setIsCompositionTextAreaFocused,

@@ -11,7 +11,12 @@ import { Data } from '../../../../data/data';
 
 import { MessageRenderingProps } from '../../../../models/messageType';
 import { openRightPanel, showMessageInfoView } from '../../../../state/ducks/conversations';
-import { useMessageSender, useMessageSenderIsAdmin } from '../../../../state/selectors';
+import {
+  useMessageIsControlMessage,
+  useMessageIsDeleted,
+  useMessageSender,
+  useMessageSenderIsAdmin,
+} from '../../../../state/selectors';
 import {
   getSelectedCanWrite,
   useSelectedConversationKey,
@@ -21,8 +26,7 @@ import { SessionContextMenuContainer } from '../../../SessionContextMenuContaine
 import { CopyAccountIdMenuItem } from '../../../menu/items/CopyAccountId/CopyAccountIdMenuItem';
 import { Localizer } from '../../../basic/Localizer';
 import { Menu, MenuItem } from '../../../menu/items/MenuItem';
-import { WithMessageId } from '../../../../session/types/with';
-import { DeleteItem } from '../../../menu/items/DeleteMessage/DeleteMessageMenuItem';
+import { WithMessageId, type WithContextMenuId } from '../../../../session/types/with';
 import { RetryItem } from '../../../menu/items/RetrySend/RetrySendMenuItem';
 import { useBanUserCb } from '../../../menuAndSettingsHooks/useBanUser';
 import { useUnbanUserCb } from '../../../menuAndSettingsHooks/useUnbanUser';
@@ -32,32 +36,22 @@ import { useRemoveSenderFromCommunityAdmin } from '../../../menuAndSettingsHooks
 import { useAddSenderAsCommunityAdmin } from '../../../menuAndSettingsHooks/useAddSenderAsCommunityAdmin';
 import { showContextMenu } from '../../../../util/contextMenu';
 import { clampNumber } from '../../../../util/maths';
-import { PopoverTriggerPosition } from '../../../SessionTooltip';
+import { type WithSetPopoverPosition } from '../../../SessionTooltip';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 import {
   useMessageCopyText,
   useMessageReply,
   useMessageSaveAttachment,
-  useMessageSelect,
 } from '../../../../hooks/useMessageInteractions';
+import { SelectMessageMenuItem } from '../../../menu/items/SelectMessage/SelectMessageMenuItem';
+import { DeleteItem } from '../../../menu/items/DeleteMessage/DeleteMessageMenuItem';
 
 export type MessageContextMenuSelectorProps = Pick<
   MessageRenderingProps,
-  | 'sender'
-  | 'direction'
-  | 'status'
-  | 'isDeletable'
-  | 'isSenderAdmin'
-  | 'text'
-  | 'serverTimestamp'
-  | 'timestamp'
+  'sender' | 'direction' | 'status' | 'isSenderAdmin' | 'text' | 'serverTimestamp' | 'timestamp'
 >;
 
-type Props = {
-  messageId: string;
-  contextMenuId: string;
-  setTriggerPosition: Dispatch<PopoverTriggerPosition | null>;
-};
+type Props = WithMessageId & WithContextMenuId & WithSetPopoverPosition;
 
 const CONTEXTIFY_MENU_WIDTH_PX = 200;
 const SCREEN_RIGHT_MARGIN_PX = 104;
@@ -255,23 +249,15 @@ function MessageReplyMenuItem({ messageId }: { messageId: string }) {
   ) : null;
 }
 
-function MessageSelectMenuItem({ messageId }: { messageId: string }) {
-  const select = useMessageSelect(messageId);
-
-  return select ? (
-    <MenuItem onClick={select} iconType={LUCIDE_ICONS_UNICODE.CIRCLE_CHECK} isDangerAction={false}>
-      <Localizer token="select" />
-    </MenuItem>
-  ) : null;
-}
-
 export const MessageContextMenu = (props: Props) => {
   const { messageId, contextMenuId, setTriggerPosition } = props;
 
+  const contextMenuRef = useRef<HTMLDivElement | null>(null);
   const isLegacyGroup = useSelectedIsLegacyGroup();
   const convoId = useSelectedConversationKey();
+  const isDeleted = useMessageIsDeleted(messageId);
   const sender = useMessageSender(messageId);
-  const contextMenuRef = useRef<HTMLDivElement | null>(null);
+  const isControlMessage = useMessageIsControlMessage(messageId);
 
   const onShow: MenuOnShowCallback = (_, { x, y }) => {
     const triggerHeight = contextMenuRef.current?.clientHeight ?? 0;
@@ -299,19 +285,22 @@ export const MessageContextMenu = (props: Props) => {
     return null;
   }
 
-  if (isLegacyGroup) {
+  if (isDeleted || isControlMessage) {
     return (
       <StyledMessageContextMenu>
         <SessionContextMenuContainer>
           <Menu id={contextMenuId}>
-            <SaveAttachmentMenuItem messageId={messageId} />
-            <CopyBodyMenuItem messageId={messageId} />
-            <MessageInfoMenuItem messageId={messageId} />
-            <CopyAccountIdMenuItem pubkey={sender} messageId={messageId} />
+            <SelectMessageMenuItem messageId={messageId} />
+            <DeleteItem messageId={messageId} />
           </Menu>
         </SessionContextMenuContainer>
       </StyledMessageContextMenu>
     );
+  }
+
+  if (isLegacyGroup) {
+    // legacy groups are deprecated
+    return null;
   }
 
   return (
@@ -329,7 +318,7 @@ export const MessageContextMenu = (props: Props) => {
           <MessageReplyMenuItem messageId={messageId} />
           <CopyBodyMenuItem messageId={messageId} />
           <MessageInfoMenuItem messageId={messageId} />
-          <MessageSelectMenuItem messageId={messageId} />
+          <SelectMessageMenuItem messageId={messageId} />
           <CopyAccountIdMenuItem pubkey={sender} messageId={messageId} />
           <DeleteItem messageId={messageId} />
           <CommunityAdminActionItems messageId={messageId} />

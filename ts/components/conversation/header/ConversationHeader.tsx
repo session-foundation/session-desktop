@@ -111,10 +111,10 @@ function useShowRecreateModal() {
     (name: string, members: Array<PubkeyType>) => {
       dispatch(
         updateConfirmModal({
-          title: tr('recreateGroup'),
+          title: { token: 'recreateGroup' },
           i18nMessage: { token: 'legacyGroupChatHistory' },
-          okText: tr('theContinue'),
-          cancelText: tr('cancel'),
+          okText: { token: 'theContinue' },
+          cancelText: { token: 'cancel' },
           okTheme: SessionButtonColor.Danger,
           onClickOk: () => {
             openCreateGroup(name, members);

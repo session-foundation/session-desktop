@@ -34,7 +34,6 @@ export const initialNetworkDataState: NetworkDataState = {
   },
 };
 
-// #region - Async thunks
 const fetchInfoFromSeshServer = createAsyncThunk(
   'networkData/fetchInfoFromSeshServer',
   async (_, payloadCreator): Promise<InfoResponse> => {
@@ -139,8 +138,6 @@ const refreshInfoFromSeshServer = createAsyncThunk(
     payloadCreator.dispatch(fetchInfoFromSeshServer() as any);
   }
 );
-
-// #endregion
 
 export const networkDataSlice = createSlice({
   name: 'networkData',
