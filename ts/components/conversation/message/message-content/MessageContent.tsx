@@ -9,14 +9,18 @@ import { useScrollToLoadedMessage } from '../../../../contexts/ScrollToLoadedMes
 import { useIsDetailMessageView } from '../../../../contexts/isDetailViewContext';
 import { IsMessageVisibleContext } from '../../../../contexts/isMessageVisibleContext';
 import { MessageModelType, MessageRenderingProps } from '../../../../models/messageType';
-import { StateType } from '../../../../state/reducer';
 import {
   useHideAvatarInMsgList,
+  useMessageDirection,
   useMessageIsDeleted,
+  useMessageLinkPreview,
+  useMessageQuote,
   useMessageSelected,
+  useMessageServerTimestamp,
+  useMessageText,
+  useMessageTimestamp,
 } from '../../../../state/selectors';
 import {
-  getMessageContentSelectorProps,
   getQuotedMessageToAnimate,
   getShouldHighlightMessage,
 } from '../../../../state/selectors/conversations';
@@ -70,10 +74,15 @@ export const MessageContent = (props: Props) => {
 
   const [highlight, setHighlight] = useState(false);
   const [didScroll, setDidScroll] = useState(false);
-  const contentProps = useSelector((state: StateType) =>
-    getMessageContentSelectorProps(state, props.messageId)
-  );
+
+  const direction = useMessageDirection(props.messageId);
+
+  const previews = useMessageLinkPreview(props.messageId);
+  const quote = useMessageQuote(props.messageId);
+  const text = useMessageText(props.messageId);
   const isDeleted = useMessageIsDeleted(props.messageId);
+  const serverTimestamp = useMessageServerTimestamp(props.messageId);
+  const timestamp = useMessageTimestamp(props.messageId);
   const [isMessageVisible, setMessageIsVisible] = useState(false);
 
   const scrollToLoadedMessage = useScrollToLoadedMessage();
@@ -128,15 +137,14 @@ export const MessageContent = (props: Props) => {
     shouldHighlightMessage,
   ]);
 
-  const toolTipTitle = useFormatFullDate(contentProps?.serverTimestamp || contentProps?.timestamp);
+  const toolTipTitle = useFormatFullDate(serverTimestamp || timestamp);
 
-  if (!contentProps) {
+  if (!props.messageId || !direction) {
     return null;
   }
 
-  const { direction, text, previews, quote } = contentProps;
-
-  const hasContentBeforeAttachment = !isEmpty(previews) || !isEmpty(quote) || !isEmpty(text);
+  const hasContentBeforeAttachment =
+    !isEmpty(previews) || !isEmpty(quote) || !isEmpty(text) || !!isDeleted;
 
   return (
     <StyledMessageContent
@@ -174,27 +182,22 @@ export const MessageContent = (props: Props) => {
                   $highlight={highlight}
                   $selected={selected}
                 >
-                  {!isDeleted && (
-                    <>
-                      <MessageQuote messageId={props.messageId} />
-                      <MessageLinkPreview
-                        messageId={props.messageId}
-                        handleImageError={handleImageError}
-                      />
-                    </>
-                  )}
+                  <MessageQuote messageId={props.messageId} />
+                  <MessageLinkPreview
+                    messageId={props.messageId}
+                    handleImageError={handleImageError}
+                  />
+
                   <MessageText messageId={props.messageId} />
                 </StyledMessageOpaqueContent>
               </MessageHighlighter>
             )}
-            {!isDeleted ? (
-              <MessageAttachment
-                messageId={props.messageId}
-                imageBroken={imageBroken}
-                handleImageError={handleImageError}
-                highlight={highlight}
-              />
-            ) : null}
+            <MessageAttachment
+              messageId={props.messageId}
+              imageBroken={imageBroken}
+              handleImageError={handleImageError}
+              highlight={highlight}
+            />
           </ContextMessageProvider>
         </IsMessageVisibleContext.Provider>
       </InView>

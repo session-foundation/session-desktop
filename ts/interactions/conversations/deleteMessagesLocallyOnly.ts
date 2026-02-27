@@ -18,7 +18,7 @@ export async function deleteMessagesLocallyOnly({
   for (let index = 0; index < messages.length; index++) {
     const message = messages[index];
     // a control message or a message deleted is forcefully removed from the DB
-    if (deletionType === 'complete' || message.isControlMessage() || message.get('isDeleted')) {
+    if (deletionType === 'complete' || message.isControlMessage() || message.isMarkedAsDeleted()) {
       await conversation.removeMessage(message.id);
     } else {
       // just mark the message as deleted but still show in conversation

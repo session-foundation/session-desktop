@@ -18,7 +18,6 @@ import { StateType } from '../reducer';
 
 import { ReplyingToMessageProps } from '../../components/conversation/composition/CompositionBox';
 import { MessageAttachmentSelectorProps } from '../../components/conversation/message/message-content/MessageAttachment';
-import { MessageContentSelectorProps } from '../../components/conversation/message/message-content/MessageContent';
 import { hasValidIncomingRequestValues } from '../../models/conversation';
 import { isOpenOrClosedGroup } from '../../models/conversationAttributes';
 import { ConvoHub } from '../../session/conversations';
@@ -129,7 +128,6 @@ export const getSortedMessagesTypesOfSelectedConversation = createSelector(
   getSortedMessagesOfSelectedConversation,
   getFirstUnreadMessageId,
   (sortedMessages, firstUnreadId) => {
-    const maxMessagesBetweenTwoDateBreaks = 5;
     // we want to show the date break if there is a large jump in time
     // remember that messages are sorted from the most recent to the oldest
     return sortedMessages.map((msg, index) => {
@@ -144,18 +142,12 @@ export const getSortedMessagesTypesOfSelectedConversation = createSelector(
             sortedMessages[index + 1].propsForMessage.timestamp;
 
       const showDateBreak =
-        messageTimestamp - previousMessageTimestamp > maxMessagesBetweenTwoDateBreaks * 60 * 1000
-          ? messageTimestamp
-          : undefined;
+        messageTimestamp - previousMessageTimestamp > 5 * 60 * 1000 ? messageTimestamp : undefined;
 
-      const common = {
+      return {
         showUnreadIndicator: isFirstUnread,
         showDateBreak,
         messageId: msg.propsForMessage.id,
-      };
-
-      return {
-        ...common,
       };
     });
   }
@@ -897,28 +889,6 @@ export const getIsMessageSelected = createSelector(
   }
 );
 
-export const getMessageContentSelectorProps = createSelector(
-  getMessagePropsByMessageId,
-  (props): MessageContentSelectorProps | undefined => {
-    if (!props || isEmpty(props)) {
-      return undefined;
-    }
-
-    const msgProps: MessageContentSelectorProps = {
-      ...pick(props.propsForMessage, [
-        'direction',
-        'serverTimestamp',
-        'text',
-        'timestamp',
-        'previews',
-        'quote',
-        'attachments',
-      ]),
-    };
-
-    return msgProps;
-  }
-);
 export const getOldTopMessageId = (state: StateType): string | null =>
   state.conversations.oldTopMessageId || null;
 

@@ -39,6 +39,7 @@ import {
   hasDebugEnvVariable,
 } from './utils';
 import { CONVERSATION_PRIORITIES } from '../../models/types';
+import { MessageDeletedType } from '../../models/messageType';
 
 // eslint:disable: quotemark one-variable-per-declaration no-unused-expression
 
@@ -127,6 +128,7 @@ const LOKI_SCHEMA_VERSIONS: Array<(currentVersion: number, db: Database) => void
     updateToSessionSchemaVersion51,
     updateToSessionSchemaVersion52,
     updateToSessionSchemaVersion53,
+    updateToSessionSchemaVersion54,
   ];
 
 function updateToSessionSchemaVersion1(currentVersion: number, db: Database) {
@@ -2359,6 +2361,33 @@ async function updateToSessionSchemaVersion53(currentVersion: number, db: Databa
     // Create an index on the the messageId & hasAttachments. Needed for `removeKnownAttachments`
     db.exec(
       `CREATE INDEX messages_id_hasAttachments_index ON ${MESSAGES_TABLE} (id, hasAttachments) WHERE hasAttachments = ${toSqliteBoolean(true)};`
+    );
+
+    writeSessionSchemaVersion(targetVersion, db);
+  })();
+
+  console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
+}
+
+async function updateToSessionSchemaVersion54(currentVersion: number, db: Database) {
+  const targetVersion = 54;
+  if (currentVersion >= targetVersion) {
+    return;
+  }
+  console.log(`updateToSessionSchemaVersion${targetVersion}: starting...`);
+
+  db.transaction(() => {
+    db.exec(`DROP INDEX IF EXISTS messages_isDeleted;`);
+
+    db.exec(`ALTER TABLE ${MESSAGES_TABLE} RENAME COLUMN isDeleted TO isDeleted_old;`);
+    db.exec(`ALTER TABLE ${MESSAGES_TABLE} ADD COLUMN isDeleted INTEGER;`);
+    db.exec(
+      `UPDATE ${MESSAGES_TABLE} SET isDeleted = CASE WHEN isDeleted_old = ${toSqliteBoolean(true)} THEN ${MessageDeletedType.deletedGlobally} ELSE NULL END;`
+    );
+    db.exec(`ALTER TABLE ${MESSAGES_TABLE} DROP COLUMN isDeleted_old;`);
+
+    db.exec(
+      `CREATE INDEX messages_isDeleted ON ${MESSAGES_TABLE} (isDeleted) WHERE isDeleted IS NOT NULL;`
     );
 
     writeSessionSchemaVersion(targetVersion, db);

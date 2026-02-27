@@ -1,8 +1,13 @@
 import type { PubkeyType, GroupPubkeyType } from 'libsession_util_nodejs';
-import { compact, isArray } from 'lodash';
+import { compact, isArray, isEmpty } from 'lodash';
 import { useDispatch } from 'react-redux';
 import { updateConfirmModal } from '../../state/ducks/modalDialog';
-import { useIsMe, useIsPublic, useWeAreAdmin } from '../../hooks/useParamSelector';
+import {
+  useIsLegacyGroup,
+  useIsMe,
+  useIsPublic,
+  useWeAreAdmin,
+} from '../../hooks/useParamSelector';
 import { SessionButtonColor } from '../basic/SessionButton';
 import { closeRightPanel, resetSelectedMessageIds } from '../../state/ducks/conversations';
 import { tr, type TrArgs } from '../../localization/localeTools';
@@ -14,10 +19,7 @@ import { ToastUtils } from '../../session/utils';
 import { UserGroupsWrapperActions } from '../../webworker/workers/browser/libsession_worker_interface';
 import { Data } from '../../data/data';
 import { MessageQueue } from '../../session/sending';
-import {
-  deleteMessagesFromSwarmAndCompletelyLocally,
-  deleteMessagesFromSwarmAndMarkAsDeletedLocally,
-} from '../../interactions/conversations/unsendingInteractions';
+
 import { deleteSogsMessageByServerIds } from '../../session/apis/open_group_api/sogsv3/sogsV3DeleteMessages';
 import { SnodeNamespaces } from '../../session/apis/snode_api/namespaces';
 import { getSodiumRenderer } from '../../session/crypto';
@@ -30,6 +32,7 @@ import { ConvoHub } from '../../session/conversations';
 import { uuidV4 } from '../../util/uuid';
 import { isUsAnySogsFromCache } from '../../session/apis/open_group_api/sogsv3/knownBlindedkeys';
 import type { RadioOptions } from '../dialog/SessionConfirm';
+import { deleteMessagesFromSwarmOnly } from '../../interactions/conversations/deleteMessagesFromSwarmOnly';
 
 const deleteMessageDeviceOnly = 'deleteMessageDeviceOnly';
 const deleteMessageAllMyDevices = 'deleteMessageDevicesAll';
@@ -47,10 +50,11 @@ type MessageDeletionType =
 export function useDeleteMessagesCb(conversationId: string | undefined) {
   const dispatch = useDispatch();
 
-  const isMe = useIsMe(conversationId);
+  const isNts = useIsMe(conversationId);
   const isPublic = useIsPublic(conversationId);
   const weAreAdminOrModCommunity = useWeAreCommunityAdminOrModerator(conversationId);
   const weAreAdminGroup = useWeAreAdmin(conversationId);
+  const isLegacyGroup = useIsLegacyGroup(conversationId);
 
   const closeDialog = () => dispatch(updateConfirmModal(null));
 
@@ -66,32 +70,43 @@ export function useDeleteMessagesCb(conversationId: string | undefined) {
     }
     const messageIdsArr = isArray(messageIds) ? messageIds : [messageIds];
 
+    // legacy groups are read only, we can only delete locally.
     const canDeleteAllForEveryoneAsAdmin =
-      (isPublic && weAreAdminOrModCommunity) || (!isPublic && weAreAdminGroup);
+      !isLegacyGroup && ((isPublic && weAreAdminOrModCommunity) || (!isPublic && weAreAdminGroup));
 
     const msgModels = await Data.getMessagesById(messageIdsArr);
     const senders = compact(msgModels.map(m => m.getSource()));
 
-    const anyAreMarkAsDeleted = msgModels.some(m => m.get('isDeleted'));
+    const anyAreMarkAsDeleted = msgModels.some(m => m.isMarkedAsDeleted());
     const anyAreControlMessages = msgModels.some(m => m.isControlMessage());
+    const anyAreSending = msgModels.some(m => m.getMessagePropStatus() === 'sending');
+    const anyAreErrors = msgModels.some(m => m.getMessagePropStatus() === 'error');
+
+    // We can never delete for everyone if one of the message is
+    // - a control message
+    // - a message marked as deleted
+    // - a message that is sending
+    // - a message that failed to be sent.
+    // In this case, the only option is to delete locally
+    const sharedCannotDeleteForEveryone =
+      anyAreControlMessages || anyAreMarkAsDeleted || anyAreSending || anyAreErrors;
 
     const canDeleteAllForEveryoneAsMe = senders.every(isUsAnySogsFromCache);
     const canDeleteAllForEveryone =
       (canDeleteAllForEveryoneAsMe || canDeleteAllForEveryoneAsAdmin) &&
-      !anyAreControlMessages &&
-      !anyAreMarkAsDeleted;
+      !sharedCannotDeleteForEveryone;
+
+    const canDeleteFromAllDevices = isNts && !sharedCannotDeleteForEveryone;
 
     // Note: the isMe case has no radio buttons, so we just show the description below
-    const i18nMessage: TrArgs | undefined = isMe
+    const i18nMessage: TrArgs | undefined = isNts
       ? { token: 'deleteMessageConfirm', count }
       : undefined;
 
-    const canDeleteFromAllDevices = isMe && !anyAreControlMessages && !anyAreMarkAsDeleted;
-
     const warningMessage: TrArgs | undefined =
-      isMe && !canDeleteFromAllDevices
+      isNts && !canDeleteFromAllDevices
         ? { token: 'deleteMessageNoteToSelfWarning', count }
-        : !isMe && !canDeleteAllForEveryone
+        : !isNts && !canDeleteAllForEveryone
           ? {
               token: 'deleteMessageWarning',
               count,
@@ -107,7 +122,7 @@ export function useDeleteMessagesCb(conversationId: string | undefined) {
           labelDataTestId: `label-${deleteMessageDeviceOnly}` as const,
           disabled: false, // we can always delete messages locally
         },
-        isMe
+        isNts
           ? {
               label: tr(deleteMessageAllMyDevices),
               value: deleteMessageAllMyDevices,
@@ -123,7 +138,7 @@ export function useDeleteMessagesCb(conversationId: string | undefined) {
               disabled: !canDeleteAllForEveryone,
             },
       ],
-      defaultSelectedValue: !isMe && canDeleteAllForEveryone ? deleteMessageEveryone : undefined,
+      defaultSelectedValue: !isNts && canDeleteAllForEveryone ? deleteMessageEveryone : undefined,
     };
 
     dispatch(
@@ -175,10 +190,15 @@ async function doDeleteSelectedMessages({
   selectedMessages,
   deletionType,
 }: {
-  selectedMessages: Array<MessageModel>;
   conversation: ConversationModel;
+  selectedMessages: Array<MessageModel>;
   deletionType: MessageDeletionType;
 }) {
+  if (selectedMessages.length === 0) {
+    window.log.info('doDeleteSelectedMessages: no messages selected');
+    return true;
+  }
+
   // legacy groups are read only
   if (conversation.isClosedGroup() && PubKey.is05Pubkey(conversation.id)) {
     window.log.info(
@@ -230,13 +250,18 @@ async function doDeleteSelectedMessages({
     return deletedFromSogs;
   }
 
-  //  Note: a groupv2 member can delete messages for everyone if they are the admin, or if that message is theirs.
+  // sanity check that this is the last available option
   if (deletionType !== deleteMessageEveryone) {
     throw new Error(`doDeleteSelectedMessages: invalid deletionType: "${deletionType}"`);
   }
 
   if (conversation.isPrivate()) {
-    // Note: we cannot delete for everyone a message in non 05-private chat
+    if (conversation.isMe()) {
+      throw new Error(
+        'the NTS case should have been deleteMessageDeviceOnly or deleteMessageAllMyDevices'
+      );
+    }
+    // Note: we cannot delete for everyone a message in a non 05-private chat
     if (!PubKey.is05Pubkey(conversation.id)) {
       throw new Error('unsendMessagesForEveryone1o1 requires a 05 key');
     }
@@ -244,19 +269,24 @@ async function doDeleteSelectedMessages({
     // build the unsendMsgObjects before we delete the hash from those messages
     const unsendMsgObjects = getUnsendMessagesObjects1o1(conversation, selectedMessages);
 
-    // private chats: we want to mark those messages as deleted
-    const deletedFromSwarmAndLocally = await deleteMessagesFromSwarmAndMarkAsDeletedLocally(
-      conversation,
-      selectedMessages
-    );
-    if (!deletedFromSwarmAndLocally) {
+    // Note: not calling deleteMessagesFromSwarmAndMarkAsDeletedLocally here as
+    // we've got some custom logic going on
+    const deletedFromSwarm = await deleteMessagesFromSwarmOnly(conversation, selectedMessages);
+    if (!deletedFromSwarm) {
       window.log.warn(
-        'unsendMessagesForEveryone1o1: failed to delete from swarm and locally. Not sending unsend requests'
+        'unsendMessagesForEveryone1o1: failed to delete from swarm. Not sending unsend requests'
       );
-      ToastUtils.pushGenericError();
+      ToastUtils.pushFailedToDelete(selectedMessages.length);
       return false;
     }
+    await deleteMessagesLocallyOnly({
+      conversation,
+      messages: selectedMessages,
+      deletionType: 'markDeleted',
+    });
+
     await unsendMessagesForEveryone1o1(conversation, unsendMsgObjects);
+
     ToastUtils.pushDeleted(selectedMessages.length);
     window.inboxStore?.dispatch(resetSelectedMessageIds());
 
@@ -268,22 +298,52 @@ async function doDeleteSelectedMessages({
     throw new Error('doDeleteSelectedMessages: invalid conversation type');
   }
 
-  const groupv2UnsendSent = await unsendMessagesForEveryoneGroupV2({
+  const weAreAdmin = await hasGroupAdminKey(conversation.id);
+  // 03 groups: mark as deleted
+  if (weAreAdmin) {
+    // when we are an admin, we first delete the messages from the swarm
+    // Note: not calling deleteMessagesFromSwarmAndMarkAsDeletedLocally here as
+    // we've got some custom logic going on
+    const deletedFromGroupSwarm = await deleteMessagesFromSwarmOnly(conversation, selectedMessages);
+    if (!deletedFromGroupSwarm) {
+      window.log.warn(
+        'unsendMessagesForEveryone1o1: failed to delete from group swarm. Not sending unsend requests'
+      );
+      ToastUtils.pushFailedToDelete(selectedMessages.length);
+
+      return false;
+    }
+
+    if (!deletedFromGroupSwarm) {
+      window.log.warn(
+        'unsendMessagesForEveryoneGroupV2: failed to delete messages on group swarm:'
+      );
+      return false;
+    }
+  }
+
+  // Here, either we've removed those messages from the swarm as an admin,
+  // or we want to request the admin to delete them for us.
+  // Those messages have to be ours in this case.
+
+  const groupV2UnsendSent = await unsendMessagesForEveryoneGroupV2({
     groupPk: conversation.id,
     msgsToDelete: selectedMessages,
     allMessagesFrom: [], // currently we cannot remove all the messages from a specific pubkey but we do already handle them on the receiving side
   });
 
-  if (!groupv2UnsendSent) {
+  if (!groupV2UnsendSent) {
     window.log.warn(
       'unsendMessagesForEveryoneGroupV2: failed to send our groupv2 unsend for everyone'
     );
-    ToastUtils.pushGenericError();
+    ToastUtils.pushFailedToDelete(selectedMessages.length);
     return false;
   }
-  // 03 groups: mark as deleted
-  await deleteMessagesFromSwarmAndMarkAsDeletedLocally(conversation, selectedMessages);
-
+  await deleteMessagesLocallyOnly({
+    conversation,
+    messages: selectedMessages,
+    deletionType: 'markDeleted',
+  });
   window.inboxStore?.dispatch(resetSelectedMessageIds());
   ToastUtils.pushDeleted(selectedMessages.length);
 
@@ -292,7 +352,7 @@ async function doDeleteSelectedMessages({
 
 /**
  * Delete those message hashes from our swarm.
- * On success, send an UnsendMessage synced message so our devices removes those messages locally,
+ * On success, send an UnsendMessage synced message so our devices removes those already fetched messages.
  * Then, deletes completely the messages locally.
  *
  * Shows a toast on error/success and reset the selection
@@ -307,19 +367,25 @@ async function unsendMessageJustForThisUserAllDevices(
 
   // get the unsendMsgObjects before we delete the hash from those messages
   const unsendMsgObjects = getUnsendMessagesObjects1o1(conversation, msgsToDeleteFromSwarm);
+  console.warn('unsendMsgObjects', unsendMsgObjects);
 
-  const deletedFromSwarm = await deleteMessagesFromSwarmAndCompletelyLocally(
-    conversation,
-    msgsToDelete
-  );
+  // Note: not calling deleteMessagesFromSwarmAndCompletelyLocally here as
+  // we've got some custom logic going on
+  const deletedFromSwarm = await deleteMessagesFromSwarmOnly(conversation, msgsToDelete);
+
   // we want to locally only when we've manage to delete them from the swarm first
   if (!deletedFromSwarm) {
     window.log.warn(
       'unsendMessageJustForThisUserAllDevices: failed to delete from swarm. Not sending unsend requests'
     );
-    ToastUtils.pushGenericError();
+    ToastUtils.pushFailedToDelete(msgsToDelete.length);
     return false;
   }
+  await deleteMessagesLocallyOnly({
+    conversation,
+    messages: msgsToDelete,
+    deletionType: 'complete',
+  });
 
   // deleting from the swarm worked, sending to our other devices all the messages separately for now
   await Promise.all(
@@ -338,10 +404,10 @@ async function unsendMessageJustForThisUserAllDevices(
 /**
  * Attempt to delete the messages from the SOGS.
  * Note: this function does not check if the user is allowed to delete the messages.
- * The call will just fail if the user is not allowed to delete the messages, silently, so make
- * sure to check the user permissions before calling this function and to display only valid actions for the user's permissions.
+ * The call will just fail if the user is not allowed to delete the messages.
+ * So make sure to check the user permissions before calling this function and to display only valid actions for the user's permissions.
  *
- * Returns true if those messages could be removed from the SOGS and were removed locally
+ * Returns true if those messages could be removed from the SOGS and were removed locally.
  */
 async function doDeleteSelectedMessagesInSOGS(
   selectedMessages: Array<MessageModel>,
@@ -439,6 +505,11 @@ async function unsendMessagesForEveryone1o1(
         .catch(window?.log?.error)
     )
   );
+}
+
+async function hasGroupAdminKey(groupPk: GroupPubkeyType) {
+  const group = await UserGroupsWrapperActions.getGroup(groupPk);
+  return !!isEmpty(group?.secretKey);
 }
 
 async function unsendMessagesForEveryoneGroupV2({

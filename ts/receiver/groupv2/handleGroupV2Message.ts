@@ -653,10 +653,8 @@ async function handle1o1GroupUpdateMessage(
       });
     }
     if (details.messageHash && !isEmpty(details.messageHash)) {
-      const deleted = await deleteMessagesFromSwarmOnly(
-        [details.messageHash],
-        UserUtils.getOurPubKeyStrFromCache()
-      );
+      const convo = ConvoHub.use().get(UserUtils.getOurPubKeyStrFromCache());
+      const deleted = await deleteMessagesFromSwarmOnly(convo, [details.messageHash]);
       if (!deleted) {
         window.log.warn(
           `failed to delete invite/promote while processing it in handle1o1GroupUpdateMessage. hash:${details.messageHash}`

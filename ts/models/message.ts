@@ -27,6 +27,7 @@ import {
 import {
   MessageAttributes,
   MessageAttributesOptionals,
+  MessageDeletedType,
   MessageGroupUpdate,
   fillMessageAttributesWithDefaults,
   type DataExtractionNotificationMsg,
@@ -217,6 +218,13 @@ export class MessageModel extends Model<MessageAttributes> {
       this.isCallNotification() ||
       this.isInteractionNotification()
     );
+  }
+
+  /**
+   * Returns true if the message is marked as deleted either globally or locally.
+   */
+  public isMarkedAsDeleted() {
+    return !!this.get('isDeleted');
   }
 
   public isIncoming() {
@@ -668,8 +676,9 @@ export class MessageModel extends Model<MessageAttributes> {
     if (body) {
       props.text = body;
     }
-    if (this.get('isDeleted')) {
-      props.isDeleted = !!this.get('isDeleted');
+    const isDeleted = this.get('isDeleted');
+    if (isDeleted) {
+      props.isDeleted = isDeleted;
     }
 
     if (this.getMessageHash()) {
@@ -934,15 +943,14 @@ export class MessageModel extends Model<MessageAttributes> {
   }
 
   /**
-   * Marks the message as deleted to show the author has deleted this message for everyone.
-   * Sets isDeleted property to true. Set message body text to deletion placeholder for conversation list items.
+   * Marks the message as deleted locally or globally.
    */
   public async markAsDeleted(deletedLocallyOnly: boolean) {
     this.set({
-      isDeleted: true,
-      body: deletedLocallyOnly
-        ? tr('deleteMessageDeletedLocally')
-        : tr('deleteMessageDeletedGlobally'),
+      isDeleted: deletedLocallyOnly
+        ? MessageDeletedType.deletedLocally
+        : MessageDeletedType.deletedGlobally,
+      body: '',
       quote: undefined,
       groupInvitation: undefined,
       dataExtractionNotification: undefined,

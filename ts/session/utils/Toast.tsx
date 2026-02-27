@@ -175,6 +175,10 @@ export function pushDeleted(count: number) {
   pushToastSuccess('deleted', tStripped('deleteMessageDeleted', { count }));
 }
 
+export function pushFailedToDelete(count: number) {
+  pushToastSuccess('failedToDelete', tStripped('deleteMessageFailed', { count }));
+}
+
 export function pushCannotRemoveGroupAdmin() {
   pushToastWarning('adminCannotBeRemoved', tStripped('adminCannotBeRemoved'));
 }

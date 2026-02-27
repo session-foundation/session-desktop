@@ -6,7 +6,11 @@ import { ReplyingToMessageProps } from '../../components/conversation/compositio
 import { Data } from '../../data/data';
 
 import { ConversationNotificationSettingType } from '../../models/conversationAttributes';
-import { MessageModelType, PropsForDataExtractionNotification } from '../../models/messageType';
+import {
+  MessageModelType,
+  PropsForDataExtractionNotification,
+  type MessageDeletedType,
+} from '../../models/messageType';
 import { ConvoHub } from '../../session/conversations';
 import { DisappearingMessages } from '../../session/disappearing_messages';
 import {
@@ -215,7 +219,7 @@ export type PropsForMessageWithoutConvoProps = {
   previews?: Array<any>;
   quote?: Quote;
   messageHash?: string;
-  isDeleted?: boolean;
+  isDeleted?: MessageDeletedType;
   isUnread?: boolean;
   expirationType?: DisappearingMessageType;
   expirationDurationMs?: number;
@@ -238,7 +242,7 @@ export type PropsForMessageWithConvoProps = PropsForMessageWithoutConvoProps & {
   weAreAdmin: boolean;
   isSenderAdmin: boolean;
   isBlocked: boolean;
-  isDeleted?: boolean;
+  isDeleted?: MessageDeletedType;
 };
 
 /**

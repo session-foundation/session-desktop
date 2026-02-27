@@ -6,6 +6,7 @@ import { ed25519Str } from '../../session/utils/String';
 
 import { deleteMessagesLocallyOnly } from './deleteMessagesLocallyOnly';
 import { deleteMessagesFromSwarmOnly } from './deleteMessagesFromSwarmOnly';
+import { ConvoHub } from '../../session/conversations';
 
 /**
  * Delete the messages (with a valid hash) from the swarm and completely delete the messages locally.
@@ -73,7 +74,12 @@ async function deleteMessagesFromSwarmShared(
     `deleteMessagesFromSwarmShared ${deletionType}: Deleting from swarm of  ${ed25519Str(pubkeyToDeleteFrom)}, hashes: ${messages.map(m => m.getMessageHash())}`
   );
 
-  const deletedFromSwarm = await deleteMessagesFromSwarmOnly(messages, pubkeyToDeleteFrom);
+  const convo = ConvoHub.use().get(conversation.id);
+  if (!convo) {
+    throw new Error(`deleteMessagesFromSwarmShared ${deletionType} convo not found`);
+  }
+
+  const deletedFromSwarm = await deleteMessagesFromSwarmOnly(convo, messages);
   if (!deletedFromSwarm) {
     window.log.warn(
       `deleteMessagesFromSwarmShared ${deletionType}: some messages failed to be deleted from swarm of ${ed25519Str(pubkeyToDeleteFrom)}. Maybe they were already deleted?`
