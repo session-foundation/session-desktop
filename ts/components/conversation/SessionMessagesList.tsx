@@ -25,7 +25,7 @@ import { InteractionNotification } from './message/message-item/InteractionNotif
 import type { WithMessageId } from '../../session/types/with';
 import { useKeyboardShortcut } from '../../hooks/useKeyboardShortcut';
 import { KbdShortcut } from '../../util/keyboardShortcuts';
-import { useMessageInteractions } from '../../hooks/useMessageInteractions';
+import { useMessageCopyText, useMessageReply } from '../../hooks/useMessageInteractions';
 
 function isNotTextboxEvent(e: KeyboardEvent) {
   return (e?.target as any)?.type === undefined;
@@ -61,7 +61,8 @@ export const SessionMessagesList = (props: {
   const oldTopMessageId = useSelector(getOldTopMessageId);
   const oldBottomMessageId = useSelector(getOldBottomMessageId);
   const focusedMessageId = useFocusedMessageId();
-  const { reply, copyText } = useMessageInteractions(focusedMessageId);
+  const reply = useMessageReply(focusedMessageId ?? undefined);
+  const copyText = useMessageCopyText(focusedMessageId ?? undefined);
 
   useKeyboardShortcut({ shortcut: KbdShortcut.messageToggleReply, handler: reply, scopeId: 'all' });
   useKeyboardShortcut({ shortcut: KbdShortcut.messageCopyText, handler: copyText, scopeId: 'all' });

@@ -16,7 +16,7 @@ import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 import { DURATION } from '../../../../session/constants';
 import { formatAbbreviatedExpireDoubleTimer } from '../../../../util/i18n/formatting/expirationTimer';
 import { useMessageExpirationPropsById } from '../../../../hooks/useParamSelector';
-import { useMessageInteractions } from '../../../../hooks/useMessageInteractions';
+import { useMessageDelete } from '../../../../hooks/useMessageInteractions';
 
 const StyledDeleteItemContent = styled.span`
   display: flex;
@@ -100,12 +100,20 @@ export const DeleteItem = ({ messageId }: { messageId: string }) => {
   const isDeletable = useMessageIsDeletable(messageId);
   const isDeletableForEveryone = useMessageIsDeletableForEveryone(messageId);
 
-  const { deleteFromConvo } = useMessageInteractions(messageId);
-  const onClick = () => {
-    deleteFromConvo(isPublic, convoId);
-  };
+  const deleteFromConvo = useMessageDelete(messageId);
 
-  if (!convoId || (isPublic && !isDeletableForEveryone) || (!isPublic && !isDeletable)) {
+  const onClick = deleteFromConvo
+    ? () => {
+        deleteFromConvo(isPublic, convoId);
+      }
+    : undefined;
+
+  if (
+    !onClick ||
+    !convoId ||
+    (isPublic && !isDeletableForEveryone) ||
+    (!isPublic && !isDeletable)
+  ) {
     return null;
   }
 

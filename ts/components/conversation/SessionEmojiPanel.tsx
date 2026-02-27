@@ -1,7 +1,6 @@
 import Picker from '@emoji-mart/react';
-import { forwardRef } from 'react';
+import { type RefObject } from 'react';
 import styled from 'styled-components';
-import clsx from 'clsx';
 
 import { usePrimaryColor } from '../../state/selectors/primaryColor';
 import { useIsDarkTheme, useTheme } from '../../state/theme/selectors/theme';
@@ -9,6 +8,7 @@ import { COLORS, THEMES, ThemeStateType, type ColorsType } from '../../themes/co
 import { FixedBaseEmoji } from '../../types/Reaction';
 import { i18nEmojiData } from '../../util/emoji';
 import { hexColorToRGB } from '../../util/hexColorToRGB';
+import { SessionFocusTrap } from '../SessionFocusTrap';
 
 export const StyledEmojiPanel = styled.div<{
   $isModal: boolean;
@@ -19,18 +19,9 @@ export const StyledEmojiPanel = styled.div<{
 }>`
   ${props => (!props.$isModal ? 'padding: var(--margins-lg);' : '')}
   z-index: 5;
-  opacity: 0;
-  visibility: hidden;
-  // this disables the slide-in animation when showing the emoji picker from a right click on a message
-  /* transition: var(--default-duration); */
 
   button:focus {
     outline: none;
-  }
-
-  &.show {
-    opacity: 1;
-    visibility: visible;
   }
 
   em-emoji-picker {
@@ -75,21 +66,18 @@ export const StyledEmojiPanel = styled.div<{
 `;
 
 type Props = {
+  ref: RefObject<HTMLDivElement | null>;
   onEmojiClicked: (emoji: FixedBaseEmoji) => void;
-  show: boolean;
   isModal?: boolean;
   onClose?: () => void;
+  show: boolean;
 };
 
-const pickerProps = {
-  title: '',
-  showPreview: true,
-  autoFocus: true,
-  skinTonePosition: 'preview',
+export const SessionEmojiPanel = (props: Props) => {
+  return props.show ? <EmojiPanel {...props} /> : null;
 };
 
-export const SessionEmojiPanel = forwardRef<HTMLDivElement, Props>((props: Props, ref) => {
-  const { onEmojiClicked, show, isModal = false, onClose } = props;
+const EmojiPanel = ({ ref, onEmojiClicked, isModal = false, onClose }: Props) => {
   const _primaryColor = usePrimaryColor();
   const theme = useTheme();
   const isDarkTheme = useIsDarkTheme();
@@ -125,22 +113,30 @@ export const SessionEmojiPanel = forwardRef<HTMLDivElement, Props>((props: Props
       );
 
   return (
-    <StyledEmojiPanel
-      $isModal={isModal}
-      $primaryColor={primaryColor}
-      $theme={theme}
-      $panelBackgroundRGB={panelBackgroundRGB}
-      $panelTextRGB={panelTextRGB}
-      className={clsx(show && 'show')}
-      ref={ref}
+    <SessionFocusTrap
+      clickOutsideDeactivates={true}
+      allowNoTabbableNodes={true}
+      onDeactivate={onClose}
     >
-      <Picker
-        theme={isDarkTheme ? 'dark' : 'light'}
-        i18n={i18nEmojiData}
-        onEmojiSelect={onEmojiClicked}
-        onClose={onClose}
-        {...pickerProps}
-      />
-    </StyledEmojiPanel>
+      <StyledEmojiPanel
+        $isModal={isModal}
+        $primaryColor={primaryColor}
+        $theme={theme}
+        $panelBackgroundRGB={panelBackgroundRGB}
+        $panelTextRGB={panelTextRGB}
+        ref={ref}
+      >
+        <Picker
+          theme={isDarkTheme ? 'dark' : 'light'}
+          i18n={i18nEmojiData}
+          onEmojiSelect={onEmojiClicked}
+          onClose={onClose}
+          title=""
+          showPreview={true}
+          skinTonePosition={'preview'}
+          autoFocus={true}
+        />
+      </StyledEmojiPanel>
+    </SessionFocusTrap>
   );
-});
+};

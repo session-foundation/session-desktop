@@ -1,11 +1,10 @@
-import { SessionDataTestId, MouseEvent, useCallback, Dispatch } from 'react';
+import { SessionDataTestId, Dispatch, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { clsx } from 'clsx';
 import styled from 'styled-components';
 import { getAppDispatch } from '../../../../state/dispatch';
 import { useIsDetailMessageView } from '../../../../contexts/isDetailViewContext';
 import { MessageRenderingProps } from '../../../../models/messageType';
-import { toggleSelectedMessageId } from '../../../../state/ducks/conversations';
 import { updateReactListModal } from '../../../../state/ducks/modalDialog';
 import { StateType } from '../../../../state/reducer';
 import { useHideAvatarInMsgList, useMessageStatus } from '../../../../state/selectors';
@@ -17,13 +16,10 @@ import { MessageContent } from './MessageContent';
 import { MessageContextMenu } from './MessageContextMenu';
 import { MessageReactions } from './MessageReactions';
 import { MessageStatus } from './MessageStatus';
-import {
-  useIsMessageSelectionMode,
-  useSelectedIsLegacyGroup,
-} from '../../../../state/selectors/selectedConversation';
 import { SessionEmojiReactBarPopover } from '../../SessionEmojiReactBarPopover';
 import { PopoverTriggerPosition } from '../../../SessionTooltip';
-import { useMessageInteractions } from '../../../../hooks/useMessageInteractions';
+import { useMessageReact } from '../../../../hooks/useMessageInteractions';
+import { SessionFocusTrap } from '../../../SessionFocusTrap';
 
 export type MessageContentWithStatusSelectorProps = { isGroup: boolean } & Pick<
   MessageRenderingProps,
@@ -37,6 +33,7 @@ type Props = {
   convoReactionsEnabled: boolean;
   triggerPosition: PopoverTriggerPosition | null;
   setTriggerPosition: Dispatch<PopoverTriggerPosition | null>;
+  autoFocusReactionBarFirstEmoji?: boolean;
 };
 
 const StyledMessageContentContainer = styled.div<{ $isIncoming: boolean; $isDetailView: boolean }>`
@@ -70,46 +67,13 @@ export const MessageContentWithStatuses = (props: Props) => {
   const contentProps = useSelector((state: StateType) =>
     getMessageContentWithStatusesSelectorProps(state, messageId)
   );
-  const { reactToMessage, reply } = useMessageInteractions(messageId);
+  const reactToMessage = useMessageReact(messageId);
   const hideAvatar = useHideAvatarInMsgList(messageId);
   const isDetailView = useIsDetailMessageView();
-  const multiSelectMode = useIsMessageSelectionMode();
-  const isLegacyGroup = useSelectedIsLegacyGroup();
   const status = useMessageStatus(props.messageId);
   const isSent = status === 'sent' || status === 'read'; // a read message should be reactable
 
-  const onClickOnMessageOuterContainer = useCallback(
-    (event: MouseEvent<HTMLDivElement>) => {
-      if (multiSelectMode && props?.messageId) {
-        event.preventDefault();
-        event.stopPropagation();
-        dispatch(toggleSelectedMessageId(props?.messageId));
-      }
-    },
-    [dispatch, props?.messageId, multiSelectMode]
-  );
-
-  const onDoubleClickReplyToMessage = (e: MouseEvent<HTMLDivElement>) => {
-    if (isLegacyGroup) {
-      return;
-    }
-    const currentSelection = window.getSelection();
-    const currentSelectionString = currentSelection?.toString() || undefined;
-
-    if ((e.target as any).localName !== 'em-emoji-picker') {
-      if (
-        !currentSelectionString ||
-        currentSelectionString.length === 0 ||
-        !/\s/.test(currentSelectionString)
-      ) {
-        // if multiple word are selected, consider that this double click was actually NOT used to reply to
-        // but to select
-        void reply();
-        currentSelection?.empty();
-        e.preventDefault();
-      }
-    }
-  };
+  const reactBarFirstEmojiRef = useRef<HTMLSpanElement>(null);
 
   if (!contentProps) {
     return null;
@@ -136,14 +100,14 @@ export const MessageContentWithStatuses = (props: Props) => {
     setTriggerPosition(null);
   };
 
+  const active = !!triggerPosition && !!reactBarFirstEmojiRef.current;
+
   return (
     <StyledMessageContentContainer $isIncoming={isIncoming} $isDetailView={isDetailView}>
       <ExpirableReadableMessage
         messageId={messageId}
         className={clsx('module-message', `module-message--${direction}`)}
         role={'button'}
-        onClick={onClickOnMessageOuterContainer}
-        onDoubleClickCapture={onDoubleClickReplyToMessage}
         dataTestId={dataTestId}
       >
         <Flex
@@ -160,27 +124,32 @@ export const MessageContentWithStatuses = (props: Props) => {
           </StyledMessageWithAuthor>
           <MessageStatus dataTestId="msg-status" messageId={messageId} />
         </Flex>
-        {enableReactions ? (
-          <SessionEmojiReactBarPopover
-            messageId={messageId}
-            open={!!triggerPosition}
-            triggerPos={triggerPosition}
-            onClickAwayFromReactionBar={closeReactionBar}
-          />
-        ) : null}
-        {enableContextMenu ? (
-          <MessageContextMenu
-            messageId={messageId}
-            contextMenuId={ctxMenuID}
-            setTriggerPosition={setTriggerPosition}
-          />
-        ) : null}
+        <SessionFocusTrap
+          active={active}
+          initialFocus={() => reactBarFirstEmojiRef.current ?? false}
+          onDeactivate={closeReactionBar}
+          clickOutsideDeactivates={true}
+        >
+          {enableReactions ? (
+            <SessionEmojiReactBarPopover
+              messageId={messageId}
+              triggerPos={triggerPosition}
+              reactBarFirstEmojiRef={reactBarFirstEmojiRef}
+            />
+          ) : null}
+          {enableContextMenu ? (
+            <MessageContextMenu
+              messageId={messageId}
+              contextMenuId={ctxMenuID}
+              setTriggerPosition={setTriggerPosition}
+            />
+          ) : null}
+        </SessionFocusTrap>
       </ExpirableReadableMessage>
       {!isDetailView && enableReactions ? (
         <MessageReactions
           messageId={messageId}
-          // eslint-disable-next-line @typescript-eslint/no-misused-promises
-          onClick={reactToMessage}
+          onEmojiClick={reactToMessage ? emoji => void reactToMessage(emoji) : undefined}
           onPopupClick={handlePopupClick}
           noAvatar={hideAvatar}
         />

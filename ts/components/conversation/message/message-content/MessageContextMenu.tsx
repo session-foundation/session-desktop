@@ -5,20 +5,15 @@ import { isNil, isNumber, isString } from 'lodash';
 import { MenuOnHideCallback, MenuOnShowCallback } from 'react-contexify';
 import styled from 'styled-components';
 import { toNumber } from 'lodash/fp';
+import { useSelector } from 'react-redux';
 import { getAppDispatch } from '../../../../state/dispatch';
 import { Data } from '../../../../data/data';
 
 import { MessageRenderingProps } from '../../../../models/messageType';
 import { openRightPanel, showMessageInfoView } from '../../../../state/ducks/conversations';
+import { useMessageSender, useMessageSenderIsAdmin } from '../../../../state/selectors';
 import {
-  useMessageAttachments,
-  useMessageDirection,
-  useMessageIsDeletable,
-  useMessageSender,
-  useMessageSenderIsAdmin,
-  useMessageStatus,
-} from '../../../../state/selectors';
-import {
+  getSelectedCanWrite,
   useSelectedConversationKey,
   useSelectedIsLegacyGroup,
 } from '../../../../state/selectors/selectedConversation';
@@ -39,7 +34,12 @@ import { showContextMenu } from '../../../../util/contextMenu';
 import { clampNumber } from '../../../../util/maths';
 import { PopoverTriggerPosition } from '../../../SessionTooltip';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
-import { useMessageInteractions } from '../../../../hooks/useMessageInteractions';
+import {
+  useMessageCopyText,
+  useMessageReply,
+  useMessageSaveAttachment,
+  useMessageSelect,
+} from '../../../../hooks/useMessageInteractions';
 
 export type MessageContextMenuSelectorProps = Pick<
   MessageRenderingProps,
@@ -205,10 +205,9 @@ export const showMessageInfoOverlay = async ({
 };
 
 function SaveAttachmentMenuItem({ messageId }: { messageId: string }) {
-  const attachments = useMessageAttachments(messageId);
-  const { saveAttachment } = useMessageInteractions(messageId);
+  const saveAttachment = useMessageSaveAttachment(messageId);
 
-  return attachments?.length && attachments.every(m => !m.pending && m.path) ? (
+  return saveAttachment ? (
     <MenuItem
       onClick={saveAttachment}
       iconType={LUCIDE_ICONS_UNICODE.ARROW_DOWN_TO_LINE}
@@ -236,30 +235,42 @@ function MessageInfoMenuItem({ messageId }: { messageId: string }) {
 }
 
 function CopyBodyMenuItem({ messageId }: { messageId: string }) {
-  const { copyText } = useMessageInteractions(messageId);
+  const copyText = useMessageCopyText(messageId);
 
-  return (
+  return copyText ? (
     <MenuItem onClick={copyText} iconType={LUCIDE_ICONS_UNICODE.COPY} isDangerAction={false}>
       {tr('copy')}
     </MenuItem>
-  );
+  ) : null;
+}
+
+function MessageReplyMenuItem({ messageId }: { messageId: string }) {
+  const reply = useMessageReply(messageId);
+  const canWrite = useSelector(getSelectedCanWrite);
+
+  return reply && canWrite ? (
+    <MenuItem onClick={reply} iconType={LUCIDE_ICONS_UNICODE.REPLY} isDangerAction={false}>
+      {tr('reply')}
+    </MenuItem>
+  ) : null;
+}
+
+function MessageSelectMenuItem({ messageId }: { messageId: string }) {
+  const select = useMessageSelect(messageId);
+
+  return select ? (
+    <MenuItem onClick={select} iconType={LUCIDE_ICONS_UNICODE.CIRCLE_CHECK} isDangerAction={false}>
+      <Localizer token="select" />
+    </MenuItem>
+  ) : null;
 }
 
 export const MessageContextMenu = (props: Props) => {
   const { messageId, contextMenuId, setTriggerPosition } = props;
 
-  const { reply, select } = useMessageInteractions(messageId);
-
   const isLegacyGroup = useSelectedIsLegacyGroup();
   const convoId = useSelectedConversationKey();
-  const direction = useMessageDirection(messageId);
-  const status = useMessageStatus(messageId);
-  const isDeletable = useMessageIsDeletable(messageId);
   const sender = useMessageSender(messageId);
-
-  const isOutgoing = direction === 'outgoing';
-  const isSent = status === 'sent' || status === 'read'; // a read message should be replyable
-
   const contextMenuRef = useRef<HTMLDivElement | null>(null);
 
   const onShow: MenuOnShowCallback = (_, { x, y }) => {
@@ -315,22 +326,10 @@ export const MessageContextMenu = (props: Props) => {
         >
           <RetryItem messageId={messageId} />
           <SaveAttachmentMenuItem messageId={messageId} />
-          {(isSent || !isOutgoing) && (
-            <MenuItem onClick={reply} iconType={LUCIDE_ICONS_UNICODE.REPLY} isDangerAction={false}>
-              {tr('reply')}
-            </MenuItem>
-          )}
+          <MessageReplyMenuItem messageId={messageId} />
           <CopyBodyMenuItem messageId={messageId} />
           <MessageInfoMenuItem messageId={messageId} />
-          {isDeletable ? (
-            <MenuItem
-              onClick={select}
-              iconType={LUCIDE_ICONS_UNICODE.CIRCLE_CHECK}
-              isDangerAction={false}
-            >
-              <Localizer token="select" />
-            </MenuItem>
-          ) : null}
+          <MessageSelectMenuItem messageId={messageId} />
           <CopyAccountIdMenuItem pubkey={sender} messageId={messageId} />
           <DeleteItem messageId={messageId} />
           <CommunityAdminActionItems messageId={messageId} />

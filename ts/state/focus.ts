@@ -8,6 +8,7 @@ import { useTopModalId } from './selectors/modal';
 
 export type FocusScope =
   | 'global'
+  | 'mainScreen'
   | 'conversationList'
   | 'message'
   | 'compositionBoxInput'
@@ -41,6 +42,10 @@ export function useIsInScope({ scope, scopeId }: ScopeArgs) {
 
   if (scope === 'global') {
     return true;
+  }
+
+  if (scope === 'mainScreen') {
+    return !modalId;
   }
 
   // if we've got a modal shown, and it is the one the scope is far, return `true`

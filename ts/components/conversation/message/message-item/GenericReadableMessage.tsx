@@ -26,10 +26,16 @@ import {
 import { isButtonClickKey, KbdShortcut } from '../../../../util/keyboardShortcuts';
 import { showMessageContextMenu } from '../message-content/MessageContextMenu';
 import { getAppDispatch } from '../../../../state/dispatch';
-import { setFocusedMessageId } from '../../../../state/ducks/conversations';
+import {
+  setFocusedMessageId,
+  toggleSelectedMessageId,
+} from '../../../../state/ducks/conversations';
 import { PopoverTriggerPosition } from '../../../SessionTooltip';
 import { useKeyboardShortcut } from '../../../../hooks/useKeyboardShortcut';
 import { useFocusScope, useIsInScope } from '../../../../state/focus';
+import { closeContextMenus } from '../../../../util/contextMenu';
+import { trimWhitespace } from '../../../../session/utils/String';
+import { useMessageReply } from '../../../../hooks/useMessageInteractions';
 
 export type GenericReadableMessageSelectorProps = Pick<
   MessageRenderingProps,
@@ -89,7 +95,6 @@ export const GenericReadableMessage = (props: Props) => {
   );
   const isMessageSelected = useMessageSelected(props.messageId);
   const selectedIsBlocked = useSelectedIsBlocked();
-
   const multiSelectMode = useIsMessageSelectionMode();
 
   const ref = useRef<HTMLDivElement>(null);
@@ -98,6 +103,27 @@ export const GenericReadableMessage = (props: Props) => {
   const isInFocusScope = useIsInScope({ scope: 'message', scopeId: messageId });
   const { focusedMessageId } = useFocusScope();
   const isAnotherMessageFocused = focusedMessageId && !isInFocusScope;
+
+  const reply = useMessageReply(messageId);
+  const focusMessageId = () => {
+    dispatch(setFocusedMessageId(messageId));
+  };
+
+  const onFocus = () => {
+    window.log.warn('potato onFocus');
+    focusMessageId();
+  };
+
+  const onBlur = () => {
+    window.log.warn('potato onBlur');
+    dispatch(setFocusedMessageId(null));
+    pointerDownRef.current = false;
+  };
+
+  const onPointerDown = () => {
+    pointerDownRef.current = true;
+    window.log.warn('potato onPointerDown');
+  };
 
   const getMessageContainerTriggerPosition = (): PopoverTriggerPosition | null => {
     if (!ref.current) {
@@ -155,16 +181,9 @@ export const GenericReadableMessage = (props: Props) => {
     }
   };
 
-  const onFocus = () => {
-    dispatch(setFocusedMessageId(messageId));
-  };
-
-  const onBlur = () => {
-    dispatch(setFocusedMessageId(null));
-  };
-
   const toggleEmojiReactionBarWithKeyboard = () => {
     if (triggerPosition) {
+      closeContextMenus();
       setTriggerPosition(null);
     } else {
       const pos = getMessageContainerTriggerPosition();
@@ -173,6 +192,35 @@ export const GenericReadableMessage = (props: Props) => {
       }
     }
   };
+
+  const onClick = useCallback(
+    (event: MouseEvent<HTMLDivElement>) => {
+      if (multiSelectMode && messageId) {
+        event.preventDefault();
+        event.stopPropagation();
+        dispatch(toggleSelectedMessageId(messageId));
+      }
+    },
+    [dispatch, messageId, multiSelectMode]
+  );
+
+  const onDoubleClickCapture = reply
+    ? (e: MouseEvent<HTMLDivElement>) => {
+        if (multiSelectMode) {
+          return;
+        }
+        const currentSelection = window.getSelection();
+        const currentSelectionString = currentSelection?.toString() || undefined;
+
+        if (
+          (!currentSelectionString || trimWhitespace(currentSelectionString).length === 0) &&
+          (e.target as any).localName !== 'em-emoji-picker'
+        ) {
+          e.preventDefault();
+          void reply();
+        }
+      }
+    : undefined;
 
   useKeyboardShortcut({
     shortcut: KbdShortcut.messageToggleReactionBar,
@@ -203,14 +251,11 @@ export const GenericReadableMessage = (props: Props) => {
       onKeyDown={onKeyDown}
       $focusedKeyboard={!pointerDownRef.current}
       tabIndex={0}
-      onPointerDown={() => {
-        pointerDownRef.current = true;
-      }}
-      onFocus={() => {
-        onFocus();
-        pointerDownRef.current = false;
-      }}
+      onPointerDown={onPointerDown}
+      onFocus={onFocus}
       onBlur={onBlur}
+      onClick={onClick}
+      onDoubleClickCapture={onDoubleClickCapture}
     >
       <MessageContentWithStatuses
         ctxMenuID={ctxMenuID}

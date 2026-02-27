@@ -1,5 +1,5 @@
 import { clone } from 'lodash';
-import { useCallback } from 'react';
+import { useCallback, type MouseEvent, type KeyboardEvent } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 import { getAppDispatch } from '../../../../state/dispatch';
@@ -82,7 +82,7 @@ export const MessageAttachment = (props: Props) => {
   );
 
   const onClickOnGenericAttachment = useCallback(
-    (e: any) => {
+    (e: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>) => {
       e.stopPropagation();
       e.preventDefault();
       if (!attachmentProps?.attachments?.length || attachmentProps?.attachments[0]?.pending) {
