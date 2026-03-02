@@ -26,8 +26,16 @@ export type WithMessageId = { messageId: string };
 export type WithContextMenuId = { contextMenuId: string };
 
 export type WithLocalMessageDeletionType = {
-  deletionType: 'complete' | 'markDeleted' | 'markDeletedThisDevice';
+  deletionType: 'complete' | 'markDeletedGlobally' | 'markDeletedThisDevice';
 };
+
+export type WithActionContext = {
+  /**
+   * A bunch of actions have different meaning when done via the UI or not (i.e. the local user doing the action).
+   */
+  actionContextIsUI: boolean;
+};
+
 export type ShortenOrExtend = 'extend' | 'shorten' | '';
 export type WithShortenOrExtend = { shortenOrExtend: ShortenOrExtend };
 export type WithMessagesHashes = { messagesHashes: Array<string> };

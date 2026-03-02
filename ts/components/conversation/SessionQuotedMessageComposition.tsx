@@ -9,7 +9,6 @@ import { AUDIO_MP3 } from '../../types/MIME';
 import { Flex } from '../basic/Flex';
 import { Image } from './Image';
 
-import { findAndFormatContact } from '../../models/message';
 import { getAbsoluteAttachmentPath } from '../../types/MessageAttachment';
 import { GoogleChrome } from '../../util';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
@@ -48,7 +47,7 @@ const StyledImage = styled.div`
   }
 `;
 
-const StyledText = styled(Flex)`
+const StyledQuotedText = styled(Flex)`
   margin: 0 var(--margins-sm) 0 var(--margins-sm);
   min-width: 0;
   p {
@@ -87,8 +86,6 @@ export const SessionQuotedMessageComposition = () => {
   if (!author || !quotedMessageProps?.id) {
     return null;
   }
-
-  const contact = findAndFormatContact(author);
 
   const { hasAttachments, firstImageLikeAttachment } = checkHasAttachments(attachments);
   const isImage = Boolean(
@@ -152,20 +149,20 @@ export const SessionQuotedMessageComposition = () => {
             ) : null}
           </StyledImage>
         )}
-        <StyledText
+        <StyledQuotedText
           $container={true}
           $flexDirection="column"
           $justifyContent={'center'}
           $alignItems={'flex-start'}
         >
           <ContactName
-            pubkey={contact.pubkey}
+            pubkey={author}
             conversationId={conversationId}
             contactNameContext="quoted-message-composition"
             style={{ maxWidth: '100%', whiteSpace: 'nowrap' }}
           />
           {subtitleText && <Subtle>{subtitleText}</Subtle>}
-        </StyledText>
+        </StyledQuotedText>
       </QuotedMessageCompositionReply>
 
       <SessionLucideIconButton

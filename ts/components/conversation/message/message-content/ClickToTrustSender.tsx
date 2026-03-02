@@ -53,7 +53,12 @@ export const ClickToTrustSender = (props: { messageId: string }) => {
         onClickOk: async () => {
           convo.setIsTrustedForAttachmentDownload(true);
           await convo.commit();
-          const messagesInConvo = await Data.getLastMessagesByConversation(convo.id, 100, false);
+          const messagesInConvo = await Data.getLastMessagesByConversation({
+            conversationId: convo.id,
+            limit: 100,
+            skipTimerInit: true,
+            skipMarkedAsDeleted: true,
+          });
 
           await Promise.all(
             messagesInConvo.map(async message => {

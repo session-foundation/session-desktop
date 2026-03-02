@@ -460,12 +460,23 @@ async function getMessagesByConversation(
  * @param skipTimerInit  see MessageModel.skipTimerInit
  * @returns the fetched messageModels
  */
-async function getLastMessagesByConversation(
-  conversationId: string,
-  limit: number,
-  skipTimerInit: boolean
-): Promise<Array<MessageModel>> {
-  const messages = await channels.getLastMessagesByConversation(conversationId, limit);
+async function getLastMessagesByConversation({
+  conversationId,
+  limit,
+  skipTimerInit,
+  skipMarkedAsDeleted,
+}: {
+  conversationId: string;
+  limit: number;
+  skipTimerInit: boolean;
+  skipMarkedAsDeleted: boolean;
+}): Promise<Array<MessageModel>> {
+  const messages = await channels.getLastMessagesByConversation({
+    conversationId,
+    limit,
+    skipMarkedAsDeleted,
+  });
+
   if (skipTimerInit) {
     // eslint-disable-next-line no-restricted-syntax
     for (const message of messages) {
@@ -476,12 +487,21 @@ async function getLastMessagesByConversation(
 }
 
 async function getLastMessageIdInConversation(conversationId: string) {
-  const models = await getLastMessagesByConversation(conversationId, 1, true);
+  const models = await getLastMessagesByConversation({
+    conversationId,
+    limit: 1,
+    skipTimerInit: true,
+    skipMarkedAsDeleted: false,
+  });
   return models?.[0]?.id || null;
 }
 
 async function getLastMessageInConversation(conversationId: string) {
-  const messages = await channels.getLastMessagesByConversation(conversationId, 1);
+  const messages = await channels.getLastMessagesByConversation({
+    conversationId,
+    limit: 1,
+    skipTimerInit: true,
+  });
   // eslint-disable-next-line no-restricted-syntax
   for (const message of messages) {
     message.skipTimerInit = true;
@@ -537,7 +557,12 @@ async function removeAllMessagesInConversation(conversationId: string): Promise<
     // Yes, we really want the await in the loop. We're deleting 500 at a
     //   time so we don't use too much memory.
     // eslint-disable-next-line no-await-in-loop
-    messages = await getLastMessagesByConversation(conversationId, 1000, false);
+    messages = await getLastMessagesByConversation({
+      conversationId,
+      limit: 1000,
+      skipTimerInit: false,
+      skipMarkedAsDeleted: false,
+    });
     if (!messages.length) {
       return;
     }

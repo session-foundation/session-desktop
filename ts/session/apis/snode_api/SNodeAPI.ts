@@ -272,6 +272,7 @@ async function networkDeleteMessageOurSwarm(
               return null;
             })
           );
+
           return isEmpty(results);
         } catch (e) {
           throw new Error(

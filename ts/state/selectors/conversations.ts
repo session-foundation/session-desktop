@@ -782,7 +782,7 @@ type QuotePropsFound = QuotePropsAlwaysThere & {
   referencedMessageNotFound: false;
   id: string;
   convoId: string;
-} & Pick<QuoteProps, 'isFromMe' | 'text' | 'attachment'>;
+} & Pick<QuoteProps, 'isFromMe' | 'text' | 'attachment' | 'isDeleted'>;
 
 export const getMessageQuoteProps = createSelector(
   getConversationLookup,
@@ -829,7 +829,7 @@ export const getMessageQuoteProps = createSelector(
     }
 
     const sourceMsgProps = foundProps.propsForMessage;
-    if (!sourceMsgProps || sourceMsgProps.isDeleted) {
+    if (!sourceMsgProps) {
       return quoteNotFoundWithDetails(author, timestamp);
     }
 
@@ -850,6 +850,7 @@ export const getMessageQuoteProps = createSelector(
       referencedMessageNotFound: false,
       convoId: convo.id,
       timestamp: toNumber(timestamp),
+      isDeleted: sourceMsgProps.isDeleted,
     };
   }
 );

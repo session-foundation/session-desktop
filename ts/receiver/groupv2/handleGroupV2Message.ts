@@ -27,7 +27,7 @@ import {
 } from '../../webworker/workers/browser/libsession_worker_interface';
 import { sendInviteResponseToGroup } from '../../session/sending/group/GroupInviteResponse';
 import { deleteMessagesFromSwarmOnly } from '../../interactions/conversations/deleteMessagesFromSwarmOnly';
-import { deleteMessagesLocallyOnly } from '../../interactions/conversations/deleteMessagesLocallyOnly';
+import { deleteOrMarkAsDeletedMessages } from '../../interactions/conversations/deleteOrMarkAsDeletedMessages';
 
 type WithSignatureTimestamp = { signatureTimestamp: number };
 type WithAuthor = { author: PubkeyType };
@@ -446,10 +446,11 @@ async function handleGroupUpdateDeleteMemberContentMessage({
     // processing the handleGroupUpdateDeleteMemberContentMessage itself
     // (we are running on the receiving pipeline here)
     // so network calls are not allowed.
-    await deleteMessagesLocallyOnly({
+    await deleteOrMarkAsDeletedMessages({
       conversation: convo,
       messages: messageModels,
-      deletionType: 'complete',
+      deletionType: 'markDeletedGlobally',
+      actionContextIsUI: false,
     });
 
     return;
@@ -489,10 +490,11 @@ async function handleGroupUpdateDeleteMemberContentMessage({
   // (we are running on the receiving pipeline here)
   // so network calls are not allowed.
   const mergedModels = modelsByHashes.concat(modelsBySenders);
-  await deleteMessagesLocallyOnly({
+  await deleteOrMarkAsDeletedMessages({
     conversation: convo,
     messages: mergedModels,
-    deletionType: 'complete',
+    deletionType: 'markDeletedGlobally',
+    actionContextIsUI: false,
   });
 }
 

@@ -4,7 +4,7 @@ import { compact, isEmpty, isNumber } from 'lodash';
 import AbortController from 'abort-controller';
 import { StringUtils } from '../..';
 import { Data } from '../../../../data/data';
-import { deleteMessagesFromSwarmAndMarkAsDeletedLocally } from '../../../../interactions/conversations/unsendingInteractions';
+import { deleteMessagesFromSwarmAndDeleteOrMarkAsDeleted } from '../../../../interactions/conversations/unsendingInteractions';
 import {
   MetaGroupWrapperActions,
   MultiEncryptWrapperActions,
@@ -229,7 +229,13 @@ class GroupPendingRemovalsJob extends PersistedJob<GroupPendingRemovalsPersisted
 
           const convo = models?.[0].getConversation();
           if (convo && messageHashes.length) {
-            await deleteMessagesFromSwarmAndMarkAsDeletedLocally(convo, models);
+            await deleteMessagesFromSwarmAndDeleteOrMarkAsDeleted({
+              conversation: convo,
+              messages: models,
+              deletionType: 'markDeletedGlobally',
+              // this job is only used for non visible messages
+              actionContextIsUI: false,
+            });
           }
         }
       } catch (e) {

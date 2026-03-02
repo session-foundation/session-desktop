@@ -2606,7 +2606,13 @@ export class ConversationModel extends Model<ConversationAttributes> {
     if (!this.id || !this.getActiveAt() || this.isHidden()) {
       return;
     }
-    const messages = await Data.getLastMessagesByConversation(this.id, 1, true);
+    const messages = await Data.getLastMessagesByConversation({
+      conversationId: this.id,
+      limit: 1,
+      skipTimerInit: true,
+      // we want to render the text from the last non-marked as deleted message
+      skipMarkedAsDeleted: true,
+    });
     const existingLastMessageAttribute = this.get('lastMessage');
     const existingLastMessageStatus = this.get('lastMessageStatus');
     if (!messages || !messages.length) {

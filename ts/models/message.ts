@@ -111,6 +111,7 @@ import { getFeatureFlag } from '../state/ducks/types/releasedFeaturesReduxTypes'
 import type { OutgoingProMessageDetails } from '../types/message/OutgoingProMessageDetails';
 import { longOrNumberToBigInt } from '../types/Bigint';
 import { toSqliteBoolean } from '../node/database_utility';
+import type { WithLocalMessageDeletionType } from '../session/types/with';
 
 // tslint:disable: cyclomatic-complexity
 
@@ -419,6 +420,14 @@ export class MessageModel extends Model<MessageAttributes> {
       });
 
       return tStrippedWithObj(i18nProps);
+    }
+    if (this.isMessageRequestResponse()) {
+      if (this.get('direction') === 'incoming') {
+        return tStripped('messageRequestsAccepted');
+      }
+      return tStripped('messageRequestYouHaveAccepted', {
+        name: ConvoHub.use().getNicknameOrRealUsernameOrPlaceholder(this.get('conversationId')),
+      });
     }
     const body = this.get('body');
     if (body) {
@@ -945,11 +954,33 @@ export class MessageModel extends Model<MessageAttributes> {
   /**
    * Marks the message as deleted locally or globally.
    */
-  public async markAsDeleted(deletedLocallyOnly: boolean) {
+  public async markAsDeleted(
+    requestedDeleteType: Extract<
+      WithLocalMessageDeletionType['deletionType'],
+      'markDeletedGlobally' | 'markDeletedThisDevice'
+    >
+  ) {
+    const isDeletedType = this.get('isDeleted');
+    const requestedDeleteLocallyOnly = requestedDeleteType === 'markDeletedThisDevice';
+    const requestedDeleteGlobally = requestedDeleteType === 'markDeletedGlobally';
+
+    // if the msg is already marked as deleted of the correct type, do nothing
+    if (isDeletedType === MessageDeletedType.deletedLocally && requestedDeleteLocallyOnly) {
+      return;
+    }
+    if (isDeletedType === MessageDeletedType.deletedGlobally && requestedDeleteGlobally) {
+      return;
+    }
+    // if we want to mark as deleted a globally deleted message, do nothing
+    if (isDeletedType === MessageDeletedType.deletedGlobally && !requestedDeleteGlobally) {
+      return;
+    }
+
     this.set({
-      isDeleted: deletedLocallyOnly
-        ? MessageDeletedType.deletedLocally
-        : MessageDeletedType.deletedGlobally,
+      isDeleted:
+        requestedDeleteType === 'markDeletedThisDevice'
+          ? MessageDeletedType.deletedLocally
+          : MessageDeletedType.deletedGlobally,
       body: '',
       quote: undefined,
       groupInvitation: undefined,
@@ -968,6 +999,11 @@ export class MessageModel extends Model<MessageAttributes> {
       errors: undefined,
       unread: toSqliteBoolean(false),
     });
+    // Only overwrite the messageHash when we are deleting globally.
+    // This is because a locally deleted message should be able to be marked as deleted globally
+    if (requestedDeleteGlobally) {
+      this.set({ messageHash: undefined });
+    }
     // we can ignore the result of that markMessageReadNoCommit as it would only be used
     // to refresh the expiry of it(but it is already marked as "deleted", so we don't care)
     this.markMessageReadNoCommit(Date.now());

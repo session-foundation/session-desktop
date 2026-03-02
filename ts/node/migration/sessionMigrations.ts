@@ -2387,7 +2387,7 @@ async function updateToSessionSchemaVersion54(currentVersion: number, db: Databa
     db.exec(`ALTER TABLE ${MESSAGES_TABLE} DROP COLUMN isDeleted_old;`);
 
     db.exec(
-      `CREATE INDEX messages_isDeleted ON ${MESSAGES_TABLE} (isDeleted) WHERE isDeleted IS NOT NULL;`
+      `CREATE INDEX messages_isDeleted_conversationId ON ${MESSAGES_TABLE} (conversationId, isDeleted) WHERE isDeleted IS NOT NULL;`
     );
 
     writeSessionSchemaVersion(targetVersion, db);

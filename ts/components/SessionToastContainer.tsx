@@ -41,7 +41,7 @@ export const SessionToastContainer = () => {
   return (
     <WrappedToastContainer
       position="bottom-right"
-      autoClose={isTestIntegration() ? 1000 : 5000}
+      autoClose={isTestIntegration() ? 1000 : 3000}
       hideProgressBar={true}
       newestOnTop={true}
       closeOnClick={true}

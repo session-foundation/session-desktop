@@ -67,6 +67,7 @@ export const MessageQuote = (props: Props) => {
         isIncoming={direction === 'incoming'}
         author={quoteProps.author}
         isFromMe={false}
+        isDeleted={undefined}
       />
     );
   }
@@ -81,6 +82,7 @@ export const MessageQuote = (props: Props) => {
       author={quoteProps.author}
       referencedMessageNotFound={false}
       isFromMe={Boolean(quoteProps.isFromMe)}
+      isDeleted={quoteProps.isDeleted}
     />
   );
 };

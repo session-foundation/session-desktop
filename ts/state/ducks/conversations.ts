@@ -563,6 +563,12 @@ function handleMessageChangedOrAdded(
     return state;
   }
 
+  const editedQuotedMessages = updateQuotedMessageProps(
+    state.quotedMessages,
+    changedOrAddedMessageProps
+  );
+  state.quotedMessages = editedQuotedMessages;
+
   const messageInStoreIndex = state.messages.findIndex(
     m => m.propsForMessage.id === changedOrAddedMessageProps.propsForMessage.id
   );
@@ -615,6 +621,50 @@ function handleMessagesChangedOrAdded(
   return stateCopy;
 }
 
+function removeQuotedMessageProps(
+  quotedMessageProps: Array<MessageModelPropsWithoutConvoProps>,
+  msgChangedProps: MessageModelPropsWithoutConvoProps
+) {
+  // Check if the message is quoted somewhere, and if so, remove it from the quotes
+  const { timestamp, sender } = msgChangedProps.propsForMessage;
+  if (timestamp && sender) {
+    const { foundAt, foundProps } = lookupQuoteInStore({
+      timestamp,
+      quotedMessagesInStore: quotedMessageProps,
+    });
+    if (foundAt >= 0) {
+      window.log.debug(`Deleting quote ${JSON.stringify(foundProps)}`);
+
+      const editedQuotedMessages = [...quotedMessageProps];
+      editedQuotedMessages.splice(foundAt, 1);
+      return editedQuotedMessages;
+    }
+  }
+  return quotedMessageProps;
+}
+
+function updateQuotedMessageProps(
+  quotedMessageProps: Array<MessageModelPropsWithoutConvoProps>,
+  msgChangedProps: MessageModelPropsWithoutConvoProps
+) {
+  // Check if the message is quoted somewhere, and if so, update the quoted message props
+  const { timestamp, sender } = msgChangedProps.propsForMessage;
+  if (timestamp && sender) {
+    const { foundAt } = lookupQuoteInStore({
+      timestamp,
+      quotedMessagesInStore: quotedMessageProps,
+    });
+    if (foundAt >= 0) {
+      window.log.debug(`Updating quote found at ${foundAt}`);
+
+      const editedQuotedMessages = [...quotedMessageProps];
+      editedQuotedMessages[foundAt] = msgChangedProps;
+      return editedQuotedMessages;
+    }
+  }
+  return quotedMessageProps;
+}
+
 function handleMessageExpiredOrDeleted(
   state: ConversationsStateType,
   payload: WithConvoId & (WithMessageId | WithMessageHash)
@@ -638,26 +688,13 @@ function handleMessageExpiredOrDeleted(
     if (messageInStoreIndex >= 0) {
       const msgToRemove = state.messages[messageInStoreIndex];
       const extractedMessageId = msgToRemove.propsForMessage.id;
-      const msgRemovedProps = state.messages[messageInStoreIndex].propsForMessage;
+      const msgRemovedProps = state.messages[messageInStoreIndex];
 
       // we cannot edit the array directly, so slice the first part, and slice the second part,
       // keeping the index removed out
       const editedMessages = [...state.messages];
       editedMessages.splice(messageInStoreIndex, 1);
-      const editedQuotedMessages = [...state.quotedMessages];
-
-      // Check if the message is quoted somewhere, and if so, remove it from the quotes
-      const { timestamp, sender } = msgRemovedProps;
-      if (timestamp && sender) {
-        const { foundAt, foundProps } = lookupQuoteInStore({
-          timestamp,
-          quotedMessagesInStore: state.quotedMessages,
-        });
-        if (foundAt >= 0) {
-          window.log.debug(`Deleting quote ${JSON.stringify(foundProps)}`);
-          editedQuotedMessages.splice(foundAt, 1);
-        }
-      }
+      const editedQuotedMessages = removeQuotedMessageProps(state.quotedMessages, msgRemovedProps);
 
       return {
         ...state,

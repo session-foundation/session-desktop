@@ -4,49 +4,28 @@ import { PubKey } from '../../session/types';
 import { UserUtils } from '../../session/utils';
 import { ed25519Str } from '../../session/utils/String';
 
-import { deleteMessagesLocallyOnly } from './deleteMessagesLocallyOnly';
+import { deleteOrMarkAsDeletedMessages } from './deleteOrMarkAsDeletedMessages';
 import { deleteMessagesFromSwarmOnly } from './deleteMessagesFromSwarmOnly';
 import { ConvoHub } from '../../session/conversations';
+import type { WithActionContext, WithLocalMessageDeletionType } from '../../session/types/with';
 
-/**
- * Delete the messages (with a valid hash) from the swarm and completely delete the messages locally.
- * Only delete locally if the delete from swarm was successful.
- *
- * Returns true if the delete from swarm was successful, false otherwise.
- */
-export async function deleteMessagesFromSwarmAndCompletelyLocally(
-  conversation: ConversationModel,
-  messages: Array<MessageModel>
-) {
-  return deleteMessagesFromSwarmShared(conversation, messages, 'complete');
-}
-
-/**
- * Delete the messages (with a valid hash) from the swarm.
- * Only mark as deleted if the delete from swarm was successful.
- *
- * Returns true if the delete from swarm was successful, false otherwise.
- *
- */
-export async function deleteMessagesFromSwarmAndMarkAsDeletedLocally(
-  conversation: ConversationModel,
-  messages: Array<MessageModel>
-) {
-  return deleteMessagesFromSwarmShared(conversation, messages, 'markDeleted');
-}
-
-async function deleteMessagesFromSwarmShared(
-  conversation: ConversationModel,
-  messages: Array<MessageModel>,
-  deletionType: 'complete' | 'markDeleted'
-) {
+export async function deleteMessagesFromSwarmAndDeleteOrMarkAsDeleted({
+  conversation,
+  deletionType,
+  messages,
+  actionContextIsUI,
+}: WithLocalMessageDeletionType &
+  WithActionContext & {
+    conversation: ConversationModel;
+    messages: Array<MessageModel>;
+  }) {
   // legacy groups are deprecated
   if (conversation.isClosedGroup() && PubKey.is05Pubkey(conversation.id)) {
     throw new Error('legacy groups are deprecated. Not deleting anything');
   }
   if (conversation.isPrivateAndBlinded()) {
     throw new Error(
-      `deleteMessagesFromSwarmShared ${deletionType} does not support blinded conversations`
+      `deleteMessagesFromSwarmAndDeleteOrMarkAsDeleted ${deletionType} does not support blinded conversations`
     );
   }
 
@@ -59,33 +38,42 @@ async function deleteMessagesFromSwarmShared(
     ? conversation.id
     : UserUtils.getOurPubKeyStrFromCache();
   if (!PubKey.is03Pubkey(pubkeyToDeleteFrom) && !PubKey.is05Pubkey(pubkeyToDeleteFrom)) {
-    throw new Error(`deleteMessagesFromSwarmShared ${deletionType} needs a 03 or 05 pk`);
+    throw new Error(
+      `deleteMessagesFromSwarmAndDeleteOrMarkAsDeleted ${deletionType} needs a 03 or 05 pk`
+    );
   }
   if (
     PubKey.is05Pubkey(pubkeyToDeleteFrom) &&
     pubkeyToDeleteFrom !== UserUtils.getOurPubKeyStrFromCache()
   ) {
     throw new Error(
-      `deleteMessagesFromSwarmShared ${deletionType} with 05 pk can only delete for ourself`
+      `deleteMessagesFromSwarmAndDeleteOrMarkAsDeleted ${deletionType} with 05 pk can only delete for ourself`
     );
   }
 
   window.log.info(
-    `deleteMessagesFromSwarmShared ${deletionType}: Deleting from swarm of  ${ed25519Str(pubkeyToDeleteFrom)}, hashes: ${messages.map(m => m.getMessageHash())}`
+    `deleteMessagesFromSwarmAndDeleteOrMarkAsDeleted ${deletionType}: Deleting from swarm of  ${ed25519Str(pubkeyToDeleteFrom)}, hashes: ${messages.map(m => m.getMessageHash())}`
   );
 
   const convo = ConvoHub.use().get(conversation.id);
   if (!convo) {
-    throw new Error(`deleteMessagesFromSwarmShared ${deletionType} convo not found`);
+    throw new Error(
+      `deleteMessagesFromSwarmAndDeleteOrMarkAsDeleted ${deletionType} convo not found`
+    );
   }
 
   const deletedFromSwarm = await deleteMessagesFromSwarmOnly(convo, messages);
   if (!deletedFromSwarm) {
     window.log.warn(
-      `deleteMessagesFromSwarmShared ${deletionType}: some messages failed to be deleted from swarm of ${ed25519Str(pubkeyToDeleteFrom)}. Maybe they were already deleted?`
+      `deleteMessagesFromSwarmAndDeleteOrMarkAsDeleted ${deletionType}: some messages failed to be deleted from swarm of ${ed25519Str(pubkeyToDeleteFrom)}. Maybe they were already deleted?`
     );
   } else {
-    await deleteMessagesLocallyOnly({ conversation, messages, deletionType });
+    await deleteOrMarkAsDeletedMessages({
+      conversation,
+      messages,
+      deletionType,
+      actionContextIsUI,
+    });
   }
   return deletedFromSwarm;
 }

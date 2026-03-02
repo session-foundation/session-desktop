@@ -10,6 +10,7 @@ import { GoogleChrome } from '../../../../../util';
 import { MessageBody } from '../MessageBody';
 import { QuoteProps } from './Quote';
 import { tr } from '../../../../../localization/localeTools';
+import { MessageDeletedType } from '../../../../../models/messageType';
 
 const StyledQuoteText = styled.div<{ $isIncoming: boolean }>`
   display: -webkit-box;
@@ -81,9 +82,12 @@ export function getShortenedFilename(fileName: string) {
 }
 
 export const QuoteText = (
-  props: Pick<QuoteProps, 'text' | 'attachment' | 'isIncoming' | 'referencedMessageNotFound'>
+  props: Pick<
+    QuoteProps,
+    'text' | 'attachment' | 'isIncoming' | 'referencedMessageNotFound' | 'isDeleted'
+  >
 ) => {
-  const { text, attachment, isIncoming, referencedMessageNotFound } = props;
+  const { text, attachment, isIncoming, referencedMessageNotFound, isDeleted } = props;
 
   const isGroup = useSelectedIsGroupOrCommunity();
   const isPublic = useSelectedIsPublic();
@@ -96,11 +100,17 @@ export const QuoteText = (
       return <div style={{ WebkitLineClamp: 1 }}>{typeLabel}</div>;
     }
   }
+  const textOrFallbacks =
+    isDeleted === MessageDeletedType.deletedGlobally
+      ? tr('deleteMessageDeletedGlobally')
+      : isDeleted === MessageDeletedType.deletedLocally
+        ? tr('deleteMessageDeletedLocally')
+        : text || tr('messageErrorOriginal');
 
   return (
     <StyledQuoteText $isIncoming={isIncoming} dir="auto" data-testid="quote-text">
       <MessageBody
-        text={text || tr('messageErrorOriginal')}
+        text={textOrFallbacks}
         disableRichContent={true}
         disableJumbomoji={true}
         isGroup={isGroup}
