@@ -1,76 +1,55 @@
 import styled from 'styled-components';
-
 import { useMemo } from 'react';
-import clsx from 'clsx';
-
 import { acceptOpenGroupInvitation } from '../../../../interactions/messageInteractions';
 import { ExpirableReadableMessage } from './ExpirableReadableMessage';
 import {
   useMessageCommunityInvitationFullUrl,
   useMessageCommunityInvitationCommunityName,
-  useMessageDirection,
+  useMessageDirectionIncoming,
 } from '../../../../state/selectors';
-import type { WithContextMenuId, WithMessageId } from '../../../../session/types/with';
+import type { WithMessageId } from '../../../../session/types/with';
 import { SessionLucideIconButton } from '../../../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 import { tr } from '../../../../localization/localeTools';
-import type { WithPopoverPosition, WithSetPopoverPosition } from '../../../SessionTooltip';
 
-const StyledCommunityInvitation = styled.div`
-  background-color: var(--message-bubble-incoming-background-color);
+const StyledCommunityInvitation = styled.div<{ $isIncoming: boolean }>`
+  background-color: ${props =>
+    props.$isIncoming
+      ? 'var(--message-bubble-incoming-background-color)'
+      : 'var(--message-bubble-outgoing-background-color)'};
+  color: ${props =>
+    props.$isIncoming
+      ? 'var(--message-bubble-incoming-text-color)'
+      : 'var(--message-bubble-outgoing-text-color)'};
 
-  &.invitation-outgoing {
-    background-color: var(--message-bubble-outgoing-background-color);
-    align-self: flex-end;
-
-    .contents {
-      .group-details {
-        color: var(--message-bubble-outgoing-text-color);
-      }
-      .session-icon-button {
-        background-color: var(--transparent-color);
-      }
-    }
-  }
-
-  display: inline-block;
-  padding: 4px;
-  margin: var(--margins-xs) calc(var(--margins-lg) + var(--margins-md)) 0 var(--margins-lg);
-
+  padding: var(--margins-sm);
   border-radius: var(--border-radius-message-box);
-
-  align-self: flex-start;
-
-  box-shadow: none;
-
-  .contents {
-    display: flex;
-    align-items: center;
-    margin: 6px;
-
-    .invite-group-avatar {
-      height: 48px;
-      width: 48px;
-    }
-
-    .group-details {
-      display: inline-flex;
-      flex-direction: column;
-      color: var(--message-bubble-incoming-text-color);
-
-      padding: 0px 12px;
-      .group-name {
-        font-weight: bold;
-        font-size: 18px;
-      }
-    }
-
-    .session-icon-button {
-      background-color: var(--primary-color);
-    }
-  }
-
   cursor: pointer;
+`;
+
+const StyledCommunityContentsContainer = styled.div`
+  display: flex;
+  align-items: center;
+`;
+
+const StyledCommunityDetailsContainer = styled.div`
+  display: inline-flex;
+  flex-direction: column;
+  padding: 0px var(--margins-sm);
+  line-height: var(--font-line-height);
+`;
+
+const StyledCommunityName = styled.div`
+  font-weight: bold;
+  font-size: var(--font-size-lg);
+`;
+
+const StyledCommunityType = styled.div`
+  font-size: var(--font-size-sm);
+`;
+
+const StyledCommunityUrl = styled.div`
+  font-size: var(--font-size-xs);
 `;
 
 const StyledIconContainer = styled.div`
@@ -78,14 +57,11 @@ const StyledIconContainer = styled.div`
   border-radius: 100%;
 `;
 
-export const CommunityInvitation = (
-  props: WithMessageId & WithPopoverPosition & WithSetPopoverPosition & WithContextMenuId
-) => {
-  const messageDirection = useMessageDirection(props.messageId);
-  const classes = ['group-invitation'];
+export const CommunityInvitation = ({ messageId }: WithMessageId) => {
+  const isIncoming = useMessageDirectionIncoming(messageId);
 
-  const fullUrl = useMessageCommunityInvitationFullUrl(props.messageId);
-  const communityName = useMessageCommunityInvitationCommunityName(props.messageId);
+  const fullUrl = useMessageCommunityInvitationFullUrl(messageId);
+  const communityName = useMessageCommunityInvitationCommunityName(messageId);
 
   const hostname = useMemo(() => {
     try {
@@ -97,52 +73,38 @@ export const CommunityInvitation = (
     }
   }, [fullUrl]);
 
-  if (messageDirection === 'outgoing') {
-    classes.push('invitation-outgoing');
-  }
-
   if (!fullUrl || !hostname) {
     return null;
   }
 
   return (
     <ExpirableReadableMessage
-      messageId={props.messageId}
-      contextMenuId={props.contextMenuId}
-      setTriggerPosition={props.setTriggerPosition}
-      key={`readable-message-${props.messageId}`}
+      messageId={messageId}
+      key={`readable-message-${messageId}`}
       dataTestId="control-message"
     >
       <StyledCommunityInvitation
-        className={clsx(classes)}
+        $isIncoming={isIncoming}
         onClick={() => {
           acceptOpenGroupInvitation(fullUrl, communityName);
         }}
       >
-        <div className="contents">
+        <StyledCommunityContentsContainer>
           <StyledIconContainer>
             <SessionLucideIconButton
-              iconColor={
-                messageDirection === 'outgoing'
-                  ? 'var(--message-bubble-outgoing-text-color)'
-                  : 'var(--message-bubble-incoming-text-color)'
-              }
-              unicode={LUCIDE_ICONS_UNICODE.GLOBE}
+              iconColor={'var(--message-bubble-outgoing-text-color)'}
+              backgroundColor={isIncoming ? 'var(--primary-color)' : undefined}
+              unicode={isIncoming ? LUCIDE_ICONS_UNICODE.PLUS : LUCIDE_ICONS_UNICODE.GLOBE}
               iconSize={'large'}
-              style={{
-                aspectRatio: 1,
-                height: '2.5em',
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}
+              padding="var(--margins-xs)"
             />
           </StyledIconContainer>
-          <span className="group-details">
-            <span className="group-name">{communityName}</span>
-            <span className="group-type">{tr('communityInvitation')}</span>
-            <span className="group-address">{hostname}</span>
-          </span>
-        </div>
+          <StyledCommunityDetailsContainer>
+            <StyledCommunityName>{communityName}</StyledCommunityName>
+            <StyledCommunityType>{tr('communityInvitation')}</StyledCommunityType>
+            <StyledCommunityUrl>{hostname}</StyledCommunityUrl>
+          </StyledCommunityDetailsContainer>
+        </StyledCommunityContentsContainer>
       </StyledCommunityInvitation>
     </ExpirableReadableMessage>
   );

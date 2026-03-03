@@ -2,7 +2,6 @@ import { connect } from 'react-redux';
 
 import autoBind from 'auto-bind';
 import { Component, RefObject } from 'react';
-import styled from 'styled-components';
 import {
   ReduxConversationType,
   SortedMessageModelProps,
@@ -10,12 +9,8 @@ import {
   resetOldBottomMessageId,
   resetOldTopMessageId,
 } from '../../state/ducks/conversations';
-import { SessionScrollButton } from '../SessionScrollButton';
 
-import {
-  ScrollToLoadedMessageContext,
-  ScrollToLoadedReasons,
-} from '../../contexts/ScrollToLoadedMessage';
+import { ScrollToLoadedReasons } from '../../contexts/ScrollToLoadedMessage';
 import { StateType } from '../../state/reducer';
 import {
   getQuotedMessageToAnimate,
@@ -23,17 +18,12 @@ import {
   getSortedMessagesOfSelectedConversation,
 } from '../../state/selectors/conversations';
 import { getSelectedConversationKey } from '../../state/selectors/selectedConversation';
-import { SessionMessagesList } from './SessionMessagesList';
-import { TypingBubble } from './TypingBubble';
-import { StyledMessageBubble } from './message/message-content/MessageBubble';
-import { StyledMentionAnother } from './AddMentions';
-import { MessagesContainerRefContext } from '../../contexts/MessagesContainerRefContext';
+import { messageContainerDomID, SessionMessagesList } from './SessionMessagesList';
 import { closeContextMenus } from '../../util/contextMenu';
 
 export type SessionMessageListProps = {
   messageContainerRef: RefObject<HTMLDivElement | null>;
 };
-export const messageContainerDomID = 'messages-container';
 
 type Props = SessionMessageListProps & {
   conversationKey?: string;
@@ -43,40 +33,6 @@ type Props = SessionMessageListProps & {
   animateQuotedMessageId: string | undefined;
   scrollToNow: () => Promise<unknown>;
 };
-
-const StyledMessagesContainer = styled.div`
-  display: flex;
-  gap: var(--margins-sm);
-  flex-direction: column;
-  justify-items: end;
-  position: relative;
-  overflow-x: hidden;
-  scrollbar-width: 4px;
-  padding-top: var(--margins-sm);
-  padding-bottom: var(--margins-xl);
-
-  .session-icon-button {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 40px;
-    width: 40px;
-    border-radius: 50%;
-  }
-
-  ${StyledMessageBubble} {
-    user-select: text;
-  }
-
-  ${StyledMentionAnother} {
-    user-select: all;
-  }
-`;
-
-// NOTE Must always match the padding of the StyledReadableMessage
-const StyledTypingBubbleContainer = styled.div`
-  padding: var(--margins-xs) var(--margins-lg) 0;
-`;
 
 class SessionMessagesListContainerInner extends Component<Props> {
   private timeoutResetQuotedScroll: NodeJS.Timeout | null = null;
@@ -117,41 +73,18 @@ class SessionMessagesListContainerInner extends Component<Props> {
     }
 
     return (
-      <MessagesContainerRefContext.Provider value={this.props.messageContainerRef}>
-        <StyledMessagesContainer
-          className="messages-container"
-          id={messageContainerDomID}
-          onScroll={this.handleScroll}
-          ref={this.props.messageContainerRef}
-          data-testid="messages-container"
-        >
-          <ScrollToLoadedMessageContext.Provider value={this.scrollToLoadedMessage}>
-            <SessionMessagesList
-              scrollAfterLoadMore={(
-                messageIdToScrollTo: string,
-                type: 'load-more-top' | 'load-more-bottom'
-              ) => {
-                this.scrollToMessage(messageIdToScrollTo, type);
-              }}
-              onPageDownPressed={this.scrollPgDown}
-              onPageUpPressed={this.scrollPgUp}
-              onHomePressed={this.scrollTop}
-              onEndPressed={this.scrollEnd}
-            />
-          </ScrollToLoadedMessageContext.Provider>
-          <StyledTypingBubbleContainer>
-            <TypingBubble
-              conversationType={conversation.type}
-              isTyping={!!conversation.isTyping}
-              key="typing-bubble"
-            />
-          </StyledTypingBubbleContainer>
-        </StyledMessagesContainer>
-        <SessionScrollButton
-          onClickScrollBottom={this.props.scrollToNow}
-          key="scroll-down-button"
-        />
-      </MessagesContainerRefContext.Provider>
+      <SessionMessagesList
+        conversation={conversation}
+        handleScroll={this.handleScroll}
+        messageContainerRef={this.props.messageContainerRef}
+        onPageDownPressed={this.scrollPgDown}
+        onPageUpPressed={this.scrollPgUp}
+        onHomePressed={this.scrollTop}
+        onEndPressed={this.scrollEnd}
+        scrollToLoadedMessage={this.scrollToLoadedMessage}
+        scrollToMessage={this.scrollToMessage}
+        scrollToNow={this.props.scrollToNow}
+      />
     );
   }
 

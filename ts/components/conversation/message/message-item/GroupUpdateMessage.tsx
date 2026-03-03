@@ -13,12 +13,11 @@ import {
 import { Localizer } from '../../../basic/Localizer';
 import { ExpirableReadableMessage } from './ExpirableReadableMessage';
 import { NotificationBubble } from './notification-bubble/NotificationBubble';
-import type { WithContextMenuId, WithMessageId } from '../../../../session/types/with';
+import type { WithMessageId } from '../../../../session/types/with';
 import { useMessageGroupUpdateChange } from '../../../../state/selectors';
 import { assertUnreachable } from '../../../../types/sqlSharedTypes';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 import type { TrArgs } from '../../../../localization/localeTools';
-import type { WithPopoverPosition, WithSetPopoverPosition } from '../../../SessionTooltip';
 
 // This component is used to display group updates in the conversation view.
 
@@ -67,10 +66,8 @@ function useChangeItem(change?: PropsForGroupUpdateType): TrArgs | null {
 // NOTE: [react-compiler] this convinces the compiler the hook is static
 const useMessageGroupUpdateChangeInternal = useMessageGroupUpdateChange;
 
-export const GroupUpdateMessage = (
-  props: WithMessageId & WithPopoverPosition & WithSetPopoverPosition & WithContextMenuId
-) => {
-  const groupChange = useMessageGroupUpdateChangeInternal(props.messageId);
+export const GroupUpdateMessage = ({ messageId }: WithMessageId) => {
+  const groupChange = useMessageGroupUpdateChangeInternal(messageId);
 
   const changeProps = useChangeItem(groupChange);
 
@@ -80,10 +77,8 @@ export const GroupUpdateMessage = (
 
   return (
     <ExpirableReadableMessage
-      messageId={props.messageId}
-      contextMenuId={props.contextMenuId}
-      setTriggerPosition={props.setTriggerPosition}
-      key={`readable-message-${props.messageId}`}
+      messageId={messageId}
+      key={`readable-message-${messageId}`}
       dataTestId="group-update-message"
     >
       <NotificationBubble unicode={LUCIDE_ICONS_UNICODE.USERS_ROUND}>

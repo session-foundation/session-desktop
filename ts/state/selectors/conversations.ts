@@ -39,6 +39,7 @@ import type { SessionSuggestionDataItem } from '../../components/conversation/co
 import { useIsPublic, useWeAreAdmin } from '../../hooks/useParamSelector';
 import { tr } from '../../localization/localeTools';
 import type { QuoteProps } from '../../components/conversation/message/message-content/quote/Quote';
+import { PopoverTriggerPosition } from '../../components/SessionTooltip';
 
 export const getConversations = (state: StateType): ConversationsStateType => state.conversations;
 
@@ -505,6 +506,12 @@ export const getIsMessageSelectionMode = (state: StateType): boolean =>
 export const getFocusedMessageId = (state: StateType): string | null =>
   state.conversations.focusedMessageId;
 
+export const getInteractableMessageId = (state: StateType): string | null =>
+  state.conversations.interactableMessageId;
+
+export const getReactionBarTriggerPosition = (state: StateType): PopoverTriggerPosition | null =>
+  state.conversations.reactionBarTriggerPosition;
+
 export const getIsCompositionTextAreaFocused = (state: StateType): boolean =>
   state.conversations.isCompositionTextAreaFocused;
 
@@ -531,6 +538,14 @@ export const getMentionsInput = (state: StateType): Array<SessionSuggestionDataI
 
 export function useFocusedMessageId() {
   return useSelector(getFocusedMessageId);
+}
+
+export function useInteractableMessageId() {
+  return useSelector(getInteractableMessageId);
+}
+
+export function useReactionBarTriggerPosition() {
+  return useSelector(getReactionBarTriggerPosition);
 }
 
 export function useIsCompositionTextAreaFocused() {

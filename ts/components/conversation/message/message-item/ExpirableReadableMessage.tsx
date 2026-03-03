@@ -6,8 +6,6 @@ import {
   useLayoutEffect,
   useState,
   type AriaRole,
-  type MouseEvent,
-  type MouseEventHandler,
   type ReactNode,
   type SessionDataTestId,
 } from 'react';
@@ -29,9 +27,7 @@ import { getIncrement } from '../../../../util/timer';
 import { ExpireTimer } from '../../ExpireTimer';
 import { Data } from '../../../../data/data';
 import { ConvoHub } from '../../../../session/conversations';
-import { MessageContextMenu } from '../message-content/MessageContextMenu';
-import type { WithSetPopoverPosition } from '../../../SessionTooltip';
-import type { WithContextMenuId, WithConvoId, WithMessageId } from '../../../../session/types/with';
+import type { WithConvoId, WithMessageId } from '../../../../session/types/with';
 import { useScrollToLoadedMessage } from '../../../../contexts/ScrollToLoadedMessage';
 import {
   getMostRecentMessageId,
@@ -44,7 +40,6 @@ import {
 import { getIsAppFocused } from '../../../../state/selectors/section';
 import { useSelectedConversationKey } from '../../../../state/selectors/selectedConversation';
 import { useMessageType } from '../../../../state/selectors';
-import { useSelectMessageViaClick } from '../../../../hooks/useMessageInteractions';
 
 const EXPIRATION_CHECK_MINIMUM = 2000;
 
@@ -102,11 +97,8 @@ export type ReadableMessageProps = {
   messageId: string;
   className?: string;
   isUnread: boolean;
-  onClick?: MouseEventHandler<HTMLElement>;
-  onDoubleClickCapture?: MouseEventHandler<HTMLElement>;
   dataTestId: SessionDataTestId;
   role?: AriaRole;
-  onContextMenu?: (e: MouseEvent<HTMLElement>) => void;
   isControlMessage?: boolean;
 };
 
@@ -162,17 +154,7 @@ async function markReadFromMessageId({
 const ReadableMessage = (
   props: ReadableMessageProps & { alignItems: 'flex-start' | 'flex-end' | 'center' }
 ) => {
-  const {
-    messageId,
-    onContextMenu,
-    className,
-    isUnread,
-    onClick,
-    onDoubleClickCapture,
-    role,
-    dataTestId,
-    alignItems,
-  } = props;
+  const { messageId, className, isUnread, role, dataTestId, alignItems } = props;
 
   const isAppFocused = useSelector(getIsAppFocused);
   const dispatch = getAppDispatch();
@@ -264,7 +246,6 @@ const ReadableMessage = (
   return (
     <InView
       id={`msg-${messageId}`}
-      onContextMenu={onContextMenu}
       className={className}
       as="div"
       threshold={0.5} // consider that more than 50% of the message visible means it is read
@@ -272,8 +253,6 @@ const ReadableMessage = (
       onChange={isAppFocused ? onVisible : noop}
       triggerOnce={false}
       trackVisibility={true}
-      onClick={onClick}
-      onDoubleClickCapture={onDoubleClickCapture}
       role={role}
       key={`inview-msg-${messageId}`}
       data-testid={dataTestId}
@@ -291,9 +270,7 @@ const ReadableMessage = (
 };
 
 export type ExpirableReadableMessageProps = Omit<ReadableMessageProps, 'isUnread' | 'onClick'> &
-  WithMessageId &
-  WithContextMenuId &
-  WithSetPopoverPosition;
+  WithMessageId;
 
 function ExpireTimerControlMessage({
   expirationTimestamp,
@@ -313,17 +290,16 @@ function ExpireTimerControlMessage({
 // NOTE: [react-compiler] this convinces the compiler the hook is static
 const useMessageExpirationPropsByIdInternal = useMessageExpirationPropsById;
 const useIsDetailMessageViewInternal = useIsDetailMessageView;
-const useSelectMessageViaClickInternal = useSelectMessageViaClick;
 const useMessageTypeInternal = useMessageType;
 
-export const ExpirableReadableMessage = (props: ExpirableReadableMessageProps) => {
-  const selected = useMessageExpirationPropsByIdInternal(props.messageId);
+export const ExpirableReadableMessage = ({
+  role,
+  dataTestId,
+  messageId,
+  children,
+}: ExpirableReadableMessageProps) => {
+  const selected = useMessageExpirationPropsByIdInternal(messageId);
   const isDetailView = useIsDetailMessageViewInternal();
-  const selectViaClick = useSelectMessageViaClickInternal(props.messageId);
-
-  const { onDoubleClickCapture, role, dataTestId, contextMenuId, setTriggerPosition, messageId } =
-    props;
-
   const messageType = useMessageTypeInternal(messageId);
 
   const { isExpired } = useIsExpired({
@@ -363,8 +339,6 @@ export const ExpirableReadableMessage = (props: ExpirableReadableMessageProps) =
       messageId={messageId}
       isUnread={!!isUnread}
       alignItems={alignItems}
-      onClick={selectViaClick ?? undefined}
-      onDoubleClickCapture={onDoubleClickCapture}
       role={role}
       key={`readable-message-${messageId}`}
       dataTestId={dataTestId}
@@ -377,12 +351,7 @@ export const ExpirableReadableMessage = (props: ExpirableReadableMessageProps) =
           expirationTimestamp={expirationTimestamp}
         />
       ) : null}
-      <MessageContextMenu
-        messageId={messageId}
-        contextMenuId={contextMenuId}
-        setTriggerPosition={setTriggerPosition}
-      />
-      {props.children}
+      {children}
     </ReadableMessage>
   );
 };
