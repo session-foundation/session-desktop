@@ -73,9 +73,9 @@ export const useAuthorAvatarPath = (messageId: string): string | null => {
   return senderProps.avatarPath || null;
 };
 
-export const useMessageIsDeleted = (messageId: string) => {
+export const useMessageIsDeleted = (messageId?: string): boolean => {
   const props = useMessagePropsByMessageId(messageId);
-  return props?.propsForMessage.isDeleted;
+  return !!props?.propsForMessage.isDeleted;
 };
 
 export const useFirstMessageOfSeries = (messageId: string | undefined): boolean => {
@@ -98,6 +98,17 @@ export const useMessageDirection = (
   messageId: string | undefined
 ): MessageModelType | undefined => {
   return useMessagePropsByMessageId(messageId)?.propsForMessage.direction;
+};
+
+export const useMessageDirectionIncoming = (
+  messageId: string | undefined,
+  isDetailView?: boolean
+) => {
+  const _direction = useMessageDirection(messageId);
+
+  // NOTE we want messages on the left in the message detail view regardless of direction
+  const direction = isDetailView ? 'incoming' : _direction;
+  return direction === 'incoming';
 };
 
 export const useMessageLinkPreview = (messageId: string | undefined): Array<any> | undefined => {

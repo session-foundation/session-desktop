@@ -73,13 +73,18 @@ export const getTriggerPositionFromId = (id: string): PopoverTriggerPosition => 
 };
 
 // Returns null if the ref is null
-export const useTriggerPosition = (
-  ref: RefObject<HTMLElement | null>
-): PopoverTriggerPosition | null => {
+export const getTriggerPosition = (ref: RefObject<HTMLElement | null>) => {
   if (!ref.current) {
     return null;
   }
   return getTriggerPositionFromBoundingClientRect(ref.current.getBoundingClientRect());
+};
+
+// Returns null if the ref is null
+export const useTriggerPosition = (
+  ref: RefObject<HTMLElement | null>
+): PopoverTriggerPosition | null => {
+  return getTriggerPosition(ref);
 };
 
 export const SessionTooltip = ({

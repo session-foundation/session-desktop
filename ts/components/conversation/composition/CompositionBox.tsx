@@ -304,17 +304,6 @@ class CompositionBoxInner extends Component<Props, State> {
     );
   }
 
-  private handleClick(e: any) {
-    if (
-      (this.emojiPanel?.current && this.emojiPanel.current.contains(e.target)) ||
-      (this.emojiPanelButton?.current && this.emojiPanelButton.current.contains(e.target))
-    ) {
-      return;
-    }
-
-    this.hideEmojiPanel();
-  }
-
   private handlePaste(e: ClipboardEvent) {
     if (!e.clipboardData) {
       return;
@@ -349,7 +338,6 @@ class CompositionBoxInner extends Component<Props, State> {
   }
 
   private showEmojiPanel() {
-    document.addEventListener('mousedown', this.handleClick, false);
     this.setState({ lastSelectedLength: window.getSelection()?.toString().length ?? 0 });
 
     closeContextMenus();
@@ -359,7 +347,6 @@ class CompositionBoxInner extends Component<Props, State> {
   }
 
   private hideEmojiPanel() {
-    document.removeEventListener('mousedown', this.handleClick, false);
     this.setState({ lastSelectedLength: 0 });
 
     this.setState({
@@ -461,9 +448,9 @@ class CompositionBoxInner extends Component<Props, State> {
           <StyledEmojiPanelContainer role="button" dir={this.props.htmlDirection}>
             <SessionEmojiPanel
               ref={this.emojiPanel}
-              show={showEmojiPanel}
               onEmojiClicked={this.onEmojiClick}
               onClose={this.hideEmojiPanel}
+              show={showEmojiPanel}
             />
           </StyledEmojiPanelContainer>
         ) : null}

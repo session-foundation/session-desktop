@@ -215,7 +215,8 @@ declare module 'react' {
     | `${ConfirmButtons}-confirm`
     | `${CancelButtons}-cancel`
     | `clear-${ClearButtons}`
-    | `${SetButton}-set`;
+    | `${SetButton}-set`
+    | `reaction-emoji-panel`;
 
   type InputLabels =
     | 'device_and_network'

@@ -24,7 +24,7 @@ import { Localizer } from '../basic/Localizer';
 import { SessionButtonColor } from '../basic/SessionButton';
 import { SessionIcon } from '../icon';
 import { getTimerNotificationStr } from '../../models/timerNotifications';
-import type { WithContextMenuId, WithMessageId } from '../../session/types/with';
+import type { WithMessageId } from '../../session/types/with';
 import {
   useMessageAuthor,
   useMessageAuthorIsUs,
@@ -34,7 +34,6 @@ import {
   useMessageExpirationUpdateTimespanText,
 } from '../../state/selectors';
 import { tr, type TrArgs } from '../../localization/localeTools';
-import type { WithPopoverPosition, WithSetPopoverPosition } from '../SessionTooltip';
 
 const FollowSettingButton = styled.button`
   color: var(--primary-color);
@@ -148,10 +147,7 @@ const FollowSettingsButton = ({ messageId }: WithMessageId) => {
   );
 };
 
-export const TimerNotification = (
-  props: WithMessageId & WithPopoverPosition & WithSetPopoverPosition & WithContextMenuId
-) => {
-  const { messageId } = props;
+export const TimerNotification = ({ messageId }: WithMessageId) => {
   const timespanSeconds = useMessageExpirationUpdateTimespanSeconds(messageId);
   const expirationMode = useMessageExpirationUpdateMode(messageId);
   const disabled = useMessageExpirationUpdateDisabled(messageId);
@@ -178,8 +174,6 @@ export const TimerNotification = (
 
   return (
     <ExpirableReadableMessage
-      contextMenuId={props.contextMenuId}
-      setTriggerPosition={props.setTriggerPosition}
       messageId={messageId}
       key={`readable-message-${messageId}`}
       dataTestId={'disappear-control-message'}
@@ -208,7 +202,7 @@ export const TimerNotification = (
         <TextWithChildren $subtle={true}>
           <Localizer {...i18nProps} />
         </TextWithChildren>
-        <FollowSettingsButton {...props} />
+        <FollowSettingsButton messageId={messageId} />
       </Flex>
     </ExpirableReadableMessage>
   );

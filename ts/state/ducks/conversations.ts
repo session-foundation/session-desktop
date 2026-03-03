@@ -40,6 +40,7 @@ import type { ProMessageFeature } from '../../models/proMessageFeature';
 import { handleTriggeredCTAs } from '../../components/dialog/SessionCTA';
 import { getFeatureFlag } from './types/releasedFeaturesReduxTypes';
 import type { Quote } from '../../session/messages/outgoing/visibleMessage/VisibleMessage';
+import { PopoverTriggerPosition } from '../../components/SessionTooltip';
 
 export type UIMessageType =
   | 'community-invitation'
@@ -364,6 +365,8 @@ export type ConversationsStateType = {
   nextMessageToPlayId?: string;
   mentionMembers: Array<SessionSuggestionDataItem>;
   focusedMessageId: string | null;
+  interactableMessageId: string | null;
+  reactionBarTriggerPosition: PopoverTriggerPosition | null;
   isCompositionTextAreaFocused: boolean;
 };
 
@@ -551,6 +554,8 @@ export function getEmptyConversationState(): ConversationsStateType {
     shouldHighlightMessage: false,
     mostRecentMessageId: null,
     focusedMessageId: null,
+    interactableMessageId: null,
+    reactionBarTriggerPosition: null,
     isCompositionTextAreaFocused: false,
   };
 }
@@ -776,6 +781,15 @@ const conversationsSlice = createSlice({
     setFocusedMessageId(state: ConversationsStateType, action: PayloadAction<string | null>) {
       return { ...state, focusedMessageId: action.payload };
     },
+    setInteractableMessageId(state: ConversationsStateType, action: PayloadAction<string | null>) {
+      return { ...state, interactableMessageId: action.payload };
+    },
+    setReactionBarTriggerPosition(
+      state: ConversationsStateType,
+      action: PayloadAction<PopoverTriggerPosition | null>
+    ) {
+      return { ...state, reactionBarTriggerPosition: action.payload };
+    },
     setIsCompositionTextAreaFocused(state: ConversationsStateType, action: PayloadAction<boolean>) {
       return { ...state, isCompositionTextAreaFocused: action.payload };
     },
@@ -939,6 +953,8 @@ const conversationsSlice = createSlice({
         oldBottomMessageId: null,
         mentionMembers: [],
         focusedMessageId: null,
+        interactableMessageId: null,
+        reactionBarTriggerPosition: null,
         isCompositionTextAreaFocused: false,
       };
     },
@@ -1213,6 +1229,8 @@ export const {
   updateMentionsMembers,
   resetConversationExternal,
   markConversationInitialLoadingInProgress,
+  setReactionBarTriggerPosition,
+  setInteractableMessageId,
 } = actions;
 
 async function unmarkAsForcedUnread(convoId: string) {

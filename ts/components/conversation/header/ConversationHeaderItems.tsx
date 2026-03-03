@@ -95,7 +95,7 @@ export const CallButton = () => {
         void callRecipient(selectedConvoKey, canCall);
       }}
       dataTestId="call-button"
-      margin="0 var(--margins-sm) 0 0"
+      padding="var(--margins-md)"
       disabled={isBlocked || !canCall}
     />
   );

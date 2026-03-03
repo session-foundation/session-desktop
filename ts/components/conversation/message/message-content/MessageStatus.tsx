@@ -190,7 +190,7 @@ const MessageStatusSent = ({ dataTestId, messageId }: Omit<Props, 'isDetailView'
       $clickable={false}
     >
       <TextDetails text={tr('disappearingMessagesSent')} textColor="var(--text-secondary-color)" />
-      <IconForExpiringMessageId messageId={messageId} unicode={LUCIDE_ICONS_UNICODE.CHECK} />
+      <IconForExpiringMessageId messageId={messageId} unicode={LUCIDE_ICONS_UNICODE.CIRCLE_CHECK} />
     </MessageStatusContainer>
   );
 };

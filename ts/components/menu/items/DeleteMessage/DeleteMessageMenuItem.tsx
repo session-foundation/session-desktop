@@ -88,7 +88,6 @@ const ExpiresInItem = ({ messageId }: { messageId: string }) => {
 
 export const DeleteItem = ({ messageId }: { messageId: string }) => {
   const convoId = useSelectedConversationKey();
-
   const deleteMessagesCb = useDeleteMessagesCb(convoId);
 
   if (!deleteMessagesCb || !messageId) {

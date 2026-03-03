@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { RefObject } from 'react';
+import { type RefObject } from 'react';
 import { nativeEmojiData } from '../../../../util/emoji';
 import { getRecentReactions } from '../../../../util/storage';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
@@ -8,9 +8,10 @@ import { createButtonOnKeyDownForClickEventHandler } from '../../../../util/keyb
 
 type Props = {
   ref?: RefObject<HTMLDivElement | null>;
-  action: (...args: Array<any>) => void;
-  additionalAction: (...args: Array<any>) => void;
   emojiPanelTriggerRef: RefObject<HTMLButtonElement | null>;
+  firstEmojiRef?: RefObject<HTMLSpanElement | null>;
+  onEmojiClick: (emoji: string) => void;
+  onPlusButtonClick: () => void;
 };
 
 const StyledMessageReactBar = styled.div`
@@ -51,21 +52,26 @@ const StyledContainer = styled.div`
   left: -1px;
 `;
 
-export const MessageReactBar = ({ ref, action, additionalAction, emojiPanelTriggerRef }: Props) => {
+export const MessageReactBar = ({
+  ref,
+  emojiPanelTriggerRef,
+  firstEmojiRef,
+  onEmojiClick,
+  onPlusButtonClick,
+}: Props) => {
   const recentReactions = getRecentReactions();
 
   return (
     <StyledContainer ref={ref}>
       <StyledMessageReactBar>
-        {recentReactions.map(emoji => {
-          const onClick = () => action(emoji);
+        {recentReactions.map((emoji, i) => {
+          const onClick = () => onEmojiClick(emoji);
           const onKeyDown = createButtonOnKeyDownForClickEventHandler(onClick);
-          const ariaLabel = nativeEmojiData?.ariaLabels
-            ? nativeEmojiData.ariaLabels[emoji]
-            : undefined;
+          const ariaLabel = nativeEmojiData?.ariaLabels?.[emoji];
 
           return (
             <ReactButton
+              ref={i === 0 ? firstEmojiRef : undefined}
               key={emoji}
               role="button"
               tabIndex={0}
@@ -82,7 +88,8 @@ export const MessageReactBar = ({ ref, action, additionalAction, emojiPanelTrigg
           iconColor={'var(--text-primary-color)'}
           iconSize={'large'}
           unicode={LUCIDE_ICONS_UNICODE.PLUS}
-          onClick={additionalAction}
+          dataTestId="reaction-emoji-panel-button"
+          onClick={onPlusButtonClick}
           backgroundColor="var(--emoji-reaction-bar-icon-background-color)"
           // NOTE: these magic numbers align the plus icon with the emoji buttons
           padding="3px"
