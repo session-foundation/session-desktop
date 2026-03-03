@@ -19,6 +19,7 @@ import { CallNotification } from './notification-bubble/CallNotification';
 import { InteractionNotification } from './InteractionNotification';
 import { MessageRequestResponse } from './MessageRequestResponse';
 import { useIsDetailMessageView } from '../../../../contexts/isDetailViewContext';
+import { MESSAGE_LIST_MESSAGE_PADDING_PX } from '../../SessionMessagesList';
 
 export type GenericReadableMessageSelectorProps = Pick<
   MessageRenderingProps,
@@ -75,8 +76,8 @@ const StyledMessageContentContainer = styled.div<{ $isIncoming: boolean; $isDeta
   flex-direction: column;
   justify-content: flex-start;
   align-items: ${props => (props.$isIncoming ? 'flex-start' : 'flex-end')};
-  padding-left: ${props => (props.$isDetailView ? '0' : 'var(--margins-lg)')};
-  padding-right: ${props => (props.$isDetailView ? '0' : 'var(--margins-lg)')};
+  padding-left: ${props => (props.$isDetailView ? '0' : MESSAGE_LIST_MESSAGE_PADDING_PX)};
+  padding-right: ${props => (props.$isDetailView ? '0' : MESSAGE_LIST_MESSAGE_PADDING_PX)};
   width: 100%;
 `;
 

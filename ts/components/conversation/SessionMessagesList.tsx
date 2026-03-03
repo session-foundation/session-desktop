@@ -31,6 +31,8 @@ import { SessionScrollButton } from '../SessionScrollButton';
 import { ConvoHub } from '../../session/conversations';
 import { SessionMessageInteractables } from './SessionMessageInteractables';
 
+export const MESSAGE_LIST_MESSAGE_PADDING_PX = 'var(--margins-lg)' as const;
+
 const StyledMessagesContainer = styled.div`
   display: flex;
   gap: var(--margins-sm);
@@ -60,9 +62,8 @@ const StyledMessagesContainer = styled.div`
   }
 `;
 
-// NOTE Must always match the padding of the StyledReadableMessage
 const StyledTypingBubbleContainer = styled.div`
-  padding: var(--margins-xs) var(--margins-lg) 0;
+  padding: var(--margins-xs) ${MESSAGE_LIST_MESSAGE_PADDING_PX} 0;
 `;
 
 function isNotTextboxEvent(e: KeyboardEvent) {
