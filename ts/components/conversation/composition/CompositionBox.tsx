@@ -67,9 +67,16 @@ import { isEnterKey, isEscapeKey } from '../../../util/keyboardShortcuts';
 
 export interface ReplyingToMessageProps {
   convoId: string;
-  id: string; // this is the quoted message timestamp
+
+  /**
+   * this is the local id of that message (i.e the uuid that we generate to identify it)
+   */
+  id: string;
   author: string;
-  timestamp: number;
+  /**
+   * This is the quoted message timestamp, i.e. what we will send as reference of the message we are quoting
+   */
+  referencedMessageSentAt: number;
   text?: string;
   attachments?: Array<any>;
 }
@@ -673,7 +680,10 @@ class CompositionBoxInner extends Component<Props, State> {
         body: text.trim(),
         attachments: attachments || [],
         quote: quotedMessageProps
-          ? { author: quotedMessageProps.author, timestamp: quotedMessageProps.timestamp }
+          ? {
+              author: quotedMessageProps.author,
+              timestamp: quotedMessageProps.referencedMessageSentAt,
+            }
           : undefined,
         preview: previews,
         groupInvitation: undefined,

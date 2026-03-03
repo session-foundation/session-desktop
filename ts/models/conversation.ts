@@ -653,12 +653,12 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
     return {
       author: msgSource,
-      id: `${quotedMessage.get('sent_at')}` || '',
-      // NOTE we send the entire body to be consistent with the other platforms
+      // NOTE we don't send this anymore. But we need this for the reply in the composition box
       text: body,
       attachments: quotedAttachments,
-      timestamp: quotedMessage.get('sent_at') || 0,
+      referencedMessageSentAt: quotedMessage.get('sent_at') || 0,
       convoId: this.id,
+      id: quotedMessage.id,
     };
   }
 
