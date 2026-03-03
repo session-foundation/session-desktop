@@ -41,8 +41,6 @@ const StyledMessagesContainer = styled.div`
   scrollbar-width: 4px;
   padding-top: var(--margins-sm);
   padding-bottom: var(--margins-xl);
-  padding-left: var(--margins-lg);
-  padding-right: var(--margins-lg);
 
   .session-icon-button {
     display: flex;

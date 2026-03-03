@@ -31,7 +31,6 @@ const highlightedMessageAnimation = keyframes`
 
 type StyledReadableMessageProps = {
   selected?: boolean;
-  // TODO: remove this, we can add styles to the message list
   $isDetailView?: boolean;
   $focusedKeyboard?: boolean;
   $forceFocusStyle?: boolean;
@@ -39,7 +38,7 @@ type StyledReadableMessageProps = {
   $isControlMessage?: boolean;
 };
 
-const StyledReadableMessage = styled.div<StyledReadableMessageProps>`
+export const StyledReadableMessage = styled.div<StyledReadableMessageProps>`
   display: flex;
   flex-direction: column;
   align-items: ${props => (props.$isIncoming ? 'flex-start' : 'flex-end')};
@@ -69,6 +68,16 @@ const StyledReadableMessage = styled.div<StyledReadableMessageProps>`
     props.$forceFocusStyle
       ? 'background-color: var(--conversation-tab-background-selected-color);'
       : ''}
+`;
+
+const StyledMessageContentContainer = styled.div<{ $isIncoming: boolean }>`
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: ${props => (props.$isIncoming ? 'flex-start' : 'flex-end')};
+  padding-left: var(--margins-lg);
+  padding-right: var(--margins-lg);
+  width: 100%;
 `;
 
 function getMessageComponent(messageType: UIMessageType) {
@@ -130,8 +139,10 @@ export const GenericReadableMessage = ({
       {...rest}
       $isDetailView={isDetailView}
     >
-      <CmpToRender messageId={messageId} />
-      {children}
+      <StyledMessageContentContainer $isIncoming={isIncoming}>
+        <CmpToRender messageId={messageId} />
+        {children}
+      </StyledMessageContentContainer>
     </StyledReadableMessage>
   );
 };

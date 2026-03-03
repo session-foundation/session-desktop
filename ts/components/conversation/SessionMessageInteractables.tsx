@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import type { MenuOnHideCallback } from 'react-contexify';
+import type { MenuOnHideCallback, MenuOnShowCallback } from 'react-contexify';
 import type { WithContextMenuId } from '../../session/types/with';
 import { SessionEmojiReactBarPopover } from './SessionEmojiReactBarPopover';
 import { SessionFocusTrap } from '../SessionFocusTrap';
@@ -39,6 +39,8 @@ export function SessionMessageInteractables({
   const isControlMessage = useMessageIsControlMessage(messageId);
   const dispatch = getAppDispatch();
 
+  const [messageContextMenuVisible, setMessageContextMenuVisible] = useState(false);
+
   /**
    * The reaction bar can be hidden by the following:
    * - Deactivation of the focus trap
@@ -49,13 +51,29 @@ export function SessionMessageInteractables({
   const showReactionBar =
     convoReactionsEnabled && !isControlMessage && !!reactionBarTriggerPosition;
 
+  const activateFocusTrap = showReactionBar || messageContextMenuVisible;
+
   const closeReactionBar = () => {
     dispatch(setReactionBarTriggerPosition(null));
   };
 
+  const closeReactionBarAndContextMenu = () => {
+    closeReactionBar();
+    closeContextMenus();
+  };
+
+  const onMessageContextMenuShow: MenuOnShowCallback = fromHidden => {
+    if (fromHidden) {
+      setMessageContextMenuVisible(true);
+    }
+  };
+
   const onMessageContextMenuHide: MenuOnHideCallback = fromVisible => {
-    if (fromVisible && !!reactionBarTriggerPosition) {
-      closeReactionBar();
+    if (fromVisible) {
+      setMessageContextMenuVisible(false);
+      if (reactionBarTriggerPosition) {
+        closeReactionBar();
+      }
     }
   };
 
@@ -77,8 +95,7 @@ export function SessionMessageInteractables({
       window.log.warn(`[SessionEmojiReactBarPopover] openEmojiPanel has no messageId`);
       return;
     }
-    closeContextMenus();
-    closeReactionBar();
+    closeReactionBarAndContextMenu();
     const pos = getTriggerPosition(emojiPanelTriggerRef);
     if (pos) {
       setEmojiPanelTriggerPos(pos);
@@ -105,7 +122,7 @@ export function SessionMessageInteractables({
     <>
       <SessionFocusTrap
         focusTrapId="SessionMessageInteractables"
-        active={showReactionBar}
+        active={activateFocusTrap}
         initialFocus={() => reactionBarFirstEmojiRef.current ?? false}
         onDeactivate={closeReactionBar}
         clickOutsideDeactivates={true}
@@ -116,13 +133,14 @@ export function SessionMessageInteractables({
             emojiPanelTriggerRef={emojiPanelTriggerRef}
             onPlusButtonClick={openEmojiPanel}
             messageId={messageId}
-            onAfterEmojiClick={closeReactionBar}
+            onAfterEmojiClick={closeReactionBarAndContextMenu}
             triggerPosition={reactionBarTriggerPosition}
           />
         ) : null}
         <MessageContextMenu
           contextMenuId={contextMenuId}
           messageId={messageId}
+          onShow={onMessageContextMenuShow}
           onHide={onMessageContextMenuHide}
           onClickCapture={messageContextMenuOnClickCapture}
         />

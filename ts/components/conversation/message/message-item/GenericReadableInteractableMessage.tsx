@@ -38,6 +38,7 @@ import {
   useInteractableMessageId,
   useReactionBarTriggerPosition,
 } from '../../../../state/selectors/conversations';
+import { useIsInScope } from '../../../../state/focus';
 
 type GenericReadableInteractableMessageProps = WithMessageId & {
   convoReactionsEnabled?: boolean;
@@ -62,17 +63,15 @@ export function GenericReadableInteractableMessage({
   const msgIsOnline = useMessageIsOnline(messageId);
   const interactableMessageId = useInteractableMessageId();
   const reactionBarTriggerPosition = useReactionBarTriggerPosition();
+  const isFocused = useIsInScope({ scope: 'message', scopeId: messageId });
 
   const ref = useRef<HTMLDivElement>(null);
   const pointerDownRef = useRef(false);
 
   const reply = useMessageReply(messageId);
-  const focusMessageId = () => {
-    dispatch(setFocusedMessageId(messageId));
-  };
 
   const onFocus = () => {
-    focusMessageId();
+    dispatch(setFocusedMessageId(messageId));
   };
 
   const onBlur = () => {
@@ -108,6 +107,7 @@ export function GenericReadableInteractableMessage({
       overridePosition?: { x: number; y: number }
     ) => {
       if (!selectedIsBlocked && !multiSelectMode && !isKickedFromGroup) {
+        dispatch(setFocusedMessageId(messageId));
         dispatch(setInteractableMessageId(messageId));
         showMessageContextMenu({
           event: e,
@@ -145,16 +145,15 @@ export function GenericReadableInteractableMessage({
     }
   };
 
-  const onClick = useCallback(
-    (event: MouseEvent<HTMLDivElement>) => {
-      if (multiSelectMode && messageId) {
-        event.preventDefault();
-        event.stopPropagation();
-        dispatch(toggleSelectedMessageId(messageId));
-      }
-    },
-    [dispatch, messageId, multiSelectMode]
-  );
+  // NOTE: we need to capture all clicks to the element otherwise clicked children
+  // will also trigger when in multiSelectMode
+  const onClickCapture = (event: MouseEvent<HTMLDivElement>) => {
+    if (multiSelectMode) {
+      event.preventDefault();
+      event.stopPropagation();
+      dispatch(toggleSelectedMessageId(messageId));
+    }
+  };
 
   const onDoubleClickCapture = reply
     ? (e: MouseEvent<HTMLDivElement>) => {
@@ -190,6 +189,7 @@ export function GenericReadableInteractableMessage({
       })
     );
   };
+
   if (!convoId || !messageId || !messageType) {
     return null;
   }
@@ -206,15 +206,13 @@ export function GenericReadableInteractableMessage({
       className={clsx(selected ? 'message-selected' : undefined)}
       tabIndex={0}
       $focusedKeyboard={!pointerDownRef.current}
-      /** TODO: this was a bit buggy but it would be nice to get working
-       * $forceFocusStyle={!pointerDownRef.current && isFocused && !!reactionBarTriggerPosition}
-       */
+      $forceFocusStyle={!pointerDownRef.current && isFocused && !!reactionBarTriggerPosition}
       onContextMenu={handleContextMenu}
       onKeyDown={onKeyDown}
       onPointerDown={onPointerDown}
       onFocus={onFocus}
       onBlur={onBlur}
-      onClick={onClick}
+      onClickCapture={onClickCapture}
       onDoubleClickCapture={onDoubleClickCapture}
     >
       {enableReactions ? (

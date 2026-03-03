@@ -14,15 +14,6 @@ export type MessageContentWithStatusSelectorProps = { isGroup: boolean } & Pick<
   'conversationType' | 'direction' | 'isDeleted'
 >;
 
-const StyledMessageContentContainer = styled.div<{ $isIncoming: boolean; $isDetailView: boolean }>`
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: ${props => (props.$isIncoming ? 'flex-start' : 'flex-end')};
-
-  width: 100%;
-`;
-
 const StyledMessageWithAuthor = styled.div`
   max-width: 100%;
   display: flex;
@@ -44,26 +35,24 @@ export const MessageContentWithStatuses = ({ messageId }: WithMessageId) => {
   const isIncoming = direction === 'incoming';
 
   return (
-    <StyledMessageContentContainer $isIncoming={isIncoming} $isDetailView={isDetailView}>
-      <ExpirableReadableMessage
-        messageId={messageId}
-        className={clsx('module-message', `module-message--${direction}`)}
-        dataTestId="message-content"
+    <ExpirableReadableMessage
+      messageId={messageId}
+      className={clsx('module-message', `module-message--${direction}`)}
+      dataTestId="message-content"
+    >
+      <Flex
+        $container={true}
+        $flexDirection="column"
+        $flexShrink={0}
+        // we need this to prevent short messages from being misaligned (incoming)
+        $alignItems={isIncoming ? 'flex-start' : 'flex-end'}
+        $maxWidth="100%"
       >
-        <Flex
-          $container={true}
-          $flexDirection="column"
-          $flexShrink={0}
-          // we need this to prevent short messages from being misaligned (incoming)
-          $alignItems={isIncoming ? 'flex-start' : 'flex-end'}
-          $maxWidth="100%"
-        >
-          <StyledMessageWithAuthor>
-            {!isDetailView && <MessageAuthorText messageId={messageId} />}
-            <MessageContent messageId={messageId} />
-          </StyledMessageWithAuthor>
-        </Flex>
-      </ExpirableReadableMessage>
-    </StyledMessageContentContainer>
+        <StyledMessageWithAuthor>
+          {!isDetailView && <MessageAuthorText messageId={messageId} />}
+          <MessageContent messageId={messageId} />
+        </StyledMessageWithAuthor>
+      </Flex>
+    </ExpirableReadableMessage>
   );
 };
