@@ -73,9 +73,9 @@ export const useAuthorAvatarPath = (messageId: string): string | null => {
   return senderProps.avatarPath || null;
 };
 
-export const useMessageIsDeleted = (messageId?: string): boolean => {
+export const useMessageIsDeleted = (messageId?: string) => {
   const props = useMessagePropsByMessageId(messageId);
-  return !!props?.propsForMessage.isDeleted;
+  return props?.propsForMessage.isDeleted;
 };
 
 export const useFirstMessageOfSeries = (messageId: string | undefined): boolean => {
