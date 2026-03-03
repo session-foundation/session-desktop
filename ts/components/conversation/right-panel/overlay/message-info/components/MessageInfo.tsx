@@ -80,7 +80,7 @@ export const LabelWithInfo = (props: LabelWithInfoProps) => {
           <CopyToClipboardIcon
             iconSize={'small'}
             copyContent={props.info}
-            margin={'0 0 0 var(--margins-xs)'}
+            margin={'var(--margins-xs) 0 0 var(--margins-xs)'}
             buttonColor={SessionButtonColor.TextPrimary}
           />
         ) : null}

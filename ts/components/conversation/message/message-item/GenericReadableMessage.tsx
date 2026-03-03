@@ -70,13 +70,13 @@ export const StyledReadableMessage = styled.div<StyledReadableMessageProps>`
       : ''}
 `;
 
-const StyledMessageContentContainer = styled.div<{ $isIncoming: boolean }>`
+const StyledMessageContentContainer = styled.div<{ $isIncoming: boolean; $isDetailView?: boolean }>`
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   align-items: ${props => (props.$isIncoming ? 'flex-start' : 'flex-end')};
-  padding-left: var(--margins-lg);
-  padding-right: var(--margins-lg);
+  padding-left: ${props => (props.$isDetailView ? '0' : 'var(--margins-lg)')};
+  padding-right: ${props => (props.$isDetailView ? '0' : 'var(--margins-lg)')};
   width: 100%;
 `;
 
@@ -139,7 +139,7 @@ export const GenericReadableMessage = ({
       {...rest}
       $isDetailView={isDetailView}
     >
-      <StyledMessageContentContainer $isIncoming={isIncoming}>
+      <StyledMessageContentContainer $isIncoming={isIncoming} $isDetailView={isDetailView}>
         <CmpToRender messageId={messageId} />
         {children}
       </StyledMessageContentContainer>
