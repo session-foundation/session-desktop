@@ -1,3 +1,4 @@
+import type { SessionDataTestId } from 'react';
 import styled from 'styled-components';
 import type { SessionIconSize } from './Icons';
 import { IconSizeToPxStr } from './SessionIcon';
@@ -9,8 +10,10 @@ const MailWithUnreadContainer = styled.div`
 export function MailWithUnreadIcon({
   iconSize,
   style,
+  dataTestId,
 }: {
   iconSize: SessionIconSize;
+  dataTestId?: SessionDataTestId;
   style?: React.CSSProperties;
 }) {
   const sizePx = IconSizeToPxStr[iconSize];
@@ -22,6 +25,7 @@ export function MailWithUnreadIcon({
         height={sizePx}
         fill="none"
         viewBox="0 0 17 17"
+        data-testid={dataTestId}
       >
         <path
           fill="currentColor"

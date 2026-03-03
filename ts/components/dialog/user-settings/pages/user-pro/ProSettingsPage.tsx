@@ -492,8 +492,6 @@ function ProSettings({ state }: SectionProps) {
     subText = { token: 'errorLoadingProAccess' };
   } else if (isLoading) {
     subText = { token: 'proAccessLoadingEllipsis' };
-  } else if (data.isProcessingRefund) {
-    subText = { token: 'processingRefundRequest', platform: data.providerConstants.platform };
   } else if (data.inGracePeriod) {
     subText = { token: 'proRenewalUnsuccessful' };
   } else if (data.autoRenew) {
@@ -509,6 +507,10 @@ function ProSettings({ state }: SectionProps) {
         {data.isProcessingRefund ? (
           <PanelIconButton
             text={{ token: 'proRequestedRefund' }}
+            subText={{
+              token: 'processingRefundRequest',
+              platform: data.providerConstants.platform,
+            }}
             dataTestId="update-access-settings-button"
             onClick={handleUpdateAccessClick}
             iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.CIRCLE_ALERT} />}

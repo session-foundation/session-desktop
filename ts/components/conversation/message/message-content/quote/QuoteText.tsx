@@ -11,6 +11,7 @@ import { MessageBody } from '../MessageBody';
 import { QuoteProps } from './Quote';
 import { tr } from '../../../../../localization/localeTools';
 import { MessageDeletedType } from '../../../../../models/messageType';
+import { collapseString } from '../../../../../shared/string_utils';
 
 const StyledQuoteText = styled.div<{ $isIncoming: boolean }>`
   display: -webkit-box;
@@ -73,12 +74,9 @@ export function getShortenedFilename(fileName: string) {
   if (!fileName) {
     return '';
   }
-  if (fileName?.length < 20) {
-    return fileName;
-  }
   const charsAround = 15;
 
-  return `${fileName.slice(0, charsAround)} … ${fileName.slice(-charsAround)}`;
+  return collapseString(fileName, charsAround, charsAround, true);
 }
 
 export const QuoteText = (
