@@ -15,7 +15,7 @@ export function SessionEmojiPanelPopover({
   open,
   onClose,
 }: {
-  emojiPanelRef: RefObject<HTMLDivElement | null>;
+  emojiPanelRef?: RefObject<HTMLDivElement | null>;
   triggerPosition: PopoverTriggerPosition | null;
   open: boolean;
   onEmojiClick: (emoji: FixedBaseEmoji) => void;

@@ -2,10 +2,13 @@ import { FocusTrap, type FocusTrapProps } from 'focus-trap-react';
 import { type ReactNode, useEffect, useState } from 'react';
 import type { CSSProperties } from 'styled-components';
 import { windowErrorFilters } from '../util/logger/renderer_process_logging';
+import { getFeatureFlagMemo } from '../state/ducks/types/releasedFeaturesReduxTypes';
 
 const focusTrapErrorSource = 'focus-trap';
 
 type SessionFocusTrapProps = FocusTrapProps['focusTrapOptions'] & {
+  /** id used for debugging */
+  focusTrapId: string;
   children: ReactNode;
   active?: boolean;
   containerDivStyle?: CSSProperties;
@@ -17,16 +20,20 @@ type SessionFocusTrapProps = FocusTrapProps['focusTrapOptions'] & {
 };
 
 export function SessionFocusTrap({
+  focusTrapId,
   children,
   active = true,
   allowOutsideClick = true,
   containerDivStyle,
   suppressErrors,
   allowNoTabbableNodes,
+  onActivate,
   onPostActivate,
   onDeactivate,
+  onPostDeactivate,
   ...rest
 }: SessionFocusTrapProps) {
+  const debugFocusTrap = getFeatureFlagMemo('debugFocusTrap');
   const defaultTabIndex = allowNoTabbableNodes ? 0 : -1;
   const _suppressErrors = suppressErrors || allowNoTabbableNodes;
   /**
@@ -38,6 +45,13 @@ export function SessionFocusTrap({
    */
   const [tabIndex, setTabIndex] = useState<0 | 1 | -1>(defaultTabIndex);
 
+  const _onActivate = () => {
+    if (debugFocusTrap) {
+      window.log.debug(`[SessionFocusTrap] onActivate - ${focusTrapId}`);
+    }
+    onActivate?.();
+  };
+
   const _onPostActivate = () => {
     if (allowNoTabbableNodes) {
       setTabIndex(-1);
@@ -46,6 +60,9 @@ export function SessionFocusTrap({
   };
 
   const _onDeactivate = () => {
+    if (debugFocusTrap) {
+      window.log.debug(`[SessionFocusTrap] onDeactivate - ${focusTrapId}`);
+    }
     if (allowNoTabbableNodes) {
       setTabIndex(defaultTabIndex);
     }
@@ -69,8 +86,10 @@ export function SessionFocusTrap({
       focusTrapOptions={{
         ...rest,
         allowOutsideClick,
+        onActivate: _onActivate,
         onPostActivate: _onPostActivate,
         onDeactivate: _onDeactivate,
+        onPostDeactivate,
       }}
     >
       {/* Note: without this div, the focus trap doesn't work */}

@@ -3,12 +3,11 @@ import { NotificationBubble } from './notification-bubble/NotificationBubble';
 import { Localizer } from '../../../basic/Localizer';
 import { useMessageAuthor, useMessageDataExtractionType } from '../../../../state/selectors';
 import { useConversationUsernameWithFallback } from '../../../../hooks/useParamSelector';
-import type { WithContextMenuId, WithMessageId } from '../../../../session/types/with';
+import type { WithMessageId } from '../../../../session/types/with';
 import { SignalService } from '../../../../protobuf';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 
-export const DataExtractionNotification = (props: WithMessageId & WithContextMenuId) => {
-  const { messageId } = props;
+export const DataExtractionNotification = ({ messageId }: WithMessageId) => {
   const author = useMessageAuthor(messageId);
   const authorName = useConversationUsernameWithFallback(true, author);
 
@@ -21,7 +20,6 @@ export const DataExtractionNotification = (props: WithMessageId & WithContextMen
   return (
     <ExpirableReadableMessage
       messageId={messageId}
-      contextMenuId={props.contextMenuId}
       dataTestId="data-extraction-notification"
       key={`readable-message-${messageId}`}
     >

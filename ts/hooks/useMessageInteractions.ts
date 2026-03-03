@@ -95,7 +95,8 @@ export function useMessageReply(messageId?: string) {
 }
 
 export function useMessageReact(messageId?: string) {
-  const cannotReact = !messageId;
+  const isControlMessage = useMessageIsControlMessage(messageId);
+  const cannotReact = !messageId || isControlMessage;
 
   return cannotReact
     ? null

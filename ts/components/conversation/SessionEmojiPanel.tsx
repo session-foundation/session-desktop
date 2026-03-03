@@ -66,7 +66,7 @@ export const StyledEmojiPanel = styled.div<{
 `;
 
 type Props = {
-  ref: RefObject<HTMLDivElement | null>;
+  ref?: RefObject<HTMLDivElement | null>;
   onEmojiClicked: (emoji: FixedBaseEmoji) => void;
   isModal?: boolean;
   onClose?: () => void;
@@ -114,6 +114,7 @@ const EmojiPanel = ({ ref, onEmojiClicked, isModal = false, onClose }: Props) =>
 
   return (
     <SessionFocusTrap
+      focusTrapId="SessionEmojiPanel"
       clickOutsideDeactivates={true}
       allowNoTabbableNodes={true}
       onDeactivate={onClose}

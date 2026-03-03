@@ -1,62 +1,31 @@
-import { type RefObject, useRef, useState } from 'react';
-import {
-  getTriggerPosition,
-  WithPopoverPosition,
-  WithSetPopoverPosition,
-  type PopoverTriggerPosition,
-} from '../SessionTooltip';
+import { type RefObject } from 'react';
 import { SessionPopoverContent } from '../SessionPopover';
 import { MessageReactBar } from './message/message-content/MessageReactBar';
 import { THEME_GLOBALS } from '../../themes/globals';
-import { SessionEmojiPanelPopover } from './SessionEmojiPanelPopover';
-import { closeContextMenus } from '../../util/contextMenu';
 import { useMessageReact } from '../../hooks/useMessageInteractions';
+import { PopoverTriggerPosition } from '../SessionTooltip';
 
-export type ReactionBarOptions = WithPopoverPosition & WithSetPopoverPosition;
-export type WithReactionBarOptions = {
-  reactionBarOptions?: ReactionBarOptions;
+type SessionEmojiReactBarPopoverProps = {
+  emojiPanelTriggerRef: RefObject<HTMLButtonElement | null>;
+  reactBarFirstEmojiRef?: RefObject<HTMLSpanElement | null>;
+  triggerPosition: PopoverTriggerPosition | null;
+  messageId: string | undefined;
+  onPlusButtonClick: () => void;
+  onAfterEmojiClick: () => void;
 };
 
 export function SessionEmojiReactBarPopover({
-  messageId,
-  triggerPos,
   reactBarFirstEmojiRef,
-}: {
-  messageId: string;
-  // this can be null as we want the emoji panel to stay when the reaction bar closes
-  triggerPos: PopoverTriggerPosition | null;
-  reactBarFirstEmojiRef?: RefObject<HTMLSpanElement | null>;
-}) {
-  const emojiPanelTriggerRef = useRef<HTMLButtonElement>(null);
-  const emojiPanelRef = useRef<HTMLDivElement>(null);
-  const emojiReactionBarRef = useRef<HTMLDivElement>(null);
-  const [emojiPanelTriggerPos, setEmojiPanelTriggerPos] = useState<PopoverTriggerPosition | null>(
-    null
-  );
+  emojiPanelTriggerRef,
+  onPlusButtonClick,
+  onAfterEmojiClick,
+  triggerPosition,
+  messageId,
+}: SessionEmojiReactBarPopoverProps) {
   const reactToMessage = useMessageReact(messageId);
-
-  const barOpen = !!triggerPos;
-  const panelOpen = !!emojiPanelTriggerPos;
-
-  const closeEmojiPanel = () => {
-    setEmojiPanelTriggerPos(null);
-  };
-
-  const openEmojiPanel = () => {
-    closeContextMenus();
-    const pos = getTriggerPosition(emojiPanelTriggerRef);
-    if (pos) {
-      setEmojiPanelTriggerPos(pos);
-    } else {
-      window.log.warn(
-        `[SessionEmojiReactBarPopover] getTriggerPosition for the emojiPanelTriggerRef returned null for message ${messageId}`
-      );
-    }
-  };
 
   const onEmojiClick = (args: any) => {
     const emoji = args.native ?? args;
-    closeEmojiPanel();
     if (reactToMessage) {
       void reactToMessage(emoji);
     } else {
@@ -64,36 +33,27 @@ export function SessionEmojiReactBarPopover({
         `[SessionEmojiReactBarPopover] reactToMessage undefined for message ${messageId}`
       );
     }
+    onAfterEmojiClick?.();
   };
 
   return (
-    <>
-      <SessionEmojiPanelPopover
-        emojiPanelRef={emojiPanelRef}
-        triggerPosition={emojiPanelTriggerPos}
-        open={panelOpen}
+    <SessionPopoverContent
+      triggerPosition={triggerPosition}
+      open={!!triggerPosition}
+      isTooltip={false}
+      verticalPosition="top"
+      horizontalPosition="right"
+      fallbackContentHeight={48}
+      fallbackContentWidth={295}
+      containerMarginTop={THEME_GLOBALS['--main-view-header-height-number']}
+      contentMargin={12}
+    >
+      <MessageReactBar
         onEmojiClick={onEmojiClick}
-        onClose={closeEmojiPanel}
+        onPlusButtonClick={onPlusButtonClick}
+        emojiPanelTriggerRef={emojiPanelTriggerRef}
+        firstEmojiRef={reactBarFirstEmojiRef}
       />
-      <SessionPopoverContent
-        triggerPosition={triggerPos}
-        open={barOpen}
-        isTooltip={false}
-        verticalPosition="top"
-        horizontalPosition="right"
-        fallbackContentHeight={48}
-        fallbackContentWidth={295}
-        containerMarginTop={THEME_GLOBALS['--main-view-header-height-number']}
-        contentMargin={12}
-      >
-        <MessageReactBar
-          ref={emojiReactionBarRef}
-          onEmojiClick={onEmojiClick}
-          onPlusButtonClick={openEmojiPanel}
-          emojiPanelTriggerRef={emojiPanelTriggerRef}
-          firstEmojiRef={reactBarFirstEmojiRef}
-        />
-      </SessionPopoverContent>
-    </>
+    </SessionPopoverContent>
   );
 }

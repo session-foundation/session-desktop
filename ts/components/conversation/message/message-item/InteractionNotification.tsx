@@ -12,7 +12,7 @@ import {
   useSelectedIsPublic,
 } from '../../../../state/selectors/selectedConversation';
 import { useMessageInteractionNotification } from '../../../../state/selectors';
-import type { WithContextMenuId, WithMessageId } from '../../../../session/types/with';
+import type { WithMessageId } from '../../../../session/types/with';
 import { tr } from '../../../../localization/localeTools';
 import { useConversationUsernameWithFallback } from '../../../../hooks/useParamSelector';
 import { ExpirableReadableMessage } from './ExpirableReadableMessage';
@@ -21,10 +21,7 @@ const StyledFailText = styled.div`
   color: var(--danger-color);
 `;
 
-export const InteractionNotification = ({
-  messageId,
-  contextMenuId,
-}: WithMessageId & WithContextMenuId) => {
+export const InteractionNotification = ({ messageId }: WithMessageId) => {
   const convoId = useSelectedConversationKey();
   const displayName = useConversationUsernameWithFallback(true, convoId);
   const isGroup = !useSelectedIsPrivate();
@@ -74,7 +71,6 @@ export const InteractionNotification = ({
   return (
     <ExpirableReadableMessage
       messageId={messageId}
-      contextMenuId={contextMenuId}
       key={`readable-message-${messageId}`}
       dataTestId="interaction-notification"
     >

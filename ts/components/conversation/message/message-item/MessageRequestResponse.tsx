@@ -1,5 +1,5 @@
 import { useConversationUsernameWithFallback } from '../../../../hooks/useParamSelector';
-import type { WithContextMenuId, WithMessageId } from '../../../../session/types/with';
+import type { WithMessageId } from '../../../../session/types/with';
 import { useMessageAuthorIsUs } from '../../../../state/selectors';
 import { useSelectedConversationKey } from '../../../../state/selectors/selectedConversation';
 import { Flex } from '../../../basic/Flex';
@@ -7,10 +7,7 @@ import { Localizer } from '../../../basic/Localizer';
 import { SpacerSM, TextWithChildren } from '../../../basic/Text';
 import { ExpirableReadableMessage } from './ExpirableReadableMessage';
 
-export const MessageRequestResponse = ({
-  messageId,
-  contextMenuId,
-}: WithMessageId & WithContextMenuId) => {
+export const MessageRequestResponse = ({ messageId }: WithMessageId) => {
   const conversationId = useSelectedConversationKey();
   const isUs = useMessageAuthorIsUs(messageId);
 
@@ -23,7 +20,6 @@ export const MessageRequestResponse = ({
   return (
     <ExpirableReadableMessage
       messageId={messageId}
-      contextMenuId={contextMenuId}
       dataTestId="message-request-response-message"
       key={`readable-message-${messageId}`}
     >

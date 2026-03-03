@@ -166,7 +166,7 @@ export const MessageReactions = ({
   const reactions = msgProps.sortedReacts ?? [];
   const onClick = !isDetailView && onEmojiClick ? onEmojiClick : undefined;
   const handleExpand = () => {
-    setIsExpanded(expanded => !expanded);
+    setIsExpanded(!isExpanded);
   };
 
   const ReactionsComp =

@@ -2,11 +2,15 @@ import type { HTMLProps } from 'react';
 import clsx from 'clsx';
 import styled, { keyframes } from 'styled-components';
 import { MessageRenderingProps } from '../../../../models/messageType';
-import { useMessageType } from '../../../../state/selectors';
+import {
+  useMessageDirectionIncoming,
+  useMessageIsControlMessage,
+  useMessageType,
+} from '../../../../state/selectors';
 import { MessageContentWithStatuses } from '../message-content/MessageContentWithStatus';
 import { StyledMessageReactionsContainer } from '../message-content/MessageReactions';
 import { type UIMessageType } from '../../../../state/ducks/conversations';
-import type { WithContextMenuId, WithMessageId } from '../../../../session/types/with';
+import type { WithMessageId } from '../../../../session/types/with';
 import { CommunityInvitation } from './CommunityInvitation';
 import { DataExtractionNotification } from './DataExtractionNotification';
 import { TimerNotification } from '../../TimerNotification';
@@ -14,7 +18,6 @@ import { GroupUpdateMessage } from './GroupUpdateMessage';
 import { CallNotification } from './notification-bubble/CallNotification';
 import { InteractionNotification } from './InteractionNotification';
 import { MessageRequestResponse } from './MessageRequestResponse';
-import { WithReactionBarOptions } from '../../SessionEmojiReactBarPopover';
 import { useIsDetailMessageView } from '../../../../contexts/isDetailViewContext';
 
 export type GenericReadableMessageSelectorProps = Pick<
@@ -31,14 +34,21 @@ type StyledReadableMessageProps = {
   // TODO: remove this, we can add styles to the message list
   $isDetailView?: boolean;
   $focusedKeyboard?: boolean;
+  $forceFocusStyle?: boolean;
+  $isIncoming?: boolean;
+  $isControlMessage?: boolean;
 };
 
 const StyledReadableMessage = styled.div<StyledReadableMessageProps>`
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: ${props => (props.$isIncoming ? 'flex-start' : 'flex-end')};
   width: 100%;
   letter-spacing: 0.03rem;
-  padding: ${props => (props.$isDetailView ? '0' : 'var(--margins-xs) var(--margins-lg) 0')};
+  padding-left: ${props =>
+    props.$isDetailView || props.$isIncoming || props.$isControlMessage ? 0 : '25%'};
+  padding-right: ${props =>
+    props.$isDetailView || !props.$isIncoming || props.$isControlMessage ? 0 : '25%'};
 
   &.message-highlighted {
     animation: ${highlightedMessageAnimation} var(--duration-message-highlight) ease-in-out;
@@ -53,6 +63,11 @@ const StyledReadableMessage = styled.div<StyledReadableMessageProps>`
       ? `&:focus-visible {
     background-color: var(--conversation-tab-background-selected-color);
   }`
+      : ''}
+
+  ${props =>
+    props.$forceFocusStyle
+      ? 'background-color: var(--conversation-tab-background-selected-color);'
       : ''}
 `;
 
@@ -80,23 +95,20 @@ function getMessageComponent(messageType: UIMessageType) {
 }
 
 type GenericReadableMessageProps = Partial<
-  HTMLProps<HTMLDivElement> &
-    Omit<StyledReadableMessageProps, '$isDetailView'> &
-    WithMessageId &
-    WithContextMenuId &
-    WithReactionBarOptions
+  HTMLProps<HTMLDivElement> & Omit<StyledReadableMessageProps, '$isDetailView'> & WithMessageId
 >;
 
 export const GenericReadableMessage = ({
   ref,
   messageId,
   selected,
-  contextMenuId,
-  reactionBarOptions,
+  children,
   ...rest
 }: GenericReadableMessageProps) => {
   const messageType = useMessageType(messageId);
   const isDetailView = useIsDetailMessageView();
+  const isControlMessage = useMessageIsControlMessage(messageId);
+  const isIncoming = useMessageDirectionIncoming(messageId, isDetailView);
 
   if (!messageId || !messageType) {
     return null;
@@ -113,15 +125,13 @@ export const GenericReadableMessage = ({
       ref={ref}
       className={clsx(selected ? 'message-selected' : undefined)}
       selected={selected}
+      $isIncoming={isIncoming}
+      $isControlMessage={isControlMessage}
       {...rest}
       $isDetailView={isDetailView}
     >
-      <CmpToRender
-        // FIXME:: move context menu out of here
-        contextMenuId={contextMenuId ?? ''}
-        messageId={messageId}
-        reactionBarOptions={reactionBarOptions}
-      />
+      <CmpToRender messageId={messageId} />
+      {children}
     </StyledReadableMessage>
   );
 };

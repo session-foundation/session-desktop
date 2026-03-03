@@ -36,7 +36,7 @@ export function useFocusScope() {
   };
 }
 
-export function useIsInScope({ scope, scopeId }: ScopeArgs) {
+export function useIsInScope({ scope, scopeId }: ScopeArgs): boolean {
   const { modalId, focusedMessageId, isCompositionTextAreaFocused, isRightPanelShowing } =
     useFocusScope();
 
@@ -74,7 +74,7 @@ export function useIsInScope({ scope, scopeId }: ScopeArgs) {
     if (scopeId === 'all') {
       return !!focusedMessageId;
     }
-    return scopeId && scopeId === focusedMessageId;
+    return !!scopeId && scopeId === focusedMessageId;
   }
 
   if (scope === 'compositionBoxInput') {

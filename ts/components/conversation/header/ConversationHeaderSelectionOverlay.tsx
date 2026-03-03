@@ -60,6 +60,7 @@ export const SelectionOverlay = () => {
 
   return (
     <SessionFocusTrap
+      focusTrapId="SectionOverlay"
       initialFocus={() => ref.current}
       containerDivStyle={{
         position: 'absolute',

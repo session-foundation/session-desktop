@@ -4,7 +4,6 @@ import { useSelector } from 'react-redux';
 import {
   useCallback,
   useLayoutEffect,
-  useRef,
   useState,
   type AriaRole,
   type MouseEvent,
@@ -30,8 +29,7 @@ import { getIncrement } from '../../../../util/timer';
 import { ExpireTimer } from '../../ExpireTimer';
 import { Data } from '../../../../data/data';
 import { ConvoHub } from '../../../../session/conversations';
-import { MessageContextMenu } from '../message-content/MessageContextMenu';
-import type { WithContextMenuId, WithConvoId, WithMessageId } from '../../../../session/types/with';
+import type { WithConvoId, WithMessageId } from '../../../../session/types/with';
 import { useScrollToLoadedMessage } from '../../../../contexts/ScrollToLoadedMessage';
 import {
   getMostRecentMessageId,
@@ -45,11 +43,6 @@ import { getIsAppFocused } from '../../../../state/selectors/section';
 import { useSelectedConversationKey } from '../../../../state/selectors/selectedConversation';
 import { useMessageType } from '../../../../state/selectors';
 import { useSelectMessageViaClick } from '../../../../hooks/useMessageInteractions';
-import {
-  SessionEmojiReactBarPopover,
-  type WithReactionBarOptions,
-} from '../../SessionEmojiReactBarPopover';
-import { SessionFocusTrap } from '../../../SessionFocusTrap';
 
 const EXPIRATION_CHECK_MINIMUM = 2000;
 
@@ -296,9 +289,7 @@ const ReadableMessage = (
 };
 
 export type ExpirableReadableMessageProps = Omit<ReadableMessageProps, 'isUnread' | 'onClick'> &
-  WithMessageId &
-  WithContextMenuId &
-  WithReactionBarOptions;
+  WithMessageId;
 
 function ExpireTimerControlMessage({
   expirationTimestamp,
@@ -321,56 +312,11 @@ const useIsDetailMessageViewInternal = useIsDetailMessageView;
 const useSelectMessageViaClickInternal = useSelectMessageViaClick;
 const useMessageTypeInternal = useMessageType;
 
-function SessionMessageInteractables({
-  messageId,
-  contextMenuId,
-  reactionBarOptions,
-}: WithMessageId & WithContextMenuId & WithReactionBarOptions) {
-  const reactionBarFirstEmojiRef = useRef<HTMLSpanElement>(null);
-  const isDetailView = useIsDetailMessageViewInternal();
-
-  if (isDetailView) {
-    return null;
-  }
-
-  const closeReactionBar = reactionBarOptions
-    ? () => {
-        reactionBarOptions.setTriggerPosition(null);
-      }
-    : undefined;
-
-  const reactionBarFocusTrapActive =
-    !!reactionBarOptions?.triggerPosition && !!reactionBarFirstEmojiRef.current;
-  return (
-    <SessionFocusTrap
-      active={reactionBarFocusTrapActive}
-      initialFocus={() => reactionBarFirstEmojiRef.current ?? false}
-      onDeactivate={closeReactionBar}
-      clickOutsideDeactivates={true}
-    >
-      {reactionBarOptions ? (
-        <SessionEmojiReactBarPopover
-          messageId={messageId}
-          triggerPos={reactionBarOptions.triggerPosition}
-          reactBarFirstEmojiRef={reactionBarFirstEmojiRef}
-        />
-      ) : null}
-      <MessageContextMenu
-        messageId={messageId}
-        contextMenuId={contextMenuId}
-        reactionBarOptions={reactionBarOptions}
-      />
-    </SessionFocusTrap>
-  );
-}
-
 export const ExpirableReadableMessage = ({
   onDoubleClickCapture,
   role,
   dataTestId,
-  contextMenuId,
   messageId,
-  reactionBarOptions,
   children,
 }: ExpirableReadableMessageProps) => {
   const selected = useMessageExpirationPropsByIdInternal(messageId);
@@ -429,11 +375,6 @@ export const ExpirableReadableMessage = ({
           expirationTimestamp={expirationTimestamp}
         />
       ) : null}
-      <SessionMessageInteractables
-        messageId={messageId}
-        contextMenuId={contextMenuId}
-        reactionBarOptions={reactionBarOptions}
-      />
       {children}
     </ReadableMessage>
   );

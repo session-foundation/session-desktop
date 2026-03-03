@@ -2,7 +2,7 @@
 import { Dispatch, type KeyboardEvent, type MouseEvent, useRef } from 'react';
 
 import { isNil, isNumber, isString } from 'lodash';
-import { MenuOnHideCallback, MenuOnShowCallback } from 'react-contexify';
+import { MenuOnHideCallback, type MenuOnShowCallback } from 'react-contexify';
 import styled from 'styled-components';
 import { toNumber } from 'lodash/fp';
 import { useSelector } from 'react-redux';
@@ -10,7 +10,11 @@ import { getAppDispatch } from '../../../../state/dispatch';
 import { Data } from '../../../../data/data';
 
 import { MessageRenderingProps } from '../../../../models/messageType';
-import { openRightPanel, showMessageInfoView } from '../../../../state/ducks/conversations';
+import {
+  openRightPanel,
+  setReactionBarTriggerPosition,
+  showMessageInfoView,
+} from '../../../../state/ducks/conversations';
 import {
   useMessageIsControlMessage,
   useMessageIsDeleted,
@@ -44,29 +48,29 @@ import {
 } from '../../../../hooks/useMessageInteractions';
 import { SelectMessageMenuItem } from '../../../menu/items/SelectMessage/SelectMessageMenuItem';
 import { DeleteItem } from '../../../menu/items/DeleteMessage/DeleteMessageMenuItem';
-import { WithReactionBarOptions } from '../../SessionEmojiReactBarPopover';
+import { messageContextMenuID } from '../../SessionMessagesList';
 
 export type MessageContextMenuSelectorProps = Pick<
   MessageRenderingProps,
   'sender' | 'direction' | 'status' | 'isSenderAdmin' | 'text' | 'serverTimestamp' | 'timestamp'
 >;
 
-type Props = WithMessageId & WithContextMenuId & WithReactionBarOptions;
+type Props = WithContextMenuId &
+  Partial<WithMessageId> & {
+    onShow?: MenuOnShowCallback;
+    onHide?: MenuOnHideCallback;
+    onClickCapture?: (e: MouseEvent<HTMLElement>) => void;
+  };
 
 const CONTEXTIFY_MENU_WIDTH_PX = 200;
 const SCREEN_RIGHT_MARGIN_PX = 104;
 
 export type ShowMessageContextMenuParams = {
-  id: string;
   event: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>;
   triggerPosition?: { x: number; y: number };
 };
 
-export function showMessageContextMenu({
-  id,
-  event,
-  triggerPosition,
-}: ShowMessageContextMenuParams) {
+export function showMessageContextMenu({ event, triggerPosition }: ShowMessageContextMenuParams) {
   // this is quite dirty but considering that we want the context menu of the message to show on click on the attachment
   // and the context menu save attachment item to save the right attachment I did not find a better way for now.
   // NOTE: If you change this, also make sure to update the `saveAttachment()`
@@ -99,7 +103,7 @@ export function showMessageContextMenu({
   const position = { x: clampNumber(_triggerPosition.x, 0, MAX_TRIGGER_X), y: _triggerPosition.y };
 
   showContextMenu({
-    id,
+    id: messageContextMenuID,
     event,
     position,
     props: {
@@ -249,9 +253,14 @@ function MessageReplyMenuItem({ messageId }: { messageId: string }) {
   ) : null;
 }
 
-export const MessageContextMenu = (props: Props) => {
-  const { messageId, contextMenuId, reactionBarOptions } = props;
-
+export const MessageContextMenu = ({
+  messageId,
+  contextMenuId,
+  onShow,
+  onHide,
+  onClickCapture,
+}: Props) => {
+  const dispatch = getAppDispatch();
   const contextMenuRef = useRef<HTMLDivElement | null>(null);
   const isLegacyGroup = useSelectedIsLegacyGroup();
   const convoId = useSelectedConversationKey();
@@ -259,7 +268,7 @@ export const MessageContextMenu = (props: Props) => {
   const sender = useMessageSender(messageId);
   const isControlMessage = useMessageIsControlMessage(messageId);
 
-  const onShow: MenuOnShowCallback = (_, { x, y }) => {
+  const _onShow: MenuOnShowCallback = (_, { x, y }) => {
     const triggerHeight = contextMenuRef.current?.clientHeight ?? 0;
     const triggerWidth = contextMenuRef.current?.clientWidth ?? 0;
 
@@ -267,41 +276,24 @@ export const MessageContextMenu = (props: Props) => {
     // it does not include changes to prevent the menu from overflowing the window. This temporary
     // fix resolves this by mirroring the y-offset adjustment.
     const yClamped = clampNumber(y, 0, window.innerHeight - triggerHeight);
-    if (reactionBarOptions) {
-      reactionBarOptions.setTriggerPosition({
-        x,
-        // Changes the x-anchor from the center to the far left
-        offsetX: -triggerWidth / 2,
-        y: yClamped,
-        height: triggerHeight,
-        width: triggerWidth,
-      });
-    }
+
+    const pos = {
+      x,
+      // Changes the x-anchor from the center to the far left
+      offsetX: -triggerWidth / 2,
+      y: yClamped,
+      height: triggerHeight,
+      width: triggerWidth,
+    };
+    dispatch(setReactionBarTriggerPosition(pos));
+    onShow?.(_, { x, y });
   };
 
-  const onHide: MenuOnHideCallback = () => {
-    reactionBarOptions?.setTriggerPosition(null);
+  const _onHide: MenuOnHideCallback = fromVisible => {
+    onHide?.(fromVisible);
   };
 
-  if (!convoId) {
-    return null;
-  }
-
-  if (isDeleted || isControlMessage) {
-    return (
-      <StyledMessageContextMenu>
-        <SessionContextMenuContainer>
-          <Menu id={contextMenuId}>
-            <SelectMessageMenuItem messageId={messageId} />
-            <DeleteItem messageId={messageId} />
-          </Menu>
-        </SessionContextMenuContainer>
-      </StyledMessageContextMenu>
-    );
-  }
-
-  if (isLegacyGroup) {
-    // legacy groups are deprecated
+  if (!convoId || isLegacyGroup) {
     return null;
   }
 
@@ -311,19 +303,30 @@ export const MessageContextMenu = (props: Props) => {
         <Menu
           ref={contextMenuRef}
           id={contextMenuId}
-          onShow={onShow}
-          onHide={onHide}
+          onShow={_onShow}
+          onHide={_onHide}
+          onClickCapture={onClickCapture}
+          onContextMenuCapture={onClickCapture}
           viewportMargin={12}
         >
-          <RetryItem messageId={messageId} />
-          <SaveAttachmentMenuItem messageId={messageId} />
-          <MessageReplyMenuItem messageId={messageId} />
-          <CopyBodyMenuItem messageId={messageId} />
-          <MessageInfoMenuItem messageId={messageId} />
-          <SelectMessageMenuItem messageId={messageId} />
-          <CopyAccountIdMenuItem pubkey={sender} messageId={messageId} />
-          <DeleteItem messageId={messageId} />
-          <CommunityAdminActionItems messageId={messageId} />
+          {!messageId ? null : isDeleted || isControlMessage ? (
+            <>
+              <SelectMessageMenuItem messageId={messageId} />
+              <DeleteItem messageId={messageId} />
+            </>
+          ) : (
+            <>
+              <RetryItem messageId={messageId} />
+              <SaveAttachmentMenuItem messageId={messageId} />
+              <MessageReplyMenuItem messageId={messageId} />
+              <CopyBodyMenuItem messageId={messageId} />
+              <MessageInfoMenuItem messageId={messageId} />
+              <SelectMessageMenuItem messageId={messageId} />
+              <CopyAccountIdMenuItem pubkey={sender} messageId={messageId} />
+              <DeleteItem messageId={messageId} />
+              <CommunityAdminActionItems messageId={messageId} />
+            </>
+          )}
         </Menu>
       </SessionContextMenuContainer>
     </StyledMessageContextMenu>
