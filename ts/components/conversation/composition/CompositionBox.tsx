@@ -79,6 +79,16 @@ export interface ReplyingToMessageProps {
   referencedMessageSentAt: number;
   text?: string;
   attachments?: Array<any>;
+  /**
+   * For the auto focus on the `CompositionBox` to work on reply,
+   * we need to make sure every reply to a message is unique.
+   * This is not the case when the user tries to reply twice to the same message,
+   * which is why we also need to create a unique change for each reply action made the user.
+   *
+   * This `quotedAt` is a `Date.now()` of when the user made the reply action.
+   * It will force a refocus on the CompositionBox even if the same message was quoted twice.
+   */
+  quotedAt: number;
 }
 
 export type StagedLinkPreviewData = {

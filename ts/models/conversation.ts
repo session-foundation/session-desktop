@@ -659,6 +659,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
       referencedMessageSentAt: quotedMessage.get('sent_at') || 0,
       convoId: this.id,
       id: quotedMessage.id,
+      quotedAt: Date.now(),
     };
   }
 
