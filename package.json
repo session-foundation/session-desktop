@@ -2,7 +2,7 @@
   "$schema": "./package.schema.json",
   "packageManager": "pnpm@10.28.1",
   "name": "session-desktop",
-  "productName": "Session",
+  "productName": "Session-pro-test",
   "description": "Private messaging from your desktop",
   "version": "1.17.12",
   "license": "GPL-3.0",
