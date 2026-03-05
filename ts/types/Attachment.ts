@@ -270,7 +270,7 @@ export const isVoiceMessage = (attachment: Pick<Attachment, 'flags'>): boolean =
   return hasFlag;
 };
 
-export const save = ({
+export function save({
   attachment,
   document,
   index,
@@ -281,14 +281,14 @@ export const save = ({
   index: number;
   getAbsolutePath: (relativePath: string) => string;
   timestamp?: number;
-}): void => {
+}) {
   const isObjectURLRequired = isUndefined(attachment.fileName);
   const filename = getSuggestedFilename({ attachment, timestamp, index });
   saveURLAsFile({ url: attachment.url, filename, document });
   if (isObjectURLRequired) {
     URL.revokeObjectURL(attachment.url);
   }
-};
+}
 
 export const getSuggestedFilename = ({
   attachment,
