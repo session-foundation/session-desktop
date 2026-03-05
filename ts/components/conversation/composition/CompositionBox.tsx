@@ -279,6 +279,9 @@ class CompositionBoxInner extends Component<Props, State> {
     // focus the composition box when user clicks start to reply to a message
     if (!_.isEqual(prevProps.quotedMessageProps, this.props.quotedMessageProps)) {
       this.focusCompositionBox();
+      setTimeout(() => {
+        this.focusCompositionBox();
+      }, 50);
     }
   }
 

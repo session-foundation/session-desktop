@@ -42,6 +42,7 @@ import { showContextMenu } from '../../../../util/contextMenu';
 import { clampNumber } from '../../../../util/maths';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 import {
+  useMessageCopyCommunityInvitationUrl,
   useMessageCopyText,
   useMessageReply,
   useMessageSaveAttachment,
@@ -242,6 +243,16 @@ function CopyBodyMenuItem({ messageId }: { messageId: string }) {
   ) : null;
 }
 
+function CopyCommunityInvitationUrlMenuItem({ messageId }: { messageId: string }) {
+  const copyText = useMessageCopyCommunityInvitationUrl(messageId);
+
+  return copyText ? (
+    <MenuItem onClick={copyText} iconType={LUCIDE_ICONS_UNICODE.COPY} isDangerAction={false}>
+      {tr('communityUrlCopy')}
+    </MenuItem>
+  ) : null;
+}
+
 function MessageReplyMenuItem({ messageId }: { messageId: string }) {
   const reply = useMessageReply(messageId);
   const canWrite = useSelector(getSelectedCanWrite);
@@ -320,6 +331,7 @@ export const MessageContextMenu = ({
               <SaveAttachmentMenuItem messageId={messageId} />
               <MessageReplyMenuItem messageId={messageId} />
               <CopyBodyMenuItem messageId={messageId} />
+              <CopyCommunityInvitationUrlMenuItem messageId={messageId} />
               <MessageInfoMenuItem messageId={messageId} />
               <SelectMessageMenuItem messageId={messageId} />
               <CopyAccountIdMenuItem pubkey={sender} messageId={messageId} />

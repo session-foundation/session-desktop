@@ -14,6 +14,7 @@ import {
 import {
   useMessageAttachments,
   useMessageBody,
+  useMessageCommunityInvitationFullUrl,
   useMessageIsControlMessage,
   useMessageIsOnline,
   useMessageSender,
@@ -63,16 +64,32 @@ export function useMessageSaveAttachment(messageId?: string) {
 
 export function useMessageCopyText(messageId?: string) {
   const text = useMessageBody(messageId);
+  const fullUrl = useMessageCommunityInvitationFullUrl(messageId);
 
-  const cannotCopy = !messageId;
+  // Note: we don't want to show "Copy" if this is an invitation, see `useMessageCopyCommunityInvitationUrl`
+  const canCopy = messageId && !fullUrl;
 
-  return cannotCopy
-    ? null
-    : () => {
+  return canCopy
+    ? () => {
         const selection = window.getSelection();
         const selectedText = selection?.toString().trim();
+
         // NOTE: the copy action should copy selected text (if any) then fallback to the whole message
         MessageInteraction.copyBodyToClipboard(selectedText || text);
+      }
+    : null;
+}
+
+export function useMessageCopyCommunityInvitationUrl(messageId?: string) {
+  const fullUrl = useMessageCommunityInvitationFullUrl(messageId);
+
+  const cannotCopyUrl = !messageId || !fullUrl;
+
+  return cannotCopyUrl
+    ? null
+    : () => {
+        window.log.info('Copying community invitation url', fullUrl);
+        MessageInteraction.copyBodyToClipboard(fullUrl);
       };
 }
 

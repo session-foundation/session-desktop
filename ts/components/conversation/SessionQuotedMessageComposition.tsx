@@ -19,6 +19,7 @@ import { ContactName } from './ContactName/ContactName';
 import { QuoteText } from './message/message-content/quote/QuoteText';
 import { useSelectedConversationKey } from '../../state/selectors/selectedConversation';
 import { useEscBlurThenHandler } from '../../hooks/useKeyboardShortcut';
+import { useMessageType } from '../../state/selectors';
 
 const QuotedMessageComposition = styled(Flex)`
   border-top: var(--default-borders);
@@ -83,7 +84,9 @@ export const SessionQuotedMessageComposition = () => {
 
   useEscBlurThenHandler(removeQuotedMessage);
 
-  if (!author || !quotedMessageProps?.id) {
+  const quotedMessageType = useMessageType(quotedMessageProps?.id);
+
+  if (!author || !quotedMessageProps?.id || !quotedMessageType) {
     return null;
   }
 
@@ -104,15 +107,17 @@ export const SessionQuotedMessageComposition = () => {
     <QuoteText isIncoming={true} text={quoteText} referencedMessageNotFound={true} />
   ) : (
     tr(
-      hasAudioAttachment
-        ? 'audio'
-        : isGenericFile
-          ? 'document'
-          : isVideo
-            ? 'video'
-            : isImage
-              ? 'image'
-              : 'messageErrorOriginal'
+      quotedMessageType === 'community-invitation'
+        ? 'communityInvitation'
+        : hasAudioAttachment
+          ? 'audio'
+          : isGenericFile
+            ? 'document'
+            : isVideo
+              ? 'video'
+              : isImage
+                ? 'image'
+                : 'messageErrorOriginal'
     )
   );
 

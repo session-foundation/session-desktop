@@ -238,7 +238,7 @@ function useCommunityInvitationProps(messageId: string | undefined) {
     return null;
   }
   if (props.messageType !== 'community-invitation') {
-    throw new Error('useCommunityInvitationProps: messageType is not community-invitation');
+    return null;
   }
   return props?.propsForCommunityInvitation;
 }
@@ -246,7 +246,7 @@ function useCommunityInvitationProps(messageId: string | undefined) {
 /**
  * Return the full url needed to join a community through a community invitation message
  */
-export function useMessageCommunityInvitationFullUrl(messageId: string) {
+export function useMessageCommunityInvitationFullUrl(messageId: string | undefined) {
   return useCommunityInvitationProps(messageId)?.fullUrl;
 }
 
