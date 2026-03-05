@@ -255,6 +255,7 @@ declare module 'react' {
     | 'image-upload-click'
     | 'your-profile-name'
     | 'community-name'
+    | 'community-invitation-details'
     | 'group-name'
     | 'group-description'
     | 'preferred-display-name'
@@ -314,6 +315,7 @@ declare module 'react' {
 
     // generic readably message (not control message)
     | 'message-content'
+    | 'message-container'
 
     // control message types
     | 'message-request-response-message'

@@ -140,7 +140,11 @@ export const GenericReadableMessage = ({
       {...rest}
       $isDetailView={isDetailView}
     >
-      <StyledMessageContentContainer $isIncoming={isIncoming} $isDetailView={isDetailView}>
+      <StyledMessageContentContainer
+        $isIncoming={isIncoming}
+        $isDetailView={isDetailView}
+        data-testid="message-container"
+      >
         <CmpToRender messageId={messageId} />
         {children}
       </StyledMessageContentContainer>

@@ -99,7 +99,7 @@ export const CommunityInvitation = ({ messageId }: WithMessageId) => {
               padding="var(--margins-xs)"
             />
           </StyledIconContainer>
-          <StyledCommunityDetailsContainer>
+          <StyledCommunityDetailsContainer data-testid='community-invitation-details'>
             <StyledCommunityName>{communityName}</StyledCommunityName>
             <StyledCommunityType>{tr('communityInvitation')}</StyledCommunityType>
             <StyledCommunityUrl>{hostname}</StyledCommunityUrl>
