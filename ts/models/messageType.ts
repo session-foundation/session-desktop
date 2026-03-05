@@ -97,7 +97,7 @@ type SharedMessageAttributes = {
   /**
    * This field is used for unsending messages and used in sending unsend message requests.
    */
-  isDeleted?: boolean;
+  isDeleted?: MessageDeletedType;
 
   callNotificationType?: CallNotificationType;
 
@@ -173,15 +173,24 @@ export type MessageAttributes = SharedMessageAttributes & NotSharedMessageAttrib
 export type MessageAttributesOptionals = SharedMessageAttributes &
   Partial<NotSharedMessageAttributes>;
 
-export interface MessageRequestResponseMsg {
-  source: string;
-  isApproved: boolean;
-}
-
 export enum MessageDirection {
   outgoing = 'outgoing',
   incoming = 'incoming',
   any = '%',
+}
+
+/**
+ * The types of deletion of a message are:
+ * - 0: the message is not deleted
+ * - 1: the message is deleted globally
+ * - 2: the message is deleted locally
+ *
+ * @see `MessageDeletedType`
+ */
+export enum MessageDeletedType {
+  notDeleted = 0,
+  deletedGlobally = 1,
+  deletedLocally = 2,
 }
 
 export type DataExtractionNotificationMsg = {

@@ -1,6 +1,5 @@
 import useUpdate from 'react-use/lib/useUpdate';
 import { getAppDispatch } from '../../../../state/dispatch';
-import { tr } from '../../../../localization/localeTools';
 import { Storage } from '../../../../util/storage';
 import { updateConfirmModal } from '../../../../state/ducks/modalDialog';
 import { SessionButtonColor } from '../../../basic/SessionButton';
@@ -25,10 +24,10 @@ export const useReleaseChannel = (): {
       );
       dispatch(
         updateConfirmModal({
-          title: tr('warning'),
+          title: { token: 'warning' },
           i18nMessage: { token: 'settingsRestartDescription' },
           okTheme: SessionButtonColor.Danger,
-          okText: tr('restart'),
+          okText: { token: 'restart' },
           onClickOk: async () => {
             try {
               await Storage.put('releaseChannel', channel);

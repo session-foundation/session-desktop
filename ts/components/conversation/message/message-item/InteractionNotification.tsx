@@ -2,7 +2,6 @@ import { isEmpty } from 'lodash';
 import styled from 'styled-components';
 import { assertUnreachable } from '../../../../types/sqlSharedTypes';
 import { Flex } from '../../../basic/Flex';
-import { ReadableMessage } from './ReadableMessage';
 import {
   ConversationInteractionStatus,
   ConversationInteractionType,
@@ -12,23 +11,21 @@ import {
   useSelectedIsPrivate,
   useSelectedIsPublic,
 } from '../../../../state/selectors/selectedConversation';
-import { useMessageInteractionNotification, useMessageIsUnread } from '../../../../state/selectors';
+import { useMessageInteractionNotification } from '../../../../state/selectors';
 import type { WithMessageId } from '../../../../session/types/with';
 import { tr } from '../../../../localization/localeTools';
 import { useConversationUsernameWithFallback } from '../../../../hooks/useParamSelector';
+import { ExpirableReadableMessage } from './ExpirableReadableMessage';
 
 const StyledFailText = styled.div`
   color: var(--danger-color);
 `;
 
-export const InteractionNotification = (props: WithMessageId) => {
-  const { messageId } = props;
-
+export const InteractionNotification = ({ messageId }: WithMessageId) => {
   const convoId = useSelectedConversationKey();
   const displayName = useConversationUsernameWithFallback(true, convoId);
   const isGroup = !useSelectedIsPrivate();
   const isCommunity = useSelectedIsPublic();
-  const isUnread = useMessageIsUnread(messageId) || false;
   const interactionNotification = useMessageInteractionNotification(messageId);
 
   if (!convoId || !messageId || !interactionNotification) {
@@ -72,9 +69,8 @@ export const InteractionNotification = (props: WithMessageId) => {
   }
 
   return (
-    <ReadableMessage
+    <ExpirableReadableMessage
       messageId={messageId}
-      isUnread={isUnread}
       key={`readable-message-${messageId}`}
       dataTestId="interaction-notification"
     >
@@ -89,6 +85,6 @@ export const InteractionNotification = (props: WithMessageId) => {
       >
         <StyledFailText>{text}</StyledFailText>
       </Flex>
-    </ReadableMessage>
+    </ExpirableReadableMessage>
   );
 };

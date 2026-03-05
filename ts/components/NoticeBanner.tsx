@@ -19,7 +19,7 @@ const StyledNoticeBanner = styled(Flex)<{ isClickable: boolean }>`
   }
 `;
 
-const StyledText = styled.span`
+const StyledBannerText = styled.span`
   margin-right: var(--margins-sm);
 `;
 
@@ -48,7 +48,7 @@ export const NoticeBanner = (props: NoticeBannerProps) => {
         onBannerClick();
       }}
     >
-      <StyledText>{text}</StyledText>
+      <StyledBannerText>{text}</StyledBannerText>
       {unicode ? (
         <SessionLucideIconButton unicode={unicode} iconColor="inherit" iconSize="small" />
       ) : null}

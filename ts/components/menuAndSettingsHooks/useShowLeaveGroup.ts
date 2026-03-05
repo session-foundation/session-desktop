@@ -168,10 +168,10 @@ function dispatchDeleteOrLeave({
   onClickClose: () => void;
   groupName: string;
 }) {
-  const title =
+  const title: TrArgs =
     deleteType === 'delete' || deleteType === 'delete-local-only'
-      ? tr('groupDelete')
-      : tr('groupLeave');
+      ? { token: 'groupDelete' }
+      : { token: 'groupLeave' };
   const i18nMessage: TrArgs = {
     token:
       deleteType === 'delete'

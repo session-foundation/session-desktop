@@ -5,7 +5,6 @@ import {
   useIsMe,
   useIsPrivate,
 } from '../../hooks/useParamSelector';
-import { tr } from '../../localization/localeTools';
 import { ConvoHub } from '../../session/conversations';
 import { updateConfirmModal, updateConversationSettingsModal } from '../../state/ducks/modalDialog';
 import { SessionButtonColor } from '../basic/SessionButton';
@@ -30,8 +29,6 @@ export function useShowDeletePrivateContactCb({ conversationId }: { conversation
     return null;
   }
 
-  const menuItemText = tr('contactDelete');
-
   const onClickClose = () => {
     dispatch(updateConfirmModal(null));
   };
@@ -39,7 +36,7 @@ export function useShowDeletePrivateContactCb({ conversationId }: { conversation
   const showConfirmationModal = () => {
     dispatch(
       updateConfirmModal({
-        title: menuItemText,
+        title: { token: 'contactDelete' },
         i18nMessage: { token: 'deleteContactDescription', name },
         onClickClose,
         okTheme: SessionButtonColor.Danger,
@@ -51,7 +48,7 @@ export function useShowDeletePrivateContactCb({ conversationId }: { conversation
           });
           dispatch(updateConversationSettingsModal(null));
         },
-        okText: tr('delete'),
+        okText: { token: 'delete' },
       })
     );
   };

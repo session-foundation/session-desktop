@@ -653,12 +653,13 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
     return {
       author: msgSource,
-      id: `${quotedMessage.get('sent_at')}` || '',
-      // NOTE we send the entire body to be consistent with the other platforms
+      // NOTE we don't send this anymore. But we need this for the reply in the composition box
       text: body,
       attachments: quotedAttachments,
-      timestamp: quotedMessage.get('sent_at') || 0,
+      referencedMessageSentAt: quotedMessage.get('sent_at') || 0,
       convoId: this.id,
+      id: quotedMessage.id,
+      quotedAt: Date.now(),
     };
   }
 
@@ -2606,7 +2607,13 @@ export class ConversationModel extends Model<ConversationAttributes> {
     if (!this.id || !this.getActiveAt() || this.isHidden()) {
       return;
     }
-    const messages = await Data.getLastMessagesByConversation(this.id, 1, true);
+    const messages = await Data.getLastMessagesByConversation({
+      conversationId: this.id,
+      limit: 1,
+      skipTimerInit: true,
+      // we want to render the text from the last non-marked as deleted message
+      skipMarkedAsDeleted: true,
+    });
     const existingLastMessageAttribute = this.get('lastMessage');
     const existingLastMessageStatus = this.get('lastMessageStatus');
     if (!messages || !messages.length) {
@@ -3029,7 +3036,6 @@ export class ConversationModel extends Model<ConversationAttributes> {
     return success;
   }
 
-  // #region Start of getters
   public getExpirationMode() {
     return this.get('expirationMode');
   }
@@ -3041,8 +3047,6 @@ export class ConversationModel extends Model<ConversationAttributes> {
   public getIsExpired03Group() {
     return PubKey.is03Pubkey(this.id) && !!this.get('isExpired03Group');
   }
-
-  // #endregion
 }
 
 export const Convo = { commitConversationAndRefreshWrapper };

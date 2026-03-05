@@ -65,13 +65,11 @@ function useFollowSettingsButtonClick({ messageId }: WithMessageId) {
           disappearing_messages_type: localizedMode,
         };
 
-    const okText = tr('confirm');
-
     dispatch(
       updateConfirmModal({
-        title: tr('disappearingMessagesFollowSetting'),
+        title: { token: 'disappearingMessagesFollowSetting' },
         i18nMessage,
-        okText,
+        okText: { token: 'confirm' },
         okTheme: SessionButtonColor.Danger,
         onClickOk: async () => {
           if (!selectedConvoKey) {
@@ -149,8 +147,7 @@ const FollowSettingsButton = ({ messageId }: WithMessageId) => {
   );
 };
 
-export const TimerNotification = (props: WithMessageId) => {
-  const { messageId } = props;
+export const TimerNotification = ({ messageId }: WithMessageId) => {
   const timespanSeconds = useMessageExpirationUpdateTimespanSeconds(messageId);
   const expirationMode = useMessageExpirationUpdateMode(messageId);
   const disabled = useMessageExpirationUpdateDisabled(messageId);
@@ -178,7 +175,6 @@ export const TimerNotification = (props: WithMessageId) => {
   return (
     <ExpirableReadableMessage
       messageId={messageId}
-      isControlMessage={true}
       key={`readable-message-${messageId}`}
       dataTestId={'disappear-control-message'}
     >
@@ -206,7 +202,7 @@ export const TimerNotification = (props: WithMessageId) => {
         <TextWithChildren $subtle={true}>
           <Localizer {...i18nProps} />
         </TextWithChildren>
-        <FollowSettingsButton {...props} />
+        <FollowSettingsButton messageId={messageId} />
       </Flex>
     </ExpirableReadableMessage>
   );

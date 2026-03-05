@@ -167,6 +167,7 @@ export function KeyboardShortcutsModal() {
         $alignItems="flex-start"
         $padding="var(--margins-sm) 0 var(--margins-xl)"
         width="100%"
+        tabIndex={0}
       >
         <KeyboardShortcutsModalContent />
       </StyledContent>

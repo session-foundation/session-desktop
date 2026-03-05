@@ -9,7 +9,6 @@ import {
 } from '../ducks/registration';
 import { OnboardingStoreState } from '../store';
 
-// #region Getters
 const getRegistration = (state: OnboardingStoreState): OnboardingState => {
   return state.registration;
 };
@@ -63,9 +62,7 @@ const getDisplayNameError = createSelector(
   getRegistration,
   (state: OnboardingState): string | undefined => state.displayNameError
 );
-// #endregion
 
-// #region Hooks
 export const useOnboardStep = () => {
   return useSelector(getOnboardingStep);
 };
@@ -105,4 +102,3 @@ export const useDisplayName = () => {
 export const useDisplayNameError = () => {
   return useSelector(getDisplayNameError);
 };
-// #endregion

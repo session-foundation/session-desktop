@@ -5,7 +5,6 @@ import {
   useIsMe,
   useConversationUsernameWithFallback,
 } from '../../hooks/useParamSelector';
-import { tr } from '../../localization/localeTools';
 import { ConvoHub } from '../../session/conversations';
 import { updateConfirmModal, updateConversationSettingsModal } from '../../state/ducks/modalDialog';
 import { SessionButtonColor } from '../basic/SessionButton';
@@ -30,8 +29,6 @@ export function useShowDeletePrivateConversationCb({ conversationId }: { convers
     return null;
   }
 
-  const menuItemText = tr('conversationsDelete');
-
   const onClickClose = () => {
     dispatch(updateConfirmModal(null));
   };
@@ -39,7 +36,7 @@ export function useShowDeletePrivateConversationCb({ conversationId }: { convers
   const showConfirmationModal = () => {
     dispatch(
       updateConfirmModal({
-        title: menuItemText,
+        title: { token: 'conversationsDelete' },
         i18nMessage: { token: 'deleteConversationDescription', name },
         onClickClose,
         okTheme: SessionButtonColor.Danger,
@@ -51,7 +48,7 @@ export function useShowDeletePrivateConversationCb({ conversationId }: { convers
           });
           dispatch(updateConversationSettingsModal(null));
         },
-        okText: tr('delete'),
+        okText: { token: 'delete' },
       })
     );
   };

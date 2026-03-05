@@ -80,7 +80,6 @@ export const GroupUpdateMessage = ({ messageId }: WithMessageId) => {
       messageId={messageId}
       key={`readable-message-${messageId}`}
       dataTestId="group-update-message"
-      isControlMessage={true}
     >
       <NotificationBubble unicode={LUCIDE_ICONS_UNICODE.USERS_ROUND}>
         <Localizer {...changeProps} />

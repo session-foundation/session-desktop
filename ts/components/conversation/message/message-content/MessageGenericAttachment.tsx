@@ -1,6 +1,7 @@
 import styled from 'styled-components';
 import clsx from 'clsx';
 
+import type { MouseEvent, KeyboardEvent } from 'react';
 import { PropsForAttachment } from '../../../../state/ducks/conversations';
 import { AttachmentTypeWithPath } from '../../../../types/Attachment';
 import { Spinner } from '../../../loading';
@@ -9,6 +10,7 @@ import { LucideIcon } from '../../../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 import { MessageHighlighter } from './MessageHighlighter';
 import { getShortenedFilename } from './quote/QuoteText';
+import { createButtonOnKeyDownForClickEventHandler } from '../../../../util/keyboardShortcuts';
 
 const StyledGenericAttachmentContainer = styled.div<{
   selected: boolean;
@@ -30,14 +32,15 @@ export function MessageGenericAttachment({
   selected: boolean;
   highlight: boolean;
   direction?: MessageModelType;
-  onClick?: (e: any) => void;
+  onClick?: (e: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>) => void;
 }) {
   const { fileName, fileSize } = attachment;
 
   const shortenedFilename = getShortenedFilename(fileName);
+  const onKeyDown = onClick ? createButtonOnKeyDownForClickEventHandler(onClick) : undefined;
 
   return (
-    <MessageHighlighter $highlight={highlight} onClick={onClick}>
+    <MessageHighlighter $highlight={highlight} onClick={onClick} onKeyDown={onKeyDown} tabIndex={0}>
       <StyledGenericAttachmentContainer
         selected={selected}
         className={'module-message__generic-attachment'}

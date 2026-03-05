@@ -40,7 +40,6 @@ import { MessageSender } from '../session/sending';
 import { StoreGroupRequestFactory } from '../session/apis/snode_api/factories/StoreGroupRequestFactory';
 import { DURATION } from '../session/constants';
 import { GroupInvite } from '../session/utils/job_runners/jobs/GroupInviteJob';
-import { tr } from '../localization/localeTools';
 
 export async function copyPublicKeyByConvoId(convoId: string) {
   if (OpenGroupUtils.isOpenGroupV2(convoId)) {
@@ -334,7 +333,7 @@ export async function showLinkSharingConfirmationModalDialog(link: string) {
     if (!alreadyDisplayedPopup) {
       window.inboxStore?.dispatch(
         updateConfirmModal({
-          title: tr('linkPreviewsEnable'),
+          title: { token: 'linkPreviewsEnable' },
           i18nMessage: { token: 'linkPreviewsFirstDescription' },
           okTheme: SessionButtonColor.Danger,
           onClickOk: async () => {
@@ -343,7 +342,7 @@ export async function showLinkSharingConfirmationModalDialog(link: string) {
           onClickClose: async () => {
             await Storage.put(SettingsKey.hasLinkPreviewPopupBeenDisplayed, true);
           },
-          okText: tr('enable'),
+          okText: { token: 'enable' },
         })
       );
     }

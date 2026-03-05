@@ -45,6 +45,7 @@ export type SessionDebugBooleanFeatureFlags = {
   debugOnlineState: boolean;
   debugKeyboardShortcuts: boolean;
   debugFocusScope: boolean;
+  debugFocusTrap: boolean;
 };
 
 export type SessionBooleanFeatureFlags = SessionBaseBooleanFeatureFlags &

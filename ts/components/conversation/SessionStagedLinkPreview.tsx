@@ -283,7 +283,7 @@ const StyledImage = styled.div`
   }
 `;
 
-const StyledText = styled(Flex)`
+const StyledStagedTitle = styled(Flex)`
   overflow: hidden;
   text-overflow: ellipsis;
   word-break: break-all;
@@ -351,7 +351,7 @@ const StagedLinkPreview = ({ isLoading, data, onClose }: StagedLinkPreviewProps)
           </StyledImage>
         ) : null}
         {!isLoading && data?.title ? (
-          <StyledText data-testid="link-preview-title">{data.title}</StyledText>
+          <StyledStagedTitle data-testid="link-preview-title">{data.title}</StyledStagedTitle>
         ) : null}
       </Flex>
       <SessionLucideIconButton

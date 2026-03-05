@@ -37,7 +37,7 @@ const StyledConversationHeader = styled.div`
   align-items: center;
   height: var(--main-view-header-height);
   position: relative;
-  padding: 0px var(--margins-lg) 0px var(--margins-sm);
+  padding: 0px var(--margins-sm);
   background: var(--background-primary-color);
 `;
 
@@ -111,10 +111,10 @@ function useShowRecreateModal() {
     (name: string, members: Array<PubkeyType>) => {
       dispatch(
         updateConfirmModal({
-          title: tr('recreateGroup'),
+          title: { token: 'recreateGroup' },
           i18nMessage: { token: 'legacyGroupChatHistory' },
-          okText: tr('theContinue'),
-          cancelText: tr('cancel'),
+          okText: { token: 'theContinue' },
+          cancelText: { token: 'cancel' },
           okTheme: SessionButtonColor.Danger,
           onClickOk: () => {
             openCreateGroup(name, members);

@@ -22,7 +22,6 @@ import { Registration } from './registration';
 import { Storage, saveRecoveryPhrase, setLocalPubKey, setSignInByLinking } from './storage';
 import { PromiseUtils } from '../session/utils';
 import { SnodeAPI } from '../session/apis/snode_api/SNodeAPI';
-import { tr } from '../localization/localeTools';
 import { SessionDisplayNameOnlyPrivate } from '../models/profile';
 import { UserConfigWrapperActions } from '../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 
@@ -357,11 +356,11 @@ export async function deleteEverythingAndNetworkData() {
       // open a new confirm dialog to ask user what to do
       window?.inboxStore?.dispatch(
         updateConfirmModal({
-          title: tr('clearDataAll'),
+          title: { token: 'clearDataAll' },
           i18nMessage: { token: 'clearDataErrorDescriptionGeneric' },
           okTheme: SessionButtonColor.Danger,
-          okText: tr('clearDevice'),
-          cancelText: tr('cancel'),
+          okText: { token: 'clearDevice' },
+          cancelText: { token: 'cancel' },
           onClickOk: async () => {
             await deleteDbLocally();
             window.restart();

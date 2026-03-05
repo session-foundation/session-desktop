@@ -2,7 +2,6 @@ import { GroupPubkeyType, PubkeyType, WithGroupPubkey } from 'libsession_util_no
 import { isEmpty, isFinite, isNumber } from 'lodash';
 import { Data } from '../../data/data';
 import { deleteAllMessagesByConvoIdNoConfirmation } from '../../interactions/conversationInteractions';
-import { deleteMessagesFromSwarmOnly } from '../../interactions/conversations/unsendingInteractions';
 import { CONVERSATION_PRIORITIES, ConversationTypeEnum } from '../../models/types';
 import { HexString } from '../../node/hexStrings';
 import { SignalService } from '../../protobuf';
@@ -27,6 +26,8 @@ import {
   UserGroupsWrapperActions,
 } from '../../webworker/workers/browser/libsession_worker_interface';
 import { sendInviteResponseToGroup } from '../../session/sending/group/GroupInviteResponse';
+import { deleteMessagesFromSwarmOnly } from '../../interactions/conversations/deleteMessagesFromSwarmOnly';
+import { deleteOrMarkAsDeletedMessages } from '../../interactions/conversations/deleteOrMarkAsDeletedMessages';
 
 type WithSignatureTimestamp = { signatureTimestamp: number };
 type WithAuthor = { author: PubkeyType };
@@ -445,19 +446,12 @@ async function handleGroupUpdateDeleteMemberContentMessage({
     // processing the handleGroupUpdateDeleteMemberContentMessage itself
     // (we are running on the receiving pipeline here)
     // so network calls are not allowed.
-    for (let index = 0; index < messageModels.length; index++) {
-      const messageModel = messageModels[index];
-      try {
-        // eslint-disable-next-line no-await-in-loop
-        await messageModel.markAsDeleted();
-      } catch (e) {
-        window.log.warn(
-          `handleGroupUpdateDeleteMemberContentMessage markAsDeleted non-admin of ${messageModel.getMessageHash()} failed with`,
-          e.message
-        );
-      }
-    }
-    convo.updateLastMessage();
+    await deleteOrMarkAsDeletedMessages({
+      conversation: convo,
+      messages: messageModels,
+      deletionType: 'markDeletedGlobally',
+      actionContextIsUI: false,
+    });
 
     return;
   }
@@ -496,19 +490,12 @@ async function handleGroupUpdateDeleteMemberContentMessage({
   // (we are running on the receiving pipeline here)
   // so network calls are not allowed.
   const mergedModels = modelsByHashes.concat(modelsBySenders);
-  for (let index = 0; index < mergedModels.length; index++) {
-    const messageModel = mergedModels[index];
-    try {
-      // eslint-disable-next-line no-await-in-loop
-      await messageModel.markAsDeleted();
-    } catch (e) {
-      window.log.warn(
-        `handleGroupDeleteMemberContentMessage markAsDeleted non-admin of ${messageModel.getMessageHash()} failed with`,
-        e.message
-      );
-    }
-  }
-  convo.updateLastMessage();
+  await deleteOrMarkAsDeletedMessages({
+    conversation: convo,
+    messages: mergedModels,
+    deletionType: 'markDeletedGlobally',
+    actionContextIsUI: false,
+  });
 }
 
 async function handleGroupUpdateInviteResponseMessage({
@@ -668,10 +655,8 @@ async function handle1o1GroupUpdateMessage(
       });
     }
     if (details.messageHash && !isEmpty(details.messageHash)) {
-      const deleted = await deleteMessagesFromSwarmOnly(
-        [details.messageHash],
-        UserUtils.getOurPubKeyStrFromCache()
-      );
+      const convo = ConvoHub.use().get(UserUtils.getOurPubKeyStrFromCache());
+      const deleted = await deleteMessagesFromSwarmOnly(convo, [details.messageHash]);
       if (!deleted) {
         window.log.warn(
           `failed to delete invite/promote while processing it in handle1o1GroupUpdateMessage. hash:${details.messageHash}`

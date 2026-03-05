@@ -452,7 +452,11 @@ export const SessionWrapperModal = (props: SessionWrapperModalType & { onClose?:
     props.headerChildren && moveHeaderIntoScrollableBody ? props.headerChildren : null;
 
   return (
-    <SessionFocusTrap allowOutsideClick={allowOutsideClick} initialFocus={() => modalRef.current}>
+    <SessionFocusTrap
+      focusTrapId="SessionWrapperModal"
+      allowOutsideClick={allowOutsideClick}
+      initialFocus={() => modalRef.current}
+    >
       <IsModalScrolledContext.Provider value={scrolled}>
         <ModalHasActionButtonContext.Provider value={!!buttonChildren}>
           <OnModalCloseContext.Provider value={onClose ?? null}>

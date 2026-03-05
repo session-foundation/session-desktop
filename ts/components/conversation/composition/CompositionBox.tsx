@@ -67,11 +67,28 @@ import { isEnterKey, isEscapeKey } from '../../../util/keyboardShortcuts';
 
 export interface ReplyingToMessageProps {
   convoId: string;
-  id: string; // this is the quoted message timestamp
+
+  /**
+   * this is the local id of that message (i.e the uuid that we generate to identify it)
+   */
+  id: string;
   author: string;
-  timestamp: number;
+  /**
+   * This is the quoted message timestamp, i.e. what we will send as reference of the message we are quoting
+   */
+  referencedMessageSentAt: number;
   text?: string;
   attachments?: Array<any>;
+  /**
+   * For the auto focus on the `CompositionBox` to work on reply,
+   * we need to make sure every reply to a message is unique.
+   * This is not the case when the user tries to reply twice to the same message,
+   * which is why we also need to create a unique change for each reply action made the user.
+   *
+   * This `quotedAt` is a `Date.now()` of when the user made the reply action.
+   * It will force a refocus on the CompositionBox even if the same message was quoted twice.
+   */
+  quotedAt: number;
 }
 
 export type StagedLinkPreviewData = {
@@ -262,6 +279,9 @@ class CompositionBoxInner extends Component<Props, State> {
     // focus the composition box when user clicks start to reply to a message
     if (!_.isEqual(prevProps.quotedMessageProps, this.props.quotedMessageProps)) {
       this.focusCompositionBox();
+      setTimeout(() => {
+        this.focusCompositionBox();
+      }, 50);
     }
   }
 
@@ -295,17 +315,6 @@ class CompositionBoxInner extends Component<Props, State> {
         </StyledCompositionContainer>
       </Flex>
     );
-  }
-
-  private handleClick(e: any) {
-    if (
-      (this.emojiPanel?.current && this.emojiPanel.current.contains(e.target)) ||
-      (this.emojiPanelButton?.current && this.emojiPanelButton.current.contains(e.target))
-    ) {
-      return;
-    }
-
-    this.hideEmojiPanel();
   }
 
   private handlePaste(e: ClipboardEvent) {
@@ -342,7 +351,6 @@ class CompositionBoxInner extends Component<Props, State> {
   }
 
   private showEmojiPanel() {
-    document.addEventListener('mousedown', this.handleClick, false);
     this.setState({ lastSelectedLength: window.getSelection()?.toString().length ?? 0 });
 
     closeContextMenus();
@@ -352,7 +360,6 @@ class CompositionBoxInner extends Component<Props, State> {
   }
 
   private hideEmojiPanel() {
-    document.removeEventListener('mousedown', this.handleClick, false);
     this.setState({ lastSelectedLength: 0 });
 
     this.setState({
@@ -454,9 +461,9 @@ class CompositionBoxInner extends Component<Props, State> {
           <StyledEmojiPanelContainer role="button" dir={this.props.htmlDirection}>
             <SessionEmojiPanel
               ref={this.emojiPanel}
-              show={showEmojiPanel}
               onEmojiClicked={this.onEmojiClick}
               onClose={this.hideEmojiPanel}
+              show={showEmojiPanel}
             />
           </StyledEmojiPanelContainer>
         ) : null}
@@ -673,7 +680,10 @@ class CompositionBoxInner extends Component<Props, State> {
         body: text.trim(),
         attachments: attachments || [],
         quote: quotedMessageProps
-          ? { author: quotedMessageProps.author, timestamp: quotedMessageProps.timestamp }
+          ? {
+              author: quotedMessageProps.author,
+              timestamp: quotedMessageProps.referencedMessageSentAt,
+            }
           : undefined,
         preview: previews,
         groupInvitation: undefined,
