@@ -53,7 +53,7 @@ type SharedMessageAttributes = {
   expirationTimerUpdate?: ExpirationTimerUpdate;
   type: MessageModelType;
   group_update?: MessageGroupUpdate;
-  groupInvitation?: { url: string | undefined; name: string } | undefined;
+  groupInvitation?: { url: string; name: string } | undefined;
   attachments?: any;
   conversationId: string;
   errors?: string;

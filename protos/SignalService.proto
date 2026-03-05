@@ -213,7 +213,7 @@ message DataMessage {
     required Action action    = 4;
   }
 
-  message OpenGroupInvitation {
+  message CommunityInvitation {
     // @required
     required string url = 1;
     // @required
@@ -243,7 +243,7 @@ message DataMessage {
   repeated Preview                   preview                        = 10;
   optional Reaction                  reaction                       = 11;
   optional LokiProfile               profile                        = 101;
-  optional OpenGroupInvitation       openGroupInvitation            = 102;
+  optional CommunityInvitation       communityInvitation            = 102;
   optional string                    syncTarget                     = 105;
   optional bool                      blocksCommunityMessageRequests = 106;
   optional GroupUpdateMessage        groupUpdateMessage             = 120;

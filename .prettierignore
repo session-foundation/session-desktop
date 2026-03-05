@@ -35,3 +35,4 @@ ts/localization/generated/
 
 dynamic_assets/**/*.js
 dynamic_assets/**/*.js.map
+dynamic_assets/service-nodes-cache.json

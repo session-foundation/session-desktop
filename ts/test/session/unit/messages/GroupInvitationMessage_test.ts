@@ -3,9 +3,9 @@ import { beforeEach } from 'mocha';
 
 import { SignalService } from '../../../../protobuf';
 import { Constants } from '../../../../session';
-import { CommunityInvitationMessage } from '../../../../session/messages/outgoing/visibleMessage/CommunityInvitationMessage';
 import { DisappearingMessageMode } from '../../../../session/disappearing_messages/types';
 import { uuidV4 } from '../../../../util/uuid';
+import { VisibleMessage } from '../../../../session/messages/outgoing/visibleMessage/VisibleMessage';
 
 const sharedNoExpire = {
   expireTimer: 0,
@@ -16,26 +16,28 @@ const sharedNoExpire = {
 };
 
 describe('CommunityInvitationMessage', () => {
-  let message: CommunityInvitationMessage;
+  let message: VisibleMessage;
   const createAtNetworkTimestamp = Date.now();
   const url = 'http://localhost';
   const name = 'test';
 
   beforeEach(() => {
-    message = new CommunityInvitationMessage({
+    message = new VisibleMessage({
       createAtNetworkTimestamp,
-      url,
-      name,
+      communityInvitation: {
+        url,
+        name,
+      },
       ...sharedNoExpire,
     });
   });
 
-  it('dataMessage.groupInvitation has url, and serverName set', () => {
+  it('dataMessage.communityInvitation has url, and serverName set', () => {
     const plainText = message.plainTextBuffer();
     const decoded = SignalService.Content.decode(plainText);
 
-    expect(decoded.dataMessage?.openGroupInvitation).to.have.property('url', url);
-    expect(decoded.dataMessage?.openGroupInvitation).to.have.property('name', name);
+    expect(decoded.dataMessage?.communityInvitation).to.have.property('url', url);
+    expect(decoded.dataMessage?.communityInvitation).to.have.property('name', name);
   });
 
   it('correct ttl', () => {

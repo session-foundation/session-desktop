@@ -74,6 +74,12 @@ const buildSyncVisibleMessage = (
     ? ({ author: dataMessage.quote.author, timestamp: dataMessage.quote.id } as Quote)
     : undefined;
   const preview = (dataMessage.preview as Array<PreviewWithAttachmentUrl>) || [];
+  const communityInvitation = dataMessage.communityInvitation
+    ? {
+        url: dataMessage.communityInvitation.url,
+        name: dataMessage.communityInvitation.name,
+      }
+    : undefined;
 
   return new VisibleMessage({
     dbMessageIdentifier,
@@ -84,6 +90,7 @@ const buildSyncVisibleMessage = (
     preview,
     userProfile: null, // this is a synced message, so we do not need to include the userProfile
     syncTarget,
+    communityInvitation,
     expireTimer: expireUpdate.expirationTimer,
     expirationType: expireUpdate.expirationType,
     outgoingProMessageDetails: proMessage ?? null,
