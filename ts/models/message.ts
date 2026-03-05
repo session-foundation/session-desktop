@@ -48,6 +48,7 @@ import {
 import {
   VisibleMessage,
   VisibleMessageParams,
+  type CommunityInvitation,
   type Quote,
 } from '../session/messages/outgoing/visibleMessage/VisibleMessage';
 import { uploadAttachmentsV3, uploadLinkPreviewsV3 } from '../session/utils/AttachmentsV2';
@@ -256,7 +257,11 @@ export class MessageModel extends Model<MessageAttributes> {
     return !!this.getCommunityInvitation();
   }
   public getCommunityInvitation() {
-    return this.get('groupInvitation');
+    const communityInvitation = this.get('groupInvitation');
+    if (communityInvitation && communityInvitation.url && communityInvitation.name) {
+      return communityInvitation;
+    }
+    return undefined;
   }
 
   private isMessageRequestResponse() {
@@ -1160,6 +1165,12 @@ export class MessageModel extends Model<MessageAttributes> {
     this.setKey('conversationId', convoId);
   }
 
+  public setCommunityInvitation(communityInvitation: CommunityInvitation) {
+    if (communityInvitation.name && communityInvitation.url) {
+      this.setKey('groupInvitation', communityInvitation);
+    }
+  }
+
   public isOutgoing() {
     return this.get('type') === 'outgoing';
   }
@@ -1210,10 +1221,11 @@ export class MessageModel extends Model<MessageAttributes> {
     const { dataMessage, proMessage } = content;
 
     if (
-      dataMessage &&
-      (dataMessage.body?.length ||
-        dataMessage.attachments?.length ||
-        dataMessage.flags === SignalService.DataMessage.Flags.EXPIRATION_TIMER_UPDATE)
+      (dataMessage &&
+        (dataMessage.body?.length ||
+          dataMessage.attachments?.length ||
+          dataMessage.flags === SignalService.DataMessage.Flags.EXPIRATION_TIMER_UPDATE)) ||
+      dataMessage?.communityInvitation?.url
     ) {
       const conversation = this.getConversation();
       if (!conversation) {

@@ -34,7 +34,6 @@ import {
   type ExpirationTimerUpdateMessageParams,
 } from '../session/messages/outgoing/controlMessage/ExpirationTimerUpdateMessage';
 import { TypingMessage } from '../session/messages/outgoing/controlMessage/TypingMessage';
-import { CommunityInvitationMessage } from '../session/messages/outgoing/visibleMessage/CommunityInvitationMessage';
 import { OpenGroupVisibleMessage } from '../session/messages/outgoing/visibleMessage/OpenGroupVisibleMessage';
 import {
   VisibleMessage,
@@ -963,7 +962,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
   }
 
   public async sendMessage(msg: SendMessageType) {
-    const { attachments, body, groupInvitation, preview, quote } = msg;
+    const { attachments, body, communityInvitation, preview, quote } = msg;
     this.clearTypingTimers();
     const networkTimestamp = NetworkTime.now();
 
@@ -993,7 +992,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
       ),
       expireTimer: this.getExpireTimer(),
       serverTimestamp: this.isOpenGroupV2() ? networkTimestamp : undefined,
-      groupInvitation,
+      groupInvitation: communityInvitation,
     });
 
     // We're offline!
@@ -2472,24 +2471,8 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
         const communityInvitation = message.getCommunityInvitation();
 
-        if (communityInvitation && communityInvitation.url) {
-          const communityInviteMessage = new CommunityInvitationMessage({
-            dbMessageIdentifier: id,
-            createAtNetworkTimestamp: networkTimestamp,
-            name: communityInvitation.name,
-            url: communityInvitation.url,
-            expirationType: chatMessageParams.expirationType,
-            expireTimer: chatMessageParams.expireTimer,
-            userProfile: chatMessageParams.userProfile,
-            outgoingProMessageDetails: chatMessageParams.outgoingProMessageDetails,
-          });
-          // we need the return await so that errors are caught in the catch {}
-          await MessageQueue.use().sendToPubKey(
-            destinationPubkey,
-            communityInviteMessage,
-            SnodeNamespaces.Default
-          );
-          return;
+        if (communityInvitation && communityInvitation.url && communityInvitation.name) {
+          chatMessageParams.communityInvitation = communityInvitation;
         }
         const chatMessagePrivate = new VisibleMessage(chatMessageParams);
         await MessageQueue.use().sendToPubKey(

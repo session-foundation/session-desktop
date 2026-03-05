@@ -64,6 +64,7 @@ import type { MessageAttributes } from '../../../models/messageType';
 import { ProWrapperActions } from '../../../webworker/workers/browser/libsession_worker_interface';
 import { updateOutgoingLightBoxOptions } from '../../../state/ducks/modalDialog';
 import { isEnterKey, isEscapeKey } from '../../../util/keyboardShortcuts';
+import type { CommunityInvitation } from '../../../session/messages/outgoing/visibleMessage/VisibleMessage';
 
 export interface ReplyingToMessageProps {
   convoId: string;
@@ -108,7 +109,7 @@ export type SendMessageType = Pick<MessageAttributes, 'quote'> & {
   body: string;
   attachments: Array<StagedAttachmentImportedType> | undefined;
   preview: Array<StagedPreviewImportedType> | undefined;
-  groupInvitation: { url: string | undefined; name: string } | undefined;
+  communityInvitation: CommunityInvitation | undefined;
 };
 
 interface Props {
@@ -686,7 +687,7 @@ class CompositionBoxInner extends Component<Props, State> {
             }
           : undefined,
         preview: previews,
-        groupInvitation: undefined,
+        communityInvitation: undefined,
       });
 
       window.inboxStore?.dispatch(
@@ -781,7 +782,7 @@ class CompositionBoxInner extends Component<Props, State> {
       attachments: [audioAttachment],
       preview: undefined,
       quote: undefined,
-      groupInvitation: undefined,
+      communityInvitation: undefined,
     });
 
     this.onExitVoiceNoteView();
