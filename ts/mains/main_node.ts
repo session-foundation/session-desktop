@@ -26,6 +26,7 @@ import os from 'os';
 import path, { join } from 'path';
 import { platform as osPlatform } from 'process';
 import url from 'url';
+import { configDotenv } from 'dotenv';
 
 import _, { isEmpty, isNumber, isFinite } from 'lodash';
 
@@ -34,6 +35,8 @@ import { setup as setupSpellChecker } from '../node/spell_check';
 
 import electronLocalshortcut from 'electron-localshortcut';
 import packageJson from '../../package.json';
+
+configDotenv({ path: '.env' });
 
 addHandler();
 

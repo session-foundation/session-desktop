@@ -69,3 +69,5 @@ build/copySource.js
 build/copyTests.js
 .build-cache
 test_output
+
+.env

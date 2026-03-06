@@ -156,6 +156,10 @@ export function useMessageIsControlMessage(messageId: string | undefined) {
   return useMessagePropsByMessageId(messageId)?.isControlMessage;
 }
 
+export function useMessageIsCommunityInvitation(messageId: string | undefined) {
+  return useMessageType(messageId) === 'community-invitation';
+}
+
 export function useMessageServerTimestamp(messageId: string | undefined) {
   return useMessagePropsByMessageId(messageId)?.propsForMessage.serverTimestamp;
 }

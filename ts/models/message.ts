@@ -1077,6 +1077,7 @@ export class MessageModel extends Model<MessageAttributes> {
         attachments,
         preview: preview ? [preview] : [],
         quote,
+        reaction: undefined,
         userProfile: await UserUtils.getOurProfile(),
         outgoingProMessageDetails: await UserUtils.getOutgoingProMessageDetails({
           utf16: body,
@@ -1225,7 +1226,8 @@ export class MessageModel extends Model<MessageAttributes> {
         (dataMessage.body?.length ||
           dataMessage.attachments?.length ||
           dataMessage.flags === SignalService.DataMessage.Flags.EXPIRATION_TIMER_UPDATE)) ||
-      dataMessage?.communityInvitation?.url
+      dataMessage?.communityInvitation?.url ||
+      dataMessage?.reaction
     ) {
       const conversation = this.getConversation();
       if (!conversation) {
