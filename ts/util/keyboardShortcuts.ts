@@ -167,11 +167,16 @@ export const KbdShortcut = {
   messageToggleReactionBar: {
     name: tr('toggleReactionBarMessage'),
     scope: 'message',
+    withCtrl: true,
+    withShift: true,
     keys: ['e'],
   },
   messageToggleReply: {
     name: tr('toggleReplyMessage'),
     scope: 'message',
+    // Note: ctrl+r reloads the window, so we need ctrl+shift+r to reply
+    withCtrl: true,
+    withShift: true,
     keys: ['r'],
   },
   messageCopyText: {
