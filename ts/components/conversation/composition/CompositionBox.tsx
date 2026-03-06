@@ -6,7 +6,7 @@ import styled from 'styled-components';
 import { AbortController } from 'abort-controller';
 
 import autoBind from 'auto-bind';
-import { Component, createRef, RefObject, KeyboardEvent } from 'react';
+import { Component, createRef, RefObject, KeyboardEvent, type ClipboardEvent } from 'react';
 import { FrequentlyUsed } from 'emoji-mart';
 import * as MIME from '../../../types/MIME';
 import { SessionEmojiPanel, StyledEmojiPanel } from '../SessionEmojiPanel';
@@ -255,17 +255,11 @@ class CompositionBoxInner extends Component<Props, State> {
 
   public componentDidMount() {
     setTimeout(this.focusCompositionBox, 500);
-    if (this.container.current) {
-      this.container.current.addEventListener('paste', this.handlePaste);
-    }
   }
 
   public componentWillUnmount() {
     this.linkPreviewAbortController?.abort();
     this.linkPreviewAbortController = undefined;
-    if (this.container.current) {
-      this.container.current.removeEventListener('paste', this.handlePaste);
-    }
   }
 
   public componentDidUpdate(prevProps: Props, _prevState: State) {
@@ -318,7 +312,7 @@ class CompositionBoxInner extends Component<Props, State> {
     );
   }
 
-  private handlePaste(e: ClipboardEvent) {
+  private handlePaste(e: ClipboardEvent<HTMLDivElement>) {
     if (!e.clipboardData) {
       return;
     }
@@ -437,7 +431,13 @@ class CompositionBoxInner extends Component<Props, State> {
           type="file"
           onChange={this.onChoseAttachment}
         />
-        <StyledSendMessageInput role="main" dir={this.props.htmlDirection} ref={this.container}>
+        <StyledSendMessageInput
+          role="main"
+          dir={this.props.htmlDirection}
+          ref={this.container}
+          // We handle paste at this level as the recording view is messing with the document listeners.
+          onPaste={this.handlePaste}
+        >
           <CompositionTextArea
             draft={this.state.draft}
             initialDraft={this.state.initialDraft}
