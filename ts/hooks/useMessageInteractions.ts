@@ -15,12 +15,13 @@ import {
   useMessageAttachments,
   useMessageBody,
   useMessageCommunityInvitationFullUrl,
+  useMessageIsCommunityInvitation,
   useMessageIsControlMessage,
+  useMessageIsDeleted,
   useMessageIsOnline,
   useMessageSender,
   useMessageServerTimestamp,
   useMessageTimestamp,
-  useMessageType,
 } from '../state/selectors';
 import { saveAttachmentToDisk } from '../util/attachment/attachmentsUtil';
 import { Reactions } from '../util/reactions';
@@ -99,7 +100,7 @@ export function useMessageReply(messageId?: string) {
   const isControlMessage = useMessageIsControlMessage(messageId);
   const msgIsOnline = useMessageIsOnline(messageId);
   // ios and android do not support replying to a community invitation
-  const isCommunityInvitation = useMessageType(messageId) === 'community-invitation';
+  const isCommunityInvitation = useMessageIsCommunityInvitation(messageId);
 
   const cannotReply = !messageId || !msgIsOnline || isControlMessage || isCommunityInvitation;
 
@@ -116,7 +117,8 @@ export function useMessageReply(messageId?: string) {
 
 export function useMessageReact(messageId?: string) {
   const isControlMessage = useMessageIsControlMessage(messageId);
-  const cannotReact = !messageId || isControlMessage;
+  const isDeleted = useMessageIsDeleted(messageId);
+  const cannotReact = !messageId || isControlMessage || isDeleted;
 
   return cannotReact
     ? null
