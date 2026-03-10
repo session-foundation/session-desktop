@@ -7,6 +7,8 @@ html {
   // Default theme is Classic Dark
   background-color: #1b1b1b;
   font-size: 14px;
+
+  line-height: var(--font-line-height);
 }
 
 body {

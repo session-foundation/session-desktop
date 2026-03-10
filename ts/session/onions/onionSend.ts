@@ -148,8 +148,6 @@ const sendViaOnionV4ToNonSnodeWithRetries = async (
 
   if (forcedHttp) {
     finalRelayOptions.protocol = 'http';
-  }
-  if (forcedHttp) {
     finalRelayOptions.port = url.port ? toNumber(url.port) : 80;
   }
 
@@ -288,7 +286,9 @@ const sendViaOnionV4ToNonSnodeWithRetries = async (
       }
     );
   } catch (e) {
-    window?.log?.warn('sendViaOnionV4ToNonSnodeWithRetries failed ', e.message, throwErrors);
+    window?.log?.warn(
+      `sendViaOnionV4ToNonSnodeWithRetries failed with ${e.message}, host: ${finalRelayOptions.protocol}:${finalRelayOptions.host} throwErrors: ${throwErrors}`
+    );
     // NOTE if there are no snodes available, we want to refresh the snode pool from the seed
     if (e instanceof OnionPathEmptyError) {
       window?.log?.warn(
