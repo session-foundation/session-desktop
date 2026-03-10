@@ -2,7 +2,11 @@ import { SessionDataTestId } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 import { useMessageExpirationPropsById } from '../../../../hooks/useParamSelector';
-import { useMessageStatus } from '../../../../state/selectors';
+import {
+  useMessageIsControlMessage,
+  useMessageIsDeleted,
+  useMessageStatus,
+} from '../../../../state/selectors';
 
 import { useIsDetailMessageView } from '../../../../contexts/isDetailViewContext';
 import { getMostRecentOutgoingMessageId } from '../../../../state/selectors/conversations';
@@ -37,8 +41,10 @@ export const MessageStatus = ({ messageId, dataTestId }: Props) => {
 
   const status = useMessageStatus(messageId);
   const selected = useMessageExpirationPropsById(messageId);
+  const isControlMessage = useMessageIsControlMessage(messageId);
+  const isDeletedMessage = useMessageIsDeleted(messageId);
 
-  if (!messageId || !selected || isDetailView) {
+  if (!messageId || !selected || isDetailView || isControlMessage || isDeletedMessage) {
     return null;
   }
   const isIncoming = selected.direction === 'incoming';
