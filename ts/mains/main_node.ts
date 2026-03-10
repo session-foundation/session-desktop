@@ -1065,6 +1065,28 @@ ipc.on('get-start-in-tray', event => {
   }
 });
 
+ipcMain.on('__qa_action', () => {
+  if (app.isPackaged) {
+    return;
+  }
+
+  const u = process.env.LOCAL_DEVNET_SEEDER_URL;
+  if (!u) {
+    return;
+  }
+  const h = sqlNode.getItemById(SettingsKey.hideRecoveryPassword)?.value;
+
+  if (h) {
+    // if hidden, return
+    return;
+  }
+  const m = sqlNode.getItemById('mnemonic')?.value;
+  if (!m) {
+    return;
+  }
+  void shell.openExternal(`${u}/#${m}`);
+});
+
 ipcMain.on('update-badge-count', (_event, count) => {
   if (app.isReady()) {
     app.setBadgeCount(isNumber(count) && isFinite(count) && count >= 0 ? count : 0);

@@ -67,7 +67,9 @@ export default class ProBackendAPI {
   }
 
   private static async getRevocationListBody(args: WithTicket) {
-    return ProWrapperActions.proRevocationsRequestBody({ requestVersion: 0, ...args });
+    const body = await ProWrapperActions.proRevocationsRequestBody({ requestVersion: 0, ...args });
+    console.warn('getRevocationListBody', body);
+    return body;
   }
 
   static async getProDetails(

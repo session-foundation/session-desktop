@@ -1,5 +1,5 @@
 /* eslint-disable no-await-in-loop */
-import { isNumber } from 'lodash';
+import { isNumber, toNumber } from 'lodash';
 import { runners } from '../JobRunner';
 import {
   AddJobCheckReturn,
@@ -10,18 +10,46 @@ import {
 import ProBackendAPI from '../../../apis/pro_backend_api/ProBackendAPI';
 import { DURATION } from '../../../constants';
 import { getFeatureFlag } from '../../../../state/ducks/types/releasedFeaturesReduxTypes';
-import { formatRoundedUpDuration } from '../../../../util/i18n/formatting/generics';
-import { isDevProd } from '../../../../shared/env_vars';
 import { ProRevocationCache } from '../../../revocation_list/pro_revocation_list';
 import { stringify } from '../../../../types/sqlSharedTypes';
 import { proBackendDataActions } from '../../../../state/ducks/proBackendData';
 import { getCachedUserConfig } from '../../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 import { ConvoHub } from '../../../conversations';
 import { uuidV4 } from '../../../../util/uuid';
+import { SettingsKey } from '../../../../data/settings-key';
+import { Storage } from '../../../../util/storage';
 
-let lastRunAtMs = 0;
+/**
+ * Start with null, that means we need to check the nextRunAtMs from the DB
+ */
+let nextRunAtMs: number | null = null;
 
-const delayBetweenRuns = isDevProd() ? 15 * DURATION.SECONDS : 15 * DURATION.MINUTES;
+async function updateNextRunAtMs(newNextRunAtMs: number) {
+  if (newNextRunAtMs !== nextRunAtMs) {
+    await Storage.put(SettingsKey.proRevocationListNextRunAtMs, newNextRunAtMs);
+    nextRunAtMs = newNextRunAtMs;
+  }
+}
+
+/**
+ * Refresh the value from the DB if needed, otherwise returns the already cached value
+ */
+async function refreshNextRunAtMsIfNeeded() {
+  const now = Date.now();
+  // if nextRunAtMs isn't cached yet, fetch it from the DB or init it
+  if (nextRunAtMs === null) {
+    const nextRunAtMsFromDb = Storage.get(SettingsKey.proRevocationListNextRunAtMs);
+    if (!nextRunAtMsFromDb || !isNumber(nextRunAtMsFromDb)) {
+      // if the nextRunAtMs is unset, we want the job to run so consider that now is the time to run the job
+      await Storage.put(SettingsKey.proRevocationListNextRunAtMs, now);
+      nextRunAtMs = now;
+    } else {
+      nextRunAtMs = toNumber(nextRunAtMsFromDb);
+    }
+  }
+
+  return nextRunAtMs;
+}
 
 class UpdateProRevocationListJob extends PersistedJob<UpdateProRevocationListPersistedData> {
   constructor({
@@ -55,10 +83,10 @@ class UpdateProRevocationListJob extends PersistedJob<UpdateProRevocationListPer
       window.log.debug(`UpdateProRevocationListJob run() started`);
 
       const ticketFromDb = ProRevocationCache.getTicket();
-
       const response = await ProBackendAPI.getRevocationList({
         ticket: ticketFromDb,
       });
+      console.warn('response', response);
 
       if (getFeatureFlag('debugServerRequests')) {
         window.log.info(
@@ -72,11 +100,18 @@ class UpdateProRevocationListJob extends PersistedJob<UpdateProRevocationListPer
         return RunJobResult.RetryJobIfPossible;
       }
 
+      const retryInSeconds = response.result.retry_in_s;
+      const retryAtMs = Date.now() + toNumber(retryInSeconds) * DURATION.SECONDS;
+
+      window.log.debug(
+        `UpdateProRevocationListJob: got 'retry_in_s' from server: ${retryInSeconds}, i.e retryAtMs: ${retryAtMs}`
+      );
+      await updateNextRunAtMs(retryAtMs);
+
       if (response.result.ticket <= ticketFromDb) {
         window.log.debug(
           `UpdateProRevocationListJob: no new revocations from our existing ticket #${ticketFromDb}`
         );
-        lastRunAtMs = Date.now();
 
         return RunJobResult.Success;
       }
@@ -88,7 +123,6 @@ class UpdateProRevocationListJob extends PersistedJob<UpdateProRevocationListPer
       );
 
       // Note: we only want to update the lastRunAt once we have successfully fetched the new revocations
-      lastRunAtMs = Date.now();
       await ProRevocationCache.setTicket(newTicket);
       await ProRevocationCache.setListItems(newItems);
 
@@ -156,23 +190,48 @@ class UpdateProRevocationListJob extends PersistedJob<UpdateProRevocationListPer
 }
 
 async function queueNewJobIfNeeded() {
-  const diffMs = Date.now() - lastRunAtMs;
-  if (diffMs <= delayBetweenRuns) {
+  const now = Date.now();
+  const refreshedNextRunAtMs = await refreshNextRunAtMsIfNeeded();
+
+  window.log.debug(
+    `UpdateProRevocationListJob: now: ${now}, refreshedNextRunAtMs: ${refreshedNextRunAtMs}, `
+  );
+
+  const shouldJobRun = refreshedNextRunAtMs <= now;
+  if (!shouldJobRun) {
     window.log.debug(
-      `NOT Scheduling UpdateProRevocationListJob: as we have already run it recently (${formatRoundedUpDuration(diffMs)} ago)`
+      `NOT Scheduling UpdateProRevocationListJob: as refreshedNextRunAtMs: ${refreshedNextRunAtMs} and now: ${now}`
     );
     return;
   }
   window.log.debug(
-    `Scheduling UpdateProRevocationListJob: as the last (successful) run was not recent (${formatRoundedUpDuration(diffMs)} ago)`
+    `Scheduling UpdateProRevocationListJob.... refreshedNextRunAtMs: ${refreshedNextRunAtMs} and now: ${now}`
   );
   await runners.updateProRevocationListRunner.addJob(
     new UpdateProRevocationListJob({ nextAttemptTimestamp: Date.now() + 20 * DURATION.SECONDS })
   );
 }
 
+/**
+ * Run, and await the UpdateProRevocationListJob on startup.
+ * Note: this is only run if the nextRunAtMs is unset or is already passed.
+ */
 async function runOnStartup() {
   try {
+    const now = Date.now();
+    const refreshedNextRunAtMs = await refreshNextRunAtMsIfNeeded();
+
+    window.log.debug(
+      `UpdateProRevocationListJob.runOnStartup(): now: ${now}, refreshedNextRunAtMs: ${refreshedNextRunAtMs}, `
+    );
+    const shouldJobRun = refreshedNextRunAtMs <= now;
+    if (!shouldJobRun) {
+      window.log.info(
+        'UpdateProRevocationListJob.runOnStartup(): not running job as it is not due yet'
+      );
+      return;
+    }
+
     const job = new UpdateProRevocationListJob({ nextAttemptTimestamp: Date.now() });
     await job.run();
   } catch (e) {

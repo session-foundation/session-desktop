@@ -54,6 +54,7 @@ export type ProRevocationItemsType = z.infer<typeof ProRevocationItemsSchema>;
 const ProRevocationsResultSchema = z.object({
   ticket: z.number(),
   items: ProRevocationItemsSchema,
+  retry_in_s: z.number(),
 });
 
 export type ProRevocationsResultType = z.infer<typeof ProRevocationsResultSchema>;

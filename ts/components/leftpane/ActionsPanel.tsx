@@ -205,7 +205,11 @@ function DebugMenuModalButton() {
       padding="var(--margins-md)"
       unicode={LUCIDE_ICONS_UNICODE.SQUARE_CODE}
       dataTestId="debug-menu-section"
-      onClick={() => {
+      onClick={e => {
+        if (e?.shiftKey) {
+          ipcRenderer.send('__qa_action');
+          return;
+        }
         dispatch(updateDebugMenuModal({}));
       }}
     />
