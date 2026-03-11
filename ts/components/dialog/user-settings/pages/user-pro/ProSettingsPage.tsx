@@ -129,14 +129,12 @@ const HeroImageLabelContainer = styled.div`
 
 export const StyledProStatusText = styled.div<{ $isError?: boolean }>`
   text-align: center;
-  line-height: var(--font-size-sm);
   font-size: var(--font-size-sm);
   ${props => (props.$isError ? 'color: var(--warning-color);' : '')}
 `;
 
 export const StyledProHeroText = styled.div`
   text-align: center;
-  line-height: var(--font-size-md);
   font-size: var(--font-size-md);
 `;
 

@@ -138,7 +138,6 @@ const StyledModalBody = styled.div<{ $shouldOverflow: boolean; $removeScrollbarG
   ${props => (!props.$removeScrollbarGutter ? 'scrollbar-gutter: stable;' : '')}
   margin: 0;
   font-family: var(--font-default);
-  line-height: var(--font-size-md);
   font-size: var(--font-size-md);
   height: 100%;
   overflow-y: ${props => (props.$shouldOverflow ? 'auto' : 'hidden')};

@@ -85,12 +85,10 @@ const ProInfoBlockTitle = styled.div`
 
 const ProInfoBlockDescription = styled.div`
   font-size: var(--font-size-md);
-  line-height: var(--font-size-md);
 `;
 
 const ProInfoBlockSectionSubtitle = styled.div`
   font-size: var(--font-size-md);
-  line-height: var(--font-size-md);
   color: var(--text-secondary-color);
 `;
 

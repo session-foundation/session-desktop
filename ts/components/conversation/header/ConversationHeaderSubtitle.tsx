@@ -113,7 +113,6 @@ const StyledConversationHeaderSubtitleText = styled.span`
   color: var(--text-primary-color);
   font-weight: 400;
   font-size: var(--font-size-sm);
-  line-height: var(--font-size-sm);
 `;
 
 export const ConversationHeaderSubtitle = (props: ConversationHeaderSubtitleProps) => {
