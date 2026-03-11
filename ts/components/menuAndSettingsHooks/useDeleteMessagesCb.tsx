@@ -79,17 +79,15 @@ export function useDeleteMessagesCb(conversationId: string | undefined) {
 
     const anyAreMarkAsDeleted = msgModels.some(m => m.isMarkedAsDeleted());
     const anyAreControlMessages = msgModels.some(m => m.isControlMessage());
-    const anyAreSending = msgModels.some(m => m.getMessagePropStatus() === 'sending');
-    const anyAreErrors = msgModels.some(m => m.getMessagePropStatus() === 'error');
 
-    // We can never delete for everyone if one of the message is
+    // We can technically never delete for everyone if one of the message is
     // - a control message
     // - a message marked as deleted
-    // - a message that is sending
-    // - a message that failed to be sent.
-    // In this case, the only option is to delete locally
-    const sharedCannotDeleteForEveryone =
-      anyAreControlMessages || anyAreMarkAsDeleted || anyAreSending || anyAreErrors;
+    // - a message that is sending or failed to be sent (as we need a hash to delete globally)
+    // In this case, the only option is to delete locally.
+    // BUT, because we love inconsistencies we still allow to delete globally a sending or failed to be sent message.
+    // This does nothing on the backend, but makes a nice UX, apparently.
+    const sharedCannotDeleteForEveryone = anyAreControlMessages || anyAreMarkAsDeleted;
 
     const canDeleteAllForEveryoneAsMe = senders.every(isUsAnySogsFromCache);
     const canDeleteAllForEveryone =
