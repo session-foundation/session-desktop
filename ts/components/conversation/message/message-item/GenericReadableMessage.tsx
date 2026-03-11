@@ -46,9 +46,13 @@ export const StyledReadableMessage = styled.div<StyledReadableMessageProps>`
   width: 100%;
   letter-spacing: 0.03rem;
   padding-left: ${props =>
-    props.$isDetailView || props.$isIncoming || props.$isControlMessage ? 0 : '25%'};
+    props.$isDetailView || props.$isIncoming || props.$isControlMessage
+      ? 0
+      : 'min(25%, calc(100% - 460px));'}; // Note: we this min to allow a message with two attachments to be displayed fully
   padding-right: ${props =>
-    props.$isDetailView || !props.$isIncoming || props.$isControlMessage ? 0 : '25%'};
+    props.$isDetailView || !props.$isIncoming || props.$isControlMessage
+      ? 0
+      : 'min(25%, calc(100% - 460px));'}; // Note: we this min to allow a message with two attachments to be displayed fully
 
   &.message-highlighted {
     animation: ${highlightedMessageAnimation} var(--duration-message-highlight) ease-in-out;
