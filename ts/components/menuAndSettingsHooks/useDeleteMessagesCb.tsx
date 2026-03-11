@@ -415,9 +415,9 @@ async function doDeleteSelectedMessagesInSOGS(
   selectedMessages: Array<MessageModel>,
   conversation: ConversationModel
 ) {
-  const toDeleteLocallyIds = await deleteOpenGroupMessages(selectedMessages, conversation);
-  if (toDeleteLocallyIds.length === 0) {
-    // Failed to delete those messages from the sogs.
+  const allSentRemovedFromSogs = await deleteOpenGroupMessages(selectedMessages, conversation);
+  if (!allSentRemovedFromSogs) {
+    // Failed to delete some/those messages from the sogs.
     ToastUtils.pushGenericError();
     return false;
   }
@@ -430,7 +430,7 @@ async function doDeleteSelectedMessagesInSOGS(
   });
 
   // successful deletion
-  ToastUtils.pushDeleted(toDeleteLocallyIds.length);
+  ToastUtils.pushDeleted(selectedMessages.length);
   window.inboxStore?.dispatch(resetSelectedMessageIds());
   return true;
 }
@@ -439,47 +439,35 @@ async function doDeleteSelectedMessagesInSOGS(
  *
  * @param messages the list of MessageModel to delete
  * @param convo the conversation to delete from (only v2 opengroups are supported)
+ * Returns true if all the messages that had a serverId were removed from the sogs, false otherwise
  */
-async function deleteOpenGroupMessages(
-  messages: Array<MessageModel>,
-  convo: ConversationModel
-): Promise<Array<string>> {
+async function deleteOpenGroupMessages(messages: Array<MessageModel>, convo: ConversationModel) {
   if (!convo.isOpenGroupV2()) {
     throw new Error('cannot delete public message on a non public groups');
   }
 
   const roomInfos = convo.toOpenGroupV2();
-  // on v2 servers we can only remove a single message per request..
-  // so logic here is to delete each messages and get which one where not removed
-  const validServerIdsToRemove = compact(
-    messages.map(msg => {
-      return msg.get('serverId');
-    })
-  );
-
-  const validMessageModelsToRemove = compact(
-    messages.map(msg => {
-      const serverId = msg.get('serverId');
-      if (serverId) {
-        return msg;
-      }
-      return undefined;
-    })
-  );
+  const msgsWithServerIdIdsToRemove = messages.filter(msg => msg.get('serverId'));
 
   let allMessagesAreDeleted: boolean = false;
-  if (validServerIdsToRemove.length) {
-    allMessagesAreDeleted = await deleteSogsMessageByServerIds(validServerIdsToRemove, roomInfos);
+  if (msgsWithServerIdIdsToRemove.length) {
+    const serverIdsToRemove = compact(msgsWithServerIdIdsToRemove.map(m => m.get('serverId')));
+
+    allMessagesAreDeleted = await deleteSogsMessageByServerIds(serverIdsToRemove, roomInfos);
+    window?.log?.info(
+      `Removed all serverIds messages from the sogs. count: ${serverIdsToRemove.length}`
+    );
+
+    if (!allMessagesAreDeleted) {
+      window?.log?.info(
+        'failed to remove all those serverIds from the sogs. not removing them locally neither'
+      );
+      return false;
+    }
   }
-  // remove only the messages we managed to remove on the server
-  if (allMessagesAreDeleted) {
-    window?.log?.info('Removed all those serverIds messages successfully');
-    return validMessageModelsToRemove.map(m => m.id);
-  }
-  window?.log?.info(
-    'failed to remove all those serverIds message. not removing them locally neither'
-  );
-  return [];
+  // remove the messages we managed to remove on the server and the ones that had no serverId (i.e. failed to send)
+
+  return true;
 }
 
 async function unsendMessagesForEveryone1o1(
