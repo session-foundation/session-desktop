@@ -97,9 +97,7 @@ export function useDeleteMessagesCb(conversationId: string | undefined) {
     const canDeleteFromAllDevices = isNts && !sharedCannotDeleteForEveryone;
 
     // Note: the isMe case has no radio buttons, so we just show the description below
-    const i18nMessage: TrArgs | undefined = isNts
-      ? { token: 'deleteMessageConfirm', count }
-      : undefined;
+    const i18nMessage: TrArgs | undefined = { token: 'deleteMessageConfirm', count };
 
     const warningMessage: TrArgs | undefined =
       isNts && !canDeleteFromAllDevices
