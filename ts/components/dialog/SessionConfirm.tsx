@@ -155,6 +155,7 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
             onClick={onClickOkHandler}
             margin={'var(--margins-xs)'}
             dataTestId="session-confirm-ok-button"
+            disabled={isLoading}
           />
           {!hideCancel && (
             <SessionButton
@@ -165,6 +166,7 @@ export const SessionConfirm = (props: SessionConfirmDialogProps) => {
               onClick={onClickCancelHandler}
               margin={'var(--margins-xs)'}
               dataTestId="session-confirm-cancel-button"
+              disabled={isLoading}
             />
           )}
         </ModalActionsContainer>
