@@ -167,16 +167,12 @@ export function pushYouLeftTheGroup() {
   pushToastError('youLeftTheGroup', tStripped('groupMemberYouLeft'));
 }
 
-export function someDeletionsFailed(count: number) {
-  pushToastWarning('deletionError', tStripped('deleteMessageFailed', { count }));
-}
-
 export function pushDeleted(count: number) {
   pushToastSuccess('deleted', tStripped('deleteMessageDeleted', { count }));
 }
 
 export function pushFailedToDelete(count: number) {
-  pushToastSuccess('failedToDelete', tStripped('deleteMessageFailed', { count }));
+  pushToastWarning('failedToDelete', tStripped('deleteMessageFailed', { count }));
 }
 
 export function pushCannotRemoveGroupAdmin() {
