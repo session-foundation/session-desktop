@@ -1,17 +1,45 @@
-import { useCallback } from 'react';
+import { debounce, noop } from 'lodash';
+import { InView } from 'react-intersection-observer';
+import { useSelector } from 'react-redux';
+import {
+  useCallback,
+  useLayoutEffect,
+  useState,
+  type AriaRole,
+  type ReactNode,
+  type SessionDataTestId,
+} from 'react';
 import useInterval from 'react-use/lib/useInterval';
 import useMount from 'react-use/lib/useMount';
-import styled from 'styled-components';
 import { getAppDispatch } from '../../../../state/dispatch';
 import { useIsDetailMessageView } from '../../../../contexts/isDetailViewContext';
-import { useMessageExpirationPropsById } from '../../../../hooks/useParamSelector';
+import { useHasUnread, useMessageExpirationPropsById } from '../../../../hooks/useParamSelector';
 import { MessageModelType } from '../../../../models/messageType';
-import { messagesExpired, PropsForExpiringMessage } from '../../../../state/ducks/conversations';
+import {
+  fetchBottomMessagesForConversation,
+  fetchTopMessagesForConversation,
+  markConversationFullyRead,
+  messagesExpired,
+  PropsForExpiringMessage,
+  showScrollToBottomButton,
+} from '../../../../state/ducks/conversations';
 import { getIncrement } from '../../../../util/timer';
 import { ExpireTimer } from '../../ExpireTimer';
-import { ReadableMessage, ReadableMessageProps } from './ReadableMessage';
 import { Data } from '../../../../data/data';
 import { ConvoHub } from '../../../../session/conversations';
+import type { WithConvoId, WithMessageId } from '../../../../session/types/with';
+import { useScrollToLoadedMessage } from '../../../../contexts/ScrollToLoadedMessage';
+import {
+  getMostRecentMessageId,
+  getOldestMessageId,
+  getYoungestMessageId,
+  areMoreMessagesBeingFetched,
+  getShowScrollButton,
+  getQuotedMessageToAnimate,
+} from '../../../../state/selectors/conversations';
+import { getIsAppFocused } from '../../../../state/selectors/section';
+import { useSelectedConversationKey } from '../../../../state/selectors/selectedConversation';
+import { useMessageType } from '../../../../state/selectors';
 
 const EXPIRATION_CHECK_MINIMUM = 2000;
 
@@ -64,33 +92,193 @@ function useIsExpired(
   return { isExpired };
 }
 
-const StyledReadableMessage = styled(ReadableMessage)<{
-  $isIncoming: boolean;
-}>`
-  display: flex;
-  justify-content: flex-end; // ${props => (props.$isIncoming ? 'flex-start' : 'flex-end')};
-  align-items: ${props => (props.$isIncoming ? 'flex-start' : 'flex-end')};
-  width: 100%;
-  flex-direction: column;
-`;
-
-export interface ExpirableReadableMessageProps extends Omit<ReadableMessageProps, 'isUnread'> {
+export type ReadableMessageProps = {
+  children: ReactNode;
   messageId: string;
+  className?: string;
+  isUnread: boolean;
+  dataTestId: SessionDataTestId;
+  role?: AriaRole;
   isControlMessage?: boolean;
+};
+
+const debouncedTriggerLoadMoreTop = debounce(
+  (selectedConversationKey: string, oldestMessageId: string) => {
+    (window.inboxStore?.dispatch as any)(
+      fetchTopMessagesForConversation({
+        conversationKey: selectedConversationKey,
+        oldTopMessageId: oldestMessageId,
+      })
+    );
+  },
+  100
+);
+
+const debouncedTriggerLoadMoreBottom = debounce(
+  (selectedConversationKey: string, youngestMessageId: string) => {
+    (window.inboxStore?.dispatch as any)(
+      fetchBottomMessagesForConversation({
+        conversationKey: selectedConversationKey,
+        oldBottomMessageId: youngestMessageId,
+      })
+    );
+  },
+  100
+);
+
+async function markReadFromMessageId({
+  conversationId,
+  messageId,
+  isUnread,
+}: WithMessageId & WithConvoId & { isUnread: boolean }) {
+  // isUnread comes from the redux store in memory, so pretty fast and allows us to not fetch from the DB too often
+  if (!isUnread) {
+    return;
+  }
+  const found = await Data.getMessageById(messageId);
+
+  if (!found) {
+    return;
+  }
+
+  if (found.isUnread()) {
+    ConvoHub.use()
+      .get(conversationId)
+      ?.markConversationRead({
+        newestUnreadDate: found.get('sent_at') || found.get('serverTimestamp') || Date.now(),
+        fromConfigMessage: false,
+      });
+  }
 }
+
+const ReadableMessage = (
+  props: ReadableMessageProps & { alignItems: 'flex-start' | 'flex-end' | 'center' }
+) => {
+  const { messageId, className, isUnread, role, dataTestId, alignItems } = props;
+
+  const isAppFocused = useSelector(getIsAppFocused);
+  const dispatch = getAppDispatch();
+
+  const selectedConversationKey = useSelectedConversationKey();
+  const mostRecentMessageId = useSelector(getMostRecentMessageId);
+  const oldestMessageId = useSelector(getOldestMessageId);
+  const youngestMessageId = useSelector(getYoungestMessageId);
+  const fetchingMoreInProgress = useSelector(areMoreMessagesBeingFetched);
+  const conversationHasUnread = useHasUnread(selectedConversationKey);
+  const scrollButtonVisible = useSelector(getShowScrollButton);
+
+  const [didScroll, setDidScroll] = useState(false);
+  const quotedMessageToAnimate = useSelector(getQuotedMessageToAnimate);
+
+  const scrollToLoadedMessage = useScrollToLoadedMessage();
+
+  // if this unread-indicator is rendered,
+  // we want to scroll here only if the conversation was not opened to a specific message
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useLayoutEffect(() => {
+    if (
+      props.messageId === youngestMessageId &&
+      !quotedMessageToAnimate &&
+      !scrollButtonVisible &&
+      !didScroll &&
+      !conversationHasUnread
+    ) {
+      scrollToLoadedMessage(props.messageId, 'go-to-bottom');
+      setDidScroll(true);
+    } else if (quotedMessageToAnimate) {
+      setDidScroll(true);
+    }
+  });
+
+  const onVisible = useCallback(
+    async (inView: boolean, _: IntersectionObserverEntry) => {
+      if (!selectedConversationKey) {
+        return;
+      }
+      // we are the most recent message
+      if (mostRecentMessageId === messageId) {
+        // make sure the app is focused, because we mark message as read here
+        if (inView === true && isAppFocused) {
+          dispatch(showScrollToBottomButton(false));
+          // TODO this is pretty expensive and should instead use values from the redux store
+          await markReadFromMessageId({
+            messageId,
+            conversationId: selectedConversationKey,
+            isUnread,
+          });
+
+          dispatch(markConversationFullyRead(selectedConversationKey));
+        } else if (inView === false) {
+          dispatch(showScrollToBottomButton(true));
+        }
+      }
+
+      if (inView && isAppFocused && oldestMessageId === messageId && !fetchingMoreInProgress) {
+        debouncedTriggerLoadMoreTop(selectedConversationKey, oldestMessageId);
+      }
+
+      if (inView && isAppFocused && youngestMessageId === messageId && !fetchingMoreInProgress) {
+        debouncedTriggerLoadMoreBottom(selectedConversationKey, youngestMessageId);
+      }
+
+      // this part is just handling the marking of the message as read if needed
+      if (inView) {
+        // TODO this is pretty expensive and should instead use values from the redux store
+        await markReadFromMessageId({
+          messageId,
+          conversationId: selectedConversationKey,
+          isUnread,
+        });
+      }
+    },
+    [
+      dispatch,
+      selectedConversationKey,
+      mostRecentMessageId,
+      oldestMessageId,
+      fetchingMoreInProgress,
+      isAppFocused,
+      messageId,
+      youngestMessageId,
+      isUnread,
+    ]
+  );
+  return (
+    <InView
+      id={`msg-${messageId}`}
+      className={className}
+      as="div"
+      threshold={0.5} // consider that more than 50% of the message visible means it is read
+      delay={isAppFocused ? 100 : 200}
+      onChange={isAppFocused ? onVisible : noop}
+      triggerOnce={false}
+      trackVisibility={true}
+      role={role}
+      key={`inview-msg-${messageId}`}
+      data-testid={dataTestId}
+      style={{
+        display: 'flex',
+        justifyContent: 'flex-end',
+        alignItems,
+        width: '100%',
+        flexDirection: 'column',
+      }}
+    >
+      {props.children}
+    </InView>
+  );
+};
+
+export type ExpirableReadableMessageProps = Omit<ReadableMessageProps, 'isUnread' | 'onClick'> &
+  WithMessageId;
 
 function ExpireTimerControlMessage({
   expirationTimestamp,
   expirationDurationMs,
-  isControlMessage,
 }: {
   expirationDurationMs: number | null | undefined;
   expirationTimestamp: number | null | undefined;
-  isControlMessage: boolean | undefined;
 }) {
-  if (!isControlMessage) {
-    return null;
-  }
   return (
     <ExpireTimer
       expirationDurationMs={expirationDurationMs || undefined}
@@ -102,12 +290,17 @@ function ExpireTimerControlMessage({
 // NOTE: [react-compiler] this convinces the compiler the hook is static
 const useMessageExpirationPropsByIdInternal = useMessageExpirationPropsById;
 const useIsDetailMessageViewInternal = useIsDetailMessageView;
+const useMessageTypeInternal = useMessageType;
 
-export const ExpirableReadableMessage = (props: ExpirableReadableMessageProps) => {
-  const selected = useMessageExpirationPropsByIdInternal(props.messageId);
+export const ExpirableReadableMessage = ({
+  role,
+  dataTestId,
+  messageId,
+  children,
+}: ExpirableReadableMessageProps) => {
+  const selected = useMessageExpirationPropsByIdInternal(messageId);
   const isDetailView = useIsDetailMessageViewInternal();
-
-  const { isControlMessage, onClick, onDoubleClickCapture, role, dataTestId } = props;
+  const messageType = useMessageTypeInternal(messageId);
 
   const { isExpired } = useIsExpired({
     convoId: selected?.convoId,
@@ -122,35 +315,43 @@ export const ExpirableReadableMessage = (props: ExpirableReadableMessageProps) =
     return null;
   }
 
-  const {
-    messageId,
-    direction: _direction,
-    isUnread,
-    expirationDurationMs,
-    expirationTimestamp,
-  } = selected;
+  const { direction: _direction, isUnread, expirationDurationMs, expirationTimestamp } = selected;
 
   // NOTE we want messages on the left in the message detail view regardless of direction
   const direction = isDetailView ? 'incoming' : _direction;
   const isIncoming = direction === 'incoming';
 
+  /**
+   * If the message can expire, it will show the expiration timer if it is expiring.
+   * Note, the only two message types that cannot expire are
+   *  - 'interaction-notification'
+   *  - 'message-request-response'
+   */
+  const canExpire =
+    messageType !== 'interaction-notification' && messageType !== 'message-request-response';
+  const isControlMessage =
+    messageType !== 'regular-message' && messageType !== 'community-invitation';
+
+  const alignItems = isControlMessage ? 'center' : isIncoming ? 'flex-start' : 'flex-end';
+
   return (
-    <StyledReadableMessage
+    <ReadableMessage
       messageId={messageId}
       isUnread={!!isUnread}
-      $isIncoming={isIncoming}
-      onClick={onClick}
-      onDoubleClickCapture={onDoubleClickCapture}
+      alignItems={alignItems}
       role={role}
       key={`readable-message-${messageId}`}
       dataTestId={dataTestId}
     >
-      <ExpireTimerControlMessage
-        expirationDurationMs={expirationDurationMs}
-        expirationTimestamp={expirationTimestamp}
-        isControlMessage={isControlMessage}
-      />
-      {props.children}
-    </StyledReadableMessage>
+      {/* This is the expire timer for control messages only (centered).The one for regular
+       messages is rendered as part of MessageStatusContainer  */}
+      {canExpire && isControlMessage ? (
+        <ExpireTimerControlMessage
+          expirationDurationMs={expirationDurationMs}
+          expirationTimestamp={expirationTimestamp}
+        />
+      ) : null}
+      {children}
+    </ReadableMessage>
   );
 };

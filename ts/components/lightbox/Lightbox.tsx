@@ -282,6 +282,7 @@ export const Lightbox = (props: Props) => {
 
   return (
     <SessionFocusTrap
+      focusTrapId="Lightbox"
       initialFocus={() => {
         return closeButtonRef.current;
       }}

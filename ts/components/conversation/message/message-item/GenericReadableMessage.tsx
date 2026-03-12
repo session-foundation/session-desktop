@@ -1,66 +1,58 @@
-import {
-  type MouseEvent,
-  type KeyboardEvent,
-  useCallback,
-  useRef,
-  useMemo,
-  useState,
-  useEffect,
-} from 'react';
+import type { HTMLProps } from 'react';
 import clsx from 'clsx';
-
-import { useSelector } from 'react-redux';
 import styled, { keyframes } from 'styled-components';
-import { useIsDetailMessageView } from '../../../../contexts/isDetailViewContext';
 import { MessageRenderingProps } from '../../../../models/messageType';
-import { ConvoHub } from '../../../../session/conversations';
-import { StateType } from '../../../../state/reducer';
-import { useMessageSelected } from '../../../../state/selectors';
-import { getGenericReadableMessageSelectorProps } from '../../../../state/selectors/conversations';
+import {
+  useMessageDirectionIncoming,
+  useMessageIsControlMessage,
+  useMessageType,
+} from '../../../../state/selectors';
 import { MessageContentWithStatuses } from '../message-content/MessageContentWithStatus';
 import { StyledMessageReactionsContainer } from '../message-content/MessageReactions';
-import {
-  useIsMessageSelectionMode,
-  useSelectedIsBlocked,
-} from '../../../../state/selectors/selectedConversation';
-import { isButtonClickKey, KbdShortcut } from '../../../../util/keyboardShortcuts';
-import { showMessageContextMenu } from '../message-content/MessageContextMenu';
-import { getAppDispatch } from '../../../../state/dispatch';
-import { setFocusedMessageId } from '../../../../state/ducks/conversations';
-import { PopoverTriggerPosition } from '../../../SessionTooltip';
-import { useKeyboardShortcut } from '../../../../hooks/useKeyboardShortcut';
-import { useFocusScope, useIsInScope } from '../../../../state/focus';
+import { type UIMessageType } from '../../../../state/ducks/conversations';
+import type { WithMessageId } from '../../../../session/types/with';
+import { CommunityInvitation } from './CommunityInvitation';
+import { DataExtractionNotification } from './DataExtractionNotification';
+import { TimerNotification } from '../../TimerNotification';
+import { GroupUpdateMessage } from './GroupUpdateMessage';
+import { CallNotification } from './notification-bubble/CallNotification';
+import { InteractionNotification } from './InteractionNotification';
+import { MessageRequestResponse } from './MessageRequestResponse';
+import { useIsDetailMessageView } from '../../../../contexts/isDetailViewContext';
+import { MESSAGE_LIST_MESSAGE_PADDING_PX } from '../../SessionMessagesList';
 
 export type GenericReadableMessageSelectorProps = Pick<
   MessageRenderingProps,
-  | 'direction'
-  | 'conversationType'
-  | 'receivedAt'
-  | 'isUnread'
-  | 'convoId'
-  | 'isDeleted'
-  | 'isKickedFromGroup'
+  'direction' | 'convoId' | 'isKickedFromGroup'
 >;
-
-type Props = {
-  messageId: string;
-  ctxMenuID: string;
-};
 
 const highlightedMessageAnimation = keyframes`
   1% { background-color: var(--primary-color); }
 `;
 
-const StyledReadableMessage = styled.div<{
-  selected: boolean;
-  $isDetailView: boolean;
-  $focusedKeyboard: boolean;
-}>`
+type StyledReadableMessageProps = {
+  selected?: boolean;
+  $isDetailView?: boolean;
+  $focusedKeyboard?: boolean;
+  $forceFocusStyle?: boolean;
+  $isIncoming?: boolean;
+  $isControlMessage?: boolean;
+};
+
+export const StyledReadableMessage = styled.div<StyledReadableMessageProps>`
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: ${props => (props.$isIncoming ? 'flex-start' : 'flex-end')};
   width: 100%;
   letter-spacing: 0.03rem;
-  padding: ${props => (props.$isDetailView ? '0' : 'var(--margins-xs) var(--margins-lg) 0')};
+  padding-left: ${props =>
+    props.$isDetailView || props.$isIncoming || props.$isControlMessage
+      ? 0
+      : 'min(25%, calc(100% - 460px));'}; // Note: we this min to allow a message with two attachments to be displayed fully
+  padding-right: ${props =>
+    props.$isDetailView || !props.$isIncoming || props.$isControlMessage
+      ? 0
+      : 'min(25%, calc(100% - 460px));'}; // Note: we this min to allow a message with two attachments to be displayed fully
 
   &.message-highlighted {
     animation: ${highlightedMessageAnimation} var(--duration-message-highlight) ease-in-out;
@@ -76,150 +68,90 @@ const StyledReadableMessage = styled.div<{
     background-color: var(--conversation-tab-background-selected-color);
   }`
       : ''}
+
+  ${props =>
+    props.$forceFocusStyle
+      ? 'background-color: var(--conversation-tab-background-selected-color);'
+      : ''}
 `;
 
-export const GenericReadableMessage = (props: Props) => {
-  const isDetailView = useIsDetailMessageView();
-  const dispatch = getAppDispatch();
+const StyledMessageContentContainer = styled.div<{ $isIncoming: boolean; $isDetailView?: boolean }>`
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: ${props => (props.$isIncoming ? 'flex-start' : 'flex-end')};
+  padding-left: ${props => (props.$isDetailView ? '0' : MESSAGE_LIST_MESSAGE_PADDING_PX)};
+  padding-right: ${props => (props.$isDetailView ? '0' : MESSAGE_LIST_MESSAGE_PADDING_PX)};
+  width: 100%;
+`;
 
-  const { ctxMenuID, messageId } = props;
-
-  const msgProps = useSelector((state: StateType) =>
-    getGenericReadableMessageSelectorProps(state, props.messageId)
-  );
-  const isMessageSelected = useMessageSelected(props.messageId);
-  const selectedIsBlocked = useSelectedIsBlocked();
-
-  const multiSelectMode = useIsMessageSelectionMode();
-
-  const ref = useRef<HTMLDivElement>(null);
-  const pointerDownRef = useRef(false);
-  const [triggerPosition, setTriggerPosition] = useState<PopoverTriggerPosition | null>(null);
-  const isInFocusScope = useIsInScope({ scope: 'message', scopeId: messageId });
-  const { focusedMessageId } = useFocusScope();
-  const isAnotherMessageFocused = focusedMessageId && !isInFocusScope;
-
-  const getMessageContainerTriggerPosition = (): PopoverTriggerPosition | null => {
-    if (!ref.current) {
+function getMessageComponent(messageType: UIMessageType) {
+  switch (messageType) {
+    case 'community-invitation':
+      return CommunityInvitation;
+    case 'data-extraction-notification':
+      return DataExtractionNotification;
+    case 'timer-update-notification':
+      return TimerNotification;
+    case 'group-update-notification':
+      return GroupUpdateMessage;
+    case 'call-notification':
+      return CallNotification;
+    case 'interaction-notification':
+      return InteractionNotification;
+    case 'message-request-response':
+      return MessageRequestResponse;
+    case 'regular-message':
+      return MessageContentWithStatuses;
+    default:
       return null;
-    }
-    const rect = ref.current.getBoundingClientRect();
-    const halfWidth = rect.width / 2;
-    return {
-      x: rect.left,
-      // NOTE: y needs to be clamped to the parent otherwise it can overflow the container
-      y: rect.top,
-      height: rect.height,
-      width: rect.width,
-      offsetX: msgProps?.direction === 'incoming' ? -halfWidth : halfWidth,
-    };
-  };
+  }
+}
 
-  const handleContextMenu = useCallback(
-    (
-      e: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>,
-      overridePosition?: { x: number; y: number }
-    ) => {
-      if (!selectedIsBlocked && !multiSelectMode && !msgProps?.isKickedFromGroup) {
-        showMessageContextMenu({
-          id: ctxMenuID,
-          event: e,
-          triggerPosition: overridePosition,
-        });
-      }
-    },
-    [selectedIsBlocked, ctxMenuID, multiSelectMode, msgProps?.isKickedFromGroup]
-  );
+type GenericReadableMessageProps = Partial<
+  HTMLProps<HTMLDivElement> & Omit<StyledReadableMessageProps, '$isDetailView'> & WithMessageId
+>;
 
-  const convoReactionsEnabled = useMemo(() => {
-    if (msgProps?.convoId) {
-      const conversationModel = ConvoHub.use().get(msgProps?.convoId);
-      if (conversationModel) {
-        return conversationModel.hasReactions();
-      }
-    }
-    return true;
-  }, [msgProps?.convoId]);
+export const GenericReadableMessage = ({
+  ref,
+  messageId,
+  selected,
+  children,
+  ...rest
+}: GenericReadableMessageProps) => {
+  const messageType = useMessageType(messageId);
+  const isDetailView = useIsDetailMessageView();
+  const isControlMessage = useMessageIsControlMessage(messageId);
+  const isIncoming = useMessageDirectionIncoming(messageId, isDetailView);
 
-  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    if (isButtonClickKey(e)) {
-      if (e.target instanceof HTMLElement && e.target.tagName === 'BUTTON') {
-        // If the target is a button, we don't want to open the context menu as this is
-        // handled by the button itself
-        return;
-      }
-      const overrideTriggerPosition = getMessageContainerTriggerPosition();
-      if (overrideTriggerPosition) {
-        handleContextMenu(e, overrideTriggerPosition);
-      }
-    }
-  };
-
-  const onFocus = () => {
-    dispatch(setFocusedMessageId(messageId));
-  };
-
-  const onBlur = () => {
-    dispatch(setFocusedMessageId(null));
-  };
-
-  const toggleEmojiReactionBarWithKeyboard = () => {
-    if (triggerPosition) {
-      setTriggerPosition(null);
-    } else {
-      const pos = getMessageContainerTriggerPosition();
-      if (pos) {
-        setTriggerPosition(pos);
-      }
-    }
-  };
-
-  useKeyboardShortcut({
-    shortcut: KbdShortcut.messageToggleReactionBar,
-    handler: toggleEmojiReactionBarWithKeyboard,
-    scopeId: messageId,
-  });
-
-  useEffect(() => {
-    if (isAnotherMessageFocused) {
-      setTriggerPosition(null);
-    }
-  }, [isAnotherMessageFocused]);
-
-  if (!msgProps) {
+  if (!messageId || !messageType) {
     return null;
   }
 
-  const selected = isMessageSelected || false;
+  const CmpToRender = getMessageComponent(messageType);
+
+  if (!CmpToRender) {
+    throw new Error(`Couldn't find a component for message type ${messageType}`);
+  }
 
   return (
     <StyledReadableMessage
       ref={ref}
-      selected={selected}
-      $isDetailView={isDetailView}
       className={clsx(selected ? 'message-selected' : undefined)}
-      onContextMenu={handleContextMenu}
-      key={`readable-message-${messageId}`}
-      onKeyDown={onKeyDown}
-      $focusedKeyboard={!pointerDownRef.current}
-      tabIndex={0}
-      onPointerDown={() => {
-        pointerDownRef.current = true;
-      }}
-      onFocus={() => {
-        onFocus();
-        pointerDownRef.current = false;
-      }}
-      onBlur={onBlur}
+      selected={selected}
+      $isIncoming={isIncoming}
+      $isControlMessage={isControlMessage}
+      {...rest}
+      $isDetailView={isDetailView}
     >
-      <MessageContentWithStatuses
-        ctxMenuID={ctxMenuID}
-        messageId={messageId}
-        dataTestId={'message-content'}
-        convoReactionsEnabled={convoReactionsEnabled}
-        triggerPosition={triggerPosition}
-        setTriggerPosition={setTriggerPosition}
-      />
+      <StyledMessageContentContainer
+        $isIncoming={isIncoming}
+        $isDetailView={isDetailView}
+        data-testid="message-container"
+      >
+        <CmpToRender messageId={messageId} />
+        {children}
+      </StyledMessageContentContainer>
     </StyledReadableMessage>
   );
 };

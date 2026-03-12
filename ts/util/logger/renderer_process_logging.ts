@@ -111,7 +111,20 @@ function toLocation(
   return `(@ ${source})`;
 }
 
+const filters = new Set<string>();
+
+export const windowErrorFilters = {
+  add: (filter: string) => filters.add(filter),
+  remove: (filter: string) => filters.delete(filter),
+  shouldSuppress: (source: string | undefined) =>
+    source ? [...filters].some(f => source.includes(f)) : false,
+};
+
 window.onerror = (event, source, line, column, error) => {
+  if (windowErrorFilters.shouldSuppress(source)) {
+    return true;
+  }
+
   const errorInfo = Errors.toString(error);
   if (errorInfo.startsWith('Error: write EPIPE')) {
     /**
@@ -123,10 +136,10 @@ window.onerror = (event, source, line, column, error) => {
      * Note: this is not graceful at all, but app.quit() doesn't work.
      */
     ipc.send('force-exit');
-    return;
+    return false;
   }
-
   log.error(`Top-level unhandled error: ${errorInfo}`, toLocation(event, source, line, column));
+  return false;
 };
 
 window.addEventListener('unhandledrejection', rejectionEvent => {

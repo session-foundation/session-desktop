@@ -14,6 +14,7 @@ import {
 } from '../../messages/outgoing/visibleMessage/VisibleMessage';
 import { UserSync } from '../job_runners/jobs/UserSyncJob';
 import { longOrNumberToNumber } from '../../../types/long/longOrNumberToNumber';
+import type { Reaction } from '../../../types/Reaction';
 
 export const forceSyncConfigurationNowIfNeeded = async (waitForMessageSent = false) => {
   return new Promise(resolve => {
@@ -74,6 +75,21 @@ const buildSyncVisibleMessage = (
     ? ({ author: dataMessage.quote.author, timestamp: dataMessage.quote.id } as Quote)
     : undefined;
   const preview = (dataMessage.preview as Array<PreviewWithAttachmentUrl>) || [];
+  const communityInvitation = dataMessage.communityInvitation
+    ? {
+        url: dataMessage.communityInvitation.url,
+        name: dataMessage.communityInvitation.name,
+      }
+    : undefined;
+
+  const reaction: Reaction | undefined = dataMessage.reaction?.emoji
+    ? {
+        action: dataMessage.reaction.action,
+        author: dataMessage.reaction.author,
+        emoji: dataMessage.reaction.emoji,
+        id: longOrNumberToNumber(dataMessage.reaction.id),
+      }
+    : undefined;
 
   return new VisibleMessage({
     dbMessageIdentifier,
@@ -82,8 +98,10 @@ const buildSyncVisibleMessage = (
     body,
     quote,
     preview,
+    reaction,
     userProfile: null, // this is a synced message, so we do not need to include the userProfile
     syncTarget,
+    communityInvitation,
     expireTimer: expireUpdate.expirationTimer,
     expirationType: expireUpdate.expirationType,
     outgoingProMessageDetails: proMessage ?? null,

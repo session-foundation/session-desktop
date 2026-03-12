@@ -39,6 +39,7 @@ import {
   hasDebugEnvVariable,
 } from './utils';
 import { CONVERSATION_PRIORITIES } from '../../models/types';
+import { MessageDeletedType } from '../../models/messageType';
 
 // eslint:disable: quotemark one-variable-per-declaration no-unused-expression
 
@@ -127,6 +128,7 @@ const LOKI_SCHEMA_VERSIONS: Array<(currentVersion: number, db: Database) => void
     updateToSessionSchemaVersion51,
     updateToSessionSchemaVersion52,
     updateToSessionSchemaVersion53,
+    updateToSessionSchemaVersion54,
   ];
 
 function updateToSessionSchemaVersion1(currentVersion: number, db: Database) {
@@ -1645,7 +1647,6 @@ function updateToSessionSchemaVersion34(currentVersion: number, db: Database) {
   console.log(`updateToSessionSchemaVersion${targetVersion}: starting...`);
   db.transaction(() => {
     try {
-      // #region v34 Disappearing Messages Database Model Changes
       // Conversation changes
       db.prepare(
         `ALTER TABLE ${CONVERSATIONS_TABLE} ADD COLUMN expirationMode TEXT DEFAULT "off";`
@@ -1658,8 +1659,6 @@ function updateToSessionSchemaVersion34(currentVersion: number, db: Database) {
       db.prepare(`ALTER TABLE ${MESSAGES_TABLE} ADD COLUMN flags INTEGER;`).run();
       db.prepare(`UPDATE ${MESSAGES_TABLE} SET flags = json_extract(json, '$.flags');`);
 
-      // #endregion
-
       const loggedInUser = getLoggedInUserConvoDuringMigration(db);
 
       if (!loggedInUser || !loggedInUser.ourKeys) {
@@ -1668,7 +1667,6 @@ function updateToSessionSchemaVersion34(currentVersion: number, db: Database) {
 
       const { privateEd25519, publicKeyHex } = loggedInUser.ourKeys;
 
-      // #region v34 Disappearing Messages Note to Self
       const noteToSelfInfo = db
         .prepare(
           `UPDATE ${CONVERSATIONS_TABLE} SET
@@ -1717,9 +1715,6 @@ function updateToSessionSchemaVersion34(currentVersion: number, db: Database) {
         }
       }
 
-      // #endregion
-
-      // #region v34 Disappearing Messages Private Conversations
       const privateConversationsInfo = db
         .prepare(
           `UPDATE ${CONVERSATIONS_TABLE} SET
@@ -1793,9 +1788,6 @@ function updateToSessionSchemaVersion34(currentVersion: number, db: Database) {
         }
       }
 
-      // #endregion
-
-      // #region v34 Disappearing Messages Groups
       const groupConversationsInfo = db
         .prepare(
           `UPDATE ${CONVERSATIONS_TABLE} SET
@@ -1866,8 +1858,6 @@ function updateToSessionSchemaVersion34(currentVersion: number, db: Database) {
           }
         }
       }
-
-      // #endregion
     } catch (e) {
       console.error(
         `Failed to migrate to disappearing messages v2. Might just not have a logged in user yet? `,
@@ -2371,6 +2361,33 @@ async function updateToSessionSchemaVersion53(currentVersion: number, db: Databa
     // Create an index on the the messageId & hasAttachments. Needed for `removeKnownAttachments`
     db.exec(
       `CREATE INDEX messages_id_hasAttachments_index ON ${MESSAGES_TABLE} (id, hasAttachments) WHERE hasAttachments = ${toSqliteBoolean(true)};`
+    );
+
+    writeSessionSchemaVersion(targetVersion, db);
+  })();
+
+  console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
+}
+
+async function updateToSessionSchemaVersion54(currentVersion: number, db: Database) {
+  const targetVersion = 54;
+  if (currentVersion >= targetVersion) {
+    return;
+  }
+  console.log(`updateToSessionSchemaVersion${targetVersion}: starting...`);
+
+  db.transaction(() => {
+    db.exec(`DROP INDEX IF EXISTS messages_isDeleted;`);
+
+    db.exec(`ALTER TABLE ${MESSAGES_TABLE} RENAME COLUMN isDeleted TO isDeleted_old;`);
+    db.exec(`ALTER TABLE ${MESSAGES_TABLE} ADD COLUMN isDeleted INTEGER;`);
+    db.exec(
+      `UPDATE ${MESSAGES_TABLE} SET isDeleted = CASE WHEN isDeleted_old = ${toSqliteBoolean(true)} THEN ${MessageDeletedType.deletedGlobally} ELSE NULL END;`
+    );
+    db.exec(`ALTER TABLE ${MESSAGES_TABLE} DROP COLUMN isDeleted_old;`);
+
+    db.exec(
+      `CREATE INDEX messages_isDeleted_conversationId ON ${MESSAGES_TABLE} (conversationId, isDeleted) WHERE isDeleted IS NOT NULL;`
     );
 
     writeSessionSchemaVersion(targetVersion, db);

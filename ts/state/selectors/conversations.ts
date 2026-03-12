@@ -18,9 +18,6 @@ import { StateType } from '../reducer';
 
 import { ReplyingToMessageProps } from '../../components/conversation/composition/CompositionBox';
 import { MessageAttachmentSelectorProps } from '../../components/conversation/message/message-content/MessageAttachment';
-import { MessageContentSelectorProps } from '../../components/conversation/message/message-content/MessageContent';
-import { MessageContentWithStatusSelectorProps } from '../../components/conversation/message/message-content/MessageContentWithStatus';
-import { GenericReadableMessageSelectorProps } from '../../components/conversation/message/message-item/GenericReadableMessage';
 import { hasValidIncomingRequestValues } from '../../models/conversation';
 import { isOpenOrClosedGroup } from '../../models/conversationAttributes';
 import { ConvoHub } from '../../session/conversations';
@@ -36,11 +33,12 @@ import { isUsAnySogsFromCache } from '../../session/apis/open_group_api/sogsv3/k
 import { PubKey } from '../../session/types';
 import { UserGroupsWrapperActions } from '../../webworker/workers/browser/libsession_worker_interface';
 import { getSelectedConversationKey } from './selectedConversation';
-import { getModeratorsOutsideRedux, useModerators } from './sogsRoomInfo';
+import { useModerators } from './sogsRoomInfo';
 import type { SessionSuggestionDataItem } from '../../components/conversation/composition/types';
 import { useIsPublic, useWeAreAdmin } from '../../hooks/useParamSelector';
 import { tr } from '../../localization/localeTools';
 import type { QuoteProps } from '../../components/conversation/message/message-content/quote/Quote';
+import { PopoverTriggerPosition } from '../../components/SessionTooltip';
 
 export const getConversations = (state: StateType): ConversationsStateType => state.conversations;
 
@@ -127,21 +125,10 @@ export const getFirstUnreadMessageId = (state: StateType): string | null => {
   return state.conversations.firstUnreadMessageId;
 };
 
-export type MessagePropsType =
-  | 'group-notification'
-  | 'group-invitation'
-  | 'data-extraction'
-  | 'message-request-response'
-  | 'timer-notification'
-  | 'regular-message'
-  | 'call-notification'
-  | 'interaction-notification';
-
 export const getSortedMessagesTypesOfSelectedConversation = createSelector(
   getSortedMessagesOfSelectedConversation,
   getFirstUnreadMessageId,
   (sortedMessages, firstUnreadId) => {
-    const maxMessagesBetweenTwoDateBreaks = 5;
     // we want to show the date break if there is a large jump in time
     // remember that messages are sorted from the most recent to the oldest
     return sortedMessages.map((msg, index) => {
@@ -156,37 +143,12 @@ export const getSortedMessagesTypesOfSelectedConversation = createSelector(
             sortedMessages[index + 1].propsForMessage.timestamp;
 
       const showDateBreak =
-        messageTimestamp - previousMessageTimestamp > maxMessagesBetweenTwoDateBreaks * 60 * 1000
-          ? messageTimestamp
-          : undefined;
+        messageTimestamp - previousMessageTimestamp > 5 * 60 * 1000 ? messageTimestamp : undefined;
 
-      const common = {
+      return {
         showUnreadIndicator: isFirstUnread,
         showDateBreak,
         messageId: msg.propsForMessage.id,
-      };
-
-      const messageType: MessagePropsType = msg.propsForDataExtractionNotification
-        ? ('data-extraction' as const)
-        : msg.propsForMessageRequestResponse
-          ? ('message-request-response' as const)
-          : msg.propsForCommunityInvitation
-            ? ('group-invitation' as const)
-            : msg.propsForGroupUpdateMessage
-              ? ('group-notification' as const)
-              : msg.propsForTimerNotification
-                ? ('timer-notification' as const)
-                : msg.propsForCallNotification
-                  ? ('call-notification' as const)
-                  : msg.propsForInteractionNotification
-                    ? ('interaction-notification' as const)
-                    : ('regular-message' as const);
-
-      return {
-        ...common,
-        message: {
-          messageType,
-        },
       };
     });
   }
@@ -536,6 +498,12 @@ export const getIsMessageSelectionMode = (state: StateType): boolean =>
 export const getFocusedMessageId = (state: StateType): string | null =>
   state.conversations.focusedMessageId;
 
+export const getInteractableMessageId = (state: StateType): string | null =>
+  state.conversations.interactableMessageId;
+
+export const getReactionBarTriggerPosition = (state: StateType): PopoverTriggerPosition | null =>
+  state.conversations.reactionBarTriggerPosition;
+
 export const getIsCompositionTextAreaFocused = (state: StateType): boolean =>
   state.conversations.isCompositionTextAreaFocused;
 
@@ -562,6 +530,14 @@ export const getMentionsInput = (state: StateType): Array<SessionSuggestionDataI
 
 export function useFocusedMessageId() {
   return useSelector(getFocusedMessageId);
+}
+
+export function useInteractableMessageId() {
+  return useSelector(getInteractableMessageId);
+}
+
+export function useReactionBarTriggerPosition() {
+  return useSelector(getReactionBarTriggerPosition);
 }
 
 export function useIsCompositionTextAreaFocused() {
@@ -745,21 +721,6 @@ export const getMessagePropsByMessageId = createSelector(
     const groupAdmins = (isGroup && selectedConvo.groupAdmins) || [];
     const weAreAdmin = groupAdmins.includes(ourPubkey) || false;
 
-    const weAreModerator =
-      (isPublic && getModeratorsOutsideRedux(selectedConvo.id).includes(ourPubkey)) || false;
-    // A message is deletable if
-    // either we sent it,
-    // or the convo is not a public one (in this case, we will only be able to delete for us)
-    // or the convo is public and we are an admin or moderator
-    const isDeletable =
-      sender === ourPubkey || !isPublic || (isPublic && (weAreAdmin || weAreModerator));
-
-    // A message is deletable for everyone if
-    // either we sent it no matter what the conversation type,
-    // or the convo is public and we are an admin or moderator
-    const isDeletableForEveryone =
-      sender === ourPubkey || (isPublic && (weAreAdmin || weAreModerator)) || false;
-
     const isSenderAdmin = groupAdmins.includes(sender);
 
     const messageProps: MessageModelPropsWithConvoProps = {
@@ -769,8 +730,6 @@ export const getMessagePropsByMessageId = createSelector(
         isBlocked: !!selectedConvo.isBlocked,
         isPublic: !!isPublic,
         isSenderAdmin,
-        isDeletable,
-        isDeletableForEveryone,
         weAreAdmin,
         conversationType: selectedConvo.type,
         sender,
@@ -838,7 +797,7 @@ type QuotePropsFound = QuotePropsAlwaysThere & {
   referencedMessageNotFound: false;
   id: string;
   convoId: string;
-} & Pick<QuoteProps, 'isFromMe' | 'text' | 'attachment'>;
+} & Pick<QuoteProps, 'isFromMe' | 'text' | 'attachment' | 'isDeleted'>;
 
 export const getMessageQuoteProps = createSelector(
   getConversationLookup,
@@ -885,7 +844,7 @@ export const getMessageQuoteProps = createSelector(
     }
 
     const sourceMsgProps = foundProps.propsForMessage;
-    if (!sourceMsgProps || sourceMsgProps.isDeleted) {
+    if (!sourceMsgProps) {
       return quoteNotFoundWithDetails(author, timestamp);
     }
 
@@ -906,6 +865,7 @@ export const getMessageQuoteProps = createSelector(
       referencedMessageNotFound: false,
       convoId: convo.id,
       timestamp: toNumber(timestamp),
+      isDeleted: sourceMsgProps.isDeleted,
     };
   }
 );
@@ -941,75 +901,7 @@ export const getIsMessageSelected = createSelector(
       return false;
     }
 
-    const { id } = props.propsForMessage;
-
-    return selectedIds.includes(id);
-  }
-);
-
-export const getMessageContentSelectorProps = createSelector(
-  getMessagePropsByMessageId,
-  (props): MessageContentSelectorProps | undefined => {
-    if (!props || isEmpty(props)) {
-      return undefined;
-    }
-
-    const msgProps: MessageContentSelectorProps = {
-      ...pick(props.propsForMessage, [
-        'direction',
-        'serverTimestamp',
-        'text',
-        'timestamp',
-        'previews',
-        'quote',
-        'attachments',
-      ]),
-    };
-
-    return msgProps;
-  }
-);
-
-export const getMessageContentWithStatusesSelectorProps = createSelector(
-  getMessagePropsByMessageId,
-  (props): MessageContentWithStatusSelectorProps | undefined => {
-    if (!props || isEmpty(props)) {
-      return undefined;
-    }
-
-    const isGroup =
-      props.propsForMessage.conversationType !== 'private' && !props.propsForMessage.isPublic;
-
-    const msgProps: MessageContentWithStatusSelectorProps = {
-      ...pick(props.propsForMessage, ['conversationType', 'direction', 'isDeleted']),
-      isGroup,
-    };
-
-    return msgProps;
-  }
-);
-
-export const getGenericReadableMessageSelectorProps = createSelector(
-  getMessagePropsByMessageId,
-  (props): GenericReadableMessageSelectorProps | undefined => {
-    if (!props || isEmpty(props)) {
-      return undefined;
-    }
-
-    const msgProps: GenericReadableMessageSelectorProps = pick(props.propsForMessage, [
-      'convoId',
-      'direction',
-      'conversationType',
-      'expirationDurationMs',
-      'expirationTimestamp',
-      'isExpired',
-      'isUnread',
-      'receivedAt',
-      'isDeleted',
-      'isKickedFromGroup',
-    ]);
-
-    return msgProps;
+    return selectedIds.includes(props.propsForMessage.id);
   }
 );
 

@@ -27,6 +27,7 @@ import {
 import {
   MessageAttributes,
   MessageAttributesOptionals,
+  MessageDeletedType,
   MessageGroupUpdate,
   fillMessageAttributesWithDefaults,
   type DataExtractionNotificationMsg,
@@ -47,6 +48,7 @@ import {
 import {
   VisibleMessage,
   VisibleMessageParams,
+  type CommunityInvitation,
   type Quote,
 } from '../session/messages/outgoing/visibleMessage/VisibleMessage';
 import { uploadAttachmentsV3, uploadLinkPreviewsV3 } from '../session/utils/AttachmentsV2';
@@ -84,7 +86,7 @@ import { Storage } from '../util/storage';
 import { ConversationModel } from './conversation';
 import { READ_MESSAGE_STATE } from './conversationAttributes';
 import { ConversationInteractionStatus, ConversationInteractionType } from '../interactions/types';
-import { LastMessageStatusType, type PropsForCallNotification } from '../state/ducks/types';
+import { LastMessageStatusType } from '../state/ducks/types';
 import {
   getGroupDisplayPictureChangeStr,
   getGroupNameChangeStr,
@@ -109,6 +111,8 @@ import { privateSet, privateSetKey } from './modelFriends';
 import { getFeatureFlag } from '../state/ducks/types/releasedFeaturesReduxTypes';
 import type { OutgoingProMessageDetails } from '../types/message/OutgoingProMessageDetails';
 import { longOrNumberToBigInt } from '../types/Bigint';
+import { toSqliteBoolean } from '../node/database_utility';
+import type { WithLocalMessageDeletionType } from '../session/types/with';
 
 // tslint:disable: cyclomatic-complexity
 
@@ -139,39 +143,62 @@ export class MessageModel extends Model<MessageAttributes> {
     const isMessageResponse = this.isMessageRequestResponse();
     const callNotificationType = this.get('callNotificationType');
     const interactionNotification = this.getInteractionNotification();
+    const propsForMessage = this.getPropsForMessage();
+
+    const byType = propsForDataExtractionNotification
+      ? ({
+          messageType: 'data-extraction-notification',
+          propsForDataExtractionNotification,
+          isControlMessage: true,
+        } as const)
+      : propsForCommunityInvitation
+        ? ({
+            messageType: 'community-invitation',
+            propsForCommunityInvitation,
+            isControlMessage: false,
+          } as const)
+        : propsForGroupUpdateMessage
+          ? ({
+              messageType: 'group-update-notification',
+              propsForGroupUpdateMessage,
+              isControlMessage: true,
+            } as const)
+          : propsForTimerNotification
+            ? ({
+                messageType: 'timer-update-notification',
+                propsForTimerNotification,
+                isControlMessage: true,
+              } as const)
+            : callNotificationType
+              ? ({
+                  messageType: 'call-notification',
+                  propsForCallNotification: {
+                    messageId: this.id,
+                    notificationType: callNotificationType,
+                  },
+                  isControlMessage: true,
+                } as const)
+              : interactionNotification
+                ? ({
+                    messageType: 'interaction-notification',
+                    propsForInteractionNotification: { notificationType: interactionNotification },
+                    isControlMessage: true,
+                  } as const)
+                : isMessageResponse
+                  ? ({
+                      messageType: 'message-request-response',
+                      propsForMessageRequestResponse: {},
+                      isControlMessage: true,
+                    } as const)
+                  : ({
+                      messageType: 'regular-message',
+                      isControlMessage: false,
+                    } as const);
 
     const messageProps: MessageModelPropsWithoutConvoProps = {
-      propsForMessage: this.getPropsForMessage(),
+      propsForMessage,
+      ...byType,
     };
-    if (propsForDataExtractionNotification) {
-      messageProps.propsForDataExtractionNotification = propsForDataExtractionNotification;
-    }
-    if (isMessageResponse) {
-      messageProps.propsForMessageRequestResponse = {};
-    }
-    if (propsForCommunityInvitation) {
-      messageProps.propsForCommunityInvitation = propsForCommunityInvitation;
-    }
-    if (propsForGroupUpdateMessage) {
-      messageProps.propsForGroupUpdateMessage = propsForGroupUpdateMessage;
-    }
-    if (propsForTimerNotification) {
-      messageProps.propsForTimerNotification = propsForTimerNotification;
-    }
-
-    if (callNotificationType) {
-      const propsForCallNotification: PropsForCallNotification = {
-        messageId: this.id,
-        notificationType: callNotificationType,
-      };
-      messageProps.propsForCallNotification = propsForCallNotification;
-    }
-
-    if (interactionNotification) {
-      messageProps.propsForInteractionNotification = {
-        notificationType: interactionNotification,
-      };
-    }
 
     return messageProps;
   }
@@ -189,8 +216,17 @@ export class MessageModel extends Model<MessageAttributes> {
       this.isExpirationTimerUpdate() ||
       this.isDataExtractionNotification() ||
       this.isMessageRequestResponse() ||
-      this.isGroupUpdate()
+      this.isGroupUpdate() ||
+      this.isCallNotification() ||
+      this.isInteractionNotification()
     );
+  }
+
+  /**
+   * Returns true if the message is marked as deleted either globally or locally.
+   */
+  public isMarkedAsDeleted() {
+    return !!this.get('isDeleted');
   }
 
   public isIncoming() {
@@ -221,7 +257,11 @@ export class MessageModel extends Model<MessageAttributes> {
     return !!this.getCommunityInvitation();
   }
   public getCommunityInvitation() {
-    return this.get('groupInvitation');
+    const communityInvitation = this.get('groupInvitation');
+    if (communityInvitation && communityInvitation.url && communityInvitation.name) {
+      return communityInvitation;
+    }
+    return undefined;
   }
 
   private isMessageRequestResponse() {
@@ -385,6 +425,14 @@ export class MessageModel extends Model<MessageAttributes> {
       });
 
       return tStrippedWithObj(i18nProps);
+    }
+    if (this.isMessageRequestResponse()) {
+      if (this.get('direction') === 'incoming') {
+        return tStripped('messageRequestsAccepted');
+      }
+      return tStripped('messageRequestYouHaveAccepted', {
+        name: ConvoHub.use().getNicknameOrRealUsernameOrPlaceholder(this.get('conversationId')),
+      });
     }
     const body = this.get('body');
     if (body) {
@@ -562,15 +610,6 @@ export class MessageModel extends Model<MessageAttributes> {
       return undefined;
     }
 
-    // some incoming legacy group updates are outgoing, but when synced to our other devices have just the received_at field set.
-    // when that is the case, we don't want to render the spinning 'sending' state
-    if (
-      (this.isExpirationTimerUpdate() || this.isDataExtractionNotification()) &&
-      this.get('received_at')
-    ) {
-      return undefined;
-    }
-
     if (
       this.isDataExtractionNotification() ||
       this.isCallNotification() ||
@@ -591,6 +630,36 @@ export class MessageModel extends Model<MessageAttributes> {
     }
 
     return 'sending';
+  }
+
+  /**
+   * Returns true if
+   * - the message is an incoming message (i.e. we've fetched it from the server/swarm)
+   * - the message is outgoing and marked as sent (i.e. we've sent it to the server/swarm and its status is "sent" or "read")
+   *
+   * @see useMessageIsOnline() that uses the same logic, redux side
+   */
+  public isOnline() {
+    const status = this.getMessagePropStatus();
+    const isIncoming = this.isIncoming();
+
+    if (isIncoming) {
+      return true;
+    }
+    switch (status) {
+      case 'sent':
+      case 'read':
+        // once a message is read by the recipient, the status is "read" so we display the "eye" status icon.
+        // but such a message was still sent in the first place
+        return true;
+      case 'sending':
+      case 'error':
+      case undefined:
+        return false;
+      default:
+        assertUnreachable(status, `wasSent: invalid msg status "${status}"`);
+        return false; // to make tsc happy
+    }
   }
 
   public getPropsForMessage(): PropsForMessageWithoutConvoProps {
@@ -621,8 +690,9 @@ export class MessageModel extends Model<MessageAttributes> {
     if (body) {
       props.text = body;
     }
-    if (this.get('isDeleted')) {
-      props.isDeleted = !!this.get('isDeleted');
+    const isDeleted = this.get('isDeleted');
+    if (isDeleted) {
+      props.isDeleted = isDeleted;
     }
 
     if (this.getMessageHash()) {
@@ -887,13 +957,36 @@ export class MessageModel extends Model<MessageAttributes> {
   }
 
   /**
-   * Marks the message as deleted to show the author has deleted this message for everyone.
-   * Sets isDeleted property to true. Set message body text to deletion placeholder for conversation list items.
+   * Marks the message as deleted locally or globally.
    */
-  public async markAsDeleted() {
+  public async markAsDeleted(
+    requestedDeleteType: Extract<
+      WithLocalMessageDeletionType['deletionType'],
+      'markDeletedGlobally' | 'markDeletedThisDevice'
+    >
+  ) {
+    const isDeletedType = this.get('isDeleted');
+    const requestedDeleteLocallyOnly = requestedDeleteType === 'markDeletedThisDevice';
+    const requestedDeleteGlobally = requestedDeleteType === 'markDeletedGlobally';
+
+    // if the msg is already marked as deleted of the correct type, do nothing
+    if (isDeletedType === MessageDeletedType.deletedLocally && requestedDeleteLocallyOnly) {
+      return;
+    }
+    if (isDeletedType === MessageDeletedType.deletedGlobally && requestedDeleteGlobally) {
+      return;
+    }
+    // if we want to mark as deleted a globally deleted message, do nothing
+    if (isDeletedType === MessageDeletedType.deletedGlobally && !requestedDeleteGlobally) {
+      return;
+    }
+
     this.set({
-      isDeleted: true,
-      body: tr('deleteMessageDeletedGlobally'),
+      isDeleted:
+        requestedDeleteType === 'markDeletedThisDevice'
+          ? MessageDeletedType.deletedLocally
+          : MessageDeletedType.deletedGlobally,
+      body: '',
       quote: undefined,
       groupInvitation: undefined,
       dataExtractionNotification: undefined,
@@ -908,7 +1001,14 @@ export class MessageModel extends Model<MessageAttributes> {
       interactionNotification: undefined,
       reaction: undefined,
       messageRequestResponse: undefined,
+      errors: undefined,
+      unread: toSqliteBoolean(false),
     });
+    // Only overwrite the messageHash when we are deleting globally.
+    // This is because a locally deleted message should be able to be marked as deleted globally
+    if (requestedDeleteGlobally) {
+      this.set({ messageHash: undefined });
+    }
     // we can ignore the result of that markMessageReadNoCommit as it would only be used
     // to refresh the expiry of it(but it is already marked as "deleted", so we don't care)
     this.markMessageReadNoCommit(Date.now());
@@ -917,6 +1017,7 @@ export class MessageModel extends Model<MessageAttributes> {
     // getNextExpiringMessage is used on app start to clean already expired messages which should have been removed already, but are not
     await this.setToExpire();
     await this.getConversation()?.refreshInMemoryDetails();
+    this.getConversation()?.updateLastMessage();
   }
 
   // One caller today: event handler for the 'Retry Send' entry on right click of a failed send message
@@ -976,6 +1077,7 @@ export class MessageModel extends Model<MessageAttributes> {
         attachments,
         preview: preview ? [preview] : [],
         quote,
+        reaction: undefined,
         userProfile: await UserUtils.getOurProfile(),
         outgoingProMessageDetails: await UserUtils.getOutgoingProMessageDetails({
           utf16: body,
@@ -1064,6 +1166,12 @@ export class MessageModel extends Model<MessageAttributes> {
     this.setKey('conversationId', convoId);
   }
 
+  public setCommunityInvitation(communityInvitation: CommunityInvitation) {
+    if (communityInvitation.name && communityInvitation.url) {
+      this.setKey('groupInvitation', communityInvitation);
+    }
+  }
+
   public isOutgoing() {
     return this.get('type') === 'outgoing';
   }
@@ -1114,10 +1222,12 @@ export class MessageModel extends Model<MessageAttributes> {
     const { dataMessage, proMessage } = content;
 
     if (
-      dataMessage &&
-      (dataMessage.body?.length ||
-        dataMessage.attachments?.length ||
-        dataMessage.flags === SignalService.DataMessage.Flags.EXPIRATION_TIMER_UPDATE)
+      (dataMessage &&
+        (dataMessage.body?.length ||
+          dataMessage.attachments?.length ||
+          dataMessage.flags === SignalService.DataMessage.Flags.EXPIRATION_TIMER_UPDATE)) ||
+      dataMessage?.communityInvitation?.url ||
+      dataMessage?.reaction
     ) {
       const conversation = this.getConversation();
       if (!conversation) {
@@ -1569,7 +1679,6 @@ export class MessageModel extends Model<MessageAttributes> {
     return forcedArrayUpdate;
   }
 
-  // #region Start of getters
   public getExpirationType() {
     return this.get('expirationType');
   }
@@ -1597,8 +1706,6 @@ export class MessageModel extends Model<MessageAttributes> {
   public getExpirationTimerUpdate() {
     return this.get('expirationTimerUpdate');
   }
-
-  // #endregion
 }
 
 const throttledAllMessagesDispatch = debounce(

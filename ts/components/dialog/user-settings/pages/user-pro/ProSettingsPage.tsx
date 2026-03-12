@@ -129,14 +129,12 @@ const HeroImageLabelContainer = styled.div`
 
 export const StyledProStatusText = styled.div<{ $isError?: boolean }>`
   text-align: center;
-  line-height: var(--font-size-sm);
   font-size: var(--font-size-sm);
   ${props => (props.$isError ? 'color: var(--warning-color);' : '')}
 `;
 
 export const StyledProHeroText = styled.div`
   text-align: center;
-  line-height: var(--font-size-md);
   font-size: var(--font-size-md);
 `;
 
@@ -492,8 +490,6 @@ function ProSettings({ state }: SectionProps) {
     subText = { token: 'errorLoadingProAccess' };
   } else if (isLoading) {
     subText = { token: 'proAccessLoadingEllipsis' };
-  } else if (data.isProcessingRefund) {
-    subText = { token: 'processingRefundRequest', platform: data.providerConstants.platform };
   } else if (data.inGracePeriod) {
     subText = { token: 'proRenewalUnsuccessful' };
   } else if (data.autoRenew) {
@@ -509,6 +505,10 @@ function ProSettings({ state }: SectionProps) {
         {data.isProcessingRefund ? (
           <PanelIconButton
             text={{ token: 'proRequestedRefund' }}
+            subText={{
+              token: 'processingRefundRequest',
+              platform: data.providerConstants.platform,
+            }}
             dataTestId="update-access-settings-button"
             onClick={handleUpdateAccessClick}
             iconElement={<PanelIconLucideIcon unicode={LUCIDE_ICONS_UNICODE.CIRCLE_ALERT} />}

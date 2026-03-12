@@ -77,7 +77,7 @@ import {
   FindAllMessageHashesInConversationMatchingAuthorTypeArgs,
   FindAllMessageHashesInConversationTypeArgs,
 } from '../data/sharedDataTypes';
-import { MessageAttributes } from '../models/messageType';
+import { MessageAttributes, MessageDeletedType } from '../models/messageType';
 import { SignalService } from '../protobuf';
 import { DURATION } from '../session/constants';
 import { createDeleter, getAttachmentsPath } from '../shared/attachments/shared_attachments';
@@ -1021,6 +1021,7 @@ function saveMessages(dataArray: Array<MessageAttributes>): Array<string> {
       messageHash,
       errors,
       expirationTimerUpdate,
+      isDeleted,
     } = data;
 
     // Check if this message mentions us
@@ -1059,6 +1060,7 @@ function saveMessages(dataArray: Array<MessageAttributes>): Array<string> {
       errors: errors ?? null,
 
       mentionsUs: toSqliteBoolean(mentionsUs),
+      isDeleted: isDeleted ? (isDeleted as number) : null,
     } satisfies SQLInsertable;
     devAssertValidSQLPayload(MESSAGES_TABLE, payload);
     return payload;
@@ -1089,6 +1091,7 @@ function saveMessages(dataArray: Array<MessageAttributes>): Array<string> {
       flags,
       messageHash,
       errors,
+      isDeleted,
       ${MessageColumns.mentionsUs}
     ) VALUES (
       $id,
@@ -1113,6 +1116,7 @@ function saveMessages(dataArray: Array<MessageAttributes>): Array<string> {
       $flags,
       $messageHash,
       $errors,
+      $isDeleted,
       $mentionsUs
     )`
   );
@@ -1750,15 +1754,28 @@ function getMessagesByConversation(
   };
 }
 
-function getLastMessagesByConversation(conversationId: string, limit: number) {
+function getLastMessagesByConversation({
+  conversationId,
+  limit,
+  skipMarkedAsDeleted,
+}: {
+  conversationId: string;
+  limit: number;
+  skipMarkedAsDeleted: boolean;
+}) {
   if (!isNumber(limit)) {
     throw new Error('limit must be a number');
   }
 
+  const andNotDeleted = skipMarkedAsDeleted
+    ? `AND (isDeleted is NULL OR isDeleted == ${MessageDeletedType.notDeleted})`
+    : '';
+
   const sql = `SELECT json FROM ${MESSAGES_TABLE} WHERE
-      conversationId = $conversationId
+      conversationId = $conversationId ${andNotDeleted}
       ${orderByClauseDESC}
     LIMIT $limit;`;
+
   const params = { conversationId, limit };
   const rows = analyzeQuery(assertGlobalInstance(), sql, params).all<JSONRow>();
 
@@ -2264,7 +2281,7 @@ function removeKnownAttachments(allAttachments: Array<string>) {
        ORDER BY id ASC
        LIMIT $chunkSize;`;
     const params = { id, chunkSize };
-    const rows = analyzeQuery(assertGlobalInstance(), sql, params, true).all<JSONRow>();
+    const rows = analyzeQuery(assertGlobalInstance(), sql, params).all<JSONRow>();
 
     const messages = parseJsonRows(rows);
 

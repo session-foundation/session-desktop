@@ -14,7 +14,6 @@ import {
   IpcMainEvent,
   Menu,
   nativeTheme,
-  powerSaveBlocker,
   screen,
   shell,
   systemPreferences,
@@ -26,6 +25,7 @@ import os from 'os';
 import path, { join } from 'path';
 import { platform as osPlatform } from 'process';
 import url from 'url';
+import { configDotenv } from 'dotenv';
 
 import _, { isEmpty, isNumber, isFinite } from 'lodash';
 
@@ -34,8 +34,13 @@ import { setup as setupSpellChecker } from '../node/spell_check';
 
 import electronLocalshortcut from 'electron-localshortcut';
 import packageJson from '../../package.json';
+import { startAppSuspensionBlocker, stopAppSuspensionBlocker } from '../node/power_saver_inhibitor';
+
+configDotenv({ path: '.env' });
 
 addHandler();
+
+startAppSuspensionBlocker();
 
 const getRealPath = (p: string) => fs.realpathSync(p);
 
@@ -44,12 +49,6 @@ const getRealPath = (p: string) => fs.realpathSync(p);
 app.commandLine.appendSwitch('disable-renderer-backgrounding');
 app.commandLine.appendSwitch('disable-background-timer-throttling');
 app.commandLine.appendSwitch('disable-backgrounding-occluded-windows');
-if (!process.env.SESSION_ALLOW_APP_SUSPENSION) {
-  console.log('SESSION_ALLOW_APP_SUSPENSION is not set, so we prevent app suspension');
-  powerSaveBlocker.start('prevent-app-suspension');
-} else {
-  console.log('SESSION_ALLOW_APP_SUSPENSION is set, so we do not prevent app suspension');
-}
 
 // Hardcoding appId to prevent build failures on release.
 // const appUserModelId = packageJson.build.appId;
@@ -911,6 +910,7 @@ app.on('before-quit', () => {
     readyForShutdown: mainWindow ? readyForShutdown : null,
     shouldQuit: windowShouldQuit(),
   });
+  stopAppSuspensionBlocker();
   if (tray) {
     tray.destroy();
   }

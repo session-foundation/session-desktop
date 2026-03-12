@@ -49,8 +49,8 @@ async function submitForOpenGroup(convoId: string, pubkeys: Array<string>) {
     if (!roomDetails) {
       throw new Error(`getCommunityByFullUrl returned no result for ${convo.id}`);
     }
-    const groupInvitation = {
-      url: roomDetails?.fullUrlWithPubkey,
+    const communityInvitation = {
+      url: roomDetails.fullUrlWithPubkey,
       name: convo.getNicknameOrRealUsernameOrPlaceholder(),
     };
     ToastUtils.pushToastInfo('sendingInvites', tr('groupInviteSending', { count: pubkeys.length }));
@@ -66,7 +66,7 @@ async function submitForOpenGroup(convoId: string, pubkeys: Array<string>) {
           conversationId: convoId,
           body: '',
           attachments: undefined,
-          groupInvitation,
+          communityInvitation,
           preview: undefined,
           quote: undefined,
         });

@@ -38,6 +38,7 @@ const NotificationSettingIcon = () => {
           iconColor="currentColor"
           iconSize="small"
           style={{ flexShrink: 0 }}
+          dataTestId="conversation-item-muted"
         />
       );
     case 'mentions_only':
@@ -46,6 +47,7 @@ const NotificationSettingIcon = () => {
           iconType="bell"
           iconColor="currentColor"
           iconSize="small"
+          dataTestId="conversation-item-mentions-only"
           style={{ flexShrink: 0 }}
         />
       );
@@ -72,6 +74,7 @@ const PinIcon = () => {
       iconColor="currentColor"
       iconSize="small"
       style={{ flexShrink: 0 }}
+      dataTestId="conversation-item-pinned"
     />
   ) : null;
 };
@@ -152,6 +155,7 @@ const AtSymbol = ({ conversationId }: WithConvoId) => {
       title="Open to latest mention"
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       onMouseDown={async e => openConvoToLastMention(e, conversationId)}
+      data-testid="conversation-item-mentioned-us"
     >
       @
     </MentionAtSymbol>
@@ -185,14 +189,24 @@ const UnreadCount = ({ conversationId }: WithConvoId) => {
       : unreadMsgCount || ' ';
 
   if (forcedUnread) {
-    return <MailWithUnreadIcon iconSize="small" style={{ maxHeight: '100%' }} />;
+    return (
+      <MailWithUnreadIcon
+        iconSize="small"
+        style={{ maxHeight: '100%' }}
+        dataTestId="conversation-item-forced-unread"
+      />
+    );
   }
 
   if (unreadMsgCount <= 0) {
     return null;
   }
 
-  return <StyledUnreadCount>{unreadWithOverflow}</StyledUnreadCount>;
+  return (
+    <StyledUnreadCount data-testid="conversation-item-unread-count">
+      {unreadWithOverflow}
+    </StyledUnreadCount>
+  );
 };
 
 export const ConversationListItemHeaderItem = () => {

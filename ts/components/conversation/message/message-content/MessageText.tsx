@@ -15,8 +15,9 @@ import {
 import type { WithMessageId } from '../../../../session/types/with';
 import { LucideIcon } from '../../../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
-import { tr } from '../../../../localization/localeTools';
 import { MessageBubble } from './MessageBubble';
+import { MessageDeletedType } from '../../../../models/messageType';
+import { tr } from '../../../../localization';
 
 type Props = WithMessageId;
 
@@ -38,11 +39,7 @@ export const MessageText = ({ messageId }: Props) => {
   const text = useMessageText(messageId);
   const isOpenOrClosedGroup = useSelectedIsGroupOrCommunity();
   const isPublic = useSelectedIsPublic();
-  const contents = isDeleted ? tr('deleteMessageDeletedGlobally') : text?.trim();
-
-  if (!contents) {
-    return null;
-  }
+  const contents = text?.trim();
 
   const iconColor =
     direction === 'incoming'
@@ -58,9 +55,17 @@ export const MessageText = ({ messageId }: Props) => {
           iconColor={iconColor}
           style={{ padding: '0 var(--margins-xs)' }}
         />
-        {contents}
+        {isDeleted === MessageDeletedType.deletedGlobally
+          ? tr('deleteMessageDeletedGlobally')
+          : isDeleted === MessageDeletedType.deletedLocally
+            ? tr('deleteMessageDeletedLocally')
+            : null}
       </StyledMessageDeleted>
     );
+  }
+
+  if (!contents) {
+    return null;
   }
 
   return (

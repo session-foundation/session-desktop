@@ -215,18 +215,28 @@ declare module 'react' {
     | `${ConfirmButtons}-confirm`
     | `${CancelButtons}-cancel`
     | `clear-${ClearButtons}`
-    | `${SetButton}-set`;
+    | `${SetButton}-set`
+    | `reaction-emoji-panel`;
 
   type InputLabels =
     | 'device_and_network'
     | 'device_only'
-    | 'deleteForEveryone'
-    | 'deleteJustForMe'
+    | 'deleteMessageEveryone'
+    | 'deleteMessageDevicesAll'
+    | 'deleteMessageDeviceOnly'
     | 'enterForSend'
     | 'enterForNewLine'
     | 'message'
     | 'name'
     | 'count';
+
+  type ConversationItemFlagsIds =
+    | 'conversation-item-muted'
+    | 'conversation-item-pinned'
+    | 'conversation-item-mentions-only'
+    | 'conversation-item-forced-unread'
+    | 'conversation-item-unread-count'
+    | 'conversation-item-mentioned-us';
 
   type SessionDataTestId =
     | 'group-member-status-text'
@@ -245,6 +255,7 @@ declare module 'react' {
     | 'image-upload-click'
     | 'your-profile-name'
     | 'community-name'
+    | 'community-invitation-details'
     | 'group-name'
     | 'group-description'
     | 'preferred-display-name'
@@ -281,6 +292,9 @@ declare module 'react' {
     // Buttons
     | `${Buttons}-button`
 
+    // Conversation Item Flags
+    | ConversationItemFlagsIds
+
     // settings menu item types
     | `${MenuItems}-menu-item`
     | `${SettingsMenuItems}-settings-menu-item`
@@ -301,6 +315,7 @@ declare module 'react' {
 
     // generic readably message (not control message)
     | 'message-content'
+    | 'message-container'
 
     // control message types
     | 'message-request-response-message'
@@ -423,6 +438,7 @@ declare module 'react' {
     | 'msg-link-preview-title'
     | 'modal-heading'
     | 'modal-description'
+    | 'modal-warning'
     | 'error-message'
     | 'group-not-updated-30-days-banner'
     | 'delete-from-details'

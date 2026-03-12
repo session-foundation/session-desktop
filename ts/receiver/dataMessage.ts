@@ -73,7 +73,7 @@ function cleanAttachments(decryptedDataMessage: SignalService.DataMessage) {
 }
 
 export function messageHasVisibleContent(message: SignalService.DataMessage) {
-  const { flags, body, attachments, quote, preview, openGroupInvitation, reaction } = message;
+  const { flags, body, attachments, quote, preview, communityInvitation, reaction } = message;
 
   return (
     !!flags ||
@@ -81,7 +81,7 @@ export function messageHasVisibleContent(message: SignalService.DataMessage) {
     !isEmpty(attachments) ||
     !isEmpty(quote) ||
     !isEmpty(preview) ||
-    !isEmpty(openGroupInvitation) ||
+    !isEmpty(communityInvitation) ||
     !isEmpty(reaction)
   );
 }

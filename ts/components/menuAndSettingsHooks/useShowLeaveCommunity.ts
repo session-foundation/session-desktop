@@ -1,6 +1,5 @@
 import { getAppDispatch } from '../../state/dispatch';
 import { useConversationUsernameWithFallback, useIsPublic } from '../../hooks/useParamSelector';
-import { tr } from '../../localization/localeTools';
 import { ConvoHub } from '../../session/conversations';
 import { updateConfirmModal, updateConversationSettingsModal } from '../../state/ducks/modalDialog';
 import { SessionButtonColor } from '../basic/SessionButton';
@@ -28,10 +27,10 @@ export function useShowLeaveCommunityCb(conversationId?: string) {
 
     dispatch(
       updateConfirmModal({
-        title: tr('communityLeave'),
+        title: { token: 'communityLeave' },
         i18nMessage: { token: 'groupLeaveDescription', group_name: username ?? '' },
         onClickOk,
-        okText: tr('leave'),
+        okText: { token: 'leave' },
         okTheme: SessionButtonColor.Danger,
         onClickClose,
         conversationId,

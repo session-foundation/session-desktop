@@ -1,34 +1,102 @@
-import { FocusTrap } from 'focus-trap-react';
-import { ReactNode } from 'react';
+import { FocusTrap, type FocusTrapProps } from 'focus-trap-react';
+import { type ReactNode, useEffect, useState } from 'react';
 import type { CSSProperties } from 'styled-components';
+import { windowErrorFilters } from '../util/logger/renderer_process_logging';
+import { getFeatureFlagMemo } from '../state/ducks/types/releasedFeaturesReduxTypes';
 
-/**
- * Focus trap which activates on mount.
- */
-export function SessionFocusTrap({
-  children,
-  allowOutsideClick = true,
-  returnFocusOnDeactivate,
-  initialFocus,
-  containerDivStyle,
-}: {
+const focusTrapErrorSource = 'focus-trap';
+
+type SessionFocusTrapProps = FocusTrapProps['focusTrapOptions'] & {
+  /** id used for debugging */
+  focusTrapId: string;
   children: ReactNode;
-  allowOutsideClick?: boolean;
-  returnFocusOnDeactivate?: boolean;
-  initialFocus: () => HTMLElement | null;
+  active?: boolean;
   containerDivStyle?: CSSProperties;
-}) {
+  /** Suppress errors thrown from inside the focus trap, preventing logging or global error emission */
+  suppressErrors?: boolean;
+  /** Allows the focus trap to exist without detectable tabbable elements. This is required if the children
+   * are within a Shadow DOM. Internally sets suppressErrors to true. */
+  allowNoTabbableNodes?: boolean;
+};
+
+export function SessionFocusTrap({
+  focusTrapId,
+  children,
+  active = true,
+  allowOutsideClick = true,
+  containerDivStyle,
+  suppressErrors,
+  allowNoTabbableNodes,
+  onActivate,
+  onPostActivate,
+  onDeactivate,
+  onPostDeactivate,
+  ...rest
+}: SessionFocusTrapProps) {
+  const debugFocusTrap = getFeatureFlagMemo('debugFocusTrap');
+  const defaultTabIndex = allowNoTabbableNodes ? 0 : -1;
+  const _suppressErrors = suppressErrors || allowNoTabbableNodes;
+  /**
+   * NOTE: the tab index tricks the focus trap into thinking it has
+   * tabbable children by setting a tab index on the empty div child. When
+   * the trap activates it will see the div in the tab list and render without
+   * error, then remove that div from the tab index list. Then when the trap
+   * deactivates the state is reset.
+   */
+  const [tabIndex, setTabIndex] = useState<0 | 1 | -1>(defaultTabIndex);
+
+  const _onActivate = () => {
+    if (debugFocusTrap) {
+      window.log.debug(`[SessionFocusTrap] onActivate - ${focusTrapId}`);
+    }
+    onActivate?.();
+  };
+
+  const _onPostActivate = () => {
+    if (allowNoTabbableNodes) {
+      setTabIndex(-1);
+    }
+    onPostActivate?.();
+  };
+
+  const _onDeactivate = () => {
+    if (debugFocusTrap) {
+      window.log.debug(`[SessionFocusTrap] onDeactivate - ${focusTrapId}`);
+    }
+    if (allowNoTabbableNodes) {
+      setTabIndex(defaultTabIndex);
+    }
+    onDeactivate?.();
+  };
+
+  useEffect(() => {
+    if (!active || !_suppressErrors) {
+      return;
+    }
+    windowErrorFilters.add(focusTrapErrorSource);
+    // eslint-disable-next-line consistent-return -- This return is the destructor
+    return () => {
+      windowErrorFilters.remove(focusTrapErrorSource);
+    };
+  }, [_suppressErrors, active]);
+
   return (
     <FocusTrap
-      active={true}
+      active={active}
       focusTrapOptions={{
-        initialFocus,
+        ...rest,
         allowOutsideClick,
-        returnFocusOnDeactivate,
+        onActivate: _onActivate,
+        onPostActivate: _onPostActivate,
+        onDeactivate: _onDeactivate,
+        onPostDeactivate,
       }}
     >
-      {/* Note:  not too sure why, but without this div, the focus trap doesn't work */}
-      <div style={containerDivStyle}>{children}</div>
+      {/* Note: without this div, the focus trap doesn't work */}
+      <div style={containerDivStyle}>
+        {allowNoTabbableNodes ? <div tabIndex={tabIndex} /> : null}
+        {children}
+      </div>
     </FocusTrap>
   );
 }

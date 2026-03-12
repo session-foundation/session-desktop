@@ -70,10 +70,10 @@ export const OverlayMessageRequest = () => {
   function handleClearAllRequestsClick() {
     dispatch(
       updateConfirmModal({
-        title: tr('clearAll'),
+        title: { token: 'clearAll' },
         i18nMessage: { token: 'messageRequestsClearAllExplanation' },
         okTheme: SessionButtonColor.Danger,
-        okText: tr('clear'),
+        okText: { token: 'clear' },
         onClickOk: async () => {
           window?.log?.info('Blocking all message requests');
           if (!hasRequests) {

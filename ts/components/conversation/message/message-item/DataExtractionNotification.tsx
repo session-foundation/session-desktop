@@ -7,8 +7,7 @@ import type { WithMessageId } from '../../../../session/types/with';
 import { SignalService } from '../../../../protobuf';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 
-export const DataExtractionNotification = (props: WithMessageId) => {
-  const { messageId } = props;
+export const DataExtractionNotification = ({ messageId }: WithMessageId) => {
   const author = useMessageAuthor(messageId);
   const authorName = useConversationUsernameWithFallback(true, author);
 
@@ -23,7 +22,6 @@ export const DataExtractionNotification = (props: WithMessageId) => {
       messageId={messageId}
       dataTestId="data-extraction-notification"
       key={`readable-message-${messageId}`}
-      isControlMessage={true}
     >
       <NotificationBubble unicode={LUCIDE_ICONS_UNICODE.ARROW_DOWN_TO_LINE}>
         <Localizer

@@ -72,6 +72,11 @@ export type WithProMessageDetailsOrProto = {
   outgoingProMessageDetails: OutgoingProMessageDetailsOrProto;
 };
 
+export type CommunityInvitation = {
+  url: string;
+  name: string;
+};
+
 export type VisibleMessageParams = ExpirableMessageParams &
   WithOutgoingUserProfile &
   WithProMessageDetailsOrProto & {
@@ -80,6 +85,7 @@ export type VisibleMessageParams = ExpirableMessageParams &
     quote?: Quote | null;
     preview?: Array<PreviewWithAttachmentUrl>;
     reaction?: Reaction;
+    communityInvitation?: CommunityInvitation;
     syncTarget?: string; // undefined means it is not a synced message
   };
 
@@ -89,6 +95,7 @@ export class VisibleMessage extends DataMessageWithProfile {
   private readonly attachments?: Array<AttachmentPointerWithUrl & { deprecatedId: Long }>;
   private readonly body?: string;
   private readonly quote?: Quote;
+  private readonly communityInvitation?: CommunityInvitation;
 
   private readonly preview?: Array<PreviewWithAttachmentUrl & { deprecatedId?: Long }>;
 
@@ -111,6 +118,7 @@ export class VisibleMessage extends DataMessageWithProfile {
     }));
     this.body = params.body;
     this.quote = params.quote ?? undefined;
+    this.communityInvitation = params.communityInvitation;
 
     this.preview = params.preview?.map(attachment => ({
       ...attachment,
@@ -165,6 +173,14 @@ export class VisibleMessage extends DataMessageWithProfile {
 
         return item;
       });
+    }
+
+    if (this.communityInvitation && this.communityInvitation.url) {
+      const communityInvitation = new SignalService.DataMessage.CommunityInvitation({
+        url: this.communityInvitation.url,
+        name: this.communityInvitation.name,
+      });
+      dataMessage.communityInvitation = communityInvitation;
     }
 
     return dataMessage;

@@ -6,7 +6,11 @@ import { ReplyingToMessageProps } from '../../components/conversation/compositio
 import { Data } from '../../data/data';
 
 import { ConversationNotificationSettingType } from '../../models/conversationAttributes';
-import { MessageModelType, PropsForDataExtractionNotification } from '../../models/messageType';
+import {
+  MessageModelType,
+  PropsForDataExtractionNotification,
+  type MessageDeletedType,
+} from '../../models/messageType';
 import { ConvoHub } from '../../session/conversations';
 import { DisappearingMessages } from '../../session/disappearing_messages';
 import {
@@ -36,17 +40,75 @@ import type { ProMessageFeature } from '../../models/proMessageFeature';
 import { handleTriggeredCTAs } from '../../components/dialog/SessionCTA';
 import { getFeatureFlag } from './types/releasedFeaturesReduxTypes';
 import type { Quote } from '../../session/messages/outgoing/visibleMessage/VisibleMessage';
+import { PopoverTriggerPosition } from '../../components/SessionTooltip';
+
+export type UIMessageType =
+  | 'community-invitation'
+  | 'data-extraction-notification'
+  | 'timer-update-notification'
+  | 'group-update-notification'
+  | 'call-notification'
+  | 'interaction-notification'
+  | 'message-request-response'
+  | 'regular-message';
+
+type MessageTypeIsControlMessage<T extends UIMessageType> = Extract<
+  T,
+  | 'data-extraction-notification'
+  | 'timer-update-notification'
+  | 'group-update-notification'
+  | 'call-notification'
+  | 'interaction-notification'
+  | 'message-request-response'
+>;
+
+type WithMessageTypeDetails<T extends UIMessageType> = {
+  messageType: T;
+  isControlMessage: T extends MessageTypeIsControlMessage<T> ? true : false;
+};
+
+type WithCommunityInvitation = WithMessageTypeDetails<'community-invitation'> & {
+  propsForCommunityInvitation: PropsForCommunityInvitation;
+};
+
+type WithDataExtractionNotification = WithMessageTypeDetails<'data-extraction-notification'> & {
+  propsForDataExtractionNotification: PropsForDataExtractionNotification;
+};
+
+type WithExpirationTimerUpdate = WithMessageTypeDetails<'timer-update-notification'> & {
+  propsForTimerNotification: PropsForExpirationTimer;
+};
+
+type WithGroupUpdateNotification = WithMessageTypeDetails<'group-update-notification'> & {
+  propsForGroupUpdateMessage: PropsForGroupUpdate;
+};
+
+type WithCallNotification = WithMessageTypeDetails<'call-notification'> & {
+  propsForCallNotification: PropsForCallNotification;
+};
+
+type WithInteractionNotification = WithMessageTypeDetails<'interaction-notification'> & {
+  propsForInteractionNotification: PropsForInteractionNotification;
+};
+
+type WithMessageRequestResponse = WithMessageTypeDetails<'message-request-response'> & {
+  propsForMessageRequestResponse: PropsForMessageRequestResponse;
+};
+
+type WithRegularMessage = WithMessageTypeDetails<'regular-message'>;
 
 export type MessageModelPropsWithoutConvoProps = {
   propsForMessage: PropsForMessageWithoutConvoProps;
-  propsForCommunityInvitation?: PropsForCommunityInvitation;
-  propsForTimerNotification?: PropsForExpirationTimer;
-  propsForDataExtractionNotification?: PropsForDataExtractionNotification;
-  propsForGroupUpdateMessage?: PropsForGroupUpdate;
-  propsForCallNotification?: PropsForCallNotification;
-  propsForMessageRequestResponse?: PropsForMessageRequestResponse;
-  propsForInteractionNotification?: PropsForInteractionNotification;
-};
+} & (
+  | WithCallNotification
+  | WithCommunityInvitation
+  | WithDataExtractionNotification
+  | WithExpirationTimerUpdate
+  | WithMessageRequestResponse
+  | WithInteractionNotification
+  | WithRegularMessage
+  | WithGroupUpdateNotification
+);
 
 export type MessageModelPropsWithConvoProps = SortedMessageModelProps & {
   propsForMessage: PropsForMessageWithConvoProps;
@@ -158,7 +220,7 @@ export type PropsForMessageWithoutConvoProps = {
   previews?: Array<any>;
   quote?: Quote;
   messageHash?: string;
-  isDeleted?: boolean;
+  isDeleted?: MessageDeletedType;
   isUnread?: boolean;
   expirationType?: DisappearingMessageType;
   expirationDurationMs?: number;
@@ -180,10 +242,8 @@ export type PropsForMessageWithConvoProps = PropsForMessageWithoutConvoProps & {
   isKickedFromGroup: boolean;
   weAreAdmin: boolean;
   isSenderAdmin: boolean;
-  isDeletable: boolean;
-  isDeletableForEveryone: boolean;
   isBlocked: boolean;
-  isDeleted?: boolean;
+  isDeleted?: MessageDeletedType;
 };
 
 /**
@@ -305,6 +365,8 @@ export type ConversationsStateType = {
   nextMessageToPlayId?: string;
   mentionMembers: Array<SessionSuggestionDataItem>;
   focusedMessageId: string | null;
+  interactableMessageId: string | null;
+  reactionBarTriggerPosition: PopoverTriggerPosition | null;
   isCompositionTextAreaFocused: boolean;
 };
 
@@ -492,6 +554,8 @@ export function getEmptyConversationState(): ConversationsStateType {
     shouldHighlightMessage: false,
     mostRecentMessageId: null,
     focusedMessageId: null,
+    interactableMessageId: null,
+    reactionBarTriggerPosition: null,
     isCompositionTextAreaFocused: false,
   };
 }
@@ -503,6 +567,12 @@ function handleMessageChangedOrAdded(
   if (changedOrAddedMessageProps.propsForMessage.convoId !== state.selectedConversation) {
     return state;
   }
+
+  const editedQuotedMessages = updateQuotedMessageProps(
+    state.quotedMessages,
+    changedOrAddedMessageProps
+  );
+  state.quotedMessages = editedQuotedMessages;
 
   const messageInStoreIndex = state.messages.findIndex(
     m => m.propsForMessage.id === changedOrAddedMessageProps.propsForMessage.id
@@ -556,6 +626,50 @@ function handleMessagesChangedOrAdded(
   return stateCopy;
 }
 
+function removeQuotedMessageProps(
+  quotedMessageProps: Array<MessageModelPropsWithoutConvoProps>,
+  msgChangedProps: MessageModelPropsWithoutConvoProps
+) {
+  // Check if the message is quoted somewhere, and if so, remove it from the quotes
+  const { timestamp, sender } = msgChangedProps.propsForMessage;
+  if (timestamp && sender) {
+    const { foundAt, foundProps } = lookupQuoteInStore({
+      timestamp,
+      quotedMessagesInStore: quotedMessageProps,
+    });
+    if (foundAt >= 0) {
+      window.log.debug(`Deleting quote ${JSON.stringify(foundProps)}`);
+
+      const editedQuotedMessages = [...quotedMessageProps];
+      editedQuotedMessages.splice(foundAt, 1);
+      return editedQuotedMessages;
+    }
+  }
+  return quotedMessageProps;
+}
+
+function updateQuotedMessageProps(
+  quotedMessageProps: Array<MessageModelPropsWithoutConvoProps>,
+  msgChangedProps: MessageModelPropsWithoutConvoProps
+) {
+  // Check if the message is quoted somewhere, and if so, update the quoted message props
+  const { timestamp, sender } = msgChangedProps.propsForMessage;
+  if (timestamp && sender) {
+    const { foundAt } = lookupQuoteInStore({
+      timestamp,
+      quotedMessagesInStore: quotedMessageProps,
+    });
+    if (foundAt >= 0) {
+      window.log.debug(`Updating quote found at ${foundAt}`);
+
+      const editedQuotedMessages = [...quotedMessageProps];
+      editedQuotedMessages[foundAt] = msgChangedProps;
+      return editedQuotedMessages;
+    }
+  }
+  return quotedMessageProps;
+}
+
 function handleMessageExpiredOrDeleted(
   state: ConversationsStateType,
   payload: WithConvoId & (WithMessageId | WithMessageHash)
@@ -579,26 +693,13 @@ function handleMessageExpiredOrDeleted(
     if (messageInStoreIndex >= 0) {
       const msgToRemove = state.messages[messageInStoreIndex];
       const extractedMessageId = msgToRemove.propsForMessage.id;
-      const msgRemovedProps = state.messages[messageInStoreIndex].propsForMessage;
+      const msgRemovedProps = state.messages[messageInStoreIndex];
 
       // we cannot edit the array directly, so slice the first part, and slice the second part,
       // keeping the index removed out
       const editedMessages = [...state.messages];
       editedMessages.splice(messageInStoreIndex, 1);
-      const editedQuotedMessages = [...state.quotedMessages];
-
-      // Check if the message is quoted somewhere, and if so, remove it from the quotes
-      const { timestamp, sender } = msgRemovedProps;
-      if (timestamp && sender) {
-        const { foundAt, foundProps } = lookupQuoteInStore({
-          timestamp,
-          quotedMessagesInStore: state.quotedMessages,
-        });
-        if (foundAt >= 0) {
-          window.log.debug(`Deleting quote ${JSON.stringify(foundProps)}`);
-          editedQuotedMessages.splice(foundAt, 1);
-        }
-      }
+      const editedQuotedMessages = removeQuotedMessageProps(state.quotedMessages, msgRemovedProps);
 
       return {
         ...state,
@@ -663,20 +764,6 @@ const conversationsSlice = createSlice({
     removeMessageInfoId(state: ConversationsStateType) {
       return { ...state, messageInfoId: undefined };
     },
-    addMessageIdToSelection(state: ConversationsStateType, action: PayloadAction<string>) {
-      if (state.selectedMessageIds.some(id => id === action.payload)) {
-        return state;
-      }
-      return { ...state, selectedMessageIds: [...state.selectedMessageIds, action.payload] };
-    },
-    removeMessageIdFromSelection(state: ConversationsStateType, action: PayloadAction<string>) {
-      const index = state.selectedMessageIds.findIndex(id => id === action.payload);
-
-      if (index === -1) {
-        return state;
-      }
-      return { ...state, selectedMessageIds: state.selectedMessageIds.splice(index, 1) };
-    },
     toggleSelectedMessageId(state: ConversationsStateType, action: PayloadAction<string>) {
       const index = state.selectedMessageIds.findIndex(id => id === action.payload);
 
@@ -693,6 +780,15 @@ const conversationsSlice = createSlice({
     },
     setFocusedMessageId(state: ConversationsStateType, action: PayloadAction<string | null>) {
       return { ...state, focusedMessageId: action.payload };
+    },
+    setInteractableMessageId(state: ConversationsStateType, action: PayloadAction<string | null>) {
+      return { ...state, interactableMessageId: action.payload };
+    },
+    setReactionBarTriggerPosition(
+      state: ConversationsStateType,
+      action: PayloadAction<PopoverTriggerPosition | null>
+    ) {
+      return { ...state, reactionBarTriggerPosition: action.payload };
     },
     setIsCompositionTextAreaFocused(state: ConversationsStateType, action: PayloadAction<boolean>) {
       return { ...state, isCompositionTextAreaFocused: action.payload };
@@ -857,6 +953,8 @@ const conversationsSlice = createSlice({
         oldBottomMessageId: null,
         mentionMembers: [],
         focusedMessageId: null,
+        interactableMessageId: null,
+        reactionBarTriggerPosition: null,
         isCompositionTextAreaFocused: false,
       };
     },
@@ -1120,7 +1218,6 @@ export const {
   openRightPanel,
   closeRightPanel,
   removeMessageInfoId,
-  addMessageIdToSelection,
   resetSelectedMessageIds,
   setFocusedMessageId,
   setIsCompositionTextAreaFocused,
@@ -1132,6 +1229,8 @@ export const {
   updateMentionsMembers,
   resetConversationExternal,
   markConversationInitialLoadingInProgress,
+  setReactionBarTriggerPosition,
+  setInteractableMessageId,
 } = actions;
 
 async function unmarkAsForcedUnread(convoId: string) {

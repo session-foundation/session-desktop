@@ -167,12 +167,12 @@ export function pushYouLeftTheGroup() {
   pushToastError('youLeftTheGroup', tStripped('groupMemberYouLeft'));
 }
 
-export function someDeletionsFailed(count: number) {
-  pushToastWarning('deletionError', tStripped('deleteMessageFailed', { count }));
-}
-
 export function pushDeleted(count: number) {
   pushToastSuccess('deleted', tStripped('deleteMessageDeleted', { count }));
+}
+
+export function pushFailedToDelete(count: number) {
+  pushToastWarning('failedToDelete', tStripped('deleteMessageFailed', { count }));
 }
 
 export function pushCannotRemoveGroupAdmin() {
@@ -263,4 +263,8 @@ export function pushNoMediaUntilApproved() {
 
 export function pushRateLimitHitReactions() {
   pushToastInfo('reactRateLimit', tStripped('emojiReactsCoolDown'));
+}
+
+export function pushGenericError() {
+  pushToastError('errorGeneric', tStripped('errorGeneric'));
 }

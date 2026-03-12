@@ -85,12 +85,10 @@ const ProInfoBlockTitle = styled.div`
 
 const ProInfoBlockDescription = styled.div`
   font-size: var(--font-size-md);
-  line-height: var(--font-size-md);
 `;
 
 const ProInfoBlockSectionSubtitle = styled.div`
   font-size: var(--font-size-md);
-  line-height: var(--font-size-md);
   color: var(--text-secondary-color);
 `;
 
@@ -192,7 +190,13 @@ function ProInfoBlockDeviceLinked() {
   );
 }
 
-function ProInfoBlockWebsite({ textElement }: { textElement: ReactNode }) {
+function ProInfoBlockWebsite({
+  textElement,
+  titleType,
+}: {
+  textElement: ReactNode;
+  titleType: 'via' | 'onThe';
+}) {
   const { data } = useProBackendProDetailsLocal();
   const storeOrPlatform = useStoreOrPlatformFromProvider(data);
 
@@ -202,7 +206,7 @@ function ProInfoBlockWebsite({ textElement }: { textElement: ReactNode }) {
       textElement={
         <ProInfoBlockText>
           <strong>
-            {tr('viaStoreWebsite', {
+            {tr(titleType === 'via' ? 'viaStoreWebsite' : 'onPlatformWebsite', {
               platform: storeOrPlatform,
             })}
           </strong>
@@ -305,6 +309,7 @@ function ProInfoBlockUpdate() {
             }
           />
           <ProInfoBlockWebsite
+            titleType="via"
             textElement={
               <Localizer
                 token="viaStoreWebsiteDescription"
@@ -347,6 +352,7 @@ function ProInfoBlockRenew() {
         <>
           <ProInfoBlockDeviceLinked />
           <ProInfoBlockWebsite
+            titleType="onThe"
             textElement={
               <Localizer
                 token="proAccessRenewPlatformStoreWebsite"
@@ -363,6 +369,8 @@ function ProInfoBlockRenew() {
 
 function ProInfoBlockCancel() {
   const { data } = useProBackendProDetailsLocal();
+  const storeOrPlatform = useStoreOrPlatformFromProvider(data);
+
   return (
     <ProInfoBlockLayout
       titleElement={tr('proCancellation')}
@@ -387,10 +395,11 @@ function ProInfoBlockCancel() {
             }
           />
           <ProInfoBlockWebsite
+            titleType="onThe"
             textElement={
               <Localizer
                 token="cancelProPlatformStore"
-                platform_store={data.providerConstants.platform}
+                platform_store={storeOrPlatform}
                 platform_account={data.providerConstants.platform_account}
               />
             }
@@ -472,6 +481,7 @@ function ProInfoBlockRefundIOS() {
             }
           />
           <ProInfoBlockWebsite
+            titleType="onThe"
             textElement={
               <Localizer
                 token="requestRefundPlatformWebsite"

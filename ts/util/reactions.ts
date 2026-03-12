@@ -160,6 +160,12 @@ const handleMessageReaction = async ({
   if (!originalMessage) {
     return undefined;
   }
+  if (originalMessage.isMarkedAsDeleted()) {
+    window.log.debug(
+      `Received a reaction on a marked-as-deleted message. Ignoring it.${originalMessage.idForLogging()}`
+    );
+    return undefined;
+  }
 
   const reacts: ReactionList = originalMessage.get('reacts') ?? {};
   reacts[reaction.emoji] = reacts[reaction.emoji] || { count: null, senders: [] };
@@ -271,6 +277,11 @@ const handleOpenGroupMessageReactions = async (
     window?.log?.debug(
       `Cannot find the original reacted message ${serverId} in conversation ${conversationId}.`
     );
+    return undefined;
+  }
+
+  if (originalMessage.isMarkedAsDeleted()) {
+    window?.log?.debug(`Cannot react to a deleted message ${serverId}.`);
     return undefined;
   }
 

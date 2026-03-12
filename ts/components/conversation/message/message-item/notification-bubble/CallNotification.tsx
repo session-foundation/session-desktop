@@ -32,9 +32,7 @@ const style = {
   },
 } satisfies StyleType;
 
-export const CallNotification = (props: WithMessageId) => {
-  const { messageId } = props;
-
+export const CallNotification = ({ messageId }: WithMessageId) => {
   const notificationType = useMessageCallNotificationType(messageId);
 
   const name = useSelectedNicknameOrProfileNameOrShortenedPubkey();
@@ -50,7 +48,6 @@ export const CallNotification = (props: WithMessageId) => {
       messageId={messageId}
       key={`readable-message-${messageId}`}
       dataTestId={`call-notification-${notificationType}`}
-      isControlMessage={true}
     >
       <NotificationBubble unicode={unicode} iconColor={iconColor}>
         {notificationTextKey === 'callsInProgress' ? (

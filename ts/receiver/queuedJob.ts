@@ -120,7 +120,7 @@ export type RegularMessageType = Pick<
   | 'attachments'
   | 'body'
   | 'flags'
-  | 'openGroupInvitation'
+  | 'communityInvitation'
   | 'quote'
   | 'preview'
   | 'reaction'
@@ -141,7 +141,7 @@ export function toRegularMessage(rawDataMessage: SignalService.DataMessage): Reg
       'body',
       'flags',
       'profileKey',
-      'openGroupInvitation',
+      'communityInvitation',
       'quote',
       'profile',
       'blocksCommunityMessageRequests',
@@ -221,8 +221,12 @@ async function handleRegularMessage(
   // this does not trigger a UI update nor write to the db
   await copyFromQuotedMessage(message, rawDataMessage.quote);
 
-  if (rawDataMessage.openGroupInvitation) {
-    message.set({ groupInvitation: rawDataMessage.openGroupInvitation });
+  if (
+    rawDataMessage.communityInvitation &&
+    rawDataMessage.communityInvitation.url &&
+    rawDataMessage.communityInvitation.name
+  ) {
+    message.setCommunityInvitation(rawDataMessage.communityInvitation);
   }
 
   handleLinkPreviews(rawDataMessage.body, rawDataMessage.preview, message);

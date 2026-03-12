@@ -50,6 +50,7 @@ export const defaultBooleanFeatureFlags = {
   debugForceSeedNodeFailure: !isEmpty(process.env.SESSION_DEBUG_FORCE_SEED_NODE_FAILURE),
   debugKeyboardShortcuts: !isEmpty(process.env.SESSION_DEBUG_KEYBOARD_SHORTCUTS),
   debugFocusScope: !isEmpty(process.env.SESSION_DEBUG_FOCUS_SCOPE),
+  debugFocusTrap: !isEmpty(process.env.SESSION_DEBUG_FOCUS_TRAP),
 } satisfies SessionBooleanFeatureFlags;
 
 function getMockNetworkPageNodeCount() {

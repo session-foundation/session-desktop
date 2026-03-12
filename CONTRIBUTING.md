@@ -67,7 +67,7 @@ See [node-gyp installation instructions](https://github.com/nodejs/node-gyp#inst
   <summary>Fedora</summary>
 
   ```sh
-  sudo dnf install make automake gcc gcc-c++ kernel-devel
+  sudo dnf install make cmake automake gcc gcc-c++ kernel-devel
   ```
 
   </details>

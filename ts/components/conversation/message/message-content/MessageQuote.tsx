@@ -7,9 +7,10 @@ import { MessageRenderingProps } from '../../../../models/messageType';
 import { ToastUtils } from '../../../../session/utils';
 import { openConversationToSpecificMessage } from '../../../../state/ducks/conversations';
 import { StateType } from '../../../../state/reducer';
-import { useMessageDirection } from '../../../../state/selectors';
+import { useMessageDirection, useMessageType } from '../../../../state/selectors';
 import { getMessageQuoteProps } from '../../../../state/selectors/conversations';
 import { Quote } from './quote/Quote';
+import { tr } from '../../../../localization';
 
 type Props = {
   messageId: string;
@@ -23,6 +24,7 @@ export const MessageQuote = (props: Props) => {
   );
   const direction = useMessageDirection(props.messageId);
   const isMessageDetailView = useIsDetailMessageView();
+  const quotedMessageType = useMessageType((quoteProps as any)?.id);
 
   if (!quoteProps || isEmpty(quoteProps)) {
     return null;
@@ -67,6 +69,7 @@ export const MessageQuote = (props: Props) => {
         isIncoming={direction === 'incoming'}
         author={quoteProps.author}
         isFromMe={false}
+        isDeleted={undefined}
       />
     );
   }
@@ -75,12 +78,15 @@ export const MessageQuote = (props: Props) => {
     <Quote
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       onClick={onQuoteClick}
-      text={quoteProps?.text}
+      text={
+        quotedMessageType === 'community-invitation' ? tr('communityInvitation') : quoteProps?.text
+      }
       attachment={quoteProps?.attachment}
       isIncoming={direction === 'incoming'}
       author={quoteProps.author}
       referencedMessageNotFound={false}
       isFromMe={Boolean(quoteProps.isFromMe)}
+      isDeleted={quoteProps.isDeleted}
     />
   );
 };

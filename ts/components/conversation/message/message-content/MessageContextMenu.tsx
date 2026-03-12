@@ -2,23 +2,27 @@
 import { Dispatch, type KeyboardEvent, type MouseEvent, useRef } from 'react';
 
 import { isNil, isNumber, isString } from 'lodash';
-import { MenuOnHideCallback, MenuOnShowCallback } from 'react-contexify';
+import { MenuOnHideCallback, type MenuOnShowCallback } from 'react-contexify';
 import styled from 'styled-components';
 import { toNumber } from 'lodash/fp';
+import { useSelector } from 'react-redux';
 import { getAppDispatch } from '../../../../state/dispatch';
 import { Data } from '../../../../data/data';
 
 import { MessageRenderingProps } from '../../../../models/messageType';
-import { openRightPanel, showMessageInfoView } from '../../../../state/ducks/conversations';
 import {
-  useMessageAttachments,
-  useMessageDirection,
-  useMessageIsDeletable,
+  openRightPanel,
+  setReactionBarTriggerPosition,
+  showMessageInfoView,
+} from '../../../../state/ducks/conversations';
+import {
+  useMessageIsControlMessage,
+  useMessageIsDeleted,
   useMessageSender,
   useMessageSenderIsAdmin,
-  useMessageStatus,
 } from '../../../../state/selectors';
 import {
+  getSelectedCanWrite,
   useSelectedConversationKey,
   useSelectedIsLegacyGroup,
 } from '../../../../state/selectors/selectedConversation';
@@ -26,8 +30,7 @@ import { SessionContextMenuContainer } from '../../../SessionContextMenuContaine
 import { CopyAccountIdMenuItem } from '../../../menu/items/CopyAccountId/CopyAccountIdMenuItem';
 import { Localizer } from '../../../basic/Localizer';
 import { Menu, MenuItem } from '../../../menu/items/MenuItem';
-import { WithMessageId } from '../../../../session/types/with';
-import { DeleteItem } from '../../../menu/items/DeleteMessage/DeleteMessageMenuItem';
+import { WithMessageId, type WithContextMenuId } from '../../../../session/types/with';
 import { RetryItem } from '../../../menu/items/RetrySend/RetrySendMenuItem';
 import { useBanUserCb } from '../../../menuAndSettingsHooks/useBanUser';
 import { useUnbanUserCb } from '../../../menuAndSettingsHooks/useUnbanUser';
@@ -37,42 +40,38 @@ import { useRemoveSenderFromCommunityAdmin } from '../../../menuAndSettingsHooks
 import { useAddSenderAsCommunityAdmin } from '../../../menuAndSettingsHooks/useAddSenderAsCommunityAdmin';
 import { showContextMenu } from '../../../../util/contextMenu';
 import { clampNumber } from '../../../../util/maths';
-import { PopoverTriggerPosition } from '../../../SessionTooltip';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
-import { useMessageInteractions } from '../../../../hooks/useMessageInteractions';
+import {
+  useMessageCopyCommunityInvitationUrl,
+  useMessageCopyText,
+  useMessageReply,
+  useMessageSaveAttachment,
+} from '../../../../hooks/useMessageInteractions';
+import { SelectMessageMenuItem } from '../../../menu/items/SelectMessage/SelectMessageMenuItem';
+import { DeleteItem } from '../../../menu/items/DeleteMessage/DeleteMessageMenuItem';
+import { messageContextMenuID } from '../../SessionMessagesList';
 
 export type MessageContextMenuSelectorProps = Pick<
   MessageRenderingProps,
-  | 'sender'
-  | 'direction'
-  | 'status'
-  | 'isDeletable'
-  | 'isSenderAdmin'
-  | 'text'
-  | 'serverTimestamp'
-  | 'timestamp'
+  'sender' | 'direction' | 'status' | 'isSenderAdmin' | 'text' | 'serverTimestamp' | 'timestamp'
 >;
 
-type Props = {
-  messageId: string;
-  contextMenuId: string;
-  setTriggerPosition: Dispatch<PopoverTriggerPosition | null>;
-};
+type Props = WithContextMenuId &
+  Partial<WithMessageId> & {
+    onShow?: MenuOnShowCallback;
+    onHide?: MenuOnHideCallback;
+    onClickCapture?: (e: MouseEvent<HTMLElement>) => void;
+  };
 
 const CONTEXTIFY_MENU_WIDTH_PX = 200;
 const SCREEN_RIGHT_MARGIN_PX = 104;
 
 export type ShowMessageContextMenuParams = {
-  id: string;
   event: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>;
   triggerPosition?: { x: number; y: number };
 };
 
-export function showMessageContextMenu({
-  id,
-  event,
-  triggerPosition,
-}: ShowMessageContextMenuParams) {
+export function showMessageContextMenu({ event, triggerPosition }: ShowMessageContextMenuParams) {
   // this is quite dirty but considering that we want the context menu of the message to show on click on the attachment
   // and the context menu save attachment item to save the right attachment I did not find a better way for now.
   // NOTE: If you change this, also make sure to update the `saveAttachment()`
@@ -105,7 +104,7 @@ export function showMessageContextMenu({
   const position = { x: clampNumber(_triggerPosition.x, 0, MAX_TRIGGER_X), y: _triggerPosition.y };
 
   showContextMenu({
-    id,
+    id: messageContextMenuID,
     event,
     position,
     props: {
@@ -205,10 +204,9 @@ export const showMessageInfoOverlay = async ({
 };
 
 function SaveAttachmentMenuItem({ messageId }: { messageId: string }) {
-  const attachments = useMessageAttachments(messageId);
-  const { saveAttachment } = useMessageInteractions(messageId);
+  const saveAttachment = useMessageSaveAttachment(messageId);
 
-  return attachments?.length && attachments.every(m => !m.pending && m.path) ? (
+  return saveAttachment ? (
     <MenuItem
       onClick={saveAttachment}
       iconType={LUCIDE_ICONS_UNICODE.ARROW_DOWN_TO_LINE}
@@ -236,33 +234,52 @@ function MessageInfoMenuItem({ messageId }: { messageId: string }) {
 }
 
 function CopyBodyMenuItem({ messageId }: { messageId: string }) {
-  const { copyText } = useMessageInteractions(messageId);
+  const copyText = useMessageCopyText(messageId);
 
-  return (
+  return copyText ? (
     <MenuItem onClick={copyText} iconType={LUCIDE_ICONS_UNICODE.COPY} isDangerAction={false}>
       {tr('copy')}
     </MenuItem>
-  );
+  ) : null;
 }
 
-export const MessageContextMenu = (props: Props) => {
-  const { messageId, contextMenuId, setTriggerPosition } = props;
+function CopyCommunityInvitationUrlMenuItem({ messageId }: { messageId: string }) {
+  const copyText = useMessageCopyCommunityInvitationUrl(messageId);
 
-  const { reply, select } = useMessageInteractions(messageId);
+  return copyText ? (
+    <MenuItem onClick={copyText} iconType={LUCIDE_ICONS_UNICODE.COPY} isDangerAction={false}>
+      {tr('communityUrlCopy')}
+    </MenuItem>
+  ) : null;
+}
 
+function MessageReplyMenuItem({ messageId }: { messageId: string }) {
+  const reply = useMessageReply(messageId);
+  const canWrite = useSelector(getSelectedCanWrite);
+
+  return reply && canWrite ? (
+    <MenuItem onClick={reply} iconType={LUCIDE_ICONS_UNICODE.REPLY} isDangerAction={false}>
+      {tr('reply')}
+    </MenuItem>
+  ) : null;
+}
+
+export const MessageContextMenu = ({
+  messageId,
+  contextMenuId,
+  onShow,
+  onHide,
+  onClickCapture,
+}: Props) => {
+  const dispatch = getAppDispatch();
+  const contextMenuRef = useRef<HTMLDivElement | null>(null);
   const isLegacyGroup = useSelectedIsLegacyGroup();
   const convoId = useSelectedConversationKey();
-  const direction = useMessageDirection(messageId);
-  const status = useMessageStatus(messageId);
-  const isDeletable = useMessageIsDeletable(messageId);
+  const isDeleted = useMessageIsDeleted(messageId);
   const sender = useMessageSender(messageId);
+  const isControlMessage = useMessageIsControlMessage(messageId);
 
-  const isOutgoing = direction === 'outgoing';
-  const isSent = status === 'sent' || status === 'read'; // a read message should be replyable
-
-  const contextMenuRef = useRef<HTMLDivElement | null>(null);
-
-  const onShow: MenuOnShowCallback = (_, { x, y }) => {
+  const _onShow: MenuOnShowCallback = (_, { x, y }) => {
     const triggerHeight = contextMenuRef.current?.clientHeight ?? 0;
     const triggerWidth = contextMenuRef.current?.clientWidth ?? 0;
 
@@ -270,37 +287,25 @@ export const MessageContextMenu = (props: Props) => {
     // it does not include changes to prevent the menu from overflowing the window. This temporary
     // fix resolves this by mirroring the y-offset adjustment.
     const yClamped = clampNumber(y, 0, window.innerHeight - triggerHeight);
-    setTriggerPosition({
+
+    const pos = {
       x,
       // Changes the x-anchor from the center to the far left
       offsetX: -triggerWidth / 2,
       y: yClamped,
       height: triggerHeight,
       width: triggerWidth,
-    });
+    };
+    dispatch(setReactionBarTriggerPosition(pos));
+    onShow?.(_, { x, y });
   };
 
-  const onHide: MenuOnHideCallback = () => {
-    setTriggerPosition(null);
+  const _onHide: MenuOnHideCallback = fromVisible => {
+    onHide?.(fromVisible);
   };
 
-  if (!convoId) {
+  if (!convoId || isLegacyGroup) {
     return null;
-  }
-
-  if (isLegacyGroup) {
-    return (
-      <StyledMessageContextMenu>
-        <SessionContextMenuContainer>
-          <Menu id={contextMenuId}>
-            <SaveAttachmentMenuItem messageId={messageId} />
-            <CopyBodyMenuItem messageId={messageId} />
-            <MessageInfoMenuItem messageId={messageId} />
-            <CopyAccountIdMenuItem pubkey={sender} messageId={messageId} />
-          </Menu>
-        </SessionContextMenuContainer>
-      </StyledMessageContextMenu>
-    );
   }
 
   return (
@@ -309,31 +314,31 @@ export const MessageContextMenu = (props: Props) => {
         <Menu
           ref={contextMenuRef}
           id={contextMenuId}
-          onShow={onShow}
-          onHide={onHide}
+          onShow={_onShow}
+          onHide={_onHide}
+          onClickCapture={onClickCapture}
+          onContextMenuCapture={onClickCapture}
           viewportMargin={12}
         >
-          <RetryItem messageId={messageId} />
-          <SaveAttachmentMenuItem messageId={messageId} />
-          {(isSent || !isOutgoing) && (
-            <MenuItem onClick={reply} iconType={LUCIDE_ICONS_UNICODE.REPLY} isDangerAction={false}>
-              {tr('reply')}
-            </MenuItem>
+          {!messageId ? null : isDeleted || isControlMessage ? (
+            <>
+              <SelectMessageMenuItem messageId={messageId} />
+              <DeleteItem messageId={messageId} />
+            </>
+          ) : (
+            <>
+              <RetryItem messageId={messageId} />
+              <SaveAttachmentMenuItem messageId={messageId} />
+              <MessageReplyMenuItem messageId={messageId} />
+              <CopyBodyMenuItem messageId={messageId} />
+              <CopyCommunityInvitationUrlMenuItem messageId={messageId} />
+              <MessageInfoMenuItem messageId={messageId} />
+              <SelectMessageMenuItem messageId={messageId} />
+              <CopyAccountIdMenuItem pubkey={sender} messageId={messageId} />
+              <DeleteItem messageId={messageId} />
+              <CommunityAdminActionItems messageId={messageId} />
+            </>
           )}
-          <CopyBodyMenuItem messageId={messageId} />
-          <MessageInfoMenuItem messageId={messageId} />
-          {isDeletable ? (
-            <MenuItem
-              onClick={select}
-              iconType={LUCIDE_ICONS_UNICODE.CIRCLE_CHECK}
-              isDangerAction={false}
-            >
-              <Localizer token="select" />
-            </MenuItem>
-          ) : null}
-          <CopyAccountIdMenuItem pubkey={sender} messageId={messageId} />
-          <DeleteItem messageId={messageId} />
-          <CommunityAdminActionItems messageId={messageId} />
         </Menu>
       </SessionContextMenuContainer>
     </StyledMessageContextMenu>

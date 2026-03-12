@@ -6,7 +6,7 @@ import styled from 'styled-components';
 import { AbortController } from 'abort-controller';
 
 import autoBind from 'auto-bind';
-import { Component, createRef, RefObject, KeyboardEvent } from 'react';
+import { Component, createRef, RefObject, KeyboardEvent, type ClipboardEvent } from 'react';
 import { FrequentlyUsed } from 'emoji-mart';
 import * as MIME from '../../../types/MIME';
 import { SessionEmojiPanel, StyledEmojiPanel } from '../SessionEmojiPanel';
@@ -64,14 +64,32 @@ import type { MessageAttributes } from '../../../models/messageType';
 import { ProWrapperActions } from '../../../webworker/workers/browser/libsession_worker_interface';
 import { updateOutgoingLightBoxOptions } from '../../../state/ducks/modalDialog';
 import { isEnterKey, isEscapeKey } from '../../../util/keyboardShortcuts';
+import type { CommunityInvitation } from '../../../session/messages/outgoing/visibleMessage/VisibleMessage';
 
 export interface ReplyingToMessageProps {
   convoId: string;
-  id: string; // this is the quoted message timestamp
+
+  /**
+   * this is the local id of that message (i.e the uuid that we generate to identify it)
+   */
+  id: string;
   author: string;
-  timestamp: number;
+  /**
+   * This is the quoted message timestamp, i.e. what we will send as reference of the message we are quoting
+   */
+  referencedMessageSentAt: number;
   text?: string;
   attachments?: Array<any>;
+  /**
+   * For the auto focus on the `CompositionBox` to work on reply,
+   * we need to make sure every reply to a message is unique.
+   * This is not the case when the user tries to reply twice to the same message,
+   * which is why we also need to create a unique change for each reply action made the user.
+   *
+   * This `quotedAt` is a `Date.now()` of when the user made the reply action.
+   * It will force a refocus on the CompositionBox even if the same message was quoted twice.
+   */
+  quotedAt: number;
 }
 
 export type StagedLinkPreviewData = {
@@ -91,7 +109,7 @@ export type SendMessageType = Pick<MessageAttributes, 'quote'> & {
   body: string;
   attachments: Array<StagedAttachmentImportedType> | undefined;
   preview: Array<StagedPreviewImportedType> | undefined;
-  groupInvitation: { url: string | undefined; name: string } | undefined;
+  communityInvitation: CommunityInvitation | undefined;
 };
 
 interface Props {
@@ -237,17 +255,11 @@ class CompositionBoxInner extends Component<Props, State> {
 
   public componentDidMount() {
     setTimeout(this.focusCompositionBox, 500);
-    if (this.container.current) {
-      this.container.current.addEventListener('paste', this.handlePaste);
-    }
   }
 
   public componentWillUnmount() {
     this.linkPreviewAbortController?.abort();
     this.linkPreviewAbortController = undefined;
-    if (this.container.current) {
-      this.container.current.removeEventListener('paste', this.handlePaste);
-    }
   }
 
   public componentDidUpdate(prevProps: Props, _prevState: State) {
@@ -262,6 +274,9 @@ class CompositionBoxInner extends Component<Props, State> {
     // focus the composition box when user clicks start to reply to a message
     if (!_.isEqual(prevProps.quotedMessageProps, this.props.quotedMessageProps)) {
       this.focusCompositionBox();
+      setTimeout(() => {
+        this.focusCompositionBox();
+      }, 50);
     }
   }
 
@@ -297,18 +312,7 @@ class CompositionBoxInner extends Component<Props, State> {
     );
   }
 
-  private handleClick(e: any) {
-    if (
-      (this.emojiPanel?.current && this.emojiPanel.current.contains(e.target)) ||
-      (this.emojiPanelButton?.current && this.emojiPanelButton.current.contains(e.target))
-    ) {
-      return;
-    }
-
-    this.hideEmojiPanel();
-  }
-
-  private handlePaste(e: ClipboardEvent) {
+  private handlePaste(e: ClipboardEvent<HTMLDivElement>) {
     if (!e.clipboardData) {
       return;
     }
@@ -342,7 +346,6 @@ class CompositionBoxInner extends Component<Props, State> {
   }
 
   private showEmojiPanel() {
-    document.addEventListener('mousedown', this.handleClick, false);
     this.setState({ lastSelectedLength: window.getSelection()?.toString().length ?? 0 });
 
     closeContextMenus();
@@ -352,7 +355,6 @@ class CompositionBoxInner extends Component<Props, State> {
   }
 
   private hideEmojiPanel() {
-    document.removeEventListener('mousedown', this.handleClick, false);
     this.setState({ lastSelectedLength: 0 });
 
     this.setState({
@@ -429,7 +431,13 @@ class CompositionBoxInner extends Component<Props, State> {
           type="file"
           onChange={this.onChoseAttachment}
         />
-        <StyledSendMessageInput role="main" dir={this.props.htmlDirection} ref={this.container}>
+        <StyledSendMessageInput
+          role="main"
+          dir={this.props.htmlDirection}
+          ref={this.container}
+          // We handle paste at this level as the recording view is messing with the document listeners.
+          onPaste={this.handlePaste}
+        >
           <CompositionTextArea
             draft={this.state.draft}
             initialDraft={this.state.initialDraft}
@@ -454,9 +462,9 @@ class CompositionBoxInner extends Component<Props, State> {
           <StyledEmojiPanelContainer role="button" dir={this.props.htmlDirection}>
             <SessionEmojiPanel
               ref={this.emojiPanel}
-              show={showEmojiPanel}
               onEmojiClicked={this.onEmojiClick}
               onClose={this.hideEmojiPanel}
+              show={showEmojiPanel}
             />
           </StyledEmojiPanelContainer>
         ) : null}
@@ -673,10 +681,13 @@ class CompositionBoxInner extends Component<Props, State> {
         body: text.trim(),
         attachments: attachments || [],
         quote: quotedMessageProps
-          ? { author: quotedMessageProps.author, timestamp: quotedMessageProps.timestamp }
+          ? {
+              author: quotedMessageProps.author,
+              timestamp: quotedMessageProps.referencedMessageSentAt,
+            }
           : undefined,
         preview: previews,
-        groupInvitation: undefined,
+        communityInvitation: undefined,
       });
 
       window.inboxStore?.dispatch(
@@ -771,7 +782,7 @@ class CompositionBoxInner extends Component<Props, State> {
       attachments: [audioAttachment],
       preview: undefined,
       quote: undefined,
-      groupInvitation: undefined,
+      communityInvitation: undefined,
     });
 
     this.onExitVoiceNoteView();

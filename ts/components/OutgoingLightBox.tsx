@@ -106,6 +106,7 @@ export const OutgoingLightBox = (props: NonNullable<OutgoingLightBoxOptions>) =>
 
   return (
     <SessionFocusTrap
+      focusTrapId="OutgoingLightBox"
       initialFocus={() => ref.current}
       allowOutsideClick={true}
       returnFocusOnDeactivate={false}

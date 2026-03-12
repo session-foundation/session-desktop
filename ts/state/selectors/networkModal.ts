@@ -7,7 +7,6 @@ const getNetworkModal = (state: StateType): NetworkModalState => {
   return state.networkModal;
 };
 
-// #region - Hooks
 export const useInfoLoading = (): boolean => {
   return useSelector((state: StateType) => getNetworkModal(state).infoLoading);
 };
@@ -23,5 +22,3 @@ export const useLastRefreshedTimestamp = (): number => {
 export const useErrorMessage = (): TrArgs | null => {
   return useSelector((state: StateType) => getNetworkModal(state).errorMessage);
 };
-
-// #endregion

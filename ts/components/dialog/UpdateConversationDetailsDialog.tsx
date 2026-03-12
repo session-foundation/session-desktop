@@ -169,6 +169,30 @@ function useUpdateConversationDetailsDialogInternal(convo: ConversationModel) {
 
 const useAvatarPointerLocal = useAvatarPointer;
 
+function localisedTitle(partDetail: 'profile' | 'community' | 'group') {
+  // keep those separate to make localised keys search and replace easy
+  return partDetail === 'profile'
+    ? ('updateProfileInformation' as const)
+    : partDetail === 'community'
+      ? ('updateCommunityInformation' as const)
+      : ('updateGroupInformation' as const);
+}
+function localisedNameEnter(partDetail: 'profile' | 'community' | 'group') {
+  // keep those separate to make localised keys search and replace easy
+  return partDetail === 'profile'
+    ? ('displayNameEnter' as const)
+    : partDetail === 'community'
+      ? ('communityNameEnter' as const)
+      : ('groupNameEnter' as const);
+}
+
+function localisedDescriptionEnter(partDetail: 'community' | 'group') {
+  // keep those separate to make localised keys search and replace easy
+  return partDetail === 'community'
+    ? ('communityDescriptionEnter' as const)
+    : ('groupDescriptionEnter' as const);
+}
+
 export function UpdateConversationDetailsDialog(props: WithConvoId) {
   const dispatch = getAppDispatch();
   const { conversationId } = props;
@@ -288,17 +312,7 @@ export function UpdateConversationDetailsDialog(props: WithConvoId) {
   return (
     <SessionWrapperModal
       modalId="updateConversationDetailsModal"
-      headerChildren={
-        <ModalBasicHeader
-          title={tr(
-            partDetail === 'profile'
-              ? 'updateProfileInformation'
-              : partDetail === 'community'
-                ? 'updateCommunityInformation'
-                : 'updateGroupInformation'
-          )}
-        />
-      }
+      headerChildren={<ModalBasicHeader title={tr(localisedTitle(partDetail))} />}
       onClose={closeDialog}
       buttonChildren={
         <ModalActionsContainer buttonType={SessionButtonType.Simple}>
@@ -345,7 +359,7 @@ export function UpdateConversationDetailsDialog(props: WithConvoId) {
         padding="var(--margins-md) var(--margins-sm)"
         inputDataTestId={`update-${partDetail}-info-name-input`}
         onValueChanged={setNewName}
-        placeholder={tr(`${partDetail === 'profile' ? 'display' : partDetail}NameEnter`)}
+        placeholder={tr(localisedNameEnter(partDetail))}
         onEnterPressed={onClickOK}
         errorDataTestId="error-message"
         providedError={errorStringName}
@@ -372,11 +386,11 @@ export function UpdateConversationDetailsDialog(props: WithConvoId) {
           padding="var(--margins-md) var(--margins-sm)"
           inputDataTestId={`update-${partDetail}-info-description-input`}
           onValueChanged={setNewDescription}
-          placeholder={tr(`${partDetail}DescriptionEnter`)}
+          placeholder={tr(localisedDescriptionEnter(partDetail))}
           errorDataTestId="error-message"
           providedError={errorStringDescription}
           autoFocus={false}
-          tabIndex={1}
+          tabIndex={0}
           required={false}
           singleLine={false}
           allowEscapeKeyPassthrough={true}

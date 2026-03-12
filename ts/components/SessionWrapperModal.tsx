@@ -138,7 +138,6 @@ const StyledModalBody = styled.div<{ $shouldOverflow: boolean; $removeScrollbarG
   ${props => (!props.$removeScrollbarGutter ? 'scrollbar-gutter: stable;' : '')}
   margin: 0;
   font-family: var(--font-default);
-  line-height: var(--font-size-md);
   font-size: var(--font-size-md);
   height: 100%;
   overflow-y: ${props => (props.$shouldOverflow ? 'auto' : 'hidden')};
@@ -452,7 +451,11 @@ export const SessionWrapperModal = (props: SessionWrapperModalType & { onClose?:
     props.headerChildren && moveHeaderIntoScrollableBody ? props.headerChildren : null;
 
   return (
-    <SessionFocusTrap allowOutsideClick={allowOutsideClick} initialFocus={() => modalRef.current}>
+    <SessionFocusTrap
+      focusTrapId="SessionWrapperModal"
+      allowOutsideClick={allowOutsideClick}
+      initialFocus={() => modalRef.current}
+    >
       <IsModalScrolledContext.Provider value={scrolled}>
         <ModalHasActionButtonContext.Provider value={!!buttonChildren}>
           <OnModalCloseContext.Provider value={onClose ?? null}>

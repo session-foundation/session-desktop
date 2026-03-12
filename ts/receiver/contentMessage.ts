@@ -8,10 +8,6 @@ import { PubKey } from '../session/types';
 
 import { Data } from '../data/data';
 import { SettingsKey } from '../data/settings-key';
-import {
-  deleteMessagesFromSwarmAndCompletelyLocally,
-  deleteMessagesFromSwarmAndMarkAsDeletedLocally,
-} from '../interactions/conversations/unsendingInteractions';
 import { findCachedBlindedMatchOrLookupOnAllServers } from '../session/apis/open_group_api/sogsv3/knownBlindedkeys';
 import { ConvoHub } from '../session/conversations';
 import { getSodiumRenderer } from '../session/crypto';
@@ -35,6 +31,7 @@ import { CONVERSATION_PRIORITIES, ConversationTypeEnum } from '../models/types';
 import { shouldProcessContentMessage } from './common';
 import { longOrNumberToNumber } from '../types/long/longOrNumberToNumber';
 import { buildPrivateProfileChangeFromMsgRequestResponse } from '../models/profile';
+import { deleteOrMarkAsDeletedMessages } from '../interactions/conversations/deleteOrMarkAsDeletedMessages';
 
 async function shouldDropIncomingPrivateMessage(
   envelope: BaseDecodedEnvelope,
@@ -481,20 +478,31 @@ async function handleUnsendMessage(
     ])
   )?.[0];
   const messageHash = messageToDelete?.get('messageHash');
-  // #endregion
 
-  // #region executing deletion
   if (messageHash && messageToDelete) {
     window.log.info('handleUnsendMessage: got a request to delete ', messageHash);
-    const conversation = ConvoHub.use().get(messageToDelete.get('conversationId'));
+    const conversation = messageToDelete.getConversation();
     if (!conversation) {
       return;
     }
-    if (messageToDelete.getSource() === UserUtils.getOurPubKeyStrFromCache()) {
-      // a message we sent is completely removed when we get a unsend request
-      void deleteMessagesFromSwarmAndCompletelyLocally(conversation, [messageToDelete]);
-    } else {
-      void deleteMessagesFromSwarmAndMarkAsDeletedLocally(conversation, [messageToDelete]);
+    const messages = [messageToDelete];
+
+    if (conversation.isMe()) {
+      // an unsend request in our NTS conversation is removing the corresponding message completely
+      await deleteOrMarkAsDeletedMessages({
+        conversation,
+        messages,
+        deletionType: 'complete',
+        actionContextIsUI: false,
+      });
+    } else if (conversation.isPrivate() && !conversation.isPrivateAndBlinded()) {
+      // in a 1o1 conversation (not NTS), processing an unsend request is marking the message as deleted globally
+      await deleteOrMarkAsDeletedMessages({
+        conversation,
+        messages,
+        deletionType: 'markDeletedGlobally',
+        actionContextIsUI: false,
+      });
     }
   } else {
     window.log.info(

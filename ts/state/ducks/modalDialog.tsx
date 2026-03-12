@@ -250,7 +250,7 @@ function pushModal<T extends ModalId>(
 }
 
 function popModal(state: ModalState, modalId: ModalId) {
-  state[modalId] = null;
+  state[modalId] = null as never; // just to make tsc happy
   state.modalStack = state.modalStack.filter(m => m !== modalId);
 
   return state;

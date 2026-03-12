@@ -34,7 +34,6 @@ import {
   type ExpirationTimerUpdateMessageParams,
 } from '../session/messages/outgoing/controlMessage/ExpirationTimerUpdateMessage';
 import { TypingMessage } from '../session/messages/outgoing/controlMessage/TypingMessage';
-import { CommunityInvitationMessage } from '../session/messages/outgoing/visibleMessage/CommunityInvitationMessage';
 import { OpenGroupVisibleMessage } from '../session/messages/outgoing/visibleMessage/OpenGroupVisibleMessage';
 import {
   VisibleMessage,
@@ -653,12 +652,13 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
     return {
       author: msgSource,
-      id: `${quotedMessage.get('sent_at')}` || '',
-      // NOTE we send the entire body to be consistent with the other platforms
+      // NOTE we don't send this anymore. But we need this for the reply in the composition box
       text: body,
       attachments: quotedAttachments,
-      timestamp: quotedMessage.get('sent_at') || 0,
+      referencedMessageSentAt: quotedMessage.get('sent_at') || 0,
       convoId: this.id,
+      id: quotedMessage.id,
+      quotedAt: Date.now(),
     };
   }
 
@@ -667,120 +667,6 @@ export class ConversationModel extends Model<ConversationAttributes> {
       throw new Error('tried to run toOpenGroup for not public group v2');
     }
     return getOpenGroupV2FromConversationId(this.id);
-  }
-
-  public async sendReactionJob(sourceMessage: MessageModel, reaction: Reaction) {
-    try {
-      const destination = this.id;
-
-      const sentAt = sourceMessage.get('sent_at');
-      if (!sentAt) {
-        throw new Error('sendReactMessageJob() sent_at must be set.');
-      }
-      const expireTimer = this.getExpireTimer();
-      const expirationType = DisappearingMessages.changeToDisappearingMessageType(
-        this,
-        expireTimer,
-        this.getExpirationMode()
-      );
-      const body = '';
-      const chatMessageParams: VisibleMessageParams = {
-        body,
-        // we need to use a new timestamp here, otherwise android&iOS will consider this message as a duplicate and drop the synced reaction
-        createAtNetworkTimestamp: NetworkTime.now(),
-        reaction,
-        userProfile: await UserUtils.getOurProfile(),
-        outgoingProMessageDetails: await UserUtils.getOutgoingProMessageDetails({
-          utf16: body,
-        }),
-        expirationType,
-        expireTimer,
-        // we have a custom logic for the reacts and send the two messages separately
-        dbMessageIdentifier: uuidV4(),
-      };
-
-      if (PubKey.isBlinded(this.id)) {
-        window.log.info('Sending a blinded message react to this user: ', this.id);
-        await this.sendBlindedMessageRequest(chatMessageParams);
-        return;
-      }
-
-      // handleAcceptConversationRequestWithoutConfirm will take care of sending response depending on the type of conversation, if needed
-      await handleAcceptConversationRequestWithoutConfirm({
-        convoId: this.id,
-        approvalMessageTimestamp: NetworkTime.now() - 100,
-      });
-
-      if (this.isOpenGroupV2()) {
-        // communities have no expiration timer support, so enforce it here.
-        chatMessageParams.expirationType = 'unknown';
-        chatMessageParams.expireTimer = 0;
-
-        const chatMessageOpenGroupV2 = new OpenGroupVisibleMessage(chatMessageParams);
-        const roomInfos = this.toOpenGroupV2();
-        if (!roomInfos) {
-          throw new Error('Could not find this room in db');
-        }
-        const openGroup = OpenGroupData.getV2OpenGroupRoom(this.id);
-        const blinded = Boolean(roomHasBlindEnabled(openGroup));
-
-        // send with blinding if we need to
-        await MessageQueue.use().sendToOpenGroupV2({
-          message: chatMessageOpenGroupV2,
-          roomInfos,
-          blinded,
-          filesToLink: [],
-        });
-        return;
-      }
-
-      const destinationPubkey = new PubKey(destination);
-
-      if (this.isPrivate()) {
-        const chatMessageMe = new VisibleMessage({
-          ...chatMessageParams,
-          syncTarget: this.id,
-        });
-        await MessageQueue.use().sendSyncMessage({
-          namespace: SnodeNamespaces.Default,
-          message: chatMessageMe,
-        });
-
-        const chatMessagePrivate = new VisibleMessage(chatMessageParams);
-
-        await MessageQueue.use().sendToPubKey(
-          destinationPubkey,
-          chatMessagePrivate,
-          SnodeNamespaces.Default
-        );
-        await Reactions.handleMessageReaction({
-          reaction,
-          sender: UserUtils.getOurPubKeyStrFromCache(),
-          you: true,
-        });
-        return;
-      }
-
-      if (this.isClosedGroupV2()) {
-        // we need the return await so that errors are caught in the catch {}
-        await this.sendMessageToGroupV2(chatMessageParams);
-        await Reactions.handleMessageReaction({
-          reaction,
-          sender: UserUtils.getOurPubKeyStrFromCache(),
-          you: true,
-        });
-        return;
-      }
-
-      if (this.isClosedGroup()) {
-        // legacy groups are readonly
-        return;
-      }
-
-      throw new TypeError(`Invalid conversation type: '${this.get('type')}'`);
-    } catch (e) {
-      window.log.error(`Reaction job failed id:${reaction.id} error:`, e);
-    }
   }
 
   /**
@@ -962,7 +848,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
   }
 
   public async sendMessage(msg: SendMessageType) {
-    const { attachments, body, groupInvitation, preview, quote } = msg;
+    const { attachments, body, communityInvitation, preview, quote } = msg;
     this.clearTypingTimers();
     const networkTimestamp = NetworkTime.now();
 
@@ -992,7 +878,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
       ),
       expireTimer: this.getExpireTimer(),
       serverTimestamp: this.isOpenGroupV2() ? networkTimestamp : undefined,
-      groupInvitation,
+      groupInvitation: communityInvitation,
     });
 
     // We're offline!
@@ -1042,7 +928,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     }
 
     void this.queueJob(async () => {
-      await this.sendReactionJob(sourceMessage, reaction);
+      await this.sendMessageJob(sourceMessage, reaction);
     });
   }
 
@@ -2387,15 +2273,19 @@ export class ConversationModel extends Model<ConversationAttributes> {
     return [];
   }
 
-  private async sendMessageJob(message: MessageModel) {
+  private async sendMessageJob(message: MessageModel, reaction?: Reaction) {
+    const isReaction = !!reaction;
     try {
-      const { body, attachments, preview, quote, fileIdsToLink } = await message.uploadData();
+      const { body, attachments, preview, quote, fileIdsToLink } = isReaction
+        ? { fileIdsToLink: [] }
+        : await message.uploadData();
       const { id } = message;
       const destination = this.id;
 
-      const sentAt = message.get('sent_at'); // this is used to store the timestamp when we tried sending that message, it should be set by the caller
+      // this is used to store the timestamp when we tried sending that message, it should be set by the caller
+      const sentAt = message.get('sent_at');
       if (!sentAt) {
-        throw new Error('sendMessageJob() sent_at is not set.');
+        throw new Error('sendMessageJob() sent_at must be set.');
       }
       const networkTimestamp = NetworkTime.now();
 
@@ -2403,39 +2293,52 @@ export class ConversationModel extends Model<ConversationAttributes> {
       await this.unhideIfNeeded(true);
 
       const outgoingProMessageDetails = await UserUtils.getOutgoingProMessageDetails({
-        utf16: body,
+        utf16: body ?? '',
       });
 
       // TODO break down those functions  (sendMessage and retrySend into smaller functions and narrow the VisibleMessageParams to preview, etc. with checks of types)
       // an OpenGroupV2 message is just a visible message
+
       const chatMessageParams: VisibleMessageParams = {
-        body,
-        dbMessageIdentifier: id,
-        createAtNetworkTimestamp: networkTimestamp,
+        body: body ?? '',
+        dbMessageIdentifier: isReaction ? uuidV4() : id,
+        // We need to use a new timestamp here, otherwise android & iOS will
+        // consider this message as a duplicate and drop the synced reaction
+        createAtNetworkTimestamp: isReaction ? NetworkTime.now() : networkTimestamp,
+        reaction,
         attachments,
-        expirationType: message.getExpirationType() ?? 'unknown', // Note we assume that the caller used a setting allowed for that conversation when building it. Here we just send it.
-        expireTimer: message.getExpireTimerSeconds(),
+        // Note we assume that the caller used a setting allowed for that conversation when building it. Here we just send it.
         preview: preview ? [preview] : [],
         quote,
         userProfile: await UserUtils.getOurProfile(),
         outgoingProMessageDetails,
+        expirationType: message.getExpirationType() ?? 'unknown',
+        expireTimer: message.getExpireTimerSeconds(),
       };
 
-      await message.applyProFeatures(outgoingProMessageDetails);
+      if (!isReaction) {
+        await message.applyProFeatures(outgoingProMessageDetails);
+      }
 
       if (PubKey.isBlinded(this.id)) {
-        window.log.info('Sending a blinded message to this user: ', this.id);
+        window.log.info(
+          `Sending a blinded message to this convo ${ed25519Str(this.id)}. isReact? ${isReaction}`
+        );
         await this.sendBlindedMessageRequest(chatMessageParams);
         return;
       }
 
-      // handleAcceptConversationRequestWithoutConfirm will take care of sending response depending on the type of conversation
+      // handleAcceptConversationRequestWithoutConfirm will take care of sending response depending on the type of conversation, if needed
       await handleAcceptConversationRequestWithoutConfirm({
         convoId: this.id,
-        approvalMessageTimestamp: networkTimestamp - 100,
+        approvalMessageTimestamp: isReaction ? NetworkTime.now() - 100 : networkTimestamp - 100,
       });
 
       if (this.isOpenGroupV2()) {
+        // communities have no expiration timer support, so enforce it here.
+        chatMessageParams.expirationType = 'unknown';
+        chatMessageParams.expireTimer = 0;
+
         const chatMessageOpenGroupV2 = new OpenGroupVisibleMessage(chatMessageParams);
         const roomInfos = this.toOpenGroupV2();
         if (!roomInfos) {
@@ -2455,53 +2358,54 @@ export class ConversationModel extends Model<ConversationAttributes> {
       const destinationPubkey = new PubKey(destination);
 
       if (this.isPrivate()) {
-        if (this.isMe()) {
-          if (this.matchesDisappearingMode('deleteAfterRead')) {
-            throw new Error('Note to Self disappearing messages must be deleteAfterSend');
-          }
-          chatMessageParams.syncTarget = this.id;
-          const chatMessageMe = new VisibleMessage(chatMessageParams);
+        const communityInvitation = message.getCommunityInvitation();
+        if (communityInvitation && communityInvitation.url && communityInvitation.name) {
+          chatMessageParams.communityInvitation = communityInvitation;
+        }
 
+        const chatMessageParamsSync = { ...chatMessageParams, syncTarget: this.id };
+        const chatMessageSync = new VisibleMessage(chatMessageParamsSync);
+
+        if (this.isMe()) {
           await MessageQueue.use().sendSyncMessage({
             namespace: SnodeNamespaces.Default,
-            message: chatMessageMe,
+            message: chatMessageSync,
           });
           return;
         }
 
-        const communityInvitation = message.getCommunityInvitation();
-
-        if (communityInvitation && communityInvitation.url) {
-          const communityInviteMessage = new CommunityInvitationMessage({
-            dbMessageIdentifier: id,
-            createAtNetworkTimestamp: networkTimestamp,
-            name: communityInvitation.name,
-            url: communityInvitation.url,
-            expirationType: chatMessageParams.expirationType,
-            expireTimer: chatMessageParams.expireTimer,
-            userProfile: chatMessageParams.userProfile,
-            outgoingProMessageDetails: chatMessageParams.outgoingProMessageDetails,
-          });
-          // we need the return await so that errors are caught in the catch {}
-          await MessageQueue.use().sendToPubKey(
-            destinationPubkey,
-            communityInviteMessage,
-            SnodeNamespaces.Default
-          );
-          return;
-        }
         const chatMessagePrivate = new VisibleMessage(chatMessageParams);
         await MessageQueue.use().sendToPubKey(
           destinationPubkey,
           chatMessagePrivate,
           SnodeNamespaces.Default
         );
+        if (isReaction) {
+          await Reactions.handleMessageReaction({
+            reaction,
+            sender: UserUtils.getOurPubKeyStrFromCache(),
+            you: true,
+          });
+          window.log.debug(`syncing reaction manually for private chat ${ed25519Str(this.id)}`);
+          // the reaction logic needs explicit syncing for private chats
+          await MessageQueue.use().sendSyncMessage({
+            namespace: SnodeNamespaces.Default,
+            message: chatMessageSync,
+          });
+        }
         return;
       }
 
       if (this.isClosedGroupV2()) {
         // we need the return await so that errors are caught in the catch {}
         await this.sendMessageToGroupV2(chatMessageParams);
+        if (isReaction) {
+          await Reactions.handleMessageReaction({
+            reaction,
+            sender: UserUtils.getOurPubKeyStrFromCache(),
+            you: true,
+          });
+        }
         return;
       }
 
@@ -2512,7 +2416,9 @@ export class ConversationModel extends Model<ConversationAttributes> {
 
       throw new TypeError(`Invalid conversation type: '${this.get('type')}'`);
     } catch (e: unknown) {
-      if (e instanceof Error) {
+      if (isReaction) {
+        window.log.error(`Reaction job failed id:${reaction.id} error:`, e);
+      } else if (e instanceof Error) {
         await message.saveErrors(e);
       }
     }
@@ -2606,7 +2512,13 @@ export class ConversationModel extends Model<ConversationAttributes> {
     if (!this.id || !this.getActiveAt() || this.isHidden()) {
       return;
     }
-    const messages = await Data.getLastMessagesByConversation(this.id, 1, true);
+    const messages = await Data.getLastMessagesByConversation({
+      conversationId: this.id,
+      limit: 1,
+      skipTimerInit: true,
+      // we want to render the text from the last non-marked as deleted message
+      skipMarkedAsDeleted: true,
+    });
     const existingLastMessageAttribute = this.get('lastMessage');
     const existingLastMessageStatus = this.get('lastMessageStatus');
     if (!messages || !messages.length) {
@@ -3014,22 +2926,6 @@ export class ConversationModel extends Model<ConversationAttributes> {
     return [];
   }
 
-  private matchesDisappearingMode(mode: DisappearingMessageConversationModeType) {
-    const ours = this.getExpirationMode();
-    // Note: couldn't this be ours === mode with a twist maybe?
-    const success =
-      mode === 'deleteAfterRead'
-        ? ours === 'deleteAfterRead'
-        : mode === 'deleteAfterSend'
-          ? ours === 'deleteAfterSend'
-          : mode === 'off'
-            ? ours === 'off'
-            : false;
-
-    return success;
-  }
-
-  // #region Start of getters
   public getExpirationMode() {
     return this.get('expirationMode');
   }
@@ -3041,8 +2937,6 @@ export class ConversationModel extends Model<ConversationAttributes> {
   public getIsExpired03Group() {
     return PubKey.is03Pubkey(this.id) && !!this.get('isExpired03Group');
   }
-
-  // #endregion
 }
 
 export const Convo = { commitConversationAndRefreshWrapper };

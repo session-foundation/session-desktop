@@ -8,6 +8,7 @@ import { useTopModalId } from './selectors/modal';
 
 export type FocusScope =
   | 'global'
+  | 'mainScreen'
   | 'conversationList'
   | 'message'
   | 'compositionBoxInput'
@@ -35,12 +36,16 @@ export function useFocusScope() {
   };
 }
 
-export function useIsInScope({ scope, scopeId }: ScopeArgs) {
+export function useIsInScope({ scope, scopeId }: ScopeArgs): boolean {
   const { modalId, focusedMessageId, isCompositionTextAreaFocused, isRightPanelShowing } =
     useFocusScope();
 
   if (scope === 'global') {
     return true;
+  }
+
+  if (scope === 'mainScreen') {
+    return !modalId;
   }
 
   // if we've got a modal shown, and it is the one the scope is far, return `true`
@@ -69,7 +74,7 @@ export function useIsInScope({ scope, scopeId }: ScopeArgs) {
     if (scopeId === 'all') {
       return !!focusedMessageId;
     }
-    return scopeId && scopeId === focusedMessageId;
+    return !!scopeId && scopeId === focusedMessageId;
   }
 
   if (scope === 'compositionBoxInput') {

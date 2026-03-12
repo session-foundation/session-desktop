@@ -60,7 +60,6 @@ export const IncomingCallDialog = () => {
     };
   }, [incomingCallFromPubkey]);
 
-  // #region input handlers
   const handleAcceptIncomingCall = async () => {
     if (incomingCallFromPubkey) {
       await CallManager.USER_acceptIncomingCallRequest(incomingCallFromPubkey);
@@ -77,7 +76,6 @@ export const IncomingCallDialog = () => {
   if (!hasIncomingCall || !incomingCallFromPubkey) {
     return null;
   }
-  // #endregion
 
   if (hasIncomingCall) {
     return (

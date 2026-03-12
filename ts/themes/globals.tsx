@@ -179,14 +179,35 @@ export function getThemeValue(key: ThemeKeys) {
   return getComputedStyle(document.documentElement).getPropertyValue(key);
 }
 
+let themeStyleEl: HTMLStyleElement | null = null;
+const themeVariables = new Map<string, string>();
+
+function getOrCreateThemeStyleEl(): HTMLStyleElement {
+  if (!themeStyleEl) {
+    themeStyleEl = document.createElement('style');
+    themeStyleEl.id = 'session-theme-variables';
+    document.head.appendChild(themeStyleEl);
+  }
+  return themeStyleEl;
+}
+
+function rebuildThemeStyleEl() {
+  const el = getOrCreateThemeStyleEl();
+  const declarations = [...themeVariables.entries()].map(([k, v]) => `  ${k}: ${v};`).join('\n');
+  el.textContent = `:root {\n${declarations}\n}`;
+}
+
 export function setThemeValues(variables: Theme) {
   // eslint-disable-next-line no-restricted-syntax
   for (const [key, value] of Object.entries(variables)) {
-    document.documentElement.style.setProperty(
-      key,
-      typeof value === 'string' ? value : value.toString()
-    );
+    themeVariables.set(key, typeof value === 'string' ? value : value.toString());
   }
+  rebuildThemeStyleEl();
+}
+
+export function setSingleThemeValue(key: ThemeKeys, value: string) {
+  themeVariables.set(key, value);
+  rebuildThemeStyleEl();
 }
 
 // These are only set once in the global style (at root).
