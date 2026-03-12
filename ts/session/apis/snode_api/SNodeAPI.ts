@@ -196,7 +196,7 @@ async function networkDeleteMessageOurSwarm(
             method: 'batch',
             abortSignal: controller.signal,
           }),
-          30 * DURATION.SECONDS,
+          10 * DURATION.SECONDS,
           controller
         );
 
@@ -351,7 +351,7 @@ async function networkDeleteMessagesForGroup(
             method: 'batch',
             abortSignal: controller.signal,
           }),
-          30 * DURATION.SECONDS,
+          10 * DURATION.SECONDS,
           controller
         );
 
@@ -364,7 +364,7 @@ async function networkDeleteMessagesForGroup(
         }
       },
       {
-        retries: 5,
+        retries: 2,
         minTimeout: SnodeAPI.getMinTimeout(),
         onFailedAttempt: e => {
           window?.log?.warn(

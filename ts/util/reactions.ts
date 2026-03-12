@@ -280,6 +280,11 @@ const handleOpenGroupMessageReactions = async (
     return undefined;
   }
 
+  if (originalMessage.isMarkedAsDeleted()) {
+    window?.log?.debug(`Cannot react to a deleted message ${serverId}.`);
+    return undefined;
+  }
+
   if (!convo.isOpenGroupV2()) {
     window.log.warn('handleOpenGroupMessageReactions() should only be used in opengroups');
     return undefined;

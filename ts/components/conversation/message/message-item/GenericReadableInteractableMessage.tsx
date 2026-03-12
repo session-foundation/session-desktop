@@ -3,7 +3,6 @@ import clsx from 'clsx';
 import {
   useHideAvatarInMsgList,
   useMessageDirection,
-  useMessageIsControlMessage,
   useMessageIsOnline,
   useMessageSelected,
   useMessageType,
@@ -51,7 +50,6 @@ export function GenericReadableInteractableMessage({
   const dispatch = getAppDispatch();
 
   const isMessageSelected = useMessageSelected(messageId);
-  const isControlMessage = useMessageIsControlMessage(messageId);
   const selectedIsBlocked = useSelectedIsBlocked();
   const multiSelectMode = useIsMessageSelectionMode();
   const convoId = useSelectedConversationKey();
@@ -223,7 +221,7 @@ export function GenericReadableInteractableMessage({
           noAvatar={hideAvatar}
         />
       ) : null}
-      {isControlMessage ? null : <MessageStatus dataTestId="msg-status" messageId={messageId} />}
+      <MessageStatus dataTestId="msg-status" messageId={messageId} />
     </GenericReadableMessage>
   );
 }
