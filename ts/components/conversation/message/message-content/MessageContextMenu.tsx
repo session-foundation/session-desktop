@@ -50,6 +50,7 @@ import {
 import { SelectMessageMenuItem } from '../../../menu/items/SelectMessage/SelectMessageMenuItem';
 import { DeleteItem } from '../../../menu/items/DeleteMessage/DeleteMessageMenuItem';
 import { messageContextMenuID } from '../../SessionMessagesList';
+import { MessageInteraction } from '../../../../interactions';
 
 export type MessageContextMenuSelectorProps = Pick<
   MessageRenderingProps,
@@ -87,6 +88,9 @@ export function showMessageContextMenu({ event, triggerPosition }: ShowMessageCo
       ? toNumber(closestAttachmentIndexStr)
       : undefined;
 
+  const triggerUrl =
+    target instanceof Element && target?.tagName === 'A' ? target.getAttribute('href') : undefined;
+
   const MAX_TRIGGER_X = window.innerWidth - CONTEXTIFY_MENU_WIDTH_PX - SCREEN_RIGHT_MARGIN_PX;
   let _triggerPosition = triggerPosition;
   if (!_triggerPosition) {
@@ -113,6 +117,7 @@ export function showMessageContextMenu({ event, triggerPosition }: ShowMessageCo
     position,
     props: {
       dataAttachmentIndex: attachmentIndex,
+      triggerUrl,
     },
   });
 }
@@ -254,6 +259,23 @@ function CopyBodyMenuItem({ messageId }: WithMessageId) {
   ) : null;
 }
 
+/**
+ * This item is only added to the context menu if the event that triggered the context menu was a link.
+ */
+function CopyLinkMenuItem({ ...internalProps }: InternalProps) {
+  return internalProps.propsFromTrigger?.triggerUrl ? (
+    <MenuItem
+      onClick={() => {
+        MessageInteraction.copyBodyToClipboard(internalProps.propsFromTrigger.triggerUrl);
+      }}
+      iconType={LUCIDE_ICONS_UNICODE.COPY}
+      isDangerAction={false}
+    >
+      {tr('urlCopy')}
+    </MenuItem>
+  ) : null;
+}
+
 function CopyCommunityInvitationUrlMenuItem({ messageId }: WithMessageId) {
   const copyText = useMessageCopyCommunityInvitationUrl(messageId);
 
@@ -342,6 +364,7 @@ export const MessageContextMenu = ({
               <SaveAttachmentMenuItem messageId={messageId} />
               <MessageReplyMenuItem messageId={messageId} />
               <CopyBodyMenuItem messageId={messageId} />
+              <CopyLinkMenuItem />
               <CopyCommunityInvitationUrlMenuItem messageId={messageId} />
               <MessageInfoMenuItem messageId={messageId} />
               <SelectMessageMenuItem messageId={messageId} />
