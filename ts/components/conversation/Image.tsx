@@ -188,11 +188,14 @@ export const Image = (props: Props) => {
           }}
         />
       ) : null}
-      {mounted && playIconOverlay ? <PlayButtonCenteredAbsolute iconSize="huge" /> : null}
+
+      {/* Note: the overlay text and play button have to be mutually exclusive */}
       {overlayText ? (
         <div className="module-image__text-container" style={{ lineHeight: height }}>
           {overlayText}
         </div>
+      ) : mounted && playIconOverlay ? (
+        <PlayButtonCenteredAbsolute iconSize="huge" />
       ) : null}
     </div>
   );
