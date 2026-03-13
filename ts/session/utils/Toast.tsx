@@ -58,11 +58,7 @@ export function pushFileSizeErrorAsByte() {
   pushToastError('fileSizeWarning', tStripped('attachmentsErrorSize'));
 }
 
-export function pushMultipleNonImageError() {
-  pushToastError('attachmentsErrorTypes', tStripped('attachmentsErrorTypes'));
-}
-
-export function pushCannotMixError() {
+export function pushAttachmentsErrorTypes() {
   pushToastError('attachmentsErrorTypes', tStripped('attachmentsErrorTypes'));
 }
 

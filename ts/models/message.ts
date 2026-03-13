@@ -222,6 +222,10 @@ export class MessageModel extends Model<MessageAttributes> {
     );
   }
 
+  public hasAttachments() {
+    return !!this.get('hasAttachments');
+  }
+
   /**
    * Returns true if the message is marked as deleted either globally or locally.
    */

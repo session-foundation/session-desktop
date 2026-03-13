@@ -411,19 +411,23 @@ export class SessionConversation extends Component<Props, State> {
       return;
     }
 
-    const haveNonImage = _.some(
+    const hasStagedGenericAttachment = _.some(
       stagedAttachments,
-      attachment => !MIME.isImage(attachment.contentType)
+      attachment => !MIME.isImage(attachment.contentType) && !MIME.isVideo(attachment.contentType)
     );
-    // You can't add another attachment if you already have a non-image staged
-    if (haveNonImage) {
-      ToastUtils.pushMultipleNonImageError();
+    const newIsImage = MIME.isImage(contentType);
+    const newIsVideo = MIME.isVideo(contentType);
+    const newIsSomethingElse = !newIsImage && !newIsVideo;
+    // if we already have a generic attachment, we can't add anything else
+    if (hasStagedGenericAttachment) {
+      ToastUtils.pushAttachmentsErrorTypes();
       return;
     }
+    // We now support multiple videos/images, as long as no generic attachments are staged
 
-    // You can't add a non-image attachment if you already have attachments staged
-    if (!MIME.isImage(contentType) && stagedAttachments.length > 0) {
-      ToastUtils.pushCannotMixError();
+    // if we already have an image/video staged, we can't add a non image/video
+    if (newIsSomethingElse && stagedAttachments.length > 0) {
+      ToastUtils.pushAttachmentsErrorTypes();
       return;
     }
 
