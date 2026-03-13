@@ -62,7 +62,10 @@ export function useDeleteMessagesCb(conversationId: string | undefined) {
     return null;
   }
 
-  return async (messageIds: string | Array<string> | undefined) => {
+  return async (
+    messageIds: string | Array<string> | undefined,
+    dataAttachmentIndex: number | null
+  ) => {
     const count = isArray(messageIds) ? messageIds.length : messageIds ? 1 : 0;
     const convo = ConvoHub.use().get(conversationId);
     if (!convo || !messageIds || (!isArray(messageIds) && !messageIds.length)) {
@@ -79,6 +82,9 @@ export function useDeleteMessagesCb(conversationId: string | undefined) {
 
     const anyAreMarkAsDeleted = msgModels.some(m => m.isMarkedAsDeleted());
     const anyAreControlMessages = msgModels.some(m => m.isControlMessage());
+    // If it's a single message that has attachment and one of those have been clicked, the title and description is slightly different
+    const singleDeleteFromAttachment =
+      msgModels.length === 1 && msgModels[0].hasAttachments() && dataAttachmentIndex !== null;
 
     // We can technically never delete for everyone if one of the message is
     // - a control message
@@ -97,7 +103,14 @@ export function useDeleteMessagesCb(conversationId: string | undefined) {
     const canDeleteFromAllDevices = isNts && !sharedCannotDeleteForEveryone;
 
     // Note: the isMe case has no radio buttons, so we just show the description below
-    const i18nMessage: TrArgs | undefined = { token: 'deleteMessageConfirm', count };
+    const i18nMessage: TrArgs | undefined = {
+      token: singleDeleteFromAttachment ? 'deleteAttachmentsDescription' : 'deleteMessageConfirm',
+      count,
+    };
+    const title: TrArgs = {
+      token: singleDeleteFromAttachment ? 'deleteAttachments' : 'deleteMessage',
+      count,
+    };
 
     const warningMessage: TrArgs | undefined =
       isNts && !canDeleteFromAllDevices
@@ -139,9 +152,9 @@ export function useDeleteMessagesCb(conversationId: string | undefined) {
 
     dispatch(
       updateConfirmModal({
-        title: { token: 'deleteMessage', count },
-        radioOptions,
+        title,
         i18nMessage,
+        radioOptions,
 
         okText: { token: 'delete' },
         warningMessage,

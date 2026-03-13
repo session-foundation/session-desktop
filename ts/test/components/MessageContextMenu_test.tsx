@@ -23,7 +23,6 @@ describe('MessageContextMenu', () => {
     document.body.appendChild(attachmentWrapper);
 
     showMessageContextMenu({
-      id: 'message-context-menu',
       event: {
         target: path,
         clientX: 40,

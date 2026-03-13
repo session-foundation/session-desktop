@@ -49,7 +49,7 @@ export const SelectionOverlay = () => {
         case 'Backspace':
         case 'Delete':
           if (selectionMode) {
-            void deleteMessagesCb?.(selectedMessageIds);
+            void deleteMessagesCb?.(selectedMessageIds, null);
           }
           return true;
         default:
@@ -89,7 +89,7 @@ export const SelectionOverlay = () => {
         buttonType={SessionButtonType.Solid}
         text={tr('delete')}
         onClick={() => {
-          void deleteMessagesCb?.(selectedMessageIds);
+          void deleteMessagesCb?.(selectedMessageIds, null);
         }}
       />
     </SessionFocusTrap>
