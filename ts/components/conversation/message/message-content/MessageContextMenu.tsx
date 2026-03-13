@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import { Dispatch, type KeyboardEvent, type MouseEvent, useRef } from 'react';
 
-import { isNil, isNumber, isString } from 'lodash';
+import { isFinite, isNil, isNumber, isString } from 'lodash';
 import { MenuOnHideCallback, type InternalProps, type MenuOnShowCallback } from 'react-contexify';
 import styled from 'styled-components';
 import { toNumber } from 'lodash/fp';
@@ -206,12 +206,20 @@ export const showMessageInfoOverlay = async ({
   }
 };
 
-function SaveAttachmentMenuItem({ messageId }: { messageId: string }) {
+function SaveAttachmentMenuItem({
+  messageId,
+  ...internalProps
+}: { messageId: string } & InternalProps) {
   const saveAttachment = useMessageSaveAttachment(messageId);
+  const dataAttachmentIndex = internalProps?.propsFromTrigger?.dataAttachmentIndex;
+  const validAttachmentIndex =
+    isNumber(dataAttachmentIndex) && isFinite(dataAttachmentIndex) ? dataAttachmentIndex : null;
 
   return saveAttachment ? (
     <MenuItem
-      onClick={saveAttachment}
+      // those props are needed to tell the menu what part of the message was clicked (body or attachments etc)
+      {...internalProps}
+      onClick={e => saveAttachment(e, validAttachmentIndex)}
       iconType={LUCIDE_ICONS_UNICODE.ARROW_DOWN_TO_LINE}
       isDangerAction={false}
     >
