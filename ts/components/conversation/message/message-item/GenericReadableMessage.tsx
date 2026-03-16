@@ -83,6 +83,7 @@ const StyledMessageContentContainer = styled.div<{ $isIncoming: boolean; $isDeta
   padding-left: ${props => (props.$isDetailView ? '0' : MESSAGE_LIST_MESSAGE_PADDING_PX)};
   padding-right: ${props => (props.$isDetailView ? '0' : MESSAGE_LIST_MESSAGE_PADDING_PX)};
   width: 100%;
+  line-height: 1.4;
 `;
 
 function getMessageComponent(messageType: UIMessageType) {
