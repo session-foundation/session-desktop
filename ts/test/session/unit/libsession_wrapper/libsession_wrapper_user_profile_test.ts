@@ -1,14 +1,21 @@
 /* eslint-disable no-unused-expressions */
 import { expect } from 'chai';
 import Sinon from 'sinon';
-import { UserConfigWrapperNode, type ProConfig } from 'libsession_util_nodejs';
-import { base64_variants, randombytes_buf, to_base64, to_hex } from 'libsodium-wrappers-sumo';
+import { UserConfigWrapperNode, type ProConfig, type ProConfigSet } from 'libsession_util_nodejs';
+import {
+  base64_variants,
+  from_hex,
+  randombytes_buf,
+  to_base64,
+  to_hex,
+} from 'libsodium-wrappers-sumo';
 
 import { UserUtils } from '../../../../session/utils';
 import { SessionUtilUserProfile } from '../../../../session/utils/libsession/libsession_utils_user_profile';
 import { TestUtils } from '../../../test-utils';
 import { stubWindowLog } from '../../../test-utils/utils';
 import { NetworkTime } from '../../../../util/NetworkTime';
+import { getSodiumNode } from '../../../../node/sodiumNode';
 
 describe('libsession_user_profile', () => {
   stubWindowLog();
@@ -55,22 +62,27 @@ describe('libsession_user_profile', () => {
 
   describe('proConfig', () => {
     it('can set, get & remove pro config', async () => {
+      const sodium = await getSodiumNode();
       const userKeys = await TestUtils.generateUserKeyPairs();
       const ed25519Seed = userKeys.ed25519KeyPair.privateKey.slice(0, 32);
 
       const wrapper = new UserConfigWrapperNode(userKeys.ed25519KeyPair.privKeyBytes, null);
       expect(wrapper.getProConfig()).to.be.null;
 
-      const proConfig: ProConfig = {
-        rotatingPrivKeyHex: to_hex(randombytes_buf(64)),
+      const proPrivKey = from_hex(wrapper.generateRotatingPrivKeyHex().rotatingPrivKeyHex);
+      const proSeed = sodium.crypto_sign_ed25519_sk_to_seed(proPrivKey);
+
+      const proConfig: ProConfigSet = {
+        rotatingSeedHex: to_hex(proSeed),
         proProof: {
           expiryMs: Date.now() + 1000,
           genIndexHashB64: to_base64(ed25519Seed, base64_variants.ORIGINAL),
-          rotatingPubkeyHex: to_hex(randombytes_buf(32)),
           version: 132,
           signatureHex: to_hex(randombytes_buf(64)),
         },
       };
+      const rotatingPrivKeyHex = to_hex(proPrivKey);
+      const rotatingPubKeyHex = to_hex(sodium.crypto_sign_ed25519_sk_to_pk(proPrivKey));
 
       wrapper.setProConfig(proConfig);
 
@@ -78,7 +90,17 @@ describe('libsession_user_profile', () => {
       if (!proConfigFromWrapper) {
         throw new Error('proConfigFromWrapper is null');
       }
-      expect(proConfigFromWrapper).to.be.deep.eq(proConfig);
+      const expectedProConfig: ProConfig = {
+        rotatingPrivKeyHex,
+        proProof: {
+          rotatingPubkeyHex: rotatingPubKeyHex,
+          expiryMs: proConfig.proProof.expiryMs,
+          genIndexHashB64: proConfig.proProof.genIndexHashB64,
+          version: proConfig.proProof.version,
+          signatureHex: proConfig.proProof.signatureHex,
+        },
+      };
+      expect(proConfigFromWrapper).to.be.deep.eq(expectedProConfig);
 
       wrapper.removeProConfig();
 
