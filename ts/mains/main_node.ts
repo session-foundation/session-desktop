@@ -1240,3 +1240,7 @@ ipc.on('media-access', async () => {
 ipc.handle('get-storage-profile', async (): Promise<string> => {
   return app.getPath('userData');
 });
+
+ipc.handle('app-is-packaged', async (): Promise<boolean> => {
+  return app.isPackaged;
+});

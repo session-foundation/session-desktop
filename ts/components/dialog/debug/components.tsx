@@ -6,7 +6,7 @@ import useInterval from 'react-use/lib/useInterval';
 import { filesize } from 'filesize';
 import styled from 'styled-components';
 
-import type { ProProof, PubkeyType } from 'libsession_util_nodejs';
+import type { PubkeyType } from 'libsession_util_nodejs';
 import { chunk, toNumber } from 'lodash';
 import { getAppDispatch } from '../../../state/dispatch';
 import { Flex } from '../../basic/Flex';
@@ -42,10 +42,8 @@ import { DEBUG_MENU_PAGE, DebugMenuSection, type DebugMenuPageProps } from './De
 import { SimpleSessionInput } from '../../inputs/SessionInput';
 import { NetworkTime } from '../../../util/NetworkTime';
 import { SessionButtonShiny } from '../../basic/SessionButtonShiny';
-import ProBackendAPI from '../../../session/apis/pro_backend_api/ProBackendAPI';
 import { getProMasterKeyHex } from '../../../session/utils/User';
 import { FlagToggle } from './FeatureFlags';
-import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { SessionDisplayNameOnlyPrivate } from '../../../models/profile';
 import {
   clearAllUrlInteractions,
@@ -57,13 +55,13 @@ import { formatRoundedUpTimeUntilTimestamp } from '../../../util/i18n/formatting
 import { LucideIcon } from '../../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 import { getIsProAvailableMemo } from '../../../hooks/useIsProAvailable';
-import { UserConfigWrapperActions } from '../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 import {
   clearAllCtaInteractions,
   getCtaInteractions,
   removeCtaInteractionHistory,
 } from '../../../util/ctaHistory';
 import { CTAVariant } from '../cta/types';
+import { isDevProd } from '../../../shared/env_vars';
 
 type DebugButtonProps = SessionButtonProps & { shiny?: boolean; hide?: boolean };
 
@@ -329,7 +327,6 @@ export const Playgrounds = ({ setPage }: DebugMenuPageProps) => {
 
   return (
     <DebugMenuSection title="Playgrounds" rowWrap={true}>
-      <DebugButton onClick={() => setPage(DEBUG_MENU_PAGE.Pro)}>Pro Playground</DebugButton>
       <DebugButton onClick={() => setPage(DEBUG_MENU_PAGE.POPOVER)}>Popover Playground</DebugButton>
     </DebugMenuSection>
   );
@@ -337,7 +334,6 @@ export const Playgrounds = ({ setPage }: DebugMenuPageProps) => {
 
 export const DebugActions = () => {
   const dispatch = getAppDispatch();
-  const proAvailable = getIsProAvailableMemo();
 
   return (
     <DebugMenuSection title="Actions" rowWrap={true}>
@@ -381,56 +377,6 @@ export const DebugActions = () => {
         }}
       >
         Open storage profile
-      </DebugButton>
-      <DebugButton
-        hide={!proAvailable}
-        onClick={async () => {
-          const masterPrivKeyHex = await getProMasterKeyHex();
-          const rotatingPrivKeyHex = await UserUtils.getProRotatingPrivateKeyHex();
-          const rotatingSeedHex = await UserUtils.getProRotatingSeedHex();
-          const response = await ProBackendAPI.generateProProof({
-            masterPrivKeyHex,
-            rotatingPrivKeyHex,
-          });
-          if (getFeatureFlag('debugServerRequests')) {
-            window?.log?.debug('getProProof response: ', response);
-          }
-          if (response?.status_code === 200) {
-            const proProof: ProProof = {
-              expiryMs: response.result.expiry_unix_ts_ms,
-              genIndexHashB64: response.result.gen_index_hash_b64,
-              rotatingPubkeyHex: response.result.rotating_pkey_hex,
-              version: response.result.version,
-              signatureHex: response.result.sig_hex,
-            };
-            await UserConfigWrapperActions.setProConfig({ proProof, rotatingSeedHex });
-          }
-        }}
-      >
-        Get Pro Proof
-      </DebugButton>
-      <DebugButton
-        hide={!proAvailable}
-        onClick={async () => {
-          const masterPrivKeyHex = await getProMasterKeyHex();
-          const response = await ProBackendAPI.getProDetails({ masterPrivKeyHex });
-          if (getFeatureFlag('debugServerRequests')) {
-            window?.log?.debug('Pro Details: ', response);
-          }
-        }}
-      >
-        Get Pro Details
-      </DebugButton>
-      <DebugButton
-        hide={!proAvailable}
-        onClick={async () => {
-          const response = await ProBackendAPI.getRevocationList({ ticket: 0 });
-          if (getFeatureFlag('debugServerRequests')) {
-            window?.log?.debug('Pro Revocation List: ', response);
-          }
-        }}
-      >
-        Get Pro Revocation List (from ticket 0)
       </DebugButton>
     </DebugMenuSection>
   );
@@ -749,12 +695,16 @@ export const OtherInfo = () => {
   const otherInfo = useAsync(async () => {
     const { id, vbid } = await window.getUserKeys();
     const proMasterKey = await getProMasterKeyHex();
+    const appIsPackaged = await ipcRenderer.invoke('app-is-packaged');
+
     const result = [
       `${tr('accountIdYours')}: ${id}`,
       `VBID: ${vbid}`,
       `Pro Public Master Key: ${proMasterKey?.slice(64)}`,
-      `Pro Private Master Key: ${proMasterKey?.slice(0, 64)}`,
     ];
+    if (!appIsPackaged && isDevProd()) {
+      result.push(`Pro Private Master Key: ${proMasterKey?.slice(0, 64)}`);
+    }
     return result;
   }, []);
 
@@ -813,7 +763,7 @@ export const OtherInfo = () => {
                 </p>
                 <CopyToClipboardIcon
                   iconSize={'small'}
-                  copyContent={info}
+                  copyContent={info.slice(info.indexOf(': ') + 2)}
                   buttonColor={SessionButtonColor.None}
                 />
               </Flex>

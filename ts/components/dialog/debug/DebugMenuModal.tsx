@@ -129,6 +129,10 @@ function MainPage({ setPage }: DebugMenuPageProps) {
           }
         </DebugMenuSection>
       ) : null}
+      <div>
+        <AboutInfo />
+        <OtherInfo />
+      </div>
       <FeatureFlags forceUpdate={forceUpdate} />
       <ProDebugSection forceUpdate={forceUpdate} setPage={setPage} />
       {isDebug ? <FeatureFlagDumper forceUpdate={forceUpdate} /> : null}
@@ -141,10 +145,6 @@ function MainPage({ setPage }: DebugMenuPageProps) {
       {isDebug ? <DebugUrlInteractionsSection /> : null}
       {isDebug ? <DebugCtaInteractionsSection /> : null}
       <ReleaseChannel />
-      <div>
-        <AboutInfo />
-        <OtherInfo />
-      </div>
     </div>
   );
 }
