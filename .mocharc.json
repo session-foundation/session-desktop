@@ -1,7 +1,7 @@
 {
   "exit": true,
   "spec": ["app/ts/test/**/*_test.js"],
-  "require": ["jsdom-global/register"],
+  "require": ["jsdom-global/register", "app/ts/test/test-utils/setup.js"],
   "timeout": 10000,
   "recursive": true,
   "reporter": "spec"
