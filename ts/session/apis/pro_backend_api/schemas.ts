@@ -34,9 +34,21 @@ export const GenerateProProofResponseSchema = SessionBackendBaseResponseSchema.e
 
 export type GenerateProProofResponseType = z.infer<typeof GenerateProProofResponseSchema>;
 
-const ProRevocationItemSchema = z
+export const ProRevocationItemDBSchema = z.object({
+  expiry_unix_ts_ms: z.number(),
+  effective_unix_ts_ms: z.number(),
+  gen_index_hash_b64: z.string(),
+});
+
+export type ProRevocationItemDBType = z.infer<typeof ProRevocationItemDBSchema>;
+
+const ProRevocationItemAPISchema = z
   .object({
     expiry_unix_ts_ms: z.number(),
+    /**
+     * When the current revocation item is to be made effective, this is the unix timestamp in milliseconds.
+     */
+    effective_unix_ts_ms: z.number(),
     /**
      * This is hex but transformed to base64 (see below)
      */
@@ -44,26 +56,27 @@ const ProRevocationItemSchema = z
   })
   .transform(data => ({
     expiry_unix_ts_ms: data.expiry_unix_ts_ms,
+    effective_unix_ts_ms: data.effective_unix_ts_ms,
     gen_index_hash_b64: hexToBase64(data.gen_index_hash),
   }));
 
-export const ProRevocationItemsSchema = z.array(ProRevocationItemSchema);
+export const ProRevocationItemsAPISchema = z.array(ProRevocationItemAPISchema);
+export const ProRevocationItemsDBSchema = z.array(ProRevocationItemDBSchema);
 
-export type ProRevocationItemsType = z.infer<typeof ProRevocationItemsSchema>;
+export type ProRevocationItemsAPIType = z.infer<typeof ProRevocationItemsAPISchema>;
+export type ProRevocationItemsDBType = z.infer<typeof ProRevocationItemsDBSchema>;
 
-const ProRevocationsResultSchema = z.object({
+const ProRevocationsResultAPISchema = z.object({
   ticket: z.number(),
-  items: ProRevocationItemsSchema,
+  items: ProRevocationItemsAPISchema,
   retry_in_s: z.number(),
 });
 
-export type ProRevocationsResultType = z.infer<typeof ProRevocationsResultSchema>;
-
-export const GetProRevocationsResponseSchema = SessionBackendBaseResponseSchema.extend({
-  result: ProRevocationsResultSchema,
+export const GetProRevocationsResponseAPISchema = SessionBackendBaseResponseSchema.extend({
+  result: ProRevocationsResultAPISchema,
 });
 
-export type GetProRevocationsResponseType = z.infer<typeof GetProRevocationsResponseSchema>;
+export type GetProRevocationsResponseType = z.infer<typeof GetProRevocationsResponseAPISchema>;
 
 const ProDetailsItemSchema = z.object({
   status: z.enum(ProItemStatus),

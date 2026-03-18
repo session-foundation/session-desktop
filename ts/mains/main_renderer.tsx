@@ -28,6 +28,7 @@ import { rtlLocales } from '../localization';
 import { SessionEventEmitter } from '../shared/event_emitter';
 import { doAppStartUp } from '../state/startup';
 import { getSodiumRenderer } from '../session/crypto';
+import { ProRevocationCache } from '../session/revocation_list/pro_revocation_list';
 
 // Globally disable drag and drop
 document.body.addEventListener(
@@ -168,6 +169,7 @@ Storage.onready(async () => {
       ConvoHub.use().load(),
       OpenGroupData.opengroupRoomsLoad(),
       loadKnownBlindedKeys(),
+      ProRevocationCache.loadFromDbIfNeeded(),
     ]);
     await startJobRunners();
   } catch (error) {

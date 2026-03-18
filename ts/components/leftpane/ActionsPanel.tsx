@@ -127,7 +127,8 @@ function usePeriodicFetchRevocationList() {
       }
       void UpdateProRevocationList.queueNewJobIfNeeded();
     },
-    isDevProd() ? 10 * DURATION.SECONDS : 1 * DURATION.MINUTES
+    // Note: we tick every 15 minutes in prod, but the job won't be added unless it needs to
+    isDevProd() ? 15 * DURATION.SECONDS : 15 * DURATION.MINUTES
   );
 }
 

@@ -9,10 +9,10 @@ import SessionBackendServerApi from '../session_backend_server';
 import {
   GenerateProProofResponseSchema,
   GenerateProProofResponseType,
-  GetProRevocationsResponseSchema,
   GetProRevocationsResponseType,
   GetProDetailsResponseSchema,
   GetProDetailsResponseType,
+  GetProRevocationsResponseAPISchema,
 } from './schemas';
 import { ProWrapperActions } from '../../../webworker/workers/browser/libsession_worker_interface';
 import { NetworkTime } from '../../../util/NetworkTime';
@@ -68,7 +68,6 @@ export default class ProBackendAPI {
 
   private static async getRevocationListBody(args: WithTicket) {
     const body = await ProWrapperActions.proRevocationsRequestBody({ requestVersion: 0, ...args });
-    console.warn('getRevocationListBody', body);
     return body;
   }
 
@@ -88,7 +87,7 @@ export default class ProBackendAPI {
       path: '/get_pro_revocations',
       method: 'POST',
       bodyGetter: () => ProBackendAPI.getRevocationListBody(args),
-      withZodSchema: GetProRevocationsResponseSchema,
+      withZodSchema: GetProRevocationsResponseAPISchema,
     });
   }
 }

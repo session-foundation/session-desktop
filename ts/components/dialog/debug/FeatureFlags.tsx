@@ -952,9 +952,7 @@ export const ProDebugSection = ({
             hide={!proAvailable}
             onClick={async () => {
               const response = await ProBackendAPI.getRevocationList({ ticket: 0 });
-              if (getFeatureFlag('debugServerRequests')) {
-                window?.log?.debug('Pro Revocation List: ', response);
-              }
+              window?.log?.debug('Pro Revocation List: ', response);
             }}
           >
             Get Pro Revocation List (from ticket 0)
