@@ -305,6 +305,7 @@ function Buttons({
             width: baseStyle.width,
           }}
           onClick={() => {
+            void registerCtaInteraction(variant, CTAInteraction.ACTION);
             openUrlNoDialog(APP_URL.DONATE);
             onClose();
           }}
@@ -524,12 +525,13 @@ export async function handleTriggeredCTAs(dispatch: Dispatch<any>, fromAppStart:
     const dbCreationTimestampMs = await Data.getDBCreationTimestampMs();
     if (dbCreationTimestampMs && dbCreationTimestampMs + 7 * DURATION.DAYS < Date.now()) {
       const donateUrlInteractions = getUrlInteractionsForUrl(APP_URL.DONATE);
-      if (
-        !donateUrlInteractions.includes(URLInteraction.COPY) &&
-        !donateUrlInteractions.includes(URLInteraction.OPEN) &&
-        !donateCTAShown
-      ) {
-        const donateCtaInteractions = getCtaInteractionsForCta(CTAVariant.DONATE_APPEAL);
+      const interactedWithUrl =
+        donateUrlInteractions.includes(URLInteraction.COPY) ||
+        donateUrlInteractions.includes(URLInteraction.OPEN);
+
+      const donateCtaInteractions = getCtaInteractionsForCta(CTAVariant.DONATE_APPEAL);
+      // NOTE: if the appeal cta has never been shown we need to show it regardless of url interaction
+      if ((!interactedWithUrl || !donateCtaInteractions?.open) && !donateCTAShown) {
         if (!donateCtaInteractions?.open || donateCtaInteractions.open < 4) {
           dispatch(updateSessionCTA({ variant: CTAVariant.DONATE_APPEAL }));
           donateCTAShown = true;

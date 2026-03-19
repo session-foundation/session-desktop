@@ -408,7 +408,6 @@ const StyledFloatingCloseButtonContainer = styled.div`
   padding: var(--margins-xs);
   border-radius: 100%;
   background-color: var(--background-tertiary-color);
-  background-opacity: 90%;
 `;
 
 function FloatingCloseButton({ onClick }: { onClick?: () => void }) {
