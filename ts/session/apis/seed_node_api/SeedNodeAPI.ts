@@ -333,7 +333,7 @@ async function getSnodesFromSeedUrl(urlObj: URL) {
     urlObj.hostname,
     urlObj.protocol !== Constants.PROTOCOLS.HTTP
   );
-  const tlsOptions = (sslAgent as https.Agent & { options?: https.AgentOptions } | undefined)
+  const tlsOptions = (sslAgent as (https.Agent & { options?: https.AgentOptions }) | undefined)
     ?.options;
   const requestTimeout = isProxyEnabled() ? 10000 : 5000;
 

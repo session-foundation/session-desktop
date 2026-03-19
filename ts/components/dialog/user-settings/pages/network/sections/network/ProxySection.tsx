@@ -3,11 +3,7 @@ import { useMemo, useState } from 'react';
 import styled from 'styled-components';
 import { Flex } from '../../../../../../basic/Flex';
 import { SessionToggle } from '../../../../../../basic/SessionToggle';
-import {
-  SectionHeading,
-  SessionNetworkParagraph,
-  Block,
-} from '../../components';
+import { SectionHeading, SessionNetworkParagraph, Block } from '../../components';
 import { ModalSimpleSessionInput } from '../../../../../../inputs/SessionInput';
 import {
   SessionButton,
@@ -129,7 +125,8 @@ export function ProxySection() {
   const [saving, setSaving] = useState(false);
   const validation = useMemo(() => validateDraft(draft), [draft]);
 
-  const saveDisabled = saving || (!!draft.enabled && (!!validation.hostError || !!validation.portError));
+  const saveDisabled =
+    saving || (!!draft.enabled && (!!validation.hostError || !!validation.portError));
 
   const saveSettings = async () => {
     if (saveDisabled) {
@@ -173,7 +170,12 @@ export function ProxySection() {
               username: normalized.username || '',
               password: normalized.password || '',
             }
-          : { ...draft, host: draft.host.trim(), username: draft.username.trim(), password: draft.password.trim() }
+          : {
+              ...draft,
+              host: draft.host.trim(),
+              username: draft.username.trim(),
+              password: draft.password.trim(),
+            }
       );
 
       ToastUtils.pushToastSuccess('proxySaved', PROXY_COPY.saved);
@@ -213,7 +215,11 @@ export function ProxySection() {
         </ToggleRow>
         {draft.enabled ? (
           <>
-            <InputsContainer $container={true} $flexDirection="column" $padding="0 var(--margins-md) var(--margins-md)">
+            <InputsContainer
+              $container={true}
+              $flexDirection="column"
+              $padding="0 var(--margins-md) var(--margins-md)"
+            >
               <ModalSimpleSessionInput
                 ariaLabel={PROXY_COPY.host}
                 placeholder={PROXY_COPY.host}

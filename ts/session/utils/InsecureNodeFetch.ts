@@ -216,7 +216,9 @@ function getProxyAgent(
 function buildAgentForRequest(params: NodeFetchParams): RequestInit['agent'] | undefined {
   const proxyAgent = getProxyAgent(params.tlsOptions, params.destination);
   if (proxyAgent) {
-    window?.log?.info(`insecureNodeFetch: using SOCKS5 proxy for ${FetchDestination[params.destination]}`);
+    window?.log?.info(
+      `insecureNodeFetch: using SOCKS5 proxy for ${FetchDestination[params.destination]}`
+    );
     return proxyAgent;
   }
 
