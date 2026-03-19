@@ -387,6 +387,7 @@ export const DebugActions = () => {
         onClick={async () => {
           const masterPrivKeyHex = await getProMasterKeyHex();
           const rotatingPrivKeyHex = await UserUtils.getProRotatingPrivateKeyHex();
+          const rotatingSeedHex = await UserUtils.getProRotatingSeedHex();
           const response = await ProBackendAPI.generateProProof({
             masterPrivKeyHex,
             rotatingPrivKeyHex,
@@ -402,7 +403,7 @@ export const DebugActions = () => {
               version: response.result.version,
               signatureHex: response.result.sig_hex,
             };
-            await UserConfigWrapperActions.setProConfig({ proProof, rotatingPrivKeyHex });
+            await UserConfigWrapperActions.setProConfig({ proProof, rotatingSeedHex });
           }
         }}
       >

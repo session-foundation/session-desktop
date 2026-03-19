@@ -1,6 +1,5 @@
 import { type MouseEvent } from 'react';
 import { ItemParams } from 'react-contexify';
-import { isNumber } from 'lodash';
 import { MessageInteraction } from '../interactions';
 import { replyToMessage } from '../interactions/conversationInteractions';
 import { pushUnblockToSend } from '../session/utils/Toast';
@@ -42,24 +41,23 @@ export function useMessageSaveAttachment(messageId?: string) {
 
   return cannotSave
     ? null
-    : (e: ItemParams) => {
-        // this is quite dirty but considering that we want the context menu of the message to show on click on the attachment
-        // and the context menu save attachment item to save the right attachment I did not find a better way for now.
-        // Note: If you change this, also make sure to update the `handleContextMenu()` in GenericReadableMessage.tsx
-        const targetAttachmentIndex = isNumber(e?.props?.dataAttachmentIndex)
-          ? e.props.dataAttachmentIndex
-          : 0;
+    : (e: ItemParams, attachmentIndex: number | null) => {
         e.event.stopPropagation();
-        if (targetAttachmentIndex > attachments.length) {
+        if (
+          attachmentIndex === null ||
+          attachmentIndex > attachments.length ||
+          attachmentIndex < 0
+        ) {
           return;
         }
         const messageTimestamp = timestamp || serverTimestamp || 0;
+
         void saveAttachmentToDisk({
-          attachment: attachments[targetAttachmentIndex],
+          attachment: attachments[attachmentIndex],
           messageTimestamp,
           messageSender: sender,
           conversationId: convoId,
-          index: targetAttachmentIndex,
+          index: attachmentIndex,
         });
       };
 }

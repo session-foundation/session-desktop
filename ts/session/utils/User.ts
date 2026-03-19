@@ -16,6 +16,7 @@ import {
   getCachedUserConfig,
   UserConfigWrapperActions,
 } from '../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
+import { getSodiumRenderer } from '../crypto';
 
 export type HexKeyPair = {
   pubKey: string;
@@ -205,4 +206,11 @@ export async function getProRotatingPrivateKeyHex() {
     throw new Error('Failed to generate pro rotating private key');
   }
   return rotatingPrivKeyHex;
+}
+
+export async function getProRotatingSeedHex() {
+  const sodium = await getSodiumRenderer();
+  const proSeedHex = await getProRotatingPrivateKeyHex();
+
+  return sodium.to_hex(sodium.crypto_sign_ed25519_sk_to_seed(sodium.from_hex(proSeedHex)));
 }

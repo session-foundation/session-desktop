@@ -429,7 +429,7 @@ export const OverlayMessageInfo = () => {
                 color={'var(--danger-color)'}
                 dataTestId="delete-from-details"
                 onClick={() => {
-                  void deleteMessagesCb?.(messageId);
+                  void deleteMessagesCb?.(messageId, null);
                 }}
               />
             )}

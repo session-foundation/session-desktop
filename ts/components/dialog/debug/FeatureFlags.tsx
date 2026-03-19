@@ -22,7 +22,7 @@ import { ConvoHub } from '../../../session/conversations';
 import { ProMessageFeature } from '../../../models/proMessageFeature';
 import { SessionButtonShiny } from '../../basic/SessionButtonShiny';
 import { SessionButtonColor, SessionButtonShape } from '../../basic/SessionButton';
-import { ToastUtils } from '../../../session/utils';
+import { ToastUtils, UserUtils } from '../../../session/utils';
 import { DEBUG_MENU_PAGE, DebugMenuPageProps, DebugMenuSection } from './DebugMenuModal';
 import {
   ProAccessVariant,
@@ -770,19 +770,12 @@ function ProConfigForm({
       genIndexHashB64: genHashInput,
       version: Number(versionInput),
     } satisfies ProProof;
+    const rotatingSeedHex = await UserUtils.getProRotatingSeedHex();
     await setProProof({
       proProof,
-      rotatingPrivKeyHex: rotatingPrivKeyInput,
+      rotatingSeedHex,
     });
-  }, [
-    setProProof,
-    rotatingPrivKeyInput,
-    rotatingPubKeyInput,
-    expiryInput,
-    sigInput,
-    genHashInput,
-    versionInput,
-  ]);
+  }, [setProProof, rotatingPubKeyInput, expiryInput, sigInput, genHashInput, versionInput]);
 
   const copy = useCallback(() => {
     const json = JSON.stringify(proConfig);

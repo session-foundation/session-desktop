@@ -20,6 +20,7 @@ export enum CTAVariant {
 
   // -- NOTE: -- Other CTAs --
   DONATE_GENERIC = 100,
+  DONATE_APPEAL = 101,
 }
 
 const ctaVariants = Object.values(CTAVariant);

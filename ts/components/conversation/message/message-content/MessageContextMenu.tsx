@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import { Dispatch, type KeyboardEvent, type MouseEvent, useRef } from 'react';
 
-import { isNil, isNumber, isString } from 'lodash';
-import { MenuOnHideCallback, type MenuOnShowCallback } from 'react-contexify';
+import { isFinite, isNil, isNumber, isString } from 'lodash';
+import { MenuOnHideCallback, type InternalProps, type MenuOnShowCallback } from 'react-contexify';
 import styled from 'styled-components';
 import { toNumber } from 'lodash/fp';
 import { useSelector } from 'react-redux';
@@ -50,6 +50,7 @@ import {
 import { SelectMessageMenuItem } from '../../../menu/items/SelectMessage/SelectMessageMenuItem';
 import { DeleteItem } from '../../../menu/items/DeleteMessage/DeleteMessageMenuItem';
 import { messageContextMenuID } from '../../SessionMessagesList';
+import { MessageInteraction } from '../../../../interactions';
 
 export type MessageContextMenuSelectorProps = Pick<
   MessageRenderingProps,
@@ -75,13 +76,20 @@ export function showMessageContextMenu({ event, triggerPosition }: ShowMessageCo
   // this is quite dirty but considering that we want the context menu of the message to show on click on the attachment
   // and the context menu save attachment item to save the right attachment I did not find a better way for now.
   // NOTE: If you change this, also make sure to update the `saveAttachment()`
-  const attachmentIndexStr = (event?.target as any)?.parentElement?.getAttribute?.(
-    'data-attachmentindex'
-  );
+
+  const target = event?.target;
+  const closestAttachmentIndexStr =
+    target instanceof Element
+      ? target.closest('[data-attachmentindex]')?.getAttribute('data-attachmentindex')
+      : undefined;
+
   const attachmentIndex =
-    isString(attachmentIndexStr) && !isNil(toNumber(attachmentIndexStr))
-      ? toNumber(attachmentIndexStr)
-      : 0;
+    isString(closestAttachmentIndexStr) && !isNil(toNumber(closestAttachmentIndexStr))
+      ? toNumber(closestAttachmentIndexStr)
+      : undefined;
+
+  const triggerUrl =
+    target instanceof Element && target?.tagName === 'A' ? target.getAttribute('href') : undefined;
 
   const MAX_TRIGGER_X = window.innerWidth - CONTEXTIFY_MENU_WIDTH_PX - SCREEN_RIGHT_MARGIN_PX;
   let _triggerPosition = triggerPosition;
@@ -109,6 +117,7 @@ export function showMessageContextMenu({ event, triggerPosition }: ShowMessageCo
     position,
     props: {
       dataAttachmentIndex: attachmentIndex,
+      triggerUrl,
     },
   });
 }
@@ -184,8 +193,7 @@ const CommunityAdminActionItems = ({ messageId }: WithMessageId) => {
 export const showMessageInfoOverlay = async ({
   messageId,
   dispatch,
-}: {
-  messageId: string;
+}: WithMessageId & {
   dispatch: Dispatch<any>;
 }) => {
   const found = await Data.getMessageById(messageId);
@@ -203,12 +211,20 @@ export const showMessageInfoOverlay = async ({
   }
 };
 
-function SaveAttachmentMenuItem({ messageId }: { messageId: string }) {
+function SaveAttachmentMenuItem({
+  messageId,
+  ...internalProps
+}: { messageId: string } & InternalProps) {
   const saveAttachment = useMessageSaveAttachment(messageId);
+  const dataAttachmentIndex = internalProps?.propsFromTrigger?.dataAttachmentIndex;
+  const validAttachmentIndex =
+    isNumber(dataAttachmentIndex) && isFinite(dataAttachmentIndex) ? dataAttachmentIndex : null;
 
   return saveAttachment ? (
     <MenuItem
-      onClick={saveAttachment}
+      // those props are needed to tell the menu what part of the message was clicked (body or attachments etc)
+      {...internalProps}
+      onClick={e => saveAttachment(e, validAttachmentIndex)}
       iconType={LUCIDE_ICONS_UNICODE.ARROW_DOWN_TO_LINE}
       isDangerAction={false}
     >
@@ -217,7 +233,7 @@ function SaveAttachmentMenuItem({ messageId }: { messageId: string }) {
   ) : null;
 }
 
-function MessageInfoMenuItem({ messageId }: { messageId: string }) {
+function MessageInfoMenuItem({ messageId }: WithMessageId) {
   const dispatch = getAppDispatch();
 
   return (
@@ -233,7 +249,7 @@ function MessageInfoMenuItem({ messageId }: { messageId: string }) {
   );
 }
 
-function CopyBodyMenuItem({ messageId }: { messageId: string }) {
+function CopyBodyMenuItem({ messageId }: WithMessageId) {
   const copyText = useMessageCopyText(messageId);
 
   return copyText ? (
@@ -243,7 +259,24 @@ function CopyBodyMenuItem({ messageId }: { messageId: string }) {
   ) : null;
 }
 
-function CopyCommunityInvitationUrlMenuItem({ messageId }: { messageId: string }) {
+/**
+ * This item is only added to the context menu if the event that triggered the context menu was a link.
+ */
+function CopyLinkMenuItem({ ...internalProps }: InternalProps) {
+  return internalProps.propsFromTrigger?.triggerUrl ? (
+    <MenuItem
+      onClick={() => {
+        MessageInteraction.copyBodyToClipboard(internalProps.propsFromTrigger.triggerUrl);
+      }}
+      iconType={LUCIDE_ICONS_UNICODE.COPY}
+      isDangerAction={false}
+    >
+      {tr('urlCopy')}
+    </MenuItem>
+  ) : null;
+}
+
+function CopyCommunityInvitationUrlMenuItem({ messageId }: WithMessageId) {
   const copyText = useMessageCopyCommunityInvitationUrl(messageId);
 
   return copyText ? (
@@ -253,7 +286,7 @@ function CopyCommunityInvitationUrlMenuItem({ messageId }: { messageId: string }
   ) : null;
 }
 
-function MessageReplyMenuItem({ messageId }: { messageId: string }) {
+function MessageReplyMenuItem({ messageId }: WithMessageId) {
   const reply = useMessageReply(messageId);
   const canWrite = useSelector(getSelectedCanWrite);
 
@@ -331,6 +364,7 @@ export const MessageContextMenu = ({
               <SaveAttachmentMenuItem messageId={messageId} />
               <MessageReplyMenuItem messageId={messageId} />
               <CopyBodyMenuItem messageId={messageId} />
+              <CopyLinkMenuItem />
               <CopyCommunityInvitationUrlMenuItem messageId={messageId} />
               <MessageInfoMenuItem messageId={messageId} />
               <SelectMessageMenuItem messageId={messageId} />

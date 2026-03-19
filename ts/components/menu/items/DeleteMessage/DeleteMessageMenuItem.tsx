@@ -1,5 +1,6 @@
+import type { InternalProps } from 'react-contexify';
 import styled from 'styled-components';
-import { isEmpty } from 'lodash';
+import { isEmpty, isFinite, isNumber } from 'lodash';
 import useUpdate from 'react-use/lib/useUpdate';
 import useInterval from 'react-use/lib/useInterval';
 import { useSelectedConversationKey } from '../../../../state/selectors/selectedConversation';
@@ -10,6 +11,7 @@ import { DURATION } from '../../../../session/constants';
 import { formatAbbreviatedExpireDoubleTimer } from '../../../../util/i18n/formatting/expirationTimer';
 import { useMessageExpirationPropsById } from '../../../../hooks/useParamSelector';
 import { useDeleteMessagesCb } from '../../../menuAndSettingsHooks/useDeleteMessagesCb';
+import type { WithMessageId } from '../../../../session/types/with';
 
 const StyledDeleteItemContent = styled.span`
   display: flex;
@@ -86,9 +88,11 @@ const ExpiresInItem = ({ messageId }: { messageId: string }) => {
   return <StyledExpiresIn>{formatTimeLeft({ timeLeftMs })}</StyledExpiresIn>;
 };
 
-export const DeleteItem = ({ messageId }: { messageId: string }) => {
+export const DeleteItem = ({ messageId, ...internalProps }: WithMessageId & InternalProps) => {
   const convoId = useSelectedConversationKey();
   const deleteMessagesCb = useDeleteMessagesCb(convoId);
+
+  const dataAttachmentIndex = internalProps.propsFromTrigger?.dataAttachmentIndex;
 
   if (!deleteMessagesCb || !messageId) {
     return null;
@@ -96,7 +100,16 @@ export const DeleteItem = ({ messageId }: { messageId: string }) => {
 
   return (
     <MenuItem
-      onClick={() => void deleteMessagesCb(messageId)}
+      // those props are needed to tell the menu what part of the message was clicked (body or attachments etc)
+      {...internalProps}
+      onClick={() =>
+        void deleteMessagesCb(
+          messageId,
+          isNumber(dataAttachmentIndex) && isFinite(dataAttachmentIndex)
+            ? dataAttachmentIndex
+            : null
+        )
+      }
       iconType={LUCIDE_ICONS_UNICODE.TRASH2}
       isDangerAction={true}
     >
