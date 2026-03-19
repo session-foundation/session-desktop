@@ -8,7 +8,8 @@ let electronBlockerId: number | null = null;
 
 function preventAppSuspensionElectron() {
   if (electronBlockerId) {
-    throw new Error('Electron blocker already running');
+    // if the power save blocker is already running, do not attempt to lock it again.
+    return;
   }
   electronBlockerId = powerSaveBlocker.start('prevent-app-suspension');
 }
@@ -41,7 +42,7 @@ export function startAppSuspensionBlocker(): void {
   );
 
   proc.on('error', () => {
-    // systemd-inhibit not available — fall back to Electron (Flatpak sandbox etc.)
+    // systemd-inhibit not available - fall back to Electron (Flatpak sandbox etc.)
     preventAppSuspensionElectron();
   });
 
