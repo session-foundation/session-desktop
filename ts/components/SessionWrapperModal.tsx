@@ -413,13 +413,12 @@ const StyledFloatingCloseButtonContainer = styled.div`
 function FloatingCloseButton({ onClick }: { onClick?: () => void }) {
   return (
     <StyledFloatingCloseButtonContainer>
-      {' '}
       <SessionLucideIconButton
         unicode={LUCIDE_ICONS_UNICODE.X}
         onClick={onClick}
         iconSize="large"
         iconColor="white"
-      />{' '}
+      />
     </StyledFloatingCloseButtonContainer>
   );
 }
