@@ -84,11 +84,7 @@ export function useDeleteMessagesCb(conversationId: string | undefined) {
     const anyAreControlMessages = msgModels.some(m => m.isControlMessage());
     // If it's a single message that has attachment and one of those have been clicked, the title and description is slightly different
     const singleDeleteFromAttachment =
-      msgModels.length === 1 &&
-      msgModels[0].hasAttachments() &&
-      dataAttachmentIndex !== null &&
-      // TODO: enable this back once SES-5326 is fixed
-      false;
+      msgModels.length === 1 && msgModels[0].hasAttachments() && dataAttachmentIndex !== null;
 
     // We can technically never delete for everyone if one of the message is
     // - a control message
