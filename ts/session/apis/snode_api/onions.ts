@@ -1130,6 +1130,7 @@ const sendOnionRequestNoRetries = async ({
     fetchOptions: guardFetchOptions,
     destination,
     caller: `${caller} -> sendOnionRequestNoRetries`,
+    tlsOptions: { rejectUnauthorized: false },
   });
   return { response, decodingSymmetricKey: destCtx.symmetricKey };
 };

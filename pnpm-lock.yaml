@@ -194,6 +194,9 @@ importers:
       sharp:
         specifier: https://github.com/session-foundation/sharp/releases/download/v0.34.5/sharp-0.34.5.tgz
         version: https://github.com/session-foundation/sharp/releases/download/v0.34.5/sharp-0.34.5.tgz
+      socks-proxy-agent:
+        specifier: ^8.0.5
+        version: 8.0.5
       styled-components:
         specifier: 6.1.19
         version: 6.1.19(react-dom@19.2.1(react@19.2.1))(react@19.2.1)

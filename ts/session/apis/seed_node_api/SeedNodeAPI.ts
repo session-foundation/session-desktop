@@ -18,7 +18,7 @@ import {
   getDataFeatureFlag,
   getFeatureFlag,
 } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
-import { FetchDestination, insecureNodeFetch } from '../../utils/InsecureNodeFetch';
+import { FetchDestination, insecureNodeFetch, isProxyEnabled } from '../../utils/InsecureNodeFetch';
 import { zodSafeParse } from '../../../util/zod';
 import {
   ServiceNodesResponseSchema,
@@ -333,10 +333,13 @@ async function getSnodesFromSeedUrl(urlObj: URL) {
     urlObj.hostname,
     urlObj.protocol !== Constants.PROTOCOLS.HTTP
   );
+  const tlsOptions = (sslAgent as https.Agent & { options?: https.AgentOptions } | undefined)
+    ?.options;
+  const requestTimeout = isProxyEnabled() ? 10000 : 5000;
 
   const fetchOptions = {
     method: 'POST',
-    timeout: 5000,
+    timeout: requestTimeout,
     body: JSON.stringify(body),
     headers: {
       'User-Agent': 'WhatsApp',
@@ -354,6 +357,7 @@ async function getSnodesFromSeedUrl(urlObj: URL) {
     fetchOptions,
     destination: FetchDestination.SEED_NODE,
     caller: 'getSnodesFromSeedUrl',
+    tlsOptions,
   });
 
   if (response.status !== 200) {

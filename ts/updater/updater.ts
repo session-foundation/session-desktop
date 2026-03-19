@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 /* eslint-disable no-console */
-import { app, type BrowserWindow } from 'electron';
+import { app, session, type BrowserWindow } from 'electron';
 import { autoUpdater, DOWNLOAD_PROGRESS, type UpdateInfo } from 'electron-updater';
 import * as fs from 'fs-extra';
 import * as path from 'path';
@@ -15,11 +15,15 @@ import { getLatestRelease } from '../node/latest_desktop_release';
 import { Errors } from '../types/Errors';
 import type { LoggerType } from '../util/logger/Logging';
 import { isDebianBased, isRunningViaAppImage } from '../OS';
+import { sqlNode } from '../node/sql';
+import { SettingsKey } from '../data/settings-key';
+import { buildProxyUrl, normalizeProxySettings } from '../session/utils/ProxySettings';
 
 let isUpdating = false;
 let downloadIgnored = false;
 let interval: NodeJS.Timeout | undefined;
 let stopped = false;
+let lastAppliedProxy: string | null = null;
 
 autoUpdater.on(DOWNLOAD_PROGRESS, eventDownloadProgress => {
   console.log(
@@ -74,6 +78,8 @@ export async function checkForUpdates(
   logger: LoggerType,
   force?: boolean
 ) {
+  await configureUpdaterProxy(logger);
+
   if (stopped || isUpdating || (downloadIgnored && !force)) {
     logger.info(
       `[updater] checkForUpdates is returning early stopped ${stopped} isUpdating ${isUpdating} downloadIgnored ${downloadIgnored}`
@@ -237,5 +243,48 @@ export async function canAutoUpdate(): Promise<boolean> {
     return exists;
   } catch (e) {
     return false;
+  }
+}
+
+async function configureUpdaterProxy(logger: LoggerType) {
+  const settings = normalizeProxySettings({
+    enabled: sqlNode.getItemById(SettingsKey.proxyEnabled)?.value,
+    host: sqlNode.getItemById(SettingsKey.proxyHost)?.value,
+    port: sqlNode.getItemById(SettingsKey.proxyPort)?.value,
+    username: sqlNode.getItemById(SettingsKey.proxyUsername)?.value,
+    password: sqlNode.getItemById(SettingsKey.proxyPassword)?.value,
+  });
+  const updaterAny = autoUpdater as any;
+  const getUpdaterSession = () => updaterAny._netSession || session.defaultSession;
+  const setUpdaterSession = (targetSession: Electron.Session | null) => {
+    updaterAny._netSession = targetSession;
+  };
+
+  if (!settings) {
+    if (lastAppliedProxy) {
+      setUpdaterSession(null);
+      lastAppliedProxy = null;
+    }
+    return;
+  }
+
+  try {
+    const proxyRules = buildProxyUrl(settings, { includeAuth: false, protocol: 'socks5' });
+    const proxyUrl = buildProxyUrl(settings, { includeAuth: true, protocol: 'socks5' });
+    const targetSession = session.defaultSession;
+
+    if (lastAppliedProxy === proxyUrl && getUpdaterSession() === targetSession) {
+      return;
+    }
+
+    await targetSession.setProxy({
+      proxyRules,
+      proxyBypassRules: '<local>',
+    });
+
+    setUpdaterSession(targetSession);
+    lastAppliedProxy = proxyUrl;
+  } catch (error) {
+    logger.warn('[updater] failed to apply proxy for auto-updater', Errors.toString(error));
   }
 }

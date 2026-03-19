@@ -37,7 +37,7 @@ import {
 } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 import { logDebugWithCat } from '../../util/logger/debugLog';
 import { stringify } from '../../types/sqlSharedTypes';
-import { FetchDestination, insecureNodeFetch } from '../utils/InsecureNodeFetch';
+import { FetchDestination, insecureNodeFetch, isProxyEnabled } from '../utils/InsecureNodeFetch';
 
 export function getOnionPathMinTimeout() {
   return DURATION.SECONDS;
@@ -353,6 +353,8 @@ export async function testGuardNode(snode: Snode) {
     params,
   };
 
+  const requestTimeout = isProxyEnabled() ? 20000 : 10000;
+
   const fetchOptions = {
     method: 'POST',
     body: JSON.stringify(body),
@@ -361,7 +363,7 @@ export async function testGuardNode(snode: Snode) {
       'User-Agent': 'WhatsApp',
       'Accept-Language': 'en-us',
     },
-    timeout: 10000, // 10s, we want a smaller timeout for testing
+    timeout: requestTimeout,
     agent: snodeHttpsAgent,
   };
 
@@ -377,6 +379,7 @@ export async function testGuardNode(snode: Snode) {
       fetchOptions,
       destination: FetchDestination.SERVICE_NODE,
       caller: 'testGuardNode',
+      tlsOptions: { rejectUnauthorized: false },
     });
   } catch (e) {
     if (e.type === 'request-timeout') {
