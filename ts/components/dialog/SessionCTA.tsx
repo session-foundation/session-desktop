@@ -221,7 +221,7 @@ function getDescription(variant: CTAVariantExcludingProCTAs) {
       return <Localizer token="donateSessionDescription" />;
 
     case CTAVariant.DONATE_APPEAL:
-      return <Localizer token="donateSessionAppealDescription" appAgeYears={appAgeYears} />;
+      return <Localizer token="donateSessionAppealDescription" />;
 
     default:
       assertUnreachable(variant, 'CtaTitle');
