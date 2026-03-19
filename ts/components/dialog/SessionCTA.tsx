@@ -39,7 +39,7 @@ import {
   isProCTAFeatureVariant,
 } from './cta/types';
 import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
-import { showLinkVisitWarningDialog } from './OpenUrlModal';
+import { openUrlNoDialog, showLinkVisitWarningDialog } from './OpenUrlModal';
 import { APP_URL, DURATION } from '../../session/constants';
 import { Data } from '../../data/data';
 import { getUrlInteractionsForUrl, URLInteraction } from '../../util/urlHistory';
@@ -127,6 +127,14 @@ function isVariantWithActionButton(variant: CTAVariant): boolean {
   ].includes(variant);
 }
 
+function isVariantWithCloseButton(variant: CTAVariant): boolean {
+  return variant !== CTAVariant.DONATE_APPEAL;
+}
+
+function isVariantWhichClosesOnOutsideClick(variant: CTAVariant): boolean {
+  return variant !== CTAVariant.DONATE_APPEAL;
+}
+
 function getImage(variant: CTAVariant): ReactNode {
   switch (variant) {
     case CTAVariant.PRO_PINNED_CONVERSATION_LIMIT:
@@ -167,16 +175,31 @@ function getImage(variant: CTAVariant): ReactNode {
     case CTAVariant.DONATE_GENERIC:
       return <StyledCTAImage src="images/cta/donate.webp" />;
 
+    case CTAVariant.DONATE_APPEAL:
+      return <StyledCTAImage src="images/cta/donate-appeal.webp" />;
+
     default:
       assertUnreachable(variant, 'getImage');
       throw new Error('unreachable');
   }
 }
 
+const StyledDonateAppealTitleContainer = styled(Localizer)`
+  text-align: center;
+`;
+
+function DonateAppealTitle() {
+  return <StyledDonateAppealTitleContainer token="donateSessionAppealTitle" />;
+}
+
 function getTitle(variant: CTAVariantExcludingProCTAs) {
   switch (variant) {
     case CTAVariant.DONATE_GENERIC:
       return <Localizer token="donateSessionHelp" />;
+
+    case CTAVariant.DONATE_APPEAL:
+      return <DonateAppealTitle />;
+
     default:
       assertUnreachable(variant, 'CtaTitle');
       throw new Error('unreachable');
@@ -196,6 +219,9 @@ function getDescription(variant: CTAVariantExcludingProCTAs) {
   switch (variant) {
     case CTAVariant.DONATE_GENERIC:
       return <Localizer token="donateSessionDescription" />;
+
+    case CTAVariant.DONATE_APPEAL:
+      return <Localizer token="donateSessionAppealDescription" appAgeYears={appAgeYears} />;
 
     default:
       assertUnreachable(variant, 'CtaTitle');
@@ -240,8 +266,15 @@ function Buttons({
 }) {
   const dispatch = getAppDispatch();
 
+  const hasActionButton = isVariantWithActionButton(variant);
+  const hasCloseButton = isVariantWithCloseButton(variant);
+
+  const hasTwoButtons = hasActionButton && hasCloseButton;
+  const width = hasTwoButtons ? proButtonProps.style.width : '50%';
+  const baseStyle = useMemo(() => ({ ...proButtonProps.style, width }), [width]);
+
   const actionButton = useMemo(() => {
-    if (!isVariantWithActionButton(variant)) {
+    if (!hasActionButton) {
       return null;
     }
 
@@ -250,7 +283,7 @@ function Buttons({
         <SessionButtonShiny
           {...proButtonProps}
           shinyContainerStyle={{
-            width: '100%',
+            width: baseStyle.width,
           }}
           onClick={() => {
             void registerCtaInteraction(variant, CTAInteraction.ACTION);
@@ -260,6 +293,24 @@ function Buttons({
           dataTestId="cta-confirm-button"
         >
           <Localizer token="donate" />
+        </SessionButtonShiny>
+      );
+    }
+
+    if (variant === CTAVariant.DONATE_APPEAL) {
+      return (
+        <SessionButtonShiny
+          {...proButtonProps}
+          shinyContainerStyle={{
+            width: baseStyle.width,
+          }}
+          onClick={() => {
+            openUrlNoDialog(APP_URL.DONATE);
+            onClose();
+          }}
+          dataTestId="cta-confirm-button"
+        >
+          <Localizer token="donateSessionAppealReadMore" />
         </SessionButtonShiny>
       );
     }
@@ -289,6 +340,7 @@ function Buttons({
     return (
       <SessionButtonShiny
         {...proButtonProps}
+        style={baseStyle}
         shinyContainerStyle={{
           width: '100%',
         }}
@@ -305,18 +357,23 @@ function Buttons({
     );
   }, [
     variant,
+    hasActionButton,
+    baseStyle,
     dispatch,
     onClose,
     actionButtonNextModalAfterCloseCallback,
     afterActionButtonCallback,
   ]);
 
-  const closeButtonToken: MergedLocalizerTokens = useMemo(() => {
+  const closeButtonToken: MergedLocalizerTokens | null = useMemo(() => {
+    if (!hasCloseButton) {
+      return null;
+    }
     if (variant === CTAVariant.DONATE_GENERIC) {
       return 'maybeLater';
     }
     return actionButton && variant !== CTAVariant.PRO_EXPIRING_SOON ? 'cancel' : 'close';
-  }, [variant, actionButton]);
+  }, [variant, hasCloseButton, actionButton]);
 
   return (
     <ModalActionsContainer
@@ -326,7 +383,7 @@ function Buttons({
         display: 'grid',
         alignItems: 'center',
         justifyItems: 'center',
-        gridTemplateColumns: actionButton ? '1fr 1fr' : '1fr',
+        gridTemplateColumns: hasTwoButtons ? '1fr 1fr' : '1fr',
         columnGap: 'var(--margins-sm)',
         paddingInline: 'var(--margins-md)',
         marginBottom: 'var(--margins-md)',
@@ -334,15 +391,17 @@ function Buttons({
       }}
     >
       {actionButton}
-      <SessionButton
-        {...proButtonProps}
-        buttonColor={SessionButtonColor.Tertiary}
-        onClick={onClose}
-        dataTestId="cta-cancel-button"
-        style={!actionButton ? { ...proButtonProps.style, width: '50%' } : proButtonProps.style}
-      >
-        <Localizer token={closeButtonToken} />
-      </SessionButton>
+      {closeButtonToken ? (
+        <SessionButton
+          {...proButtonProps}
+          style={baseStyle}
+          buttonColor={SessionButtonColor.Tertiary}
+          onClick={onClose}
+          dataTestId="cta-cancel-button"
+        >
+          <Localizer token={closeButtonToken} />
+        </SessionButton>
+      ) : null}
     </ModalActionsContainer>
   );
 }
@@ -365,10 +424,14 @@ export function SessionCTA(props: SessionCTAState) {
     return null;
   }
 
+  const clickOutsideDeactivates = isVariantWhichClosesOnOutsideClick(variant);
+
   return (
     <SessionWrapperModal
       modalId="sessionProInfoModal"
       onClose={onClose}
+      clickOutsideDeactivates={clickOutsideDeactivates}
+      showFloatingCloseButton={!clickOutsideDeactivates}
       shouldOverflow={true}
       $contentMinWidth={WrapperModalWidth.normal}
       $contentMaxWidth={WrapperModalWidth.normal}
@@ -466,9 +529,9 @@ export async function handleTriggeredCTAs(dispatch: Dispatch<any>, fromAppStart:
         !donateUrlInteractions.includes(URLInteraction.OPEN) &&
         !donateCTAShown
       ) {
-        const donateCtaInteractions = getCtaInteractionsForCta(CTAVariant.DONATE_GENERIC);
+        const donateCtaInteractions = getCtaInteractionsForCta(CTAVariant.DONATE_APPEAL);
         if (!donateCtaInteractions?.open || donateCtaInteractions.open < 4) {
-          dispatch(updateSessionCTA({ variant: CTAVariant.DONATE_GENERIC }));
+          dispatch(updateSessionCTA({ variant: CTAVariant.DONATE_APPEAL }));
           donateCTAShown = true;
         }
       }

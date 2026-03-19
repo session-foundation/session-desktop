@@ -251,6 +251,8 @@ type SessionWrapperModalType = {
   $flexGap?: string;
   style?: Omit<CSSProperties, 'maxWidth' | 'minWidth' | 'padding' | 'border'>;
   modalId: ModalId;
+  clickOutsideDeactivates?: boolean;
+  showFloatingCloseButton?: boolean;
 };
 
 const useNeedsSpacerOnSide = ({
@@ -399,6 +401,30 @@ export const ModalBasicHeader = ({
   );
 };
 
+const StyledFloatingCloseButtonContainer = styled.div`
+  position: absolute;
+  top: var(--margins-md);
+  right: var(--margins-md);
+  padding: var(--margins-xs);
+  border-radius: 100%;
+  background-color: var(--background-tertiary-color);
+  background-opacity: 90%;
+`;
+
+function FloatingCloseButton({ onClick }: { onClick?: () => void }) {
+  return (
+    <StyledFloatingCloseButtonContainer>
+      {' '}
+      <SessionLucideIconButton
+        unicode={LUCIDE_ICONS_UNICODE.X}
+        onClick={onClick}
+        iconSize="large"
+        iconColor="white"
+      />{' '}
+    </StyledFloatingCloseButtonContainer>
+  );
+}
+
 /**
  * A generic modal component that is constructed from a provided header, body and some actions.
  */
@@ -419,6 +445,9 @@ export const SessionWrapperModal = (props: SessionWrapperModalType & { onClose?:
     modalId,
     moveHeaderIntoScrollableBody,
     buttonChildren,
+    // TODO: make this work with the focus trap
+    clickOutsideDeactivates = true,
+    showFloatingCloseButton = false,
   } = props;
 
   const [scrolled, setScrolled] = useState(false);
@@ -433,9 +462,8 @@ export const SessionWrapperModal = (props: SessionWrapperModalType & { onClose?:
     }
     return isEscapeKey(event);
   }, onClose);
-
   const handleClick = (e: any) => {
-    if (!modalRef.current?.contains(e.target)) {
+    if (clickOutsideDeactivates && !modalRef.current?.contains(e.target)) {
       onClose?.();
     }
   };
@@ -494,6 +522,7 @@ export const SessionWrapperModal = (props: SessionWrapperModalType & { onClose?:
                   </Flex>
                   {buttonChildren ? buttonChildren : <SpacerLG />}
                 </StyledModalBody>
+                {showFloatingCloseButton ? <FloatingCloseButton onClick={onClose} /> : null}
               </StyledModal>
             </StyledRootDialog>
           </OnModalCloseContext.Provider>

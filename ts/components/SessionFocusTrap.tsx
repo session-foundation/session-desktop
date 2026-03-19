@@ -24,6 +24,7 @@ export function SessionFocusTrap({
   children,
   active = true,
   allowOutsideClick = true,
+  clickOutsideDeactivates = false,
   containerDivStyle,
   suppressErrors,
   allowNoTabbableNodes,
@@ -86,6 +87,7 @@ export function SessionFocusTrap({
       focusTrapOptions={{
         ...rest,
         allowOutsideClick,
+        clickOutsideDeactivates,
         onActivate: _onActivate,
         onPostActivate: _onPostActivate,
         onDeactivate: _onDeactivate,
