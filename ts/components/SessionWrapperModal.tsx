@@ -417,7 +417,7 @@ function FloatingCloseButton({ onClick }: { onClick?: () => void }) {
         unicode={LUCIDE_ICONS_UNICODE.X}
         onClick={onClick}
         iconSize="large"
-        iconColor="white"
+        iconColor="var(--text-primary-color)"
       />
     </StyledFloatingCloseButtonContainer>
   );
