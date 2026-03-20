@@ -85,6 +85,12 @@ export const SettingsKey = {
    * Note: changes to this have to be done through the ProRevocationCache
    */
   proRevocationListItems: 'proRevocationListItems',
+  /**
+   * The next time we want to run the UpdateProRevocationListJob, number | undefined (milliseconds since epoch).
+   * This is either unset or set via the retry_in_s from the server.
+   *
+   */
+  proRevocationListNextRunAtMs: 'proRevocationListNextRunAtMs',
   proDetails: 'proDetails',
   // NOTE: for these CTAs undefined means it has never been shown in this cycle of pro access, true means it needs to be shown and false means it has been shown and dont show it again.
   proExpiringSoonCTA: 'proExpiringSoonCTA',

@@ -111,7 +111,7 @@ export abstract class BaseDecodedEnvelope {
     if (!this.validPro) {
       return false;
     }
-    const alreadyRevoked = ProRevocationCache.isB64HashRevoked(
+    const alreadyRevoked = ProRevocationCache.isB64HashEffectivelyRevoked(
       this.validPro.proProof.genIndexHashB64
     );
 

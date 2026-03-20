@@ -12,6 +12,7 @@ import { BlockedNumberController } from '../../../util';
 import { loadLocalizedDictionary } from '../../../node/locale';
 import * as libsessionWorker from '../../../webworker/workers/browser/libsession_worker_interface';
 import * as utilWorker from '../../../webworker/workers/browser/util_worker_interface';
+import { Storage } from '../../../util/storage';
 
 const globalAny: any = global;
 
@@ -21,6 +22,7 @@ const globalAny: any = global;
 type DataFunction = typeof Data;
 type OpenGroupDataFunction = typeof OpenGroupData;
 type ConfigDumpDataFunction = typeof ConfigDumpData;
+type StorageFunction = typeof Storage;
 
 /**
  * Stub a function inside Data.
@@ -30,6 +32,10 @@ type ConfigDumpDataFunction = typeof ConfigDumpData;
  */
 export function stubData<K extends keyof DataFunction>(fn: K): sinon.SinonStub {
   return Sinon.stub(Data, fn);
+}
+
+export function stubStorage<K extends keyof StorageFunction>(fn: K) {
+  return Sinon.stub(Storage, fn);
 }
 
 export function stubOpenGroupData<K extends keyof OpenGroupDataFunction>(fn: K): sinon.SinonStub {
