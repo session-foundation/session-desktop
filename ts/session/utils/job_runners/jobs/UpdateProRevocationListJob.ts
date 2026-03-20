@@ -101,10 +101,11 @@ class UpdateProRevocationListJob extends PersistedJob<UpdateProRevocationListPer
 
       const retryInSecondsFromBackend = response.result.retry_in_s;
       const retryInSeconds = Math.max(retryInSecondsFromBackend, 0);
+
       const retryAtMs = Date.now() + toNumber(retryInSeconds) * DURATION.SECONDS;
 
       window.log.debug(
-        `UpdateProRevocationListJob: got 'retry_in_s' from server: ${retryInSeconds}, i.e retryAtMs: ${retryAtMs}`
+        `UpdateProRevocationListJob: got 'retry_in_s' from server: ${retryInSeconds}, i.e we will retryAtMs: ${retryAtMs}`
       );
       await updateNextRunAtMs(retryAtMs);
 
@@ -208,11 +209,14 @@ async function queueNewJobIfNeeded() {
     );
     return;
   }
+  const postponedSeconds = 20;
   window.log.debug(
-    `Scheduling UpdateProRevocationListJob.... refreshedNextRunAtMs: ${refreshedNextRunAtMs} and now: ${now}`
+    `Scheduling UpdateProRevocationListJob in ${postponedSeconds}s. refreshedNextRunAtMs: ${refreshedNextRunAtMs} and now: ${now}`
   );
   await runners.updateProRevocationListRunner.addJob(
-    new UpdateProRevocationListJob({ nextAttemptTimestamp: Date.now() + 20 * DURATION.SECONDS })
+    new UpdateProRevocationListJob({
+      nextAttemptTimestamp: Date.now() + postponedSeconds * DURATION.SECONDS,
+    })
   );
 }
 

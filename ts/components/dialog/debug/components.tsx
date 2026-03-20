@@ -744,30 +744,33 @@ export const OtherInfo = () => {
           </p>
         ) : null}
         {otherInfo.value
-          ? otherInfo.value.map((info, index) => (
-              <Flex
-                key={`debug-other-info-${index}`}
-                $container={true}
-                width="100%"
-                $alignItems="flex-start"
-                $flexGap="var(--margins-xs)"
-              >
-                <p
-                  style={{
-                    userSelect: 'text',
-                    lineHeight: 1.5,
-                    fontSize: 'var(--font-size-small)',
-                  }}
+          ? otherInfo.value.map((info, index) => {
+              const indexOfColon = info.indexOf(': ');
+              return (
+                <Flex
+                  key={`debug-other-info-${index}`}
+                  $container={true}
+                  width="100%"
+                  $alignItems="flex-start"
+                  $flexGap="var(--margins-xs)"
                 >
-                  {info}
-                </p>
-                <CopyToClipboardIcon
-                  iconSize={'small'}
-                  copyContent={info.slice(info.indexOf(': ') + 2)}
-                  buttonColor={SessionButtonColor.None}
-                />
-              </Flex>
-            ))
+                  <p
+                    style={{
+                      userSelect: 'text',
+                      lineHeight: 1.5,
+                      fontSize: 'var(--font-size-small)',
+                    }}
+                  >
+                    {info}
+                  </p>
+                  <CopyToClipboardIcon
+                    iconSize={'small'}
+                    copyContent={indexOfColon > 0 ? info.slice(indexOfColon + 2) : info}
+                    buttonColor={SessionButtonColor.None}
+                  />
+                </Flex>
+              );
+            })
           : null}
       </Flex>
     </Flex>

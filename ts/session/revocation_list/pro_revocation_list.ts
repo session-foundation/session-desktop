@@ -24,15 +24,12 @@ async function loadFromDbIfNeeded() {
 
   const resetItems: ProRevocationItemsDBType = [];
   if (!isString(itemsFromDb) || !itemsFromDb) {
-    // reset the cache and the DB entry manually (not calling setListItems here)
-    await Storage.put(SettingsKey.proRevocationListItems, JSON.stringify(resetItems));
-    cachedProRevocationListItems = resetItems;
+    await setListItems(resetItems, false);
   } else {
     try {
       const parsedJsonItems = JSON.parse(itemsFromDb);
       if (!isArray(parsedJsonItems)) {
-        await Storage.put(SettingsKey.proRevocationListItems, JSON.stringify(resetItems));
-        cachedProRevocationListItems = resetItems;
+        await setListItems(resetItems, false);
       } else {
         const parsed = ProRevocationItemsDBSchema.safeParse(parsedJsonItems);
 
@@ -43,8 +40,7 @@ async function loadFromDbIfNeeded() {
             'failed to parse pro revocation list items from storage, resetting to []. error:',
             parsed.error
           );
-          await Storage.put(SettingsKey.proRevocationListItems, JSON.stringify(resetItems));
-          cachedProRevocationListItems = resetItems;
+          await setListItems(resetItems, false);
         }
       }
     } catch (e) {
@@ -52,8 +48,7 @@ async function loadFromDbIfNeeded() {
         'failed to parse pro revocation list items from storage, resetting to []. error:',
         e.message
       );
-      await Storage.put(SettingsKey.proRevocationListItems, JSON.stringify(resetItems));
-      cachedProRevocationListItems = resetItems;
+      await setListItems(resetItems, false);
     }
   }
 
@@ -85,8 +80,10 @@ async function getListItems(): Promise<ProRevocationItemsDBType> {
   return cachedProRevocationListItems;
 }
 
-async function setListItems(items: ProRevocationItemsDBType) {
-  assertInitialFetchFromDBDone('setListItems');
+async function setListItems(items: ProRevocationItemsDBType, assertLoaded = true) {
+  if (assertLoaded) {
+    assertInitialFetchFromDBDone('setListItems');
+  }
 
   await Storage.put(SettingsKey.proRevocationListItems, JSON.stringify(items));
   cachedProRevocationListItems = items;
