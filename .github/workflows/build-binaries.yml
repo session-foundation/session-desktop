@@ -150,6 +150,8 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       USE_HARD_LINKS: false # see https://github.com/electron-userland/electron-builder/issues/7093
+      GH_PUBLISH_OWNER: ${{ github.repository_owner }}
+      GH_PUBLISH_REPO: ${{ github.event.repository.name }}
 
     steps:
       - name: Checkout git repo
@@ -194,7 +196,7 @@ jobs:
       - name: Make release build & publish ${{ matrix.identifier }}
         if: ${{ needs.create_draft_release_if_needed.outputs.version_tag != '' }}
         run: |
-          sed -i 's/"target": "deb"/"target": "${{ matrix.electron_target }}"/g' package.json && pnpm run build-release-publish
+          sed -i 's/"target": "deb"/"target": "${{ matrix.electron_target }}"/g' package.json && pnpm run build-release-publish --config.publish.provider=github --config.publish.owner="${GH_PUBLISH_OWNER}" --config.publish.repo="${GH_PUBLISH_REPO}"
 
       - name: Backup release metadata
         # only run this on "push" to "master" or alpha releases
@@ -261,6 +263,8 @@ jobs:
     needs: [create_draft_release_if_needed, lint]
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_PUBLISH_OWNER: ${{ github.repository_owner }}
+      GH_PUBLISH_REPO: ${{ github.event.repository.name }}
     name: "windows x64"
     steps:
       - run: git config --global core.autocrlf false
@@ -303,7 +307,7 @@ jobs:
 
       - name: Make release build & publish
         if: ${{ needs.create_draft_release_if_needed.outputs.version_tag != '' }}
-        run: pnpm run build-release-publish # No other args needed for windows publish
+        run: pnpm run build-release-publish --config.publish.provider=github --config.publish.owner="${env:GH_PUBLISH_OWNER}" --config.publish.repo="${env:GH_PUBLISH_REPO}"
 
   # We want both arm64 and intel mac builds, and according to this https://docs.github.com/en/actions/using-github-hosted-runners/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources macos-14 and above is always arm64 and macos-15 is the last intel runner
   # NOTE x64 builds made on an arm64 host will not bundle the native modules correctly https://github.com/electron-userland/electron-builder/issues/8646
@@ -329,6 +333,8 @@ jobs:
       SIGNING_APPLE_ID: ${{ secrets.SIGNING_APPLE_ID }}
       SIGNING_APP_PASSWORD: ${{ secrets.SIGNING_APP_PASSWORD }}
       SIGNING_TEAM_ID: ${{ secrets.SIGNING_TEAM_ID }}
+      GH_PUBLISH_OWNER: ${{ github.repository_owner }}
+      GH_PUBLISH_REPO: ${{ github.event.repository.name }}
     steps:
       - run: git config --global core.autocrlf false
 
