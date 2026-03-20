@@ -509,6 +509,7 @@ function ProInfoBlockRefund() {
     case ProPaymentProvider.GooglePlayStore:
       return <ProInfoBlockRefundGooglePlay />;
     case ProPaymentProvider.Nil:
+    case ProPaymentProvider.Rangeproof:
       return <ProInfoBlockRefundSessionSupport />;
     default:
       return assertUnreachable(data.provider, `Unknown pro payment provider: ${data.provider}`);
