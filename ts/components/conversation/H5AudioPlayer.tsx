@@ -210,6 +210,7 @@ export const AudioPlayerWithEncryptedFile = (props: {
       player.current.container.current.setAttribute('data-testid', dataTestId);
       // The library hardcodes tabIndex={0} on the container, override it so only the buttons inside are tabbable
       player.current.container.current.tabIndex = -1;
+      player.current.container.current.setAttribute('data-attachmentindex', '0');
     }
 
     player.current?.progressBar.current?.addEventListener('mousedown', e => {
