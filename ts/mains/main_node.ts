@@ -1270,7 +1270,7 @@ async function applyProxySettings() {
   process.env.NO_PROXY = '<local>';
 }
 
-app.on('login', (_event, _webContents, _request, authInfo, callback) => {
+app.on('login', (event, _webContents, _request, authInfo, callback) => {
   const settings = normalizeProxySettings({
     enabled: sqlNode.getItemById(SettingsKey.proxyEnabled)?.value,
     host: sqlNode.getItemById(SettingsKey.proxyHost)?.value,
@@ -1280,11 +1280,9 @@ app.on('login', (_event, _webContents, _request, authInfo, callback) => {
   });
 
   if (authInfo.isProxy && settings?.username && settings.password) {
+    event.preventDefault();
     callback(settings.username, settings.password);
-    return;
   }
-
-  callback('', '');
 });
 
 ipc.on('apply-proxy-settings', async event => {
