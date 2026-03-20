@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import Sinon from 'sinon';
 import { getIncrement, getTimerBucketIcon } from '../../../../util/timer';
 
 describe('getIncrement', () => {
@@ -54,23 +55,33 @@ describe('getIncrement', () => {
 });
 
 describe('getTimerBucketIcon', () => {
+  const mockNow = 1000000;
+
+  beforeEach(() => {
+    Sinon.stub(Date, 'now').returns(mockNow);
+  });
+
+  afterEach(() => {
+    Sinon.restore();
+  });
+
   describe('absolute values', () => {
     it('delta < 0', () => {
-      expect(getTimerBucketIcon(Date.now() - 1000, 100)).to.be.equal(
+      expect(getTimerBucketIcon(mockNow - 1000, 100)).to.be.equal(
         'timer60',
         'should have return timer60'
       );
     });
 
     it('delta > length by a little', () => {
-      expect(getTimerBucketIcon(Date.now() + 105, 100)).to.be.equal(
+      expect(getTimerBucketIcon(mockNow + 105, 100)).to.be.equal(
         'timer00',
         'should have return timer00'
       );
     });
 
     it('delta > length by a lot', () => {
-      expect(getTimerBucketIcon(Date.now() + 10100000, 100)).to.be.equal(
+      expect(getTimerBucketIcon(mockNow + 10100000, 100)).to.be.equal(
         'timer00',
         'should have return timer00'
       );
@@ -80,90 +91,90 @@ describe('getTimerBucketIcon', () => {
   describe('calculated values for length 1000', () => {
     const length = 1000;
     it('delta = 0', () => {
-      expect(getTimerBucketIcon(Date.now(), length)).to.be.equal(
+      expect(getTimerBucketIcon(mockNow, length)).to.be.equal(
         'timer00',
         'should have return timer00'
       );
     });
     it('delta = 1/12 of length', () => {
-      expect(getTimerBucketIcon(Date.now() + (1 / 12) * length, length)).to.be.equal(
+      expect(getTimerBucketIcon(mockNow + (1 / 12) * length, length)).to.be.equal(
         'timer05',
         'should have return timer05'
       );
     });
 
     it('delta = 2/12 of length', () => {
-      expect(getTimerBucketIcon(Date.now() + (2 / 12) * length, length)).to.be.equal(
+      expect(getTimerBucketIcon(mockNow + (2 / 12) * length, length)).to.be.equal(
         'timer10',
         'should have return timer10'
       );
     });
 
     it('delta = 3/12 of length', () => {
-      expect(getTimerBucketIcon(Date.now() + (3 / 12) * length, length)).to.be.equal(
+      expect(getTimerBucketIcon(mockNow + (3 / 12) * length, length)).to.be.equal(
         'timer15',
         'should have return timer15'
       );
     });
 
     it('delta = 4/12 of length', () => {
-      expect(getTimerBucketIcon(Date.now() + (4 / 12) * length, length)).to.be.equal(
+      expect(getTimerBucketIcon(mockNow + (4 / 12) * length, length)).to.be.equal(
         'timer20',
         'should have return timer20'
       );
     });
 
     it('delta = 5/12 of length', () => {
-      expect(getTimerBucketIcon(Date.now() + (5 / 12) * length, length)).to.be.equal(
+      expect(getTimerBucketIcon(mockNow + (5 / 12) * length, length)).to.be.equal(
         'timer25',
         'should have return timer25'
       );
     });
 
     it('delta = 6/12 of length', () => {
-      expect(getTimerBucketIcon(Date.now() + (6 / 12) * length, length)).to.be.equal(
+      expect(getTimerBucketIcon(mockNow + (6 / 12) * length, length)).to.be.equal(
         'timer30',
         'should have return timer30'
       );
     });
 
     it('delta = 7/12 of length', () => {
-      expect(getTimerBucketIcon(Date.now() + (7 / 12) * length, length)).to.be.equal(
+      expect(getTimerBucketIcon(mockNow + (7 / 12) * length, length)).to.be.equal(
         'timer35',
         'should have return timer35'
       );
     });
 
     it('delta = 8/12 of length', () => {
-      expect(getTimerBucketIcon(Date.now() + (8 / 12) * length, length)).to.be.equal(
+      expect(getTimerBucketIcon(mockNow + (8 / 12) * length, length)).to.be.equal(
         'timer40',
         'should have return timer40'
       );
     });
 
     it('delta = 9/12 of length', () => {
-      expect(getTimerBucketIcon(Date.now() + (9 / 12) * length, length)).to.be.equal(
+      expect(getTimerBucketIcon(mockNow + (9 / 12) * length, length)).to.be.equal(
         'timer45',
         'should have return timer45'
       );
     });
 
     it('delta = 10/12 of length', () => {
-      expect(getTimerBucketIcon(Date.now() + (10 / 12) * length, length)).to.be.equal(
+      expect(getTimerBucketIcon(mockNow + (10 / 12) * length, length)).to.be.equal(
         'timer50',
         'should have return timer50'
       );
     });
 
     it('delta = 11/12 of length', () => {
-      expect(getTimerBucketIcon(Date.now() + (11 / 12) * length, length)).to.be.equal(
+      expect(getTimerBucketIcon(mockNow + (11 / 12) * length, length)).to.be.equal(
         'timer55',
         'should have return timer55'
       );
     });
 
     it('delta = 12/12 of length', () => {
-      expect(getTimerBucketIcon(Date.now() + (12 / 12) * length, length)).to.be.equal(
+      expect(getTimerBucketIcon(mockNow + (12 / 12) * length, length)).to.be.equal(
         'timer60',
         'should have return timer60'
       );
