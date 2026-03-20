@@ -22,6 +22,16 @@ const StyledScrollDescriptionContainer = styled.div`
   text-align: center;
 `;
 
+async function openUrl(url: string) {
+  void shell.openExternal(url);
+  await registerUrlInteraction(url, URLInteraction.OPEN);
+}
+
+async function copyUrl(url: string) {
+  MessageInteraction.copyBodyToClipboard(url);
+  await registerUrlInteraction(url, URLInteraction.COPY);
+}
+
 export function OpenUrlModal(props: OpenUrlModalState) {
   const dispatch = getAppDispatch();
 
@@ -35,14 +45,12 @@ export function OpenUrlModal(props: OpenUrlModalState) {
   }
 
   async function onClickOpen() {
-    void shell.openExternal(url);
+    await openUrl(url);
     onClose();
-    await registerUrlInteraction(url, URLInteraction.OPEN);
   }
 
   async function onClickCopy() {
-    MessageInteraction.copyBodyToClipboard(url);
-    await registerUrlInteraction(url, URLInteraction.COPY);
+    await copyUrl(url);
     onClose();
   }
 
@@ -87,4 +95,8 @@ export const showLinkVisitWarningDialog = (urlToOpen: string, dispatch: Dispatch
       urlToOpen,
     })
   );
+};
+
+export const openUrlNoDialog = (urlToOpen: string) => {
+  void openUrl(urlToOpen);
 };

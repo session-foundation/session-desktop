@@ -45,6 +45,7 @@ export function MessageGenericAttachment({
         selected={selected}
         className={'module-message__generic-attachment'}
         onClick={onClick}
+        data-attachmentindex={0}
       >
         {pending ? (
           <div className="module-message__generic-attachment__spinner-container">

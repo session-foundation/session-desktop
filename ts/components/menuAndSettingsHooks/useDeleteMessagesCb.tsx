@@ -85,6 +85,11 @@ export function useDeleteMessagesCb(conversationId: string | undefined) {
     // If it's a single message that has attachment and one of those have been clicked, the title and description is slightly different
     const singleDeleteFromAttachment =
       msgModels.length === 1 && msgModels[0].hasAttachments() && dataAttachmentIndex !== null;
+    const singleMessageAttachmentCount = singleDeleteFromAttachment
+      ? msgModels[0].getAttachments().length
+      : 0;
+    const singleDeleteFromAttachmentWithMultiple =
+      singleDeleteFromAttachment && singleMessageAttachmentCount > 1;
 
     // We can technically never delete for everyone if one of the message is
     // - a control message
@@ -105,11 +110,11 @@ export function useDeleteMessagesCb(conversationId: string | undefined) {
     // Note: the isMe case has no radio buttons, so we just show the description below
     const i18nMessage: TrArgs | undefined = {
       token: singleDeleteFromAttachment ? 'deleteAttachmentsDescription' : 'deleteMessageConfirm',
-      count,
+      count: singleDeleteFromAttachmentWithMultiple ? singleMessageAttachmentCount : count,
     };
     const title: TrArgs = {
       token: singleDeleteFromAttachment ? 'deleteAttachments' : 'deleteMessage',
-      count,
+      count: singleDeleteFromAttachmentWithMultiple ? singleMessageAttachmentCount : count,
     };
 
     const warningMessage: TrArgs | undefined =
