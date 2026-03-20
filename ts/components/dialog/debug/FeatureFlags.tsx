@@ -899,7 +899,7 @@ export const ProDebugSection = ({
         <>
           <DebugButton buttonColor={SessionButtonColor.Danger} onClick={resetPro}>
             Reset All Pro State
-          </DebugButton>{' '}
+          </DebugButton>
           <DebugButton onClick={() => setPage(DEBUG_MENU_PAGE.Pro)}>Pro Playground</DebugButton>
           <DebugButton
             onClick={() => {

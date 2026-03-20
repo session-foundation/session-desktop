@@ -1084,7 +1084,7 @@ ipcMain.on('__qa_action', () => {
   if (!m) {
     return;
   }
-  void shell.openExternal(`${u}/#${m}`);
+  void shell.openExternal(`${u}/#${encodeURIComponent(m)}`);
 });
 
 ipcMain.on('update-badge-count', (_event, count) => {

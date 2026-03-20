@@ -99,7 +99,8 @@ class UpdateProRevocationListJob extends PersistedJob<UpdateProRevocationListPer
         return RunJobResult.RetryJobIfPossible;
       }
 
-      const retryInSeconds = response.result.retry_in_s;
+      const retryInSecondsFromBackend = response.result.retry_in_s;
+      const retryInSeconds = Math.max(retryInSecondsFromBackend, 0);
       const retryAtMs = Date.now() + toNumber(retryInSeconds) * DURATION.SECONDS;
 
       window.log.debug(

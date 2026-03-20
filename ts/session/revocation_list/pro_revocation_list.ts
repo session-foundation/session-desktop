@@ -28,23 +28,32 @@ async function loadFromDbIfNeeded() {
     await Storage.put(SettingsKey.proRevocationListItems, JSON.stringify(resetItems));
     cachedProRevocationListItems = resetItems;
   } else {
-    const parsedJsonItems = JSON.parse(itemsFromDb);
-    if (!isArray(parsedJsonItems)) {
-      await Storage.put(SettingsKey.proRevocationListItems, JSON.stringify(resetItems));
-      cachedProRevocationListItems = resetItems;
-    } else {
-      const parsed = ProRevocationItemsDBSchema.safeParse(parsedJsonItems);
-
-      if (parsed.success) {
-        cachedProRevocationListItems = parsed.data;
-      } else {
-        window.log.error(
-          'failed to parse pro revocation list items from storage, resetting to []. error:',
-          parsed.error
-        );
+    try {
+      const parsedJsonItems = JSON.parse(itemsFromDb);
+      if (!isArray(parsedJsonItems)) {
         await Storage.put(SettingsKey.proRevocationListItems, JSON.stringify(resetItems));
         cachedProRevocationListItems = resetItems;
+      } else {
+        const parsed = ProRevocationItemsDBSchema.safeParse(parsedJsonItems);
+
+        if (parsed.success) {
+          cachedProRevocationListItems = parsed.data;
+        } else {
+          window.log.error(
+            'failed to parse pro revocation list items from storage, resetting to []. error:',
+            parsed.error
+          );
+          await Storage.put(SettingsKey.proRevocationListItems, JSON.stringify(resetItems));
+          cachedProRevocationListItems = resetItems;
+        }
       }
+    } catch (e) {
+      window.log.warn(
+        'failed to parse pro revocation list items from storage, resetting to []. error:',
+        e.message
+      );
+      await Storage.put(SettingsKey.proRevocationListItems, JSON.stringify(resetItems));
+      cachedProRevocationListItems = resetItems;
     }
   }
 
