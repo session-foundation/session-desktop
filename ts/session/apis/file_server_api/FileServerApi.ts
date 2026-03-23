@@ -217,7 +217,7 @@ export const extendFileExpiry = async (fileId: string, fsTarget: FILE_SERVER_TAR
   }
 
   const method = 'POST';
-  const endpoint = `/file/${fileId}/extend`;
+  const endpoint = `${FILE_ENDPOINT}/${fileId}/extend`;
 
   const result = await OnionSending.sendJsonViaOnionV4ToFileServer({
     abortSignal: new AbortController().signal,
