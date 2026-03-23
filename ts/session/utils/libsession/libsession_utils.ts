@@ -694,7 +694,7 @@ async function createInitialDumpsMissingForGroups() {
     .filter(m => m.data.length)
     .map(m => m.variant.substring(m.variant.indexOf('-03') + 1));
   const inUserGroupsWithKeysWithoutDumps = allIdsInUserGroupsWithKeys.filter(
-    groupPk => !allIdsWithDump.includes(`MetaGroupConfig-${groupPk}`)
+    groupPk => !allIdsWithDump.includes(groupPk) // Note: here we don't have the MetaGroup- prefix
   );
 
   const userEd25519Secretkey = (await UserUtils.getUserED25519KeyPairBytes()).privKeyBytes;
