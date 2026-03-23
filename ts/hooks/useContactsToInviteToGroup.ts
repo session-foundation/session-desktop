@@ -11,6 +11,7 @@ import {
 import { useSortedGroupMembers } from './useParamSelector';
 import { getPrivateContactsPubkeys } from '../state/selectors/conversations';
 import type { SearchType } from '../state/ducks/search';
+import { UserUtils } from '../session/utils';
 
 /**
  * Returns the 05 pubkeys of contacts that we can invite to a group.
@@ -24,9 +25,10 @@ export const useContactsToInviteTo = (searchType: SearchType, conversationId?: s
   const searchTerm = useSearchTermForType(searchType);
 
   const members = uniq(membersFromRedux);
+  const us = UserUtils.getOurPubKeyStrFromCache();
 
   const contactsToRender = isSearch
-    ? searchResultContactsOnly.filter(m => PubKey.is05Pubkey(m))
+    ? searchResultContactsOnly.filter(m => PubKey.is05Pubkey(m) && m !== us)
     : privateContactsPubkeys;
 
   const validContactsForInvite = useMemo(() => {
