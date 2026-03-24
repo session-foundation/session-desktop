@@ -406,6 +406,11 @@ export function useMessageReactsPropsById(messageId?: string) {
   });
 }
 
+export function useMessageSortedReacts(messageId?: string) {
+  const messageReactsProps = useMessageReactsPropsById(messageId);
+  return messageReactsProps?.sortedReacts ? messageReactsProps.sortedReacts : [];
+}
+
 /**
  * Returns the unread count of that conversation, or 0 if none are found.
  * Note: returned value is capped at a max of CONVERSATION.MAX_CONVO_UNREAD_COUNT
