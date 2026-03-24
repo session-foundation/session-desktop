@@ -1,8 +1,6 @@
 import { SessionDataTestId } from 'react';
 import styled from 'styled-components';
 import { Flex } from './basic/Flex';
-import { SessionLucideIconButton } from './icon/SessionIconButton';
-import type { WithLucideUnicode } from './icon/lucide';
 
 const StyledNoticeBanner = styled(Flex)<{ isClickable: boolean }>`
   background-color: var(--primary-color);
@@ -21,16 +19,17 @@ const StyledNoticeBanner = styled(Flex)<{ isClickable: boolean }>`
 
 const StyledBannerText = styled.span`
   margin-right: var(--margins-sm);
+  font-family: var(--font-default), var(--font-icon);
 `;
 
-type NoticeBannerProps = Partial<WithLucideUnicode> & {
+type NoticeBannerProps = {
   text: string;
   onBannerClick?: () => void;
   dataTestId: SessionDataTestId;
 };
 
 export const NoticeBanner = (props: NoticeBannerProps) => {
-  const { text, onBannerClick, unicode, dataTestId } = props;
+  const { text, onBannerClick, dataTestId } = props;
 
   return (
     <StyledNoticeBanner
@@ -49,9 +48,6 @@ export const NoticeBanner = (props: NoticeBannerProps) => {
       }}
     >
       <StyledBannerText>{text}</StyledBannerText>
-      {unicode ? (
-        <SessionLucideIconButton unicode={unicode} iconColor="inherit" iconSize="small" />
-      ) : null}
     </StyledNoticeBanner>
   );
 };
