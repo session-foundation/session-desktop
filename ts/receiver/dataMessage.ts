@@ -29,6 +29,7 @@ import { ConversationTypeEnum } from '../models/types';
 import { ed25519Str } from '../session/utils/String';
 import { longOrNumberToNumber } from '../types/long/longOrNumberToNumber';
 import { buildPrivateProfileChangeFromSwarmDataMessage } from '../models/profile';
+import { isUsAnySogsFromCache } from '../session/apis/open_group_api/sogsv3/knownBlindedkeys';
 
 function cleanAttachment(attachment: SignalService.IAttachmentPointer) {
   return {
@@ -298,7 +299,7 @@ async function handleSwarmMessage(
     // this call has to be made inside the queueJob!
     // We handle reaction DataMessages separately
     if (!convoToAddMessageTo.isOpenGroupV2() && rawDataMessage.reaction) {
-      await Reactions.handleMessageReaction({
+      const addedToMessage = await Reactions.handleMessageReaction({
         reaction: rawDataMessage.reaction,
         sender: msgModel.get('source'),
         you: isUsFromCache(msgModel.get('source')),
@@ -307,10 +308,22 @@ async function handleSwarmMessage(
       if (
         convoToAddMessageTo.isPrivate() &&
         msgModel.get('unread') &&
-        rawDataMessage.reaction.action === Action.REACT
+        rawDataMessage.reaction.action === Action.REACT &&
+        addedToMessage
       ) {
         msgModel.setKey('reaction', rawDataMessage.reaction as Reaction);
-        convoToAddMessageTo.throttledNotify(msgModel);
+        // we want to notify if the
+        // - the user who reacted is not us
+        // - the user that sent the original message was us.
+        const originalMsgSenderIsUs = isUsAnySogsFromCache(addedToMessage.getSource());
+
+        // msgModel is the react itself in this case, i.e. a message that is not saved to the DB with only the reaction.
+        // We update addedToMessage with the react details.
+        const reactSenderIsUs = isUsAnySogsFromCache(msgModel.getSource());
+
+        if (originalMsgSenderIsUs && !reactSenderIsUs) {
+          convoToAddMessageTo.throttledNotify(msgModel);
+        }
       }
 
       return;
