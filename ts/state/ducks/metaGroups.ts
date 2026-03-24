@@ -8,7 +8,6 @@ import {
   WithGroupPubkey,
 } from 'libsession_util_nodejs';
 import { concat, intersection, isEmpty, isNil, uniq } from 'lodash';
-import { ConfigDumpData } from '../../data/configDump/configDump';
 import { HexString } from '../../node/hexStrings';
 import { SignalService } from '../../protobuf';
 import { getSwarmPollingInstance } from '../../session/apis/snode_api';
@@ -28,12 +27,7 @@ import { GroupSync } from '../../session/utils/job_runners/jobs/GroupSyncJob';
 import { RunJobResult } from '../../session/utils/job_runners/PersistedJob';
 import { LibSessionUtil } from '../../session/utils/libsession/libsession_utils';
 import { ed25519Str } from '../../session/utils/String';
-import { getUserED25519KeyPairBytes } from '../../session/utils/User';
 import { stringify, toFixedUint8ArrayOfLength } from '../../types/sqlSharedTypes';
-import {
-  getGroupPubkeyFromWrapperType,
-  isMetaGroupWrapperType,
-} from '../../webworker/workers/browser/libsession_worker_functions';
 import {
   MetaGroupWrapperActions,
   UserGroupsWrapperActions,
@@ -371,52 +365,12 @@ const handleUserGroupUpdate = createAsyncThunk(
  */
 const loadMetaDumpsFromDB = createAsyncThunk(
   'group/loadMetaDumpsFromDB',
-  async (): Promise<Array<GroupDetailsUpdate>> => {
-    const ed25519KeyPairBytes = await getUserED25519KeyPairBytes();
-    if (!ed25519KeyPairBytes?.privKeyBytes) {
-      throw new Error('user has no ed25519KeyPairBytes.');
-    }
-
-    // Make sure all of the groups that should have a dump in DB, actually have one before we load them
-    await LibSessionUtil.createInitialDumpsMissingForGroups();
-    const variantsWithData = await ConfigDumpData.getAllDumpsWithData();
-    const allUserGroups = await UserGroupsWrapperActions.getAllGroups();
+  async (groupPubkeysToRefresh: Array<GroupPubkeyType>): Promise<Array<GroupDetailsUpdate>> => {
     const toReturn: Array<GroupDetailsUpdate> = [];
-    for (let index = 0; index < variantsWithData.length; index++) {
-      const { variant, data } = variantsWithData[index];
-      if (!isMetaGroupWrapperType(variant)) {
-        continue;
-      }
-      const groupPk = getGroupPubkeyFromWrapperType(variant);
-      const groupEd25519Pubkey = HexString.fromHexString(groupPk.substring(2));
-      const foundInUserWrapper = allUserGroups.find(m => m.pubkeyHex === groupPk);
-      if (!foundInUserWrapper) {
-        try {
-          window.log.info(
-            'metaGroup not found in userGroups. Deleting the corresponding dumps:',
-            groupPk
-          );
-
-          await ConfigDumpData.deleteDumpFor(groupPk);
-        } catch (e) {
-          window.log.warn(`ConfigDumpData.deleteDumpFor for ${groupPk} failed with `, e.message);
-        }
-        continue;
-      }
+    for (let index = 0; index < groupPubkeysToRefresh.length; index++) {
+      const groupPk = groupPubkeysToRefresh[index];
 
       try {
-        window.log.debug('loadMetaDumpsFromDB init from meta group dump', variant);
-
-        await MetaGroupWrapperActions.init(groupPk, {
-          groupEd25519Pubkey: toFixedUint8ArrayOfLength(groupEd25519Pubkey, 32).buffer,
-          groupEd25519Secretkey: foundInUserWrapper?.secretKey || null,
-          userEd25519Secretkey: toFixedUint8ArrayOfLength(ed25519KeyPairBytes.privKeyBytes, 64)
-            .buffer,
-          metaDumped: data,
-        });
-
-        // If we were sending to that member an invite/promote, we won't auto retry.
-        // We need to reset the sending state (on load from disk) so that the user can resend manually if needed
         await MetaGroupWrapperActions.memberResetAllSendingState(groupPk);
 
         const infos = await MetaGroupWrapperActions.infoGet(groupPk);
@@ -428,7 +382,7 @@ const loadMetaDumpsFromDB = createAsyncThunk(
       } catch (e) {
         // Note: Don't rethrow here, we want to load everything we can
         window.log.error(
-          `initGroup of Group wrapper of variant ${variant} failed with ${e.message} `
+          `initGroup of Group wrapper of group ${ed25519Str(groupPk)}} failed with ${e.message}`
         );
       }
     }
