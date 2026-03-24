@@ -98,12 +98,17 @@ export const QuoteText = (
       return <div style={{ WebkitLineClamp: 1 }}>{typeLabel}</div>;
     }
   }
+
+  const firstLine = text?.split('\n')[0];
+  const firstLineWithMore =
+    firstLine && firstLine.length !== text?.length ? `${firstLine}…` : firstLine;
+
   const textOrFallbacks =
     isDeleted === MessageDeletedType.deletedGlobally
       ? tr('deleteMessageDeletedGlobally')
       : isDeleted === MessageDeletedType.deletedLocally
         ? tr('deleteMessageDeletedLocally')
-        : text || tr('messageErrorOriginal');
+        : firstLineWithMore || tr('messageErrorOriginal');
 
   return (
     <StyledQuoteText $isIncoming={isIncoming} dir="auto" data-testid="quote-text">
