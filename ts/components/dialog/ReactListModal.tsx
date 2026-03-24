@@ -219,6 +219,15 @@ export const ReactListModal = (props: Props) => {
   }, [reactions]);
   const reactionsCount = reactionsMap[currentReact]?.count;
 
+  if (
+    !reactionsMap?.[currentReact] &&
+    reactions?.length &&
+    reactions[0][0] &&
+    currentReact !== reactions[0][0]
+  ) {
+    setCurrentReact(reactions[0][0]);
+  }
+
   // TODO we should break down this useEffect, it is hard to read.
   useEffect(() => {
     if (currentReact === '' && currentReact !== reaction) {
@@ -333,12 +342,12 @@ export const ReactListModal = (props: Props) => {
                 <span role={'img'} aria-label={reactAriaLabel}>
                   {currentReact}
                 </span>
-                {reactionsMap[currentReact].count && (
+                {reactionsMap?.[currentReact]?.count ? (
                   <>
                     <span>&#8226;</span>
                     <span>{reactionsMap[currentReact].count}</span>
                   </>
-                )}
+                ) : null}
               </p>
               {weAreCommunityAdminOrModerator && (
                 <SessionButton
