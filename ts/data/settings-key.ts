@@ -14,6 +14,11 @@ const hasSyncedInitialConfigurationItem = 'hasSyncedInitialConfigurationItem';
 const hasLinkPreviewPopupBeenDisplayed = 'hasLinkPreviewPopupBeenDisplayed';
 const hasFollowSystemThemeEnabled = 'hasFollowSystemThemeEnabled';
 const hideRecoveryPassword = 'hideRecoveryPassword';
+const proxyEnabled = 'proxyEnabled';
+const proxyHost = 'proxyHost';
+const proxyPort = 'proxyPort';
+const proxyUsername = 'proxyUsername';
+const proxyPassword = 'proxyPassword';
 
 // Pro stats counters
 const proLongerMessagesSent = 'proLongerMessagesSent';
@@ -52,6 +57,11 @@ export const SettingsKey = {
   settingsAudioNotification,
   hasSyncedInitialConfigurationItem,
   hasLinkPreviewPopupBeenDisplayed,
+  proxyEnabled,
+  proxyHost,
+  proxyPort,
+  proxyUsername,
+  proxyPassword,
   latestUserProfileEnvelopeTimestamp,
   latestUserGroupEnvelopeTimestamp,
   latestUserContactsEnvelopeTimestamp,

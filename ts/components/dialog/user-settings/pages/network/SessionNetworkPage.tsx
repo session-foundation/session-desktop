@@ -9,6 +9,7 @@ import {
   useLastRefreshedTimestamp,
 } from '../../../../../state/selectors/networkModal';
 import { NetworkSection } from './sections/network/NetworkSection';
+import { ProxySection } from './sections/network/ProxySection';
 import { useDataIsStale } from '../../../../../state/selectors/networkData';
 import { SessionLucideIconButton } from '../../../../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../../../../icon/lucide';
@@ -71,6 +72,7 @@ export function SessionNetworkPage(modalState: UserSettingsModalState) {
       onClose={closeAction || undefined}
     >
       <NetworkSection />
+      <ProxySection />
       <StakeSection />
       {!dataIsStale && lastRefreshedTimestamp && !loading ? (
         <>

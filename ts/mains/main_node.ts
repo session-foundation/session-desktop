@@ -15,6 +15,7 @@ import {
   Menu,
   nativeTheme,
   screen,
+  session,
   shell,
   systemPreferences,
 } from 'electron';
@@ -196,6 +197,7 @@ import LIBSESSION_CONSTANTS from '../session/utils/libsession/libsession_constan
 import { isReleaseChannel } from '../updater/types';
 import { canAutoUpdate, checkForUpdates } from '../updater/updater';
 import { initializeMainProcessLogger } from '../util/logger/main_process_logging';
+import { buildProxyUrl, normalizeProxySettings } from '../session/utils/ProxySettings';
 
 import * as log from '../util/logger/log';
 import { DURATION } from '../session/constants';
@@ -843,6 +845,7 @@ async function showMainWindow(sqlKey: string, passwordAttempt = false) {
     tray = createTrayIcon(getMainWindow);
   }
 
+  await applyProxySettings();
   setupMenu();
 }
 
@@ -1257,6 +1260,60 @@ async function askForMediaAccess() {
 
 ipc.on('media-access', async () => {
   await askForMediaAccess();
+});
+
+async function applyProxySettings() {
+  const settings = normalizeProxySettings({
+    enabled: sqlNode.getItemById(SettingsKey.proxyEnabled)?.value,
+    host: sqlNode.getItemById(SettingsKey.proxyHost)?.value,
+    port: sqlNode.getItemById(SettingsKey.proxyPort)?.value,
+    username: sqlNode.getItemById(SettingsKey.proxyUsername)?.value,
+    password: sqlNode.getItemById(SettingsKey.proxyPassword)?.value,
+  });
+
+  if (!settings) {
+    await session.defaultSession.setProxy({ proxyRules: '' });
+    delete process.env.HTTPS_PROXY;
+    delete process.env.HTTP_PROXY;
+    delete process.env.NO_PROXY;
+    return;
+  }
+
+  const proxyRules = buildProxyUrl(settings, { includeAuth: false, protocol: 'socks5' });
+  const proxyEnv = buildProxyUrl(settings, { includeAuth: true, protocol: 'socks5' });
+
+  await session.defaultSession.setProxy({
+    proxyRules,
+    proxyBypassRules: '<local>',
+  });
+
+  process.env.HTTPS_PROXY = proxyEnv;
+  process.env.HTTP_PROXY = proxyEnv;
+  process.env.NO_PROXY = '<local>';
+}
+
+app.on('login', (event, _webContents, _request, authInfo, callback) => {
+  const settings = normalizeProxySettings({
+    enabled: sqlNode.getItemById(SettingsKey.proxyEnabled)?.value,
+    host: sqlNode.getItemById(SettingsKey.proxyHost)?.value,
+    port: sqlNode.getItemById(SettingsKey.proxyPort)?.value,
+    username: sqlNode.getItemById(SettingsKey.proxyUsername)?.value,
+    password: sqlNode.getItemById(SettingsKey.proxyPassword)?.value,
+  });
+
+  if (authInfo.isProxy && settings?.username && settings.password) {
+    event.preventDefault();
+    callback(settings.username, settings.password);
+  }
+});
+
+ipc.on('apply-proxy-settings', async event => {
+  try {
+    await applyProxySettings();
+    event.sender.send('apply-proxy-settings-response', null);
+  } catch (error) {
+    event.sender.send('apply-proxy-settings-response', error);
+  }
 });
 
 ipc.handle('get-storage-profile', async (): Promise<string> => {

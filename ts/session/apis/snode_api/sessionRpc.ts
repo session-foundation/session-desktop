@@ -91,6 +91,7 @@ async function doRequestNoRetries({
       },
       destination: FetchDestination.SERVICE_NODE,
       caller: 'doRequestNoRetries',
+      tlsOptions: fetchOptions.agent ? { rejectUnauthorized: false } : undefined,
     });
     if (!response.ok) {
       throw new HTTPError('Loki_rpc error', response);
