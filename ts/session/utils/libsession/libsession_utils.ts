@@ -10,6 +10,8 @@ import { ConfigDumpData } from '../../../data/configDump/configDump';
 import { assertUnreachable, toFixedUint8ArrayOfLength } from '../../../types/sqlSharedTypes';
 import {
   ConfigWrapperUser,
+  getGroupPubkeyFromWrapperType,
+  isMetaGroupWrapperType,
   isUserConfigWrapperType,
 } from '../../../webworker/workers/browser/libsession_worker_functions';
 import {
@@ -36,6 +38,7 @@ import { UserConfigWrapperActions } from '../../../webworker/workers/browser/lib
 import { HexString } from '../../../node/hexStrings';
 import { ConvoHub } from '../../conversations';
 import { getSwarmPollingInstance } from '../../apis/snode_api';
+import { getUserED25519KeyPairBytes } from '../User';
 
 const requiredUserVariants: Array<ConfigWrapperUser> = [
   'UserConfig',
@@ -739,6 +742,69 @@ async function createInitialDumpsMissingForGroups() {
   }
 }
 
+async function loadGroupDumpsAndCleanup() {
+  const ed25519KeyPairBytes = await getUserED25519KeyPairBytes();
+  if (!ed25519KeyPairBytes?.privKeyBytes) {
+    throw new Error('loadGroupDumpsAndCleanup: user has no ed25519KeyPairBytes.');
+  }
+
+  // Make sure all of the groups that should have a dump in DB, actually have one before we load them
+  await createInitialDumpsMissingForGroups();
+  const variantsWithData = await ConfigDumpData.getAllDumpsWithData();
+  const allUserGroups = await UserGroupsWrapperActions.getAllGroups();
+  const toRefresh: Array<GroupPubkeyType> = [];
+  for (let index = 0; index < variantsWithData.length; index++) {
+    const { variant, data } = variantsWithData[index];
+    if (!isMetaGroupWrapperType(variant)) {
+      continue;
+    }
+    const groupPk = getGroupPubkeyFromWrapperType(variant);
+    const groupEd25519Pubkey = HexString.fromHexString(groupPk.substring(2));
+    const foundInUserWrapper = allUserGroups.find(m => m.pubkeyHex === groupPk);
+    if (!foundInUserWrapper) {
+      try {
+        window.log.info(
+          'loadGroupDumpsAndCleanup: metaGroup not found in userGroups. Deleting the corresponding dumps:',
+          ed25519Str(groupPk)
+        );
+
+        await ConfigDumpData.deleteDumpFor(groupPk);
+      } catch (e) {
+        window.log.warn(
+          `ConfigDumpData.deleteDumpFor for ${ed25519Str(groupPk)} failed with `,
+          e.message
+        );
+      }
+      continue;
+    }
+
+    try {
+      window.log.debug('loadGroupDumpsAndCleanup init from meta group dump', variant);
+
+      await MetaGroupWrapperActions.init(groupPk, {
+        groupEd25519Pubkey: toFixedUint8ArrayOfLength(groupEd25519Pubkey, 32).buffer,
+        groupEd25519Secretkey: foundInUserWrapper?.secretKey || null,
+        userEd25519Secretkey: toFixedUint8ArrayOfLength(ed25519KeyPairBytes.privKeyBytes, 64)
+          .buffer,
+        metaDumped: data,
+      });
+      // If we were sending to that member an invite/promote, we won't auto retry.
+      // We need to reset the sending state (on load from disk) so that the user can resend manually if needed
+      await MetaGroupWrapperActions.memberResetAllSendingState(groupPk);
+
+      toRefresh.push(groupPk);
+    } catch (e) {
+      // Note: Don't rethrow here, we want to load everything we can
+      window.log.error(
+        `loadGroupDumpsAndCleanup: initGroup of Group wrapper of variant ${variant} failed with ${e.message} `
+      );
+    }
+  }
+  window.log.info(`loadGroupDumpsAndCleanup: groups still valid [${toRefresh.map(ed25519Str)}]`);
+
+  return toRefresh;
+}
+
 export const LibSessionUtil = {
   initializeLibSessionUtilWrappers,
   userNamespaceToVariant,
@@ -746,7 +812,7 @@ export const LibSessionUtil = {
   pendingChangesForUs,
   pendingChangesForGroup,
   saveDumpsToDb,
-  createInitialDumpsMissingForGroups,
+  loadGroupDumpsAndCleanup,
   batchResultsToGroupSuccessfulChange,
   batchResultsToUserSuccessfulChange,
   createMemberAndSetDetails,
