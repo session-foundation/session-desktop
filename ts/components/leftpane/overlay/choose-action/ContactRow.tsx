@@ -9,6 +9,8 @@ import { useShowUserDetailsCbFromConversation } from '../../../menuAndSettingsHo
 import { ContactName } from '../../../conversation/ContactName/ContactName';
 import { MemoConversationListItemContextMenu } from '../../../menu/ConversationListItemContextMenu';
 import { ContextConversationProvider } from '../../../../contexts/ConvoIdContext';
+import { getAppDispatch } from '../../../../state/dispatch';
+import { sectionActions } from '../../../../state/ducks/section';
 
 const Portal = ({ children }: { children: ReactNode }) => {
   return createPortal(children, document.querySelector('.inbox.index') as Element);
@@ -67,13 +69,17 @@ export const ContactRowBreak = (props: { char: string; key: string; style: CSSPr
 export const ContactRow = (props: Props) => {
   const { id, style } = props;
   const triggerId = `contact-row-${id}-ctxmenu`;
+  const dispatch = getAppDispatch();
 
   return (
     <ContextConversationProvider value={id}>
       <StyledRowContainer
         style={style}
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        onClick={async () => openConversationWithMessages({ conversationKey: id, messageId: null })}
+        onClick={async () => {
+          await openConversationWithMessages({ conversationKey: id, messageId: null });
+          dispatch(sectionActions.resetLeftOverlayMode());
+        }}
         onContextMenu={e => {
           contextMenu.show({
             id: triggerId,
