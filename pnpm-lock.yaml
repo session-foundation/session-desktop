@@ -25,7 +25,7 @@ importers:
         version: https://github.com/session-foundation/session-emoji-mart/releases/download/v5.6.0/emoji-mart-data-v1.2.1.tgz
       '@emoji-mart/react':
         specifier: https://github.com/session-foundation/session-emoji-mart/releases/download/v5.6.0/emoji-mart-react-v1.1.1.tgz
-        version: https://github.com/session-foundation/session-emoji-mart/releases/download/v5.6.0/emoji-mart-react-v1.1.1.tgz(emoji-mart@https://github.com/session-foundation/session-emoji-mart/releases/download/v5.6.1/emoji-mart-v5.6.1.tgz)(react@19.2.1)
+        version: https://github.com/session-foundation/session-emoji-mart/releases/download/v5.6.0/emoji-mart-react-v1.1.1.tgz(emoji-mart@https://github.com/session-foundation/session-emoji-mart/releases/download/v5.6.2/emoji-mart-v5.6.2.tgz)(react@19.2.1)
       '@emotion/is-prop-valid':
         specifier: 1.2.2
         version: 1.2.2
@@ -78,8 +78,8 @@ importers:
         specifier: ^6.3.9
         version: 6.3.9
       emoji-mart:
-        specifier: https://github.com/session-foundation/session-emoji-mart/releases/download/v5.6.1/emoji-mart-v5.6.1.tgz
-        version: https://github.com/session-foundation/session-emoji-mart/releases/download/v5.6.1/emoji-mart-v5.6.1.tgz
+        specifier: https://github.com/session-foundation/session-emoji-mart/releases/download/v5.6.2/emoji-mart-v5.6.2.tgz
+        version: https://github.com/session-foundation/session-emoji-mart/releases/download/v5.6.2/emoji-mart-v5.6.2.tgz
       filesize:
         specifier: 10.1.6
         version: 10.1.6
@@ -2962,9 +2962,9 @@ packages:
     engines: {node: '>= 12.20.55'}
     hasBin: true
 
-  emoji-mart@https://github.com/session-foundation/session-emoji-mart/releases/download/v5.6.1/emoji-mart-v5.6.1.tgz:
-    resolution: {integrity: sha512-5hTnYjRBbXpHIkcEv6r7tN7gKhmVyN746oXDBt0dcW5h2XhFG2hiSe1Su45CD6zpnP70OWWtkBn5+AdPXf0Sgg==, tarball: https://github.com/session-foundation/session-emoji-mart/releases/download/v5.6.1/emoji-mart-v5.6.1.tgz}
-    version: 5.6.1
+  emoji-mart@https://github.com/session-foundation/session-emoji-mart/releases/download/v5.6.2/emoji-mart-v5.6.2.tgz:
+    resolution: {integrity: sha512-3f7ab6IreqbqeLKNL4q3n3mvMrY8MfSbfJHCfGVhP6yLjWT1Ser9JJAT5gixyScAXNDHCGBWusNJPNYeB/VzwQ==, tarball: https://github.com/session-foundation/session-emoji-mart/releases/download/v5.6.2/emoji-mart-v5.6.2.tgz}
+    version: 5.6.2
 
   emoji-regex@8.0.0:
     resolution: {integrity: sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==}
@@ -6907,9 +6907,9 @@ snapshots:
 
   '@emoji-mart/data@https://github.com/session-foundation/session-emoji-mart/releases/download/v5.6.0/emoji-mart-data-v1.2.1.tgz': {}
 
-  '@emoji-mart/react@https://github.com/session-foundation/session-emoji-mart/releases/download/v5.6.0/emoji-mart-react-v1.1.1.tgz(emoji-mart@https://github.com/session-foundation/session-emoji-mart/releases/download/v5.6.1/emoji-mart-v5.6.1.tgz)(react@19.2.1)':
+  '@emoji-mart/react@https://github.com/session-foundation/session-emoji-mart/releases/download/v5.6.0/emoji-mart-react-v1.1.1.tgz(emoji-mart@https://github.com/session-foundation/session-emoji-mart/releases/download/v5.6.2/emoji-mart-v5.6.2.tgz)(react@19.2.1)':
     dependencies:
-      emoji-mart: https://github.com/session-foundation/session-emoji-mart/releases/download/v5.6.1/emoji-mart-v5.6.1.tgz
+      emoji-mart: https://github.com/session-foundation/session-emoji-mart/releases/download/v5.6.2/emoji-mart-v5.6.2.tgz
       react: 19.2.1
 
   '@emotion/is-prop-valid@1.2.2':
@@ -8918,7 +8918,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  emoji-mart@https://github.com/session-foundation/session-emoji-mart/releases/download/v5.6.1/emoji-mart-v5.6.1.tgz: {}
+  emoji-mart@https://github.com/session-foundation/session-emoji-mart/releases/download/v5.6.2/emoji-mart-v5.6.2.tgz: {}
 
   emoji-regex@8.0.0: {}
 
