@@ -63,10 +63,9 @@ export const LightboxGallery = (props: Props) => {
     const mediaItem = media[currentIndex];
 
     if (isDataBlob && mediaItem.objectURL) {
-      saveURLAsFile({
+      void saveURLAsFile({
         filename: mediaItem.attachment.fileName,
         url: mediaItem.objectURL,
-        document,
       });
     } else {
       if (!selectedConversation) {
