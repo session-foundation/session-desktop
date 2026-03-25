@@ -1,6 +1,7 @@
 import { SessionDataTestId } from 'react';
 import styled from 'styled-components';
 import { Flex } from './basic/Flex';
+import type { LUCIDE_ICONS_UNICODE } from './icon/lucide';
 
 const StyledNoticeBanner = styled(Flex)<{ isClickable: boolean }>`
   background-color: var(--primary-color);
@@ -17,7 +18,7 @@ const StyledNoticeBanner = styled(Flex)<{ isClickable: boolean }>`
   }
 `;
 
-const StyledBannerText = styled.span`
+const StyledBannerText = styled.div`
   margin-right: var(--margins-sm);
   font-family: var(--font-default), var(--font-icon);
 `;
@@ -26,7 +27,13 @@ type NoticeBannerProps = {
   text: string;
   onBannerClick?: () => void;
   dataTestId: SessionDataTestId;
+  unicode?: LUCIDE_ICONS_UNICODE;
 };
+
+const StyledIconContainer = styled.span`
+  vertical-align: middle;
+  margin-inline-start: var(--margins-xs);
+`;
 
 export const NoticeBanner = (props: NoticeBannerProps) => {
   const { text, onBannerClick, dataTestId } = props;
@@ -47,7 +54,10 @@ export const NoticeBanner = (props: NoticeBannerProps) => {
         onBannerClick();
       }}
     >
-      <StyledBannerText>{text}</StyledBannerText>
+      <StyledBannerText>
+        {text}
+        {props.unicode ? <StyledIconContainer>{props.unicode}</StyledIconContainer> : null}
+      </StyledBannerText>
     </StyledNoticeBanner>
   );
 };
