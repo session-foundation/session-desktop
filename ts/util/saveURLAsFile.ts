@@ -1,14 +1,14 @@
-export const saveURLAsFile = ({
-  filename,
-  url,
-  document,
-}: {
-  filename: string;
-  url: string;
-  document: Document;
-}): void => {
-  const anchorElement = document.createElement('a');
-  anchorElement.href = url;
-  anchorElement.download = filename;
-  anchorElement.click();
-};
+export async function saveURLAsFile({ filename, url }: { filename: string; url: string }) {
+  const fileHandle = await window.showSaveFilePicker({
+    suggestedName: filename,
+    startIn: 'downloads',
+    id: 'save-file-picker',
+  });
+
+  const response = await fetch(url);
+  const blob = await response.blob();
+
+  const writable = await fileHandle.createWritable();
+  await writable.write(blob);
+  await writable.close();
+}
