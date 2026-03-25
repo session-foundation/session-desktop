@@ -20,7 +20,7 @@ const StyledNoticeBanner = styled(Flex)<{ isClickable: boolean }>`
 
 const StyledBannerText = styled.div`
   margin-right: var(--margins-sm);
-  font-family: var(--font-default), var(--font-icon);
+  font-family: var(--font-default);
 `;
 
 type NoticeBannerProps = {
@@ -31,7 +31,8 @@ type NoticeBannerProps = {
 };
 
 const StyledIconContainer = styled.span`
-  vertical-align: middle;
+  font-family: var(--font-icon);
+  vertical-align: bottom;
   margin-inline-start: var(--margins-xs);
 `;
 
