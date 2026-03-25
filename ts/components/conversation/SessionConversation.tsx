@@ -698,11 +698,12 @@ function OutdatedLegacyGroupBanner() {
 
   return isLegacyGroup ? (
     <NoticeBanner
-      text={`${text} ${LUCIDE_ICONS_UNICODE.EXTERNAL_LINK_ICON}`}
+      text={text}
       onBannerClick={() => {
         showLinkVisitWarningDialog('https://getsession.org/groups', dispatch);
       }}
       dataTestId="legacy-group-banner"
+      unicode={LUCIDE_ICONS_UNICODE.EXTERNAL_LINK_ICON}
     />
   ) : null;
 }
