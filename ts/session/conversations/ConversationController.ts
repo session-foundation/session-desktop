@@ -310,16 +310,18 @@ class ConvoController {
     const groupInUserGroup = await UserGroupsWrapperActions.getGroup(groupPk);
 
     // Let's check if we still have a MetaGroupWrapper for this group. If we don't we won't be able to do anything..
-    let metaGroupWrapperExists = false;
+    let metaGroupWrapperExistsAndHasEncKeys = false;
     try {
       await MetaGroupWrapperActions.infoGet(groupPk);
-      metaGroupWrapperExists = true;
+      const groupEncKeys = await MetaGroupWrapperActions.keyGetAll(groupPk);
+      // Note: if we don't have enc keys, even if we are an admin we cannot do anything, as we cannot encrypt a push()
+      metaGroupWrapperExistsAndHasEncKeys = groupEncKeys.length > 0;
     } catch {
       window.log.warn(`deleteGroup: MetaGroupWrapperActions for ${groupPk} does not exist.`);
     }
 
     // send the leave message before we delete everything for this group (including the key!)
-    if (sendLeaveMessage && metaGroupWrapperExists) {
+    if (sendLeaveMessage && metaGroupWrapperExistsAndHasEncKeys) {
       const failedToSendLeaveMessage = await leaveClosedGroup(groupPk, fromSyncMessage);
       if (PubKey.is03Pubkey(groupPk) && failedToSendLeaveMessage) {
         // this is caught and is adding an interaction notification message
@@ -363,7 +365,7 @@ class ConvoController {
         }
       }
     } else {
-      if (metaGroupWrapperExists) {
+      if (metaGroupWrapperExistsAndHasEncKeys) {
         let secretKey: Uint8Array | null = null;
         let weAreLastAdmin = false;
         // this is pretty ugly. We need to **try to check** if we are the last admin before we destroy.
