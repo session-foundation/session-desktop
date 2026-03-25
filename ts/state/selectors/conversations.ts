@@ -633,6 +633,15 @@ export const getMostRecentOutgoingMessageId = createSelector(
   }
 );
 
+export const getMostRecentOutgoingReadMessageId = createSelector(
+  getSortedMessagesOfSelectedConversation,
+  (messages: Array<MessageModelPropsWithoutConvoProps>): string | undefined => {
+    return messages.find(
+      m => m.propsForMessage.direction === 'outgoing' && m.propsForMessage.status === 'read'
+    )?.propsForMessage.id;
+  }
+);
+
 export const getOldestMessageId = createSelector(
   getSortedMessagesOfSelectedConversation,
   (messages: Array<MessageModelPropsWithoutConvoProps>): string | undefined => {
