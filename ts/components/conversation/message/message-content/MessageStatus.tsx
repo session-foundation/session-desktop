@@ -9,7 +9,10 @@ import {
 } from '../../../../state/selectors';
 
 import { useIsDetailMessageView } from '../../../../contexts/isDetailViewContext';
-import { getMostRecentOutgoingMessageId } from '../../../../state/selectors/conversations';
+import {
+  getMostRecentOutgoingMessageId,
+  getMostRecentOutgoingReadMessageId,
+} from '../../../../state/selectors/conversations';
 import { useSelectedIsGroupOrCommunity } from '../../../../state/selectors/selectedConversation';
 import { SpacerXS } from '../../../basic/Text';
 import { ExpireTimer } from '../../ExpireTimer';
@@ -124,6 +127,11 @@ function useIsMostRecentOutgoingMessage(messageId: string) {
   return mostRecentOutgoingMessageId === messageId;
 }
 
+function useIsMostRecentOutgoingReadMessage(messageId: string) {
+  const mostRecentOutgoingReadMessageId = useSelector(getMostRecentOutgoingReadMessageId);
+  return mostRecentOutgoingReadMessageId === messageId;
+}
+
 function MessageStatusExpireTimer(props: Pick<Props, 'messageId'>) {
   const selected = useMessageExpirationPropsById(props.messageId);
   if (
@@ -209,10 +217,10 @@ const MessageStatusRead = ({
   const isExpiring = useIsExpiring(messageId);
   const isGroup = useSelectedIsGroupOrCommunityInternal();
 
-  const isMostRecentOutgoingMessage = useIsMostRecentOutgoingMessage(messageId);
+  const isMostRecentOutgoingReadMessage = useIsMostRecentOutgoingReadMessage(messageId);
 
   // we hide an outgoing "read" message status which is not expiring except for the most recent message
-  if (!isIncoming && !isExpiring && !isMostRecentOutgoingMessage) {
+  if (!isIncoming && !isExpiring && !isMostRecentOutgoingReadMessage) {
     return null;
   }
 
