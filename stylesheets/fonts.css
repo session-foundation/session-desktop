@@ -107,3 +107,11 @@
   font-family: 'Lucide';
   src: url('../fonts/lucide.ttf') format('truetype');
 }
+
+/** Emoji font
+ * Download from https://fonts.google.com/noto/specimen/Noto+Color+Emoji
+*/
+@font-face {
+  font-family: 'NotoColorEmoji';
+  src: url('../fonts/NotoColorEmoji.ttf') format('truetype');
+}

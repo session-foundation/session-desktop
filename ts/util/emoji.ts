@@ -63,15 +63,16 @@ export async function initialiseEmojiData(data: any): Promise<void> {
         if (!strings) {
           return null;
         }
-        return (Array.isArray(strings) ? strings : [strings])
+        const asArr = (Array.isArray(strings) ? strings : [strings])
           .map(string =>
             (split ? string.split(/[-|_|\s]+/) : [string]).map((s: string) => s.toLowerCase())
           )
           .flat();
+        return asArr;
       })
       .flat()
       .filter(a => a && a.trim())
-      .join(',')})}`;
+      .join(',')}`;
 
     (value as FixedBaseEmoji).skins.forEach(skin => {
       ariaLabels[skin.native] = value.name;
