@@ -55,6 +55,7 @@ const StyledContactContainer = styled.span`
 const StyledReactionBar = styled(Flex)`
   width: 100%;
   margin: 12px 0 20px 4px;
+  font-family: var(--font-default);
 
   p {
     color: var(--text-secondary-color);

@@ -28,7 +28,6 @@ type ThemeGlobals = {
   '--font-accent': string;
   '--font-mono': string;
   '--font-icon': string;
-  '--font-emoji': string;
 
   /* Headings */
   '--font-size-h1': string;
@@ -213,11 +212,10 @@ export function setSingleThemeValue(key: ThemeKeys, value: string) {
 
 // These are only set once in the global style (at root).
 export const THEME_GLOBALS: ThemeGlobals = {
-  '--font-default': 'Roboto',
+  '--font-default': 'Roboto, NotoColorEmoji',
   '--font-accent': 'Loor',
   '--font-mono': 'Roboto Mono',
   '--font-icon': 'Lucide',
-  '--font-emoji': 'NotoColorEmoji',
 
   '--font-size-h1': '30px',
   '--font-size-h1-new': '36px',
