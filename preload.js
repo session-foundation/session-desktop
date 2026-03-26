@@ -177,11 +177,6 @@ window.readyForUpdates = () => {
   ipc.send('ready-for-updates');
 };
 
-ipc.on('get-theme-setting', () => {
-  const theme = window.getSettingValue('theme');
-  ipc.send('get-success-theme-setting', theme);
-});
-
 // Assume we are online until we are told otherwise (needed for restore from seed to work)
 window.isOnline = true;
 
