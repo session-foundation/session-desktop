@@ -2045,7 +2045,7 @@ function getNextAttachmentDownloadJobs(limit: number) {
   const timestamp = Date.now();
 
   const sql = `SELECT json FROM ${ATTACHMENT_DOWNLOADS_TABLE}
-    WHERE pending = 0 AND timestamp < $timestamp
+    WHERE pending = 0 AND timestamp <= $timestamp
     ORDER BY timestamp DESC
     LIMIT $limit;`;
   const params = {

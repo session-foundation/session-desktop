@@ -795,7 +795,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
       if (!proProof) {
         return false;
       }
-      if (ProRevocationCache.isB64HashRevoked(proProof.genIndexHashB64)) {
+      if (ProRevocationCache.isB64HashEffectivelyRevoked(proProof.genIndexHashB64)) {
         // `false` because the proof is not valid (revoked)
         return false;
       }
@@ -809,7 +809,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
     }
 
     // make sure that genIndexHash was not revoked first
-    if (ProRevocationCache.isB64HashRevoked(proDetails.proGenIndexHashB64)) {
+    if (ProRevocationCache.isB64HashEffectivelyRevoked(proDetails.proGenIndexHashB64)) {
       // `false` because the proof is not valid (revoked)
       return false;
     }

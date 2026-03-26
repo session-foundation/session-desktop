@@ -702,8 +702,8 @@ function OutdatedLegacyGroupBanner() {
       onBannerClick={() => {
         showLinkVisitWarningDialog('https://getsession.org/groups', dispatch);
       }}
-      unicode={LUCIDE_ICONS_UNICODE.EXTERNAL_LINK_ICON}
       dataTestId="legacy-group-banner"
+      unicode={LUCIDE_ICONS_UNICODE.EXTERNAL_LINK_ICON}
     />
   ) : null;
 }

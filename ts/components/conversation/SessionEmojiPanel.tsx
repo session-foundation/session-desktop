@@ -29,6 +29,7 @@ export const StyledEmojiPanel = styled.div<{
     border: var(--default-borders);
     padding-bottom: var(--margins-sm);
     --font-family: var(--font-default);
+    --emoji-font: 'NotoColorEmoji'; // Note: var(--emoji-font) doesn't go through shadow doms
     --font-size: var(--font-size-sm);
     --shadow: none;
     --border-radius: 8px;

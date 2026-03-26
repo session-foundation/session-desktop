@@ -3,7 +3,7 @@ import { getAppDispatch } from '../../state/dispatch';
 import { useMessageReactsPropsById } from '../../hooks/useParamSelector';
 import { clearSogsReactionByServerId } from '../../session/apis/open_group_api/sogsv3/sogsV3ClearReaction';
 import { ConvoHub } from '../../session/conversations';
-import { updateReactClearAllModal } from '../../state/ducks/modalDialog';
+import { updateReactClearAllModal, updateReactListModal } from '../../state/ducks/modalDialog';
 import { SessionButton, SessionButtonColor, SessionButtonType } from '../basic/SessionButton';
 import { SessionSpinner } from '../loading';
 import {
@@ -45,6 +45,13 @@ export const ReactClearAllModal = (props: Props) => {
       await clearSogsReactionByServerId(reaction, serverId, roomInfos);
       setClearingInProgress(false);
       handleClose();
+      const reactsWithoutCleared = msgProps?.sortedReacts?.filter(react => react[0] !== reaction);
+
+      if (!reactsWithoutCleared?.length) {
+        dispatch(updateReactListModal(null));
+      } else {
+        dispatch(updateReactListModal({ messageId, reaction: reactsWithoutCleared[0][0] }));
+      }
     } else {
       window.log.warn('Error for batch removal of', reaction, 'on message', messageId);
     }

@@ -33,6 +33,7 @@ const StyledReaction = styled.button<{
   padding: 0 7px;
   height: ${EMOJI_REACTION_HEIGHT}px;
   min-width: ${props => (props.$showCount ? 2 * EMOJI_REACTION_HEIGHT : EMOJI_REACTION_HEIGHT)}px;
+  font-family: var(--font-default);
 
   span {
     width: 100%;

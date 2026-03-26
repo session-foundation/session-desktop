@@ -2,7 +2,7 @@ import { isBoolean, isNil } from 'lodash';
 import { Dispatch, useCallback, useEffect, useMemo, useState } from 'react';
 import { clipboard } from 'electron';
 import useAsync from 'react-use/lib/useAsync';
-import { ProConfig, ProProof } from 'libsession_util_nodejs';
+import { ProConfig, type ProProof } from 'libsession_util_nodejs';
 import { getAppDispatch } from '../../../state/dispatch';
 import {
   getDataFeatureFlag,
@@ -44,6 +44,8 @@ import {
   useProBackendProDetails,
   useProBackendRefetch,
 } from '../../../state/selectors/proBackendData';
+import ProBackendAPI from '../../../session/apis/pro_backend_api/ProBackendAPI';
+import { getProMasterKeyHex } from '../../../session/utils/User';
 
 type FeatureFlagToggleType = {
   forceUpdate: () => void;
@@ -728,13 +730,10 @@ function ProConfigForm({
   forceUpdate: () => Promise<void>;
 }) {
   const hasProConfig = !proConfig || typeof proConfig === 'object';
-  const [error, setError] = useState<Error | null>();
   const [rotatingPrivKeyInput, setRotatingPrivKeyInput] = useState<string>(
     proConfig?.rotatingPrivKeyHex ?? ''
   );
-  const [rotatingPubKeyInput, setRotatingPubKeyInput] = useState<string>(
-    proConfig?.proProof.rotatingPubkeyHex ?? ''
-  );
+
   const [expiryInput, setExpiryInput] = useState<string>(
     proConfig?.proProof.expiryMs.toString() ?? ''
   );
@@ -746,105 +745,18 @@ function ProConfigForm({
     proConfig?.proProof.version.toString() ?? ''
   );
 
-  const [configDumpValue, setConfigDumpValue] = useState<string>(
-    hasProConfig ? JSON.stringify(proConfig) : ''
-  );
-
-  const setProProof = useCallback(
-    async (config: Parameters<typeof UserConfigWrapperActions.setProConfig>[0]) => {
-      try {
-        await UserConfigWrapperActions.setProConfig(config);
-      } catch (e) {
-        window?.log?.error(e);
-        setError(e);
-      }
-    },
-    []
-  );
-
-  const save = useCallback(async () => {
-    const proProof = {
-      rotatingPubkeyHex: rotatingPubKeyInput,
-      expiryMs: Number(expiryInput),
-      signatureHex: sigInput,
-      genIndexHashB64: genHashInput,
-      version: Number(versionInput),
-    } satisfies ProProof;
-    const rotatingSeedHex = await UserUtils.getProRotatingSeedHex();
-    await setProProof({
-      proProof,
-      rotatingSeedHex,
-    });
-  }, [setProProof, rotatingPubKeyInput, expiryInput, sigInput, genHashInput, versionInput]);
-
-  const copy = useCallback(() => {
-    const json = JSON.stringify(proConfig);
-    clipboard.writeText(json);
-    ToastUtils.pushToastSuccess('flag-dumper-toast-copy', 'Copied to clipboard');
-  }, [proConfig]);
-
-  const setConfig = useCallback(async () => {
-    try {
-      const parsed = JSON.parse(configDumpValue) as ProConfig;
-
-      // Update all the input fields with the pasted config
-      setRotatingPrivKeyInput(parsed.rotatingPrivKeyHex ?? '');
-      setRotatingPubKeyInput(parsed.proProof.rotatingPubkeyHex ?? '');
-      setExpiryInput(parsed.proProof.expiryMs.toString() ?? '');
-      setSigInput(parsed.proProof.signatureHex ?? '');
-      setGenHashInput(parsed.proProof.genIndexHashB64 ?? '');
-      setVersionInput(parsed.proProof.version.toString() ?? '');
-
-      ToastUtils.pushToastSuccess('flag-dumper-toast-paste', 'Pasted from clipboard');
-      await forceUpdate();
-    } catch (e) {
-      window?.log?.error(e);
-      ToastUtils.pushToastError('flag-dumper-toast-paste-error', `Failed to paste: ${e?.message}`);
-    }
-  }, [configDumpValue, forceUpdate]);
-
   const removeConfig = useCallback(async () => {
     await UserConfigWrapperActions.removeProConfig();
     setRotatingPrivKeyInput('');
-    setRotatingPubKeyInput('');
     setExpiryInput('');
     setSigInput('');
     setGenHashInput('');
     setVersionInput('');
-    setConfigDumpValue('');
     await forceUpdate();
   }, [forceUpdate]);
 
   return (
     <div style={{ width: '100%' }}>
-      <h2>Pro Config Dumper</h2>
-      <DebugButton onClick={copy} disabled={!hasProConfig}>
-        Copy Config Dump
-      </DebugButton>
-      <DebugButton onClick={setConfig} disabled={!configDumpValue?.length}>
-        Set Config Dump
-      </DebugButton>
-      <label
-        style={{
-          display: 'block',
-          color: 'var(--text-primary-color)',
-        }}
-      >
-        Config Dump
-      </label>
-      <textarea
-        style={{
-          width: '100%',
-          minWidth: '100px',
-          padding: 'var(--margins-xs) var(--margins-sm)',
-          backgroundColor: 'var(--background-primary-color)',
-          color: 'var(--text-primary-color)',
-          border: 'var(--default-borders)',
-          borderRadius: 'var(--border-radius)',
-        }}
-        onChange={e => setConfigDumpValue(e.target.value)}
-        defaultValue={configDumpValue}
-      />
       <h2>Pro Config</h2>
       <DebugButton
         onClick={removeConfig}
@@ -858,17 +770,10 @@ function ProConfigForm({
         value={rotatingPrivKeyInput}
         setValue={setRotatingPrivKeyInput}
       />
-      <DebugInput
-        label="Rotating Public Key"
-        value={rotatingPubKeyInput}
-        setValue={setRotatingPubKeyInput}
-      />
       <DebugInput label="Expiry Timestamp (ms)" value={expiryInput} setValue={setExpiryInput} />
       <DebugInput label="Signature" value={sigInput} setValue={setSigInput} />
       <DebugInput label="Gen Hash" value={genHashInput} setValue={setGenHashInput} />
       <DebugInput label="Version" value={versionInput} setValue={setVersionInput} />
-      <DebugButton onClick={save}>Set Pro Config</DebugButton>
-      {error?.message ? error.message : null}
     </div>
   );
 }
@@ -991,25 +896,70 @@ export const ProDebugSection = ({
     <DebugMenuSection title="Session Pro">
       <FlagToggle forceUpdate={forceUpdate} flag="proAvailable" label="Pro Beta Released" />
       {proAvailable ? (
-        <DebugButton buttonColor={SessionButtonColor.Danger} onClick={resetPro}>
-          Reset All Pro State
-        </DebugButton>
+        <>
+          <DebugButton buttonColor={SessionButtonColor.Danger} onClick={resetPro}>
+            Reset All Pro State
+          </DebugButton>
+          <DebugButton onClick={() => setPage(DEBUG_MENU_PAGE.Pro)}>Pro Playground</DebugButton>
+          <DebugButton
+            onClick={() => {
+              if (!proAvailable) {
+                return;
+              }
+              dispatch(proBackendDataActions.refreshGetProDetailsFromProBackend({}) as any);
+            }}
+          >
+            Refresh Pro Details
+          </DebugButton>
+          <DebugButton
+            onClick={async () => {
+              const masterPrivKeyHex = await getProMasterKeyHex();
+              const rotatingPrivKeyHex = await UserUtils.getProRotatingPrivateKeyHex();
+              const rotatingSeedHex = await UserUtils.getProRotatingSeedHex();
+              const response = await ProBackendAPI.generateProProof({
+                masterPrivKeyHex,
+                rotatingPrivKeyHex,
+              });
+              if (getFeatureFlag('debugServerRequests')) {
+                window?.log?.debug('getProProof response: ', response);
+              }
+              if (response?.status_code === 200) {
+                const proProof: ProProof = {
+                  expiryMs: response.result.expiry_unix_ts_ms,
+                  genIndexHashB64: response.result.gen_index_hash_b64,
+                  rotatingPubkeyHex: response.result.rotating_pkey_hex,
+                  version: response.result.version,
+                  signatureHex: response.result.sig_hex,
+                };
+                await UserConfigWrapperActions.setProConfig({ proProof, rotatingSeedHex });
+              }
+            }}
+          >
+            Get Pro Proof
+          </DebugButton>
+          <DebugButton
+            onClick={async () => {
+              const masterPrivKeyHex = await getProMasterKeyHex();
+              const response = await ProBackendAPI.getProDetails({ masterPrivKeyHex });
+              if (getFeatureFlag('debugServerRequests')) {
+                window?.log?.debug('Pro Details: ', response);
+              }
+            }}
+          >
+            Get Pro Details
+          </DebugButton>
+          <DebugButton
+            hide={!proAvailable}
+            onClick={async () => {
+              const response = await ProBackendAPI.getRevocationList({ ticket: 0 });
+              window?.log?.debug('Pro Revocation List: ', response);
+            }}
+          >
+            Get Pro Revocation List (from ticket 0)
+          </DebugButton>
+        </>
       ) : null}
-      {proAvailable ? (
-        <DebugButton onClick={() => setPage(DEBUG_MENU_PAGE.Pro)}>Pro Playground</DebugButton>
-      ) : null}
-      {proAvailable ? (
-        <DebugButton
-          onClick={() => {
-            if (!proAvailable) {
-              return;
-            }
-            dispatch(proBackendDataActions.refreshGetProDetailsFromProBackend({}) as any);
-          }}
-        >
-          Refresh Pro Details
-        </DebugButton>
-      ) : null}
+
       <FlagToggle
         forceUpdate={forceUpdate}
         flag="useTestProBackend"
@@ -1049,6 +999,7 @@ export const ProDebugSection = ({
         options={[
           { label: 'Google Play', value: ProPaymentProvider.GooglePlayStore },
           { label: 'iOS App Store', value: ProPaymentProvider.iOSAppStore },
+          { label: 'Rangeproof', value: ProPaymentProvider.Rangeproof },
         ]}
         forceUpdate={forceUpdate}
         unsetOption={{ label: 'Select originating platform', value: null }}

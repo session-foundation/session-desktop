@@ -212,7 +212,7 @@ export function setSingleThemeValue(key: ThemeKeys, value: string) {
 
 // These are only set once in the global style (at root).
 export const THEME_GLOBALS: ThemeGlobals = {
-  '--font-default': 'Roboto',
+  '--font-default': 'Roboto, NotoColorEmoji',
   '--font-accent': 'Loor',
   '--font-mono': 'Roboto Mono',
   '--font-icon': 'Lucide',

@@ -5,7 +5,7 @@ import { tr } from '../localization/localeTools';
 
 const sha512 = (text: string) => {
   const hash = crypto.createHash('sha512');
-  hash.update(text.trim());
+  hash.update(text);
   return hash.digest('hex');
 };
 

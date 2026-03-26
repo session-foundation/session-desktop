@@ -58,10 +58,11 @@ export function useShowUserDetailsCbFromMessage() {
       );
       foundRealSessionId =
         resolvedNakedId && resolvedNakedId !== sender ? resolvedNakedId : undefined;
-    }
 
-    if (!foundRealSessionId || foundRealSessionId.startsWith(KeyPrefixType.blinded15)) {
-      await ConvoHub.use().get(sender).setOriginConversationID(selectedConvoKey, true);
+      if (!foundRealSessionId || foundRealSessionId.startsWith(KeyPrefixType.blinded15)) {
+        // this will throw if sender is not a sogs or 03 group
+        await ConvoHub.use().get(sender).setOriginConversationID(selectedConvoKey, true);
+      }
     }
 
     // open user details dialog for the user to do what he wants

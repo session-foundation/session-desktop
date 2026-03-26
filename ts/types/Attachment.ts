@@ -270,21 +270,19 @@ export const isVoiceMessage = (attachment: Pick<Attachment, 'flags'>): boolean =
   return hasFlag;
 };
 
-export function save({
+export async function save({
   attachment,
-  document,
   index,
   timestamp,
 }: {
   attachment: AttachmentType;
-  document: Document;
   index: number;
   getAbsolutePath: (relativePath: string) => string;
   timestamp?: number;
 }) {
   const isObjectURLRequired = isUndefined(attachment.fileName);
   const filename = getSuggestedFilename({ attachment, timestamp, index });
-  saveURLAsFile({ url: attachment.url, filename, document });
+  await saveURLAsFile({ url: attachment.url, filename });
   if (isObjectURLRequired) {
     URL.revokeObjectURL(attachment.url);
   }

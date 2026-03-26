@@ -51,6 +51,8 @@ import { SelectMessageMenuItem } from '../../../menu/items/SelectMessage/SelectM
 import { DeleteItem } from '../../../menu/items/DeleteMessage/DeleteMessageMenuItem';
 import { messageContextMenuID } from '../../SessionMessagesList';
 import { MessageInteraction } from '../../../../interactions';
+import { useMessageSortedReacts } from '../../../../hooks/useParamSelector';
+import { updateReactListModal } from '../../../../state/ducks/modalDialog';
 
 export type MessageContextMenuSelectorProps = Pick<
   MessageRenderingProps,
@@ -297,6 +299,26 @@ function MessageReplyMenuItem({ messageId }: WithMessageId) {
   ) : null;
 }
 
+function ShowReactionsMenuItem({ messageId }: WithMessageId) {
+  const msgReacts = useMessageSortedReacts(messageId);
+  const dispatch = getAppDispatch();
+
+  const onClick = () => {
+    dispatch(
+      updateReactListModal({
+        reaction: msgReacts[0][0],
+        messageId,
+      })
+    );
+  };
+
+  return msgReacts.length ? (
+    <MenuItem onClick={onClick} iconType={LUCIDE_ICONS_UNICODE.SMILE} isDangerAction={false}>
+      {tr('viewReactions')}
+    </MenuItem>
+  ) : null;
+}
+
 export const MessageContextMenu = ({
   messageId,
   contextMenuId,
@@ -367,6 +389,7 @@ export const MessageContextMenu = ({
               <CopyLinkMenuItem />
               <CopyCommunityInvitationUrlMenuItem messageId={messageId} />
               <MessageInfoMenuItem messageId={messageId} />
+              <ShowReactionsMenuItem messageId={messageId} />
               <SelectMessageMenuItem messageId={messageId} />
               <CopyAccountIdMenuItem pubkey={sender} messageId={messageId} />
               <DeleteItem messageId={messageId} />

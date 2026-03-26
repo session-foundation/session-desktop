@@ -30,6 +30,7 @@ export enum ProPaymentProvider {
   Nil = 0,
   GooglePlayStore = 1,
   iOSAppStore = 2,
+  Rangeproof = 3,
 }
 
 export function getProPaymentProviderFromProOriginatingPlatform(
@@ -42,6 +43,8 @@ export function getProPaymentProviderFromProOriginatingPlatform(
       return ProPaymentProvider.GooglePlayStore;
     case 'iOS':
       return ProPaymentProvider.iOSAppStore;
+    case 'Rangeproof':
+      return ProPaymentProvider.Rangeproof;
     default:
       assertUnreachable(v, 'getProPaymentProviderFromProOriginatingPlatform');
       throw new Error('getProPaymentProviderFromProOriginatingPlatform: case not handled');
@@ -58,6 +61,8 @@ export function getProOriginatingPlatformFromProPaymentProvider(
       return 'Google';
     case ProPaymentProvider.iOSAppStore:
       return 'iOS';
+    case ProPaymentProvider.Rangeproof:
+      return 'Rangeproof';
     default:
       assertUnreachable(v, 'getProOriginatingPlatformFromProPaymentProvider');
       throw new Error('getProOriginatingPlatformFromProPaymentProvider: case not handled');

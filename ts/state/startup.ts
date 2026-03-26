@@ -43,6 +43,7 @@ import { isTestIntegration } from '../shared/env_vars';
 import { sleepFor } from '../session/utils/Promise';
 import { UpdateProRevocationList } from '../session/utils/job_runners/jobs/UpdateProRevocationListJob';
 import { initialAnnouncementState } from './ducks/announcements';
+import { LibSessionUtil } from '../session/utils/libsession/libsession_utils';
 
 function makeLookup<T>(items: Array<T>, key: string): { [key: string]: T } {
   // Yep, we can't index into item without knowing what it is. True. But we want to.
@@ -195,7 +196,8 @@ export const doAppStartUp = async () => {
     void loadDefaultRooms();
   }); // refresh our swarm on start to speed up the first message fetching event
 
-  window.inboxStore?.dispatch(groupInfoActions.loadMetaDumpsFromDB() as any); // this loads the dumps from DB and fills the 03-groups slice with the corresponding details
+  const groupPubkeysToRefresh = await LibSessionUtil.loadGroupDumpsAndCleanup();
+  window.inboxStore?.dispatch(groupInfoActions.loadMetaDumpsFromDB(groupPubkeysToRefresh) as any); // this loads the dumps from DB and fills the 03-groups slice with the corresponding details
 
   // this generates the key to encrypt attachments locally
   await Data.generateAttachmentKeyIfEmpty();

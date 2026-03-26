@@ -58,6 +58,12 @@ declare global {
     getMediaPermissions: () => boolean;
     nodeSetImmediate: any;
 
+    showSaveFilePicker: (args: {
+      suggestedName?: string;
+      startIn?: string;
+      id?: string;
+    }) => Promise<FileSystemFileHandle>;
+
     getTitle: () => string;
     getAppInstance: () => string;
     getCommitHash: () => string | undefined;

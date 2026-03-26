@@ -16,6 +16,7 @@ type PackageJson = Record<string, unknown> & {
 
 type MocharcJson = Record<string, unknown> & {
   spec: Array<string>;
+  require: Array<string>;
 };
 
 async function copySource(): Promise<void> {
@@ -53,6 +54,12 @@ async function copySource(): Promise<void> {
       return specPath.slice(4);
     }
     return specPath;
+  });
+  mocharcJson.require = mocharcJson.require.map(requirePath => {
+    if (requirePath.startsWith('app/')) {
+      return requirePath.slice(4);
+    }
+    return requirePath;
   });
 
   await fs.writeFile(destMocharcJsonPath, JSON.stringify(mocharcJson, null, 2));
