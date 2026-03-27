@@ -178,6 +178,7 @@ declare module 'react' {
     | 'attachments'
     | 'set-nickname-remove'
     | 'emoji'
+    | 'gif'
     | 'remove-password-settings'
     | 'change-password-settings'
     | 'leave-group'

@@ -221,6 +221,7 @@ const LightboxObject = ({
         controls={true}
         style={styles.object as any}
         key={urlToLoad}
+        loop={true}
       >
         <source src={urlToLoad} />
       </video>

@@ -56,6 +56,7 @@ export const SettingsKey = {
   latestUserGroupEnvelopeTimestamp,
   latestUserContactsEnvelopeTimestamp,
   hasFollowSystemThemeEnabled,
+  hasGiphyIntegrationEnabled: 'hasGiphyIntegrationEnabled',
   hideRecoveryPassword,
   showOnboardingAccountJustCreated,
   lastMessageGroupsRegenerated,

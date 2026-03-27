@@ -1,4 +1,4 @@
-import { forwardRef } from 'react';
+import { forwardRef, type RefObject } from 'react';
 import { useIsOutgoingRequest } from '../../../hooks/useParamSelector';
 import {
   useSelectedConversationKey,
@@ -9,6 +9,7 @@ import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 import type { SessionIconSize } from '../../icon';
 import { useKeyboardShortcut } from '../../../hooks/useKeyboardShortcut';
 import { KbdShortcut } from '../../../util/keyboardShortcuts';
+import { useHasGiphyIntegrationEnabled } from '../../../state/selectors/settings';
 
 type CompositionButtonProps = {
   onClick: () => void;
@@ -93,3 +94,21 @@ export const SendMessageButton = ({ onClick }: CompositionButtonProps) => {
     />
   );
 };
+
+export function ToggleGifButton(
+  props: CompositionButtonProps & { ref: RefObject<HTMLButtonElement | null> }
+) {
+  const hasGiphyIntegrationEnabled = useHasGiphyIntegrationEnabled();
+  if (!hasGiphyIntegrationEnabled) {
+    return null;
+  }
+  return (
+    <SessionLucideIconButton
+      unicode={LUCIDE_ICONS_UNICODE.IMAGE_PLAY}
+      {...getSharedButtonProps(false)}
+      onClick={props.onClick}
+      dataTestId="gif-button"
+      ref={props.ref}
+    />
+  );
+}

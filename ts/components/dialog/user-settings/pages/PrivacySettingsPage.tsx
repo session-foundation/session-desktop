@@ -23,6 +23,7 @@ import {
 import { CallManager } from '../../../../session/utils';
 import { SessionButtonColor } from '../../../basic/SessionButton';
 import {
+  useHasGiphyIntegrationEnabled,
   useHasLinkPreviewEnabled,
   useWeHaveBlindedMsgRequestsEnabled,
 } from '../../../../state/selectors/settings';
@@ -88,6 +89,30 @@ async function toggleLinkPreviews(isToggleOn: boolean, forceUpdate: () => void) 
   }
 }
 
+async function toggleGiphyIntegration(isToggleOn: boolean, forceUpdate: () => void) {
+  if (!isToggleOn) {
+    window.inboxStore?.dispatch(
+      updateConfirmModal({
+        title: { token: 'giphyIntegrationTitle' },
+        i18nMessage: { token: 'giphyIntegrationModalDescription' },
+        okTheme: SessionButtonColor.Danger,
+        okText: { token: 'theContinue' },
+        onClickOk: async () => {
+          const newValue = !isToggleOn;
+          await window.setSettingValue(SettingsKey.hasGiphyIntegrationEnabled, newValue);
+          forceUpdate();
+        },
+        onClickClose: () => {
+          window.inboxStore?.dispatch(updateConfirmModal(null));
+        },
+      })
+    );
+  } else {
+    await window.setSettingValue(SettingsKey.hasGiphyIntegrationEnabled, false);
+    forceUpdate();
+  }
+}
+
 function HasPasswordSubSection() {
   const dispatch = getAppDispatch();
   return (
@@ -147,6 +172,7 @@ export function PrivacySettingsPage(modalState: UserSettingsModalState) {
   const title = useUserSettingsTitle(modalState);
   const weHaveBlindedRequestsEnabled = useWeHaveBlindedMsgRequestsEnabled();
   const isLinkPreviewsOn = useHasLinkPreviewEnabled();
+  const isGiphyIntegrationOn = useHasGiphyIntegrationEnabled();
 
   const forceUpdate = useUpdate();
 
@@ -246,6 +272,19 @@ export function PrivacySettingsPage(modalState: UserSettingsModalState) {
           }}
           text={{ token: 'linkPreviewsSend' }}
           subText={{ token: 'linkPreviewsDescription' }}
+        />
+      </PanelButtonGroup>
+      <PanelLabelWithDescription title={{ token: 'giphyIntegrationSectionTitle' }} />
+
+      <PanelButtonGroup>
+        <SettingsToggleBasic
+          baseDataTestId="enable-giphy-integration"
+          active={isGiphyIntegrationOn}
+          onClick={async () => {
+            void toggleGiphyIntegration(isGiphyIntegrationOn, forceUpdate);
+          }}
+          text={{ token: 'giphyIntegrationTitle' }}
+          subText={{ token: 'giphyIntegrationDescription' }}
         />
       </PanelButtonGroup>
       <PanelLabelWithDescription title={{ token: 'passwords' }} />

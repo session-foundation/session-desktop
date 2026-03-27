@@ -20,6 +20,7 @@ const BUILD_CONFIG: BuildConfig = {
     'about.html',
     'about_preload.js',
     'background.html',
+    'background-giphy.html',
     'password.html',
     'password_preload.js',
     'preload.js',
