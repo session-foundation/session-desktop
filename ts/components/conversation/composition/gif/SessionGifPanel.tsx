@@ -13,6 +13,7 @@ import { useHasGiphyIntegrationEnabled } from '../../../../state/selectors/setti
 import { SessionPopoverContent } from '../../../SessionPopover';
 import { SessionFocusTrap } from '../../../SessionFocusTrap';
 import { IMAGE_GIF, VIDEO_MP4 } from '../../../../types/MIME';
+import { useIsDarkTheme } from '../../../../state/theme/selectors/theme';
 
 type WithSelectGif = {
   selectGif: (gif: ArrayBuffer, gifId: string) => void;
@@ -48,6 +49,7 @@ export const StyledGifPanel = styled.div`
   z-index: 5;
   width: ${GIF_PANEL_WIDTH_PX - 30}px;
   height: ${GIF_PANEL_HEIGHT_PX - 10}px;
+  max-height: calc(100vh - 120px);
 
   button:focus {
     outline: none;
@@ -132,9 +134,12 @@ const StyledPoweredByGiphyImg = styled.img`
 `;
 
 function PoweredByGiphy() {
+  const isDarkTheme = useIsDarkTheme();
   return (
     <StyledPoweredByGiphy>
-      <StyledPoweredByGiphyImg src="images/powered-by-giphy.png" />
+      <StyledPoweredByGiphyImg
+        src={isDarkTheme ? 'images/powered-by-giphy-light.png' : 'images/powered-by-giphy-dark.png'}
+      />
     </StyledPoweredByGiphy>
   );
 }

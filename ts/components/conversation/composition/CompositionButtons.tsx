@@ -99,7 +99,12 @@ export function ToggleGifButton(
   props: CompositionButtonProps & { ref: RefObject<HTMLButtonElement | null> }
 ) {
   const hasGiphyIntegrationEnabled = useHasGiphyIntegrationEnabled();
+  const hasLoadedGiphyBackground = window.location.pathname.includes('background-giphy.html');
   if (!hasGiphyIntegrationEnabled) {
+    return null;
+  }
+  if (!hasLoadedGiphyBackground) {
+    window.log.info('ToggleGifButton: Session needs to restart');
     return null;
   }
   return (
