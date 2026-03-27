@@ -2367,6 +2367,13 @@ export class ConversationModel extends Model<ConversationAttributes> {
         const chatMessageSync = new VisibleMessage(chatMessageParamsSync);
 
         if (this.isMe()) {
+          if (isReaction) {
+            await Reactions.handleMessageReaction({
+              reaction,
+              sender: UserUtils.getOurPubKeyStrFromCache(),
+              you: true,
+            });
+          }
           await MessageQueue.use().sendSyncMessage({
             namespace: SnodeNamespaces.Default,
             message: chatMessageSync,
