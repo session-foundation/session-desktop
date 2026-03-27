@@ -39,6 +39,7 @@ window.getEnvironment = () => configAny.environment;
 window.getAppInstance = () => configAny.appInstance;
 window.getVersion = () => configAny.version;
 window.getCommitHash = () => configAny.commitHash;
+window.getGiphyApiKey = () => configAny.giphyApiKey;
 window.getNodeVersion = () => configAny.node_version;
 window.getOSRelease = () =>
   `${os.type()} ${os.release()}, Node.js ${config.node_version} ${os.platform()} ${os.arch()}`;

@@ -214,6 +214,7 @@ function prepareURL(pathSegments: Array<string>, moreKeys?: { theme: string }) {
       locale: getCrowdinLocale(),
       version: app.getVersion(),
       commitHash: config.get('commitHash'),
+      giphyApiKey: config.get('giphyApiKey'),
       environment: (config as any).environment,
       node_version: process.versions.node,
       hostname: os.hostname(),

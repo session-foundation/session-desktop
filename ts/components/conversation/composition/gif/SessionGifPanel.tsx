@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, type RefObject } from 'react';
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import styled from 'styled-components';
 import fetch from 'node-fetch';
+import pRetry from 'p-retry';
 
 import { SessionGifSearchInput } from './SessionGifSearchInput';
 import { SessionSpinner } from '../../../loading';
@@ -14,7 +15,7 @@ import { SessionFocusTrap } from '../../../SessionFocusTrap';
 import { IMAGE_GIF, VIDEO_MP4 } from '../../../../types/MIME';
 
 type WithSelectGif = {
-  selectGif: (gif: ArrayBuffer) => void;
+  selectGif: (gif: ArrayBuffer, gifId: string) => void;
 };
 
 type WithGifStartDownload = {
@@ -34,16 +35,19 @@ type WithFetchPreview = {
   fetchPreview: () => Promise<ArrayBuffer | null>;
 };
 
+type WithGifId = {
+  gifId: string;
+};
+
 const GIF_PANEL_WIDTH_PX = 600;
 const GIF_PANEL_HEIGHT_PX = 500;
 
 export const StyledGifPanel = styled.div`
   display: flex;
   flex-direction: column;
-  /* padding: var(--margins-lg); */
   z-index: 5;
-  width: ${GIF_PANEL_WIDTH_PX}px;
-  height: ${GIF_PANEL_HEIGHT_PX}px;
+  width: ${GIF_PANEL_WIDTH_PX - 30}px;
+  height: ${GIF_PANEL_HEIGHT_PX - 10}px;
 
   button:focus {
     outline: none;
@@ -61,7 +65,7 @@ const StyledGifGrid = styled.div<{ $loading: boolean }>`
 `;
 
 function getGiphyAPIKey() {
-  const apiKey = process.env.SESSION_GIPHY_API_KEY;
+  const apiKey = window.getGiphyApiKey();
   if (!apiKey) {
     window.log.warn('SESSION_GIPHY_API_KEY is not set');
     throw new Error('SESSION_GIPHY_API_KEY is not set');
@@ -93,7 +97,6 @@ async function fetchGifs(searchTerm: string = '') {
   window.log.debug(
     `Found ${body.data.length} gifs for searchTerm:"${searchTerm}" endpoint:"${endpoint}"`
   );
-  console.warn('body.data', body.data);
 
   const gifsToFetch: Array<Gif> = body.data.map(gif => {
     return {
@@ -102,9 +105,9 @@ async function fetchGifs(searchTerm: string = '') {
       previewHeight: gif.images.preview.height,
       fetchOriginal: () => {
         // look for an original gif less than 1MB in size
-        if (gif.images.original.size < 1024 * 1024) {
-          window.log.debug(`Downloading original gif of size ${gif.images.original.size}`);
-          return fetchGifBuffer(gif.images.original.url, IMAGE_GIF);
+        if (gif.images.original_mp4.size < 1024 * 1024) {
+          window.log.debug(`Downloading original_mp4 gif of size ${gif.images.original_mp4.size}`);
+          return fetchGifBuffer(gif.images.original_mp4.mp4, IMAGE_GIF);
         }
         window.log.debug(`Downloading downsized gif of size ${gif.images.downsized.size}`);
 
@@ -120,6 +123,8 @@ async function fetchGifs(searchTerm: string = '') {
 const StyledPoweredByGiphy = styled.div`
   display: flex;
   justify-content: center;
+  margin-top: var(--margins-sm);
+  margin-bottom: var(--margins-xs);
 `;
 
 const StyledPoweredByGiphyImg = styled.img`
@@ -148,9 +153,9 @@ export function SessionGifPanel({
   const [gifs, setGifs] = useState<Array<Gif>>([]);
   const [loading, setLoading] = useState(false);
 
-  const selectGif = async (gif: ArrayBuffer) => {
+  const selectGif = async (gif: ArrayBuffer, gifId: string) => {
     window.log.debug('gif selected of size', gif.byteLength);
-    const file = new File([gif], 'gif.gif', { type: IMAGE_GIF });
+    const file = new File([gif], `gif-${gifId}.gif`, { type: IMAGE_GIF });
     onChoseAttachments([file]);
     closeGifPicker();
   };
@@ -209,11 +214,12 @@ export function SessionGifPanel({
   );
 }
 
-interface GiphyGif {
+type GiphyGif = {
   id: string;
   images: {
     original_mp4: {
       mp4: string;
+      size: number;
     };
     downsized: {
       /**
@@ -222,13 +228,7 @@ interface GiphyGif {
       url: string;
       size: number;
     };
-    original: {
-      /**
-       * url to the gif version
-       */
-      url: string;
-      size: number;
-    };
+
     preview: {
       mp4: string;
       width: number;
@@ -236,7 +236,7 @@ interface GiphyGif {
       size: number;
     };
   };
-}
+};
 
 interface GiphyBody {
   data: Array<GiphyGif>;
@@ -250,20 +250,42 @@ type Gif = WithPreviewWidthAndHeight &
 
 async function fetchGifBuffer(url: string, contentType: string) {
   try {
-    const fetched = await fetch(url, {
-      headers: {
-        'Content-Type': contentType,
+    const fetchedContent = pRetry(
+      async () => {
+        const response = await fetch(url, {
+          headers: {
+            'Content-Type': contentType,
+          },
+          timeout: 10000,
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to download gif buffer ${url} ${contentType}`);
+        }
+
+        const arr = await response.arrayBuffer();
+        // window.log.debug(
+        //   `fetchGifBuffer ${url} returned ${response.status} with size:${arr.byteLength}`
+        // );
+        if (arr.byteLength === 0) {
+          throw new Error(`Failed to download gif buffer ${url} ${contentType}`);
+        }
+        return arr;
       },
-    });
+      {
+        onFailedAttempt: error => {
+          window.log.error(
+            `Failed to download gif buffer ${url} ${contentType} attempt:${error.attemptNumber}, retriesLeft:${error.retriesLeft}`,
+            error.message
+          );
+        },
+        retries: 3,
+      }
+    );
 
-    const arr = await fetched.arrayBuffer();
-    // window.log.debug(
-    //   `fetchGifBuffer ${url} returned ${fetched.status} with size:${arr.byteLength}`
-    // );
-
-    return arr;
+    return fetchedContent;
   } catch (e) {
-    window.log.error(e);
+    window.log.error(`Failed to download gif buffer ${url} ${contentType}`, e);
     return null;
   }
 }
@@ -292,6 +314,7 @@ function GifColumn({
           <GifItem
             key={id}
             {...gif}
+            gifId={gif.id}
             selectGif={selectGif}
             onGifStartDownload={onGifStartDownload}
           />
@@ -310,20 +333,24 @@ function GifGrid({
   loading: boolean;
 }) {
   const [gifDownloading, setGifDownloading] = useState(false);
-  const leftSideGifs: Array<Gif> = [];
-  const rightSideGifs: Array<Gif> = [];
-  let leftHeight = 0;
-  let rightHeight = 0;
-  for (const gif of providedGifs) {
-    const renderedHeight = gif.previewHeight / gif.previewWidth;
-    if (leftHeight <= rightHeight) {
-      leftSideGifs.push(gif);
-      leftHeight += renderedHeight;
-    } else {
-      rightSideGifs.push(gif);
-      rightHeight += renderedHeight;
+
+  const { leftSideGifs, rightSideGifs } = useMemo(() => {
+    const left: Array<Gif> = [];
+    const right: Array<Gif> = [];
+    let leftHeight = 0;
+    let rightHeight = 0;
+    for (const gif of providedGifs) {
+      const renderedHeight = gif.previewHeight / gif.previewWidth;
+      if (leftHeight <= rightHeight) {
+        left.push(gif);
+        leftHeight += renderedHeight;
+      } else {
+        right.push(gif);
+        rightHeight += renderedHeight;
+      }
     }
-  }
+    return { leftSideGifs: left, rightSideGifs: right };
+  }, [providedGifs]);
 
   function onGifStartDownload() {
     setGifDownloading(true);
@@ -383,11 +410,13 @@ const GifItem = ({
   previewHeight,
   previewWidth,
   onGifStartDownload,
+  gifId,
 }: WithSelectGif &
   WithGifStartDownload &
   WithPreviewWidthAndHeight &
   WithFetchOriginal &
-  WithFetchPreview) => {
+  WithFetchPreview &
+  WithGifId) => {
   const [preview, setPreview] = useState<ArrayBuffer | null>(null);
   const blobUrlPreview = useMemo(() => {
     if (!preview) {
@@ -421,7 +450,7 @@ const GifItem = ({
         onGifStartDownload();
         const fetched = await fetchOriginal();
         if (fetched) {
-          selectGif(fetched);
+          selectGif(fetched, gifId);
         }
       }}
       style={{ height: blobUrlPreview ? '' : previewHeight }}
