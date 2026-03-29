@@ -14,6 +14,7 @@ import { SessionPopoverContent } from '../../../SessionPopover';
 import { SessionFocusTrap } from '../../../SessionFocusTrap';
 import { IMAGE_GIF, VIDEO_MP4 } from '../../../../types/MIME';
 import { useIsDarkTheme } from '../../../../state/theme/selectors/theme';
+import { FetchDestination, insecureNodeFetch } from '../../../../session/utils/InsecureNodeFetch';
 
 type WithSelectGif = {
   selectGif: (gif: ArrayBuffer, gifId: string) => void;
@@ -93,7 +94,19 @@ async function fetchGifs(searchTerm: string = '') {
   const endpoint = searchTerm ? 'search' : 'trending';
   const withSearchTerm = searchTerm ? `&q=${searchTerm}` : '';
   const url = `https://api.giphy.com/v1/gifs/${endpoint}?rating=pg-13&offset=0&limit=${getGiphyLimit()}&api_key=${getGiphyAPIKey()}${withSearchTerm}`;
-  const res = await fetch(url);
+  const res = await insecureNodeFetch({
+    url,
+    caller: 'fetchGifs',
+    destination: FetchDestination.PUBLIC,
+    fetchOptions: {
+      headers: {
+        Accept: 'text/html,application/xhtml+xml',
+        'User-Agent': 'WhatsApp',
+      },
+      signal: null,
+      timeout: 10000,
+    },
+  });
 
   const body = (await res.json()) as GiphyBody;
   window.log.debug(

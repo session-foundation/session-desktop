@@ -458,13 +458,7 @@ async function createWindow() {
     }
   });
 
-  const isGiphyEnabled =
-    sqlNode.getItemById(SettingsKey.hasGiphyIntegrationEnabled)?.value ?? false;
-  console.info('isGiphyEnabled', isGiphyEnabled, typeof isGiphyEnabled);
-  const urlToLoad = prepareURL([
-    getAppRootPath(),
-    isGiphyEnabled ? 'background-giphy.html' : 'background.html',
-  ]);
+  const urlToLoad = prepareURL([getAppRootPath(), 'background.html']);
 
   await mainWindow?.loadURL(urlToLoad).catch(err => {
     console.error('Failed to load background.html:', err);

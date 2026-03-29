@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
 import { debounce } from 'lodash';
 import styled from 'styled-components';
-import { SessionLucideIconButton } from '../../../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 import { tr } from '../../../../localization';
+import { LucideIcon } from '../../../icon/LucideIcon';
 
 const StyledSearchInput = styled.div`
   height: var(--search-input-height);
@@ -55,7 +55,7 @@ export const SessionGifSearchInput = ({ search }: { search: (searchTerm: string)
 
   return (
     <StyledSearchInput>
-      <SessionLucideIconButton
+      <LucideIcon
         iconColor="var(--search-bar-icon-color)"
         iconSize="medium"
         unicode={LUCIDE_ICONS_UNICODE.SEARCH}
