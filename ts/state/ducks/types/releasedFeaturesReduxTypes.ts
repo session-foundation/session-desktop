@@ -20,6 +20,7 @@ type SessionBaseBooleanFeatureFlags = {
   debugInputCommands: boolean;
   proAvailable: boolean;
   proGroupsAvailable: boolean;
+  canToggleGiphy: boolean;
   mockCurrentUserHasProPlatformRefundExpired: boolean;
   mockCurrentUserHasProCancelled: boolean;
   mockCurrentUserHasProInGracePeriod: boolean;

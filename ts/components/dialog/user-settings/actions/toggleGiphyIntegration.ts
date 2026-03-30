@@ -1,10 +1,10 @@
 import { SettingsKey } from '../../../../data/settings-key';
-import { showGiphyToggleButtons } from '../../../../shared/env_vars';
 import { updateConfirmModal } from '../../../../state/ducks/modalDialog';
+import { getFeatureFlag } from '../../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { SessionButtonColor } from '../../../basic/SessionButton';
 
 export async function toggleGiphyIntegration(currentlyEnabled: boolean, onTurnOn?: () => void) {
-  if (!showGiphyToggleButtons()) {
+  if (!getFeatureFlag('canToggleGiphy')) {
     return;
   }
   if (!currentlyEnabled) {

@@ -119,15 +119,6 @@ function getGiphyLimit() {
   return 20;
 }
 
-// function getPingbackID() {
-//   const pingbackID = process.env.SESSION_GIPHY_PINGBACK_ID;
-//   if (!pingbackID) {
-//     window.log.warn('SESSION_GIPHY_PINGBACK_ID is not set');
-//     throw new Error('SESSION_GIPHY_PINGBACK_ID is not set');
-//   }
-//   return pingbackID;
-// }
-
 async function fetchGifs(searchTerm: string = '') {
   // &pingback_id=18dcdd3b1357ff91
   const endpoint = searchTerm ? 'search' : 'trending';

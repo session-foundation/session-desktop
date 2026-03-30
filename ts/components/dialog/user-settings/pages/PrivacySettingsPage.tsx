@@ -34,7 +34,7 @@ import { SettingsPanelButtonInlineBasic } from '../components/SettingsPanelButto
 import { UserSettingsModalContainer } from '../components/UserSettingsModalContainer';
 import { UserConfigWrapperActions } from '../../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 import { toggleGiphyIntegration } from '../actions/toggleGiphyIntegration';
-import { showGiphyToggleButtons } from '../../../../shared/env_vars';
+import { getFeatureFlag } from '../../../../state/ducks/types/releasedFeaturesReduxTypes';
 
 const toggleCallMediaPermissions = async (triggerUIUpdate: () => void) => {
   const currentValue = window.getCallMediaPermissions();
@@ -252,7 +252,7 @@ export function PrivacySettingsPage(modalState: UserSettingsModalState) {
           subText={{ token: 'linkPreviewsDescription' }}
         />
       </PanelButtonGroup>
-      {showGiphyToggleButtons() ? (
+      {getFeatureFlag('canToggleGiphy') ? (
         <>
           <PanelLabelWithDescription title={{ token: 'giphyWarning' }} />
           <PanelButtonGroup>

@@ -13,7 +13,7 @@ import { useKeyboardShortcut } from '../../../hooks/useKeyboardShortcut';
 import { KbdShortcut } from '../../../util/keyboardShortcuts';
 import { useHasGiphyIntegrationEnabled } from '../../../state/selectors/settings';
 import { toggleGiphyIntegration } from '../../dialog/user-settings/actions/toggleGiphyIntegration';
-import { showGiphyToggleButtons } from '../../../shared/env_vars';
+import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 
 type CompositionButtonProps = {
   onClick: () => void;
@@ -103,7 +103,7 @@ export function ToggleGifButton(
   const canAddAttachments = useSelectedCanAddAttachments();
   const canWrite = useSelector(getSelectedCanWrite);
 
-  const canToggleGiphyIntegration = showGiphyToggleButtons();
+  const canToggleGiphyIntegration = getFeatureFlag('canToggleGiphy');
 
   if (!canAddAttachments || !canWrite || !canToggleGiphyIntegration) {
     return null;
