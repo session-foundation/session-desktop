@@ -217,11 +217,6 @@ export function useIsPublic(convoId?: string) {
   return Boolean(convoProps && convoProps.isPublic);
 }
 
-export function useIsBlocked(convoId?: string) {
-  const convoProps = useConversationPropsById(convoId);
-  return Boolean(convoProps && convoProps.isBlocked);
-}
-
 export function useActiveAt(convoId?: string): number | undefined {
   const convoProps = useConversationPropsById(convoId);
   return convoProps?.activeAt;
@@ -374,6 +369,17 @@ export function useIsOutgoingRequest(convoId?: string) {
   );
 }
 
+function getConversationPropsById(state: StateType, convoId?: string) {
+  if (!convoId) {
+    return null;
+  }
+  const convo = state.conversations.conversationLookup[convoId];
+  if (!convo) {
+    return null;
+  }
+  return convo;
+}
+
 /**
  * Note: NOT to be exported:
  * This selector is too generic and needs to be broken down into individual fields selectors.
@@ -381,16 +387,7 @@ export function useIsOutgoingRequest(convoId?: string) {
  * (check useSortedGroupMembers() as an example)
  */
 function useConversationPropsById(convoId?: string) {
-  return useSelector((state: StateType) => {
-    if (!convoId) {
-      return null;
-    }
-    const convo = state.conversations.conversationLookup[convoId];
-    if (!convo) {
-      return null;
-    }
-    return convo;
-  });
+  return useSelector((state: StateType) => getConversationPropsById(state, convoId));
 }
 
 export function useMessageReactsPropsById(messageId?: string) {
@@ -584,4 +581,13 @@ export function useLastMessageIsLeaveError(convoId?: string) {
     lastMessage?.interactionType === ConversationInteractionType.Leave &&
     lastMessage?.interactionStatus === ConversationInteractionStatus.Error
   );
+}
+
+export function getIsBlocked(state: StateType, convoId?: string) {
+  const convoProps = getConversationPropsById(state, convoId);
+  return Boolean(convoProps && convoProps.isBlocked);
+}
+
+export function useIsBlocked(convoId?: string) {
+  return useSelector((state: StateType) => getIsBlocked(state, convoId));
 }

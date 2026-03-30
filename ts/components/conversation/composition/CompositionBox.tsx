@@ -21,6 +21,7 @@ import { StateType } from '../../../state/reducer';
 import { getQuotedMessage, getSelectedConversation } from '../../../state/selectors/conversations';
 import {
   getIsSelectedBlocked,
+  getSelectedCanAddAttachments,
   getSelectedCanWrite,
   getSelectedConversationKey,
   useSelectedConversationKey,
@@ -124,6 +125,7 @@ interface Props {
   quotedMessageProps?: ReplyingToMessageProps;
   stagedAttachments: Array<StagedAttachmentType>;
   onChoseAttachments: (newAttachments: Array<File>) => void;
+  canAddAttachments: boolean;
   htmlDirection: HTMLDirection;
 }
 
@@ -342,12 +344,16 @@ class CompositionBoxInner extends Component<Props, State> {
       }
     }
     if (imgBlob !== null) {
-      const file = imgBlob;
-      window?.log?.info('Adding attachment from clipboard', file);
-      this.props.onChoseAttachments([file]);
+      if (this.props.canAddAttachments) {
+        const file = imgBlob;
+        window?.log?.info('Adding attachment from clipboard', file);
+        this.props.onChoseAttachments([file]);
 
-      e.preventDefault();
-      e.stopPropagation();
+        e.preventDefault();
+        e.stopPropagation();
+      } else {
+        window?.log?.info('Cannot add attachment from clipboard (canAddAttachments is false)');
+      }
     }
   }
 
@@ -862,6 +868,7 @@ const mapStateToProps = (state: StateType) => {
     selectedConversationKey: getSelectedConversationKey(state),
     typingEnabled: getSelectedCanWrite(state),
     isBlocked: getIsSelectedBlocked(state),
+    canAddAttachments: getSelectedCanAddAttachments(state),
   };
 };
 

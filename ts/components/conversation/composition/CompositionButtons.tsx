@@ -1,7 +1,7 @@
 import { forwardRef, type RefObject } from 'react';
-import { useIsOutgoingRequest } from '../../../hooks/useParamSelector';
+
 import {
-  useSelectedConversationKey,
+  useSelectedCanAddAttachments,
   useSelectedIsBlocked,
 } from '../../../state/selectors/selectedConversation';
 import { SessionLucideIconButton } from '../../icon/SessionIconButton';
@@ -23,11 +23,9 @@ const getSharedButtonProps = (disabled?: boolean) => ({
 });
 
 export const AddStagedAttachmentButton = ({ onClick }: CompositionButtonProps) => {
-  const selectedConvoKey = useSelectedConversationKey();
-  const isOutgoingRequest = useIsOutgoingRequest(selectedConvoKey);
+  const canAddAttachments = useSelectedCanAddAttachments();
 
-  const isBlocked = useSelectedIsBlocked();
-  const disabled = isOutgoingRequest || isBlocked;
+  const disabled = !canAddAttachments;
 
   useKeyboardShortcut({
     shortcut: KbdShortcut.conversationUploadAttachment,
@@ -46,10 +44,9 @@ export const AddStagedAttachmentButton = ({ onClick }: CompositionButtonProps) =
 };
 
 export const StartRecordingButton = ({ onClick }: CompositionButtonProps) => {
-  const selectedConvoKey = useSelectedConversationKey();
-  const isOutgoingRequest = useIsOutgoingRequest(selectedConvoKey);
-  const isBlocked = useSelectedIsBlocked();
-  const disabled = isOutgoingRequest || isBlocked;
+  const canAddAttachments = useSelectedCanAddAttachments();
+
+  const disabled = !canAddAttachments;
 
   return (
     <SessionLucideIconButton

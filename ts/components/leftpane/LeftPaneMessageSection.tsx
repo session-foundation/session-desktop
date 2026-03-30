@@ -23,7 +23,10 @@ import { OverlayMessage } from './overlay/OverlayMessage';
 import { OverlayMessageRequest } from './overlay/OverlayMessageRequest';
 import { OverlayChooseAction } from './overlay/choose-action/OverlayChooseAction';
 import { sectionActions } from '../../state/ducks/section';
-import { openConversationWithMessages } from '../../state/ducks/conversations';
+import {
+  openConversationWithMessages,
+  resetConversationExternal,
+} from '../../state/ducks/conversations';
 import { useKeyboardShortcut } from '../../hooks/useKeyboardShortcut';
 import { KbdShortcut } from '../../util/keyboardShortcuts';
 import { UserUtils } from '../../session/utils';
@@ -99,7 +102,15 @@ function useConversationListKeyboardShortcuts(conversationIds: Array<string>) {
     void openConversationWithMessages({ conversationKey: id, messageId: null });
   };
 
+  const closeOpenConversation = () => {
+    window.inboxStore?.dispatch(resetConversationExternal());
+  };
+
   useKeyboardShortcut({ shortcut: KbdShortcut.openNoteToSelf, handler: openNoteToSelf });
+  useKeyboardShortcut({
+    shortcut: KbdShortcut.closeOpenConversation,
+    handler: closeOpenConversation,
+  });
   useKeyboardShortcut({
     shortcut: KbdShortcut.conversationNavigation1,
     handler: () => void openConversation(conversationIds[0]),
