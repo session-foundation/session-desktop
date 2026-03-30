@@ -16,6 +16,7 @@ import { selectLibGroupName, selectLibMembersPubkeys } from './groups';
 import { getCanWrite, getSubscriberCount } from './sogsRoomInfo';
 import { getLibGroupDestroyed, getLibGroupKicked } from './userGroups';
 import { tr } from '../../localization/localeTools';
+import { getCanAddAttachmentsToConversation } from '../../hooks/useParamSelector';
 
 const getIsSelectedPrivate = (state: StateType): boolean => {
   return Boolean(getSelectedConversation(state)?.isPrivate) || false;
@@ -430,4 +431,9 @@ export function useConversationIsExpired03Group(convoId?: string) {
     (state: StateType) =>
       !!convoId && PubKey.is03Pubkey(convoId) && !!getSelectedConversation(state)?.isExpired03Group
   );
+}
+
+export function getSelectedCanAddAttachments(state: StateType) {
+  const selectedConvoKey = getSelectedConversationKey(state);
+  return getCanAddAttachmentsToConversation(state, selectedConvoKey);
 }
