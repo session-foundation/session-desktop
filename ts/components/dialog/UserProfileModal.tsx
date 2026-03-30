@@ -86,6 +86,11 @@ export const UserProfileModal = ({
       ConversationTypeEnum.PRIVATE
     );
 
+    if (!conversation.isActive()) {
+      conversation.setActiveAt(Date.now());
+      await conversation.commit();
+    }
+
     await openConversationWithMessages({ conversationKey: conversation.id, messageId: null });
 
     closeDialog();

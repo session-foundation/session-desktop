@@ -435,6 +435,7 @@ export function useConversationIsExpired03Group(convoId?: string) {
 
 export function getSelectedCanAddAttachments(state: StateType) {
   const convoProps = getSelectedConversation(state);
+
   const isOutgoingRequest =
     convoProps &&
     hasValidOutgoingRequestValues({
