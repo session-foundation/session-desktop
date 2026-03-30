@@ -16,7 +16,7 @@ import { selectLibGroupName, selectLibMembersPubkeys } from './groups';
 import { getCanWrite, getSubscriberCount } from './sogsRoomInfo';
 import { getLibGroupDestroyed, getLibGroupKicked } from './userGroups';
 import { tr } from '../../localization/localeTools';
-import { getCanAddAttachmentsToConversation } from '../../hooks/useParamSelector';
+import { hasValidOutgoingRequestValues } from '../../models/conversation';
 
 const getIsSelectedPrivate = (state: StateType): boolean => {
   return Boolean(getSelectedConversation(state)?.isPrivate) || false;
@@ -434,6 +434,22 @@ export function useConversationIsExpired03Group(convoId?: string) {
 }
 
 export function getSelectedCanAddAttachments(state: StateType) {
-  const selectedConvoKey = getSelectedConversationKey(state);
-  return getCanAddAttachmentsToConversation(state, selectedConvoKey);
+  const convoProps = getSelectedConversation(state);
+  const isOutgoingRequest =
+    convoProps &&
+    hasValidOutgoingRequestValues({
+      isMe: convoProps.isMe || false,
+      isApproved: convoProps.isApproved || false,
+      didApproveMe: convoProps.didApproveMe || false,
+      isPrivate: convoProps.isPrivate || false,
+      isBlocked: convoProps.isBlocked || false,
+      activeAt: convoProps.activeAt || 0,
+    });
+  const isBlocked = convoProps?.isBlocked || false;
+
+  return !isBlocked && !isOutgoingRequest;
+}
+
+export function useSelectedCanAddAttachments() {
+  return useSelector(getSelectedCanAddAttachments);
 }

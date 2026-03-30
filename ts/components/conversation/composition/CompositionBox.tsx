@@ -346,7 +346,7 @@ class CompositionBoxInner extends Component<Props, State> {
         e.preventDefault();
         e.stopPropagation();
       } else {
-        window.log.info('Cannot add attachment from clipboard (canAddAttachments is false)');
+        window?.log?.info('Cannot add attachment from clipboard (canAddAttachments is false)');
       }
     }
   }

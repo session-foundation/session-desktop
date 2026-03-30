@@ -22,7 +22,7 @@ import {
   selectLibGroupName,
   useLibGroupMembers,
 } from '../state/selectors/groups';
-import { getIsSelectedBlocked, isPrivateAndFriend } from '../state/selectors/selectedConversation';
+import { isPrivateAndFriend } from '../state/selectors/selectedConversation';
 import { getOurNumber } from '../state/selectors/user';
 import {
   getGroupById,
@@ -590,25 +590,4 @@ export function getIsBlocked(state: StateType, convoId?: string) {
 
 export function useIsBlocked(convoId?: string) {
   return useSelector((state: StateType) => getIsBlocked(state, convoId));
-}
-
-export function getCanAddAttachmentsToConversation(state: StateType, convoId?: string) {
-  const convoProps = getConversationPropsById(state, convoId);
-  const isOutgoingRequest =
-    convoProps &&
-    hasValidOutgoingRequestValues({
-      isMe: convoProps.isMe || false,
-      isApproved: convoProps.isApproved || false,
-      didApproveMe: convoProps.didApproveMe || false,
-      isPrivate: convoProps.isPrivate || false,
-      isBlocked: convoProps.isBlocked || false,
-      activeAt: convoProps.activeAt || 0,
-    });
-  const isBlocked = getIsSelectedBlocked(state);
-
-  return !isBlocked && !isOutgoingRequest;
-}
-
-export function useCanAddAttachmentsToConversation(convoId?: string) {
-  return useSelector((state: StateType) => getCanAddAttachmentsToConversation(state, convoId));
 }

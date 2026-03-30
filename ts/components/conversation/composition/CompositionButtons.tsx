@@ -1,7 +1,7 @@
 import { forwardRef } from 'react';
-import { useCanAddAttachmentsToConversation } from '../../../hooks/useParamSelector';
+
 import {
-  useSelectedConversationKey,
+  useSelectedCanAddAttachments,
   useSelectedIsBlocked,
 } from '../../../state/selectors/selectedConversation';
 import { SessionLucideIconButton } from '../../icon/SessionIconButton';
@@ -22,8 +22,7 @@ const getSharedButtonProps = (disabled?: boolean) => ({
 });
 
 export const AddStagedAttachmentButton = ({ onClick }: CompositionButtonProps) => {
-  const selectedConvoKey = useSelectedConversationKey();
-  const canAddAttachments = useCanAddAttachmentsToConversation(selectedConvoKey);
+  const canAddAttachments = useSelectedCanAddAttachments();
 
   const disabled = !canAddAttachments;
 
@@ -44,8 +43,7 @@ export const AddStagedAttachmentButton = ({ onClick }: CompositionButtonProps) =
 };
 
 export const StartRecordingButton = ({ onClick }: CompositionButtonProps) => {
-  const selectedConvoKey = useSelectedConversationKey();
-  const canAddAttachments = useCanAddAttachmentsToConversation(selectedConvoKey);
+  const canAddAttachments = useSelectedCanAddAttachments();
 
   const disabled = !canAddAttachments;
 
