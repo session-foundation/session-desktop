@@ -28,3 +28,7 @@ export function isUnitTest() {
 export function isDebugMode() {
   return !!process.env.SESSION_DEV;
 }
+
+export function showGiphyToggleButtons() {
+  return !!process.env.SESSION_CAN_TOGGLE_GIPHY;
+}

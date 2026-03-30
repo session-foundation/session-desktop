@@ -13,6 +13,7 @@ import { useKeyboardShortcut } from '../../../hooks/useKeyboardShortcut';
 import { KbdShortcut } from '../../../util/keyboardShortcuts';
 import { useHasGiphyIntegrationEnabled } from '../../../state/selectors/settings';
 import { toggleGiphyIntegration } from '../../dialog/user-settings/actions/toggleGiphyIntegration';
+import { showGiphyToggleButtons } from '../../../shared/env_vars';
 
 type CompositionButtonProps = {
   onClick: () => void;
@@ -102,7 +103,9 @@ export function ToggleGifButton(
   const canAddAttachments = useSelectedCanAddAttachments();
   const canWrite = useSelector(getSelectedCanWrite);
 
-  if (!canAddAttachments || !canWrite) {
+  const canToggleGiphyIntegration = showGiphyToggleButtons();
+
+  if (!canAddAttachments || !canWrite || !canToggleGiphyIntegration) {
     return null;
   }
 

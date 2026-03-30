@@ -34,6 +34,7 @@ import { SettingsPanelButtonInlineBasic } from '../components/SettingsPanelButto
 import { UserSettingsModalContainer } from '../components/UserSettingsModalContainer';
 import { UserConfigWrapperActions } from '../../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 import { toggleGiphyIntegration } from '../actions/toggleGiphyIntegration';
+import { showGiphyToggleButtons } from '../../../../shared/env_vars';
 
 const toggleCallMediaPermissions = async (triggerUIUpdate: () => void) => {
   const currentValue = window.getCallMediaPermissions();
@@ -251,18 +252,23 @@ export function PrivacySettingsPage(modalState: UserSettingsModalState) {
           subText={{ token: 'linkPreviewsDescription' }}
         />
       </PanelButtonGroup>
-      <PanelLabelWithDescription title={{ token: 'giphyWarning' }} />
-      <PanelButtonGroup>
-        <SettingsToggleBasic
-          baseDataTestId="enable-giphy-integration"
-          active={isGiphyIntegrationOn}
-          onClick={async () => {
-            void toggleGiphyIntegration(isGiphyIntegrationOn, forceUpdate);
-          }}
-          text={{ token: 'giphyWarning' }}
-          subText={{ token: 'giphyIntegrationDescription' }}
-        />
-      </PanelButtonGroup>
+      {showGiphyToggleButtons() ? (
+        <>
+          <PanelLabelWithDescription title={{ token: 'giphyWarning' }} />
+          <PanelButtonGroup>
+            <SettingsToggleBasic
+              baseDataTestId="enable-giphy-integration"
+              active={isGiphyIntegrationOn}
+              onClick={async () => {
+                void toggleGiphyIntegration(isGiphyIntegrationOn, forceUpdate);
+              }}
+              text={{ token: 'giphyWarning' }}
+              subText={{ token: 'giphyIntegrationDescription' }}
+            />
+          </PanelButtonGroup>
+        </>
+      ) : null}
+
       <PanelLabelWithDescription title={{ token: 'passwords' }} />
       <PasswordSubSection />
     </UserSettingsModalContainer>
