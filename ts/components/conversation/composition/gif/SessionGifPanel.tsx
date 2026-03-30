@@ -1,11 +1,12 @@
-/* eslint-disable no-debugger */
 /* eslint-disable more/no-then */
 import { useEffect, useMemo, useState, type RefObject } from 'react';
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import styled from 'styled-components';
 import fetch from 'node-fetch';
 import pRetry from 'p-retry';
+import { toNumber } from 'lodash';
 
+import { z, zodSafeParse } from '../../../../util/zod';
 import { SessionGifSearchInput } from './SessionGifSearchInput';
 import { SessionSpinner } from '../../../loading';
 import { getTriggerPosition, type PopoverTriggerPosition } from '../../../SessionTooltip';
@@ -15,6 +16,7 @@ import { SessionFocusTrap } from '../../../SessionFocusTrap';
 import { IMAGE_GIF, VIDEO_MP4 } from '../../../../types/MIME';
 import { useIsDarkTheme } from '../../../../state/theme/selectors/theme';
 import { FetchDestination, insecureNodeFetch } from '../../../../session/utils/InsecureNodeFetch';
+import { Constants } from '../../../../session';
 
 type WithSelectGif = {
   selectGif: (gif: ArrayBuffer, gifId: string) => void;
@@ -40,6 +42,44 @@ type WithFetchPreview = {
 type WithGifId = {
   gifId: string;
 };
+
+// use types from https://developers.giphy.com/docs/api/schema/#image-object
+const gifSchema = z.object({
+  id: z.string(),
+  images: z.object({
+    /**
+     * Data on a version of this GIF downsized to be under 8mb
+     */
+    downsized_large: z.object({
+      url: z.string(),
+      size: z.string().transform(toNumber),
+      width: z.string().transform(toNumber),
+      height: z.string().transform(toNumber),
+    }),
+    /**
+     * Data on a version of this GIF downsized to be under 2mb.
+     */
+    downsized: z.object({
+      url: z.string(),
+      size: z.string().transform(toNumber),
+      width: z.string().transform(toNumber),
+      height: z.string().transform(toNumber),
+    }),
+    /**
+     * Data on a version of this GIF in .MP4 format limited to 50kb that displays the first 1-2 seconds of the GIF.
+     */
+    preview: z.object({
+      mp4: z.string(),
+      mp4_size: z.string().transform(toNumber),
+      width: z.string().transform(toNumber),
+      height: z.string().transform(toNumber),
+    }),
+  }),
+});
+
+const giphyBodySchema = z.object({
+  data: z.array(gifSchema),
+});
 
 const GIF_PANEL_WIDTH_PX = 600;
 const GIF_PANEL_HEIGHT_PX = 500;
@@ -70,7 +110,6 @@ const StyledGifGrid = styled.div<{ $loading: boolean }>`
 function getGiphyAPIKey() {
   const apiKey = window.getGiphyApiKey();
   if (!apiKey) {
-    window.log.warn('SESSION_GIPHY_API_KEY is not set');
     throw new Error('SESSION_GIPHY_API_KEY is not set');
   }
   return apiKey;
@@ -92,8 +131,15 @@ function getGiphyLimit() {
 async function fetchGifs(searchTerm: string = '') {
   // &pingback_id=18dcdd3b1357ff91
   const endpoint = searchTerm ? 'search' : 'trending';
-  const withSearchTerm = searchTerm ? `&q=${searchTerm}` : '';
-  const url = `https://api.giphy.com/v1/gifs/${endpoint}?rating=pg-13&offset=0&limit=${getGiphyLimit()}&api_key=${getGiphyAPIKey()}${withSearchTerm}`;
+  const urlSearchParams = new URLSearchParams({
+    rating: 'pg-13',
+    offset: '0',
+    limit: getGiphyLimit().toString(),
+    api_key: getGiphyAPIKey(),
+    ...(searchTerm ? { q: searchTerm } : {}),
+  });
+  const url = `https://api.giphy.com/v1/gifs/${endpoint}?${urlSearchParams}`;
+
   const res = await insecureNodeFetch({
     url,
     caller: 'fetchGifs',
@@ -108,11 +154,17 @@ async function fetchGifs(searchTerm: string = '') {
     },
   });
 
-  const body = (await res.json()) as GiphyBody;
+  const json = await res.json();
+  const parsed = zodSafeParse(giphyBodySchema, json);
+  if (!parsed.success) {
+    window.log.error(`Failed to parse giphy response`);
+    window.log.debug(`Failed to parse giphy response: ${parsed.error.message}`);
+    return [];
+  }
   window.log.debug(
-    `Found ${body.data.length} gifs for searchTerm:"${searchTerm}" endpoint:"${endpoint}"`
+    `Found ${parsed.data.data.length} gifs for searchTerm:"${searchTerm}" endpoint:"${endpoint}"`
   );
-
+  const body = parsed.data;
   const gifsToFetch: Array<Gif> = body.data.map(gif => {
     return {
       id: gif.id,
@@ -120,9 +172,11 @@ async function fetchGifs(searchTerm: string = '') {
       previewHeight: gif.images.preview.height,
       fetchOriginal: () => {
         // look for an original gif less than 1MB in size
-        if (gif.images.original_mp4.size < 1024 * 1024) {
-          window.log.debug(`Downloading original_mp4 gif of size ${gif.images.original_mp4.size}`);
-          return fetchGifBuffer(gif.images.original_mp4.mp4, IMAGE_GIF);
+        if (gif.images.downsized_large.size < 1 * Constants.FILESIZE.MB) {
+          window.log.debug(
+            `Downloading downsized_large gif of size ${gif.images.downsized_large.size}`
+          );
+          return fetchGifBuffer(gif.images.downsized_large.url, IMAGE_GIF);
         }
         window.log.debug(`Downloading downsized gif of size ${gif.images.downsized.size}`);
 
@@ -230,34 +284,6 @@ export function SessionGifPanel({
       </SessionFocusTrap>
     </SessionPopoverContent>
   );
-}
-
-type GiphyGif = {
-  id: string;
-  images: {
-    original_mp4: {
-      mp4: string;
-      size: number;
-    };
-    downsized: {
-      /**
-       * url to the gif version
-       */
-      url: string;
-      size: number;
-    };
-
-    preview: {
-      mp4: string;
-      width: number;
-      height: number;
-      size: number;
-    };
-  };
-};
-
-interface GiphyBody {
-  data: Array<GiphyGif>;
 }
 
 type Gif = WithPreviewWidthAndHeight &

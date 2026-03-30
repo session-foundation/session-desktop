@@ -1,6 +1,8 @@
 import { forwardRef, type RefObject } from 'react';
+import { useSelector } from 'react-redux';
 
 import {
+  getSelectedCanWrite,
   useSelectedCanAddAttachments,
   useSelectedIsBlocked,
 } from '../../../state/selectors/selectedConversation';
@@ -96,7 +98,10 @@ export function ToggleGifButton(
   props: CompositionButtonProps & { ref: RefObject<HTMLButtonElement | null> }
 ) {
   const hasGiphyIntegrationEnabled = useHasGiphyIntegrationEnabled();
-  if (!hasGiphyIntegrationEnabled) {
+  const canAddAttachments = useSelectedCanAddAttachments();
+  const canWrite = useSelector(getSelectedCanWrite);
+
+  if (!hasGiphyIntegrationEnabled || !canAddAttachments || !canWrite) {
     return null;
   }
 
