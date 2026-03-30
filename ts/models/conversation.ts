@@ -3026,14 +3026,15 @@ export function hasValidOutgoingRequestValues({
   isPrivate: boolean;
   activeAt: number;
 }): boolean {
-  const isActive = activeAt && isFinite(activeAt) && activeAt > 0;
+  const isActive = Boolean(activeAt && isFinite(activeAt) && activeAt > 0);
+
+  const shared = !isMe && isPrivate && !isBlocked && !didApproveMe && isActive;
 
   // Started a new message, but haven't sent a message yet
-  const emptyConvo = !isMe && !isApproved && isPrivate && !isBlocked && !didApproveMe && !!isActive;
+  const emptyConvo = shared && !isApproved;
 
   // Started a new message, and sent a message
-  const sentOutgoingRequest =
-    !isMe && isApproved && isPrivate && !isBlocked && !didApproveMe && !!isActive;
+  const sentOutgoingRequest = shared && isApproved;
 
   return emptyConvo || sentOutgoingRequest;
 }
