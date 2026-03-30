@@ -33,6 +33,7 @@ import { SettingsToggleBasic } from '../components/SettingsToggleBasic';
 import { SettingsPanelButtonInlineBasic } from '../components/SettingsPanelButtonInlineBasic';
 import { UserSettingsModalContainer } from '../components/UserSettingsModalContainer';
 import { UserConfigWrapperActions } from '../../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
+import { toggleGiphyIntegration } from '../actions/toggleGiphyIntegration';
 
 const toggleCallMediaPermissions = async (triggerUIUpdate: () => void) => {
   const currentValue = window.getCallMediaPermissions();
@@ -85,30 +86,6 @@ async function toggleLinkPreviews(isToggleOn: boolean, forceUpdate: () => void) 
   } else {
     await window.setSettingValue(SettingsKey.settingsLinkPreview, false);
     await Storage.put(SettingsKey.hasLinkPreviewPopupBeenDisplayed, false);
-    forceUpdate();
-  }
-}
-
-async function toggleGiphyIntegration(isToggleOn: boolean, forceUpdate: () => void) {
-  if (!isToggleOn) {
-    window.inboxStore?.dispatch(
-      updateConfirmModal({
-        title: { token: 'giphyIntegrationTitle' },
-        i18nMessage: { token: 'giphyIntegrationModalDescription' },
-        okTheme: SessionButtonColor.Danger,
-        okText: { token: 'theContinue' },
-        onClickOk: async () => {
-          const newValue = !isToggleOn;
-          await window.setSettingValue(SettingsKey.hasGiphyIntegrationEnabled, newValue);
-          forceUpdate();
-        },
-        onClickClose: () => {
-          window.inboxStore?.dispatch(updateConfirmModal(null));
-        },
-      })
-    );
-  } else {
-    await window.setSettingValue(SettingsKey.hasGiphyIntegrationEnabled, false);
     forceUpdate();
   }
 }
@@ -274,8 +251,7 @@ export function PrivacySettingsPage(modalState: UserSettingsModalState) {
           subText={{ token: 'linkPreviewsDescription' }}
         />
       </PanelButtonGroup>
-      <PanelLabelWithDescription title={{ token: 'giphyIntegrationSectionTitle' }} />
-
+      <PanelLabelWithDescription title={{ token: 'giphyWarning' }} />
       <PanelButtonGroup>
         <SettingsToggleBasic
           baseDataTestId="enable-giphy-integration"
@@ -283,7 +259,7 @@ export function PrivacySettingsPage(modalState: UserSettingsModalState) {
           onClick={async () => {
             void toggleGiphyIntegration(isGiphyIntegrationOn, forceUpdate);
           }}
-          text={{ token: 'giphyIntegrationTitle' }}
+          text={{ token: 'giphyWarning' }}
           subText={{ token: 'giphyIntegrationDescription' }}
         />
       </PanelButtonGroup>

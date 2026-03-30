@@ -12,6 +12,7 @@ import type { SessionIconSize } from '../../icon';
 import { useKeyboardShortcut } from '../../../hooks/useKeyboardShortcut';
 import { KbdShortcut } from '../../../util/keyboardShortcuts';
 import { useHasGiphyIntegrationEnabled } from '../../../state/selectors/settings';
+import { toggleGiphyIntegration } from '../../dialog/user-settings/actions/toggleGiphyIntegration';
 
 type CompositionButtonProps = {
   onClick: () => void;
@@ -101,7 +102,7 @@ export function ToggleGifButton(
   const canAddAttachments = useSelectedCanAddAttachments();
   const canWrite = useSelector(getSelectedCanWrite);
 
-  if (!hasGiphyIntegrationEnabled || !canAddAttachments || !canWrite) {
+  if (!canAddAttachments || !canWrite) {
     return null;
   }
 
@@ -109,7 +110,13 @@ export function ToggleGifButton(
     <SessionLucideIconButton
       unicode={LUCIDE_ICONS_UNICODE.IMAGE_PLAY}
       {...getSharedButtonProps(false)}
-      onClick={props.onClick}
+      onClick={
+        hasGiphyIntegrationEnabled
+          ? props.onClick
+          : () => {
+              void toggleGiphyIntegration(hasGiphyIntegrationEnabled, props.onClick);
+            }
+      }
       dataTestId="gif-button"
       ref={props.ref}
     />
