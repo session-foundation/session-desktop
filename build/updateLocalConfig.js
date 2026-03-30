@@ -1,6 +1,7 @@
 var fs = require('fs');
 var _ = require('lodash');
 var execSync = require('child_process').execSync;
+require('dotenv').config();
 
 const updateLocalConfig = () => {
   var environment = 'production';
@@ -26,6 +27,7 @@ const updateLocalConfig = () => {
   localConfig = {
     ...localConfig,
     commitHash: hash,
+    giphyApiKey: process.env.SESSION_GIPHY_API_KEY || '',
   };
   var toWrite = `${JSON.stringify(localConfig)}\n`;
   fs.writeFileSync(configPath, toWrite);

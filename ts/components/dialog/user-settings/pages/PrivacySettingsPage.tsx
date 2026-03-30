@@ -23,6 +23,7 @@ import {
 import { CallManager } from '../../../../session/utils';
 import { SessionButtonColor } from '../../../basic/SessionButton';
 import {
+  useHasGiphyIntegrationEnabled,
   useHasLinkPreviewEnabled,
   useWeHaveBlindedMsgRequestsEnabled,
 } from '../../../../state/selectors/settings';
@@ -32,6 +33,8 @@ import { SettingsToggleBasic } from '../components/SettingsToggleBasic';
 import { SettingsPanelButtonInlineBasic } from '../components/SettingsPanelButtonInlineBasic';
 import { UserSettingsModalContainer } from '../components/UserSettingsModalContainer';
 import { UserConfigWrapperActions } from '../../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
+import { toggleGiphyIntegration } from '../actions/toggleGiphyIntegration';
+import { getFeatureFlag } from '../../../../state/ducks/types/releasedFeaturesReduxTypes';
 
 const toggleCallMediaPermissions = async (triggerUIUpdate: () => void) => {
   const currentValue = window.getCallMediaPermissions();
@@ -147,6 +150,7 @@ export function PrivacySettingsPage(modalState: UserSettingsModalState) {
   const title = useUserSettingsTitle(modalState);
   const weHaveBlindedRequestsEnabled = useWeHaveBlindedMsgRequestsEnabled();
   const isLinkPreviewsOn = useHasLinkPreviewEnabled();
+  const isGiphyIntegrationOn = useHasGiphyIntegrationEnabled();
 
   const forceUpdate = useUpdate();
 
@@ -248,6 +252,23 @@ export function PrivacySettingsPage(modalState: UserSettingsModalState) {
           subText={{ token: 'linkPreviewsDescription' }}
         />
       </PanelButtonGroup>
+      {getFeatureFlag('canToggleGiphy') ? (
+        <>
+          <PanelLabelWithDescription title={{ token: 'giphyWarning' }} />
+          <PanelButtonGroup>
+            <SettingsToggleBasic
+              baseDataTestId="enable-giphy-integration"
+              active={isGiphyIntegrationOn}
+              onClick={async () => {
+                void toggleGiphyIntegration(isGiphyIntegrationOn, forceUpdate);
+              }}
+              text={{ token: 'giphyWarning' }}
+              subText={{ token: 'giphyIntegrationDescription' }}
+            />
+          </PanelButtonGroup>
+        </>
+      ) : null}
+
       <PanelLabelWithDescription title={{ token: 'passwords' }} />
       <PasswordSubSection />
     </UserSettingsModalContainer>

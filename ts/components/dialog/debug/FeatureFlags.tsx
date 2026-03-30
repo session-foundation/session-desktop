@@ -520,6 +520,7 @@ export const FeatureFlags = ({ forceUpdate }: { forceUpdate: () => void }) => {
       ([key]) => !handledBooleanFeatureFlags.includes(key as SessionBooleanFeatureFlagKeys)
     )
   );
+
   return (
     <DebugMenuSection title="Feature Flags">
       <i>

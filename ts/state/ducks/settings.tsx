@@ -14,6 +14,7 @@ const SettingsBoolsKeyTrackedInRedux = [
   SettingsKey.showRecoveryPhrasePrompt,
   SettingsKey.dismissedRecoveryPhrasePrompt,
   SettingsKey.hideMessageRequests,
+  SettingsKey.hasGiphyIntegrationEnabled,
 ] as const;
 
 export type SettingsState = {
@@ -33,6 +34,7 @@ export function getSettingsInitialState() {
       showRecoveryPhrasePrompt: false,
       dismissedRecoveryPhrasePrompt: false,
       hideMessageRequests: false,
+      hasGiphyIntegrationEnabled: false,
     },
   };
 }
@@ -68,6 +70,7 @@ const settingsSlice = createSlice({
         showRecoveryPhrasePrompt: boolean;
         dismissedRecoveryPhrasePrompt: boolean;
         hideMessageRequests: boolean;
+        hasGiphyIntegrationEnabled: boolean;
       }>
     ) {
       const {
@@ -81,6 +84,7 @@ const settingsSlice = createSlice({
         showRecoveryPhrasePrompt,
         dismissedRecoveryPhrasePrompt,
         hideMessageRequests,
+        hasGiphyIntegrationEnabled,
       } = payload;
 
       state.settingsBools['link-preview-setting'] = settingsLinkPreview;
@@ -93,6 +97,7 @@ const settingsSlice = createSlice({
       state.settingsBools.showRecoveryPhrasePrompt = showRecoveryPhrasePrompt;
       state.settingsBools.dismissedRecoveryPhrasePrompt = dismissedRecoveryPhrasePrompt;
       state.settingsBools.hideMessageRequests = hideMessageRequests;
+      state.settingsBools.hasGiphyIntegrationEnabled = hasGiphyIntegrationEnabled;
 
       return state;
     },

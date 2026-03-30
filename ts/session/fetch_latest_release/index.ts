@@ -27,7 +27,7 @@ async function fetchReleaseFromFSAndUpdateMain(
     window.log.info('[updater] about to fetchReleaseFromFSAndUpdateMain');
     const diff = Date.now() - lastFetchedTimestamp;
     if (!force && diff < skipIfLessThan) {
-      window.log.info(
+      window.log.debug(
         `[updater] fetched release from fs ${Math.floor(diff / DURATION.MINUTES)} minutes ago, skipping until that's at least ${Math.floor(skipIfLessThan / DURATION.MINUTES)}`
       );
       return null;

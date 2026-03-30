@@ -1,4 +1,4 @@
-import { CSSProperties, MouseEvent, MutableRefObject, useRef, type Ref } from 'react';
+import { CSSProperties, MouseEvent, useRef, type Ref } from 'react';
 
 import { isUndefined } from 'lodash';
 import useUnmount from 'react-use/lib/useUnmount';
@@ -178,7 +178,7 @@ const LightboxObject = ({
 }: {
   objectURL: string;
   contentType: MIME.MIMEType;
-  renderedRef: MutableRefObject<any>;
+  renderedRef: React.RefObject<any>;
   onObjectClick: (e?: MouseEvent<HTMLButtonElement>) => void;
 }) => {
   const { urlToLoad } = useEncryptedFileFetch(objectURL, contentType, false);
@@ -190,7 +190,7 @@ const LightboxObject = ({
     if (!renderedRef?.current) {
       return;
     }
-    renderedRef.current.pause.pause();
+    renderedRef.current.pause();
   });
   const disableDrag = useDisableDrag();
 
@@ -210,18 +210,18 @@ const LightboxObject = ({
   if (isVideoTypeSupported) {
     if (urlToLoad) {
       if (renderedRef?.current?.paused) {
-        void renderedRef?.current?.play();
+        setTimeout(() => {
+          try {
+            void renderedRef?.current?.play();
+          } catch (e) {
+            window.log.error('Failed to play video', e.message);
+          }
+        }, 50);
       }
     }
 
     return (
-      <video
-        role="button"
-        ref={renderedRef}
-        controls={true}
-        style={styles.object as any}
-        key={urlToLoad}
-      >
+      <video role="button" ref={renderedRef} controls={true} style={styles.object} key={urlToLoad}>
         <source src={urlToLoad} />
       </video>
     );
@@ -255,7 +255,7 @@ const LightboxObject = ({
 };
 
 export const Lightbox = (props: Props) => {
-  const renderedRef = useRef<any>(null);
+  const renderedRef = useRef<HTMLElement>(null);
   const dispatch = getAppDispatch();
   const { caption, contentType, objectURL, onNext, onPrevious, onSave, onClose } = props;
 

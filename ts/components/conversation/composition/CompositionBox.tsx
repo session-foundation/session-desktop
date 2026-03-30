@@ -45,6 +45,7 @@ import {
   SendMessageButton,
   StartRecordingButton,
   ToggleEmojiButton,
+  ToggleGifButton,
 } from './CompositionButtons';
 import { CompositionTextArea } from './CompositionTextArea';
 import { HTMLDirection } from '../../../util/i18n/rtlSupport';
@@ -66,6 +67,7 @@ import { ProWrapperActions } from '../../../webworker/workers/browser/libsession
 import { updateOutgoingLightBoxOptions } from '../../../state/ducks/modalDialog';
 import { isEnterKey, isEscapeKey } from '../../../util/keyboardShortcuts';
 import type { CommunityInvitation } from '../../../session/messages/outgoing/visibleMessage/VisibleMessage';
+import { SessionGifPanel } from './gif/SessionGifPanel';
 
 export interface ReplyingToMessageProps {
   convoId: string;
@@ -135,6 +137,7 @@ interface State {
    */
   draft: string;
   showEmojiPanel: boolean;
+  showGifPanel: boolean;
   lastSelectedLength: number; // used for emoji panel replacement
   ignoredLink?: string; // set the ignored url when users closed the link preview
   stagedLinkPreview?: StagedLinkPreviewData;
@@ -147,6 +150,7 @@ const getDefaultState = (newConvoId?: string) => {
     initialDraft: draft,
     showRecordingView: false,
     showEmojiPanel: false,
+    showGifPanel: false,
     lastSelectedLength: 0,
     ignoredLink: undefined,
     stagedLinkPreview: undefined,
@@ -238,6 +242,7 @@ class CompositionBoxInner extends Component<Props, State> {
   private container: RefObject<HTMLDivElement | null>;
   private readonly emojiPanel: RefObject<HTMLDivElement | null>;
   private readonly emojiPanelButton: any;
+  private readonly showGifsButtonRef: RefObject<HTMLButtonElement | null>;
   private linkPreviewAbortController?: AbortController;
 
   constructor(props: Props) {
@@ -247,6 +252,7 @@ class CompositionBoxInner extends Component<Props, State> {
     this.inputRef = createRef();
     this.fileInput = createRef();
     this.container = createRef();
+    this.showGifsButtonRef = createRef();
 
     // Emojis
     this.emojiPanel = createRef();
@@ -386,6 +392,26 @@ class CompositionBoxInner extends Component<Props, State> {
     }
   }
 
+  private toggleGifPanel() {
+    if (this.state.showGifPanel) {
+      this.hideGifPanel();
+    } else {
+      this.showGifPanel();
+    }
+  }
+
+  private showGifPanel() {
+    this.setState({
+      showGifPanel: true,
+    });
+  }
+
+  private hideGifPanel() {
+    this.setState({
+      showGifPanel: false,
+    });
+  }
+
   private renderRecordingView() {
     return (
       <SessionRecording
@@ -397,7 +423,7 @@ class CompositionBoxInner extends Component<Props, State> {
   }
 
   private renderCompositionView() {
-    const { showEmojiPanel } = this.state;
+    const { showEmojiPanel, showGifPanel } = this.state;
     const { typingEnabled, isBlocked } = this.props;
 
     // we can only send a message if the conversation allows writing in it AND
@@ -429,6 +455,10 @@ class CompositionBoxInner extends Component<Props, State> {
         {typingEnabled || isBlocked ? (
           <AddStagedAttachmentButton onClick={this.onChooseAttachment} />
         ) : null}
+        {typingEnabled ? (
+          <ToggleGifButton onClick={this.toggleGifPanel} ref={this.showGifsButtonRef} />
+        ) : null}
+
         <input
           className="hidden"
           placeholder="Attachment"
@@ -473,6 +503,14 @@ class CompositionBoxInner extends Component<Props, State> {
               show={showEmojiPanel}
             />
           </StyledEmojiPanelContainer>
+        ) : null}
+        {showGifPanel ? (
+          <SessionGifPanel
+            show={showGifPanel}
+            onChoseAttachments={this.props.onChoseAttachments}
+            closeGifPicker={this.hideGifPanel}
+            buttonRef={this.showGifsButtonRef}
+          />
         ) : null}
         <CharacterCount text={this.getSendableTextFromDraft()} />
       </StyledCompositionBoxContainer>

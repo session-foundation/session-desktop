@@ -30,6 +30,7 @@ export const defaultBooleanFeatureFlags = {
   disableLocalAttachmentEncryption: !isEmpty(
     process.env.SESSION_DISABLE_LOCAL_ATTACHMENT_ENCRYPTION
   ),
+  canToggleGiphy: !isEmpty(process.env.SESSION_CAN_TOGGLE_GIPHY),
   useTestNet: isTestNet() || isTestIntegration(),
   debugInputCommands: !isEmpty(process.env.SESSION_DEBUG),
   alwaysShowRemainingChars: false,

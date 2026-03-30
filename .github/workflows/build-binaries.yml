@@ -150,6 +150,7 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       USE_HARD_LINKS: false # see https://github.com/electron-userland/electron-builder/issues/7093
+      SESSION_GIPHY_API_KEY: ${{ secrets.SESSION_GIPHY_API_KEY }}
 
     steps:
       - name: Checkout git repo
@@ -261,6 +262,7 @@ jobs:
     needs: [create_draft_release_if_needed, lint]
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      SESSION_GIPHY_API_KEY: ${{ secrets.SESSION_GIPHY_API_KEY }}
     name: "windows x64"
     steps:
       - run: git config --global core.autocrlf false
@@ -329,6 +331,7 @@ jobs:
       SIGNING_APPLE_ID: ${{ secrets.SIGNING_APPLE_ID }}
       SIGNING_APP_PASSWORD: ${{ secrets.SIGNING_APP_PASSWORD }}
       SIGNING_TEAM_ID: ${{ secrets.SIGNING_TEAM_ID }}
+      SESSION_GIPHY_API_KEY: ${{ secrets.SESSION_GIPHY_API_KEY }}
     steps:
       - run: git config --global core.autocrlf false
 

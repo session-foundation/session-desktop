@@ -5,6 +5,9 @@ import { StateType } from '../reducer';
 const getLinkPreviewEnabled = (state: StateType) =>
   state.settings.settingsBools[SettingsKey.settingsLinkPreview];
 
+const getHasGiphyIntegrationEnabled = (state: StateType) =>
+  state.settings.settingsBools[SettingsKey.hasGiphyIntegrationEnabled];
+
 const getHasBlindedMsgRequestsEnabled = (state: StateType) =>
   state.settings.settingsBools[SettingsKey.hasBlindedMsgRequestsEnabled];
 
@@ -34,6 +37,11 @@ export const getHideMessageRequestBanner = (state: StateType): boolean =>
 
 export const useHasLinkPreviewEnabled = () => {
   const value = useSelector(getLinkPreviewEnabled);
+  return Boolean(value);
+};
+
+export const useHasGiphyIntegrationEnabled = () => {
+  const value = useSelector(getHasGiphyIntegrationEnabled);
   return Boolean(value);
 };
 
