@@ -67,6 +67,7 @@ declare global {
     getTitle: () => string;
     getAppInstance: () => string;
     getCommitHash: () => string | undefined;
+    getGiphyApiKey: () => string | undefined;
     getVersion: () => string;
     getOSRelease: () => string;
     saveLog: () => void;

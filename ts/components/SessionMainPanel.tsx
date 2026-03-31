@@ -1,5 +1,4 @@
 import { useAppIsFocused } from '../hooks/useAppFocused';
-
 import { SmartSessionConversation } from '../state/smart/SessionConversation';
 import { useHTMLDirection } from '../util/i18n/rtlSupport';
 

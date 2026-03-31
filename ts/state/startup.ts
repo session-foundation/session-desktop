@@ -161,6 +161,7 @@ export const doAppStartUp = async () => {
         false
       ),
       hideMessageRequests: Storage.getBoolOr(SettingsKey.hideMessageRequests, false),
+      hasGiphyIntegrationEnabled: Storage.getBoolOr(SettingsKey.hasGiphyIntegrationEnabled, false),
     })
   );
 

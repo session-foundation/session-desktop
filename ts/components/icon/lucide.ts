@@ -27,6 +27,7 @@ export enum LUCIDE_ICONS_UNICODE {
   GLOBE = '',
   HEART = '',
   IMAGE = '',
+  IMAGE_PLAY = '',
   INFO = '',
   LINK = '',
   LOCK_KEYHOLE = '',
@@ -117,6 +118,7 @@ export function isIconToMirrorRtl(unicode: LUCIDE_ICONS_UNICODE) {
     case LUCIDE_ICONS_UNICODE.GLOBE:
     case LUCIDE_ICONS_UNICODE.HEART:
     case LUCIDE_ICONS_UNICODE.IMAGE:
+    case LUCIDE_ICONS_UNICODE.IMAGE_PLAY:
     case LUCIDE_ICONS_UNICODE.INFO:
     case LUCIDE_ICONS_UNICODE.LINK:
     case LUCIDE_ICONS_UNICODE.LOCK_KEYHOLE:

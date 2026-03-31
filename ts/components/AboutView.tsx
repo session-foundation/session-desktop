@@ -21,6 +21,7 @@ const StyledContent = styled(Flex)`
   font-size: var(--font-size-sm);
   height: 100%;
   width: 100%;
+  overflow: auto;
 
   a {
     color: var(--text-primary-color);

@@ -86,6 +86,13 @@ const conversationNavigation = Object.fromEntries(
 // in the database and its an often overlooked feature with little lift and massive UX gains.
 export const KbdShortcut = {
   ...conversationNavigation,
+  closeOpenConversation: {
+    name: 'Close Open Conversation',
+    scope: 'global',
+    withCtrl: true,
+    keys: ['w'],
+  },
+
   keyboardShortcutModal: {
     name: 'Keyboard Shortcuts',
     scope: 'global',
@@ -206,6 +213,7 @@ export const KbdShortcutInformation: Record<string, Array<KbdShortcutOptions>> =
     KbdShortcut.createGroup,
     KbdShortcut.joinCommunity,
     KbdShortcut.openNoteToSelf,
+    KbdShortcut.closeOpenConversation,
     KbdShortcut.conversationListSearch,
     KbdShortcut.keyboardShortcutModal,
     baseConversationNavigation,

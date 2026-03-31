@@ -204,7 +204,7 @@ import { getSimpleStringNoArgs, tr } from '../localization/localeTools';
 import { logCrash } from '../node/crash/log_crash';
 import { THEMES } from '../themes/constants/colors';
 
-function prepareURL(pathSegments: Array<string>, moreKeys?: { theme: any }) {
+function prepareURL(pathSegments: Array<string>, moreKeys?: { theme: string }) {
   const urlObject: url.UrlObject = {
     pathname: join(...pathSegments),
     protocol: 'file:',
@@ -214,6 +214,7 @@ function prepareURL(pathSegments: Array<string>, moreKeys?: { theme: any }) {
       locale: getCrowdinLocale(),
       version: app.getVersion(),
       commitHash: config.get('commitHash'),
+      giphyApiKey: config.get('giphyApiKey'),
       environment: (config as any).environment,
       node_version: process.versions.node,
       hostname: os.hostname(),
@@ -679,7 +680,7 @@ async function showAbout() {
     return;
   }
 
-  const theme = await getThemeFromMainWindow();
+  const theme = getThemeFromDb();
   const options = {
     width: 550,
     height: 550,
@@ -1233,13 +1234,22 @@ nativeTheme.on('updated', () => {
   mainWindow?.webContents.send('native-theme-update', nativeTheme.shouldUseDarkColors);
 });
 
-async function getThemeFromMainWindow() {
-  return new Promise(resolve => {
-    ipc.once('get-success-theme-setting', (_event, value) => {
-      resolve(value);
-    });
-    mainWindow?.webContents.send('get-theme-setting');
-  });
+function getThemeFromDb() {
+  const item = sqlNode.getItemById(SettingsKey.settingsTheme);
+
+  if (item?.value) {
+    switch (item.value) {
+      case 'classic-dark':
+      case 'classic-light':
+      case 'ocean-dark':
+      case 'ocean-light':
+        return item.value;
+      default:
+        console.info(`[getThemeFromDb] unknown theme: ${item.value}`);
+        break;
+    }
+  }
+  return 'classic-dark';
 }
 
 async function askForMediaAccess() {

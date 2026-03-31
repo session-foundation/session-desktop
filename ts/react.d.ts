@@ -97,7 +97,8 @@ declare module 'react' {
     | 'auto-update'
     | 'auto-dark-mode'
     | 'hide-menu-bar'
-    | 'pro-badge-visible';
+    | 'pro-badge-visible'
+    | 'enable-giphy-integration';
 
   type SettingsRadio =
     | `set-notifications-${'message' | 'name' | 'count'}`
@@ -178,6 +179,7 @@ declare module 'react' {
     | 'attachments'
     | 'set-nickname-remove'
     | 'emoji'
+    | 'gif'
     | 'remove-password-settings'
     | 'change-password-settings'
     | 'leave-group'

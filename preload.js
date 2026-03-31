@@ -39,6 +39,7 @@ window.getEnvironment = () => configAny.environment;
 window.getAppInstance = () => configAny.appInstance;
 window.getVersion = () => configAny.version;
 window.getCommitHash = () => configAny.commitHash;
+window.getGiphyApiKey = () => configAny.giphyApiKey;
 window.getNodeVersion = () => configAny.node_version;
 window.getOSRelease = () =>
   `${os.type()} ${os.release()}, Node.js ${config.node_version} ${os.platform()} ${os.arch()}`;
@@ -176,11 +177,6 @@ window.closeAbout = () => {
 window.readyForUpdates = () => {
   ipc.send('ready-for-updates');
 };
-
-ipc.on('get-theme-setting', () => {
-  const theme = window.getSettingValue('theme');
-  ipc.send('get-success-theme-setting', theme);
-});
 
 // Assume we are online until we are told otherwise (needed for restore from seed to work)
 window.isOnline = true;
