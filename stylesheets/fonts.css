@@ -91,13 +91,6 @@
   font-style: italic;
 }
 
-/* Accented font */
-@font-face {
-  font-family: Loor; /* Loor does not support some Cyrillic ghyphs so where we use it, we add a fallback to Roboto */
-  src: url('../fonts/Loor.ttf') format('truetype');
-  line-height: 1.4rem;
-}
-
 /** Icon font
  * Current: Lucide v0.488.0
  * Download from https://github.com/lucide-icons/lucide/releases
