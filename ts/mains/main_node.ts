@@ -57,9 +57,8 @@ if (!process.env.SESSION_ALLOW_APP_SUSPENSION) {
   // 'prevent-display-sleep' maps to --what=sleep on Linux, which is correct.
   // On macOS and Windows, 'prevent-app-suspension' is already the right choice
   // (IOPMAssertPreventUserIdleSystemSleep / ES_SYSTEM_REQUIRED — display unaffected).
-  const blockerType = process.platform === 'linux'
-    ? 'prevent-display-sleep'
-    : 'prevent-app-suspension';
+  const blockerType =
+    process.platform === 'linux' ? 'prevent-display-sleep' : 'prevent-app-suspension';
   powerSaveBlocker.start(blockerType);
 } else {
   console.log('SESSION_ALLOW_APP_SUSPENSION is set, so we do not prevent app suspension');
