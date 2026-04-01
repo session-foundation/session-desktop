@@ -21,6 +21,7 @@ const StyledMenuButton = styled.button`
   width: 51px;
   height: 33px;
   cursor: pointer;
+  flex-shrink: 0;
 
   transition: var(--default-duration);
 
@@ -54,11 +55,16 @@ export function useNewConversationCallback() {
  */
 export const MenuButton = () => {
   const onClick = useNewConversationCallback();
+  const leftOverlayMode = useLeftOverlayModeType();
+
+  if (leftOverlayMode) {
+    return null;
+  }
 
   return (
     <StyledMenuButton data-testid="new-conversation-button" onClick={onClick}>
       <LucideIcon
-        unicode={LUCIDE_ICONS_UNICODE.PLUS}
+        unicode={leftOverlayMode ? LUCIDE_ICONS_UNICODE.X : LUCIDE_ICONS_UNICODE.PLUS}
         iconSize="large"
         aria-label={tr('contentDescriptionChooseConversationType')}
       />

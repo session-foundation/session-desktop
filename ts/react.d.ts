@@ -318,6 +318,7 @@ declare module 'react' {
     // generic readably message (not control message)
     | 'message-content'
     | 'message-container'
+    | 'message-content-inner'
 
     // control message types
     | 'message-request-response-message'

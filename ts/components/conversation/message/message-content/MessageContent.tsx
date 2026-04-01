@@ -152,6 +152,7 @@ export const MessageContent = (props: Props) => {
       role="button"
       title={toolTipTitle}
       $msgDirection={direction}
+      data-testid="message-content-inner"
     >
       {hideAvatar ? null : (
         <StyledAvatarContainer>
