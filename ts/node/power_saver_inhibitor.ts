@@ -11,7 +11,13 @@ function preventAppSuspensionElectron() {
     // if the power save blocker is already running, do not attempt to lock it again.
     return;
   }
-  electronBlockerId = powerSaveBlocker.start('prevent-app-suspension');
+  // On Linux, 'prevent-app-suspension' maps to systemd-inhibit --what=idle which blocks
+  // the entire idle pipeline (screensaver, lock screen, DPMS). Use 'prevent-display-sleep'
+  // instead, which maps to --what=sleep and only prevents suspend.
+  // On macOS/Windows, 'prevent-app-suspension' is correct.
+  const blockerType =
+    process.platform === 'linux' ? 'prevent-display-sleep' : 'prevent-app-suspension';
+  electronBlockerId = powerSaveBlocker.start(blockerType);
 }
 
 powerMonitor.on('resume', () => {
@@ -31,7 +37,7 @@ export function startAppSuspensionBlocker(): void {
   const proc = spawn(
     'systemd-inhibit',
     [
-      '--what=idle',
+      '--what=sleep',
       `--who=${packageJson.productName}`,
       `--why=Keeping ${packageJson.name} running`,
       '--mode=block',
