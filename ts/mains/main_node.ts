@@ -49,6 +49,21 @@ const getRealPath = (p: string) => fs.realpathSync(p);
 app.commandLine.appendSwitch('disable-renderer-backgrounding');
 app.commandLine.appendSwitch('disable-background-timer-throttling');
 app.commandLine.appendSwitch('disable-backgrounding-occluded-windows');
+if (!process.env.SESSION_ALLOW_APP_SUSPENSION) {
+  console.log('SESSION_ALLOW_APP_SUSPENSION is not set, so we prevent app suspension');
+  // On Linux, 'prevent-app-suspension' maps to systemd-inhibit --what=idle --mode=block,
+  // which blocks the entire idle pipeline (screensaver, lock screen, DPMS). Only
+  // --what=sleep is needed to keep network connections alive through suspend.
+  // 'prevent-display-sleep' maps to --what=sleep on Linux, which is correct.
+  // On macOS and Windows, 'prevent-app-suspension' is already the right choice
+  // (IOPMAssertPreventUserIdleSystemSleep / ES_SYSTEM_REQUIRED — display unaffected).
+  const blockerType = process.platform === 'linux'
+    ? 'prevent-display-sleep'
+    : 'prevent-app-suspension';
+  powerSaveBlocker.start(blockerType);
+} else {
+  console.log('SESSION_ALLOW_APP_SUSPENSION is set, so we do not prevent app suspension');
+}
 
 // Hardcoding appId to prevent build failures on release.
 // const appUserModelId = packageJson.build.appId;
