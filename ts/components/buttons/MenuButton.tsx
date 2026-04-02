@@ -49,13 +49,15 @@ export function useNewConversationCallback() {
   };
 }
 
+const useLocalLeftOverlayModeType = useLeftOverlayModeType;
+
 /**
  * This is the Session Menu Button. i.e. the button on top of the conversation list to start a new conversation.
  * It has two state: selected or not and so we use an checkbox input to keep the state in sync.
  */
 export const MenuButton = () => {
   const onClick = useNewConversationCallback();
-  const leftOverlayMode = useLeftOverlayModeType();
+  const leftOverlayMode = useLocalLeftOverlayModeType();
 
   if (leftOverlayMode) {
     return null;

@@ -4,7 +4,12 @@ import { isEmpty, isString } from 'lodash';
 import { getAppDispatch } from '../../../../state/dispatch';
 import { SpacerSM } from '../../../basic/Text';
 import { StyledLeftPaneOverlay } from '../OverlayMessage';
-import { ActionRow, StyledActionRowContainer } from './ActionRow';
+import {
+  ActionRow,
+  ActionRowIconWidth,
+  StyledActionRowContainer,
+  StyledActionRowHr,
+} from './ActionRow';
 import { ContactsListWithBreaks } from './ContactsListWithBreaks';
 import { sectionActions } from '../../../../state/ducks/section';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
@@ -88,6 +93,7 @@ export const OverlayChooseAction = () => {
           onClick={() => openNewMessage()}
           dataTestId="chooser-new-conversation-button"
         />
+        <StyledActionRowHr $marginLeft={ActionRowIconWidth} />
         <ActionRow
           title={tr('groupCreate')}
           ariaLabel={'Create a group button'}
@@ -95,6 +101,7 @@ export const OverlayChooseAction = () => {
           onClick={() => openCreateGroup()}
           dataTestId="chooser-new-group"
         />
+        <StyledActionRowHr $marginLeft={ActionRowIconWidth} />
         <ActionRow
           title={tr('communityJoin')}
           ariaLabel={'Join a community button'}
@@ -102,6 +109,7 @@ export const OverlayChooseAction = () => {
           onClick={() => openJoinCommunity()}
           dataTestId="chooser-new-community"
         />
+        <StyledActionRowHr $marginLeft={ActionRowIconWidth} />
         <ActionRow
           title={tr('sessionInviteAFriend')}
           ariaLabel={'Invite a friend button'}

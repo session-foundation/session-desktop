@@ -1,12 +1,11 @@
 import { focusVisibleBoxShadowOutsetStr } from '../../../styles/focusVisible';
-import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
-import { SessionLucideIconButton } from '../../icon/SessionIconButton';
+import { SessionIconButton } from '../../icon/SessionIconButton';
 
 export function AvatarExitQrCodeButton({ onExitQrCodeView }: { onExitQrCodeView: () => void }) {
   return (
-    <SessionLucideIconButton
-      unicode={LUCIDE_ICONS_UNICODE.USER_ROUND}
-      iconSize={'large'}
+    <SessionIconButton
+      iconType="userRoundFilled"
+      iconSize={'huge'}
       backgroundColor="var(--primary-color)"
       iconColor="var(--black-color)"
       padding="var(--margins-xs)"
@@ -18,8 +17,9 @@ export function AvatarExitQrCodeButton({ onExitQrCodeView }: { onExitQrCodeView:
         insetInlineEnd: '-15px',
         display: 'flex',
         alignItems: 'center',
-        borderRadius: '50%',
       }}
+      borderRadius="50%"
+      iconPadding="var(--margins-xs)"
     />
   );
 }
