@@ -21,6 +21,7 @@ const StyledMenuButton = styled.button`
   width: 51px;
   height: 33px;
   cursor: pointer;
+  flex-shrink: 0;
 
   transition: var(--default-duration);
 
@@ -48,17 +49,24 @@ export function useNewConversationCallback() {
   };
 }
 
+const useLocalLeftOverlayModeType = useLeftOverlayModeType;
+
 /**
  * This is the Session Menu Button. i.e. the button on top of the conversation list to start a new conversation.
  * It has two state: selected or not and so we use an checkbox input to keep the state in sync.
  */
 export const MenuButton = () => {
   const onClick = useNewConversationCallback();
+  const leftOverlayMode = useLocalLeftOverlayModeType();
+
+  if (leftOverlayMode) {
+    return null;
+  }
 
   return (
     <StyledMenuButton data-testid="new-conversation-button" onClick={onClick}>
       <LucideIcon
-        unicode={LUCIDE_ICONS_UNICODE.PLUS}
+        unicode={leftOverlayMode ? LUCIDE_ICONS_UNICODE.X : LUCIDE_ICONS_UNICODE.PLUS}
         iconSize="large"
         aria-label={tr('contentDescriptionChooseConversationType')}
       />

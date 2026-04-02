@@ -4,6 +4,8 @@ import { Flex } from '../../../basic/Flex';
 import { LucideIcon } from '../../../icon/LucideIcon';
 import type { WithLucideUnicode } from '../../../icon/lucide';
 
+export const ActionRowIconWidth = 58;
+
 export const StyledChooseActionTitle = styled.span`
   color: var(--text-primary-color);
   font-size: 18px;
@@ -13,15 +15,8 @@ export const StyledChooseActionTitle = styled.span`
 `;
 
 const StyledIcon = styled.div`
-  width: 58px;
-`;
-
-const StyledHR = styled.hr`
-  height: 0px;
-  width: 100%;
-  border: 0.5px solid var(--borders-color);
-  padding: 0;
-  margin: 0;
+  width: ${ActionRowIconWidth}px;
+  flex-shrink: 0;
 `;
 
 const StyledActionRow = styled.button`
@@ -35,10 +30,35 @@ const StyledActionRow = styled.button`
   &:hover {
     background: var(--conversation-tab-background-hover-color);
   }
+`;
 
-  &:focus-visible ${StyledHR} {
-    // hide the border so the focus-visible looks better
-    border-color: var(--transparent-color);
+export const StyledActionRowHr = styled.div<{ $marginLeft?: number }>`
+  height: 0.5px;
+  width: 100%;
+  border-top: 0.5px solid var(--borders-color);
+  padding: 0;
+  margin: 0;
+  margin-left: ${({ $marginLeft }) => $marginLeft}px;
+  transition: opacity var(--default-duration);
+  pointer-events: none;
+
+  // tsc is not happy when we merge those together, so we have to keep them separate...
+  // hide the separator when the previous row is hovered or focused
+  &:has(+ ${StyledActionRow}:hover) {
+    opacity: 0;
+  }
+
+  &:has(+ ${StyledActionRow}:focus-visible) {
+    opacity: 0;
+  }
+
+  // hide the separator when the next row is hovered and focused
+  ${StyledActionRow}:hover + & {
+    opacity: 0;
+  }
+
+  ${StyledActionRow}:focus-visible + & {
+    opacity: 0;
   }
 `;
 
@@ -46,9 +66,18 @@ export const StyledActionRowContainer = styled(Flex)`
   width: 100%;
   border-top: var(--default-borders);
   border-bottom: var(--default-borders);
+  transition:
+    border-top-color var(--default-duration),
+    border-bottom-color var(--default-duration);
 
-  ${StyledActionRow}:last-child ${StyledHR} {
-    border-color: transparent;
+  &:has(button:first-of-type:hover),
+  &:has(button:first-of-type:focus-visible) {
+    border-top-color: var(--transparent-color);
+  }
+
+  &:has(button:last-of-type:hover),
+  &:has(button:last-of-type:focus-visible) {
+    border-bottom-color: var(--transparent-color);
   }
 `;
 
@@ -75,7 +104,6 @@ export function ActionRow(props: ActionRowProps) {
         width={'100%'}
       >
         <StyledChooseActionTitle>{title}</StyledChooseActionTitle>
-        <StyledHR />
       </Flex>
     </StyledActionRow>
   );

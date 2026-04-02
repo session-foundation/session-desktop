@@ -1,5 +1,6 @@
+import { useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 import { getAppDispatch } from '../../state/dispatch';
 import { LeftOverlayType, sectionActions } from '../../state/ducks/section';
 import { useLeftOverlayModeType } from '../../state/selectors/section';
@@ -23,6 +24,7 @@ import { tr } from '../../localization/localeTools';
 import { userSettingsModal } from '../../state/ducks/modalDialog';
 import { SettingsKey } from '../../data/settings-key';
 import { LeftPaneAnnouncements } from './LeftPaneAnnoucements';
+import { useAppIsFocused } from '../../hooks/useAppFocused';
 
 const StyledLeftPaneSectionHeader = styled(Flex)`
   height: var(--main-view-header-height);
@@ -30,8 +32,32 @@ const StyledLeftPaneSectionHeader = styled(Flex)`
   transition: var(--default-duration);
 `;
 
-const SectionTitle = styled(H4)`
+const SectionTitleWrapper = styled.div`
   flex-grow: 1;
+  overflow: hidden;
+  min-width: 0;
+  flex-shrink: 100;
+  margin-inline-end: var(--margins-sm);
+`;
+
+const SectionTitle = styled(H4)<{ $overflowPx?: number; $appIsFocused: boolean }>`
+  white-space: nowrap;
+  ${({ $overflowPx, $appIsFocused }) =>
+    $overflowPx && $appIsFocused
+      ? css`
+          animation: sectionTitleMarquee 6s ease-in-out infinite;
+          @keyframes sectionTitleMarquee {
+            0%,
+            20% {
+              transform: translateX(0);
+            }
+            80%,
+            100% {
+              transform: translateX(-${$overflowPx}px);
+            }
+          }
+        `
+      : ''};
 `;
 
 const StyledProgressBarContainer = styled.div`
@@ -167,6 +193,8 @@ export const LeftPaneSectionHeader = () => {
   const noOverlayMode = !leftOverlayMode;
   const showRecoveryPhrasePrompt = useSelector(getShowRecoveryPhrasePrompt);
 
+  const isAppFocused = useAppIsFocused();
+
   const dispatch = getAppDispatch();
   const goBack = () => {
     if (!leftOverlayMode) {
@@ -193,6 +221,27 @@ export const LeftPaneSectionHeader = () => {
 
   const label = getLeftPaneHeaderLabel(leftOverlayMode);
 
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const [overflowPx, setOverflowPx] = useState<number | undefined>(undefined);
+
+  useEffect(() => {
+    const container = wrapperRef.current;
+    if (!container) {
+      return;
+    }
+    const check = () => {
+      const diff = container.scrollWidth - container.clientWidth;
+      setOverflowPx(diff > 0 ? diff : undefined);
+    };
+    check();
+    const ro = new ResizeObserver(check);
+    ro.observe(container);
+    // eslint-disable-next-line consistent-return
+    return () => {
+      ro.disconnect();
+    };
+  }, [label]);
+
   return (
     <Flex $flexDirection="column">
       <StyledLeftPaneSectionHeader
@@ -208,15 +257,22 @@ export const LeftPaneSectionHeader = () => {
             unicode={LUCIDE_ICONS_UNICODE.CHEVRON_LEFT}
             onClick={goBack}
             dataTestId="back-button"
-            padding="var(--margins-sm)"
+            padding="var(--margins-xs)"
           />
         ) : (
           <SpacerSM />
         )}
-        <SectionTitle color={'var(--text-primary-color)'} onClick={goBack}>
-          {label}
-        </SectionTitle>
-        {!leftOverlayMode && <MenuButton />}
+        <SectionTitleWrapper ref={wrapperRef}>
+          <SectionTitle
+            color={'var(--text-primary-color)'}
+            onClick={goBack}
+            $overflowPx={overflowPx}
+            $appIsFocused={isAppFocused}
+          >
+            {label}
+          </SectionTitle>
+        </SectionTitleWrapper>
+        <MenuButton />
       </StyledLeftPaneSectionHeader>
       {noOverlayMode && showRecoveryPhrasePrompt ? <LeftPaneBanner /> : null}
       {noOverlayMode ? <LeftPaneAnnouncements /> : null}
