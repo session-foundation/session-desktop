@@ -9,6 +9,16 @@ import { getOpenGroupV2ConversationId } from '../utils/OpenGroupUtils';
 import { OpenGroupData } from '../../../../data/opengroups';
 import { OpenGroupMessageV2 } from './OpenGroupMessageV2';
 import { DURATION } from '../../../constants';
+
+declare global {
+  interface Window {
+    getPowerStateMultiplier?: () => number;
+  }
+}
+
+function getPowerStateMultiplier(): number {
+  return window.getPowerStateMultiplier?.() ?? 1;
+}
 import {
   batchGlobalIsSuccess,
   OpenGroupBatchRow,
@@ -48,7 +58,7 @@ export type OpenGroupReactionMessageV4 = Omit<OpenGroupMessageV4, 'seqno'> & {
   seqno: number | undefined;
 };
 
-const pollForEverythingInterval = DURATION.SECONDS * 10;
+const pollForEverythingInterval = DURATION.SECONDS * 10 * getPowerStateMultiplier();
 
 export const invalidAuthRequiresBlinding =
   'Invalid authentication: this server requires the use of blinded ids';

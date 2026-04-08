@@ -7,6 +7,16 @@ import {
   type WithMessageHash,
 } from 'libsession_util_nodejs';
 
+declare global {
+  interface Window {
+    getPowerStateMultiplier?: () => number;
+  }
+}
+
+function getPowerStateMultiplier(): number {
+  return window.getPowerStateMultiplier?.() ?? 1;
+}
+
 import { compact, concat, flatten, isArray, isEmpty, last, omit, sampleSize, uniqBy } from 'lodash';
 import { v4 } from 'uuid';
 import z from '../../../util/zod';
@@ -216,25 +226,26 @@ export class SwarmPolling {
   public getPollingTimeout(convoId: PubKey) {
     const convo = ConvoHub.use().get(convoId.key);
     if (!convo) {
-      return SWARM_POLLING_TIMEOUT.INACTIVE;
+      return SWARM_POLLING_TIMEOUT.INACTIVE * getPowerStateMultiplier();
     }
     const activeAt = convo.getActiveAt();
     if (!activeAt) {
-      return SWARM_POLLING_TIMEOUT.INACTIVE;
+      return SWARM_POLLING_TIMEOUT.INACTIVE * getPowerStateMultiplier();
     }
 
     const currentTimestamp = Date.now();
     const diff = currentTimestamp - activeAt;
+    const multiplier = getPowerStateMultiplier();
 
     // consider that this is an active group if activeAt is less than two days old
     if (diff <= DURATION.DAYS * 2) {
-      return SWARM_POLLING_TIMEOUT.ACTIVE;
+      return SWARM_POLLING_TIMEOUT.ACTIVE * multiplier;
     }
 
     if (diff <= DURATION.DAYS * 7) {
-      return SWARM_POLLING_TIMEOUT.MEDIUM_ACTIVE;
+      return SWARM_POLLING_TIMEOUT.MEDIUM_ACTIVE * multiplier;
     }
-    return SWARM_POLLING_TIMEOUT.INACTIVE;
+    return SWARM_POLLING_TIMEOUT.INACTIVE * multiplier;
   }
 
   public shouldPollByTimeout(entry: GroupPollingEntry) {

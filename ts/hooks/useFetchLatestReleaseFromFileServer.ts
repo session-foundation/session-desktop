@@ -16,5 +16,5 @@ export function useFetchLatestReleaseFromFileServer() {
     if (userEd25519SecretKey && !isEmpty(userEd25519SecretKey)) {
       void fetchLatestRelease.fetchReleaseFromFSAndUpdateMain(userEd25519SecretKey);
     }
-  }, fetchLatestRelease.fetchReleaseFromFileServerInterval);
+  }, fetchLatestRelease.getFetchReleaseFromFileServerInterval());
 }

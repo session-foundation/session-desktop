@@ -308,3 +308,11 @@ window.addEventListener('contextmenu', e => {
     e.preventDefault();
   }
 });
+
+window.getPowerStateMultiplier = () => {
+  return 1;
+};
+
+ipc.on('power-state-changed', (_, multiplier) => {
+  window.getPowerStateMultiplier = () => multiplier;
+});

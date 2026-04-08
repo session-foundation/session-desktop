@@ -50,7 +50,17 @@ import { GroupUpdateMemberChangeMessage } from '../../../messages/outgoing/contr
 import { getFeatureFlag } from '../../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { longOrNumberToNumber } from '../../../../types/long/longOrNumberToNumber';
 
-const defaultMsBetweenRetries = 15000; // a long time between retries, to avoid running multiple jobs at the same time, when one was postponed at the same time as one already planned (5s)
+declare global {
+  interface Window {
+    getPowerStateMultiplier?: () => number;
+  }
+}
+
+function getPowerStateMultiplier(): number {
+  return window.getPowerStateMultiplier?.() ?? 1;
+}
+
+const defaultMsBetweenRetries = 15000 * getPowerStateMultiplier();
 const defaultMaxAttempts = 2;
 
 /**

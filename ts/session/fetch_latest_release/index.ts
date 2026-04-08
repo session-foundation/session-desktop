@@ -8,6 +8,16 @@ import { DURATION } from '../constants';
 import { getLatestReleaseFromFileServer } from '../apis/file_server_api/FileServerApi';
 import { isReleaseChannel } from '../../updater/types';
 
+declare global {
+  interface Window {
+    getPowerStateMultiplier?: () => number;
+  }
+}
+
+function getPowerStateMultiplier(): number {
+  return window.getPowerStateMultiplier?.() ?? 1;
+}
+
 /**
  * We don't want to hit the fileserver too often. Only often on start, and then every 30 minutes
  */
@@ -63,7 +73,7 @@ export const fetchLatestRelease = {
    * Try to fetch the latest release from the fileserver every 1 minute.
    * If we did fetch a release already in the last 30 minutes, we will skip the call.
    */
-  fetchReleaseFromFileServerInterval: DURATION.MINUTES * 1,
+  getFetchReleaseFromFileServerInterval: () => DURATION.MINUTES * 1 * getPowerStateMultiplier(),
   fetchReleaseFromFSAndUpdateMain,
   resetForTesting,
 };

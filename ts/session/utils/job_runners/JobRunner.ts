@@ -21,6 +21,16 @@ import {
 import { JobRunnerType } from './jobs/JobRunnerType';
 import { DURATION } from '../../constants';
 
+declare global {
+  interface Window {
+    getPowerStateMultiplier?: () => number;
+  }
+}
+
+function getPowerStateMultiplier(): number {
+  return window.getPowerStateMultiplier?.() ?? 1;
+}
+
 function jobToLogId<T extends TypeOfPersistedData>(jobRunner: JobRunnerType, job: PersistedJob<T>) {
   return `id: "${job.persistedData.identifier}" (type: "${jobRunner}")`;
 }
@@ -38,7 +48,7 @@ const MAX_WORKER_COUNT = 4 as const;
  * But when some jobs are scheduled and none of them needs to be run now, nothing will start the first one.
  * This interval is used to periodically check for jobs to run.
  */
-const planNextJobInternalMs = DURATION.SECONDS * 1;
+const planNextJobInternalMs = DURATION.SECONDS * 1 * getPowerStateMultiplier();
 
 /**
  * This class is used to plan jobs and make sure they are retried until the success.

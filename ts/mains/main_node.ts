@@ -37,19 +37,45 @@ import packageJson from '../../package.json';
 
 addHandler();
 
+import { initPowerState, isScreenOff, onScreenOff, onScreenOn } from './powerState';
+
 const getRealPath = (p: string) => fs.realpathSync(p);
 
-// All of our polling is done from the renderer thread, so we need to set this flag
-// to keep polling even if the renderer hidden/minimized.
-app.commandLine.appendSwitch('disable-renderer-backgrounding');
-app.commandLine.appendSwitch('disable-background-timer-throttling');
-app.commandLine.appendSwitch('disable-backgrounding-occluded-windows');
-if (!process.env.SESSION_ALLOW_APP_SUSPENSION) {
-  console.log('SESSION_ALLOW_APP_SUSPENSION is not set, so we prevent app suspension');
-  powerSaveBlocker.start('prevent-app-suspension');
-} else {
-  console.log('SESSION_ALLOW_APP_SUSPENSION is set, so we do not prevent app suspension');
+function updatePowerSaveBlocking(): void {
+  const screenOff = isScreenOff();
+  if (!screenOff) {
+    app.commandLine.appendSwitch('disable-renderer-backgrounding');
+    app.commandLine.appendSwitch('disable-background-timer-throttling');
+    app.commandLine.appendSwitch('disable-backgrounding-occluded-windows');
+  }
+  if (!process.env.SESSION_ALLOW_APP_SUSPENSION && !screenOff) {
+    console.log('SESSION_ALLOW_APP_SUSPENSION is not set, so we prevent app suspension');
+    powerSaveBlocker.start('prevent-app-suspension');
+  } else {
+    console.log(
+      'SESSION_ALLOW_APP_SUSPENSION is set or screen off, so we do not prevent app suspension'
+    );
+  }
 }
+
+let appSuspensionBlocker: number | null = null;
+
+onScreenOff(() => {
+  window.log.info('[main] Screen off - enabling power saving');
+  if (appSuspensionBlocker !== null) {
+    powerSaveBlocker.stop(appSuspensionBlocker);
+    appSuspensionBlocker = null;
+  }
+});
+
+onScreenOn(() => {
+  window.log.info('[main] Screen on - disabling power saving');
+  if (!process.env.SESSION_ALLOW_APP_SUSPENSION && appSuspensionBlocker === null) {
+    appSuspensionBlocker = powerSaveBlocker.start('prevent-app-suspension');
+  }
+});
+
+updatePowerSaveBlocking();
 
 // Hardcoding appId to prevent build failures on release.
 // const appUserModelId = packageJson.build.appId;
@@ -337,7 +363,7 @@ async function createWindow() {
       preload: path.join(getAppRootPath(), 'preload.js'),
       nativeWindowOpen: true,
       spellcheck: await getSpellCheckSetting(),
-      backgroundThrottling: false,
+      backgroundThrottling: isScreenOff(),
     },
     // only set icon for Linux, the executable one will be used by default for other platforms
     icon:
@@ -380,6 +406,8 @@ async function createWindow() {
 
   // Create the browser window.
   mainWindow = new BrowserWindow(windowOptions);
+
+  initPowerState(mainWindow);
 
   setupSpellChecker(mainWindow);
 
