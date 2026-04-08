@@ -13,6 +13,12 @@ import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
 import { createButtonOnKeyDownForClickEventHandler } from '../../../util/keyboardShortcuts';
 import { getAppDispatch } from '../../../state/dispatch';
 import { focusVisibleBoxShadowOutset } from '../../../styles/focusVisible';
+import { Menu, MenuItem } from '../../menu/items/MenuItem';
+import { SessionContextMenuContainer } from '../../SessionContextMenuContainer';
+import { tr } from '../../../localization';
+import { saveAttachmentToDisk } from '../../../util/attachment/attachmentsUtil';
+import { useSelectedConversationKey } from '../../../state/selectors/selectedConversation';
+import { showContextMenu } from '../../../util/contextMenu';
 
 type Props = {
   mediaItem: MediaItemType;
@@ -40,8 +46,7 @@ const StyledMediaGridItemImageContainer = styled.div`
   position: relative;
 `;
 
-const MediaGridItemContent = (props: Props) => {
-  const { mediaItem } = props;
+const MediaGridItemContent = ({ mediaItem }: Pick<Props, 'mediaItem'>) => {
   const { attachment, contentType } = mediaItem;
 
   const urlToDecrypt = mediaItem.thumbnailObjectUrl || '';
@@ -109,20 +114,68 @@ const MediaGridItemContent = (props: Props) => {
   return <LucideIcon iconSize="small" unicode={LUCIDE_ICONS_UNICODE.FILE} />;
 };
 
-export const MediaGridItem = (props: Props) => {
+export const MediaGridItem = ({ mediaItem, mediaItems }: Props) => {
   const dispatch = getAppDispatch();
+  const msgId = mediaItem.messageId;
+  const contextMenuId = `media-grid-item-menu-${msgId}`;
+
   const onClick = () => {
     const lightBoxOptions: LightBoxOptions = {
-      media: props.mediaItems,
-      attachment: props.mediaItem.attachment,
+      media: mediaItems,
+      attachment: mediaItem.attachment,
     };
 
     dispatch(updateLightBoxOptions(lightBoxOptions));
   };
   const onKeyDown = createButtonOnKeyDownForClickEventHandler(onClick);
+
   return (
-    <StyledMediaGridItem role="button" onClick={onClick} tabIndex={0} onKeyDown={onKeyDown}>
-      <MediaGridItemContent {...props} />
+    <StyledMediaGridItem
+      role="button"
+      onClick={onClick}
+      tabIndex={0}
+      onKeyDown={onKeyDown}
+      onContextMenu={e => {
+        showContextMenu({ event: e, id: contextMenuId });
+      }}
+    >
+      <MediaGridItemContent mediaItem={mediaItem} />
+      <GridItemContextMenu contextMenuId={contextMenuId} mediaItem={mediaItem} />
     </StyledMediaGridItem>
   );
 };
+
+function GridItemContextMenu({
+  contextMenuId,
+  mediaItem,
+}: {
+  contextMenuId: string;
+  mediaItem: MediaItemType;
+}) {
+  const selectedConversationKey = useSelectedConversationKey();
+  function onSave() {
+    if (selectedConversationKey) {
+      void saveAttachmentToDisk({
+        attachment: mediaItem.attachment,
+        index: mediaItem.index,
+        messageSender: mediaItem.messageSender,
+        messageTimestamp: mediaItem.messageTimestamp,
+        conversationId: selectedConversationKey,
+      });
+    }
+  }
+
+  return (
+    <SessionContextMenuContainer>
+      <Menu id={contextMenuId}>
+        <MenuItem
+          iconType={LUCIDE_ICONS_UNICODE.ARROW_DOWN_TO_LINE}
+          isDangerAction={false}
+          onClick={onSave}
+        >
+          {tr('save')}
+        </MenuItem>
+      </Menu>
+    </SessionContextMenuContainer>
+  );
+}

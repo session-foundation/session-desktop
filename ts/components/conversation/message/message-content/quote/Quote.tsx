@@ -24,7 +24,9 @@ const StyledQuote = styled.div<{
   display: flex;
   flex-direction: row;
   align-items: stretch;
-  margin: var(--margins-xs);
+  margin-block: var(--margins-xs);
+  // margin-inline-start is 0 so that a body & start of quote are aligned
+  margin-inline: 0 var(--margins-xs);
   ${props => !props.$hasAttachment && 'border-left: 4px solid;'}
   border-color: ${props =>
     props.$isIncoming

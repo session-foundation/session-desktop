@@ -12,7 +12,7 @@ import { AttachmentTypeWithPath } from '../../types/Attachment';
 import { saveAttachmentToDisk } from '../../util/attachment/attachmentsUtil';
 import { saveURLAsFile } from '../../util/saveURLAsFile';
 
-export interface MediaItemType {
+export type MediaItemType = {
   objectURL?: string;
   thumbnailObjectUrl?: string;
   contentType: MIME.MIMEType;
@@ -21,7 +21,7 @@ export interface MediaItemType {
   messageTimestamp: number;
   messageSender: string;
   messageId: string;
-}
+};
 
 type Props = {
   media: Array<MediaItemType>;
