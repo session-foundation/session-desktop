@@ -22,38 +22,6 @@ const StyledFullscreenContainer = styled(Flex)`
 
 const StyledSessionContent = styled(Flex)`
   z-index: 1;
-  &-accent {
-    &-text {
-      font-family: var(--font-accent), var(--font-default);
-      text-align: center;
-      .title {
-        font-size: 90px;
-        font-weight: 700;
-        line-height: 100px;
-      }
-    }
-  }
-
-  &-registration {
-    padding-inline-end: 128px;
-  }
-
-  &-header {
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-    justify-content: space-between;
-    padding: 17px 20px;
-  }
-
-  &-body {
-    display: flex;
-    flex-direction: row;
-    flex: 1;
-    align-items: center;
-    width: 100%;
-    padding-bottom: 20px;
-  }
 `;
 
 export const SessionRegistrationView = () => {

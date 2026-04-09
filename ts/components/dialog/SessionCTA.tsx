@@ -69,14 +69,18 @@ export const StyledScrollDescriptionContainer = styled.div`
   color: var(--text-secondary-color);
 `;
 
-const StyledCTAImage = styled.img`
+const StyledCTAImage = styled.img<{ $withSmallGradient?: boolean }>`
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: right center;
   background-color: var(--primary-color);
 
-  mask-image: linear-gradient(to bottom, black 66%, transparent 97%);
+  ${props =>
+    props.$withSmallGradient
+      ? 'mask-image: linear-gradient(to bottom, black 90%, transparent 97%);'
+      : 'mask-image: linear-gradient(to bottom, black 66%, transparent 97%);'}
+
   mask-size: 100% 100%;
 `;
 
@@ -176,7 +180,7 @@ function getImage(variant: CTAVariant): ReactNode {
       return <StyledCTAImage src="images/cta/donate.webp" />;
 
     case CTAVariant.DONATE_APPEAL:
-      return <StyledCTAImage src="images/cta/donate-appeal.webp" />;
+      return <StyledCTAImage src="images/cta/donate-appeal.webp" $withSmallGradient={true} />;
 
     default:
       assertUnreachable(variant, 'getImage');
@@ -186,10 +190,11 @@ function getImage(variant: CTAVariant): ReactNode {
 
 const StyledDonateAppealTitleContainer = styled(Localizer)`
   text-align: center;
+  margin-inline: var(--margins-xs);
 `;
 
 function DonateAppealTitle() {
-  return <StyledDonateAppealTitleContainer token="donateSessionAppealTitle" />;
+  return <StyledDonateAppealTitleContainer token="finalAppeal" />;
 }
 
 function getTitle(variant: CTAVariantExcludingProCTAs) {
@@ -221,7 +226,7 @@ function getDescription(variant: CTAVariantExcludingProCTAs) {
       return <Localizer token="donateSessionDescription" />;
 
     case CTAVariant.DONATE_APPEAL:
-      return <Localizer token="donateSessionAppealDescription" />;
+      return <Localizer token="finalAppealDescription" />;
 
     default:
       assertUnreachable(variant, 'CtaTitle');
@@ -311,7 +316,7 @@ function Buttons({
           }}
           dataTestId="cta-confirm-button"
         >
-          <Localizer token="donateSessionAppealReadMore" />
+          <Localizer token="readMoreCapital" />
         </SessionButtonShiny>
       );
     }

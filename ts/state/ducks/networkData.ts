@@ -51,7 +51,6 @@ const fetchInfoFromSeshServer = createAsyncThunk(
       if (infoLoading) {
         throw new Error('already loading');
       }
-
       payloadCreator.dispatch(setInfoLoading(true));
       const result = await NetworkApi.getInfo();
       if (!result) {
