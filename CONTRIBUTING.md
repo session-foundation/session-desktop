@@ -231,9 +231,12 @@ git clone https://github.com/session-foundation/session-desktop.git
 cd session-desktop
 git submodule update --init --recursive # Initialize and fetch submodules
 npm install --global pnpm               # (only if you don’t already have `pnpm`)
+
+# NOTE: on Windows you should use pnpm install --node-linker=hoisted
 pnpm install                            # Install and build dependencies (this will take a while)
 pnpm build
-# NOTE: on windows you need to use pnpm test-hoisted
+
+# NOTE: on Windows you need to use pnpm test-hoisted
 pnpm test                               # A good idea to make sure tests run first
 pnpm start-prod                         # Start Session!
 ```
