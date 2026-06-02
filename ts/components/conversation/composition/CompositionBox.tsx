@@ -103,6 +103,7 @@ export type StagedLinkPreviewData = {
 };
 
 export type StagedAttachmentType = AttachmentType & {
+  stagedAttachmentId: string;
   file: File;
   path?: string; // a bit hacky, but this is the only way to make our sending audio message be playable, this must be used only for those message
 };
@@ -807,15 +808,12 @@ class CompositionBoxInner extends Component<Props, State> {
       contentType: MIME.AUDIO_MP3,
     });
     // { ...savedAudioFile, path: savedAudioFile.path },
-    const audioAttachment: StagedAttachmentType = {
-      file: new File([], 'session-audio-message'), // this is just to emulate a file for the staged attachment type of that audio file
+    const audioAttachment: StagedAttachmentImportedType = {
       contentType: MIME.AUDIO_MP3,
       size: savedAudioFile.size,
-      fileSize: null,
       screenshot: null,
       fileName: 'session-audio-message',
       thumbnail: null,
-      url: '',
       isVoiceMessage: true,
       path: savedAudioFile.path,
     };
