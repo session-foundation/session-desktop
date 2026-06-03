@@ -8,19 +8,18 @@ import { downloadAttachmentFs, downloadAttachmentSogsV3 } from '../../receiver/a
 import { initializeAttachmentLogic, processNewAttachment } from '../../types/MessageAttachment';
 import { getAttachmentMetadata } from '../../types/message/initializeAttachmentMetadata';
 import { AttachmentDownloadMessageDetails } from '../../types/sqlSharedTypes';
-import { was404Error } from '../apis/snode_api/onions';
 import * as Constants from '../constants';
+import {
+  buildAttachmentDownloadRetryJob,
+  getAttachmentDownloadRetryDecision,
+  isAttachmentDownload404Error,
+  markAttachmentDownloadFailed,
+} from './AttachmentDownloadRetry';
 
 // this may cause issues if we increment that value to > 1, but only having one job will block the whole queue while one attachment is downloading
 const MAX_ATTACHMENT_JOB_PARALLELISM = 3;
 
 const TICK_INTERVAL = Constants.DURATION.MINUTES;
-
-const RETRY_BACKOFF = {
-  1: Constants.DURATION.SECONDS * 30,
-  2: Constants.DURATION.MINUTES * 30,
-  3: Constants.DURATION.HOURS * 6,
-};
 
 let enabled = false;
 let timeout: any;
@@ -180,7 +179,7 @@ async function _runJob(job: any) {
         : await downloadAttachmentFs(attachment);
     } catch (error) {
       // Attachments on the server expire after 60 days, then start returning 404
-      if (error && error.code === 404) {
+      if (isAttachmentDownload404Error(error)) {
         logger.warn(
           `_runJob: Got 404 from server, marking attachment from message ${found.idForLogging()} as permanent error`
         );
@@ -224,13 +223,17 @@ async function _runJob(job: any) {
 
     await _finishJob(found, id);
   } catch (error) {
-    const currentAttempt: 1 | 2 | 3 = (attempts || 0) + 1;
+    const retryDecision = getAttachmentDownloadRetryDecision({
+      error,
+      previousAttempts: attempts || 0,
+      type,
+    });
 
-    // if we get a 404 error for attachment downloaded, we can safely assume that the attachment expired server-side.
-    // so there is no need to continue trying to download it.
-    if (currentAttempt >= 3 || was404Error(error)) {
+    // Stop immediately for terminal errors, and keep normal attachments retryable for longer than previews.
+    // 404s are terminal because attachments expire server-side after 60 days.
+    if (!retryDecision.shouldRetry) {
       logger.error(
-        `_runJob: ${currentAttempt} failed attempts, marking attachment ${id} from message ${found?.idForLogging()} as permanent error:`,
+        `_runJob: terminal failure, marking attachment ${id} from message ${found?.idForLogging()} as permanent error:`,
         error && error.message ? error.message : error
       );
 
@@ -249,18 +252,23 @@ async function _runJob(job: any) {
     }
 
     logger.error(
-      `_runJob: Failed to download attachment type ${type} for message ${found?.idForLogging()}, attempt ${currentAttempt}:`,
+      `_runJob: Failed to download attachment type ${type} for message ${found?.idForLogging()}, attempt ${retryDecision.attempt}:`,
       error && error.message ? error.message : error
     );
 
-    const failedJob = {
-      ...job,
-      pending: 0,
-      attempts: currentAttempt,
-      timestamp: Date.now() + RETRY_BACKOFF[currentAttempt],
-    };
+    if (retryDecision.shouldMarkAttachmentFailed) {
+      found = await Data.getMessageById(messageId);
+      try {
+        _addAttachmentToMessage(found, _markAttachmentAsError(attachment), { type, index });
+        await _commitMessageIfNeeded(found || null);
+      } catch (e) {
+        // just swallow this exception. We don't want to throw it from the catch block here as this will end up being a Uncaught global promise
+      }
+    }
 
-    await Data.saveAttachmentDownloadJob(failedJob);
+    await Data.saveAttachmentDownloadJob(
+      buildAttachmentDownloadRetryJob(job, retryDecision.attempt, retryDecision.retryBackoff)
+    );
 
     delete _activeAttachmentDownloadJobs[id];
     void _maybeStartJob();
@@ -268,12 +276,7 @@ async function _runJob(job: any) {
 }
 
 async function _finishJob(message: MessageModel | null, id: string) {
-  if (message) {
-    const conversation = message.getConversation();
-    if (conversation) {
-      await message.commit();
-    }
-  }
+  await _commitMessageIfNeeded(message);
 
   await Data.removeAttachmentDownloadJob(id);
 
@@ -281,16 +284,23 @@ async function _finishJob(message: MessageModel | null, id: string) {
   await _maybeStartJob();
 }
 
+async function _commitMessageIfNeeded(message: MessageModel | null) {
+  if (!message) {
+    return;
+  }
+
+  const conversation = message.getConversation();
+  if (conversation) {
+    await message.commit();
+  }
+}
+
 function getActiveJobCount() {
   return Object.keys(_activeAttachmentDownloadJobs).length;
 }
 
 function _markAttachmentAsError(attachment: any) {
-  return {
-    ...omit(attachment, ['key', 'digest', 'id']),
-    error: true,
-    pending: false,
-  };
+  return markAttachmentDownloadFailed(omit(attachment, ['toJSON']));
 }
 
 function _addAttachmentToMessage(

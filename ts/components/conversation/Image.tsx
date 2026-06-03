@@ -92,6 +92,7 @@ export const Image = (props: Props) => {
 
   const width = isNumber(_width) ? `${_width}px` : _width;
   const height = isNumber(_height) ? `${_height}px` : _height;
+  const attachmentFailed = Boolean((attachment as AttachmentTypeWithPath).error) || url === '';
 
   useEffect(() => {
     if (mounted && url === '') {
@@ -110,7 +111,7 @@ export const Image = (props: Props) => {
     }
   }, [imageBroken, loading, mounted, onErrorUrlFiltering, pending, url, urlToLoad]);
 
-  if (mounted && imageBroken) {
+  if (mounted && (imageBroken || attachmentFailed)) {
     return (
       <MessageGenericAttachment
         attachment={attachment as AttachmentTypeWithPath}
