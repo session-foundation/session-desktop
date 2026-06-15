@@ -69,8 +69,8 @@ const styles = {
   object: {
     flexGrow: 1,
     flexShrink: 0,
-    maxWidth: '80vw',
-    maxHeight: '80vh',
+    maxWidth: 'none',
+    maxHeight: 'none',
     objectFit: 'contain',
   } as CSSProperties,
   caption: {
