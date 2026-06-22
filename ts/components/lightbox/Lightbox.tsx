@@ -1,4 +1,4 @@
-import { CSSProperties, MouseEvent, useRef, type Ref } from 'react';
+import { CSSProperties, MouseEvent, useEffect, useRef, useState, type Ref } from 'react';
 
 import { isUndefined } from 'lodash';
 import useUnmount from 'react-use/lib/useUnmount';
@@ -28,6 +28,9 @@ type Props = {
 
 const CONTROLS_WIDTH = 50;
 const CONTROLS_SPACING = 10;
+const MIN_SCALE = 1;
+const MAX_SCALE = 10;
+const ZOOM_SENSITIVITY = 0.002;
 
 const styles = {
   container: {
@@ -60,6 +63,7 @@ const styles = {
     flexGrow: 1,
     display: 'inline-flex',
     justifyContent: 'center',
+    overflow: 'hidden',
   } as CSSProperties,
   objectParentContainer: {
     flexGrow: 1,
@@ -69,8 +73,8 @@ const styles = {
   object: {
     flexGrow: 1,
     flexShrink: 0,
-    maxWidth: 'none',
-    maxHeight: 'none',
+    maxWidth: '80vw',
+    maxHeight: '80vh',
     objectFit: 'contain',
   } as CSSProperties,
   caption: {
@@ -183,6 +187,20 @@ const LightboxObject = ({
 }) => {
   const { urlToLoad } = useEncryptedFileFetch(objectURL, contentType, false);
 
+  // scale: 1 = fit-to-screen. translate is in px, relative to centered origin.
+  const [scale, setScale] = useState(1);
+  const [translate, setTranslate] = useState({ x: 0, y: 0 });
+  const isDragging = useRef(false);
+  const didDrag = useRef(false);
+  const dragStart = useRef({ x: 0, y: 0 });
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Reset zoom and pan whenever the displayed image changes (prev/next navigation)
+  useEffect(() => {
+    setScale(1);
+    setTranslate({ x: 0, y: 0 });
+  }, [objectURL]);
+
   const isImageTypeSupported = GoogleChrome.isImageTypeSupported(contentType);
 
   // auto play video on showing a video attachment
@@ -195,14 +213,118 @@ const LightboxObject = ({
   const disableDrag = useDisableDrag();
 
   if (isImageTypeSupported) {
+    const isZoomed = scale > 1;
+
+    const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+      // ctrlKey is true for pinch-to-zoom on macOS trackpads as well as Ctrl+scroll on all platforms
+      if (!e.ctrlKey && !e.metaKey) {
+        return;
+      }
+      e.preventDefault();
+      e.stopPropagation();
+
+      const container = containerRef.current;
+      if (!container) {
+        return;
+      }
+
+      const rect = container.getBoundingClientRect();
+      // Pointer position relative to container center (the transform origin)
+      const pointerX = e.clientX - rect.left - rect.width / 2;
+      const pointerY = e.clientY - rect.top - rect.height / 2;
+
+      const delta = -e.deltaY * ZOOM_SENSITIVITY;
+      const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale * (1 + delta)));
+
+      if (newScale === scale) {
+        return;
+      }
+
+      // Adjust translate so the point under the pointer stays fixed
+      const scaleFactor = newScale / scale;
+      const newTranslateX = pointerX - scaleFactor * (pointerX - translate.x);
+      const newTranslateY = pointerY - scaleFactor * (pointerY - translate.y);
+
+      setScale(newScale);
+      // Snap translate back to zero when returning to fit-to-screen
+      if (newScale === MIN_SCALE) {
+        setTranslate({ x: 0, y: 0 });
+      } else {
+        setTranslate({ x: newTranslateX, y: newTranslateY });
+      }
+    };
+
+    const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+      if (!isZoomed) {
+        return;
+      }
+      isDragging.current = true;
+      didDrag.current = false;
+      dragStart.current = { x: e.clientX - translate.x, y: e.clientY - translate.y };
+      e.preventDefault();
+      e.stopPropagation();
+    };
+
+    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+      if (!isDragging.current) {
+        return;
+      }
+      didDrag.current = true;
+      e.stopPropagation();
+      setTranslate({
+        x: e.clientX - dragStart.current.x,
+        y: e.clientY - dragStart.current.y,
+      });
+    };
+
+    const handleMouseUp = (e: React.MouseEvent<HTMLDivElement>) => {
+      if (isDragging.current) {
+        e.stopPropagation();
+      }
+      isDragging.current = false;
+    };
+
+    const handleDoubleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+      e.stopPropagation();
+      setScale(1);
+      setTranslate({ x: 0, y: 0 });
+    };
+
+    const imgStyle: CSSProperties = {
+      ...styles.object,
+      transform: `scale(${scale}) translate(${translate.x / scale}px, ${translate.y / scale}px)`,
+      transformOrigin: 'center center',
+      transition: isDragging.current ? 'none' : 'transform 0.05s ease-out',
+      cursor: isZoomed ? (isDragging.current ? 'grabbing' : 'grab') : 'default',
+      // Let the image overflow the container; the container clips it
+      flexShrink: 0,
+      userSelect: 'none',
+    };
+
     return (
-      <img
-        style={styles.object as any}
-        onDragStart={disableDrag}
-        src={urlToLoad}
-        alt={AriaLabels.imageSentInConversation}
-        ref={renderedRef}
-      />
+      <div
+        ref={containerRef}
+        style={{ overflow: 'hidden' }}
+        onWheel={handleWheel}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+        onDoubleClick={handleDoubleClick}
+      >
+        <img
+          style={imgStyle as any}
+          onDragStart={disableDrag}
+          src={urlToLoad}
+          alt={AriaLabels.imageSentInConversation}
+          ref={renderedRef}
+          onClick={e => {
+            if (didDrag.current) {
+              e.stopPropagation();
+            }
+          }}
+        />
+      </div>
     );
   }
 
