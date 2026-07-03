@@ -40,7 +40,9 @@ const stagedAttachmentsSlice = createSlice({
           (currentStagedAttachments.length > 0 || newAttachments.length > 1)) ||
         (hasCurrentVoiceMessage && newAttachments.length > 0)
       ) {
-        window?.log?.warn('A voice note cannot be sent with other attachments');
+        window?.log?.warn(
+          'Only one voice note can be staged, and it cannot be mixed with other attachments'
+        );
         return state;
       }
 

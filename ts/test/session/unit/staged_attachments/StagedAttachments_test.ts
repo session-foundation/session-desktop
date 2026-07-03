@@ -156,6 +156,30 @@ describe('state/ducks/stagedAttachments', () => {
     expect((global as any).window.log.warn.calledOnce).to.eq(true);
   });
 
+  it('does not add multiple voice messages at once', () => {
+    const firstVoiceAttachment = makeAttachment({
+      stagedAttachmentId: 'first-voice',
+      fileName: 'session-audio-message',
+      isVoiceMessage: true,
+    });
+    const secondVoiceAttachment = makeAttachment({
+      stagedAttachmentId: 'second-voice',
+      fileName: 'session-audio-message',
+      isVoiceMessage: true,
+    });
+
+    const state = reducer(
+      getEmptyStagedAttachmentsState(),
+      addStagedAttachmentsInConversation({
+        conversationKey,
+        newAttachments: [firstVoiceAttachment, secondVoiceAttachment],
+      })
+    );
+
+    expect(state.stagedAttachments[conversationKey]).to.eq(undefined);
+    expect((global as any).window.log.warn.calledOnce).to.eq(true);
+  });
+
   it('does not add another attachment when a voice message is already staged', () => {
     const voiceAttachment = makeAttachment({
       stagedAttachmentId: 'voice',
