@@ -1,4 +1,4 @@
-// every 1 minute we fetch from the fileserver to check for a new release
+// Periodically fetch from the fileserver to check for a new release
 // * if there is none, no request to github are made.
 // * if there is a version on the fileserver more recent than our current, we fetch github to get the UpdateInfos and trigger an update as usual (asking user via dialog)
 
@@ -9,9 +9,9 @@ import { getLatestReleaseFromFileServer } from '../apis/file_server_api/FileServ
 import { isReleaseChannel } from '../../updater/types';
 
 /**
- * We don't want to hit the fileserver too often. Only often on start, and then every 30 minutes
+ * We don't want to hit the fileserver too often. Only often on start, and then every 30 minutes.
  */
-const skipIfLessThan = DURATION.MINUTES * 30;
+const fetchReleaseFromFileServerInterval = DURATION.MINUTES * 30;
 
 let lastFetchedTimestamp = Number.MIN_SAFE_INTEGER;
 
@@ -26,9 +26,9 @@ async function fetchReleaseFromFSAndUpdateMain(
   try {
     window.log.info('[updater] about to fetchReleaseFromFSAndUpdateMain');
     const diff = Date.now() - lastFetchedTimestamp;
-    if (!force && diff < skipIfLessThan) {
+    if (!force && diff < fetchReleaseFromFileServerInterval) {
       window.log.debug(
-        `[updater] fetched release from fs ${Math.floor(diff / DURATION.MINUTES)} minutes ago, skipping until that's at least ${Math.floor(skipIfLessThan / DURATION.MINUTES)}`
+        `[updater] fetched release from fs ${Math.floor(diff / DURATION.MINUTES)} minutes ago, skipping until that's at least ${Math.floor(fetchReleaseFromFileServerInterval / DURATION.MINUTES)}`
       );
       return null;
     }
@@ -60,10 +60,9 @@ async function fetchReleaseFromFSAndUpdateMain(
 
 export const fetchLatestRelease = {
   /**
-   * Try to fetch the latest release from the fileserver every 1 minute.
-   * If we did fetch a release already in the last 30 minutes, we will skip the call.
+   * Try to fetch the latest release from the fileserver every 30 minutes.
    */
-  fetchReleaseFromFileServerInterval: DURATION.MINUTES * 1,
+  fetchReleaseFromFileServerInterval,
   fetchReleaseFromFSAndUpdateMain,
   resetForTesting,
 };

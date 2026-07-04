@@ -4,6 +4,8 @@ import { readFileSync } from 'fs-extra';
 import { isEmpty } from 'lodash';
 import { expect } from 'chai';
 import { enableLogRedirect } from '../../../test-utils/utils';
+import { DURATION } from '../../../../session/constants';
+import { fetchLatestRelease } from '../../../../session/fetch_latest_release';
 
 describe('Updater', () => {
   it('package.json target is correct', () => {
@@ -24,5 +26,9 @@ describe('Updater', () => {
       false,
       'If you see this message, just set `enableLogRedirect` to false in `ts/test/test-utils/utils/stubbing.ts'
     );
+  });
+
+  it('checks the file server on the same cadence as the update throttle', () => {
+    expect(fetchLatestRelease.fetchReleaseFromFileServerInterval).to.equal(30 * DURATION.MINUTES);
   });
 });
