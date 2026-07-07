@@ -131,6 +131,7 @@ const LOKI_SCHEMA_VERSIONS: Array<(currentVersion: number, db: Database) => void
     updateToSessionSchemaVersion53,
     updateToSessionSchemaVersion54,
     updateToSessionSchemaVersion55,
+    updateToSessionSchemaVersion56,
   ];
 
 function updateToSessionSchemaVersion1(currentVersion: number, db: Database) {
@@ -2400,6 +2401,40 @@ async function updateToSessionSchemaVersion54(currentVersion: number, db: Databa
 
 async function updateToSessionSchemaVersion55(currentVersion: number, db: Database) {
   const targetVersion = 55;
+  if (currentVersion >= targetVersion) {
+    return;
+  }
+  console.log(`updateToSessionSchemaVersion${targetVersion}: starting...`);
+
+  db.transaction(() => {
+    const ctaInteractions = sqlNode.getItemById(SettingsKey.ctaInteractions, db)?.value ?? [];
+    console.log(
+      `updateToSessionSchemaVersion55 ${SettingsKey.ctaInteractions} before: ${JSON.stringify(ctaInteractions)}`
+    );
+
+    const idx = ctaInteractions.findIndex((i: any) => i?.variant === CTAVariant.DONATE_APPEAL);
+    if (idx !== -1) {
+      ctaInteractions.splice(idx, 1);
+      console.log(
+        `updateToSessionSchemaVersion55 removed ${CTAVariant.DONATE_APPEAL} from ${SettingsKey.ctaInteractions}`
+      );
+      sqlNode.createOrUpdateItem({ id: SettingsKey.ctaInteractions, value: ctaInteractions }, db);
+    }
+
+    console.log(
+      `updateToSessionSchemaVersion55 ${SettingsKey.ctaInteractions} after: ${JSON.stringify(sqlNode.getItemById(SettingsKey.ctaInteractions, db)?.value ?? [])}`
+    );
+
+    writeSessionSchemaVersion(targetVersion, db);
+  })();
+
+  console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
+}
+
+// Note: updateToSessionSchemaVersion55 and updateToSessionSchemaVersion56 are the same,
+// but run at different times to make the donate appeal CTA show up again.
+async function updateToSessionSchemaVersion56(currentVersion: number, db: Database) {
+  const targetVersion = 56;
   if (currentVersion >= targetVersion) {
     return;
   }

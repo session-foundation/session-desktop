@@ -194,7 +194,7 @@ const StyledDonateAppealTitleContainer = styled(Localizer)`
 `;
 
 function DonateAppealTitle() {
-  return <StyledDonateAppealTitleContainer token="finalAppeal" />;
+  return <StyledDonateAppealTitleContainer token="ongoingAppeal" />;
 }
 
 function getTitle(variant: CTAVariantExcludingProCTAs) {
@@ -226,7 +226,7 @@ function getDescription(variant: CTAVariantExcludingProCTAs) {
       return <Localizer token="donateSessionDescription" />;
 
     case CTAVariant.DONATE_APPEAL:
-      return <Localizer token="finalAppealDescription" />;
+      return <Localizer token="ongoingAppealDescription" />;
 
     default:
       assertUnreachable(variant, 'CtaTitle');
