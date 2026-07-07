@@ -2399,36 +2399,40 @@ async function updateToSessionSchemaVersion54(currentVersion: number, db: Databa
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
-async function updateToSessionSchemaVersion55(currentVersion: number, db: Database) {
-  const targetVersion = 55;
-  if (currentVersion >= targetVersion) {
-    return;
-  }
+async function removeDonateAppealCTAReadFlag(targetVersion: number, db: Database) {
   console.log(`updateToSessionSchemaVersion${targetVersion}: starting...`);
 
   db.transaction(() => {
     const ctaInteractions = sqlNode.getItemById(SettingsKey.ctaInteractions, db)?.value ?? [];
     console.log(
-      `updateToSessionSchemaVersion55 ${SettingsKey.ctaInteractions} before: ${JSON.stringify(ctaInteractions)}`
+      `updateToSessionSchemaVersion${targetVersion} ${SettingsKey.ctaInteractions} before: ${JSON.stringify(ctaInteractions)}`
     );
 
     const idx = ctaInteractions.findIndex((i: any) => i?.variant === CTAVariant.DONATE_APPEAL);
     if (idx !== -1) {
       ctaInteractions.splice(idx, 1);
       console.log(
-        `updateToSessionSchemaVersion55 removed ${CTAVariant.DONATE_APPEAL} from ${SettingsKey.ctaInteractions}`
+        `updateToSessionSchemaVersion${targetVersion} removed ${CTAVariant.DONATE_APPEAL} from ${SettingsKey.ctaInteractions}`
       );
       sqlNode.createOrUpdateItem({ id: SettingsKey.ctaInteractions, value: ctaInteractions }, db);
     }
 
     console.log(
-      `updateToSessionSchemaVersion55 ${SettingsKey.ctaInteractions} after: ${JSON.stringify(sqlNode.getItemById(SettingsKey.ctaInteractions, db)?.value ?? [])}`
+      `updateToSessionSchemaVersion${targetVersion} ${SettingsKey.ctaInteractions} after: ${JSON.stringify(sqlNode.getItemById(SettingsKey.ctaInteractions, db)?.value ?? [])}`
     );
 
     writeSessionSchemaVersion(targetVersion, db);
   })();
 
   console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
+}
+
+async function updateToSessionSchemaVersion55(currentVersion: number, db: Database) {
+  const targetVersion = 55;
+  if (currentVersion >= targetVersion) {
+    return;
+  }
+  await removeDonateAppealCTAReadFlag(targetVersion, db);
 }
 
 // Note: updateToSessionSchemaVersion55 and updateToSessionSchemaVersion56 are the same,
@@ -2438,31 +2442,7 @@ async function updateToSessionSchemaVersion56(currentVersion: number, db: Databa
   if (currentVersion >= targetVersion) {
     return;
   }
-  console.log(`updateToSessionSchemaVersion${targetVersion}: starting...`);
-
-  db.transaction(() => {
-    const ctaInteractions = sqlNode.getItemById(SettingsKey.ctaInteractions, db)?.value ?? [];
-    console.log(
-      `updateToSessionSchemaVersion55 ${SettingsKey.ctaInteractions} before: ${JSON.stringify(ctaInteractions)}`
-    );
-
-    const idx = ctaInteractions.findIndex((i: any) => i?.variant === CTAVariant.DONATE_APPEAL);
-    if (idx !== -1) {
-      ctaInteractions.splice(idx, 1);
-      console.log(
-        `updateToSessionSchemaVersion55 removed ${CTAVariant.DONATE_APPEAL} from ${SettingsKey.ctaInteractions}`
-      );
-      sqlNode.createOrUpdateItem({ id: SettingsKey.ctaInteractions, value: ctaInteractions }, db);
-    }
-
-    console.log(
-      `updateToSessionSchemaVersion55 ${SettingsKey.ctaInteractions} after: ${JSON.stringify(sqlNode.getItemById(SettingsKey.ctaInteractions, db)?.value ?? [])}`
-    );
-
-    writeSessionSchemaVersion(targetVersion, db);
-  })();
-
-  console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
+  await removeDonateAppealCTAReadFlag(targetVersion, db);
 }
 
 export function printTableColumns(table: string, db: Database) {
