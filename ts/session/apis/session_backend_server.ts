@@ -258,4 +258,57 @@ export default class SessionBackendServerApi {
 
     return this.parseSchema({ path: requestParams.path, response, schema: withZodSchema });
   }
+
+  /**
+   * Like `makeRequest`, but returns the RAW response body bytes + the transport status, WITHOUT
+   * parsing the body or assuming a content-type. The Session Pro response wire format is a contract
+   * between libsession and the backend only, so the caller relays these bytes straight to libsession's
+   * parser (via the nodejs glue) rather than parsing/interpreting them here — a future wire-format
+   * change never touches this client.
+   */
+  public async makeRequestReturningRawBody(
+    params: SessionBackendServerMakeRequestParams
+  ): Promise<{ status_code: number; bodyBinary: Uint8Array | null }> {
+    const body = typeof params.bodyGetter === 'function' ? await params.bodyGetter() : null;
+
+    const headers = params.blindSignRequest
+      ? await this.getBlindSignedHeaders({ method: params.method, path: params.path, body })
+      : {};
+
+    if (headers === null) {
+      this.logError('failed to blind sign request parameters', params.path);
+      return { status_code: 500, bodyBinary: null };
+    }
+
+    const url = new URL(params.path, this.server.url);
+
+    const controller = new AbortController();
+    const result = await timeoutWithAbort(
+      OnionSending.sendViaOnionV4ToNonSnodeWithRetries(
+        this.server.xPkHex,
+        url,
+        {
+          method: params.method,
+          headers,
+          body,
+          useV4: true,
+        },
+        false,
+        controller.signal,
+        this.server.requestTimeoutMs,
+        FetchDestination.SESSION_SERVER,
+        'SessionBackendServerApi.makeRequestReturningRawBody'
+      ),
+      this.server.abortControllerTimeoutMs,
+      controller
+    );
+
+    if (!result) {
+      this.logError('makeRequestReturningRawBody: returned no response', params.path);
+      return { status_code: 500, bodyBinary: null };
+    }
+
+    // NOTE: no content-type parsing here on purpose — the body is relayed raw to libsession.
+    return { status_code: result.status_code, bodyBinary: result.bodyBinary };
+  }
 }

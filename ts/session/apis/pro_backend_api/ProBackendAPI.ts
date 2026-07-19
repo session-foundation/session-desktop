@@ -6,13 +6,10 @@ import type {
 
 import { PRO_API } from './ProBackendTarget';
 import SessionBackendServerApi from '../session_backend_server';
-import {
-  GenerateProProofResponseSchema,
+import type {
   GenerateProProofResponseType,
-  GetProRevocationsResponseType,
-  GetProDetailsResponseSchema,
   GetProDetailsResponseType,
-  GetProRevocationsResponseAPISchema,
+  GetProRevocationsResponseType,
 } from './schemas';
 import { ProWrapperActions } from '../../../webworker/workers/browser/libsession_worker_interface';
 import { NetworkTime } from '../../../util/NetworkTime';
@@ -22,72 +19,61 @@ export default class ProBackendAPI {
   private static readonly server = new SessionBackendServerApi(PRO_API.PRO_BACKENDS.DEFAULT);
   private static readonly testServer = new SessionBackendServerApi(PRO_API.PRO_BACKENDS.DEV);
 
-  static readonly requestVersion = 0;
-
-  static getProSigningArgs({ masterPrivKeyHex }: WithMasterPrivKeyHex) {
-    return {
-      requestVersion: ProBackendAPI.requestVersion,
-      masterPrivKeyHex,
-      unixTsMs: NetworkTime.now(),
-    };
-  }
-
   static getServer() {
     return getFeatureFlag('useTestProBackend') ? ProBackendAPI.testServer : ProBackendAPI.server;
   }
 
-  private static async getProProofBody({
-    masterPrivKeyHex,
-    rotatingPrivKeyHex,
-  }: WithMasterPrivKeyHex & WithRotatingPrivKeyHex) {
-    return ProWrapperActions.proProofRequestBody({
-      ...ProBackendAPI.getProSigningArgs({ masterPrivKeyHex }),
-      rotatingPrivKeyHex,
+  /**
+   * POST a libsession-built request (`{ endpoint, body }`) and relay the RAW response bytes to
+   * libsession's parser — desktop never parses or interprets the wire itself (that's a
+   * libsession<->backend contract). Returns null on transport failure or a missing body; app-level
+   * (backend) errors surface via the parsed struct's `errors` (and non-success `status`).
+   */
+  private static async sendAndParse<T>(
+    request: { endpoint: string; body: string },
+    parse: (body: Uint8Array) => Promise<T>
+  ): Promise<T | null> {
+    const { status_code, bodyBinary } = await ProBackendAPI.getServer().makeRequestReturningRawBody({
+      path: `/${request.endpoint}`,
+      method: 'POST',
+      bodyGetter: async () => request.body,
     });
+
+    if (status_code !== 200 || !bodyBinary) {
+      return null;
+    }
+
+    return parse(bodyBinary);
   }
 
   static async generateProProof(
     args: WithMasterPrivKeyHex & WithRotatingPrivKeyHex
   ): Promise<GenerateProProofResponseType | null> {
-    return ProBackendAPI.getServer().makeRequestWithSchema({
-      path: '/generate_pro_proof',
-      method: 'POST',
-      bodyGetter: () => ProBackendAPI.getProProofBody(args),
-      withZodSchema: GenerateProProofResponseSchema,
+    const request = await ProWrapperActions.proProofRequest({
+      ...args,
+      unixTsMs: NetworkTime.now(),
     });
+    return ProBackendAPI.sendAndParse(request, body =>
+      ProWrapperActions.parseProProofResponse({ body })
+    );
   }
 
-  private static async getProDetailsBody(args: WithMasterPrivKeyHex) {
-    const request = await ProWrapperActions.proStatusRequestBody({
-      ...ProBackendAPI.getProSigningArgs(args),
-      // NOTE: The latest payment is the only one required for state derivation
+  static async getProDetails(args: WithMasterPrivKeyHex): Promise<GetProDetailsResponseType | null> {
+    const request = await ProWrapperActions.proStatusRequest({
+      ...args,
+      unixTsMs: NetworkTime.now(),
+      // NOTE: the latest payment is the only one required for state derivation
       count: 1,
     });
-    return request;
-  }
-
-  private static async getRevocationListBody(args: WithTicket) {
-    const body = await ProWrapperActions.proRevocationsRequestBody({ requestVersion: 0, ...args });
-    return body;
-  }
-
-  static async getProDetails(
-    args: WithMasterPrivKeyHex
-  ): Promise<GetProDetailsResponseType | null> {
-    return ProBackendAPI.getServer().makeRequestWithSchema({
-      path: '/get_pro_details',
-      method: 'POST',
-      bodyGetter: () => ProBackendAPI.getProDetailsBody(args),
-      withZodSchema: GetProDetailsResponseSchema,
-    });
+    return ProBackendAPI.sendAndParse(request, body =>
+      ProWrapperActions.parsePaymentDetailsResponse({ body })
+    );
   }
 
   static async getRevocationList(args: WithTicket): Promise<GetProRevocationsResponseType | null> {
-    return ProBackendAPI.getServer().makeRequestWithSchema({
-      path: '/get_pro_revocations',
-      method: 'POST',
-      bodyGetter: () => ProBackendAPI.getRevocationListBody(args),
-      withZodSchema: GetProRevocationsResponseAPISchema,
-    });
+    const request = await ProWrapperActions.proRevocationsRequest(args);
+    return ProBackendAPI.sendAndParse(request, body =>
+      ProWrapperActions.parseRevocationsResponse({ body })
+    );
   }
 }
