@@ -16,6 +16,8 @@ import { LucideIcon } from '../../../../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE, WithLucideUnicode } from '../../../../icon/lucide';
 import { SessionButton, SessionButtonColor } from '../../../../basic/SessionButton';
 import { showLinkVisitWarningDialog } from '../../../OpenUrlModal';
+import { ProWrapperActions } from '../../../../../webworker/workers/browser/libsession_worker_interface';
+import type { ProviderUrls } from 'libsession_util_nodejs';
 import { proButtonProps } from '../../../SessionCTA';
 import { Flex } from '../../../../basic/Flex';
 import type { ProNonOriginatingPageVariant } from '../../../../../types/ReduxTypes';
@@ -33,6 +35,22 @@ type VariantPageProps = {
 };
 
 const useProBackendProDetailsLocal = useProBackendProDetails;
+
+/**
+ * Provider support/management URLs are libsession's (fetched by provider slug), not client display data,
+ * so we resolve them on demand at click time via the worker rather than threading async state into the
+ * (synchronous) selector. `pick` chooses which URL from the resolved set.
+ */
+async function openProviderUrl(
+  provider: ProPaymentProvider,
+  pick: (urls: ProviderUrls) => string,
+  dispatch: Parameters<typeof showLinkVisitWarningDialog>[1]
+) {
+  const urls = await ProWrapperActions.providerUrls({ code: provider });
+  if (urls) {
+    showLinkVisitWarningDialog(pick(urls), dispatch);
+  }
+}
 const useCurrentNeverHadProLocal = useCurrentNeverHadPro;
 
 /**
@@ -40,7 +58,7 @@ const useCurrentNeverHadProLocal = useCurrentNeverHadPro;
  * Those two are not stored in the same field, so this hook can be used to fetch the right one
  */
 function useStoreOrPlatformFromProvider(data: ProcessedProDetails['data']) {
-  return data.provider === ProPaymentProvider.iOSAppStore
+  return data.provider === ProPaymentProvider.AppStore
     ? data.providerConstants.platform // we want `Apple website` for apple
     : data.providerConstants.store; // but `Google Play Store website` for google...
 }
@@ -504,15 +522,13 @@ function ProInfoBlockRefund() {
   }
 
   switch (data.provider) {
-    case ProPaymentProvider.iOSAppStore:
+    case ProPaymentProvider.AppStore:
       return <ProInfoBlockRefundIOS />;
-    case ProPaymentProvider.GooglePlayStore:
+    case ProPaymentProvider.GooglePlay:
       return <ProInfoBlockRefundGooglePlay />;
-    case ProPaymentProvider.Nil:
-    case ProPaymentProvider.Rangeproof:
-      return <ProInfoBlockRefundSessionSupport />;
     default:
-      return assertUnreachable(data.provider, `Unknown pro payment provider: ${data.provider}`);
+      // Rangeproof, none (''), or an unknown/future provider slug -> the Session-support refund flow.
+      return <ProInfoBlockRefundSessionSupport />;
   }
 }
 
@@ -532,7 +548,7 @@ function ProInfoBlockRefundRequested() {
       </ProInfoBlockRefundTitle>
       <ProInfoBlockDescription
         onClick={() =>
-          showLinkVisitWarningDialog(data.providerConstants.refund_status_url, dispatch)
+          void openProviderUrl(data.provider, u => u.refundStatusUrl, dispatch)
         }
         style={{ cursor: 'pointer' }}
       >
@@ -575,7 +591,7 @@ function ProPageButtonUpdate() {
       {...proButtonProps}
       buttonColor={SessionButtonColor.Primary}
       onClick={() => {
-        showLinkVisitWarningDialog(data.providerConstants.update_subscription_url, dispatch);
+        void openProviderUrl(data.provider, u => u.updateSubscriptionUrl, dispatch);
       }}
       dataTestId="pro-open-platform-website-button"
     >
@@ -593,7 +609,7 @@ function ProPageButtonCancel() {
       {...proButtonProps}
       buttonColor={SessionButtonColor.Danger}
       onClick={() => {
-        showLinkVisitWarningDialog(data.providerConstants.cancel_subscription_url, dispatch);
+        void openProviderUrl(data.provider, u => u.cancelSubscriptionUrl, dispatch);
       }}
       dataTestId="pro-open-platform-website-button"
     >
@@ -611,10 +627,9 @@ function ProPageButtonRefund() {
       {...proButtonProps}
       buttonColor={SessionButtonColor.Danger}
       onClick={() => {
-        showLinkVisitWarningDialog(
-          data.isPlatformRefundAvailable
-            ? data.providerConstants.refund_platform_url
-            : data.providerConstants.refund_support_url,
+        void openProviderUrl(
+          data.provider,
+          u => (data.isPlatformRefundAvailable ? u.refundPlatformUrl : u.refundSupportUrl),
           dispatch
         );
       }}

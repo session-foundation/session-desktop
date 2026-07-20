@@ -1,6 +1,4 @@
 import { useSelector } from 'react-redux';
-import { ProOriginatingPlatform } from 'libsession_util_nodejs';
-import { zodSafeParse } from '../../util/zod';
 import type { StateType } from '../reducer';
 import {
   proBackendDataActions,
@@ -10,7 +8,7 @@ import {
 } from '../ducks/proBackendData';
 import { SettingsKey } from '../../data/settings-key';
 import { Storage } from '../../util/storage';
-import { ProDetailsResultSchema } from '../../session/apis/pro_backend_api/schemas';
+import type { ProDetailsResultType } from '../../session/apis/pro_backend_api/schemas';
 import {
   getDataFeatureFlag,
   getFeatureFlag,
@@ -23,34 +21,31 @@ import {
   formatRoundedUpTimeUntilTimestamp,
 } from '../../util/i18n/formatting/generics';
 import {
-  getProOriginatingPlatformFromProPaymentProvider,
   ProAccessVariant,
   ProPaymentProvider,
   ProStatus,
 } from '../../session/apis/pro_backend_api/types';
-import LIBSESSION_CONSTANTS from '../../session/utils/libsession/libsession_constants';
+import { tr } from '../../localization/localeTools';
 import { getAppDispatch } from '../dispatch';
 import { sleepFor } from '../../session/utils/Promise';
-import { assertUnreachable } from '../../types/sqlSharedTypes';
 
 const getProBackendData = (state: StateType): ProBackendDataState => {
   return state.proBackendData;
 };
 
-function getProDetailsFromStorage() {
+function getProDetailsFromStorage(): ProDetailsResultType | null {
   const response = Storage.get(SettingsKey.proDetails);
   if (!response) {
     return null;
   }
-  const result = zodSafeParse(ProDetailsResultSchema, response);
-  if (result.success) {
-    return result.data;
+  // We persist the libsession-parsed struct verbatim (see putProDetailsInStorage). There's no hand-rolled
+  // schema to validate against anymore, so trust a well-formed object and drop anything obviously wrong
+  // (it's re-fetched on the next poll).
+  if (typeof response === 'object' && Array.isArray((response as ProDetailsResultType).items)) {
+    return response as ProDetailsResultType;
   }
   void Storage.remove(SettingsKey.proDetails);
-  window?.log?.error(
-    'failed to parse pro details from storage, removing item. error:',
-    result.error
-  );
+  window?.log?.error('pro details in storage were malformed; removing.');
   return null;
 }
 
@@ -62,26 +57,38 @@ export function proAccessVariantToString(variant: ProAccessVariant): string {
       return '3 Months';
     case ProAccessVariant.TwelveMonth:
       return '12 Months';
-    case ProAccessVariant.Nil:
-      return 'N/A';
     default:
-      return assertUnreachable(variant, `Unknown pro access variant: ${variant}`);
+      // '' (none) or an unrecognized/future billing-period slug.
+      return 'N/A';
   }
 }
 
-export function getProProviderConstantsWithFallbacks(provider: ProPaymentProvider) {
-  const libsessionPaymentProvider = getProOriginatingPlatformFromProPaymentProvider(provider);
-  const constants = LIBSESSION_CONSTANTS.LIBSESSION_PRO_PROVIDERS[libsessionPaymentProvider];
+/**
+ * Per-provider display strings. Client-owned i18n now (Delta #10) — libsession no longer supplies them.
+ * URLs are NOT here: they're only needed for link clicks and are fetched on demand via
+ * ProWrapperActions.providerUrls(slug). (These proProvider* tokens are a temporary stopgap injected
+ * into the generated localization; they're wiped by the next Crowdin sync, so upstream them first.)
+ */
+export type ProviderDisplayConstants = {
+  store: string;
+  platform: string;
+  device: string;
+  platform_account: string;
+  store_other: string;
+};
 
-  if (!constants.store) {
-    constants.store = LIBSESSION_CONSTANTS.LIBSESSION_PRO_PROVIDERS.Google.store;
-  }
-
-  if (!constants.store_other) {
-    constants.store_other = LIBSESSION_CONSTANTS.LIBSESSION_PRO_PROVIDERS.Google.store_other;
-  }
-
-  return constants;
+export function getProProviderConstantsWithFallbacks(
+  provider: ProPaymentProvider
+): ProviderDisplayConstants {
+  const isApple = provider === ProPaymentProvider.AppStore;
+  return {
+    store: isApple ? tr('proProviderAppleStore') : tr('proProviderGoogleStore'),
+    platform: isApple ? tr('proProviderApplePlatform') : tr('proProviderGooglePlatform'),
+    device: isApple ? tr('proProviderAppleDevice') : tr('proProviderGoogleDevice'),
+    platform_account: isApple ? tr('proProviderAppleAccount') : tr('proProviderGoogleAccount'),
+    // "the other store": for Apple show Google's, and vice-versa.
+    store_other: isApple ? tr('proProviderGoogleStore') : tr('proProviderAppleStore'),
+  };
 }
 
 function getMockedProAccessExpiry(variant: MockProAccessExpiryOptions): number | null {
@@ -141,7 +148,7 @@ type ProAccessDetails = {
   expiryTimeRelativeString: string;
   isPlatformRefundAvailable: boolean;
   provider: ProPaymentProvider;
-  providerConstants: (typeof LIBSESSION_CONSTANTS)['LIBSESSION_PRO_PROVIDERS'][ProOriginatingPlatform];
+  providerConstants: ProviderDisplayConstants;
 };
 
 // These values are used if pro isnt available or if no data is available from the backend.
@@ -149,10 +156,10 @@ export const defaultProAccessDetailsSourceData = {
   currentStatus: ProStatus.NeverBeenPro,
   autoRenew: true,
   inGracePeriod: false,
-  variant: ProAccessVariant.Nil,
+  variant: '',
   expiryTimeMs: 0,
   isPlatformRefundAvailable: false,
-  provider: ProPaymentProvider.Nil,
+  provider: '',
   isLoading: false,
   isError: false,
 } satisfies ProAccessDetailsSourceData;
@@ -200,25 +207,25 @@ function processProBackendData({
   const now = NetworkTime.now();
 
   const expiryTimeMs =
-    mockExpiry ?? data?.expiry_unix_ts_ms ?? defaultProAccessDetailsSourceData.expiryTimeMs;
+    mockExpiry ?? data?.expiryMs ?? defaultProAccessDetailsSourceData.expiryTimeMs;
 
   const latestAccess = data?.items?.[0];
   const provider =
-    mockPlatform ?? latestAccess?.payment_provider ?? defaultProAccessDetailsSourceData.provider;
+    mockPlatform ?? latestAccess?.paymentProvider ?? defaultProAccessDetailsSourceData.provider;
   const variant = mockVariant ?? latestAccess?.plan ?? defaultProAccessDetailsSourceData.variant;
   const isPlatformRefundAvailable =
     mockIsPlatformRefundAvailable ||
-    (latestAccess?.platform_refund_expiry_unix_ts_ms &&
-      now < latestAccess.platform_refund_expiry_unix_ts_ms) ||
+    (latestAccess?.platformRefundExpiryTsMs &&
+      now < latestAccess.platformRefundExpiryTsMs) ||
     defaultProAccessDetailsSourceData.isPlatformRefundAvailable;
 
   const autoRenew = mockCancelled
     ? !mockCancelled
-    : (data?.auto_renewing ?? defaultProAccessDetailsSourceData.autoRenew);
+    : (data?.autoRenewing ?? defaultProAccessDetailsSourceData.autoRenew);
 
   let beginAutoRenew = 0;
   if (data) {
-    beginAutoRenew = data.expiry_unix_ts_ms - data.grace_period_duration_ms;
+    beginAutoRenew = data.expiryMs - data.gracePeriodDurationMs;
   }
 
   let inGracePeriod = mockInGracePeriod;
@@ -226,11 +233,11 @@ function processProBackendData({
     inGracePeriod = autoRenew && now >= beginAutoRenew && now < expiryTimeMs;
   }
 
-  const isProcessingRefund = !!data?.refund_requested_unix_ts_ms;
+  const isProcessingRefund = !!data?.refundRequestedTsMs;
 
   return {
     data: {
-      currentStatus: data?.status ?? defaultProAccessDetailsSourceData.currentStatus,
+      currentStatus: data?.userStatus ?? defaultProAccessDetailsSourceData.currentStatus,
       autoRenew,
       inGracePeriod,
       isProcessingRefund,
