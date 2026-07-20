@@ -93,7 +93,7 @@ class UpdateProRevocationListJob extends PersistedJob<UpdateProRevocationListPer
         );
       }
 
-      if (!response || response.errors.length > 0) {
+      if (!response || response.status !== 'ok') {
         window.log.debug(`UpdateProRevocationListJob run() failed: ${JSON.stringify(response)}`);
         window.log.warn(`UpdateProRevocationListJob run() failed. Will retry soon if possible`);
         return RunJobResult.RetryJobIfPossible;

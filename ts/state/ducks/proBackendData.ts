@@ -62,8 +62,11 @@ export const initialProBackendDataState: ProBackendDataState = {
 type PayloadCreatorType = Parameters<Parameters<typeof createAsyncThunk>['1']>['1'];
 
 // The getter returns a libsession-parsed response struct (or null on transport failure). Every parsed
-// struct carries `errors` (empty on success) — a non-empty list means the backend reported a problem.
-type CreateProBackendFetchAsyncThunk<D extends { errors: Array<string> }> = {
+// struct carries the Delta #12 header: `status` ('ok' on success) + an optional machine `errorCode` slug
+// and an English diagnostic `error`.
+type CreateProBackendFetchAsyncThunk<
+  D extends { status: 'ok' | 'fail' | 'error'; errorCode: string | null; error: string | null },
+> = {
   key: keyof ProBackendDataState;
   getter: () => Promise<D | null>;
   payloadCreator: PayloadCreatorType;
@@ -74,7 +77,9 @@ type CreateProBackendFetchAsyncThunk<D extends { errors: Array<string> }> = {
 
 export type WithCallerContext = { callerContext?: 'recover' };
 
-async function createProBackendFetchAsyncThunk<D extends { errors: Array<string> }>({
+async function createProBackendFetchAsyncThunk<
+  D extends { status: 'ok' | 'fail' | 'error'; errorCode: string | null; error: string | null },
+>({
   key,
   getter,
   payloadCreator,
@@ -118,8 +123,10 @@ async function createProBackendFetchAsyncThunk<D extends { errors: Array<string>
       throw new Error('Data fetch failed');
     }
 
-    // App-level failures come back as a non-empty `errors` on the parsed struct (not an HTTP status).
-    const error = response.errors.length ? response.errors.join('; ') : null;
+    // App-level failure = status !== 'ok'. The diagnostic `error` string is for logging; user-facing
+    // text should come from mapping `errorCode` to a localized string (TODO: the error_code i18n work).
+    const error =
+      response.status === 'ok' ? null : (response.error ?? response.errorCode ?? 'request failed');
 
     if (error && debug) {
       window?.log?.error(error);
@@ -168,7 +175,7 @@ async function handleNewProProof(rotatingPrivKeyHex: string): Promise<ProProof |
     masterPrivKeyHex,
     rotatingPrivKeyHex,
   });
-  if (response && response.errors.length === 0) {
+  if (response && response.status === 'ok') {
     // libsession returns a ready-made ProProof; relay it verbatim rather than re-assembling fields.
     const proProof = response.proof;
     const { proConfig, proAccessExpiry, proProfileBitset } = getCachedUserConfig();

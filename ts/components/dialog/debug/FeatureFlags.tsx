@@ -924,7 +924,7 @@ export const ProDebugSection = ({
               if (getFeatureFlag('debugServerRequests')) {
                 window?.log?.debug('getProProof response: ', response);
               }
-              if (response && response.errors.length === 0) {
+              if (response && response.status === 'ok') {
                 // libsession returns a ready-made ProProof; relay it verbatim.
                 await UserConfigWrapperActions.setProConfig({
                   proProof: response.proof,
