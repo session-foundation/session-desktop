@@ -1,6 +1,7 @@
 import { SERVER_HOSTS } from '..';
 import { assertUnreachable } from '../../../types/sqlSharedTypes';
 import { SessionServerConfigType } from '../session_backend_server';
+import LIBSESSION_CONSTANTS from '../../utils/libsession/libsession_constants';
 
 // not exported/included in the SERVER_HOSTS as this is for testing only
 const PRO_BACKEND_DEV = 'pro.session.codes';
@@ -12,10 +13,10 @@ const PRO_BACKENDS: Record<
 > = {
   DEFAULT: {
     name: 'ProBackend',
-    url: `http://${SERVER_HOSTS.PRO_SERVER}`,
-    // FIXME: to be replaced by the real pubkey
-    edPkHex: 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
-    xPkHex: 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
+    // URL + pubkeys come from libsession — the single source of truth; no hand-carried copies here.
+    url: LIBSESSION_CONSTANTS.LIBSESSION_PRO_BACKEND_URL as SessionServerConfigType['url'],
+    edPkHex: LIBSESSION_CONSTANTS.LIBSESSION_PRO_BACKEND_PUBKEY_HEX,
+    xPkHex: LIBSESSION_CONSTANTS.LIBSESSION_PRO_BACKEND_PUBKEY_X25519_HEX,
   },
   DEV: {
     name: 'ProBackendDev',

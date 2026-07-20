@@ -30,12 +30,13 @@ export default class ProBackendAPI {
    * (backend) errors surface via the parsed struct's `errors` (and non-success `status`).
    */
   private static async sendAndParse<T>(
-    request: { endpoint: string; body: string },
+    request: { endpoint: string; contentType: string; body: string },
     parse: (body: Uint8Array) => Promise<T>
   ): Promise<T | null> {
     const { status_code, bodyBinary } = await ProBackendAPI.getServer().makeRequestReturningRawBody({
       path: `/${request.endpoint}`,
       method: 'POST',
+      contentType: request.contentType,
       bodyGetter: async () => request.body,
     });
 

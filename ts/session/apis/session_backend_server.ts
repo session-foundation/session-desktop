@@ -267,18 +267,23 @@ export default class SessionBackendServerApi {
    * change never touches this client.
    */
   public async makeRequestReturningRawBody(
-    params: SessionBackendServerMakeRequestParams
+    params: SessionBackendServerMakeRequestParams & { contentType?: string }
   ): Promise<{ status_code: number; bodyBinary: Uint8Array | null }> {
     const body = typeof params.bodyGetter === 'function' ? await params.bodyGetter() : null;
 
-    const headers = params.blindSignRequest
+    const blindHeaders = params.blindSignRequest
       ? await this.getBlindSignedHeaders({ method: params.method, path: params.path, body })
       : {};
 
-    if (headers === null) {
+    if (blindHeaders === null) {
       this.logError('failed to blind sign request parameters', params.path);
       return { status_code: 500, bodyBinary: null };
     }
+
+    // Content-Type is supplied by libsession (the wire format is its contract with the backend); relay it.
+    const headers = params.contentType
+      ? { ...blindHeaders, 'Content-Type': params.contentType }
+      : blindHeaders;
 
     const url = new URL(params.path, this.server.url);
 
