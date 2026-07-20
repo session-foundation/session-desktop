@@ -2,7 +2,7 @@ import { isBoolean, isNil } from 'lodash';
 import { Dispatch, useCallback, useEffect, useMemo, useState } from 'react';
 import { clipboard } from 'electron';
 import useAsync from 'react-use/lib/useAsync';
-import { ProConfig, type ProProof } from 'libsession_util_nodejs';
+import { ProConfig } from 'libsession_util_nodejs';
 import { getAppDispatch } from '../../../state/dispatch';
 import {
   getDataFeatureFlag,
@@ -924,15 +924,12 @@ export const ProDebugSection = ({
               if (getFeatureFlag('debugServerRequests')) {
                 window?.log?.debug('getProProof response: ', response);
               }
-              if (response?.status_code === 200) {
-                const proProof: ProProof = {
-                  expiryMs: response.result.expiry_unix_ts_ms,
-                  genIndexHashB64: response.result.gen_index_hash_b64,
-                  rotatingPubkeyHex: response.result.rotating_pkey_hex,
-                  version: response.result.version,
-                  signatureHex: response.result.sig_hex,
-                };
-                await UserConfigWrapperActions.setProConfig({ proProof, rotatingSeedHex });
+              if (response && response.errors.length === 0) {
+                // libsession returns a ready-made ProProof; relay it verbatim.
+                await UserConfigWrapperActions.setProConfig({
+                  proProof: response.proof,
+                  rotatingSeedHex,
+                });
               }
             }}
           >

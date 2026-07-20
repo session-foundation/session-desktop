@@ -13,9 +13,7 @@ import { SettingsKey } from '../../data/settings-key';
 import { ProDetailsResultType } from '../../session/apis/pro_backend_api/schemas';
 import { Storage } from '../../util/storage';
 import { NetworkTime } from '../../util/NetworkTime';
-import { assertUnreachable } from '../../types/sqlSharedTypes';
 import { DURATION } from '../../session/constants';
-import { SessionBackendBaseResponseType } from '../../session/apis/session_backend_server';
 import {
   getCachedUserConfig,
   UserConfigWrapperActions,
@@ -61,15 +59,13 @@ export const initialProBackendDataState: ProBackendDataState = {
   details: defaultRequestState,
 };
 
-type ApiResponse<T> = SessionBackendBaseResponseType & {
-  result: T;
-};
-
 type PayloadCreatorType = Parameters<Parameters<typeof createAsyncThunk>['1']>['1'];
 
-type CreateProBackendFetchAsyncThunk<D> = {
+// The getter returns a libsession-parsed response struct (or null on transport failure). Every parsed
+// struct carries `errors` (empty on success) — a non-empty list means the backend reported a problem.
+type CreateProBackendFetchAsyncThunk<D extends { errors: Array<string> }> = {
   key: keyof ProBackendDataState;
-  getter: () => Promise<ApiResponse<D> | null>;
+  getter: () => Promise<D | null>;
   payloadCreator: PayloadCreatorType;
   contextHandler?: (state: RequestState<D>) => Promise<void>;
   // Runs at the end of the function, as long as the function doesn't early return because it was already fetching.
@@ -78,7 +74,7 @@ type CreateProBackendFetchAsyncThunk<D> = {
 
 export type WithCallerContext = { callerContext?: 'recover' };
 
-async function createProBackendFetchAsyncThunk<D>({
+async function createProBackendFetchAsyncThunk<D extends { errors: Array<string> }>({
   key,
   getter,
   payloadCreator,
@@ -117,37 +113,25 @@ async function createProBackendFetchAsyncThunk<D>({
 
     const response = await getter();
     if (!response) {
+      // null == transport failure (or a non-200 the glue swallowed); the selector falls back to the
+      // last details persisted in storage, so surfacing this as a hard error is fine.
       throw new Error('Data fetch failed');
     }
 
-    let error = response.error ?? null;
-
-    if (response.status_code !== 200) {
-      if (!error) {
-        error = `Received ${response.status_code} status code with no error message`;
-      }
-      result = {
-        data: result.data,
-        error,
-        isError: true,
-        isFetching: false,
-        isLoading: false,
-        t: response.t,
-        isEnabled: true,
-      };
-    }
+    // App-level failures come back as a non-empty `errors` on the parsed struct (not an HTTP status).
+    const error = response.errors.length ? response.errors.join('; ') : null;
 
     if (error && debug) {
       window?.log?.error(error);
     }
 
     result = {
-      data: error ? result.data : response.result,
+      data: error ? result.data : response,
       error,
       isError: !!error,
       isFetching: false,
       isLoading: false,
-      t: response.t,
+      t: NetworkTime.now(),
       isEnabled: true,
     };
   } catch (e) {
@@ -184,14 +168,9 @@ async function handleNewProProof(rotatingPrivKeyHex: string): Promise<ProProof |
     masterPrivKeyHex,
     rotatingPrivKeyHex,
   });
-  if (response?.status_code === 200) {
-    const proProof = {
-      expiryMs: response.result.expiry_unix_ts_ms,
-      genIndexHashB64: response.result.gen_index_hash_b64,
-      rotatingPubkeyHex: response.result.rotating_pkey_hex,
-      version: response.result.version,
-      signatureHex: response.result.sig_hex,
-    } satisfies ProProof;
+  if (response && response.errors.length === 0) {
+    // libsession returns a ready-made ProProof; relay it verbatim rather than re-assembling fields.
+    const proProof = response.proof;
     const { proConfig, proAccessExpiry, proProfileBitset } = getCachedUserConfig();
     const rotatingSeedHex = await UserUtils.getProRotatingSeedHex();
     // If we have a new proof but it seems that we never had one before, set the pro badge feature as enabled
@@ -358,18 +337,18 @@ const fetchGetProDetailsFromProBackend = createAsyncThunk(
       payloadCreator,
       callback: async state => {
         if (state.data) {
-          if (state.data.error_report === 1) {
+          if (state.data.errorReport === 1) {
             state.isError = true;
             state.error = 'Backend unable to process current state, please try again later.';
             // NOTE: we want to continue processing the state, as even if there was an error we need to try to handle the pro proofs.
           }
-          switch (state.data.status) {
+          switch (state.data.userStatus) {
             case ProStatus.Active:
               window.log.debug(`[handleBackendProStatusChange] ProStatus.Active`);
               await handleProProof(
-                state.data.expiry_unix_ts_ms,
-                state.data.auto_renewing,
-                state.data.status
+                state.data.expiryMs,
+                state.data.autoRenewing,
+                state.data.userStatus
               );
               break;
 
@@ -385,13 +364,18 @@ const fetchGetProDetailsFromProBackend = createAsyncThunk(
               break;
 
             default:
-              assertUnreachable(state.data.status, 'handleBackendProStatusChange');
+              // Status is now an opaque slug — an unknown/future value must not hard-fail; treat it
+              // like "no active pro" and clear any stale proof.
+              window.log.warn(
+                `[handleBackendProStatusChange] unknown pro userStatus: ${state.data.userStatus}`
+              );
+              await handleClearProProof();
               break;
           }
           await handleExpiryCTAs(
-            state.data.expiry_unix_ts_ms,
-            state.data.auto_renewing,
-            state.data.status
+            state.data.expiryMs,
+            state.data.autoRenewing,
+            state.data.userStatus
           );
           // on the first fetch of our pro details after a restart, we want to show the CTAs if needed
           if (window.inboxStore?.dispatch && !firstFetchProDetailsHappened) {
@@ -409,7 +393,7 @@ const fetchGetProDetailsFromProBackend = createAsyncThunk(
       },
       contextHandler: async state => {
         if (context === 'recover') {
-          if (state.data?.status === ProStatus.Active) {
+          if (state.data?.userStatus === ProStatus.Active) {
             payloadCreator.dispatch(
               updateLocalizedPopupDialog({
                 title: { token: 'proAccessRestored' },

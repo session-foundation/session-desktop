@@ -93,34 +93,31 @@ class UpdateProRevocationListJob extends PersistedJob<UpdateProRevocationListPer
         );
       }
 
-      if (response?.status_code !== 200) {
+      if (!response || response.errors.length > 0) {
         window.log.debug(`UpdateProRevocationListJob run() failed: ${JSON.stringify(response)}`);
         window.log.warn(`UpdateProRevocationListJob run() failed. Will retry soon if possible`);
         return RunJobResult.RetryJobIfPossible;
       }
 
-      const retryInSecondsFromBackend = response.result.retry_in_s;
-      const retryInSeconds = Math.max(retryInSecondsFromBackend, 0);
+      // libsession already resolved the backend's retry-after into an absolute unix instant (ms),
+      // clamped to now; we just persist it as the next run time — no arithmetic here.
+      const { retryAtMs } = response;
 
-      const retryAtMs = Date.now() + toNumber(retryInSeconds) * DURATION.SECONDS;
-
-      window.log.debug(
-        `UpdateProRevocationListJob: got 'retry_in_s' from server: ${retryInSeconds}, i.e we will retryAtMs: ${retryAtMs}`
-      );
+      window.log.debug(`UpdateProRevocationListJob: next revocation refresh at retryAtMs: ${retryAtMs}`);
       await updateNextRunAtMs(retryAtMs);
 
-      if (response.result.ticket <= ticketFromDb) {
+      if (response.ticket <= ticketFromDb) {
         window.log.debug(
           `UpdateProRevocationListJob: no new revocations from our existing ticket #${ticketFromDb}`
         );
 
         return RunJobResult.Success;
       }
-      const newTicket = response.result.ticket;
-      const newItems = response.result.items;
+      const newTicket = response.ticket;
+      const newItems = response.items;
 
       window.log.debug(
-        `UpdateProRevocationListJob: new revocations from ticket #${ticketFromDb}: to #${newTicket}. items: ${stringify(response.result.items)}`
+        `UpdateProRevocationListJob: new revocations from ticket #${ticketFromDb}: to #${newTicket}. items: ${stringify(response.items)}`
       );
 
       // Note: we only want to update the lastRunAt once we have successfully fetched the new revocations
@@ -128,7 +125,7 @@ class UpdateProRevocationListJob extends PersistedJob<UpdateProRevocationListPer
       await ProRevocationCache.setListItems(newItems);
 
       window.log.info(
-        `UpdateProRevocationListJob: new revocations from ticket #${ticketFromDb}: to #${newTicket}. itemsCount: ${response.result.items.length}`
+        `UpdateProRevocationListJob: new revocations from ticket #${ticketFromDb}: to #${newTicket}. itemsCount: ${response.items.length}`
       );
 
       const ourProConfig = getCachedUserConfig().proConfig;

@@ -7,19 +7,16 @@ import type { Storage } from '../../../../util/storage';
 import { DURATION } from '../../../../session/constants';
 
 const validItemEffective = {
-  effective_unix_ts_ms: Date.now() - 2 * DURATION.DAYS, // this one is effective already
-  expiry_unix_ts_ms: Date.now() + 2 * DURATION.DAYS, // and not expired
-  gen_index_hash_b64: 'QJGEFg4+FQkDzqeoWW5ghObbGB0IR/TTs4ve1MHzL9I=',
+  effectiveMs: Date.now() - 2 * DURATION.DAYS, // this one is effective already
+  genIndexHashB64: 'QJGEFg4+FQkDzqeoWW5ghObbGB0IR/TTs4ve1MHzL9I=',
 };
 const validItemDelayed = {
-  effective_unix_ts_ms: Date.now() + 2 * DURATION.DAYS, // this one is delayed (not effective yet)
-  expiry_unix_ts_ms: Date.now() + 6 * DURATION.DAYS, // and not expired
-  gen_index_hash_b64: 'b2ArHxhrhbSrV6/aVqOF5RYG55l74doHcB935pZyFxo=',
+  effectiveMs: Date.now() + 2 * DURATION.DAYS, // this one is delayed (not effective yet)
+  genIndexHashB64: 'b2ArHxhrhbSrV6/aVqOF5RYG55l74doHcB935pZyFxo=',
 };
 const validItemExpired = {
-  effective_unix_ts_ms: Date.now() - 6 * DURATION.DAYS, // this one is effective
-  expiry_unix_ts_ms: Date.now() - 2 * DURATION.DAYS, // and expired
-  gen_index_hash_b64: 'dfL3b6/G//0jNGOZDwOGVY4CWUOjoNkoR5tDTGeJtI4=',
+  effectiveMs: Date.now() - 6 * DURATION.DAYS, // this one is effective
+  genIndexHashB64: 'dfL3b6/G//0jNGOZDwOGVY4CWUOjoNkoR5tDTGeJtI4=',
 };
 
 // loadFromDbIfNeeded makes a few setup calls to get/put/remove, so we need to reset them
@@ -125,7 +122,7 @@ describe('ProRevocationCache', () => {
 
       await ProRevocationCache.setListItems([validItemEffective]);
       expect(
-        ProRevocationCache.isB64HashEffectivelyRevoked(validItemEffective.gen_index_hash_b64)
+        ProRevocationCache.isB64HashEffectivelyRevoked(validItemEffective.genIndexHashB64)
       ).to.eq(true);
     });
     it('non-present hash returns false', async () => {
@@ -134,7 +131,7 @@ describe('ProRevocationCache', () => {
 
       await ProRevocationCache.setListItems([validItemEffective]);
       expect(
-        ProRevocationCache.isB64HashEffectivelyRevoked(validItemDelayed.gen_index_hash_b64)
+        ProRevocationCache.isB64HashEffectivelyRevoked(validItemDelayed.genIndexHashB64)
       ).to.eq(false);
     });
     it('present but non effective hash returns false', async () => {
@@ -143,7 +140,7 @@ describe('ProRevocationCache', () => {
 
       await ProRevocationCache.setListItems([validItemDelayed]);
       expect(
-        ProRevocationCache.isB64HashEffectivelyRevoked(validItemDelayed.gen_index_hash_b64)
+        ProRevocationCache.isB64HashEffectivelyRevoked(validItemDelayed.genIndexHashB64)
       ).to.eq(false);
     });
 
@@ -153,7 +150,7 @@ describe('ProRevocationCache', () => {
 
       await ProRevocationCache.setListItems([validItemExpired]);
       expect(
-        ProRevocationCache.isB64HashEffectivelyRevoked(validItemExpired.gen_index_hash_b64)
+        ProRevocationCache.isB64HashEffectivelyRevoked(validItemExpired.genIndexHashB64)
       ).to.eq(true);
     });
   });
