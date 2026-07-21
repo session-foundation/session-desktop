@@ -25,7 +25,7 @@ import {
   ProPaymentProvider,
   ProStatus,
 } from '../../session/apis/pro_backend_api/types';
-import { tr } from '../../localization/localeTools';
+import { isSimpleTokenNoArgs, tr } from '../../localization/localeTools';
 import { getAppDispatch } from '../dispatch';
 import { sleepFor } from '../../session/utils/Promise';
 
@@ -66,28 +66,35 @@ export function proAccessVariantToString(variant: ProAccessVariant): string {
 /**
  * Per-provider display strings. Client-owned i18n now (Delta #10) — libsession no longer supplies them.
  * URLs are NOT here: they're only needed for link clicks and are fetched on demand via
- * ProWrapperActions.providerUrls(slug). (These proProvider* tokens are a temporary stopgap injected
- * into the generated localization; they're wiped by the next Crowdin sync, so upstream them first.)
+ * ProWrapperActions.providerUrls(slug). Resolved dynamically from `pro_provider_<slug>_<suffix>` tokens
+ * (a temporary stopgap injected into the generated localization; wiped by the next Crowdin sync, so
+ * upstream them first), so a new provider needs only translations, not a code change.
  */
 export type ProviderDisplayConstants = {
   store: string;
   platform: string;
   device: string;
   platform_account: string;
-  store_other: string;
 };
+
+/**
+ * Resolve one provider display field for [slug]: the localized `pro_provider_<slug>_<suffix>` if that token
+ * exists, else the raw slug (an unknown/untranslated provider degrades to its slug — the same
+ * "gate on the translation existing" rule used by the {pro_stores} list).
+ */
+function providerDisplay(slug: string, suffix: 'platform' | 'store' | 'device' | 'account'): string {
+  const token = `pro_provider_${slug}_${suffix}`;
+  return isSimpleTokenNoArgs(token) ? tr(token) : slug;
+}
 
 export function getProProviderConstantsWithFallbacks(
   provider: ProPaymentProvider
 ): ProviderDisplayConstants {
-  const isApple = provider === ProPaymentProvider.AppStore;
   return {
-    store: isApple ? tr('proProviderAppleStore') : tr('proProviderGoogleStore'),
-    platform: isApple ? tr('proProviderApplePlatform') : tr('proProviderGooglePlatform'),
-    device: isApple ? tr('proProviderAppleDevice') : tr('proProviderGoogleDevice'),
-    platform_account: isApple ? tr('proProviderAppleAccount') : tr('proProviderGoogleAccount'),
-    // "the other store": for Apple show Google's, and vice-versa.
-    store_other: isApple ? tr('proProviderGoogleStore') : tr('proProviderAppleStore'),
+    store: providerDisplay(provider, 'store'),
+    platform: providerDisplay(provider, 'platform'),
+    device: providerDisplay(provider, 'device'),
+    platform_account: providerDisplay(provider, 'account'),
   };
 }
 

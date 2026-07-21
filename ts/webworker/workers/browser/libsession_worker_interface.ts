@@ -809,6 +809,10 @@ export const ProWrapperActions: ProActionsCalls = {
     callLibSessionWorker(['Pro', 'providerUrls', first]) as Promise<
       ReturnType<ProActionsCalls['providerUrls']>
     >,
+  visiblePlatforms: async () =>
+    callLibSessionWorker(['Pro', 'visiblePlatforms']) as Promise<
+      ReturnType<ProActionsCalls['visiblePlatforms']>
+    >,
 };
 
 export const allKnownEncryptionDomains: Array<EncryptionDomain> = ['SessionGroupKickedMessage'];

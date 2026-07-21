@@ -1,7 +1,7 @@
 import styled from 'styled-components';
-import { type ReactNode } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 import { getAppDispatch } from '../../../../../state/dispatch';
-import { tr } from '../../../../../localization/localeTools';
+import { isSimpleTokenNoArgs, tr } from '../../../../../localization/localeTools';
 import { Localizer } from '../../../../basic/Localizer';
 import { ModalBasicHeader } from '../../../../SessionWrapperModal';
 import { ModalBackButton } from '../../../shared/ModalBackButton';
@@ -61,6 +61,46 @@ function useStoreOrPlatformFromProvider(data: ProcessedProDetails['data']) {
   return data.provider === ProPaymentProvider.AppStore
     ? data.providerConstants.platform // we want `Apple website` for apple
     : data.providerConstants.store; // but `Google Play Store website` for google...
+}
+
+// The purchasable-platform slug set is a static libsession constant, so fetch it once and cache it.
+let cachedVisiblePlatformSlugs: Array<string> | null = null;
+
+/**
+ * Build the `{pro_stores}` bulleted list from the purchasable provider slugs, keeping only those with a
+ * `pro_provider_<slug>_store` translation (a new/untranslated provider is skipped gracefully). Desktop
+ * keeps libsession's order as-is (it has no "own" platform to hoist).
+ */
+function buildProStoresList(slugs: Array<string>): string {
+  return slugs
+    .map(slug => {
+      const token = `pro_provider_${slug}_store`;
+      return isSimpleTokenNoArgs(token) ? tr(token) : undefined;
+    })
+    .filter((store): store is string => !!store)
+    .map(store => `<br/>• ${store}`)
+    .join('');
+}
+
+/** The localized `{pro_stores}` list for the "purchase via …" messages (fetched once; empty until loaded). */
+function useProStoresList(): string {
+  const [slugs, setSlugs] = useState<Array<string>>(cachedVisiblePlatformSlugs ?? []);
+  useEffect(() => {
+    if (cachedVisiblePlatformSlugs) {
+      return undefined;
+    }
+    let cancelled = false;
+    void ProWrapperActions.visiblePlatforms().then(result => {
+      cachedVisiblePlatformSlugs = result;
+      if (!cancelled) {
+        setSlugs(result);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  return buildProStoresList(slugs);
 }
 
 function ProStatusTextUpdate() {
@@ -188,8 +228,8 @@ function ProInfoBlockDevice({ textElement }: { textElement: ReactNode }) {
 }
 
 function ProInfoBlockDeviceLinked() {
-  const { data } = useProBackendProDetailsLocal();
   const hasNeverHadPro = useCurrentNeverHadProLocal();
+  const proStores = useProStoresList();
 
   return (
     <ProInfoBlockItem
@@ -199,8 +239,7 @@ function ProInfoBlockDeviceLinked() {
           <strong>{tr('onLinkedDevice')}</strong>
           <Localizer
             token={hasNeverHadPro ? 'proUpgradeDesktopLinked' : 'proRenewDesktopLinked'}
-            platform_store={data.providerConstants.store} // this one is always store
-            platform_store_other={data.providerConstants.store_other}
+            pro_stores={proStores}
           />
         </ProInfoBlockText>
       }
@@ -275,15 +314,14 @@ function ProInfoBlockLayout({
 
 function ProInfoBlockUpgrade() {
   const dispatch = getAppDispatch();
-  const { data } = useProBackendProDetailsLocal();
+  const proStores = useProStoresList();
   return (
     <ProInfoBlockLayout
       titleElement={tr('proUpgradingTo')}
       descriptionElement={
         <Localizer
           token="proAccessUpgradeDesktop"
-          platform_store={data.providerConstants.store} // this one is always store
-          platform_store_other={data.providerConstants.store_other}
+          pro_stores={proStores}
           icon={LUCIDE_ICONS_UNICODE.EXTERNAL_LINK_ICON}
         />
       }
@@ -346,6 +384,7 @@ function ProInfoBlockRenew() {
   const dispatch = getAppDispatch();
   const { data } = useProBackendProDetailsLocal();
   const storeOrPlatform = useStoreOrPlatformFromProvider(data);
+  const proStores = useProStoresList();
 
   return (
     <ProInfoBlockLayout
@@ -353,8 +392,7 @@ function ProInfoBlockRenew() {
       descriptionElement={
         <Localizer
           token="proAccessRenewDesktop"
-          platform_store={data.providerConstants.store}
-          platform_store_other={data.providerConstants.store_other}
+          pro_stores={proStores}
           icon={LUCIDE_ICONS_UNICODE.EXTERNAL_LINK_ICON}
         />
       }

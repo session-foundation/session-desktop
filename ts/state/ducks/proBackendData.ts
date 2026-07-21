@@ -11,6 +11,7 @@ import { showLinkVisitWarningDialog } from '../../components/dialog/OpenUrlModal
 import { ProStatus } from '../../session/apis/pro_backend_api/types';
 import { SettingsKey } from '../../data/settings-key';
 import { ProDetailsResultType } from '../../session/apis/pro_backend_api/schemas';
+import { proErrorMessage } from '../../session/apis/pro_backend_api/proErrorMessage';
 import { Storage } from '../../util/storage';
 import { NetworkTime } from '../../util/NetworkTime';
 import { DURATION } from '../../session/constants';
@@ -123,13 +124,16 @@ async function createProBackendFetchAsyncThunk<
       throw new Error('Data fetch failed');
     }
 
-    // App-level failure = status !== 'ok'. The diagnostic `error` string is for logging; user-facing
-    // text should come from mapping `errorCode` to a localized string (TODO: the error_code i18n work).
-    const error =
+    // App-level failure = status !== 'ok'. Keep the raw backend diagnostic for logging, but surface a
+    // user-facing message mapped from the `errorCode` slug to a localized `pro_error_<slug>` string
+    // (falling back to the diagnostic, then a generic message).
+    const diagnostic =
       response.status === 'ok' ? null : (response.error ?? response.errorCode ?? 'request failed');
+    const error =
+      response.status === 'ok' ? null : proErrorMessage(response.errorCode, response.error);
 
-    if (error && debug) {
-      window?.log?.error(error);
+    if (diagnostic && debug) {
+      window?.log?.error(diagnostic);
     }
 
     result = {
