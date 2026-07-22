@@ -2227,7 +2227,7 @@ async function updateToSessionSchemaVersion50(currentVersion: number, db: Databa
   db.transaction(() => {
     db.exec(`
           ALTER TABLE ${CONVERSATIONS_TABLE} ADD COLUMN bitsetProFeatures TEXT;
-          ALTER TABLE ${CONVERSATIONS_TABLE} ADD COLUMN proGenIndexHashB64 TEXT;
+          ALTER TABLE ${CONVERSATIONS_TABLE} ADD COLUMN proRevocationTagB64 TEXT;
           ALTER TABLE ${CONVERSATIONS_TABLE} ADD COLUMN proExpiryTsMs INTEGER;
          `);
 

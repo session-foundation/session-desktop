@@ -795,7 +795,7 @@ export class ConversationModel extends Model<ConversationAttributes> {
       if (!proProof) {
         return false;
       }
-      if (ProRevocationCache.isB64HashEffectivelyRevoked(proProof.genIndexHashB64)) {
+      if (ProRevocationCache.isB64HashEffectivelyRevoked(proProof.revocationTagB64)) {
         // `false` because the proof is not valid (revoked)
         return false;
       }
@@ -804,12 +804,12 @@ export class ConversationModel extends Model<ConversationAttributes> {
     }
 
     const proDetails = this.dbContactProDetails();
-    if (!proDetails || !proDetails.proExpiryTsMs || !proDetails.proGenIndexHashB64) {
+    if (!proDetails || !proDetails.proExpiryTsMs || !proDetails.proRevocationTagB64) {
       return false;
     }
 
-    // make sure that genIndexHash was not revoked first
-    if (ProRevocationCache.isB64HashEffectivelyRevoked(proDetails.proGenIndexHashB64)) {
+    // make sure that revocation tag was not revoked first
+    if (ProRevocationCache.isB64HashEffectivelyRevoked(proDetails.proRevocationTagB64)) {
       // `false` because the proof is not valid (revoked)
       return false;
     }
@@ -1731,11 +1731,11 @@ export class ConversationModel extends Model<ConversationAttributes> {
     ) {
       return null;
     }
-    const proGenIndexHashB64 = this.get('proGenIndexHashB64');
+    const proRevocationTagB64 = this.get('proRevocationTagB64');
     const proExpiryTsMs = this.get('proExpiryTsMs');
     const bitsetProFeatures = this.get('bitsetProFeatures');
     return {
-      proGenIndexHashB64,
+      proRevocationTagB64,
       proExpiryTsMs,
       bitsetProFeatures,
     };

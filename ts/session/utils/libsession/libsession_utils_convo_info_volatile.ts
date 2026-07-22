@@ -104,7 +104,7 @@ async function insertConvoFromDBIntoWrapperAndRefresh(convoId: string): Promise<
         const toSet = {
           forcedUnread: isForcedUnread,
           lastReadTsMs: lastReadMessageTimestamp,
-          proGenIndexHashB64: proDetails?.proGenIndexHashB64 || null,
+          proRevocationTagB64: proDetails?.proRevocationTagB64 || null,
           proExpiryTsMs: proDetails?.proExpiryTsMs || null,
         };
         await ConvoInfoVolatileWrapperActions.set1o1(convoId, toSet);

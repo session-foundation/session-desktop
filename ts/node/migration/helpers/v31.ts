@@ -156,7 +156,7 @@ function insertContactIntoContactWrapper(
     volatileConfigWrapper.set1o1(contact.id, {
       lastReadTsMs: lastRead,
       forcedUnread: false,
-      proGenIndexHashB64: null,
+      proRevocationTagB64: null,
       proExpiryTsMs: null,
     });
   } catch (e) {

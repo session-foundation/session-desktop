@@ -80,7 +80,7 @@ const clearOurAvatar = createAsyncThunk('user/clearOurAvatar', async () => {
     displayName: null,
     profileUpdatedAtSeconds: NetworkTime.nowSeconds(),
     // NTS case, we don't care about those
-    proDetails: { bitsetProFeatures: null, proExpiryTsMs: null, proGenIndexHashB64: null },
+    proDetails: { bitsetProFeatures: null, proExpiryTsMs: null, proRevocationTagB64: null },
   });
 
   await profile.applyChangesIfNeeded();

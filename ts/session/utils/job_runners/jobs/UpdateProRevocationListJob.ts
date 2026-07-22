@@ -132,33 +132,33 @@ class UpdateProRevocationListJob extends PersistedJob<UpdateProRevocationListPer
 
       if (
         ourProConfig &&
-        ourProConfig.proProof.genIndexHashB64 &&
+        ourProConfig.proProof.revocationTagB64 &&
         // `ProRevocationCache.setListItems` above updated the cache, so we can use it here
-        ProRevocationCache.isB64HashEffectivelyRevoked(ourProConfig.proProof.genIndexHashB64)
+        ProRevocationCache.isB64HashEffectivelyRevoked(ourProConfig.proProof.revocationTagB64)
       ) {
         // if we've been revoked, refresh our pro proof.
         // this will fetch the new one if one is provided or just remove it from our config.
         window.log.info(
-          `UpdateProRevocationListJob: our current genIndexHash is revoked. Refreshing our pro proof.`
+          `UpdateProRevocationListJob: our current revocation tag is revoked. Refreshing our pro proof.`
         );
         window.inboxStore?.dispatch(
           proBackendDataActions.refreshGetProDetailsFromProBackend({}) as any
         );
       }
-      // find all the conversations that have a revoked genIndexHAsh and trigger a UI refresh on them
+      // find all the conversations that have a revoked revocation tag and trigger a UI refresh on them
       const convos = ConvoHub.use().getConversations();
       convos.forEach(m => {
         const proDetails = m.dbContactProDetails();
-        if (!proDetails?.proGenIndexHashB64) {
+        if (!proDetails?.proRevocationTagB64) {
           return;
         }
         const revoked = ProRevocationCache.isB64HashEffectivelyRevoked(
-          proDetails.proGenIndexHashB64
+          proDetails.proRevocationTagB64
         );
 
         if (revoked) {
           window.log.debug(
-            `UpdateProRevocationListJob: found an effectively revoked genIndexHash for convo ${m.idForLogging()}. Triggering UI refresh.`
+            `UpdateProRevocationListJob: found an effectively revoked revocation tag for convo ${m.idForLogging()}. Triggering UI refresh.`
           );
           m.triggerUIRefresh();
         }

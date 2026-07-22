@@ -21,7 +21,7 @@ export type ProPaymentItemType = ProPaymentItem;
 // read (shape matches the glue's ProRevocationItem). An old/unknown shape fails safeParse and the
 // caller resets the (re-fetchable) cache — see pro_revocation_list.ts.
 export const ProRevocationItemDBSchema = z.object({
-  genIndexHashB64: z.string(),
+  revocationTagB64: z.string(),
   effectiveMs: z.number(),
 });
 export const ProRevocationItemsDBSchema = z.array(ProRevocationItemDBSchema);

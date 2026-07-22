@@ -740,7 +740,7 @@ function ProConfigForm({
   );
   const [sigInput, setSigInput] = useState<string>(proConfig?.proProof.signatureHex ?? '');
   const [genHashInput, setGenHashInput] = useState<string>(
-    proConfig?.proProof.genIndexHashB64 ?? ''
+    proConfig?.proProof.revocationTagB64 ?? ''
   );
   const [versionInput, setVersionInput] = useState<string>(
     proConfig?.proProof.version.toString() ?? ''
