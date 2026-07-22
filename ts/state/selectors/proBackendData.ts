@@ -2,7 +2,6 @@ import { useSelector } from 'react-redux';
 import type { StateType } from '../reducer';
 import {
   proBackendDataActions,
-  PRO_DETAILS_CACHE_VERSION,
   RequestActionArgs,
   WithCallerContext,
   type ProBackendDataState,
@@ -35,25 +34,27 @@ const getProBackendData = (state: StateType): ProBackendDataState => {
 };
 
 function getProDetailsFromStorage(): ProDetailsResultType | null {
-  const stored = Storage.get(SettingsKey.proDetails) as
-    | { version?: number; data?: ProDetailsResultType }
-    | null
-    | undefined;
-  if (!stored) {
+  const response = Storage.get(SettingsKey.proDetails);
+  if (!response) {
     return null;
   }
-  // We persist the libsession-parsed struct verbatim (see putProDetailsInStorage), wrapped with a
-  // version. There's no hand-rolled schema to validate against, so we only drop a cache whose version
-  // doesn't match the current shape (an older client's stale shape — e.g. missing a newly-required
-  // field — must not be mis-read against the current type) or that is obviously malformed. Anything
-  // dropped is re-fetched on the next poll. (The pre-versioning format has no `version` and is dropped
-  // here too.)
-  const data = stored.version === PRO_DETAILS_CACHE_VERSION ? stored.data : undefined;
-  if (data && typeof data === 'object' && Array.isArray(data.items)) {
-    return data;
+  // We persist, verbatim, the JS object the libsession-util-nodejs glue produced from the backend
+  // response (see putProDetailsInStorage) — not a raw libsession struct — and cast it back to the
+  // CURRENT ProDetailsResultType (an alias of the glue's GetProDetailsResponse). session-desktop and
+  // libsession-util-nodejs ship in lockstep, so within a single build the producer, the type and this
+  // consumer can't drift — but a cache written by an OLDER build can.
+  //
+  // ⚠️ TRANSITION REQUIRED IF YOU ADD A REQUIRED FIELD to this shape: an upgraded client would read a
+  // stale-shape cache here and cast it to the new type with that field undefined (the Array.isArray
+  // check below validates only the top level, not individual fields). Handle it as part of that change —
+  // e.g. drop this cache behind a stored shape/version marker, or keep the new field optional at this
+  // boundary. It's a transient, re-fetched cache, so drop-and-refetch is the simplest transition. This
+  // is left as a reminder rather than pre-built, since pre-building would just be guessing at the shape.
+  if (typeof response === 'object' && Array.isArray((response as ProDetailsResultType).items)) {
+    return response as ProDetailsResultType;
   }
   void Storage.remove(SettingsKey.proDetails);
-  window?.log?.error('pro details in storage were stale/malformed; removing.');
+  window?.log?.error('pro details in storage were malformed; removing.');
   return null;
 }
 

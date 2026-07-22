@@ -165,15 +165,11 @@ async function createProBackendFetchAsyncThunk<
   return result;
 }
 
-/**
- * Bump whenever the persisted {@link ProDetailsResultType} shape changes (e.g. libsession adds a new
- * required field). getProDetailsFromStorage drops a cache whose version doesn't match, so an older
- * client's stale-shape cache is re-fetched rather than mis-read against the current type.
- */
-export const PRO_DETAILS_CACHE_VERSION = 1;
-
 async function putProDetailsInStorage(details: ProDetailsResultType) {
-  await Storage.put(SettingsKey.proDetails, { version: PRO_DETAILS_CACHE_VERSION, data: details });
+  // We persist, verbatim, the JS object the libsession-util-nodejs glue produced from the backend
+  // response (not a raw libsession struct). See getProDetailsFromStorage for the transition reminder
+  // that applies before adding any REQUIRED field to this shape.
+  await Storage.put(SettingsKey.proDetails, details);
 }
 
 async function handleNewProProof(rotatingPrivKeyHex: string): Promise<ProProof | null> {
