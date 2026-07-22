@@ -31,7 +31,6 @@ type RequestState<D = unknown> = {
   // True if the request has been made
   isEnabled: boolean;
   error: string | null;
-  t: number;
   data: D | null;
 };
 
@@ -41,7 +40,6 @@ const defaultRequestState = {
   isError: false,
   isEnabled: false,
   error: null,
-  t: 0,
   data: null,
 } satisfies RequestState;
 
@@ -142,7 +140,6 @@ async function createProBackendFetchAsyncThunk<
       isError: !!error,
       isFetching: false,
       isLoading: false,
-      t: NetworkTime.now(),
       isEnabled: true,
     };
   } catch (e) {
@@ -153,7 +150,6 @@ async function createProBackendFetchAsyncThunk<
       isError: true,
       isFetching: false,
       isLoading: false,
-      t: 0,
       isEnabled: true,
     };
   }

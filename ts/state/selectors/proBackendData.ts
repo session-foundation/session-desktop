@@ -176,7 +176,6 @@ export type ProcessedProDetails = {
   isFetching: boolean;
   isError: boolean;
   data: ProAccessDetails;
-  t: number;
 };
 
 function processProBackendData({
@@ -184,7 +183,6 @@ function processProBackendData({
   isFetching: _isFetching,
   isError: _isError,
   data,
-  t,
 }: ProBackendDataState['details']): ProcessedProDetails {
   const mockIsLoading = getFeatureFlag('mockProBackendLoading');
   const mockIsError = getFeatureFlag('mockProBackendError');
@@ -263,7 +261,6 @@ function processProBackendData({
     isLoading,
     isFetching,
     isError,
-    t,
   };
 }
 
