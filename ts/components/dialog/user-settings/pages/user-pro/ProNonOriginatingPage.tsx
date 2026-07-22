@@ -47,8 +47,14 @@ async function openProviderUrl(
   dispatch: Parameters<typeof showLinkVisitWarningDialog>[1]
 ) {
   const urls = await ProWrapperActions.providerUrls({ code: provider });
-  if (urls) {
-    showLinkVisitWarningDialog(pick(urls), dispatch);
+  if (!urls) {
+    return;
+  }
+  // A provider may expose only some URLs; libsession returns '' for an absent one. Guard on the
+  // picked URL (not just the container) so we never open the link-visit dialog on an empty string.
+  const url = pick(urls);
+  if (url) {
+    showLinkVisitWarningDialog(url, dispatch);
   }
 }
 const useCurrentNeverHadProLocal = useCurrentNeverHadPro;
