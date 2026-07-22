@@ -56,7 +56,7 @@ export function useCurrentNeverHadPro() {
   const isProAvailable = getIsProAvailableMemo();
   const status = useCurrentUserProStatus();
 
-  return isProAvailable && status === ProStatus.NeverBeenPro;
+  return isProAvailable && status === ProStatus.Never;
 }
 
 /**

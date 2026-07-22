@@ -5,7 +5,7 @@
 // by the client (i18n), keyed on these slugs.
 
 export const ProStatus = {
-  NeverBeenPro: 'never',
+  Never: 'never',
   Active: 'active',
   Expired: 'expired',
 } as const;

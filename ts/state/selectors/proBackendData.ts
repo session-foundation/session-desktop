@@ -169,7 +169,7 @@ type ProAccessDetails = {
 
 // These values are used if pro isnt available or if no data is available from the backend.
 export const defaultProAccessDetailsSourceData = {
-  currentStatus: ProStatus.NeverBeenPro,
+  currentStatus: ProStatus.Never,
   autoRenew: true,
   inGracePeriod: false,
   variant: '',

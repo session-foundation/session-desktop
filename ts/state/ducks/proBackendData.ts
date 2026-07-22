@@ -362,8 +362,8 @@ const fetchGetProDetailsFromProBackend = createAsyncThunk(
               );
               break;
 
-            case ProStatus.NeverBeenPro:
-              window.log.debug(`[handleBackendProStatusChange] ProStatus.NeverBeenPro`);
+            case ProStatus.Never:
+              window.log.debug(`[handleBackendProStatusChange] ProStatus.Never`);
               await handleClearProProof();
               break;
 

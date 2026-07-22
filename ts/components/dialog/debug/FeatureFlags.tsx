@@ -980,7 +980,7 @@ export const ProDebugSection = ({
         label="Current Status"
         flag="mockProCurrentStatus"
         options={[
-          { label: 'Never Had Pro', value: ProStatus.NeverBeenPro },
+          { label: 'Never Had Pro', value: ProStatus.Never },
           { label: 'Active', value: ProStatus.Active },
           { label: 'Expired', value: ProStatus.Expired },
         ]}
@@ -1004,7 +1004,7 @@ export const ProDebugSection = ({
         visibleWithBooleanFlag="proAvailable"
         visibleWithEnumFlag={{
           flag: 'mockProCurrentStatus',
-          isVisible: v => v !== ProStatus.NeverBeenPro,
+          isVisible: v => v !== ProStatus.Never,
         }}
       />
       <FlagEnumDropdownInput
@@ -1020,7 +1020,7 @@ export const ProDebugSection = ({
         visibleWithBooleanFlag="proAvailable"
         visibleWithEnumFlag={{
           flag: 'mockProCurrentStatus',
-          isVisible: v => v !== ProStatus.NeverBeenPro,
+          isVisible: v => v !== ProStatus.Never,
         }}
       />
       <FlagEnumDropdownInput
