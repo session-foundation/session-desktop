@@ -2,6 +2,7 @@ import { useSelector } from 'react-redux';
 import type { StateType } from '../reducer';
 import {
   proBackendDataActions,
+  PRO_DETAILS_CACHE_VERSION,
   RequestActionArgs,
   WithCallerContext,
   type ProBackendDataState,
@@ -34,18 +35,25 @@ const getProBackendData = (state: StateType): ProBackendDataState => {
 };
 
 function getProDetailsFromStorage(): ProDetailsResultType | null {
-  const response = Storage.get(SettingsKey.proDetails);
-  if (!response) {
+  const stored = Storage.get(SettingsKey.proDetails) as
+    | { version?: number; data?: ProDetailsResultType }
+    | null
+    | undefined;
+  if (!stored) {
     return null;
   }
-  // We persist the libsession-parsed struct verbatim (see putProDetailsInStorage). There's no hand-rolled
-  // schema to validate against anymore, so trust a well-formed object and drop anything obviously wrong
-  // (it's re-fetched on the next poll).
-  if (typeof response === 'object' && Array.isArray((response as ProDetailsResultType).items)) {
-    return response as ProDetailsResultType;
+  // We persist the libsession-parsed struct verbatim (see putProDetailsInStorage), wrapped with a
+  // version. There's no hand-rolled schema to validate against, so we only drop a cache whose version
+  // doesn't match the current shape (an older client's stale shape — e.g. missing a newly-required
+  // field — must not be mis-read against the current type) or that is obviously malformed. Anything
+  // dropped is re-fetched on the next poll. (The pre-versioning format has no `version` and is dropped
+  // here too.)
+  const data = stored.version === PRO_DETAILS_CACHE_VERSION ? stored.data : undefined;
+  if (data && typeof data === 'object' && Array.isArray(data.items)) {
+    return data;
   }
   void Storage.remove(SettingsKey.proDetails);
-  window?.log?.error('pro details in storage were malformed; removing.');
+  window?.log?.error('pro details in storage were stale/malformed; removing.');
   return null;
 }
 
