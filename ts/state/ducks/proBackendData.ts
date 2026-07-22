@@ -371,12 +371,15 @@ const fetchGetProDetailsFromProBackend = createAsyncThunk(
               break;
 
             default:
-              // Status is now an opaque slug — an unknown/future value must not hard-fail; treat it
-              // like "no active pro" and clear any stale proof.
+              // Opaque/unknown status: we have no basis to conclude the subscription ended, and
+              // handleClearProProof() writes SYNCED user config — clearing here would erase a valid
+              // proof across ALL the user's devices just because this (possibly older) client didn't
+              // recognise a new status slug. Leave the proof untouched: entitlement is governed by
+              // the proof's own signature + expiry (hasValidCurrentProProof), and the backend simply
+              // won't refresh it (or will revoke it) if the account has genuinely lapsed.
               window.log.warn(
-                `[handleBackendProStatusChange] unknown pro userStatus: ${state.data.userStatus}`
+                `[handleBackendProStatusChange] unknown pro userStatus: ${state.data.userStatus}; leaving proof untouched`
               );
-              await handleClearProProof();
               break;
           }
           await handleExpiryCTAs(
