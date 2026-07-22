@@ -3,9 +3,11 @@ import { assertUnreachable } from '../../../types/sqlSharedTypes';
 import { SessionServerConfigType } from '../session_backend_server';
 import LIBSESSION_CONSTANTS from '../../utils/libsession/libsession_constants';
 
-// not exported/included in the SERVER_HOSTS as this is for testing only
-const PRO_BACKEND_DEV = 'pro.session.codes';
-// const PRO_BACKEND_DEV = '192.168.1.223:8888';
+// There is no dev Pro backend yet (and a future one likely can't carry full signing keys), so the DEV
+// target below is intentionally non-functional: it holds no real URL/keys, and getServer() throws if
+// `useTestProBackend` is enabled (see ProBackendAPI). Wire real values in when a dev backend exists —
+// ideally sourced from libsession, not hard-copied here. Not in SERVER_HOSTS (testing only).
+const PRO_BACKEND_DEV = 'dev-pro-backend-not-configured.invalid';
 
 const PRO_BACKENDS: Record<
   'DEFAULT' | 'DEV',
@@ -20,10 +22,11 @@ const PRO_BACKENDS: Record<
   },
   DEV: {
     name: 'ProBackendDev',
+    // Intentionally non-functional placeholders (see PRO_BACKEND_DEV above): no real URL/keys copied
+    // here. getServer() throws before this target is ever used.
     url: `https://${PRO_BACKEND_DEV}`,
-    // url: `http://${PRO_BACKEND_DEV}`,
-    edPkHex: '479ffca8bcec7b4a0f0f7afe48b8a6d15635a8c7ff15ad16add05752c19414d4',
-    xPkHex: 'ce5a75f64b6c43db6c1374d362c3ea9d85951c4f42a3d04cf94f87822d4f803b',
+    edPkHex: '',
+    xPkHex: '',
   },
 };
 

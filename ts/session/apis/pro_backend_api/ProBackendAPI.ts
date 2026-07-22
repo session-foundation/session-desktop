@@ -17,10 +17,14 @@ import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesRedux
 
 export default class ProBackendAPI {
   private static readonly server = new SessionBackendServerApi(PRO_API.PRO_BACKENDS.DEFAULT);
-  private static readonly testServer = new SessionBackendServerApi(PRO_API.PRO_BACKENDS.DEV);
 
   static getServer() {
-    return getFeatureFlag('useTestProBackend') ? ProBackendAPI.testServer : ProBackendAPI.server;
+    if (getFeatureFlag('useTestProBackend')) {
+      // There is no dev Pro backend configured yet (the DEV target holds no real URL/keys — see
+      // ProBackendTarget). Fail loudly rather than silently using the default backend or placeholders.
+      throw new Error('useTestProBackend is enabled but no dev Pro backend is configured yet');
+    }
+    return ProBackendAPI.server;
   }
 
   /**
