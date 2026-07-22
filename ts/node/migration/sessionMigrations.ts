@@ -132,6 +132,7 @@ const LOKI_SCHEMA_VERSIONS: Array<(currentVersion: number, db: Database) => void
     updateToSessionSchemaVersion54,
     updateToSessionSchemaVersion55,
     updateToSessionSchemaVersion56,
+    updateToSessionSchemaVersion57,
   ];
 
 function updateToSessionSchemaVersion1(currentVersion: number, db: Database) {
@@ -2227,7 +2228,7 @@ async function updateToSessionSchemaVersion50(currentVersion: number, db: Databa
   db.transaction(() => {
     db.exec(`
           ALTER TABLE ${CONVERSATIONS_TABLE} ADD COLUMN bitsetProFeatures TEXT;
-          ALTER TABLE ${CONVERSATIONS_TABLE} ADD COLUMN proRevocationTagB64 TEXT;
+          ALTER TABLE ${CONVERSATIONS_TABLE} ADD COLUMN proGenIndexHashB64 TEXT;
           ALTER TABLE ${CONVERSATIONS_TABLE} ADD COLUMN proExpiryTsMs INTEGER;
          `);
 
@@ -2443,6 +2444,39 @@ async function updateToSessionSchemaVersion56(currentVersion: number, db: Databa
     return;
   }
   await removeDonateAppealCTAReadFlag(targetVersion, db);
+}
+
+async function updateToSessionSchemaVersion57(currentVersion: number, db: Database) {
+  const targetVersion = 57;
+  if (currentVersion >= targetVersion) {
+    return;
+  }
+  console.log(`updateToSessionSchemaVersion${targetVersion}: starting...`);
+
+  db.transaction(() => {
+    // Rename the pro-proof column proGenIndexHashB64 -> proRevocationTagB64 to match libsession's
+    // `revocation_tag`. v50 shipped the column as `proGenIndexHashB64`, so we rename it in place
+    // here rather than editing v50: existing installs already ran v50 and would otherwise keep the
+    // old column while the app reads the new name (SQLITE_ERROR: no such column). Guarded so it is
+    // idempotent for internal builds that already carry the new column.
+    const columns = db.pragma(`table_info('${CONVERSATIONS_TABLE}');`) as Array<{ name: string }>;
+    const hasOld = columns.some(c => c.name === 'proGenIndexHashB64');
+    const hasNew = columns.some(c => c.name === 'proRevocationTagB64');
+
+    if (hasOld && !hasNew) {
+      db.exec(
+        `ALTER TABLE ${CONVERSATIONS_TABLE} RENAME COLUMN proGenIndexHashB64 TO proRevocationTagB64;`
+      );
+    } else if (!hasOld && !hasNew) {
+      // Neither column present (shouldn't happen given v50) — add the new one so later code is safe.
+      db.exec(`ALTER TABLE ${CONVERSATIONS_TABLE} ADD COLUMN proRevocationTagB64 TEXT;`);
+    }
+    // else: the new column already exists — nothing to do.
+
+    writeSessionSchemaVersion(targetVersion, db);
+  })();
+
+  console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
 }
 
 export function printTableColumns(table: string, db: Database) {
