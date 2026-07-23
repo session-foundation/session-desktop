@@ -823,6 +823,7 @@ export class MessageModel extends Model<MessageAttributes> {
       thumbnail,
       fileName,
       caption,
+      error,
       isVoiceMessage: isVoiceMessageFromDb,
     } = attachment;
 
@@ -843,6 +844,7 @@ export class MessageModel extends Model<MessageAttributes> {
       fileSize: size ? filesize(size, { base: 10 }) : null,
       isVoiceMessage: isVoiceMessageBool,
       pending: Boolean(pending),
+      error,
       url: path ? getAbsoluteAttachmentPath(path) : '',
       screenshot: screenshot
         ? {
