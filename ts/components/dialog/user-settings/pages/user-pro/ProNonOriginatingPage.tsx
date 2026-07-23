@@ -246,6 +246,7 @@ function ProInfoBlockDeviceLinked() {
           <Localizer
             token={hasNeverHadPro ? 'proUpgradeDesktopLinked' : 'proRenewDesktopLinked'}
             pro_stores={proStores}
+            htmlArgs={['pro_stores']}
           />
         </ProInfoBlockText>
       }
@@ -328,6 +329,7 @@ function ProInfoBlockUpgrade() {
         <Localizer
           token="proAccessUpgradeDesktop"
           pro_stores={proStores}
+          htmlArgs={['pro_stores']}
           icon={LUCIDE_ICONS_UNICODE.EXTERNAL_LINK_ICON}
         />
       }
@@ -399,6 +401,7 @@ function ProInfoBlockRenew() {
         <Localizer
           token="proAccessRenewDesktop"
           pro_stores={proStores}
+          htmlArgs={['pro_stores']}
           icon={LUCIDE_ICONS_UNICODE.EXTERNAL_LINK_ICON}
         />
       }
