@@ -195,6 +195,13 @@ const LightboxObject = ({
   const dragStart = useRef({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Keep the latest scale/translate available to the native wheel listener without
+  // having to re-register it on every zoom step.
+  const scaleRef = useRef(scale);
+  const translateRef = useRef(translate);
+  scaleRef.current = scale;
+  translateRef.current = translate;
+
   // Reset zoom and pan whenever the displayed image changes (prev/next navigation)
   useEffect(() => {
     setScale(1);
@@ -202,6 +209,59 @@ const LightboxObject = ({
   }, [objectURL]);
 
   const isImageTypeSupported = GoogleChrome.isImageTypeSupported(contentType);
+
+  // Register the wheel listener natively with { passive: false } so we can call
+  // preventDefault(). React's onWheel is passive by default, which both prints
+  // "Unable to preventDefault inside passive event listener invocation" and fails
+  // to stop the page from scrolling while zooming.
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || !isImageTypeSupported) {
+      return undefined;
+    }
+
+    const handleWheelNative = (e: WheelEvent) => {
+      // ctrlKey is true for pinch-to-zoom on macOS trackpads as well as Ctrl+scroll on all platforms
+      if (!e.ctrlKey && !e.metaKey) {
+        return;
+      }
+      e.preventDefault();
+      e.stopPropagation();
+
+      const rect = container.getBoundingClientRect();
+      // Pointer position relative to container center (the transform origin)
+      const pointerX = e.clientX - rect.left - rect.width / 2;
+      const pointerY = e.clientY - rect.top - rect.height / 2;
+
+      const currentScale = scaleRef.current;
+      const currentTranslate = translateRef.current;
+
+      const delta = -e.deltaY * ZOOM_SENSITIVITY;
+      const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, currentScale * (1 + delta)));
+
+      if (newScale === currentScale) {
+        return;
+      }
+
+      // Adjust translate so the point under the pointer stays fixed
+      const scaleFactor = newScale / currentScale;
+      const newTranslateX = pointerX - scaleFactor * (pointerX - currentTranslate.x);
+      const newTranslateY = pointerY - scaleFactor * (pointerY - currentTranslate.y);
+
+      setScale(newScale);
+      // Snap translate back to zero when returning to fit-to-screen
+      if (newScale === MIN_SCALE) {
+        setTranslate({ x: 0, y: 0 });
+      } else {
+        setTranslate({ x: newTranslateX, y: newTranslateY });
+      }
+    };
+
+    container.addEventListener('wheel', handleWheelNative, { passive: false });
+    return () => {
+      container.removeEventListener('wheel', handleWheelNative);
+    };
+  }, [isImageTypeSupported]);
 
   // auto play video on showing a video attachment
   useUnmount(() => {
@@ -214,45 +274,6 @@ const LightboxObject = ({
 
   if (isImageTypeSupported) {
     const isZoomed = scale > 1;
-
-    const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
-      // ctrlKey is true for pinch-to-zoom on macOS trackpads as well as Ctrl+scroll on all platforms
-      if (!e.ctrlKey && !e.metaKey) {
-        return;
-      }
-      e.preventDefault();
-      e.stopPropagation();
-
-      const container = containerRef.current;
-      if (!container) {
-        return;
-      }
-
-      const rect = container.getBoundingClientRect();
-      // Pointer position relative to container center (the transform origin)
-      const pointerX = e.clientX - rect.left - rect.width / 2;
-      const pointerY = e.clientY - rect.top - rect.height / 2;
-
-      const delta = -e.deltaY * ZOOM_SENSITIVITY;
-      const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale * (1 + delta)));
-
-      if (newScale === scale) {
-        return;
-      }
-
-      // Adjust translate so the point under the pointer stays fixed
-      const scaleFactor = newScale / scale;
-      const newTranslateX = pointerX - scaleFactor * (pointerX - translate.x);
-      const newTranslateY = pointerY - scaleFactor * (pointerY - translate.y);
-
-      setScale(newScale);
-      // Snap translate back to zero when returning to fit-to-screen
-      if (newScale === MIN_SCALE) {
-        setTranslate({ x: 0, y: 0 });
-      } else {
-        setTranslate({ x: newTranslateX, y: newTranslateY });
-      }
-    };
 
     const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
       if (!isZoomed) {
@@ -305,7 +326,6 @@ const LightboxObject = ({
       <div
         ref={containerRef}
         style={{ overflow: 'hidden' }}
-        onWheel={handleWheel}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
