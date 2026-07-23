@@ -1,4 +1,12 @@
-import { CSSProperties, MouseEvent, useEffect, useRef, useState, type Ref } from 'react';
+import {
+  CSSProperties,
+  MouseEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type Ref,
+} from 'react';
 
 import { isUndefined } from 'lodash';
 import useUnmount from 'react-use/lib/useUnmount';
@@ -31,6 +39,8 @@ const CONTROLS_SPACING = 10;
 const MIN_SCALE = 1;
 const MAX_SCALE = 10;
 const ZOOM_SENSITIVITY = 0.002;
+// Successive scales the double-click zoom steps through before cycling back to fit-to-screen.
+const DOUBLE_CLICK_ZOOM_STEPS = [2.5, MAX_SCALE];
 
 const styles = {
   container: {
@@ -202,11 +212,78 @@ const LightboxObject = ({
   scaleRef.current = scale;
   translateRef.current = translate;
 
-  // Reset zoom and pan whenever the displayed image changes (prev/next navigation)
-  useEffect(() => {
+  // Double-click zoom sequence tracking. dblClickStepRef is the index into
+  // DOUBLE_CLICK_ZOOM_STEPS for the next double-click; lastDblClickScaleRef is the scale we
+  // last set via double-click (null when the current zoom came from the wheel instead).
+  const dblClickStepRef = useRef(0);
+  const lastDblClickScaleRef = useRef<number | null>(null);
+
+  // Clamp a translate to the scaled overflow so the image edges can't be dragged past the
+  // container (which would leave empty space / let the image be lost off-screen).
+  const clampTranslate = useCallback(
+    (tx: number, ty: number, atScale: number) => {
+      const container = containerRef.current;
+      const img = renderedRef?.current as HTMLElement | null;
+      if (!container || !img) {
+        return { x: tx, y: ty };
+      }
+      const overflowX = Math.max(0, (img.offsetWidth * atScale - container.clientWidth) / 2);
+      const overflowY = Math.max(0, (img.offsetHeight * atScale - container.clientHeight) / 2);
+      return {
+        x: Math.min(overflowX, Math.max(-overflowX, tx)),
+        y: Math.min(overflowY, Math.max(-overflowY, ty)),
+      };
+    },
+    [renderedRef]
+  );
+
+  // Zoom to a target scale while keeping the point under (clientX, clientY) fixed on screen.
+  // Shared by the wheel and double-click handlers.
+  const applyZoom = useCallback(
+    (targetScale: number, clientX: number, clientY: number) => {
+      const container = containerRef.current;
+      if (!container) {
+        return;
+      }
+      const currentScale = scaleRef.current;
+      const currentTranslate = translateRef.current;
+      const clampedScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, targetScale));
+      if (clampedScale === currentScale) {
+        return;
+      }
+
+      const rect = container.getBoundingClientRect();
+      // Pointer position relative to container center (the transform origin)
+      const pointerX = clientX - rect.left - rect.width / 2;
+      const pointerY = clientY - rect.top - rect.height / 2;
+
+      // Adjust translate so the point under the pointer stays fixed
+      const scaleFactor = clampedScale / currentScale;
+      const newTranslateX = pointerX - scaleFactor * (pointerX - currentTranslate.x);
+      const newTranslateY = pointerY - scaleFactor * (pointerY - currentTranslate.y);
+
+      setScale(clampedScale);
+      // Snap translate back to zero when returning to fit-to-screen
+      if (clampedScale === MIN_SCALE) {
+        setTranslate({ x: 0, y: 0 });
+      } else {
+        setTranslate(clampTranslate(newTranslateX, newTranslateY, clampedScale));
+      }
+    },
+    [clampTranslate]
+  );
+
+  const resetZoom = useCallback(() => {
     setScale(1);
     setTranslate({ x: 0, y: 0 });
-  }, [objectURL]);
+    dblClickStepRef.current = 0;
+    lastDblClickScaleRef.current = null;
+  }, []);
+
+  // Reset zoom and pan whenever the displayed image changes (prev/next navigation)
+  useEffect(() => {
+    resetZoom();
+  }, [objectURL, resetZoom]);
 
   const isImageTypeSupported = GoogleChrome.isImageTypeSupported(contentType);
 
@@ -228,40 +305,19 @@ const LightboxObject = ({
       e.preventDefault();
       e.stopPropagation();
 
-      const rect = container.getBoundingClientRect();
-      // Pointer position relative to container center (the transform origin)
-      const pointerX = e.clientX - rect.left - rect.width / 2;
-      const pointerY = e.clientY - rect.top - rect.height / 2;
-
-      const currentScale = scaleRef.current;
-      const currentTranslate = translateRef.current;
-
       const delta = -e.deltaY * ZOOM_SENSITIVITY;
-      const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, currentScale * (1 + delta)));
+      applyZoom(scaleRef.current * (1 + delta), e.clientX, e.clientY);
 
-      if (newScale === currentScale) {
-        return;
-      }
-
-      // Adjust translate so the point under the pointer stays fixed
-      const scaleFactor = newScale / currentScale;
-      const newTranslateX = pointerX - scaleFactor * (pointerX - currentTranslate.x);
-      const newTranslateY = pointerY - scaleFactor * (pointerY - currentTranslate.y);
-
-      setScale(newScale);
-      // Snap translate back to zero when returning to fit-to-screen
-      if (newScale === MIN_SCALE) {
-        setTranslate({ x: 0, y: 0 });
-      } else {
-        setTranslate({ x: newTranslateX, y: newTranslateY });
-      }
+      // A wheel zoom breaks out of the double-click sequence, so the next double-click resets.
+      dblClickStepRef.current = 0;
+      lastDblClickScaleRef.current = null;
     };
 
     container.addEventListener('wheel', handleWheelNative, { passive: false });
     return () => {
       container.removeEventListener('wheel', handleWheelNative);
     };
-  }, [isImageTypeSupported]);
+  }, [isImageTypeSupported, applyZoom]);
 
   // auto play video on showing a video attachment
   useUnmount(() => {
@@ -292,10 +348,13 @@ const LightboxObject = ({
       }
       didDrag.current = true;
       e.stopPropagation();
-      setTranslate({
-        x: e.clientX - dragStart.current.x,
-        y: e.clientY - dragStart.current.y,
-      });
+      setTranslate(
+        clampTranslate(
+          e.clientX - dragStart.current.x,
+          e.clientY - dragStart.current.y,
+          scaleRef.current
+        )
+      );
     };
 
     const handleMouseUp = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -307,8 +366,29 @@ const LightboxObject = ({
 
     const handleDoubleClick = (e: React.MouseEvent<HTMLDivElement>) => {
       e.stopPropagation();
-      setScale(1);
-      setTranslate({ x: 0, y: 0 });
+
+      const currentScale = scaleRef.current;
+      // Whether the current zoom came from our double-click sequence (vs. a wheel zoom).
+      const inSequence =
+        lastDblClickScaleRef.current !== null && currentScale === lastDblClickScaleRef.current;
+
+      // Zoomed in some other way (wheel) -> reset straight back to fit-to-screen.
+      if (currentScale > MIN_SCALE && !inSequence) {
+        resetZoom();
+        return;
+      }
+
+      const step = inSequence ? dblClickStepRef.current : 0;
+      // Past the last zoom step -> cycle back to fit-to-screen.
+      if (step >= DOUBLE_CLICK_ZOOM_STEPS.length) {
+        resetZoom();
+        return;
+      }
+
+      const targetScale = DOUBLE_CLICK_ZOOM_STEPS[step];
+      applyZoom(targetScale, e.clientX, e.clientY);
+      dblClickStepRef.current = step + 1;
+      lastDblClickScaleRef.current = targetScale;
     };
 
     const imgStyle: CSSProperties = {
