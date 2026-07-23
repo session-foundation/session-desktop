@@ -243,7 +243,7 @@ async function handleExpiryCTAs(
   }
 }
 
-let firstFetchProDetailsHappened = false;
+let firstFetchProStatusHappened = false;
 let lastKnownProofExpiryTimestamp: number | null = null;
 let scheduledProofExpiryTaskTimestamp: number | null = null;
 let scheduledProofExpiryTaskId: ReturnType<typeof setTimeout> | null = null;
@@ -255,7 +255,7 @@ function scheduleRefresh(timestampMs: number) {
   window?.log?.info(`Scheduling a pro details refresh in ${delay}ms for ${timestampMs}`);
   return setTimeout(() => {
     window?.inboxStore?.dispatch(
-      proBackendDataActions.refreshGetProDetailsFromProBackend({}) as any
+      proBackendDataActions.refreshGetProStatusFromProBackend({}) as any
     );
   }, delay);
 }
@@ -335,8 +335,8 @@ async function handleProProof(accessExpiryTsMs: number, autoRenewing: boolean, s
   }
 }
 
-const fetchGetProDetailsFromProBackend = createAsyncThunk(
-  'proBackendData/fetchGetProDetails',
+const fetchGetProStatusFromProBackend = createAsyncThunk(
+  'proBackendData/fetchGetProStatus',
   async (
     { callerContext: context, ...args }: WithMasterPrivKeyHex & WithCallerContext,
     payloadCreator
@@ -391,10 +391,10 @@ const fetchGetProDetailsFromProBackend = createAsyncThunk(
             state.data.userStatus
           );
           // on the first fetch of our pro details after a restart, we want to show the CTAs if needed
-          if (window.inboxStore?.dispatch && !firstFetchProDetailsHappened) {
+          if (window.inboxStore?.dispatch && !firstFetchProStatusHappened) {
             void handleTriggeredCTAs(window.inboxStore?.dispatch, false);
           }
-          firstFetchProDetailsHappened = true;
+          firstFetchProStatusHappened = true;
         }
 
         if (state.data) {
@@ -445,8 +445,8 @@ const fetchGetProDetailsFromProBackend = createAsyncThunk(
   }
 );
 
-const refreshGetProDetailsFromProBackend = createAsyncThunk(
-  'proBackendData/refreshGetProDetails',
+const refreshGetProStatusFromProBackend = createAsyncThunk(
+  'proBackendData/refreshGetProStatus',
   async (opts: WithCallerContext = {}, payloadCreator) => {
     if (!getFeatureFlag('proAvailable')) {
       return;
@@ -454,7 +454,7 @@ const refreshGetProDetailsFromProBackend = createAsyncThunk(
 
     if (getFeatureFlag('debugServerRequests')) {
       window.log.info(
-        `[proBackend/refreshGetProDetailsFromProBackend] starting ${new Date().toISOString()}`
+        `[proBackend/refreshGetProStatusFromProBackend] starting ${new Date().toISOString()}`
       );
     }
 
@@ -466,11 +466,11 @@ const refreshGetProDetailsFromProBackend = createAsyncThunk(
 
     if (getFeatureFlag('debugServerRequests')) {
       window.log.info(
-        `[proBackend/refreshGetProDetailsFromProBackend] triggered refresh at ${new Date().toISOString()}`
+        `[proBackend/refreshGetProStatusFromProBackend] triggered refresh at ${new Date().toISOString()}`
       );
     }
     const masterPrivKeyHex = await UserUtils.getProMasterKeyHex();
-    payloadCreator.dispatch(fetchGetProDetailsFromProBackend({ ...opts, masterPrivKeyHex }) as any);
+    payloadCreator.dispatch(fetchGetProStatusFromProBackend({ ...opts, masterPrivKeyHex }) as any);
   }
 );
 
@@ -500,15 +500,15 @@ export const proBackendDataSlice = createSlice({
     },
   },
   extraReducers: builder => {
-    builder.addCase(fetchGetProDetailsFromProBackend.rejected, (_state, action) => {
+    builder.addCase(fetchGetProStatusFromProBackend.rejected, (_state, action) => {
       window.log.error(
-        `[proBackend / fetchGetProDetailsFromProBackend] rejected ${action.error.message || action.error} `
+        `[proBackend / fetchGetProStatusFromProBackend] rejected ${action.error.message || action.error} `
       );
     });
-    builder.addCase(fetchGetProDetailsFromProBackend.fulfilled, (state, action) => {
+    builder.addCase(fetchGetProStatusFromProBackend.fulfilled, (state, action) => {
       if (getFeatureFlag('debugServerRequests')) {
         window.log.info(
-          `[proBackend / fetchGetProDetailsFromProBackend] fulfilled ${new Date().toISOString()} `,
+          `[proBackend / fetchGetProStatusFromProBackend] fulfilled ${new Date().toISOString()} `,
           JSON.stringify(action.payload)
         );
       }
@@ -520,6 +520,6 @@ export const proBackendDataSlice = createSlice({
 export default proBackendDataSlice.reducer;
 export const proBackendDataActions = {
   ...proBackendDataSlice.actions,
-  fetchGetProDetailsFromProBackend,
-  refreshGetProDetailsFromProBackend,
+  fetchGetProStatusFromProBackend,
+  refreshGetProStatusFromProBackend,
 };

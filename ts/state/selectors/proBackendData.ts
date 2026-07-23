@@ -200,7 +200,7 @@ export const defaultProAccessDetailsSourceData = {
   isError: false,
 } satisfies ProAccessDetailsSourceData;
 
-export type ProcessedProDetails = {
+export type ProcessedProStatus = {
   isLoading: boolean;
   isFetching: boolean;
   isError: boolean;
@@ -212,7 +212,7 @@ function processProBackendData({
   isFetching: _isFetching,
   isError: _isError,
   data,
-}: ProBackendDataState['details']): ProcessedProDetails {
+}: ProBackendDataState['details']): ProcessedProStatus {
   const mockIsLoading = getFeatureFlag('mockProBackendLoading');
   const mockIsError = getFeatureFlag('mockProBackendError');
 
@@ -297,7 +297,7 @@ function processProBackendData({
   };
 }
 
-export const getProBackendProDetails = (state: StateType): ProcessedProDetails => {
+export const getProBackendProStatus = (state: StateType): ProcessedProStatus => {
   const details = getProBackendData(state).details;
   const mergedDetails = details.data ? details : { ...details, data: getProStatusFromStorage() };
 
@@ -305,11 +305,11 @@ export const getProBackendProDetails = (state: StateType): ProcessedProDetails =
 };
 
 export const getProBackendCurrentUserStatus = (state: StateType) => {
-  return getProBackendProDetails(state).data?.currentStatus;
+  return getProBackendProStatus(state).data?.currentStatus;
 };
 
-export const useProBackendProDetails = () => {
-  return useSelector(getProBackendProDetails);
+export const useProBackendProStatus = () => {
+  return useSelector(getProBackendProStatus);
 };
 
 export const useProBackendCurrentUserStatus = () => {
@@ -319,7 +319,7 @@ export const useProBackendCurrentUserStatus = () => {
 export function useProBackendRefetch() {
   const dispatch = getAppDispatch();
 
-  const details = useProBackendProDetails();
+  const details = useProBackendProStatus();
 
   const mockSuccess = getFeatureFlagMemo('mockProRecoverButtonAlwaysSucceed');
   const mockFail = getFeatureFlagMemo('mockProRecoverButtonAlwaysFail');
@@ -364,7 +364,7 @@ export function useProBackendRefetch() {
       void mockRefetchSuccess();
       return;
     }
-    dispatch(proBackendDataActions.refreshGetProDetailsFromProBackend(args) as any);
+    dispatch(proBackendDataActions.refreshGetProStatusFromProBackend(args) as any);
   };
 
   return refetch;

@@ -25,8 +25,8 @@ import { useCurrentNeverHadPro } from '../../../../../hooks/useHasPro';
 import LIBSESSION_CONSTANTS from '../../../../../session/utils/libsession/libsession_constants';
 import { ProPaymentProvider } from '../../../../../session/apis/pro_backend_api/types';
 import {
-  useProBackendProDetails,
-  type ProcessedProDetails,
+  useProBackendProStatus,
+  type ProcessedProStatus,
 } from '../../../../../state/selectors/proBackendData';
 import { userSettingsModal } from '../../../../../state/ducks/modalDialog';
 
@@ -34,7 +34,7 @@ type VariantPageProps = {
   variant: ProNonOriginatingPageVariant;
 };
 
-const useProBackendProDetailsLocal = useProBackendProDetails;
+const useProBackendProStatusLocal = useProBackendProStatus;
 
 /**
  * Provider support/management URLs are libsession's (fetched by provider slug), not client display data,
@@ -63,7 +63,7 @@ const useCurrentNeverHadProLocal = useCurrentNeverHadPro;
  * For some texts, we want `Apple website` for apple but `Google Play Store website` for google...
  * Those two are not stored in the same field, so this hook can be used to fetch the right one
  */
-function useStoreOrPlatformFromProvider(data: ProcessedProDetails['data']) {
+function useStoreOrPlatformFromProvider(data: ProcessedProStatus['data']) {
   return data.provider === ProPaymentProvider.AppStore
     ? data.providerConstants.platform // we want `Apple website` for apple
     : data.providerConstants.store; // but `Google Play Store website` for google...
@@ -110,7 +110,7 @@ function useProStoresList(): string {
 }
 
 function ProStatusTextUpdate() {
-  const { data } = useProBackendProDetailsLocal();
+  const { data } = useProBackendProStatusLocal();
   return data.autoRenew ? (
     <Localizer
       token="proAccessActivatedAutoShort"
@@ -219,7 +219,7 @@ const ProInfoBlockText = styled.div`
 `;
 
 function ProInfoBlockDevice({ textElement }: { textElement: ReactNode }) {
-  const { data } = useProBackendProDetailsLocal();
+  const { data } = useProBackendProStatusLocal();
   return (
     <ProInfoBlockItem
       iconElement={<ProInfoBlockIconElement unicode={LUCIDE_ICONS_UNICODE.SMARTPHONE} />}
@@ -260,7 +260,7 @@ function ProInfoBlockWebsite({
   textElement: ReactNode;
   titleType: 'via' | 'onThe';
 }) {
-  const { data } = useProBackendProDetailsLocal();
+  const { data } = useProBackendProStatusLocal();
   const storeOrPlatform = useStoreOrPlatformFromProvider(data);
 
   return (
@@ -343,7 +343,7 @@ function ProInfoBlockUpgrade() {
 }
 
 function ProInfoBlockUpdate() {
-  const { data } = useProBackendProDetailsLocal();
+  const { data } = useProBackendProStatusLocal();
   const storeOrPlatform = useStoreOrPlatformFromProvider(data);
 
   return (
@@ -388,7 +388,7 @@ function ProInfoBlockUpdate() {
 
 function ProInfoBlockRenew() {
   const dispatch = getAppDispatch();
-  const { data } = useProBackendProDetailsLocal();
+  const { data } = useProBackendProStatusLocal();
   const storeOrPlatform = useStoreOrPlatformFromProvider(data);
   const proStores = useProStoresList();
 
@@ -430,7 +430,7 @@ function ProInfoBlockRenew() {
 }
 
 function ProInfoBlockCancel() {
-  const { data } = useProBackendProDetailsLocal();
+  const { data } = useProBackendProStatusLocal();
   const storeOrPlatform = useStoreOrPlatformFromProvider(data);
 
   return (
@@ -501,7 +501,7 @@ function ProInfoBlockRefundSessionSupport() {
 }
 
 function ProInfoBlockRefundGooglePlay() {
-  const { data } = useProBackendProDetailsLocal();
+  const { data } = useProBackendProStatusLocal();
   return (
     <PanelButtonGroup containerStyle={containerStyle}>
       <ProInfoBlockRefundTitle>
@@ -517,7 +517,7 @@ function ProInfoBlockRefundGooglePlay() {
 }
 
 function ProInfoBlockRefundIOS() {
-  const { data } = useProBackendProDetailsLocal();
+  const { data } = useProBackendProStatusLocal();
   return (
     <ProInfoBlockLayout
       titleElement={tr('proRefunding')}
@@ -559,7 +559,7 @@ function ProInfoBlockRefundIOS() {
 }
 
 function ProInfoBlockRefund() {
-  const { data } = useProBackendProDetailsLocal();
+  const { data } = useProBackendProStatusLocal();
 
   if (!data.isPlatformRefundAvailable) {
     return <ProInfoBlockRefundSessionSupport />;
@@ -577,7 +577,7 @@ function ProInfoBlockRefund() {
 }
 
 function ProInfoBlockRefundRequested() {
-  const { data } = useProBackendProDetailsLocal();
+  const { data } = useProBackendProStatusLocal();
   const dispatch = getAppDispatch();
 
   return (
@@ -627,7 +627,7 @@ function ProInfoBlock({ variant }: VariantPageProps) {
 
 function ProPageButtonUpdate() {
   const dispatch = getAppDispatch();
-  const { data } = useProBackendProDetailsLocal();
+  const { data } = useProBackendProStatusLocal();
   const storeOrPlatform = useStoreOrPlatformFromProvider(data);
 
   return (
@@ -646,7 +646,7 @@ function ProPageButtonUpdate() {
 
 function ProPageButtonCancel() {
   const dispatch = getAppDispatch();
-  const { data } = useProBackendProDetailsLocal();
+  const { data } = useProBackendProStatusLocal();
   const storeOrPlatform = useStoreOrPlatformFromProvider(data);
   return (
     <SessionButton
@@ -664,7 +664,7 @@ function ProPageButtonCancel() {
 
 function ProPageButtonRefund() {
   const dispatch = getAppDispatch();
-  const { data } = useProBackendProDetailsLocal();
+  const { data } = useProBackendProStatusLocal();
   const storeOrPlatform = useStoreOrPlatformFromProvider(data);
   return (
     <SessionButton

@@ -41,7 +41,7 @@ import {
 import { UserConfigWrapperActions } from '../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 import { isDebugMode } from '../../../shared/env_vars';
 import {
-  useProBackendProDetails,
+  useProBackendProStatus,
   useProBackendRefetch,
 } from '../../../state/selectors/proBackendData';
 import ProBackendAPI from '../../../session/apis/pro_backend_api/ProBackendAPI';
@@ -780,7 +780,7 @@ function ProConfigForm({
 }
 
 function ProConfigManager({ forceUpdate }: { forceUpdate: () => void }) {
-  const { isFetching } = useProBackendProDetails();
+  const { isFetching } = useProBackendProStatus();
   const refetch = useProBackendRefetch();
   const [proConfig, setProConfig] = useState<ProConfig | null>(null);
   const getProConfig = useCallback(async () => {
@@ -907,7 +907,7 @@ export const ProDebugSection = ({
               if (!proAvailable) {
                 return;
               }
-              dispatch(proBackendDataActions.refreshGetProDetailsFromProBackend({}) as any);
+              dispatch(proBackendDataActions.refreshGetProStatusFromProBackend({}) as any);
             }}
           >
             Refresh Pro Details

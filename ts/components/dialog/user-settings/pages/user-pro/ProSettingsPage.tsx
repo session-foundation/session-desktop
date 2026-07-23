@@ -57,7 +57,7 @@ import {
 } from '../../../../../models/proMessageFeature';
 import { usePinnedConversationsCount } from '../../../../../state/selectors/conversations';
 import {
-  useProBackendProDetails,
+  useProBackendProStatus,
   useProBackendRefetch,
 } from '../../../../../state/selectors/proBackendData';
 import { formatNumber } from '../../../../../util/i18n/formatting/generics';
@@ -214,7 +214,7 @@ function useBackendErrorDialogButtons() {
 }
 
 // NOTE: [react-compiler] this convinces the compiler the hook is static
-const useProBackendProDetailsInternal = useProBackendProDetails;
+const useProBackendProStatusInternal = useProBackendProStatus;
 const useCurrentUserHasProInternal = useCurrentUserHasPro;
 const useCurrentUserHasExpiredProInternal = useCurrentUserHasExpiredPro;
 const useCurrentNeverHadProInternal = useCurrentNeverHadPro;
@@ -225,7 +225,7 @@ function ProNonProContinueButton({ state }: SectionProps) {
   const { returnToThisModalAction, centerAlign, afterCloseAction } = state;
   const dispatch = getAppDispatch();
   const neverHadPro = useCurrentNeverHadProInternal();
-  const { isLoading, isError } = useProBackendProDetailsInternal();
+  const { isLoading, isError } = useProBackendProStatusInternal();
 
   const backendErrorButtons = useBackendErrorDialogButtons();
 
@@ -434,7 +434,7 @@ function ProSettings({ state }: SectionProps) {
   const userHasPro = useCurrentUserHasProInternal();
   const userHasExpiredPro = useCurrentUserHasExpiredProInternal();
   const userNeverHadPro = useCurrentNeverHadProInternal();
-  const { data, isLoading, isError } = useProBackendProDetailsInternal();
+  const { data, isLoading, isError } = useProBackendProStatusInternal();
   const backendErrorButtons = useBackendErrorDialogButtons();
 
   const forceRefresh = useUpdate();
@@ -765,7 +765,7 @@ function ProFeatures({ state }: SectionProps) {
 
 function ManageProCurrentAccess({ state }: SectionProps) {
   const dispatch = getAppDispatch();
-  const { data } = useProBackendProDetailsInternal();
+  const { data } = useProBackendProStatusInternal();
   const userHasPro = useCurrentUserHasProInternal();
   if (!userHasPro) {
     return null;
@@ -822,7 +822,7 @@ function ManageProAccess({ state }: SectionProps) {
 
   const { returnToThisModalAction, centerAlign } = state;
 
-  const { isLoading, isError } = useProBackendProDetailsInternal();
+  const { isLoading, isError } = useProBackendProStatusInternal();
 
   const backendErrorButtons = useBackendErrorDialogButtons();
 
@@ -962,7 +962,7 @@ function PageHero({ state }: SectionProps) {
   const dispatch = getAppDispatch();
   const isPro = useCurrentUserHasProInternal();
   const proExpired = useCurrentUserHasExpiredProInternal();
-  const { isLoading, isError } = useProBackendProDetailsInternal();
+  const { isLoading, isError } = useProBackendProStatusInternal();
 
   const backendErrorButtons = useBackendErrorDialogButtons();
 

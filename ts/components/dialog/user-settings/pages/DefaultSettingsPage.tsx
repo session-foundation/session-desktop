@@ -41,7 +41,7 @@ import { APP_URL, DURATION_SECONDS } from '../../../../session/constants';
 import { getFeatureFlag } from '../../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { useUserSettingsCloseAction } from './userSettingsHooks';
 import {
-  useProBackendProDetails,
+  useProBackendProStatus,
   useProBackendRefetch,
 } from '../../../../state/selectors/proBackendData';
 import { focusVisibleBoxShadowOutsetStr } from '../../../../styles/focusVisible';
@@ -330,7 +330,7 @@ const SessionInfo = () => {
 export const DefaultSettingPage = (modalState: UserSettingsModalState) => {
   const dispatch = getAppDispatch();
   const closeAction = useUserSettingsCloseAction(modalState);
-  const { t } = useProBackendProDetails();
+  const { t } = useProBackendProStatus();
   const refetch = useProBackendRefetch();
 
   const profileName = useOurConversationUsername() || '';

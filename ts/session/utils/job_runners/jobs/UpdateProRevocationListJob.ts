@@ -142,7 +142,7 @@ class UpdateProRevocationListJob extends PersistedJob<UpdateProRevocationListPer
           `UpdateProRevocationListJob: our current revocation tag is revoked. Refreshing our pro proof.`
         );
         window.inboxStore?.dispatch(
-          proBackendDataActions.refreshGetProDetailsFromProBackend({}) as any
+          proBackendDataActions.refreshGetProStatusFromProBackend({}) as any
         );
       }
       // find all the conversations that have a revoked revocation tag and trigger a UI refresh on them
