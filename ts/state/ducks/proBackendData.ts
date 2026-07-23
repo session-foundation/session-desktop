@@ -10,7 +10,7 @@ import { updateLocalizedPopupDialog } from './modalDialog';
 import { showLinkVisitWarningDialog } from '../../components/dialog/OpenUrlModal';
 import { ProStatus } from '../../session/apis/pro_backend_api/types';
 import { SettingsKey } from '../../data/settings-key';
-import { ProDetailsResultType } from '../../session/apis/pro_backend_api/schemas';
+import { ProStatusResultType } from '../../session/apis/pro_backend_api/schemas';
 import { proErrorMessage } from '../../session/apis/pro_backend_api/proErrorMessage';
 import { Storage } from '../../util/storage';
 import { NetworkTime } from '../../util/NetworkTime';
@@ -51,7 +51,7 @@ export type RequestActionArgs = {
 type ReducerBooleanStateAction = PayloadAction<RequestActionArgs>;
 
 export type ProBackendDataState = {
-  details: RequestState<ProDetailsResultType>;
+  details: RequestState<ProStatusResultType>;
 };
 
 export const initialProBackendDataState: ProBackendDataState = {
@@ -165,9 +165,9 @@ async function createProBackendFetchAsyncThunk<
   return result;
 }
 
-async function putProDetailsInStorage(details: ProDetailsResultType) {
+async function putProStatusInStorage(details: ProStatusResultType) {
   // We persist, verbatim, the JS object the libsession-util-nodejs glue produced from the backend
-  // response (not a raw libsession struct). See getProDetailsFromStorage for the transition reminder
+  // response (not a raw libsession struct). See getProStatusFromStorage for the transition reminder
   // that applies before adding any REQUIRED field to this shape.
   await Storage.put(SettingsKey.proDetails, details);
 }
@@ -340,10 +340,10 @@ const fetchGetProDetailsFromProBackend = createAsyncThunk(
   async (
     { callerContext: context, ...args }: WithMasterPrivKeyHex & WithCallerContext,
     payloadCreator
-  ): Promise<RequestState<ProDetailsResultType>> => {
+  ): Promise<RequestState<ProStatusResultType>> => {
     return createProBackendFetchAsyncThunk({
       key: 'details',
-      getter: () => ProBackendAPI.getProDetails(args),
+      getter: () => ProBackendAPI.getProStatus(args),
       payloadCreator,
       callback: async state => {
         if (state.data) {
@@ -398,7 +398,7 @@ const fetchGetProDetailsFromProBackend = createAsyncThunk(
         }
 
         if (state.data) {
-          await putProDetailsInStorage(state.data);
+          await putProStatusInStorage(state.data);
         }
         // trigger a UI refresh so our state and Pro rights are up to date without a restart (animated image should stop animating)
         ConvoHub.use().get(UserUtils.getOurPubKeyStrFromCache())?.triggerUIRefresh();

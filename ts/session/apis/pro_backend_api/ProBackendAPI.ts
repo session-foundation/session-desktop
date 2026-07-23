@@ -8,8 +8,8 @@ import { PRO_API } from './ProBackendTarget';
 import SessionBackendServerApi from '../session_backend_server';
 import type {
   GenerateProProofResponseType,
-  GetProDetailsResponseType,
   GetProRevocationsResponseType,
+  ProStatusResultType,
 } from './schemas';
 import { ProWrapperActions } from '../../../webworker/workers/browser/libsession_worker_interface';
 import { NetworkTime } from '../../../util/NetworkTime';
@@ -63,15 +63,13 @@ export default class ProBackendAPI {
     );
   }
 
-  static async getProDetails(args: WithMasterPrivKeyHex): Promise<GetProDetailsResponseType | null> {
+  static async getProStatus(args: WithMasterPrivKeyHex): Promise<ProStatusResultType | null> {
     const request = await ProWrapperActions.proStatusRequest({
       ...args,
       unixTsMs: NetworkTime.now(),
-      // NOTE: the latest payment is the only one required for state derivation
-      count: 1,
     });
     return ProBackendAPI.sendAndParse(request, body =>
-      ProWrapperActions.parsePaymentDetailsResponse({ body })
+      ProWrapperActions.parseProStatusResponse({ body })
     );
   }
 

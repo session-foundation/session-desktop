@@ -1,7 +1,7 @@
 import { z } from '../../../util/zod';
 import type {
   GenerateProProofResponse,
-  GetProDetailsResponse,
+  GetProStatusResponse,
   GetProRevocationsResponse,
   ProPaymentItem,
   ProProof,
@@ -14,7 +14,7 @@ import type {
 export type ProProofResultType = ProProof;
 export type GenerateProProofResponseType = GenerateProProofResponse;
 export type GetProRevocationsResponseType = GetProRevocationsResponse;
-export type ProDetailsResultType = GetProDetailsResponse;
+export type ProStatusResultType = GetProStatusResponse;
 export type ProPaymentItemType = ProPaymentItem;
 
 // Revocation items are cached to local storage; keep a small DB schema to validate cached blobs on

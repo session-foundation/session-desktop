@@ -8,7 +8,7 @@ import {
 } from '../ducks/proBackendData';
 import { SettingsKey } from '../../data/settings-key';
 import { Storage } from '../../util/storage';
-import type { ProDetailsResultType } from '../../session/apis/pro_backend_api/schemas';
+import type { ProStatusResultType } from '../../session/apis/pro_backend_api/schemas';
 import {
   getDataFeatureFlag,
   getFeatureFlag,
@@ -33,14 +33,14 @@ const getProBackendData = (state: StateType): ProBackendDataState => {
   return state.proBackendData;
 };
 
-function getProDetailsFromStorage(): ProDetailsResultType | null {
+function getProStatusFromStorage(): ProStatusResultType | null {
   const response = Storage.get(SettingsKey.proDetails);
   if (!response) {
     return null;
   }
   // We persist, verbatim, the JS object the libsession-util-nodejs glue produced from the backend
-  // response (see putProDetailsInStorage) — not a raw libsession struct — and cast it back to the
-  // CURRENT ProDetailsResultType (an alias of the glue's GetProDetailsResponse). session-desktop and
+  // response (see putProStatusInStorage) — not a raw libsession struct — and cast it back to the
+  // CURRENT ProStatusResultType (an alias of the glue's GetProStatusResponse). session-desktop and
   // libsession-util-nodejs ship in lockstep, so within a single build the producer, the type and this
   // consumer can't drift — but a cache written by an OLDER build can.
   //
@@ -50,8 +50,8 @@ function getProDetailsFromStorage(): ProDetailsResultType | null {
   // e.g. drop this cache behind a stored shape/version marker, or keep the new field optional at this
   // boundary. It's a transient, re-fetched cache, so drop-and-refetch is the simplest transition. This
   // is left as a reminder rather than pre-built, since pre-building would just be guessing at the shape.
-  if (typeof response === 'object' && Array.isArray((response as ProDetailsResultType).items)) {
-    return response as ProDetailsResultType;
+  if (typeof response === 'object' && response !== null && 'userStatus' in response) {
+    return response as ProStatusResultType;
   }
   void Storage.remove(SettingsKey.proDetails);
   window?.log?.error('pro details in storage were malformed; removing.');
@@ -70,6 +70,26 @@ export function proAccessVariantToString(variant: ProAccessVariant): string {
       // '' (none) or an unrecognized/future billing-period slug.
       return 'N/A';
   }
+}
+
+/**
+ * Display string for a parsed plan period {planCount, planUnit} (libsession Delta #14). Minimal English
+ * for now; the localized/pluralized version is tracked separately. "Lifetime" for the lifetime unit,
+ * "<n> <Unit>(s)" otherwise.
+ */
+export function planPeriodToString(
+  planCount: number | undefined,
+  planUnit: string | undefined
+): string {
+  if (!planUnit) {
+    return 'N/A';
+  }
+  if (planUnit === 'lifetime') {
+    return 'Lifetime';
+  }
+  const n = planCount ?? 0;
+  const unit = planUnit.charAt(0).toUpperCase() + planUnit.slice(1);
+  return `${n} ${unit}${n === 1 ? '' : 's'}`;
 }
 
 /**
@@ -223,10 +243,14 @@ function processProBackendData({
   const expiryTimeMs =
     mockExpiry ?? data?.expiryMs ?? defaultProAccessDetailsSourceData.expiryTimeMs;
 
-  const latestAccess = data?.items?.[0];
+  const latestAccess = data?.latestPayment ?? undefined;
   const provider =
     mockPlatform ?? latestAccess?.paymentProvider ?? defaultProAccessDetailsSourceData.provider;
-  const variant = mockVariant ?? latestAccess?.plan ?? defaultProAccessDetailsSourceData.variant;
+  const variant = mockVariant ?? defaultProAccessDetailsSourceData.variant;
+  // Real data carries a parsed {planCount, planUnit}; the mock still uses a legacy variant slug.
+  const variantString = mockVariant
+    ? proAccessVariantToString(mockVariant)
+    : planPeriodToString(latestAccess?.planCount, latestAccess?.planUnit);
   const isPlatformRefundAvailable =
     mockIsPlatformRefundAvailable ||
     (latestAccess?.platformRefundExpiryTsMs &&
@@ -256,7 +280,7 @@ function processProBackendData({
       inGracePeriod,
       isProcessingRefund,
       variant,
-      variantString: proAccessVariantToString(variant),
+      variantString,
       expiryTimeMs,
       expiryTimeDateString: formatDateWithLocale({
         date: new Date(beginAutoRenew),
@@ -275,7 +299,7 @@ function processProBackendData({
 
 export const getProBackendProDetails = (state: StateType): ProcessedProDetails => {
   const details = getProBackendData(state).details;
-  const mergedDetails = details.data ? details : { ...details, data: getProDetailsFromStorage() };
+  const mergedDetails = details.data ? details : { ...details, data: getProStatusFromStorage() };
 
   return processProBackendData(mergedDetails);
 };

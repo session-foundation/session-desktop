@@ -801,9 +801,9 @@ export const ProWrapperActions: ProActionsCalls = {
     callLibSessionWorker(['Pro', 'parseRevocationsResponse', first]) as Promise<
       ReturnType<ProActionsCalls['parseRevocationsResponse']>
     >,
-  parsePaymentDetailsResponse: async first =>
-    callLibSessionWorker(['Pro', 'parsePaymentDetailsResponse', first]) as Promise<
-      ReturnType<ProActionsCalls['parsePaymentDetailsResponse']>
+  parseProStatusResponse: async first =>
+    callLibSessionWorker(['Pro', 'parseProStatusResponse', first]) as Promise<
+      ReturnType<ProActionsCalls['parseProStatusResponse']>
     >,
   providerUrls: async first =>
     callLibSessionWorker(['Pro', 'providerUrls', first]) as Promise<

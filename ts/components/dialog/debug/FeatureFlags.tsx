@@ -938,7 +938,7 @@ export const ProDebugSection = ({
           <DebugButton
             onClick={async () => {
               const masterPrivKeyHex = await getProMasterKeyHex();
-              const response = await ProBackendAPI.getProDetails({ masterPrivKeyHex });
+              const response = await ProBackendAPI.getProStatus({ masterPrivKeyHex });
               if (getFeatureFlag('debugServerRequests')) {
                 window?.log?.debug('Pro Details: ', response);
               }
