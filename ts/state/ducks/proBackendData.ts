@@ -169,7 +169,7 @@ async function putProStatusInStorage(details: ProStatusResultType) {
   // We persist, verbatim, the JS object the libsession-util-nodejs glue produced from the backend
   // response (not a raw libsession struct). See getProStatusFromStorage for the transition reminder
   // that applies before adding any REQUIRED field to this shape.
-  await Storage.put(SettingsKey.proDetails, details);
+  await Storage.put(SettingsKey.proStatus, details);
 }
 
 async function handleNewProProof(rotatingPrivKeyHex: string): Promise<ProProof | null> {
@@ -252,7 +252,7 @@ let scheduledAccessExpiryTaskId: ReturnType<typeof setTimeout> | null = null;
 
 function scheduleRefresh(timestampMs: number) {
   const delay = Math.max(timestampMs - NetworkTime.now(), 15 * DURATION.SECONDS);
-  window?.log?.info(`Scheduling a pro details refresh in ${delay}ms for ${timestampMs}`);
+  window?.log?.info(`Scheduling a pro status refresh in ${delay}ms for ${timestampMs}`);
   return setTimeout(() => {
     window?.inboxStore?.dispatch(
       proBackendDataActions.refreshGetProStatusFromProBackend({}) as any
@@ -390,7 +390,7 @@ const fetchGetProStatusFromProBackend = createAsyncThunk(
             state.data.autoRenewing,
             state.data.userStatus
           );
-          // on the first fetch of our pro details after a restart, we want to show the CTAs if needed
+          // on the first fetch of our pro status after a restart, we want to show the CTAs if needed
           if (window.inboxStore?.dispatch && !firstFetchProStatusHappened) {
             void handleTriggeredCTAs(window.inboxStore?.dispatch, false);
           }

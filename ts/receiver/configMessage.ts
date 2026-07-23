@@ -151,7 +151,7 @@ async function mergeUserConfigsWithIncomingUpdates(
 
           if (proAccessExpiryBefore !== proAccessExpiryAfter) {
             window.log.debug(
-              `[mergeConfigsWithInboxUpdates] proAccessExpiry changed from ${proAccessExpiryBefore} to ${proAccessExpiryAfter}. Refreshing our pro details.`
+              `[mergeConfigsWithInboxUpdates] proAccessExpiry changed from ${proAccessExpiryBefore} to ${proAccessExpiryAfter}. Refreshing our pro status.`
             );
             window.inboxStore?.dispatch(
               proBackendDataActions.refreshGetProStatusFromProBackend({}) as any

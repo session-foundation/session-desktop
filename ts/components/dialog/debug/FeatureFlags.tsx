@@ -829,7 +829,7 @@ export const ProDebugSection = ({
 
   const resetPro = useCallback(async () => {
     await UserConfigWrapperActions.removeProConfig();
-    await Storage.remove(SettingsKey.proDetails);
+    await Storage.remove(SettingsKey.proStatus);
     await Storage.remove(SettingsKey.proExpiringSoonCTA);
     await Storage.remove(SettingsKey.proExpiredCTA);
     dispatch(proBackendDataActions.reset({ key: 'details' }));
@@ -910,7 +910,7 @@ export const ProDebugSection = ({
               dispatch(proBackendDataActions.refreshGetProStatusFromProBackend({}) as any);
             }}
           >
-            Refresh Pro Details
+            Refresh Pro Status
           </DebugButton>
           <DebugButton
             onClick={async () => {
@@ -940,11 +940,11 @@ export const ProDebugSection = ({
               const masterPrivKeyHex = await getProMasterKeyHex();
               const response = await ProBackendAPI.getProStatus({ masterPrivKeyHex });
               if (getFeatureFlag('debugServerRequests')) {
-                window?.log?.debug('Pro Details: ', response);
+                window?.log?.debug('Pro Status: ', response);
               }
             }}
           >
-            Get Pro Details
+            Get Pro Status
           </DebugButton>
           <DebugButton
             hide={!proAvailable}

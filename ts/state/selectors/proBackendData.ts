@@ -35,7 +35,7 @@ const getProBackendData = (state: StateType): ProBackendDataState => {
 };
 
 function getProStatusFromStorage(): ProStatusResultType | null {
-  const response = Storage.get(SettingsKey.proDetails);
+  const response = Storage.get(SettingsKey.proStatus);
   if (!response) {
     return null;
   }
@@ -54,8 +54,8 @@ function getProStatusFromStorage(): ProStatusResultType | null {
   if (typeof response === 'object' && response !== null && 'userStatus' in response) {
     return response as ProStatusResultType;
   }
-  void Storage.remove(SettingsKey.proDetails);
-  window?.log?.error('pro details in storage were malformed; removing.');
+  void Storage.remove(SettingsKey.proStatus);
+  window?.log?.error('pro status in storage were malformed; removing.');
   return null;
 }
 
