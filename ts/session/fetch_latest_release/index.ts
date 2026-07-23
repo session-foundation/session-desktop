@@ -48,6 +48,12 @@ async function fetchReleaseFromFSAndUpdateMain(
       lastFetchedTimestamp = Date.now();
       ipcRenderer.send('set-release-from-file-server', justFetched);
       window.readyForUpdates();
+      // When we detect a new release through routine polling, trigger an immediate check
+      // instead of waiting for the next updater interval tick. The forced (debug menu) path
+      // runs its own 'force-update-check', so we skip it here to avoid a duplicate check.
+      if (!force) {
+        void ipcRenderer.invoke('trigger-update-check');
+      }
       return releaseVersion;
     }
 
