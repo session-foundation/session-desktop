@@ -61,7 +61,7 @@ export const initialProBackendDataState: ProBackendDataState = {
 type PayloadCreatorType = Parameters<Parameters<typeof createAsyncThunk>['1']>['1'];
 
 // The getter returns a libsession-parsed response struct (or null on transport failure). Every parsed
-// struct carries the Delta #12 header: `status` ('ok' on success) + an optional machine `errorCode` slug
+// struct carries the response header (§5): `status` ('ok' on success) + an optional machine `errorCode` slug
 // and an English diagnostic `error`.
 type CreateProBackendFetchAsyncThunk<
   D extends { status: 'ok' | 'fail' | 'error'; errorCode: string | null; error: string | null },

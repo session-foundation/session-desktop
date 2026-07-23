@@ -166,7 +166,7 @@ export function formatRoundedUpDuration(durationMs: number): string {
 export type PlanDurationUnit = 'second' | 'day' | 'week' | 'month' | 'year';
 
 /**
- * Formats a parsed plan period {count, unit} (libsession Delta #14) into a localized, pluralized
+ * Formats a parsed plan period {count, unit} (libsession, plan grammar §1) into a localized, pluralized
  * duration string like "3 months" or "1 year", using the date-fns locale. The unit is rendered
  * exactly as given — never canonicalized, so 12 months stays "12 months", not "1 year".
  */

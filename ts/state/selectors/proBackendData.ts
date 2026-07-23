@@ -74,7 +74,7 @@ export function proAccessVariantToString(variant: ProAccessVariant): string {
 }
 
 /**
- * Display string for a parsed plan period {planCount, planUnit} (libsession Delta #14). The duration
+ * Display string for a parsed plan period {planCount, planUnit} (libsession, plan grammar §1). The duration
  * units render via date-fns (localized + pluralized, unit preserved as-is — 12 months stays "12
  * months"). "lifetime" isn't a duration: use the localized `proPlanLifetime` if that Crowdin key
  * exists yet, else the English fallback (same gate as the pro_provider_* / pro_error_* stopgaps).
@@ -105,7 +105,7 @@ export function planPeriodToString(
 }
 
 /**
- * Per-provider display strings. Client-owned i18n now (Delta #10) — libsession no longer supplies them.
+ * Per-provider display strings. Client-owned i18n now — libsession no longer supplies them.
  * URLs are NOT here: they're only needed for link clicks and are fetched on demand via
  * ProWrapperActions.providerUrls(slug). Resolved dynamically from `pro_provider_<slug>_<suffix>` tokens
  * (a temporary stopgap injected into the generated localization; wiped by the next Crowdin sync, so
