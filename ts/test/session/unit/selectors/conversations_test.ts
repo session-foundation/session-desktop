@@ -2,10 +2,19 @@ import { assert } from 'chai';
 
 import Sinon from 'sinon';
 import { CONVERSATION_PRIORITIES, ConversationTypeEnum } from '../../../../models/types';
-import { ConversationLookupType } from '../../../../state/ducks/conversations';
+import type { ReplyingToMessageProps } from '../../../../components/conversation/composition/CompositionBox';
+import {
+  actions,
+  ConversationLookupType,
+  getEmptyConversationState,
+  quoteMessage,
+  reducer as conversationsReducer,
+} from '../../../../state/ducks/conversations';
+import type { StateType } from '../../../../state/reducer';
 import {
   _getConversationComparator,
   _getSortedConversations,
+  getQuotedMessage,
 } from '../../../../state/selectors/conversations';
 import { TestUtils } from '../../../test-utils';
 
@@ -17,6 +26,69 @@ describe('state/selectors/conversations', () => {
   afterEach(() => {
     Sinon.restore();
   });
+
+  describe('#getQuotedMessage', () => {
+    const openConversation = (
+      state: ReturnType<typeof getEmptyConversationState>,
+      conversationKey: string
+    ) =>
+      conversationsReducer(
+        state,
+        actions.openConversationExternal({
+          conversationKey,
+          initialMessages: [],
+          initialQuotes: [],
+          firstUnreadMessageId: null,
+          mostRecentMessageId: null,
+          oldestMessageId: null,
+        })
+      );
+
+    const buildState = (conversations: ReturnType<typeof getEmptyConversationState>) =>
+      ({ conversations }) as StateType;
+
+    const firstQuote: ReplyingToMessageProps = {
+      convoId: 'conversation-1',
+      id: 'message-1',
+      author: 'author-1',
+      referencedMessageSentAt: 111,
+      quotedAt: 1,
+      text: 'first quote',
+    };
+
+    const secondQuote: ReplyingToMessageProps = {
+      convoId: 'conversation-2',
+      id: 'message-2',
+      author: 'author-2',
+      referencedMessageSentAt: 222,
+      quotedAt: 2,
+      text: 'second quote',
+    };
+
+    it('keeps draft reply quotes scoped to their conversation', () => {
+      let state = getEmptyConversationState();
+
+      state = openConversation(state, 'conversation-1');
+      state = conversationsReducer(state, quoteMessage(firstQuote));
+      assert.deepEqual(getQuotedMessage(buildState(state)), firstQuote);
+
+      state = openConversation(state, 'conversation-2');
+      assert.isUndefined(getQuotedMessage(buildState(state)));
+
+      state = conversationsReducer(state, quoteMessage(secondQuote));
+      assert.deepEqual(getQuotedMessage(buildState(state)), secondQuote);
+
+      state = openConversation(state, 'conversation-1');
+      assert.deepEqual(getQuotedMessage(buildState(state)), firstQuote);
+
+      state = conversationsReducer(state, quoteMessage(undefined));
+      assert.isUndefined(getQuotedMessage(buildState(state)));
+
+      state = openConversation(state, 'conversation-2');
+      assert.deepEqual(getQuotedMessage(buildState(state)), secondQuote);
+    });
+  });
+
   describe('#getSortedConversationsList', () => {
     it('sorts conversations based on timestamp then by intl-friendly title', () => {
       const data: ConversationLookupType = {

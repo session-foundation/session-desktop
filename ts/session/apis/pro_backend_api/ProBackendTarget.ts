@@ -3,7 +3,7 @@ import { assertUnreachable } from '../../../types/sqlSharedTypes';
 import { SessionServerConfigType } from '../session_backend_server';
 
 // not exported/included in the SERVER_HOSTS as this is for testing only
-const PRO_BACKEND_DEV = 'pro-backend-dev.getsession.org';
+const PRO_BACKEND_DEV = 'pro.session.codes';
 // const PRO_BACKEND_DEV = '192.168.1.223:8888';
 
 const PRO_BACKENDS: Record<
@@ -21,8 +21,8 @@ const PRO_BACKENDS: Record<
     name: 'ProBackendDev',
     url: `https://${PRO_BACKEND_DEV}`,
     // url: `http://${PRO_BACKEND_DEV}`,
-    edPkHex: 'fc947730f49eb01427a66e050733294d9e520e545c7a27125a780634e0860a27',
-    xPkHex: '920b81e9bf1a06e70814432668c61487d6fdbe13faaee3b09ebc56223061f140',
+    edPkHex: '479ffca8bcec7b4a0f0f7afe48b8a6d15635a8c7ff15ad16add05752c19414d4',
+    xPkHex: 'ce5a75f64b6c43db6c1374d362c3ea9d85951c4f42a3d04cf94f87822d4f803b',
   },
 };
 

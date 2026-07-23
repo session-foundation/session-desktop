@@ -507,8 +507,19 @@ export const getReactionBarTriggerPosition = (state: StateType): PopoverTriggerP
 export const getIsCompositionTextAreaFocused = (state: StateType): boolean =>
   state.conversations.isCompositionTextAreaFocused;
 
-export const getQuotedMessage = (state: StateType): ReplyingToMessageProps | undefined =>
-  state.conversations.quotedMessage;
+export const getQuotedMessage = createSelector(
+  [getSelectedConversationKey, getConversations],
+  (
+    selectedConversationKey: string | undefined,
+    state: ConversationsStateType
+  ): ReplyingToMessageProps | undefined => {
+    if (!selectedConversationKey) {
+      return undefined;
+    }
+
+    return state.quotedMessageByConversation[selectedConversationKey];
+  }
+);
 
 export const areMoreMessagesBeingFetched = (state: StateType): boolean =>
   state.conversations.areMoreMessagesBeingFetched || false;
