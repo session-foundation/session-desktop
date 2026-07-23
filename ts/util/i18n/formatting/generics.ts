@@ -161,6 +161,30 @@ export function formatRoundedUpDuration(durationMs: number): string {
   return formatDuration(duration, { locale });
 }
 
+/** date-fns duration units a parsed plan {count, unit} can map onto (excludes 'lifetime', which
+ * isn't a duration and is handled by the caller with a localized "Lifetime" string). */
+export type PlanDurationUnit = 'second' | 'day' | 'week' | 'month' | 'year';
+
+/**
+ * Formats a parsed plan period {count, unit} (libsession Delta #14) into a localized, pluralized
+ * duration string like "3 months" or "1 year", using the date-fns locale. The unit is rendered
+ * exactly as given — never canonicalized, so 12 months stays "12 months", not "1 year".
+ */
+export function formatPlanDuration(count: number, unit: PlanDurationUnit): string {
+  const locale = getTimeLocaleDictionary();
+  const duration =
+    unit === 'second'
+      ? { seconds: count }
+      : unit === 'day'
+        ? { days: count }
+        : unit === 'week'
+          ? { weeks: count }
+          : unit === 'month'
+            ? { months: count }
+            : { years: count };
+  return formatDuration(duration, { locale });
+}
+
 /**
  * Formats the time remaining until a unix timestamp with localized duration strings.
  * @see {@link formatRoundedUpDuration}

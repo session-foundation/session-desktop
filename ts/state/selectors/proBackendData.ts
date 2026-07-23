@@ -18,6 +18,7 @@ import {
 import { NetworkTime } from '../../util/NetworkTime';
 import {
   formatDateWithLocale,
+  formatPlanDuration,
   formatRoundedUpTimeUntilTimestamp,
 } from '../../util/i18n/formatting/generics';
 import {
@@ -73,9 +74,10 @@ export function proAccessVariantToString(variant: ProAccessVariant): string {
 }
 
 /**
- * Display string for a parsed plan period {planCount, planUnit} (libsession Delta #14). Minimal English
- * for now; the localized/pluralized version is tracked separately. "Lifetime" for the lifetime unit,
- * "<n> <Unit>(s)" otherwise.
+ * Display string for a parsed plan period {planCount, planUnit} (libsession Delta #14). The duration
+ * units render via date-fns (localized + pluralized, unit preserved as-is — 12 months stays "12
+ * months"). "lifetime" isn't a duration: use the localized `proPlanLifetime` if that Crowdin key
+ * exists yet, else the English fallback (same gate as the pro_provider_* / pro_error_* stopgaps).
  */
 export function planPeriodToString(
   planCount: number | undefined,
@@ -85,11 +87,21 @@ export function planPeriodToString(
     return 'N/A';
   }
   if (planUnit === 'lifetime') {
-    return 'Lifetime';
+    const lifetimeToken = 'proPlanLifetime';
+    return isSimpleTokenNoArgs(lifetimeToken) ? tr(lifetimeToken) : 'Lifetime';
   }
   const n = planCount ?? 0;
-  const unit = planUnit.charAt(0).toUpperCase() + planUnit.slice(1);
-  return `${n} ${unit}${n === 1 ? '' : 's'}`;
+  switch (planUnit) {
+    case 'second':
+    case 'day':
+    case 'week':
+    case 'month':
+    case 'year':
+      return formatPlanDuration(n, planUnit);
+    default:
+      // libsession's closed grammar means we shouldn't get an unrecognized unit; degrade gracefully.
+      return 'N/A';
+  }
 }
 
 /**
