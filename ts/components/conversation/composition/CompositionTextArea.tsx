@@ -71,7 +71,8 @@ function isEditableTarget(target: EventTarget | null) {
     return false;
   }
 
-  const editableSelector = 'input, textarea, select, [contenteditable="true"], [contenteditable="plaintext-only"]';
+  const editableSelector =
+    'input, textarea, select, [contenteditable="true"], [contenteditable="plaintext-only"]';
   return !!target.closest(editableSelector);
 }
 
@@ -604,7 +605,7 @@ export function CompositionTextArea(props: Props) {
     },
   });
 
-      useEffect(() => {
+  useEffect(() => {
     if (!selectedConversationKey || !typingEnabled) {
       return undefined;
     }
