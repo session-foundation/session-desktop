@@ -66,6 +66,26 @@ type Props = {
 
 type SearchableSuggestion = SessionSuggestionDataItem & { searchable?: Array<string> };
 
+function isEditableTarget(target: EventTarget | null) {
+  if (!(target instanceof HTMLElement)) {
+    return false;
+  }
+
+  const editableSelector =
+    'input, textarea, select, [contenteditable="true"], [contenteditable="plaintext-only"]';
+  return !!target.closest(editableSelector);
+}
+
+function isPrintableTypingEvent(event: globalThis.KeyboardEvent) {
+  return (
+    event.key.length === 1 &&
+    !event.altKey &&
+    !event.ctrlKey &&
+    !event.metaKey &&
+    !event.defaultPrevented
+  );
+}
+
 function useMembersInThisChat(): Array<SearchableSuggestion> {
   const selectedConvoKey = useSelectedConversationKey();
   const isPrivate = useSelectedIsPrivate();
@@ -584,6 +604,33 @@ export function CompositionTextArea(props: Props) {
       }
     },
   });
+
+  useEffect(() => {
+    if (!selectedConversationKey || !typingEnabled) {
+      return undefined;
+    }
+
+    const handleTypingFocus = (event: globalThis.KeyboardEvent) => {
+      if (!isPrintableTypingEvent(event) || isEditableTarget(event.target)) {
+        return;
+      }
+
+      const input = inputRef.current;
+      if (!input) {
+        return;
+      }
+
+      event.preventDefault();
+      input.focus();
+      input.typeAtCaret(event.key);
+    };
+
+    document.addEventListener('keydown', handleTypingFocus, true);
+
+    return () => {
+      document.removeEventListener('keydown', handleTypingFocus, true);
+    };
+  }, [inputRef, selectedConversationKey, typingEnabled]);
 
   const onFocus = () => {
     dispatch(setIsCompositionTextAreaFocused(true));
