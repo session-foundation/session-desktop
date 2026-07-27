@@ -111,7 +111,6 @@ import { privateSet, privateSetKey } from './modelFriends';
 import { getFeatureFlag } from '../state/ducks/types/releasedFeaturesReduxTypes';
 import type { OutgoingProMessageDetails } from '../types/message/OutgoingProMessageDetails';
 import { longOrNumberToBigInt } from '../types/Bigint';
-import { toSqliteBoolean } from '../node/database_utility';
 import type { WithLocalMessageDeletionType } from '../session/types/with';
 
 // tslint:disable: cyclomatic-complexity
@@ -967,7 +966,8 @@ export class MessageModel extends Model<MessageAttributes> {
     requestedDeleteType: Extract<
       WithLocalMessageDeletionType['deletionType'],
       'markDeletedGlobally' | 'markDeletedThisDevice'
-    >
+    >,
+    { shouldMarkAsRead }: { shouldMarkAsRead: boolean }
   ) {
     const isDeletedType = this.get('isDeleted');
     const requestedDeleteLocallyOnly = requestedDeleteType === 'markDeletedThisDevice';
@@ -1006,16 +1006,13 @@ export class MessageModel extends Model<MessageAttributes> {
       reaction: undefined,
       messageRequestResponse: undefined,
       errors: undefined,
-      unread: toSqliteBoolean(false),
+      ...(shouldMarkAsRead ? { unread: READ_MESSAGE_STATE.read } : {}),
     });
     // Only overwrite the messageHash when we are deleting globally.
     // This is because a locally deleted message should be able to be marked as deleted globally
     if (requestedDeleteGlobally) {
       this.set({ messageHash: undefined });
     }
-    // we can ignore the result of that markMessageReadNoCommit as it would only be used
-    // to refresh the expiry of it(but it is already marked as "deleted", so we don't care)
-    this.markMessageReadNoCommit(Date.now());
     await this.commit();
     // the line below makes sure that getNextExpiringMessage will find this message as expiring.
     // getNextExpiringMessage is used on app start to clean already expired messages which should have been removed already, but are not
