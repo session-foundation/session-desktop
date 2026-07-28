@@ -101,14 +101,14 @@ function clear() {
 /**
  * Returns true if the hash is effectively revoked.
  * That is, if the hash is present in the revocation list,
- * and has an `effective_unix_ts_ms` that is in the past (network time).
+ * and has an `effectiveMs` that is in the past (network time).
  */
-function isB64HashEffectivelyRevoked(genIndexHashBase64: string) {
+function isB64HashEffectivelyRevoked(revocationTagBase64: string) {
   assertInitialFetchFromDBDone('isB64HashEffectivelyRevoked');
 
-  const found = cachedProRevocationListItems.find(m => m.gen_index_hash_b64 === genIndexHashBase64);
+  const found = cachedProRevocationListItems.find(m => m.revocationTagB64 === revocationTagBase64);
 
-  return !!found && NetworkTime.now() >= found.effective_unix_ts_ms;
+  return !!found && NetworkTime.now() >= found.effectiveMs;
 }
 
 export const ProRevocationCache = {

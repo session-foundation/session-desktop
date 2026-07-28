@@ -1,7 +1,7 @@
 import styled from 'styled-components';
-import { type ReactNode } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 import { getAppDispatch } from '../../../../../state/dispatch';
-import { tr } from '../../../../../localization/localeTools';
+import { isSimpleTokenNoArgs, tr } from '../../../../../localization/localeTools';
 import { Localizer } from '../../../../basic/Localizer';
 import { ModalBasicHeader } from '../../../../SessionWrapperModal';
 import { ModalBackButton } from '../../../shared/ModalBackButton';
@@ -16,6 +16,8 @@ import { LucideIcon } from '../../../../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE, WithLucideUnicode } from '../../../../icon/lucide';
 import { SessionButton, SessionButtonColor } from '../../../../basic/SessionButton';
 import { showLinkVisitWarningDialog } from '../../../OpenUrlModal';
+import { ProWrapperActions } from '../../../../../webworker/workers/browser/libsession_worker_interface';
+import type { ProviderUrls } from 'libsession_util_nodejs';
 import { proButtonProps } from '../../../SessionCTA';
 import { Flex } from '../../../../basic/Flex';
 import type { ProNonOriginatingPageVariant } from '../../../../../types/ReduxTypes';
@@ -23,8 +25,8 @@ import { useCurrentNeverHadPro } from '../../../../../hooks/useHasPro';
 import LIBSESSION_CONSTANTS from '../../../../../session/utils/libsession/libsession_constants';
 import { ProPaymentProvider } from '../../../../../session/apis/pro_backend_api/types';
 import {
-  useProBackendProDetails,
-  type ProcessedProDetails,
+  useProBackendProStatus,
+  type ProcessedProStatus,
 } from '../../../../../state/selectors/proBackendData';
 import { userSettingsModal } from '../../../../../state/ducks/modalDialog';
 
@@ -32,21 +34,83 @@ type VariantPageProps = {
   variant: ProNonOriginatingPageVariant;
 };
 
-const useProBackendProDetailsLocal = useProBackendProDetails;
+const useProBackendProStatusLocal = useProBackendProStatus;
+
+/**
+ * Provider support/management URLs are libsession's (fetched by provider slug), not client display data,
+ * so we resolve them on demand at click time via the worker rather than threading async state into the
+ * (synchronous) selector. `pick` chooses which URL from the resolved set.
+ */
+async function openProviderUrl(
+  provider: ProPaymentProvider,
+  pick: (urls: ProviderUrls) => string,
+  dispatch: Parameters<typeof showLinkVisitWarningDialog>[1]
+) {
+  const urls = await ProWrapperActions.providerUrls({ code: provider });
+  if (!urls) {
+    return;
+  }
+  // A provider may expose only some URLs; libsession returns '' for an absent one. Guard on the
+  // picked URL (not just the container) so we never open the link-visit dialog on an empty string.
+  const url = pick(urls);
+  if (url) {
+    showLinkVisitWarningDialog(url, dispatch);
+  }
+}
 const useCurrentNeverHadProLocal = useCurrentNeverHadPro;
 
 /**
  * For some texts, we want `Apple website` for apple but `Google Play Store website` for google...
  * Those two are not stored in the same field, so this hook can be used to fetch the right one
  */
-function useStoreOrPlatformFromProvider(data: ProcessedProDetails['data']) {
-  return data.provider === ProPaymentProvider.iOSAppStore
+function useStoreOrPlatformFromProvider(data: ProcessedProStatus['data']) {
+  return data.provider === ProPaymentProvider.AppStore
     ? data.providerConstants.platform // we want `Apple website` for apple
     : data.providerConstants.store; // but `Google Play Store website` for google...
 }
 
+// The purchasable-platform slug set is a static libsession constant, so fetch it once and cache it.
+let cachedVisiblePlatformSlugs: Array<string> | null = null;
+
+/**
+ * Build the `{pro_stores}` bulleted list from the purchasable provider slugs, keeping only those with a
+ * `pro_provider_<slug>_store` translation (a new/untranslated provider is skipped gracefully). Desktop
+ * keeps libsession's order as-is (it has no "own" platform to hoist).
+ */
+function buildProStoresList(slugs: Array<string>): string {
+  return slugs
+    .map(slug => {
+      const token = `pro_provider_${slug}_store`;
+      return isSimpleTokenNoArgs(token) ? tr(token) : undefined;
+    })
+    .filter((store): store is string => !!store)
+    .map(store => `<br/>• ${store}`)
+    .join('');
+}
+
+/** The localized `{pro_stores}` list for the "purchase via …" messages (fetched once; empty until loaded). */
+function useProStoresList(): string {
+  const [slugs, setSlugs] = useState<Array<string>>(cachedVisiblePlatformSlugs ?? []);
+  useEffect(() => {
+    if (cachedVisiblePlatformSlugs) {
+      return undefined;
+    }
+    let cancelled = false;
+    void ProWrapperActions.visiblePlatforms().then(result => {
+      cachedVisiblePlatformSlugs = result;
+      if (!cancelled) {
+        setSlugs(result);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  return buildProStoresList(slugs);
+}
+
 function ProStatusTextUpdate() {
-  const { data } = useProBackendProDetailsLocal();
+  const { data } = useProBackendProStatusLocal();
   return data.autoRenew ? (
     <Localizer
       token="proAccessActivatedAutoShort"
@@ -155,7 +219,7 @@ const ProInfoBlockText = styled.div`
 `;
 
 function ProInfoBlockDevice({ textElement }: { textElement: ReactNode }) {
-  const { data } = useProBackendProDetailsLocal();
+  const { data } = useProBackendProStatusLocal();
   return (
     <ProInfoBlockItem
       iconElement={<ProInfoBlockIconElement unicode={LUCIDE_ICONS_UNICODE.SMARTPHONE} />}
@@ -170,8 +234,8 @@ function ProInfoBlockDevice({ textElement }: { textElement: ReactNode }) {
 }
 
 function ProInfoBlockDeviceLinked() {
-  const { data } = useProBackendProDetailsLocal();
   const hasNeverHadPro = useCurrentNeverHadProLocal();
+  const proStores = useProStoresList();
 
   return (
     <ProInfoBlockItem
@@ -181,8 +245,8 @@ function ProInfoBlockDeviceLinked() {
           <strong>{tr('onLinkedDevice')}</strong>
           <Localizer
             token={hasNeverHadPro ? 'proUpgradeDesktopLinked' : 'proRenewDesktopLinked'}
-            platform_store={data.providerConstants.store} // this one is always store
-            platform_store_other={data.providerConstants.store_other}
+            pro_stores={proStores}
+            htmlArgs={['pro_stores']}
           />
         </ProInfoBlockText>
       }
@@ -197,7 +261,7 @@ function ProInfoBlockWebsite({
   textElement: ReactNode;
   titleType: 'via' | 'onThe';
 }) {
-  const { data } = useProBackendProDetailsLocal();
+  const { data } = useProBackendProStatusLocal();
   const storeOrPlatform = useStoreOrPlatformFromProvider(data);
 
   return (
@@ -257,15 +321,15 @@ function ProInfoBlockLayout({
 
 function ProInfoBlockUpgrade() {
   const dispatch = getAppDispatch();
-  const { data } = useProBackendProDetailsLocal();
+  const proStores = useProStoresList();
   return (
     <ProInfoBlockLayout
       titleElement={tr('proUpgradingTo')}
       descriptionElement={
         <Localizer
           token="proAccessUpgradeDesktop"
-          platform_store={data.providerConstants.store} // this one is always store
-          platform_store_other={data.providerConstants.store_other}
+          pro_stores={proStores}
+          htmlArgs={['pro_stores']}
           icon={LUCIDE_ICONS_UNICODE.EXTERNAL_LINK_ICON}
         />
       }
@@ -281,7 +345,7 @@ function ProInfoBlockUpgrade() {
 }
 
 function ProInfoBlockUpdate() {
-  const { data } = useProBackendProDetailsLocal();
+  const { data } = useProBackendProStatusLocal();
   const storeOrPlatform = useStoreOrPlatformFromProvider(data);
 
   return (
@@ -326,8 +390,9 @@ function ProInfoBlockUpdate() {
 
 function ProInfoBlockRenew() {
   const dispatch = getAppDispatch();
-  const { data } = useProBackendProDetailsLocal();
+  const { data } = useProBackendProStatusLocal();
   const storeOrPlatform = useStoreOrPlatformFromProvider(data);
+  const proStores = useProStoresList();
 
   return (
     <ProInfoBlockLayout
@@ -335,8 +400,8 @@ function ProInfoBlockRenew() {
       descriptionElement={
         <Localizer
           token="proAccessRenewDesktop"
-          platform_store={data.providerConstants.store}
-          platform_store_other={data.providerConstants.store_other}
+          pro_stores={proStores}
+          htmlArgs={['pro_stores']}
           icon={LUCIDE_ICONS_UNICODE.EXTERNAL_LINK_ICON}
         />
       }
@@ -368,7 +433,7 @@ function ProInfoBlockRenew() {
 }
 
 function ProInfoBlockCancel() {
-  const { data } = useProBackendProDetailsLocal();
+  const { data } = useProBackendProStatusLocal();
   const storeOrPlatform = useStoreOrPlatformFromProvider(data);
 
   return (
@@ -439,7 +504,7 @@ function ProInfoBlockRefundSessionSupport() {
 }
 
 function ProInfoBlockRefundGooglePlay() {
-  const { data } = useProBackendProDetailsLocal();
+  const { data } = useProBackendProStatusLocal();
   return (
     <PanelButtonGroup containerStyle={containerStyle}>
       <ProInfoBlockRefundTitle>
@@ -455,7 +520,7 @@ function ProInfoBlockRefundGooglePlay() {
 }
 
 function ProInfoBlockRefundIOS() {
-  const { data } = useProBackendProDetailsLocal();
+  const { data } = useProBackendProStatusLocal();
   return (
     <ProInfoBlockLayout
       titleElement={tr('proRefunding')}
@@ -497,27 +562,25 @@ function ProInfoBlockRefundIOS() {
 }
 
 function ProInfoBlockRefund() {
-  const { data } = useProBackendProDetailsLocal();
+  const { data } = useProBackendProStatusLocal();
 
   if (!data.isPlatformRefundAvailable) {
     return <ProInfoBlockRefundSessionSupport />;
   }
 
   switch (data.provider) {
-    case ProPaymentProvider.iOSAppStore:
+    case ProPaymentProvider.AppStore:
       return <ProInfoBlockRefundIOS />;
-    case ProPaymentProvider.GooglePlayStore:
+    case ProPaymentProvider.GooglePlay:
       return <ProInfoBlockRefundGooglePlay />;
-    case ProPaymentProvider.Nil:
-    case ProPaymentProvider.Rangeproof:
-      return <ProInfoBlockRefundSessionSupport />;
     default:
-      return assertUnreachable(data.provider, `Unknown pro payment provider: ${data.provider}`);
+      // Rangeproof, none (''), or an unknown/future provider slug -> the Session-support refund flow.
+      return <ProInfoBlockRefundSessionSupport />;
   }
 }
 
 function ProInfoBlockRefundRequested() {
-  const { data } = useProBackendProDetailsLocal();
+  const { data } = useProBackendProStatusLocal();
   const dispatch = getAppDispatch();
 
   return (
@@ -532,7 +595,7 @@ function ProInfoBlockRefundRequested() {
       </ProInfoBlockRefundTitle>
       <ProInfoBlockDescription
         onClick={() =>
-          showLinkVisitWarningDialog(data.providerConstants.refund_status_url, dispatch)
+          void openProviderUrl(data.provider, u => u.refundStatusUrl, dispatch)
         }
         style={{ cursor: 'pointer' }}
       >
@@ -567,7 +630,7 @@ function ProInfoBlock({ variant }: VariantPageProps) {
 
 function ProPageButtonUpdate() {
   const dispatch = getAppDispatch();
-  const { data } = useProBackendProDetailsLocal();
+  const { data } = useProBackendProStatusLocal();
   const storeOrPlatform = useStoreOrPlatformFromProvider(data);
 
   return (
@@ -575,7 +638,7 @@ function ProPageButtonUpdate() {
       {...proButtonProps}
       buttonColor={SessionButtonColor.Primary}
       onClick={() => {
-        showLinkVisitWarningDialog(data.providerConstants.update_subscription_url, dispatch);
+        void openProviderUrl(data.provider, u => u.updateSubscriptionUrl, dispatch);
       }}
       dataTestId="pro-open-platform-website-button"
     >
@@ -586,14 +649,14 @@ function ProPageButtonUpdate() {
 
 function ProPageButtonCancel() {
   const dispatch = getAppDispatch();
-  const { data } = useProBackendProDetailsLocal();
+  const { data } = useProBackendProStatusLocal();
   const storeOrPlatform = useStoreOrPlatformFromProvider(data);
   return (
     <SessionButton
       {...proButtonProps}
       buttonColor={SessionButtonColor.Danger}
       onClick={() => {
-        showLinkVisitWarningDialog(data.providerConstants.cancel_subscription_url, dispatch);
+        void openProviderUrl(data.provider, u => u.cancelSubscriptionUrl, dispatch);
       }}
       dataTestId="pro-open-platform-website-button"
     >
@@ -604,17 +667,16 @@ function ProPageButtonCancel() {
 
 function ProPageButtonRefund() {
   const dispatch = getAppDispatch();
-  const { data } = useProBackendProDetailsLocal();
+  const { data } = useProBackendProStatusLocal();
   const storeOrPlatform = useStoreOrPlatformFromProvider(data);
   return (
     <SessionButton
       {...proButtonProps}
       buttonColor={SessionButtonColor.Danger}
       onClick={() => {
-        showLinkVisitWarningDialog(
-          data.isPlatformRefundAvailable
-            ? data.providerConstants.refund_platform_url
-            : data.providerConstants.refund_support_url,
+        void openProviderUrl(
+          data.provider,
+          u => (data.isPlatformRefundAvailable ? u.refundPlatformUrl : u.refundSupportUrl),
           dispatch
         );
       }}

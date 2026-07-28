@@ -2,7 +2,7 @@ import { isBoolean, isNil } from 'lodash';
 import { Dispatch, useCallback, useEffect, useMemo, useState } from 'react';
 import { clipboard } from 'electron';
 import useAsync from 'react-use/lib/useAsync';
-import { ProConfig, type ProProof } from 'libsession_util_nodejs';
+import { ProConfig } from 'libsession_util_nodejs';
 import { getAppDispatch } from '../../../state/dispatch';
 import {
   getDataFeatureFlag,
@@ -41,7 +41,7 @@ import {
 import { UserConfigWrapperActions } from '../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 import { isDebugMode } from '../../../shared/env_vars';
 import {
-  useProBackendProDetails,
+  useProBackendProStatus,
   useProBackendRefetch,
 } from '../../../state/selectors/proBackendData';
 import ProBackendAPI from '../../../session/apis/pro_backend_api/ProBackendAPI';
@@ -740,7 +740,7 @@ function ProConfigForm({
   );
   const [sigInput, setSigInput] = useState<string>(proConfig?.proProof.signatureHex ?? '');
   const [genHashInput, setGenHashInput] = useState<string>(
-    proConfig?.proProof.genIndexHashB64 ?? ''
+    proConfig?.proProof.revocationTagB64 ?? ''
   );
   const [versionInput, setVersionInput] = useState<string>(
     proConfig?.proProof.version.toString() ?? ''
@@ -780,7 +780,7 @@ function ProConfigForm({
 }
 
 function ProConfigManager({ forceUpdate }: { forceUpdate: () => void }) {
-  const { isFetching } = useProBackendProDetails();
+  const { isFetching } = useProBackendProStatus();
   const refetch = useProBackendRefetch();
   const [proConfig, setProConfig] = useState<ProConfig | null>(null);
   const getProConfig = useCallback(async () => {
@@ -829,7 +829,7 @@ export const ProDebugSection = ({
 
   const resetPro = useCallback(async () => {
     await UserConfigWrapperActions.removeProConfig();
-    await Storage.remove(SettingsKey.proDetails);
+    await Storage.remove(SettingsKey.proStatus);
     await Storage.remove(SettingsKey.proExpiringSoonCTA);
     await Storage.remove(SettingsKey.proExpiredCTA);
     dispatch(proBackendDataActions.reset({ key: 'details' }));
@@ -907,10 +907,10 @@ export const ProDebugSection = ({
               if (!proAvailable) {
                 return;
               }
-              dispatch(proBackendDataActions.refreshGetProDetailsFromProBackend({}) as any);
+              dispatch(proBackendDataActions.refreshGetProStatusFromProBackend({}) as any);
             }}
           >
-            Refresh Pro Details
+            Refresh Pro Status
           </DebugButton>
           <DebugButton
             onClick={async () => {
@@ -924,15 +924,12 @@ export const ProDebugSection = ({
               if (getFeatureFlag('debugServerRequests')) {
                 window?.log?.debug('getProProof response: ', response);
               }
-              if (response?.status_code === 200) {
-                const proProof: ProProof = {
-                  expiryMs: response.result.expiry_unix_ts_ms,
-                  genIndexHashB64: response.result.gen_index_hash_b64,
-                  rotatingPubkeyHex: response.result.rotating_pkey_hex,
-                  version: response.result.version,
-                  signatureHex: response.result.sig_hex,
-                };
-                await UserConfigWrapperActions.setProConfig({ proProof, rotatingSeedHex });
+              if (response && response.status === 'ok') {
+                // libsession returns a ready-made ProProof; relay it verbatim.
+                await UserConfigWrapperActions.setProConfig({
+                  proProof: response.proof,
+                  rotatingSeedHex,
+                });
               }
             }}
           >
@@ -941,13 +938,13 @@ export const ProDebugSection = ({
           <DebugButton
             onClick={async () => {
               const masterPrivKeyHex = await getProMasterKeyHex();
-              const response = await ProBackendAPI.getProDetails({ masterPrivKeyHex });
+              const response = await ProBackendAPI.getProStatus({ masterPrivKeyHex });
               if (getFeatureFlag('debugServerRequests')) {
-                window?.log?.debug('Pro Details: ', response);
+                window?.log?.debug('Pro Status: ', response);
               }
             }}
           >
-            Get Pro Details
+            Get Pro Status
           </DebugButton>
           <DebugButton
             hide={!proAvailable}
@@ -983,7 +980,7 @@ export const ProDebugSection = ({
         label="Current Status"
         flag="mockProCurrentStatus"
         options={[
-          { label: 'Never Had Pro', value: ProStatus.NeverBeenPro },
+          { label: 'Never Had Pro', value: ProStatus.Never },
           { label: 'Active', value: ProStatus.Active },
           { label: 'Expired', value: ProStatus.Expired },
         ]}
@@ -1007,7 +1004,7 @@ export const ProDebugSection = ({
         visibleWithBooleanFlag="proAvailable"
         visibleWithEnumFlag={{
           flag: 'mockProCurrentStatus',
-          isVisible: v => v !== ProStatus.NeverBeenPro,
+          isVisible: v => v !== ProStatus.Never,
         }}
       />
       <FlagEnumDropdownInput
@@ -1023,7 +1020,7 @@ export const ProDebugSection = ({
         visibleWithBooleanFlag="proAvailable"
         visibleWithEnumFlag={{
           flag: 'mockProCurrentStatus',
-          isVisible: v => v !== ProStatus.NeverBeenPro,
+          isVisible: v => v !== ProStatus.Never,
         }}
       />
       <FlagEnumDropdownInput

@@ -781,17 +781,37 @@ export const ProWrapperActions: ProActionsCalls = {
     callLibSessionWorker(['Pro', 'utf16CountTruncatedToCodepoints', first]) as Promise<
       ReturnType<ProActionsCalls['utf16CountTruncatedToCodepoints']>
     >,
-  proProofRequestBody: async first =>
-    callLibSessionWorker(['Pro', 'proProofRequestBody', first]) as Promise<
-      ReturnType<ProActionsCalls['proProofRequestBody']>
+  proProofRequest: async first =>
+    callLibSessionWorker(['Pro', 'proProofRequest', first]) as Promise<
+      ReturnType<ProActionsCalls['proProofRequest']>
     >,
-  proRevocationsRequestBody: async first =>
-    callLibSessionWorker(['Pro', 'proRevocationsRequestBody', first]) as Promise<
-      ReturnType<ProActionsCalls['proRevocationsRequestBody']>
+  proRevocationsRequest: async first =>
+    callLibSessionWorker(['Pro', 'proRevocationsRequest', first]) as Promise<
+      ReturnType<ProActionsCalls['proRevocationsRequest']>
     >,
-  proStatusRequestBody: async first =>
-    callLibSessionWorker(['Pro', 'proStatusRequestBody', first]) as Promise<
-      ReturnType<ProActionsCalls['proStatusRequestBody']>
+  proStatusRequest: async first =>
+    callLibSessionWorker(['Pro', 'proStatusRequest', first]) as Promise<
+      ReturnType<ProActionsCalls['proStatusRequest']>
+    >,
+  parseProProofResponse: async first =>
+    callLibSessionWorker(['Pro', 'parseProProofResponse', first]) as Promise<
+      ReturnType<ProActionsCalls['parseProProofResponse']>
+    >,
+  parseRevocationsResponse: async first =>
+    callLibSessionWorker(['Pro', 'parseRevocationsResponse', first]) as Promise<
+      ReturnType<ProActionsCalls['parseRevocationsResponse']>
+    >,
+  parseProStatusResponse: async first =>
+    callLibSessionWorker(['Pro', 'parseProStatusResponse', first]) as Promise<
+      ReturnType<ProActionsCalls['parseProStatusResponse']>
+    >,
+  providerUrls: async first =>
+    callLibSessionWorker(['Pro', 'providerUrls', first]) as Promise<
+      ReturnType<ProActionsCalls['providerUrls']>
+    >,
+  visiblePlatforms: async () =>
+    callLibSessionWorker(['Pro', 'visiblePlatforms']) as Promise<
+      ReturnType<ProActionsCalls['visiblePlatforms']>
     >,
 };
 

@@ -1,6 +1,4 @@
 import { useSelector } from 'react-redux';
-import { ProOriginatingPlatform } from 'libsession_util_nodejs';
-import { zodSafeParse } from '../../util/zod';
 import type { StateType } from '../reducer';
 import {
   proBackendDataActions,
@@ -10,7 +8,7 @@ import {
 } from '../ducks/proBackendData';
 import { SettingsKey } from '../../data/settings-key';
 import { Storage } from '../../util/storage';
-import { ProDetailsResultSchema } from '../../session/apis/pro_backend_api/schemas';
+import type { ProStatusResultType } from '../../session/apis/pro_backend_api/schemas';
 import {
   getDataFeatureFlag,
   getFeatureFlag,
@@ -20,37 +18,44 @@ import {
 import { NetworkTime } from '../../util/NetworkTime';
 import {
   formatDateWithLocale,
+  formatPlanDuration,
   formatRoundedUpTimeUntilTimestamp,
 } from '../../util/i18n/formatting/generics';
 import {
-  getProOriginatingPlatformFromProPaymentProvider,
   ProAccessVariant,
   ProPaymentProvider,
   ProStatus,
 } from '../../session/apis/pro_backend_api/types';
-import LIBSESSION_CONSTANTS from '../../session/utils/libsession/libsession_constants';
+import { isSimpleTokenNoArgs, tr } from '../../localization/localeTools';
 import { getAppDispatch } from '../dispatch';
 import { sleepFor } from '../../session/utils/Promise';
-import { assertUnreachable } from '../../types/sqlSharedTypes';
 
 const getProBackendData = (state: StateType): ProBackendDataState => {
   return state.proBackendData;
 };
 
-function getProDetailsFromStorage() {
-  const response = Storage.get(SettingsKey.proDetails);
+function getProStatusFromStorage(): ProStatusResultType | null {
+  const response = Storage.get(SettingsKey.proStatus);
   if (!response) {
     return null;
   }
-  const result = zodSafeParse(ProDetailsResultSchema, response);
-  if (result.success) {
-    return result.data;
+  // We persist, verbatim, the JS object the libsession-util-nodejs glue produced from the backend
+  // response (see putProStatusInStorage) — not a raw libsession struct — and cast it back to the
+  // CURRENT ProStatusResultType (an alias of the glue's GetProStatusResponse). session-desktop and
+  // libsession-util-nodejs ship in lockstep, so within a single build the producer, the type and this
+  // consumer can't drift — but a cache written by an OLDER build can.
+  //
+  // ⚠️ TRANSITION REQUIRED IF YOU ADD A REQUIRED FIELD to this shape: an upgraded client would read a
+  // stale-shape cache here and cast it to the new type with that field undefined (the Array.isArray
+  // check below validates only the top level, not individual fields). Handle it as part of that change —
+  // e.g. drop this cache behind a stored shape/version marker, or keep the new field optional at this
+  // boundary. It's a transient, re-fetched cache, so drop-and-refetch is the simplest transition. This
+  // is left as a reminder rather than pre-built, since pre-building would just be guessing at the shape.
+  if (typeof response === 'object' && response !== null && 'userStatus' in response) {
+    return response as ProStatusResultType;
   }
-  void Storage.remove(SettingsKey.proDetails);
-  window?.log?.error(
-    'failed to parse pro details from storage, removing item. error:',
-    result.error
-  );
+  void Storage.remove(SettingsKey.proStatus);
+  window?.log?.error('pro status in storage were malformed; removing.');
   return null;
 }
 
@@ -62,26 +67,76 @@ export function proAccessVariantToString(variant: ProAccessVariant): string {
       return '3 Months';
     case ProAccessVariant.TwelveMonth:
       return '12 Months';
-    case ProAccessVariant.Nil:
-      return 'N/A';
     default:
-      return assertUnreachable(variant, `Unknown pro access variant: ${variant}`);
+      // '' (none) or an unrecognized/future billing-period slug.
+      return 'N/A';
   }
 }
 
-export function getProProviderConstantsWithFallbacks(provider: ProPaymentProvider) {
-  const libsessionPaymentProvider = getProOriginatingPlatformFromProPaymentProvider(provider);
-  const constants = LIBSESSION_CONSTANTS.LIBSESSION_PRO_PROVIDERS[libsessionPaymentProvider];
-
-  if (!constants.store) {
-    constants.store = LIBSESSION_CONSTANTS.LIBSESSION_PRO_PROVIDERS.Google.store;
+/**
+ * Display string for a parsed plan period {planCount, planUnit} (libsession, plan grammar §1). The duration
+ * units render via date-fns (localized + pluralized, unit preserved as-is — 12 months stays "12
+ * months"). "lifetime" isn't a duration: use the localized `proPlanLifetime` if that Crowdin key
+ * exists yet, else the English fallback (same gate as the pro_provider_* / pro_error_* stopgaps).
+ */
+export function planPeriodToString(
+  planCount: number | undefined,
+  planUnit: string | undefined
+): string {
+  if (!planUnit) {
+    return 'N/A';
   }
-
-  if (!constants.store_other) {
-    constants.store_other = LIBSESSION_CONSTANTS.LIBSESSION_PRO_PROVIDERS.Google.store_other;
+  if (planUnit === 'lifetime') {
+    const lifetimeToken = 'proPlanLifetime';
+    return isSimpleTokenNoArgs(lifetimeToken) ? tr(lifetimeToken) : 'Lifetime';
   }
+  const n = planCount ?? 0;
+  switch (planUnit) {
+    case 'second':
+    case 'day':
+    case 'week':
+    case 'month':
+    case 'year':
+      return formatPlanDuration(n, planUnit);
+    default:
+      // libsession's closed grammar means we shouldn't get an unrecognized unit; degrade gracefully.
+      return 'N/A';
+  }
+}
 
-  return constants;
+/**
+ * Per-provider display strings. Client-owned i18n now — libsession no longer supplies them.
+ * URLs are NOT here: they're only needed for link clicks and are fetched on demand via
+ * ProWrapperActions.providerUrls(slug). Resolved dynamically from `pro_provider_<slug>_<suffix>` tokens
+ * (a temporary stopgap injected into the generated localization; wiped by the next Crowdin sync, so
+ * upstream them first), so a new provider needs only translations, not a code change.
+ */
+export type ProviderDisplayConstants = {
+  store: string;
+  platform: string;
+  device: string;
+  platform_account: string;
+};
+
+/**
+ * Resolve one provider display field for [slug]: the localized `pro_provider_<slug>_<suffix>` if that token
+ * exists, else the raw slug (an unknown/untranslated provider degrades to its slug — the same
+ * "gate on the translation existing" rule used by the {pro_stores} list).
+ */
+function providerDisplay(slug: string, suffix: 'platform' | 'store' | 'device' | 'account'): string {
+  const token = `pro_provider_${slug}_${suffix}`;
+  return isSimpleTokenNoArgs(token) ? tr(token) : slug;
+}
+
+export function getProProviderConstantsWithFallbacks(
+  provider: ProPaymentProvider
+): ProviderDisplayConstants {
+  return {
+    store: providerDisplay(provider, 'store'),
+    platform: providerDisplay(provider, 'platform'),
+    device: providerDisplay(provider, 'device'),
+    platform_account: providerDisplay(provider, 'account'),
+  };
 }
 
 function getMockedProAccessExpiry(variant: MockProAccessExpiryOptions): number | null {
@@ -141,28 +196,27 @@ type ProAccessDetails = {
   expiryTimeRelativeString: string;
   isPlatformRefundAvailable: boolean;
   provider: ProPaymentProvider;
-  providerConstants: (typeof LIBSESSION_CONSTANTS)['LIBSESSION_PRO_PROVIDERS'][ProOriginatingPlatform];
+  providerConstants: ProviderDisplayConstants;
 };
 
 // These values are used if pro isnt available or if no data is available from the backend.
 export const defaultProAccessDetailsSourceData = {
-  currentStatus: ProStatus.NeverBeenPro,
+  currentStatus: ProStatus.Never,
   autoRenew: true,
   inGracePeriod: false,
-  variant: ProAccessVariant.Nil,
+  variant: '',
   expiryTimeMs: 0,
   isPlatformRefundAvailable: false,
-  provider: ProPaymentProvider.Nil,
+  provider: '',
   isLoading: false,
   isError: false,
 } satisfies ProAccessDetailsSourceData;
 
-export type ProcessedProDetails = {
+export type ProcessedProStatus = {
   isLoading: boolean;
   isFetching: boolean;
   isError: boolean;
   data: ProAccessDetails;
-  t: number;
 };
 
 function processProBackendData({
@@ -170,8 +224,7 @@ function processProBackendData({
   isFetching: _isFetching,
   isError: _isError,
   data,
-  t,
-}: ProBackendDataState['details']): ProcessedProDetails {
+}: ProBackendDataState['details']): ProcessedProStatus {
   const mockIsLoading = getFeatureFlag('mockProBackendLoading');
   const mockIsError = getFeatureFlag('mockProBackendError');
 
@@ -200,25 +253,29 @@ function processProBackendData({
   const now = NetworkTime.now();
 
   const expiryTimeMs =
-    mockExpiry ?? data?.expiry_unix_ts_ms ?? defaultProAccessDetailsSourceData.expiryTimeMs;
+    mockExpiry ?? data?.expiryMs ?? defaultProAccessDetailsSourceData.expiryTimeMs;
 
-  const latestAccess = data?.items?.[0];
+  const latestAccess = data?.latestPayment ?? undefined;
   const provider =
-    mockPlatform ?? latestAccess?.payment_provider ?? defaultProAccessDetailsSourceData.provider;
-  const variant = mockVariant ?? latestAccess?.plan ?? defaultProAccessDetailsSourceData.variant;
+    mockPlatform ?? latestAccess?.paymentProvider ?? defaultProAccessDetailsSourceData.provider;
+  const variant = mockVariant ?? defaultProAccessDetailsSourceData.variant;
+  // Real data carries a parsed {planCount, planUnit}; the mock still uses a legacy variant slug.
+  const variantString = mockVariant
+    ? proAccessVariantToString(mockVariant)
+    : planPeriodToString(latestAccess?.planCount, latestAccess?.planUnit);
   const isPlatformRefundAvailable =
     mockIsPlatformRefundAvailable ||
-    (latestAccess?.platform_refund_expiry_unix_ts_ms &&
-      now < latestAccess.platform_refund_expiry_unix_ts_ms) ||
+    (latestAccess?.platformRefundExpiryTsMs &&
+      now < latestAccess.platformRefundExpiryTsMs) ||
     defaultProAccessDetailsSourceData.isPlatformRefundAvailable;
 
   const autoRenew = mockCancelled
     ? !mockCancelled
-    : (data?.auto_renewing ?? defaultProAccessDetailsSourceData.autoRenew);
+    : (data?.autoRenewing ?? defaultProAccessDetailsSourceData.autoRenew);
 
   let beginAutoRenew = 0;
   if (data) {
-    beginAutoRenew = data.expiry_unix_ts_ms - data.grace_period_duration_ms;
+    beginAutoRenew = data.expiryMs - data.gracePeriodDurationMs;
   }
 
   let inGracePeriod = mockInGracePeriod;
@@ -226,16 +283,16 @@ function processProBackendData({
     inGracePeriod = autoRenew && now >= beginAutoRenew && now < expiryTimeMs;
   }
 
-  const isProcessingRefund = !!data?.refund_requested_unix_ts_ms;
+  const isProcessingRefund = !!data?.refundRequestedTsMs;
 
   return {
     data: {
-      currentStatus: data?.status ?? defaultProAccessDetailsSourceData.currentStatus,
+      currentStatus: data?.userStatus ?? defaultProAccessDetailsSourceData.currentStatus,
       autoRenew,
       inGracePeriod,
       isProcessingRefund,
       variant,
-      variantString: proAccessVariantToString(variant),
+      variantString,
       expiryTimeMs,
       expiryTimeDateString: formatDateWithLocale({
         date: new Date(beginAutoRenew),
@@ -249,23 +306,22 @@ function processProBackendData({
     isLoading,
     isFetching,
     isError,
-    t,
   };
 }
 
-export const getProBackendProDetails = (state: StateType): ProcessedProDetails => {
+export const getProBackendProStatus = (state: StateType): ProcessedProStatus => {
   const details = getProBackendData(state).details;
-  const mergedDetails = details.data ? details : { ...details, data: getProDetailsFromStorage() };
+  const mergedDetails = details.data ? details : { ...details, data: getProStatusFromStorage() };
 
   return processProBackendData(mergedDetails);
 };
 
 export const getProBackendCurrentUserStatus = (state: StateType) => {
-  return getProBackendProDetails(state).data?.currentStatus;
+  return getProBackendProStatus(state).data?.currentStatus;
 };
 
-export const useProBackendProDetails = () => {
-  return useSelector(getProBackendProDetails);
+export const useProBackendProStatus = () => {
+  return useSelector(getProBackendProStatus);
 };
 
 export const useProBackendCurrentUserStatus = () => {
@@ -275,7 +331,7 @@ export const useProBackendCurrentUserStatus = () => {
 export function useProBackendRefetch() {
   const dispatch = getAppDispatch();
 
-  const details = useProBackendProDetails();
+  const details = useProBackendProStatus();
 
   const mockSuccess = getFeatureFlagMemo('mockProRecoverButtonAlwaysSucceed');
   const mockFail = getFeatureFlagMemo('mockProRecoverButtonAlwaysFail');
@@ -320,7 +376,7 @@ export function useProBackendRefetch() {
       void mockRefetchSuccess();
       return;
     }
-    dispatch(proBackendDataActions.refreshGetProDetailsFromProBackend(args) as any);
+    dispatch(proBackendDataActions.refreshGetProStatusFromProBackend(args) as any);
   };
 
   return refetch;

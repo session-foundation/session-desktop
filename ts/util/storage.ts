@@ -4,7 +4,7 @@ import { DEFAULT_RECENT_REACTS } from '../session/constants';
 import { deleteSettingsBoolValue, updateSettingsBoolValue } from '../state/ducks/settings';
 import { Data } from '../data/data';
 import { SettingsKey } from '../data/settings-key';
-import { ProProofResultType, ProDetailsResultType } from '../session/apis/pro_backend_api/schemas';
+import { ProProofResultType, ProStatusResultType } from '../session/apis/pro_backend_api/schemas';
 import { UrlInteractionsType } from './urlHistory';
 import { updateStorageSchema } from './storageMigrations';
 import { CtaInteractionsType } from './ctaHistory';
@@ -20,7 +20,7 @@ type ValueType =
   | Array<string>
   | UrlInteractionsType
   | CtaInteractionsType
-  | ProDetailsResultType
+  | ProStatusResultType
   | ProProofResultType;
 type InsertedValueType = { id: string; value: ValueType };
 let items: Record<string, InsertedValueType>;

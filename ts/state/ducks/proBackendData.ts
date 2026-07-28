@@ -10,12 +10,11 @@ import { updateLocalizedPopupDialog } from './modalDialog';
 import { showLinkVisitWarningDialog } from '../../components/dialog/OpenUrlModal';
 import { ProStatus } from '../../session/apis/pro_backend_api/types';
 import { SettingsKey } from '../../data/settings-key';
-import { ProDetailsResultType } from '../../session/apis/pro_backend_api/schemas';
+import { ProStatusResultType } from '../../session/apis/pro_backend_api/schemas';
+import { proErrorMessage } from '../../session/apis/pro_backend_api/proErrorMessage';
 import { Storage } from '../../util/storage';
 import { NetworkTime } from '../../util/NetworkTime';
-import { assertUnreachable } from '../../types/sqlSharedTypes';
 import { DURATION } from '../../session/constants';
-import { SessionBackendBaseResponseType } from '../../session/apis/session_backend_server';
 import {
   getCachedUserConfig,
   UserConfigWrapperActions,
@@ -32,7 +31,6 @@ type RequestState<D = unknown> = {
   // True if the request has been made
   isEnabled: boolean;
   error: string | null;
-  t: number;
   data: D | null;
 };
 
@@ -42,7 +40,6 @@ const defaultRequestState = {
   isError: false,
   isEnabled: false,
   error: null,
-  t: 0,
   data: null,
 } satisfies RequestState;
 
@@ -54,22 +51,23 @@ export type RequestActionArgs = {
 type ReducerBooleanStateAction = PayloadAction<RequestActionArgs>;
 
 export type ProBackendDataState = {
-  details: RequestState<ProDetailsResultType>;
+  details: RequestState<ProStatusResultType>;
 };
 
 export const initialProBackendDataState: ProBackendDataState = {
   details: defaultRequestState,
 };
 
-type ApiResponse<T> = SessionBackendBaseResponseType & {
-  result: T;
-};
-
 type PayloadCreatorType = Parameters<Parameters<typeof createAsyncThunk>['1']>['1'];
 
-type CreateProBackendFetchAsyncThunk<D> = {
+// The getter returns a libsession-parsed response struct (or null on transport failure). Every parsed
+// struct carries the response header (§5): `status` ('ok' on success) + an optional machine `errorCode` slug
+// and an English diagnostic `error`.
+type CreateProBackendFetchAsyncThunk<
+  D extends { status: 'ok' | 'fail' | 'error'; errorCode: string | null; error: string | null },
+> = {
   key: keyof ProBackendDataState;
-  getter: () => Promise<ApiResponse<D> | null>;
+  getter: () => Promise<D | null>;
   payloadCreator: PayloadCreatorType;
   contextHandler?: (state: RequestState<D>) => Promise<void>;
   // Runs at the end of the function, as long as the function doesn't early return because it was already fetching.
@@ -78,7 +76,9 @@ type CreateProBackendFetchAsyncThunk<D> = {
 
 export type WithCallerContext = { callerContext?: 'recover' };
 
-async function createProBackendFetchAsyncThunk<D>({
+async function createProBackendFetchAsyncThunk<
+  D extends { status: 'ok' | 'fail' | 'error'; errorCode: string | null; error: string | null },
+>({
   key,
   getter,
   payloadCreator,
@@ -117,37 +117,29 @@ async function createProBackendFetchAsyncThunk<D>({
 
     const response = await getter();
     if (!response) {
+      // null == transport failure (or a non-200 the glue swallowed); the selector falls back to the
+      // last details persisted in storage, so surfacing this as a hard error is fine.
       throw new Error('Data fetch failed');
     }
 
-    let error = response.error ?? null;
+    // App-level failure = status !== 'ok'. Keep the raw backend diagnostic for logging, but surface a
+    // user-facing message mapped from the `errorCode` slug to a localized `pro_error_<slug>` string
+    // (falling back to the diagnostic, then a generic message).
+    const diagnostic =
+      response.status === 'ok' ? null : (response.error ?? response.errorCode ?? 'request failed');
+    const error =
+      response.status === 'ok' ? null : proErrorMessage(response.errorCode, response.error);
 
-    if (response.status_code !== 200) {
-      if (!error) {
-        error = `Received ${response.status_code} status code with no error message`;
-      }
-      result = {
-        data: result.data,
-        error,
-        isError: true,
-        isFetching: false,
-        isLoading: false,
-        t: response.t,
-        isEnabled: true,
-      };
-    }
-
-    if (error && debug) {
-      window?.log?.error(error);
+    if (diagnostic && debug) {
+      window?.log?.error(diagnostic);
     }
 
     result = {
-      data: error ? result.data : response.result,
+      data: error ? result.data : response,
       error,
       isError: !!error,
       isFetching: false,
       isLoading: false,
-      t: response.t,
       isEnabled: true,
     };
   } catch (e) {
@@ -158,7 +150,6 @@ async function createProBackendFetchAsyncThunk<D>({
       isError: true,
       isFetching: false,
       isLoading: false,
-      t: 0,
       isEnabled: true,
     };
   }
@@ -174,8 +165,11 @@ async function createProBackendFetchAsyncThunk<D>({
   return result;
 }
 
-async function putProDetailsInStorage(details: ProDetailsResultType) {
-  await Storage.put(SettingsKey.proDetails, details);
+async function putProStatusInStorage(details: ProStatusResultType) {
+  // We persist, verbatim, the JS object the libsession-util-nodejs glue produced from the backend
+  // response (not a raw libsession struct). See getProStatusFromStorage for the transition reminder
+  // that applies before adding any REQUIRED field to this shape.
+  await Storage.put(SettingsKey.proStatus, details);
 }
 
 async function handleNewProProof(rotatingPrivKeyHex: string): Promise<ProProof | null> {
@@ -184,14 +178,9 @@ async function handleNewProProof(rotatingPrivKeyHex: string): Promise<ProProof |
     masterPrivKeyHex,
     rotatingPrivKeyHex,
   });
-  if (response?.status_code === 200) {
-    const proProof = {
-      expiryMs: response.result.expiry_unix_ts_ms,
-      genIndexHashB64: response.result.gen_index_hash_b64,
-      rotatingPubkeyHex: response.result.rotating_pkey_hex,
-      version: response.result.version,
-      signatureHex: response.result.sig_hex,
-    } satisfies ProProof;
+  if (response && response.status === 'ok') {
+    // libsession returns a ready-made ProProof; relay it verbatim rather than re-assembling fields.
+    const proProof = response.proof;
     const { proConfig, proAccessExpiry, proProfileBitset } = getCachedUserConfig();
     const rotatingSeedHex = await UserUtils.getProRotatingSeedHex();
     // If we have a new proof but it seems that we never had one before, set the pro badge feature as enabled
@@ -254,7 +243,7 @@ async function handleExpiryCTAs(
   }
 }
 
-let firstFetchProDetailsHappened = false;
+let firstFetchProStatusHappened = false;
 let lastKnownProofExpiryTimestamp: number | null = null;
 let scheduledProofExpiryTaskTimestamp: number | null = null;
 let scheduledProofExpiryTaskId: ReturnType<typeof setTimeout> | null = null;
@@ -263,10 +252,10 @@ let scheduledAccessExpiryTaskId: ReturnType<typeof setTimeout> | null = null;
 
 function scheduleRefresh(timestampMs: number) {
   const delay = Math.max(timestampMs - NetworkTime.now(), 15 * DURATION.SECONDS);
-  window?.log?.info(`Scheduling a pro details refresh in ${delay}ms for ${timestampMs}`);
+  window?.log?.info(`Scheduling a pro status refresh in ${delay}ms for ${timestampMs}`);
   return setTimeout(() => {
     window?.inboxStore?.dispatch(
-      proBackendDataActions.refreshGetProDetailsFromProBackend({}) as any
+      proBackendDataActions.refreshGetProStatusFromProBackend({}) as any
     );
   }, delay);
 }
@@ -346,35 +335,35 @@ async function handleProProof(accessExpiryTsMs: number, autoRenewing: boolean, s
   }
 }
 
-const fetchGetProDetailsFromProBackend = createAsyncThunk(
-  'proBackendData/fetchGetProDetails',
+const fetchGetProStatusFromProBackend = createAsyncThunk(
+  'proBackendData/fetchGetProStatus',
   async (
     { callerContext: context, ...args }: WithMasterPrivKeyHex & WithCallerContext,
     payloadCreator
-  ): Promise<RequestState<ProDetailsResultType>> => {
+  ): Promise<RequestState<ProStatusResultType>> => {
     return createProBackendFetchAsyncThunk({
       key: 'details',
-      getter: () => ProBackendAPI.getProDetails(args),
+      getter: () => ProBackendAPI.getProStatus(args),
       payloadCreator,
       callback: async state => {
         if (state.data) {
-          if (state.data.error_report === 1) {
+          if (state.data.errorReport === 1) {
             state.isError = true;
             state.error = 'Backend unable to process current state, please try again later.';
             // NOTE: we want to continue processing the state, as even if there was an error we need to try to handle the pro proofs.
           }
-          switch (state.data.status) {
+          switch (state.data.userStatus) {
             case ProStatus.Active:
               window.log.debug(`[handleBackendProStatusChange] ProStatus.Active`);
               await handleProProof(
-                state.data.expiry_unix_ts_ms,
-                state.data.auto_renewing,
-                state.data.status
+                state.data.expiryMs,
+                state.data.autoRenewing,
+                state.data.userStatus
               );
               break;
 
-            case ProStatus.NeverBeenPro:
-              window.log.debug(`[handleBackendProStatusChange] ProStatus.NeverBeenPro`);
+            case ProStatus.Never:
+              window.log.debug(`[handleBackendProStatusChange] ProStatus.Never`);
               await handleClearProProof();
               break;
 
@@ -385,23 +374,31 @@ const fetchGetProDetailsFromProBackend = createAsyncThunk(
               break;
 
             default:
-              assertUnreachable(state.data.status, 'handleBackendProStatusChange');
+              // Opaque/unknown status: we have no basis to conclude the subscription ended, and
+              // handleClearProProof() writes SYNCED user config — clearing here would erase a valid
+              // proof across ALL the user's devices just because this (possibly older) client didn't
+              // recognise a new status slug. Leave the proof untouched: entitlement is governed by
+              // the proof's own signature + expiry (hasValidCurrentProProof), and the backend simply
+              // won't refresh it (or will revoke it) if the account has genuinely lapsed.
+              window.log.warn(
+                `[handleBackendProStatusChange] unknown pro userStatus: ${state.data.userStatus}; leaving proof untouched`
+              );
               break;
           }
           await handleExpiryCTAs(
-            state.data.expiry_unix_ts_ms,
-            state.data.auto_renewing,
-            state.data.status
+            state.data.expiryMs,
+            state.data.autoRenewing,
+            state.data.userStatus
           );
-          // on the first fetch of our pro details after a restart, we want to show the CTAs if needed
-          if (window.inboxStore?.dispatch && !firstFetchProDetailsHappened) {
+          // on the first fetch of our pro status after a restart, we want to show the CTAs if needed
+          if (window.inboxStore?.dispatch && !firstFetchProStatusHappened) {
             void handleTriggeredCTAs(window.inboxStore?.dispatch, false);
           }
-          firstFetchProDetailsHappened = true;
+          firstFetchProStatusHappened = true;
         }
 
         if (state.data) {
-          await putProDetailsInStorage(state.data);
+          await putProStatusInStorage(state.data);
         }
         // trigger a UI refresh so our state and Pro rights are up to date without a restart (animated image should stop animating)
         ConvoHub.use().get(UserUtils.getOurPubKeyStrFromCache())?.triggerUIRefresh();
@@ -409,7 +406,7 @@ const fetchGetProDetailsFromProBackend = createAsyncThunk(
       },
       contextHandler: async state => {
         if (context === 'recover') {
-          if (state.data?.status === ProStatus.Active) {
+          if (state.data?.userStatus === ProStatus.Active) {
             payloadCreator.dispatch(
               updateLocalizedPopupDialog({
                 title: { token: 'proAccessRestored' },
@@ -448,8 +445,8 @@ const fetchGetProDetailsFromProBackend = createAsyncThunk(
   }
 );
 
-const refreshGetProDetailsFromProBackend = createAsyncThunk(
-  'proBackendData/refreshGetProDetails',
+const refreshGetProStatusFromProBackend = createAsyncThunk(
+  'proBackendData/refreshGetProStatus',
   async (opts: WithCallerContext = {}, payloadCreator) => {
     if (!getFeatureFlag('proAvailable')) {
       return;
@@ -457,7 +454,7 @@ const refreshGetProDetailsFromProBackend = createAsyncThunk(
 
     if (getFeatureFlag('debugServerRequests')) {
       window.log.info(
-        `[proBackend/refreshGetProDetailsFromProBackend] starting ${new Date().toISOString()}`
+        `[proBackend/refreshGetProStatusFromProBackend] starting ${new Date().toISOString()}`
       );
     }
 
@@ -469,11 +466,11 @@ const refreshGetProDetailsFromProBackend = createAsyncThunk(
 
     if (getFeatureFlag('debugServerRequests')) {
       window.log.info(
-        `[proBackend/refreshGetProDetailsFromProBackend] triggered refresh at ${new Date().toISOString()}`
+        `[proBackend/refreshGetProStatusFromProBackend] triggered refresh at ${new Date().toISOString()}`
       );
     }
     const masterPrivKeyHex = await UserUtils.getProMasterKeyHex();
-    payloadCreator.dispatch(fetchGetProDetailsFromProBackend({ ...opts, masterPrivKeyHex }) as any);
+    payloadCreator.dispatch(fetchGetProStatusFromProBackend({ ...opts, masterPrivKeyHex }) as any);
   }
 );
 
@@ -503,15 +500,15 @@ export const proBackendDataSlice = createSlice({
     },
   },
   extraReducers: builder => {
-    builder.addCase(fetchGetProDetailsFromProBackend.rejected, (_state, action) => {
+    builder.addCase(fetchGetProStatusFromProBackend.rejected, (_state, action) => {
       window.log.error(
-        `[proBackend / fetchGetProDetailsFromProBackend] rejected ${action.error.message || action.error} `
+        `[proBackend / fetchGetProStatusFromProBackend] rejected ${action.error.message || action.error} `
       );
     });
-    builder.addCase(fetchGetProDetailsFromProBackend.fulfilled, (state, action) => {
+    builder.addCase(fetchGetProStatusFromProBackend.fulfilled, (state, action) => {
       if (getFeatureFlag('debugServerRequests')) {
         window.log.info(
-          `[proBackend / fetchGetProDetailsFromProBackend] fulfilled ${new Date().toISOString()} `,
+          `[proBackend / fetchGetProStatusFromProBackend] fulfilled ${new Date().toISOString()} `,
           JSON.stringify(action.payload)
         );
       }
@@ -523,6 +520,6 @@ export const proBackendDataSlice = createSlice({
 export default proBackendDataSlice.reducer;
 export const proBackendDataActions = {
   ...proBackendDataSlice.actions,
-  fetchGetProDetailsFromProBackend,
-  refreshGetProDetailsFromProBackend,
+  fetchGetProStatusFromProBackend,
+  refreshGetProStatusFromProBackend,
 };

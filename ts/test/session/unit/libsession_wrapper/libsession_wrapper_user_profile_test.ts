@@ -76,7 +76,7 @@ describe('libsession_user_profile', () => {
         rotatingSeedHex: to_hex(proSeed),
         proProof: {
           expiryMs: Date.now() + 1000,
-          genIndexHashB64: to_base64(ed25519Seed, base64_variants.ORIGINAL),
+          revocationTagB64: to_base64(ed25519Seed, base64_variants.ORIGINAL),
           version: 132,
           signatureHex: to_hex(randombytes_buf(64)),
         },
@@ -95,7 +95,7 @@ describe('libsession_user_profile', () => {
         proProof: {
           rotatingPubkeyHex: rotatingPubKeyHex,
           expiryMs: proConfig.proProof.expiryMs,
-          genIndexHashB64: proConfig.proProof.genIndexHashB64,
+          revocationTagB64: proConfig.proProof.revocationTagB64,
           version: proConfig.proProof.version,
           signatureHex: proConfig.proProof.signatureHex,
         },

@@ -78,7 +78,7 @@ const allowedKeysFormatRowOfConversation = [
   'lastMessageInteractionType',
   'lastMessageInteractionStatus',
   'bitsetProFeatures',
-  'proGenIndexHashB64',
+  'proRevocationTagB64',
   'proExpiryTsMs',
   'triggerNotificationsFor',
   'profileUpdatedSeconds',
@@ -183,8 +183,8 @@ export function formatRowOfConversation(
     convo.bitsetProFeatures = undefined;
   }
 
-  if (!convo.proGenIndexHashB64) {
-    convo.proGenIndexHashB64 = undefined;
+  if (!convo.proRevocationTagB64) {
+    convo.proRevocationTagB64 = undefined;
   }
 
   if (!convo.proExpiryTsMs) {
@@ -230,7 +230,7 @@ const allowedKeysOfConversationAttributes = [
   'lastMessageInteractionStatus',
   'triggerNotificationsFor',
   'bitsetProFeatures',
-  'proGenIndexHashB64',
+  'proRevocationTagB64',
   'proExpiryTsMs',
   'profileUpdatedSeconds',
   'lastJoinedTimestamp',

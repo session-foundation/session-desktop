@@ -92,7 +92,7 @@ export const SettingsKey = {
    *
    */
   proRevocationListNextRunAtMs: 'proRevocationListNextRunAtMs',
-  proDetails: 'proDetails',
+  proStatus: 'proStatus',
   // NOTE: for these CTAs undefined means it has never been shown in this cycle of pro access, true means it needs to be shown and false means it has been shown and dont show it again.
   proExpiringSoonCTA: 'proExpiringSoonCTA',
   proExpiredCTA: 'proExpiredCTA',
