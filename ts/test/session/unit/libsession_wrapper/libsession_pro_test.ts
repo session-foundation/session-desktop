@@ -39,115 +39,82 @@ describe('libsession_pro', () => {
     });
   });
 
-  describe('proRevocationsRequestBody', () => {
+  describe('proRevocationsRequest', () => {
     it('throws if invalid input', async () => {
       expect(() =>
-        ProWrapperNode.proRevocationsRequestBody({
-          requestVersion: 0,
+        ProWrapperNode.proRevocationsRequest({
           ticket: 'randomstr' as any as number,
         })
-      ).to.throw;
+      ).to.throw();
 
-      expect(() =>
-        ProWrapperNode.proRevocationsRequestBody({
-          requestVersion: 'randomstr' as any as number,
-          ticket: 0,
-        })
-      ).to.throw;
+      expect(() => ProWrapperNode.proRevocationsRequest({} as any)).to.throw();
     });
 
-    it('passes if valid input', async () => {
-      expect(
-        ProWrapperNode.proRevocationsRequestBody({
-          ticket: 0,
-          requestVersion: 0,
-        })
-      ).to.be.deep.eq('{"ticket":0,"version":0}');
+    it('generates a valid request', async () => {
+      expect(ProWrapperNode.proRevocationsRequest({ ticket: 0 })).to.be.deep.eq({
+        endpoint: 'get_pro_revocations',
+        contentType: 'application/json',
+        body: '{"ticket":0}',
+      });
 
-      expect(
-        ProWrapperNode.proRevocationsRequestBody({
-          ticket: 1234,
-          requestVersion: 255,
-        })
-      ).to.be.deep.eq('{"ticket":1234,"version":255}');
+      expect(ProWrapperNode.proRevocationsRequest({ ticket: 1234 })).to.be.deep.eq({
+        endpoint: 'get_pro_revocations',
+        contentType: 'application/json',
+        body: '{"ticket":1234}',
+      });
 
-      expect(
-        ProWrapperNode.proRevocationsRequestBody({
-          ticket: 1265893200,
-          requestVersion: 123,
-        })
-      ).to.be.deep.eq('{"ticket":1265893200,"version":123}');
+      expect(ProWrapperNode.proRevocationsRequest({ ticket: 1265893200 })).to.be.deep.eq({
+        endpoint: 'get_pro_revocations',
+        contentType: 'application/json',
+        body: '{"ticket":1265893200}',
+      });
     });
   });
 
-  describe('proProofRequestBody', () => {
-    it('generates a valid request body', async () => {
+  describe('proProofRequest', () => {
+    it('generates a valid request', async () => {
+      // NOTE: the wire timestamp is in whole seconds, so the ms we hand in gets floored.
       const validContent = {
-        version: 0,
         master_pkey: '3ec4ff1928220d599cccbf8d76002e80191c286906bc18987f46fd9688418852',
+        master_sig:
+          '119672683ad26a1475657749d22242cac855f109457df384d8144b5026630e4ad1f45e60ebabc08edf18d2d12b528482b8943f31c0ad145c2cfc6fade020100e',
         rotating_pkey: '574b0063d782e6b56beac6c1b67766f0f81ecacf66ab7efefd2c9a65d6c8de88',
-        unix_ts_ms: 1761884113627,
-        master_sig:
-          'd1f0da92e22df8f285da4fe0fc92322ef0155c0c5ed2586532458a5758995b9b7bf98a3a0772af11e162e78ceba13ab936041fee4a59f04b3d28a77d17b0b603',
         rotating_sig:
-          'cb1a3a4e5037c30bf662be6e3b33025b64612edd668d4494c7190e93629c2c0591c2dbbb2e6930732eadbbb9b7fcf98df3d085fddfb7fed58c75901b50c12506',
+          '7c9e0bcd6cdad351a6c223412070e3c8da105b7ca44e8de5f4dcac113af093fcd16ec9ce07228b5dcb983bf1e51f14f34c82feeb5e37e6bf10d3380377a55509',
+        ts: 1761884113,
       };
 
       await getSodiumNode();
-      expect(
-        JSON.parse(
-          ProWrapperNode.proProofRequestBody({
-            requestVersion: 0,
-            masterPrivKeyHex: masterPrivKey,
-            rotatingPrivKeyHex: rotatingPrivKey,
-            unixTsMs: 1761884113627,
-          })
-        )
-      ).to.deep.eq(validContent);
+      const request = ProWrapperNode.proProofRequest({
+        masterPrivKeyHex: masterPrivKey,
+        rotatingPrivKeyHex: rotatingPrivKey,
+        unixTsMs: 1761884113627,
+      });
+
+      expect(request.endpoint).to.be.eq('generate_pro_proof');
+      expect(request.contentType).to.be.eq('application/json');
+      expect(JSON.parse(request.body)).to.deep.eq(validContent);
     });
   });
 
-  describe('proStatusRequestBody', () => {
-    it('generates a valid request body', async () => {
+  describe('proStatusRequest', () => {
+    it('generates a valid request', async () => {
       const validContent = {
-        version: 0,
-        count: 10,
         master_pkey: '3ec4ff1928220d599cccbf8d76002e80191c286906bc18987f46fd9688418852',
-        unix_ts_ms: 1761884113627,
         master_sig:
-          'f9065b20b5162b58e5580e855f979521ff02826b25b72b68a1c6c44c4eeb74e5e626e783de4ae715d7ef4438827f858221eb06aae2e7c4eea6ef3cd31e0e1c0f',
+          '60b4f0b4522be79dcb35798d085cd2bd80ab9047a6578e791de824e1d12690e30153b2feb77b3781f4eb6ae521aa85150a799231e5e5ffd605354551ef50560c',
+        ts: 1761884113,
       };
 
       await getSodiumNode();
-      expect(
-        JSON.parse(
-          ProWrapperNode.proStatusRequestBody({
-            requestVersion: 0,
-            masterPrivKeyHex: masterPrivKey,
-            unixTsMs: 1761884113627,
-            count: 10,
-          })
-        )
-      ).to.deep.eq(validContent);
-    });
-  });
+      const request = ProWrapperNode.proStatusRequest({
+        masterPrivKeyHex: masterPrivKey,
+        unixTsMs: 1761884113627,
+      });
 
-  describe('proRevocationsRequestBody', () => {
-    it('generates a valid request body', async () => {
-      const validContent = {
-        version: 0,
-        ticket: 0,
-      };
-
-      await getSodiumNode();
-      expect(
-        JSON.parse(
-          ProWrapperNode.proRevocationsRequestBody({
-            requestVersion: 0,
-            ticket: 0,
-          })
-        )
-      ).to.deep.eq(validContent);
+      expect(request.endpoint).to.be.eq('get_pro_status');
+      expect(request.contentType).to.be.eq('application/json');
+      expect(JSON.parse(request.body)).to.deep.eq(validContent);
     });
   });
 });

@@ -219,6 +219,9 @@ export type ProcessedProStatus = {
   isLoading: boolean;
   isFetching: boolean;
   isError: boolean;
+  // When the last successful fetch completed (ms, network time), 0 if none happened this run.
+  // Note: `data` can be non-null with a 0 here, as it falls back to the copy persisted on disk.
+  lastFetchedMs: number;
   data: ProAccessDetails;
 };
 
@@ -226,6 +229,7 @@ function processProBackendData({
   isLoading: _isLoading,
   isFetching: _isFetching,
   isError: _isError,
+  lastFetchedMs,
   data,
 }: ProBackendDataState['details']): ProcessedProStatus {
   const mockIsLoading = getFeatureFlag('mockProBackendLoading');
@@ -308,6 +312,7 @@ function processProBackendData({
     isLoading,
     isFetching,
     isError,
+    lastFetchedMs,
   };
 }
 

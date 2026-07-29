@@ -75,7 +75,9 @@ describe('libsession_user_profile', () => {
       const proConfig: ProConfigSet = {
         rotatingSeedHex: to_hex(proSeed),
         proProof: {
-          expiryMs: Date.now() + 1000,
+          // libsession stores the proof expiry in whole seconds (the JS domain stays ms), so a
+          // sub-second value would come back floored. Use a second-aligned one to round-trip as-is.
+          expiryMs: Math.floor(Date.now() / 1000) * 1000 + 1000,
           revocationTagB64: to_base64(ed25519Seed, base64_variants.ORIGINAL),
           version: 132,
           signatureHex: to_hex(randombytes_buf(64)),
@@ -140,7 +142,9 @@ describe('libsession_user_profile', () => {
       const wrapper = new UserConfigWrapperNode(userKeys.ed25519KeyPair.privKeyBytes, null);
       expect(wrapper.getProAccessExpiry()).to.be.deep.eq(null);
 
-      const now = Date.now();
+      // libsession stores the access expiry in whole seconds (the JS domain stays ms), so a
+      // sub-second value would come back floored. Use a second-aligned one to round-trip as-is.
+      const now = Math.floor(Date.now() / 1000) * 1000;
       wrapper.setProAccessExpiry(now);
 
       expect(wrapper.getProAccessExpiry()).to.be.deep.eq(now);

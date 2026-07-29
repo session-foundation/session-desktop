@@ -31,6 +31,9 @@ type RequestState<D = unknown> = {
   // True if the request has been made
   isEnabled: boolean;
   error: string | null;
+  // When the last successful fetch completed (ms, network time). 0 if we never got one this run.
+  // Used to throttle the opportunistic refresh done when a screen that shows this data is opened.
+  lastFetchedMs: number;
   data: D | null;
 };
 
@@ -40,6 +43,7 @@ const defaultRequestState = {
   isError: false,
   isEnabled: false,
   error: null,
+  lastFetchedMs: 0,
   data: null,
 } satisfies RequestState;
 
@@ -50,8 +54,15 @@ export type RequestActionArgs = {
 
 type ReducerBooleanStateAction = PayloadAction<RequestActionArgs>;
 
+// The payload held under each pro-backend request key. Each one is a libsession-parsed response
+// struct, so it carries the response header (§5) that createProBackendFetchAsyncThunk reads below:
+// adding a key whose payload has no `status`/`errorCode`/`error` fails to compile there.
+type ProBackendDataPayloads = {
+  details: ProStatusResultType;
+};
+
 export type ProBackendDataState = {
-  details: RequestState<ProStatusResultType>;
+  [K in keyof ProBackendDataPayloads]: RequestState<ProBackendDataPayloads[K]>;
 };
 
 export const initialProBackendDataState: ProBackendDataState = {
@@ -63,35 +74,31 @@ type PayloadCreatorType = Parameters<Parameters<typeof createAsyncThunk>['1']>['
 // The getter returns a libsession-parsed response struct (or null on transport failure). Every parsed
 // struct carries the response header (§5): `status` ('ok' on success) + an optional machine `errorCode` slug
 // and an English diagnostic `error`.
-type CreateProBackendFetchAsyncThunk<
-  D extends { status: 'ok' | 'fail' | 'error'; errorCode: string | null; error: string | null },
-> = {
-  key: keyof ProBackendDataState;
-  getter: () => Promise<D | null>;
+type CreateProBackendFetchAsyncThunk<K extends keyof ProBackendDataPayloads> = {
+  key: K;
+  getter: () => Promise<ProBackendDataPayloads[K] | null>;
   payloadCreator: PayloadCreatorType;
-  contextHandler?: (state: RequestState<D>) => Promise<void>;
+  contextHandler?: (state: ProBackendDataState[K]) => Promise<void>;
   // Runs at the end of the function, as long as the function doesn't early return because it was already fetching.
-  callback?: (state: RequestState<D>) => Promise<RequestState<D>>;
+  callback?: (state: ProBackendDataState[K]) => Promise<ProBackendDataState[K]>;
 };
 
 export type WithCallerContext = { callerContext?: 'recover' };
 
-async function createProBackendFetchAsyncThunk<
-  D extends { status: 'ok' | 'fail' | 'error'; errorCode: string | null; error: string | null },
->({
+async function createProBackendFetchAsyncThunk<K extends keyof ProBackendDataPayloads>({
   key,
   getter,
   payloadCreator,
   contextHandler,
   callback,
-}: CreateProBackendFetchAsyncThunk<D>): Promise<RequestState<D>> {
+}: CreateProBackendFetchAsyncThunk<K>): Promise<ProBackendDataState[K]> {
   const debug = getFeatureFlag('debugServerRequests');
   if (debug) {
     window?.log?.debug(`[${key}] starting ${new Date().toISOString()}`);
   }
 
   const state = payloadCreator.getState() as StateType;
-  const initialState = state.proBackendData[key] as RequestState<D>;
+  const initialState = state.proBackendData[key];
   let result = initialState;
   try {
     if (initialState.isFetching) {
@@ -141,16 +148,18 @@ async function createProBackendFetchAsyncThunk<
       isFetching: false,
       isLoading: false,
       isEnabled: true,
+      lastFetchedMs: error ? initialState.lastFetchedMs : NetworkTime.now(),
     };
   } catch (e) {
     window?.log?.error(e);
     result = {
-      data: null as D,
+      data: null,
       error: e.message,
       isError: true,
       isFetching: false,
       isLoading: false,
       isEnabled: true,
+      lastFetchedMs: 0,
     };
   }
 
@@ -340,7 +349,7 @@ const fetchGetProStatusFromProBackend = createAsyncThunk(
   async (
     { callerContext: context, ...args }: WithMasterPrivKeyHex & WithCallerContext,
     payloadCreator
-  ): Promise<RequestState<ProStatusResultType>> => {
+  ): Promise<ProBackendDataState['details']> => {
     return createProBackendFetchAsyncThunk({
       key: 'details',
       getter: () => ProBackendAPI.getProStatus(args),

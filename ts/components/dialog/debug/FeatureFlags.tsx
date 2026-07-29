@@ -995,8 +995,8 @@ export const ProDebugSection = ({
         label="Payment Provider"
         flag="mockProPaymentProvider"
         options={[
-          { label: 'Google Play', value: ProPaymentProvider.GooglePlayStore },
-          { label: 'iOS App Store', value: ProPaymentProvider.iOSAppStore },
+          { label: 'Google Play', value: ProPaymentProvider.GooglePlay },
+          { label: 'iOS App Store', value: ProPaymentProvider.AppStore },
           { label: 'Rangeproof', value: ProPaymentProvider.Rangeproof },
         ]}
         forceUpdate={forceUpdate}

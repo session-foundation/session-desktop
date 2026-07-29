@@ -37,7 +37,7 @@ import { OnionStatusLight } from '../../OnionStatusPathDialog';
 import { UserSettingsModalContainer } from '../components/UserSettingsModalContainer';
 import { useCurrentUserHasExpiredPro, useCurrentUserHasPro } from '../../../../hooks/useHasPro';
 import { NetworkTime } from '../../../../util/NetworkTime';
-import { APP_URL, DURATION_SECONDS } from '../../../../session/constants';
+import { APP_URL, DURATION } from '../../../../session/constants';
 import { getFeatureFlag } from '../../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { useUserSettingsCloseAction } from './userSettingsHooks';
 import {
@@ -330,7 +330,7 @@ const SessionInfo = () => {
 export const DefaultSettingPage = (modalState: UserSettingsModalState) => {
   const dispatch = getAppDispatch();
   const closeAction = useUserSettingsCloseAction(modalState);
-  const { t } = useProBackendProStatus();
+  const { lastFetchedMs } = useProBackendProStatus();
   const refetch = useProBackendRefetch();
 
   const profileName = useOurConversationUsername() || '';
@@ -354,7 +354,9 @@ export const DefaultSettingPage = (modalState: UserSettingsModalState) => {
     if (!getFeatureFlag('proAvailable')) {
       return;
     }
-    if (NetworkTime.nowSeconds() > t + 1 * DURATION_SECONDS.MINUTES) {
+    // Opportunistic refresh when opening the settings, throttled to once a minute (and always done
+    // when we haven't had a successful fetch yet this run, i.e. lastFetchedMs is still 0).
+    if (NetworkTime.now() > lastFetchedMs + 1 * DURATION.MINUTES) {
       void refetch();
     }
   });
