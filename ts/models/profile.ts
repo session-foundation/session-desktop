@@ -216,7 +216,10 @@ abstract class SessionProfileChanges {
       this.convo[privateSetKey]('bitsetProFeatures', undefined);
       proDetailsChanged = true;
     }
-    if (!isNil(proRevocationTagB64) && this.convo.get('proRevocationTagB64') !== proRevocationTagB64) {
+    if (
+      !isNil(proRevocationTagB64) &&
+      this.convo.get('proRevocationTagB64') !== proRevocationTagB64
+    ) {
       this.convo[privateSetKey]('proRevocationTagB64', proRevocationTagB64);
       proDetailsChanged = true;
     }

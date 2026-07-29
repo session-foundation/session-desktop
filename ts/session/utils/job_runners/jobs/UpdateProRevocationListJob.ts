@@ -103,7 +103,9 @@ class UpdateProRevocationListJob extends PersistedJob<UpdateProRevocationListPer
       // clamped to now; we just persist it as the next run time — no arithmetic here.
       const { retryAtMs } = response;
 
-      window.log.debug(`UpdateProRevocationListJob: next revocation refresh at retryAtMs: ${retryAtMs}`);
+      window.log.debug(
+        `UpdateProRevocationListJob: next revocation refresh at retryAtMs: ${retryAtMs}`
+      );
       await updateNextRunAtMs(retryAtMs);
 
       if (response.ticket <= ticketFromDb) {

@@ -1,4 +1,3 @@
-import { z } from '../../../util/zod';
 import type {
   GenerateProProofResponse,
   GetProStatusResponse,
@@ -6,6 +5,7 @@ import type {
   ProPaymentItem,
   ProProof,
 } from 'libsession_util_nodejs';
+import { z } from '../../../util/zod';
 
 // Wire parsing now lives in libsession (the nodejs glue `parse*Response` functions) — the single
 // source of truth for the wire shape. The hand-rolled zod request/response schemas that used to live

@@ -123,7 +123,10 @@ export type ProviderDisplayConstants = {
  * exists, else the raw slug (an unknown/untranslated provider degrades to its slug — the same
  * "gate on the translation existing" rule used by the {pro_stores} list).
  */
-function providerDisplay(slug: string, suffix: 'platform' | 'store' | 'device' | 'account'): string {
+function providerDisplay(
+  slug: string,
+  suffix: 'platform' | 'store' | 'device' | 'account'
+): string {
   const token = `pro_provider_${slug}_${suffix}`;
   return isSimpleTokenNoArgs(token) ? tr(token) : slug;
 }
@@ -265,8 +268,7 @@ function processProBackendData({
     : planPeriodToString(latestAccess?.planCount, latestAccess?.planUnit);
   const isPlatformRefundAvailable =
     mockIsPlatformRefundAvailable ||
-    (latestAccess?.platformRefundExpiryTsMs &&
-      now < latestAccess.platformRefundExpiryTsMs) ||
+    (latestAccess?.platformRefundExpiryTsMs && now < latestAccess.platformRefundExpiryTsMs) ||
     defaultProAccessDetailsSourceData.isPlatformRefundAvailable;
 
   const autoRenew = mockCancelled

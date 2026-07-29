@@ -170,9 +170,7 @@ export const doAppStartUp = async () => {
     window.log.debug('appStartup: got our fresh swarm, starting polling');
     // trigger any other actions that need to be done after the swarm is ready
     window.inboxStore?.dispatch(networkDataActions.fetchInfoFromSeshServer() as any);
-    window.inboxStore?.dispatch(
-      proBackendDataActions.refreshGetProStatusFromProBackend({}) as any
-    );
+    window.inboxStore?.dispatch(proBackendDataActions.refreshGetProStatusFromProBackend({}) as any);
     if (window.inboxStore) {
       const delayedTimeout = getDataFeatureFlag('useLocalDevNet') && isTestIntegration() ? 2000 : 0;
       /**

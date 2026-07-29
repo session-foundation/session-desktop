@@ -37,12 +37,14 @@ export default class ProBackendAPI {
     request: { endpoint: string; contentType: string; body: string },
     parse: (body: Uint8Array) => Promise<T>
   ): Promise<T | null> {
-    const { status_code, bodyBinary } = await ProBackendAPI.getServer().makeRequestReturningRawBody({
-      path: `/${request.endpoint}`,
-      method: 'POST',
-      contentType: request.contentType,
-      bodyGetter: async () => request.body,
-    });
+    const { status_code, bodyBinary } = await ProBackendAPI.getServer().makeRequestReturningRawBody(
+      {
+        path: `/${request.endpoint}`,
+        method: 'POST',
+        contentType: request.contentType,
+        bodyGetter: async () => request.body,
+      }
+    );
 
     if (status_code !== 200 || !bodyBinary) {
       return null;

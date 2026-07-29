@@ -1,5 +1,6 @@
 import styled from 'styled-components';
 import { type ReactNode, useEffect, useState } from 'react';
+import type { ProviderUrls } from 'libsession_util_nodejs';
 import { getAppDispatch } from '../../../../../state/dispatch';
 import { isSimpleTokenNoArgs, tr } from '../../../../../localization/localeTools';
 import { Localizer } from '../../../../basic/Localizer';
@@ -17,7 +18,6 @@ import { LUCIDE_ICONS_UNICODE, WithLucideUnicode } from '../../../../icon/lucide
 import { SessionButton, SessionButtonColor } from '../../../../basic/SessionButton';
 import { showLinkVisitWarningDialog } from '../../../OpenUrlModal';
 import { ProWrapperActions } from '../../../../../webworker/workers/browser/libsession_worker_interface';
-import type { ProviderUrls } from 'libsession_util_nodejs';
 import { proButtonProps } from '../../../SessionCTA';
 import { Flex } from '../../../../basic/Flex';
 import type { ProNonOriginatingPageVariant } from '../../../../../types/ReduxTypes';
@@ -96,6 +96,7 @@ function useProStoresList(): string {
       return undefined;
     }
     let cancelled = false;
+    // eslint-disable-next-line more/no-then
     void ProWrapperActions.visiblePlatforms().then(result => {
       cachedVisiblePlatformSlugs = result;
       if (!cancelled) {
@@ -594,9 +595,7 @@ function ProInfoBlockRefundRequested() {
         <Localizer token="helpSupport" />
       </ProInfoBlockRefundTitle>
       <ProInfoBlockDescription
-        onClick={() =>
-          void openProviderUrl(data.provider, u => u.refundStatusUrl, dispatch)
-        }
+        onClick={() => void openProviderUrl(data.provider, u => u.refundStatusUrl, dispatch)}
         style={{ cursor: 'pointer' }}
       >
         <Localizer
