@@ -193,10 +193,10 @@ export async function getProMasterKeyHex() {
 }
 
 /**
- * The deterministic rotating key for the current weekly period, derived from the Pro master key.
- * Used to REQUEST a proof: every device derives the same key for the period so concurrent
- * (re)generations converge, and libsession persists the seed alongside the returned proof (that
- * seed is then what signs Pro messages).
+ * The deterministic rotating key for `now`, derived from the Pro master key (libsession owns the
+ * rotation schedule). Used to REQUEST a proof: every device deriving from the same master key +
+ * time converges on the same key so concurrent (re)generations don't race, and libsession persists
+ * the seed alongside the returned proof (that seed is then what signs Pro messages).
  */
 export async function deriveCurrentProRotatingKey() {
   const proMasterKeyHex = await getProMasterKeyHex();

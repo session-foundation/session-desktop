@@ -183,7 +183,7 @@ async function putProStatusInStorage(details: ProStatusResultType) {
 
 async function handleNewProProof(): Promise<ProProof | null> {
   const masterPrivKeyHex = await getProMasterKeyHex();
-  // Deterministic weekly rotating key: request the proof with it, then persist its seed alongside
+  // Deterministic rotating key for now: request the proof with it, then persist its seed alongside
   // the returned proof (that seed is what subsequently signs Pro messages).
   const { rotatingSeedHex, rotatingPrivKeyHex } = await UserUtils.deriveCurrentProRotatingKey();
   const response = await ProBackendAPI.generateProProof({
