@@ -13,7 +13,10 @@ import { getFeatureFlag } from '../../../../state/ducks/types/releasedFeaturesRe
 import { ProRevocationCache } from '../../../revocation_list/pro_revocation_list';
 import { stringify } from '../../../../types/sqlSharedTypes';
 import { proBackendDataActions } from '../../../../state/ducks/proBackendData';
-import { getCachedUserConfig } from '../../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
+import {
+  getCachedUserConfig,
+  UserConfigWrapperActions,
+} from '../../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 import { ConvoHub } from '../../../conversations';
 import { uuidV4 } from '../../../../util/uuid';
 import { SettingsKey } from '../../../../data/settings-key';
@@ -138,11 +141,14 @@ class UpdateProRevocationListJob extends PersistedJob<UpdateProRevocationListPer
         // `ProRevocationCache.setListItems` above updated the cache, so we can use it here
         ProRevocationCache.isB64HashEffectivelyRevoked(ourProConfig.proProof.revocationTagB64)
       ) {
-        // if we've been revoked, refresh our pro proof.
-        // this will fetch the new one if one is provided or just remove it from our config.
+        // Our own proof is revoked: clear it directly. The renewal loop won't do this for us —
+        // renewal_target treats a still-unexpired proof as "not due", so a revoked-but-unexpired
+        // proof would otherwise linger in config (and stay attachable, §6.1) until natural expiry.
+        // Also refresh status so the UI reflects the change.
         window.log.info(
-          `UpdateProRevocationListJob: our current revocation tag is revoked. Refreshing our pro proof.`
+          `UpdateProRevocationListJob: our current revocation tag is revoked. Clearing our pro proof.`
         );
+        await UserConfigWrapperActions.removeProConfig();
         window.inboxStore?.dispatch(
           proBackendDataActions.refreshGetProStatusFromProBackend({}) as any
         );
