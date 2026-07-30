@@ -915,8 +915,8 @@ export const ProDebugSection = ({
           <DebugButton
             onClick={async () => {
               const masterPrivKeyHex = await getProMasterKeyHex();
-              const rotatingPrivKeyHex = await UserUtils.getProRotatingPrivateKeyHex();
-              const rotatingSeedHex = await UserUtils.getProRotatingSeedHex();
+              const { rotatingSeedHex, rotatingPrivKeyHex } =
+                await UserUtils.deriveCurrentProRotatingKey();
               const response = await ProBackendAPI.generateProProof({
                 masterPrivKeyHex,
                 rotatingPrivKeyHex,

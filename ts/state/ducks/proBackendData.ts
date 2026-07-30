@@ -181,8 +181,11 @@ async function putProStatusInStorage(details: ProStatusResultType) {
   await Storage.put(SettingsKey.proStatus, details);
 }
 
-async function handleNewProProof(rotatingPrivKeyHex: string): Promise<ProProof | null> {
+async function handleNewProProof(): Promise<ProProof | null> {
   const masterPrivKeyHex = await getProMasterKeyHex();
+  // Deterministic weekly rotating key: request the proof with it, then persist its seed alongside
+  // the returned proof (that seed is what subsequently signs Pro messages).
+  const { rotatingSeedHex, rotatingPrivKeyHex } = await UserUtils.deriveCurrentProRotatingKey();
   const response = await ProBackendAPI.generateProProof({
     masterPrivKeyHex,
     rotatingPrivKeyHex,
@@ -191,7 +194,6 @@ async function handleNewProProof(rotatingPrivKeyHex: string): Promise<ProProof |
     // libsession returns a ready-made ProProof; relay it verbatim rather than re-assembling fields.
     const proProof = response.proof;
     const { proConfig, proAccessExpiry, proProfileBitset } = getCachedUserConfig();
-    const rotatingSeedHex = await UserUtils.getProRotatingSeedHex();
     // If we have a new proof but it seems that we never had one before, set the pro badge feature as enabled
     if (!proConfig && !proAccessExpiry && !proProfileBitset) {
       await UserConfigWrapperActions.setProBadge(true);
@@ -269,9 +271,9 @@ function scheduleRefresh(timestampMs: number) {
   }, delay);
 }
 
-async function fetchNewProof(rotatingPrivKeyHex: string) {
+async function fetchNewProof() {
   try {
-    const newProof = await handleNewProProof(rotatingPrivKeyHex);
+    const newProof = await handleNewProProof();
     if (newProof) {
       return newProof.expiryMs;
     }
@@ -287,9 +289,6 @@ async function handleProProof(accessExpiryTsMs: number, autoRenewing: boolean, s
   }
 
   const proConfig = getCachedUserConfig().proConfig;
-
-  const rotatingPrivKeyHex =
-    proConfig?.rotatingPrivKeyHex ?? (await UserUtils.getProRotatingPrivateKeyHex());
 
   const cachedProofExpiry = proConfig?.proProof.expiryMs;
 
@@ -309,7 +308,7 @@ async function handleProProof(accessExpiryTsMs: number, autoRenewing: boolean, s
     autoRenewing;
 
   if (shouldRefreshNoProProof || shouldRefreshProofExpired || shouldRefreshProofExpiresSoon) {
-    refreshedProofExpiry = await fetchNewProof(rotatingPrivKeyHex);
+    refreshedProofExpiry = await fetchNewProof();
     if (refreshedProofExpiry) {
       await UserConfigWrapperActions.setProAccessExpiry(refreshedProofExpiry);
     }

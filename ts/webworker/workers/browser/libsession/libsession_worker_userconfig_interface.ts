@@ -16,6 +16,8 @@ type CachedUserConfig = {
   proConfig: AwaitedReturn<UserConfigWrapperActionsCalls['getProConfig']>;
   proProfileBitset: AwaitedReturn<UserConfigWrapperActionsCalls['getProProfileBitset']>;
   proAccessExpiry: AwaitedReturn<UserConfigWrapperActionsCalls['getProAccessExpiry']>;
+  refundRequested: AwaitedReturn<UserConfigWrapperActionsCalls['getRefundRequested']>;
+  proPrepaid: AwaitedReturn<UserConfigWrapperActionsCalls['getProPrepaid']>;
 };
 
 let cachedUserConfig: CachedUserConfig | null = null;
@@ -36,6 +38,8 @@ async function fullRefreshCachedUserConfig() {
   const proConfig = await UserConfigWrapperActions.getProConfig();
   const proProfileBitset = await UserConfigWrapperActions.getProProfileBitset();
   const proAccessExpiry = await UserConfigWrapperActions.getProAccessExpiry();
+  const refundRequested = await UserConfigWrapperActions.getRefundRequested();
+  const proPrepaid = await UserConfigWrapperActions.getProPrepaid();
 
   if (!cachedUserConfig) {
     cachedUserConfig = {
@@ -44,6 +48,8 @@ async function fullRefreshCachedUserConfig() {
       proAccessExpiry,
       proConfig,
       proProfileBitset,
+      refundRequested,
+      proPrepaid,
       profilePic,
       profileUpdatedSeconds,
       priority,
@@ -60,6 +66,8 @@ async function fullRefreshCachedUserConfig() {
   applyUserConfigIfChanged('proConfig', proConfig);
   applyUserConfigIfChanged('proProfileBitset', proProfileBitset);
   applyUserConfigIfChanged('proAccessExpiry', proAccessExpiry);
+  applyUserConfigIfChanged('refundRequested', refundRequested);
+  applyUserConfigIfChanged('proPrepaid', proPrepaid);
 }
 
 function applyUserConfigIfChanged<T extends keyof CachedUserConfig>(
@@ -196,5 +204,35 @@ export const UserConfigWrapperActions: UserConfigWrapperActionsCalls = {
   ) =>
     callLibSessionWorker(['UserConfig', 'generateRotatingPrivKeyHex', ...args]) as Promise<
       ReturnType<UserConfigWrapperActionsCalls['generateRotatingPrivKeyHex']>
+    >,
+  deriveProRotatingKey: async (
+    ...args: Parameters<UserConfigWrapperActionsCalls['deriveProRotatingKey']>
+  ) =>
+    callLibSessionWorker(['UserConfig', 'deriveProRotatingKey', ...args]) as Promise<
+      ReturnType<UserConfigWrapperActionsCalls['deriveProRotatingKey']>
+    >,
+  getRefundRequested: async (
+    ...args: Parameters<UserConfigWrapperActionsCalls['getRefundRequested']>
+  ) =>
+    callLibSessionWorker(['UserConfig', 'getRefundRequested', ...args]) as Promise<
+      ReturnType<UserConfigWrapperActionsCalls['getRefundRequested']>
+    >,
+  setRefundRequested: async (
+    ...args: Parameters<UserConfigWrapperActionsCalls['setRefundRequested']>
+  ) => {
+    return callLibsessionWithUserConfigRefresh(['UserConfig', 'setRefundRequested', ...args]);
+  },
+  getProPrepaid: async (...args: Parameters<UserConfigWrapperActionsCalls['getProPrepaid']>) =>
+    callLibSessionWorker(['UserConfig', 'getProPrepaid', ...args]) as Promise<
+      ReturnType<UserConfigWrapperActionsCalls['getProPrepaid']>
+    >,
+  setProPrepaid: async (...args: Parameters<UserConfigWrapperActionsCalls['setProPrepaid']>) => {
+    return callLibsessionWithUserConfigRefresh(['UserConfig', 'setProPrepaid', ...args]);
+  },
+  getProRenewalTarget: async (
+    ...args: Parameters<UserConfigWrapperActionsCalls['getProRenewalTarget']>
+  ) =>
+    callLibSessionWorker(['UserConfig', 'getProRenewalTarget', ...args]) as Promise<
+      ReturnType<UserConfigWrapperActionsCalls['getProRenewalTarget']>
     >,
 };
