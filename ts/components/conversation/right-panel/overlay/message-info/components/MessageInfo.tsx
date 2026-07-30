@@ -1,5 +1,4 @@
 import styled from 'styled-components';
-import { useEffect, useState } from 'react';
 import { MessageFrom } from '.';
 import {
   useMessageBody,
@@ -41,7 +40,6 @@ import { ProIconButton } from '../../../../../buttons/ProButton';
 import { assertUnreachable } from '../../../../../../types/sqlSharedTypes';
 import { ProMessageFeature } from '../../../../../../models/proMessageFeature';
 import { SessionButtonColor } from '../../../../../basic/SessionButton';
-import { ProWrapperActions } from '../../../../../../webworker/workers/browser/libsession_worker_interface';
 
 export const MessageInfoLabel = styled.label<{ color?: string }>`
   font-size: var(--font-size-lg);
@@ -102,17 +100,7 @@ const DebugMessageInfo = ({ messageId }: { messageId: string }) => {
   const serverTimestamp = useMessageServerTimestamp(messageId);
   const message = useMessageBody(messageId);
 
-  const [codepointCount, setCodepointCount] = useState(0);
-
-  useEffect(() => {
-    async function getCodepointCount() {
-      const { codepointCount: fromLibsession } = await ProWrapperActions.utf16Count({
-        utf16: message ?? '',
-      });
-      setCodepointCount(fromLibsession);
-    }
-    void getCodepointCount();
-  }, [message]);
+  const codepointCount = [...(message ?? '')].length;
 
   if (!isDevProd()) {
     return null;

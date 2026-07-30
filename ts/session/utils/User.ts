@@ -157,7 +157,7 @@ export async function getOutgoingProMessageDetails({
   }
 
   const { proMessageBitset, status } = await ProWrapperActions.proFeaturesForMessage({
-    utf16: utf16 ?? '',
+    codepointCount: [...(utf16 ?? '')].length,
   });
 
   if (status !== 'SUCCESS') {

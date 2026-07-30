@@ -51,7 +51,7 @@ import { CompositionTextArea } from './CompositionTextArea';
 import { HTMLDirection } from '../../../util/i18n/rtlSupport';
 import type { FixedBaseEmoji } from '../../../types/Reaction';
 import { CharacterCount } from './CharacterCount';
-import { Constants } from '../../../session';
+import LIBSESSION_CONSTANTS from '../../../session/utils/libsession/libsession_constants';
 import type { CompositionInputRef } from './CompositionInput';
 import { useShowBlockUnblock } from '../../menuAndSettingsHooks/useShowBlockUnblock';
 import { showLocalizedPopupDialog } from '../../dialog/LocalizedPopupDialog';
@@ -63,7 +63,6 @@ import { CTAVariant } from '../../dialog/cta/types';
 import { selectWeAreProUser } from '../../../hooks/useHasPro';
 import { closeContextMenus } from '../../../util/contextMenu';
 import type { MessageAttributes } from '../../../models/messageType';
-import { ProWrapperActions } from '../../../webworker/workers/browser/libsession_worker_interface';
 import { updateOutgoingLightBoxOptions } from '../../../state/ducks/modalDialog';
 import { isEnterKey, isEscapeKey } from '../../../util/keyboardShortcuts';
 import type { CommunityInvitation } from '../../../session/messages/outgoing/visibleMessage/VisibleMessage';
@@ -665,12 +664,12 @@ class CompositionBoxInner extends Component<Props, State> {
     const isProAvailable = getFeatureFlag('proAvailable');
 
     const charLimit = hasPro
-      ? Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_PRO
-      : Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_STANDARD;
+      ? LIBSESSION_CONSTANTS.MESSAGE_CHARACTER_LIMIT_PRO
+      : LIBSESSION_CONSTANTS.MESSAGE_CHARACTER_LIMIT_STANDARD;
 
     const text = this.getSendableTextFromDraft();
 
-    const { codepointCount } = await ProWrapperActions.utf16Count({ utf16: text });
+    const codepointCount = [...text].length;
 
     if (codepointCount > charLimit) {
       const dispatch = window.inboxStore?.dispatch;
