@@ -1,4 +1,4 @@
-import type { ProProof, WithMasterPrivKeyHex } from 'libsession_util_nodejs';
+import type { WithMasterPrivKeyHex } from 'libsession_util_nodejs';
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { isUndefined } from 'lodash';
 import type { StateType } from '../reducer';
