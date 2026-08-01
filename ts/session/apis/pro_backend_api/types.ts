@@ -13,7 +13,6 @@ export const ProStatus = {
 export type ProStatus = string;
 
 export const ProItemStatus = {
-  Unredeemed: 'unredeemed',
   Redeemed: 'redeemed',
   Expired: 'expired',
   Revoked: 'revoked',
