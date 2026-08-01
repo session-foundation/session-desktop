@@ -997,7 +997,7 @@ export const ProDebugSection = ({
         options={[
           { label: 'Google Play', value: ProPaymentProvider.GooglePlay },
           { label: 'iOS App Store', value: ProPaymentProvider.AppStore },
-          { label: 'Rangeproof', value: ProPaymentProvider.Rangeproof },
+          { label: 'STF', value: ProPaymentProvider.Stf },
         ]}
         forceUpdate={forceUpdate}
         unsetOption={{ label: 'Select originating platform', value: null }}
