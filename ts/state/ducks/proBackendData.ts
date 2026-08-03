@@ -243,7 +243,9 @@ async function applyProofOutcome(
       break;
     default:
       // Unrecognized error_code: fail closed, non-destructively — treat as transient (no write/clear).
-      window?.log?.warn(`[proProof] unrecognized generate_pro_proof error_code: ${response.errorCode}`);
+      window?.log?.warn(
+        `[proProof] unrecognized generate_pro_proof error_code: ${response.errorCode}`
+      );
       break;
   }
 }
@@ -310,9 +312,12 @@ function scheduleReconcileWake(atMs: number) {
   if (reconcileWakeId) {
     clearTimeout(reconcileWakeId);
   }
-  reconcileWakeId = setTimeout(() => {
-    void reconcileProProof();
-  }, Math.max(atMs - NetworkTime.now(), 0));
+  reconcileWakeId = setTimeout(
+    () => {
+      void reconcileProProof();
+    },
+    Math.max(atMs - NetworkTime.now(), 0)
+  );
 }
 
 async function requestAndApplyProof(): Promise<void> {
