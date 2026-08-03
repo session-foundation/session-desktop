@@ -13,7 +13,6 @@ export const ProStatus = {
 export type ProStatus = string;
 
 export const ProItemStatus = {
-  Unredeemed: 'unredeemed',
   Redeemed: 'redeemed',
   Expired: 'expired',
   Revoked: 'revoked',
@@ -32,7 +31,7 @@ export type ProAccessVariant = string;
 export const ProPaymentProvider = {
   GooglePlay: 'google_play',
   AppStore: 'app_store',
-  Rangeproof: 'rangeproof',
+  Stf: 'stf',
 } as const;
 /** Payment-provider slug (canonical values in {@link ProPaymentProvider}); may be an unknown slug. */
 export type ProPaymentProvider = string;

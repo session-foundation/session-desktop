@@ -575,7 +575,7 @@ function ProInfoBlockRefund() {
     case ProPaymentProvider.GooglePlay:
       return <ProInfoBlockRefundGooglePlay />;
     default:
-      // Rangeproof, none (''), or an unknown/future provider slug -> the Session-support refund flow.
+      // STF, none (''), or an unknown/future provider slug -> the Session-support refund flow.
       return <ProInfoBlockRefundSessionSupport />;
   }
 }

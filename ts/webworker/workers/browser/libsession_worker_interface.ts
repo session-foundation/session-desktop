@@ -773,14 +773,6 @@ export const ProWrapperActions: ProActionsCalls = {
     callLibSessionWorker(['Pro', 'proFeaturesForMessage', first]) as Promise<
       ReturnType<ProActionsCalls['proFeaturesForMessage']>
     >,
-  utf16Count: async first =>
-    callLibSessionWorker(['Pro', 'utf16Count', first]) as Promise<
-      ReturnType<ProActionsCalls['utf16Count']>
-    >,
-  utf16CountTruncatedToCodepoints: async first =>
-    callLibSessionWorker(['Pro', 'utf16CountTruncatedToCodepoints', first]) as Promise<
-      ReturnType<ProActionsCalls['utf16CountTruncatedToCodepoints']>
-    >,
   proProofRequest: async first =>
     callLibSessionWorker(['Pro', 'proProofRequest', first]) as Promise<
       ReturnType<ProActionsCalls['proProofRequest']>

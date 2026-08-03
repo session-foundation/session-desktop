@@ -1,4 +1,4 @@
-import type { ProProof, WithMasterPrivKeyHex } from 'libsession_util_nodejs';
+import type { WithMasterPrivKeyHex } from 'libsession_util_nodejs';
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { isUndefined } from 'lodash';
 import type { StateType } from '../reducer';
@@ -181,27 +181,73 @@ async function putProStatusInStorage(details: ProStatusResultType) {
   await Storage.put(SettingsKey.proStatus, details);
 }
 
-async function handleNewProProof(rotatingPrivKeyHex: string): Promise<ProProof | null> {
-  const masterPrivKeyHex = await getProMasterKeyHex();
-  const response = await ProBackendAPI.generateProProof({
-    masterPrivKeyHex,
-    rotatingPrivKeyHex,
-  });
-  if (response && response.status === 'ok') {
-    // libsession returns a ready-made ProProof; relay it verbatim rather than re-assembling fields.
-    const proProof = response.proof;
-    const { proConfig, proAccessExpiry, proProfileBitset } = getCachedUserConfig();
-    const rotatingSeedHex = await UserUtils.getProRotatingSeedHex();
-    // If we have a new proof but it seems that we never had one before, set the pro badge feature as enabled
-    if (!proConfig && !proAccessExpiry && !proProfileBitset) {
-      await UserConfigWrapperActions.setProBadge(true);
-    }
-    await UserConfigWrapperActions.setProConfig({ proProof, rotatingSeedHex });
+/** A currently-usable proof is held (unexpired). Revocation is a separate clear path. */
+function haveValidProof(): boolean {
+  const proof = getCachedUserConfig().proConfig?.proProof;
+  return !!proof && proof.expiryMs > NetworkTime.now();
+}
 
-    return proProof;
+/**
+ * Apply one generate_pro_proof outcome to config (see the ON_COMPLETE rules in
+ * agent-comms/pro-proof-renewal-loop-design.md §4). A stale response must never reduce coverage:
+ * upgrades are gated on a strictly-newer expiry, clears on there being no valid proof to protect.
+ */
+async function applyProofOutcome(
+  response: Awaited<ReturnType<typeof ProBackendAPI.generateProProof>>,
+  rotatingSeedHex: string
+): Promise<void> {
+  if (!response) {
+    // network/transient: nothing to write
+    return;
   }
-  window?.log?.error('failed to get new pro proof: ', response);
-  return null;
+  if (response.status === 'ok') {
+    const proProof = response.proof;
+    const current = getCachedUserConfig().proConfig?.proProof;
+    // Upgrade guard: only replace the proof if it extends coverage (monotonic merge; same-period
+    // races round to the same expiry → byte-identical → no-op).
+    if (!current || proProof.expiryMs > current.expiryMs) {
+      const { proConfig, proAccessExpiry, proProfileBitset } = getCachedUserConfig();
+      // First-ever proof: enable the pro badge feature.
+      if (!proConfig && !proAccessExpiry && !proProfileBitset) {
+        await UserConfigWrapperActions.setProBadge(true);
+      }
+      await UserConfigWrapperActions.setProConfig({ proProof, rotatingSeedHex });
+    }
+    // Refresh cached access-expiry from the advisory account_expiry (decoupled from the proof guard,
+    // so a mid-period horizon extension is still picked up). Guaranteed present on a success parse.
+    if (response.accountExpiryMs !== null) {
+      await UserConfigWrapperActions.setProAccessExpiry(response.accountExpiryMs);
+    }
+    return;
+  }
+  // Non-ok: the machine slug (error_code) decides.
+  switch (response.errorCode) {
+    case 'subscription_expired':
+      // The sub genuinely lapsed. Don't wipe a fresh proof a re-subscribe just landed.
+      if (!haveValidProof()) {
+        if (response.accountExpiryMs !== null) {
+          await UserConfigWrapperActions.setProAccessExpiry(response.accountExpiryMs);
+        }
+        await UserConfigWrapperActions.removeProConfig();
+      }
+      break;
+    case 'not_subscribed':
+      // Clear the (absent) credential but leave pro_prepaid so a pending purchase keeps polling.
+      if (!haveValidProof()) {
+        await UserConfigWrapperActions.removeProConfig();
+      }
+      break;
+    case 'revoked':
+      // Terminal: revocation must kill even an unexpired proof (bypasses the downgrade guard). No E.
+      await UserConfigWrapperActions.removeProConfig();
+      break;
+    default:
+      // Unrecognized error_code: fail closed, non-destructively — treat as transient (no write/clear).
+      window?.log?.warn(
+        `[proProof] unrecognized generate_pro_proof error_code: ${response.errorCode}`
+      );
+      break;
+  }
 }
 
 async function handleClearProProof() {
@@ -253,95 +299,92 @@ async function handleExpiryCTAs(
 }
 
 let firstFetchProStatusHappened = false;
-let lastKnownProofExpiryTimestamp: number | null = null;
-let scheduledProofExpiryTaskTimestamp: number | null = null;
-let scheduledProofExpiryTaskId: ReturnType<typeof setTimeout> | null = null;
-let scheduledAccessExpiryTaskTimestamp: number | null = null;
-let scheduledAccessExpiryTaskId: ReturnType<typeof setTimeout> | null = null;
+// ===== Pro proof renewal reconcile loop (agent-comms/pro-proof-renewal-loop-design.md) =====
+const DARK_STEP_MS = 15 * DURATION.SECONDS;
+const DARK_CAP_MS = 15 * DURATION.MINUTES;
+const COVERED_MS = 60 * DURATION.SECONDS;
 
-function scheduleRefresh(timestampMs: number) {
-  const delay = Math.max(timestampMs - NetworkTime.now(), 15 * DURATION.SECONDS);
-  window?.log?.info(`Scheduling a pro status refresh in ${delay}ms for ${timestampMs}`);
-  return setTimeout(() => {
-    window?.inboxStore?.dispatch(
-      proBackendDataActions.refreshGetProStatusFromProBackend({}) as any
-    );
-  }, delay);
-}
+let reconcileWakeId: ReturnType<typeof setTimeout> | null = null;
+let lastProofRequestAt = -Infinity;
+let darkAttempt = 0;
 
-async function fetchNewProof(rotatingPrivKeyHex: string) {
-  try {
-    const newProof = await handleNewProProof(rotatingPrivKeyHex);
-    if (newProof) {
-      return newProof.expiryMs;
-    }
-  } catch (e) {
-    window?.log?.error(e);
+function scheduleReconcileWake(atMs: number) {
+  if (reconcileWakeId) {
+    clearTimeout(reconcileWakeId);
   }
-  return null;
+  reconcileWakeId = setTimeout(
+    () => {
+      void reconcileProProof();
+    },
+    Math.max(atMs - NetworkTime.now(), 0)
+  );
 }
 
-async function handleProProof(accessExpiryTsMs: number, autoRenewing: boolean, status: ProStatus) {
-  if (status !== ProStatus.Active) {
+async function requestAndApplyProof(): Promise<void> {
+  try {
+    const masterPrivKeyHex = await getProMasterKeyHex();
+    // Deterministic rotating key for now; libsession owns the rotation schedule.
+    const { rotatingSeedHex, rotatingPrivKeyHex } = await UserUtils.deriveCurrentProRotatingKey();
+    const response = await ProBackendAPI.generateProProof({ masterPrivKeyHex, rotatingPrivKeyHex });
+    await applyProofOutcome(response, rotatingSeedHex);
+    // Reflect any proof/status change in the UI without a restart.
+    ConvoHub.use().get(UserUtils.getOurPubKeyStrFromCache())?.triggerUIRefresh();
+  } catch (e) {
+    window?.log?.error('[proProof] generate_pro_proof request failed', e);
+    // transient: nothing to write
+  }
+  // Re-derive from fresh config: success -> far-future target; failure -> backed-off retry.
+  void reconcileProProof();
+}
+
+/**
+ * The renewal loop. Timing + whether-to-renew are entirely libsession's (the gated
+ * `pro_renewal_target`); the client only schedules a wake and, when due, fires a bare
+ * `generate_pro_proof`. Single-flight is best-effort (an overlap with a slow in-flight request is
+ * accepted — the §4 monotonic merge no-ops the late reply). Holds no durable state.
+ */
+export async function reconcileProProof(): Promise<void> {
+  if (!getFeatureFlag('proAvailable')) {
     return;
   }
-
-  const proConfig = getCachedUserConfig().proConfig;
-
-  const rotatingPrivKeyHex =
-    proConfig?.rotatingPrivKeyHex ?? (await UserUtils.getProRotatingPrivateKeyHex());
-
-  const cachedProofExpiry = proConfig?.proProof.expiryMs;
-
-  // We want to fetch a new pro proof when:
-  // 1. we don't have one yet
-  // 2. we have one that has already expired
-  // 3. we have one that is expiring soon (within the next 60 minutes)
+  if (reconcileWakeId) {
+    clearTimeout(reconcileWakeId);
+    reconcileWakeId = null;
+  }
   const now = NetworkTime.now();
-  let refreshedProofExpiry: number | null = null;
-
-  const shouldRefreshNoProProof = !proConfig || !proConfig.proProof; // case 1: we don't have a pro proof yet
-  const shouldRefreshProofExpired = proConfig && proConfig.proProof.expiryMs < now; // case 2: we have a pro proof that has expired
-  const shouldRefreshProofExpiresSoon = // case 3: we have a pro proof that is expiring soon
-    proConfig &&
-    proConfig.proProof.expiryMs < now + DURATION.HOURS && // the cached proof expires in the next 60 minutes
-    accessExpiryTsMs > now + DURATION.HOURS && // the access expiry expires in more than 60 minutes
-    autoRenewing;
-
-  if (shouldRefreshNoProProof || shouldRefreshProofExpired || shouldRefreshProofExpiresSoon) {
-    refreshedProofExpiry = await fetchNewProof(rotatingPrivKeyHex);
-    if (refreshedProofExpiry) {
-      await UserConfigWrapperActions.setProAccessExpiry(refreshedProofExpiry);
-    }
+  const target = await UserConfigWrapperActions.getProRenewalTarget(now);
+  if (target === null) {
+    // DORMANT (not Pro / no pending purchase, OR a valid proof with entitlement ending — riding out).
+    // NOTE: DORMANT is not "not Pro" — never gate Pro UI on this; re-entry is trigger-only.
+    darkAttempt = 0;
+    return;
   }
-
-  // fallback to the cached expiry if we didn't get a new one
-  if (!refreshedProofExpiry) {
-    refreshedProofExpiry = cachedProofExpiry ?? null;
+  if (target > now) {
+    // Not yet due: one wake (preemptive renewal / woke-early / another device renewed).
+    darkAttempt = 0;
+    scheduleReconcileWake(target);
+    return;
   }
-
-  const accessExpiryRefreshTimestamp = accessExpiryTsMs + 30 * DURATION.SECONDS;
-  if (accessExpiryRefreshTimestamp !== scheduledAccessExpiryTaskTimestamp) {
-    if (scheduledAccessExpiryTaskId) {
-      clearTimeout(scheduledAccessExpiryTaskId);
-    }
-    scheduledAccessExpiryTaskTimestamp = accessExpiryRefreshTimestamp;
-    scheduledAccessExpiryTaskId = scheduleRefresh(scheduledAccessExpiryTaskTimestamp);
+  // Due.
+  const covered = haveValidProof();
+  if (covered) {
+    darkAttempt = 0;
   }
-
-  if (
-    refreshedProofExpiry &&
-    (!scheduledProofExpiryTaskTimestamp || refreshedProofExpiry !== lastKnownProofExpiryTimestamp)
-  ) {
-    if (scheduledProofExpiryTaskId) {
-      clearTimeout(scheduledProofExpiryTaskId);
-    }
-    // Random number of minutes between 10 and 60
-    const minutes = Math.floor(Math.random() * 51) + 10;
-    lastKnownProofExpiryTimestamp = refreshedProofExpiry;
-    scheduledProofExpiryTaskTimestamp = refreshedProofExpiry - minutes * DURATION.MINUTES;
-    scheduledProofExpiryTaskId = scheduleRefresh(scheduledProofExpiryTaskTimestamp);
+  const interval = covered ? COVERED_MS : Math.min(DARK_STEP_MS * darkAttempt, DARK_CAP_MS);
+  if (now - lastProofRequestAt < interval) {
+    // Spacing / in-flight / awaiting a possibly-lost completion.
+    scheduleReconcileWake(lastProofRequestAt + interval);
+    return;
   }
+  lastProofRequestAt = now;
+  if (!covered) {
+    darkAttempt += 1;
+  }
+  // A lost/frozen completion is re-checked at this wake.
+  scheduleReconcileWake(
+    now + (covered ? COVERED_MS : Math.min(DARK_STEP_MS * darkAttempt, DARK_CAP_MS))
+  );
+  void requestAndApplyProof();
 }
 
 const fetchGetProStatusFromProBackend = createAsyncThunk(
@@ -356,30 +399,24 @@ const fetchGetProStatusFromProBackend = createAsyncThunk(
       payloadCreator,
       callback: async state => {
         if (state.data) {
-          if (state.data.errorReport === 1) {
-            state.isError = true;
-            state.error = 'Backend unable to process current state, please try again later.';
-            // NOTE: we want to continue processing the state, as even if there was an error we need to try to handle the pro proofs.
-          }
           switch (state.data.userStatus) {
             case ProStatus.Active:
               window.log.debug(`[handleBackendProStatusChange] ProStatus.Active`);
-              await handleProProof(
-                state.data.expiryMs,
-                state.data.autoRenewing,
-                state.data.userStatus
-              );
+              // Keep the cached access-expiry (E) fresh from the account horizon (catches a
+              // horizon-only change the renewal path wouldn't). The proof itself is (re)obtained by
+              // the reconcile loop, triggered below.
+              await UserConfigWrapperActions.setProAccessExpiry(state.data.expiryMs);
               break;
 
             case ProStatus.Never:
-              window.log.debug(`[handleBackendProStatusChange] ProStatus.Never`);
-              await handleClearProProof();
-              break;
-
             case ProStatus.Expired:
-              window.log.debug(`[handleBackendProStatusChange] ProStatus.Expired`);
-
-              await handleClearProProof();
+              window.log.debug(`[handleBackendProStatusChange] ProStatus.${state.data.userStatus}`);
+              // No/ended entitlement. Clear — but never wipe a currently-valid proof (a stale status
+              // read vs a fresh proof another device just landed); the proof lifecycle is otherwise
+              // the reconcile loop's.
+              if (!haveValidProof()) {
+                await handleClearProProof();
+              }
               break;
 
             default:
@@ -411,6 +448,9 @@ const fetchGetProStatusFromProBackend = createAsyncThunk(
         }
         // trigger a UI refresh so our state and Pro rights are up to date without a restart (animated image should stop animating)
         ConvoHub.use().get(UserUtils.getOurPubKeyStrFromCache())?.triggerUIRefresh();
+        // A get_pro_status fetch may have changed config (E / prepaid / status) — re-run the proof
+        // renewal loop against the fresh state.
+        void reconcileProProof();
         return state;
       },
       contextHandler: async state => {

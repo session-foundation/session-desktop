@@ -28,6 +28,7 @@ import {
 } from '../../session/apis/pro_backend_api/types';
 import { isSimpleTokenNoArgs, tr } from '../../localization/localeTools';
 import { getAppDispatch } from '../dispatch';
+import { getCachedUserConfig } from '../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 import { sleepFor } from '../../session/utils/Promise';
 
 const getProBackendData = (state: StateType): ProBackendDataState => {
@@ -289,7 +290,15 @@ function processProBackendData({
     inGracePeriod = autoRenew && now >= beginAutoRenew && now < expiryTimeMs;
   }
 
-  const isProcessingRefund = !!data?.refundRequestedTsMs;
+  // Refund-requested is now a synced config flag (UserProfile key R), not a backend response field.
+  // Read it from the cached user config; libsession applies the 1-week read gate.
+  let refundRequested: number | null = null;
+  try {
+    refundRequested = getCachedUserConfig().refundRequested;
+  } catch {
+    // cached user config not initialised yet (e.g. pre-login): treat as no refund in progress
+  }
+  const isProcessingRefund = !!refundRequested;
 
   return {
     data: {

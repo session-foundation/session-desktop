@@ -16,7 +16,7 @@ import { lookupQuoteInStore, pushQuotedMessageDetails } from '../state/ducks/con
 import { selectMemberInviteSentOutsideRedux } from '../state/selectors/groups';
 import { LinkPreviews } from '../util/linkPreviews';
 import { GroupV2Receiver } from './groupv2/handleGroupV2Message';
-import { Constants } from '../session';
+import LIBSESSION_CONSTANTS from '../session/utils/libsession/libsession_constants';
 import { longOrNumberToNumber } from '../types/long/longOrNumberToNumber';
 import { getHideMessageRequestBannerOutsideRedux } from '../state/selectors/settings';
 import { showMessageRequestBannerOutsideRedux } from '../state/ducks/settings';
@@ -24,7 +24,6 @@ import { getFeatureFlag } from '../state/ducks/types/releasedFeaturesReduxTypes'
 import type { StateType } from '../state/reducer';
 import { isUsFromCache } from '../session/utils/User';
 import { isUsAnySogsFromCache } from '../session/apis/open_group_api/sogsv3/knownBlindedkeys';
-import { ProWrapperActions } from '../webworker/workers/browser/libsession_worker_interface';
 
 export async function pushQuotedMessageToStoreIfNeeded(quoteDetails: {
   id: Long | number;
@@ -234,15 +233,10 @@ async function handleRegularMessage(
   // NOTE: The truncation value must be the Pro count so when Pro is released older clients wont truncate pro messages.
   const maxChars =
     !getFeatureFlag('proAvailable') || sendingDeviceConversation.hasValidCurrentProProof()
-      ? Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_PRO
-      : Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_STANDARD;
+      ? LIBSESSION_CONSTANTS.MESSAGE_CHARACTER_LIMIT_PRO
+      : LIBSESSION_CONSTANTS.MESSAGE_CHARACTER_LIMIT_STANDARD;
 
-  const { truncateAt } = await ProWrapperActions.utf16CountTruncatedToCodepoints({
-    utf16: rawDataMessage.body,
-    codepointLen: maxChars,
-  });
-
-  const body = rawDataMessage.body.slice(0, truncateAt);
+  const body = [...rawDataMessage.body].slice(0, maxChars).join('');
 
   message.set({
     // quote: rawDataMessage.quote, // do not do this copy here, it must be done only in copyFromQuotedMessage()

@@ -15,26 +15,24 @@ describe('libsession_pro', () => {
     it('no need for 10k limit', async () => {
       expect(
         ProWrapperNode.proFeaturesForMessage({
-          utf16: 'hello',
+          codepointCount: 5,
         })
       ).to.deep.eq({
         proMessageBitset: 0n,
         status: 'SUCCESS',
         error: null,
-        codepointCount: 5,
       });
     });
 
     it('expects 10K_CHARACTER_LIMIT to be added if need for 10k limit', async () => {
       expect(
         ProWrapperNode.proFeaturesForMessage({
-          utf16: '012345678'.repeat(1000), // 1000 * 9 chars = 9000 codepoints
+          codepointCount: 9000,
         })
       ).to.deep.eq({
         proMessageBitset: 1n,
         status: 'SUCCESS',
         error: null,
-        codepointCount: 9000,
       });
     });
   });
