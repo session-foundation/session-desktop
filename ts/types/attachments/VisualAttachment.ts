@@ -10,10 +10,7 @@ import { GoogleChrome } from '../../util';
 import { isAudio } from '../MIME';
 import { formatTimeDurationMs } from '../../util/i18n/formatting/generics';
 import { isTestIntegration } from '../../shared/env_vars';
-import {
-  getDataFeatureFlag,
-  getFeatureFlag,
-} from '../../state/ducks/types/releasedFeaturesReduxTypes';
+import { getDataFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 import { processAvatarData } from '../../util/avatar/processAvatarData';
 import type { ProcessedAvatarDataType } from '../../webworker/workers/node/image_processor/image_processor';
 import { ImageProcessor } from '../../webworker/workers/browser/image_processor_interface';
@@ -191,10 +188,7 @@ export const revokeObjectUrl = (objectUrl: string) => {
 };
 
 async function pickFileForReal() {
-  const acceptedImages = ['.png', '.gif', '.jpeg', '.jpg'];
-  if (getFeatureFlag('proAvailable')) {
-    acceptedImages.push('.webp');
-  }
+  const acceptedImages = ['.png', '.gif', '.jpeg', '.jpg', '.webp'];
 
   const [fileHandle] = await (window as any).showOpenFilePicker({
     types: [

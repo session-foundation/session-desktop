@@ -8,16 +8,10 @@ import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 import { DebugButton } from '../components';
 import { DebugMenuPageProps, DebugMenuSection } from '../DebugMenuModal';
 import { CTAVariant } from '../../cta/types';
-import { getIsProAvailableMemo } from '../../../../hooks/useIsProAvailable';
 
 export function ProPlaygroundPage(props: DebugMenuPageProps) {
   const forceUpdate = useUpdate();
   const handleClick = useShowSessionCTACbWithVariant();
-  const proAvailable = getIsProAvailableMemo();
-
-  if (!proAvailable) {
-    return null;
-  }
 
   return (
     <>

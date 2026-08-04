@@ -7,7 +7,6 @@ import {
 } from '../../../../state/ducks/modalDialog';
 import { assertUnreachable } from '../../../../types/sqlSharedTypes';
 import { handleTriggeredCTAs } from '../../SessionCTA';
-import { getFeatureFlag } from '../../../../state/ducks/types/releasedFeaturesReduxTypes';
 
 export function useUserSettingsTitle(page: UserSettingsModalState | undefined) {
   if (!page) {
@@ -81,9 +80,7 @@ export function useUserSettingsCloseAction(props: UserSettingsModalState) {
     case 'proNonOriginating':
       return () => {
         dispatch(userSettingsModal(null));
-        if (getFeatureFlag('proAvailable')) {
-          void handleTriggeredCTAs(dispatch, false);
-        }
+        void handleTriggeredCTAs(dispatch, false);
         props.afterCloseAction?.();
       };
 

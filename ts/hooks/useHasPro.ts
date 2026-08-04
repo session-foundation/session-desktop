@@ -1,6 +1,5 @@
 import { useSelector } from 'react-redux';
 import { getDataFeatureFlagMemo } from '../state/ducks/types/releasedFeaturesReduxTypes';
-import { getIsProAvailableMemo } from './useIsProAvailable';
 import {
   defaultProAccessDetailsSourceData,
   getProBackendCurrentUserStatus,
@@ -32,20 +31,18 @@ function useCurrentUserProStatus() {
  * Returns true if pro is available, and the current user has pro (active, not expired)
  */
 export function useCurrentUserHasPro() {
-  const isProAvailable = getIsProAvailableMemo();
   const status = useCurrentUserProStatus();
 
-  return isProAvailable && status === ProStatus.Active;
+  return status === ProStatus.Active;
 }
 
 /**
  * Returns true if pro is available, and the current user has expired pro.
  */
 export function useCurrentUserHasExpiredPro() {
-  const isProAvailable = getIsProAvailableMemo();
   const status = useCurrentUserProStatus();
 
-  return isProAvailable && status === ProStatus.Expired;
+  return status === ProStatus.Expired;
 }
 
 /**
@@ -53,10 +50,9 @@ export function useCurrentUserHasExpiredPro() {
  * (i.e. the user does not have pro currently and doesn't have an expired pro either)
  */
 export function useCurrentNeverHadPro() {
-  const isProAvailable = getIsProAvailableMemo();
   const status = useCurrentUserProStatus();
 
-  return isProAvailable && status === ProStatus.Never;
+  return status === ProStatus.Never;
 }
 
 /**
@@ -70,15 +66,10 @@ function useShowProBadgeForOther(convoId?: string) {
 }
 
 export function useShowProBadgeFor(convoId?: string) {
-  const isProAvailable = getIsProAvailableMemo();
   // the current user pro badge is always shown if we have a valid pro
   const currentUserHasPro = useCurrentUserHasPro();
   // the other user pro badge is shown if they have a valid pro proof and pro badge feature enabled
   const otherUserHasPro = useShowProBadgeForOther(convoId);
-
-  if (!isProAvailable) {
-    return false;
-  }
 
   if (UserUtils.isUsFromCache(convoId)) {
     return currentUserHasPro;

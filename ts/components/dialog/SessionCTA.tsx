@@ -24,7 +24,6 @@ import {
 import { SpacerSM, SpacerXL } from '../basic/Text';
 import type { MergedLocalizerTokens } from '../../localization/localeTools';
 import { SessionButtonShiny } from '../basic/SessionButtonShiny';
-import { getIsProAvailableMemo } from '../../hooks/useIsProAvailable';
 import { useCurrentUserHasPro } from '../../hooks/useHasPro';
 import { assertUnreachable } from '../../types/sqlSharedTypes';
 import { Storage } from '../../util/storage';
@@ -38,7 +37,6 @@ import {
   type ProCTAVariant,
   isProCTAFeatureVariant,
 } from './cta/types';
-import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 import { openUrlNoDialog, showLinkVisitWarningDialog } from './OpenUrlModal';
 import { APP_URL, DURATION } from '../../session/constants';
 import { Data } from '../../data/data';
@@ -475,33 +473,22 @@ export const showSessionCTA = (variant: CTAVariant, dispatch: Dispatch<any>) => 
 
 export const useShowSessionCTACb = (variant: CTAVariant) => {
   const dispatch = getAppDispatch();
-  const isProAvailable = getIsProAvailableMemo();
-  const isProCTA = useIsProCTAVariant(variant);
-  if (isProCTA && !isProAvailable) {
-    return () => null;
-  }
 
   return () => showSessionCTA(variant, dispatch);
 };
 
 export const useShowSessionCTACbWithVariant = () => {
   const dispatch = getAppDispatch();
-  const isProAvailable = getIsProAvailableMemo();
 
   return (variant: CTAVariant) => {
-    if (isProCTAVariant(variant) && !isProAvailable) {
-      return;
-    }
     showSessionCTA(variant, dispatch);
   };
 };
 
 export async function handleTriggeredCTAs(dispatch: Dispatch<any>, fromAppStart: boolean) {
-  const proAvailable = getFeatureFlag('proAvailable');
-
   if (Storage.get(SettingsKey.proExpiringSoonCTA)) {
     // Note: postpone showing the pro CTAs as we need to make sure we've fetched our latest pro status from the backend
-    if (!proAvailable || fromAppStart) {
+    if (fromAppStart) {
       return;
     }
     dispatch(
@@ -513,7 +500,7 @@ export async function handleTriggeredCTAs(dispatch: Dispatch<any>, fromAppStart:
   } else if (Storage.get(SettingsKey.proExpiredCTA)) {
     // Note: postpone showing the pro CTAs as we need to make sure we've fetched our latest pro status from the backend
 
-    if (!proAvailable || fromAppStart) {
+    if (fromAppStart) {
       return;
     }
     dispatch(

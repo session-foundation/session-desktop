@@ -349,9 +349,6 @@ async function requestAndApplyProof(): Promise<void> {
  * accepted — the §4 monotonic merge no-ops the late reply). Holds no durable state.
  */
 export async function reconcileProProof(): Promise<void> {
-  if (!getFeatureFlag('proAvailable')) {
-    return;
-  }
   if (reconcileWakeId) {
     clearTimeout(reconcileWakeId);
     reconcileWakeId = null;
@@ -502,10 +499,6 @@ const fetchGetProStatusFromProBackend = createAsyncThunk(
 const refreshGetProStatusFromProBackend = createAsyncThunk(
   'proBackendData/refreshGetProStatus',
   async (opts: WithCallerContext = {}, payloadCreator) => {
-    if (!getFeatureFlag('proAvailable')) {
-      return;
-    }
-
     if (getFeatureFlag('debugServerRequests')) {
       window.log.info(
         `[proBackend/refreshGetProStatusFromProBackend] starting ${new Date().toISOString()}`

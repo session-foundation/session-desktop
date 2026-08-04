@@ -18,7 +18,6 @@ type SessionBaseBooleanFeatureFlags = {
   alwaysShowRemainingChars: boolean;
   showPopoverAnchors: boolean;
   debugInputCommands: boolean;
-  proAvailable: boolean;
   proGroupsAvailable: boolean;
   canToggleGiphy: boolean;
   mockCurrentUserHasProPlatformRefundExpired: boolean;
