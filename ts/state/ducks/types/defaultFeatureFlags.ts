@@ -6,7 +6,6 @@ import type {
 } from './releasedFeaturesReduxTypes';
 
 export const defaultProBooleanFeatureFlags = {
-  proAvailable: !isEmpty(process.env.SESSION_PRO),
   proGroupsAvailable: !isEmpty(process.env.SESSION_PRO_GROUPS),
   useTestProBackend: !isEmpty(process.env.TEST_PRO_BACKEND),
   mockCurrentUserHasProPlatformRefundExpired: !isEmpty(

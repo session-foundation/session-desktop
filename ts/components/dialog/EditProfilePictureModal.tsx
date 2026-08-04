@@ -29,7 +29,6 @@ import {
   ModalBasicHeader,
   SessionWrapperModal,
 } from '../SessionWrapperModal';
-import { getIsProAvailableMemo } from '../../hooks/useIsProAvailable';
 import { SpacerLG, SpacerSM } from '../basic/Text';
 import { AvatarSize } from '../avatar/Avatar';
 import { ProIconButton } from '../buttons/ProButton';
@@ -139,7 +138,6 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
   const isMe = useIsMe(conversationId);
   const isCommunity = useIsPublic(conversationId);
   const weHavePro = useCurrentUserHasPro() && isMe;
-  const isProAvailable = getIsProAvailableMemo();
 
   const avatarPath = useAvatarPath(conversationId) || '';
 
@@ -229,7 +227,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
      * C. Community admin uploading a community profile picture
      * All of those are taken care of as part of the `isProUser` check in the conversation model
      */
-    if (isProAvailable && !weHavePro && isNewAvatarAnimated && !isCommunity) {
+    if (!weHavePro && isNewAvatarAnimated && !isCommunity) {
       dispatch(
         updateSessionCTA({
           variant: CTAVariant.PRO_ANIMATED_DISPLAY_PICTURE,

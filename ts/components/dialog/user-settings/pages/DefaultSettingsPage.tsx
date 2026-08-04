@@ -30,7 +30,6 @@ import { ModalPencilIcon } from '../../shared/ModalPencilButton';
 import { ProfileHeader, ProfileName } from '../components';
 import type { ProfileDialogModes } from '../ProfileDialogModes';
 import { tr } from '../../../../localization/localeTools';
-import { getIsProAvailableMemo } from '../../../../hooks/useIsProAvailable';
 import { setDebugMode } from '../../../../state/ducks/debug';
 import { useHideRecoveryPasswordEnabled } from '../../../../state/selectors/settings';
 import { OnionStatusLight } from '../../OnionStatusPathDialog';
@@ -38,7 +37,6 @@ import { UserSettingsModalContainer } from '../components/UserSettingsModalConta
 import { useCurrentUserHasExpiredPro, useCurrentUserHasPro } from '../../../../hooks/useHasPro';
 import { NetworkTime } from '../../../../util/NetworkTime';
 import { APP_URL, DURATION } from '../../../../session/constants';
-import { getFeatureFlag } from '../../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { useUserSettingsCloseAction } from './userSettingsHooks';
 import {
   useProBackendProStatus,
@@ -73,13 +71,8 @@ function LucideIconForSettings(props: Omit<LucideIconProps, 'iconSize' | 'style'
 function SessionProSection() {
   const dispatch = getAppDispatch();
 
-  const isProAvailable = getIsProAvailableMemo();
   const userHasPro = useCurrentUserHasPro();
   const currentUserHasExpiredPro = useCurrentUserHasExpiredPro();
-
-  if (!isProAvailable) {
-    return null;
-  }
 
   return (
     <PanelButtonGroup>
@@ -351,9 +344,6 @@ export const DefaultSettingPage = (modalState: UserSettingsModalState) => {
   }
 
   useMount(() => {
-    if (!getFeatureFlag('proAvailable')) {
-      return;
-    }
     // Opportunistic refresh when opening the settings, throttled to once a minute (and always done
     // when we haven't had a successful fetch yet this run, i.e. lastFetchedMs is still 0).
     if (NetworkTime.now() > lastFetchedMs + 1 * DURATION.MINUTES) {

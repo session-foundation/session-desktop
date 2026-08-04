@@ -12,7 +12,6 @@ import {
   getDataFeatureFlagMemo,
   type SessionDataFeatureFlagKeys,
   type SessionBooleanFeatureFlagKeys,
-  getFeatureFlagMemo,
 } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { Flex } from '../../basic/Flex';
 import { SessionToggle } from '../../basic/SessionToggle';
@@ -39,7 +38,6 @@ import {
   defaultProDataFeatureFlags,
 } from '../../../state/ducks/types/defaultFeatureFlags';
 import { UserConfigWrapperActions } from '../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
-import { isDebugMode } from '../../../shared/env_vars';
 import {
   useProBackendProStatus,
   useProBackendRefetch,
@@ -431,7 +429,6 @@ const proBooleanFlags: BooleanFlags = [
   {
     label: 'Platform Refund Expired',
     flag: 'mockCurrentUserHasProPlatformRefundExpired',
-    visibleWithBooleanFlag: 'proAvailable',
     visibleWithEnumFlag: {
       flag: 'mockProCurrentStatus',
       isVisible: v => v === ProStatus.Active,
@@ -460,25 +457,21 @@ const proBackendBooleanFlags: BooleanFlags = [
   {
     label: 'Backend Loading',
     flag: 'mockProBackendLoading',
-    visibleWithBooleanFlag: 'proAvailable',
     hiddenAndDisabledWhenKeyEnabled: 'mockProBackendError',
   },
   {
     label: 'Backend Error',
     flag: 'mockProBackendError',
-    visibleWithBooleanFlag: 'proAvailable',
     hiddenAndDisabledWhenKeyEnabled: 'mockProBackendLoading',
   },
   {
     label: 'Recover always succeeds',
     flag: 'mockProRecoverButtonAlwaysSucceed',
-    visibleWithBooleanFlag: 'proAvailable',
     hiddenAndDisabledWhenKeyEnabled: 'mockProRecoverButtonAlwaysFail',
   },
   {
     label: 'Recover always fails',
     flag: 'mockProRecoverButtonAlwaysFail',
-    visibleWithBooleanFlag: 'proAvailable',
     hiddenAndDisabledWhenKeyEnabled: 'mockProRecoverButtonAlwaysSucceed',
   },
 ];
@@ -497,7 +490,6 @@ const handledBooleanFeatureFlags = proBooleanFlags
   .concat(proBackendBooleanFlags.map(({ flag: key }) => key))
   .concat(debugFeatureFlags.map(({ flag: key }) => key))
   .concat([
-    'proAvailable',
     'proGroupsAvailable',
     'useTestProBackend',
     'debugLogging',
@@ -666,12 +658,7 @@ export function FeatureFlagDumper({ forceUpdate }: { forceUpdate: () => void }) 
 }
 
 function MessageProFeatures({ forceUpdate }: { forceUpdate: () => void }) {
-  const proIsAvailable = getFeatureFlagMemo('proAvailable');
   const value = getDataFeatureFlagMemo('mockMessageProFeatures') ?? [];
-
-  if (!proIsAvailable) {
-    return null;
-  }
 
   return (
     <Flex
@@ -825,7 +812,6 @@ export const ProDebugSection = ({
 }: DebugMenuPageProps & { forceUpdate: () => void }) => {
   const dispatch = getAppDispatch();
   const mockExpiry = getDataFeatureFlagMemo('mockProAccessExpiry');
-  const proAvailable = getFeatureFlagMemo('proAvailable');
 
   const resetPro = useCallback(async () => {
     await UserConfigWrapperActions.removeProConfig();
@@ -889,92 +875,67 @@ export const ProDebugSection = ({
     };
   }, [proExpiredCTASetting]);
 
-  if (!proAvailable && !isDebugMode()) {
-    return null;
-  }
-
   return (
     <DebugMenuSection title="Session Pro">
-      <FlagToggle forceUpdate={forceUpdate} flag="proAvailable" label="Pro Beta Released" />
-      {proAvailable ? (
-        <>
-          <DebugButton buttonColor={SessionButtonColor.Danger} onClick={resetPro}>
-            Reset All Pro State
-          </DebugButton>
-          <DebugButton onClick={() => setPage(DEBUG_MENU_PAGE.Pro)}>Pro Playground</DebugButton>
-          <DebugButton
-            onClick={() => {
-              if (!proAvailable) {
-                return;
-              }
-              dispatch(proBackendDataActions.refreshGetProStatusFromProBackend({}) as any);
-            }}
-          >
-            Refresh Pro Status
-          </DebugButton>
-          <DebugButton
-            onClick={async () => {
-              const masterPrivKeyHex = await getProMasterKeyHex();
-              const { rotatingSeedHex, rotatingPrivKeyHex } =
-                await UserUtils.deriveCurrentProRotatingKey();
-              const response = await ProBackendAPI.generateProProof({
-                masterPrivKeyHex,
-                rotatingPrivKeyHex,
-              });
-              if (getFeatureFlag('debugServerRequests')) {
-                window?.log?.debug('getProProof response: ', response);
-              }
-              if (response && response.status === 'ok') {
-                // libsession returns a ready-made ProProof; relay it verbatim.
-                await UserConfigWrapperActions.setProConfig({
-                  proProof: response.proof,
-                  rotatingSeedHex,
-                });
-              }
-            }}
-          >
-            Get Pro Proof
-          </DebugButton>
-          <DebugButton
-            onClick={async () => {
-              const masterPrivKeyHex = await getProMasterKeyHex();
-              const response = await ProBackendAPI.getProStatus({ masterPrivKeyHex });
-              if (getFeatureFlag('debugServerRequests')) {
-                window?.log?.debug('Pro Status: ', response);
-              }
-            }}
-          >
-            Get Pro Status
-          </DebugButton>
-          <DebugButton
-            hide={!proAvailable}
-            onClick={async () => {
-              const response = await ProBackendAPI.getRevocationList({ ticket: 0 });
-              window?.log?.debug('Pro Revocation List: ', response);
-            }}
-          >
-            Get Pro Revocation List (from ticket 0)
-          </DebugButton>
-        </>
-      ) : null}
+      <DebugButton buttonColor={SessionButtonColor.Danger} onClick={resetPro}>
+        Reset All Pro State
+      </DebugButton>
+      <DebugButton onClick={() => setPage(DEBUG_MENU_PAGE.Pro)}>Pro Playground</DebugButton>
+      <DebugButton
+        onClick={() => {
+          dispatch(proBackendDataActions.refreshGetProStatusFromProBackend({}) as any);
+        }}
+      >
+        Refresh Pro Status
+      </DebugButton>
+      <DebugButton
+        onClick={async () => {
+          const masterPrivKeyHex = await getProMasterKeyHex();
+          const { rotatingSeedHex, rotatingPrivKeyHex } =
+            await UserUtils.deriveCurrentProRotatingKey();
+          const response = await ProBackendAPI.generateProProof({
+            masterPrivKeyHex,
+            rotatingPrivKeyHex,
+          });
+          if (getFeatureFlag('debugServerRequests')) {
+            window?.log?.debug('getProProof response: ', response);
+          }
+          if (response && response.status === 'ok') {
+            // libsession returns a ready-made ProProof; relay it verbatim.
+            await UserConfigWrapperActions.setProConfig({
+              proProof: response.proof,
+              rotatingSeedHex,
+            });
+          }
+        }}
+      >
+        Get Pro Proof
+      </DebugButton>
+      <DebugButton
+        onClick={async () => {
+          const masterPrivKeyHex = await getProMasterKeyHex();
+          const response = await ProBackendAPI.getProStatus({ masterPrivKeyHex });
+          if (getFeatureFlag('debugServerRequests')) {
+            window?.log?.debug('Pro Status: ', response);
+          }
+        }}
+      >
+        Get Pro Status
+      </DebugButton>
+      <DebugButton
+        onClick={async () => {
+          const response = await ProBackendAPI.getRevocationList({ ticket: 0 });
+          window?.log?.debug('Pro Revocation List: ', response);
+        }}
+      >
+        Get Pro Revocation List (from ticket 0)
+      </DebugButton>
 
-      <FlagToggle
-        forceUpdate={forceUpdate}
-        flag="useTestProBackend"
-        visibleWithBooleanFlag="proAvailable"
-        label="Use Test Pro Backend"
-      />
-      <FlagToggle
-        forceUpdate={forceUpdate}
-        flag="proGroupsAvailable"
-        visibleWithBooleanFlag="proAvailable"
-        label="Pro Groups Released"
-      />
-      {proAvailable ? (
-        <DebugButton buttonColor={SessionButtonColor.Danger} onClick={resetProMocking}>
-          Reset Pro Mocking
-        </DebugButton>
-      ) : null}
+      <FlagToggle forceUpdate={forceUpdate} flag="useTestProBackend" label="Use Test Pro Backend" />
+      <FlagToggle forceUpdate={forceUpdate} flag="proGroupsAvailable" label="Pro Groups Released" />
+      <DebugButton buttonColor={SessionButtonColor.Danger} onClick={resetProMocking}>
+        Reset Pro Mocking
+      </DebugButton>
 
       <FlagEnumDropdownInput
         label="Current Status"
@@ -986,7 +947,6 @@ export const ProDebugSection = ({
         ]}
         forceUpdate={forceUpdate}
         unsetOption={{ label: 'Select Current Status', value: null }}
-        visibleWithBooleanFlag="proAvailable"
       />
       {proBooleanFlags.map(props => (
         <FlagToggle {...props} key={props.flag} forceUpdate={forceUpdate} />
@@ -1001,7 +961,6 @@ export const ProDebugSection = ({
         ]}
         forceUpdate={forceUpdate}
         unsetOption={{ label: 'Select originating platform', value: null }}
-        visibleWithBooleanFlag="proAvailable"
         visibleWithEnumFlag={{
           flag: 'mockProCurrentStatus',
           isVisible: v => v !== ProStatus.Never,
@@ -1017,7 +976,6 @@ export const ProDebugSection = ({
         ]}
         forceUpdate={forceUpdate}
         unsetOption={{ label: 'Select access variant', value: null }}
-        visibleWithBooleanFlag="proAvailable"
         visibleWithEnumFlag={{
           flag: 'mockProCurrentStatus',
           isVisible: v => v !== ProStatus.Never,
@@ -1043,7 +1001,6 @@ export const ProDebugSection = ({
         ]}
         forceUpdate={forceUpdate}
         unsetOption={{ label: 'Select expiry', value: null }}
-        visibleWithBooleanFlag="proAvailable"
         visibleWithEnumFlag={{
           flag: 'mockProCurrentStatus',
           isVisible: v => v === ProStatus.Active,
@@ -1056,25 +1013,21 @@ export const ProDebugSection = ({
         label="Longer Messages Sent"
         flag="mockProLongerMessagesSent"
         forceUpdate={forceUpdate}
-        visibleWithBooleanFlag="proAvailable"
       />
       <FlagIntegerInput
         label="Pinned Conversations"
         flag="mockProPinnedConversations"
         forceUpdate={forceUpdate}
-        visibleWithBooleanFlag="proAvailable"
       />
       <FlagIntegerInput
         label="Pro Badges Sent"
         flag="mockProBadgesSent"
         forceUpdate={forceUpdate}
-        visibleWithBooleanFlag="proAvailable"
       />
       <FlagIntegerInput
         label="Groups Upgraded"
         flag="mockProGroupsUpgraded"
         forceUpdate={forceUpdate}
-        visibleWithBooleanFlag="proAvailable"
       />
       {proBackendBooleanFlags.map(props => (
         <FlagToggle {...props} key={props.flag} forceUpdate={forceUpdate} />
@@ -1084,27 +1037,23 @@ export const ProDebugSection = ({
         The CTAs will show when a conversation is next opened or the user settings modal is next
         closed
       </i>
-      {proAvailable ? (
-        <DebugButton
-          onClick={async () => {
-            await handleSetExpiringSoonCTA();
-            forceUpdate();
-          }}
-        >
-          {setExpiringSoonCTAString}
-        </DebugButton>
-      ) : null}
-      {proAvailable ? (
-        <DebugButton
-          onClick={async () => {
-            await handleSetExpiredCTA();
-            forceUpdate();
-          }}
-        >
-          {setExpiredCTAString}
-        </DebugButton>
-      ) : null}
-      {proAvailable ? <ProConfigManager forceUpdate={forceUpdate} /> : null}
+      <DebugButton
+        onClick={async () => {
+          await handleSetExpiringSoonCTA();
+          forceUpdate();
+        }}
+      >
+        {setExpiringSoonCTAString}
+      </DebugButton>
+      <DebugButton
+        onClick={async () => {
+          await handleSetExpiredCTA();
+          forceUpdate();
+        }}
+      >
+        {setExpiredCTAString}
+      </DebugButton>
+      <ProConfigManager forceUpdate={forceUpdate} />
     </DebugMenuSection>
   );
 };

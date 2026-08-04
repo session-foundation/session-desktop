@@ -1,5 +1,4 @@
 import { useSelector } from 'react-redux';
-import { getIsProAvailableMemo } from '../../hooks/useIsProAvailable';
 import { ConvoHub } from '../../session/conversations';
 import {
   useIsKickedFromGroup,
@@ -55,15 +54,12 @@ export function useTogglePinConversationHandler(id: string) {
 
   const showPinUnpin = useShowPinUnpin(id);
 
-  const isProAvailable = getIsProAvailableMemo();
-
   if (!showPinUnpin) {
     return null;
   }
 
   if (
     isPinned ||
-    !isProAvailable ||
     hasPro ||
     pinnedConversationsCount < Constants.CONVERSATION.MAX_PINNED_CONVERSATIONS_STANDARD
   ) {
