@@ -35,6 +35,7 @@ import { MultiEncryptUtils } from '../../utils/libsession/libsession_utils_multi
 import { SnodeNamespace, SnodeNamespaces, SnodeNamespacesUserConfig } from './namespaces';
 import { PollForGroup, PollForLegacy, PollForUs } from './pollingTypes';
 import { SnodeAPIRetrieve } from './retrieveRequest';
+import { ConfigRecovery } from './configRecovery';
 import { SnodePool } from './snodePool';
 import { SwarmPollingGroupConfig } from './swarm_polling_config/SwarmPollingGroupConfig';
 import { SwarmPollingUserConfig } from './swarm_polling_config/SwarmPollingUserConfig';
@@ -111,6 +112,30 @@ function mergeMultipleRetrieveResults(
     namespace,
     messages: { messages: Array.from(messagesMap.values()) },
   }));
+}
+
+/**
+ * Whether every config namespace we polled actually answered.
+ *
+ * Guard §4.1 is about knowing the swarm state for the configs we are about to act on. A poll
+ * fetches several namespaces at once and they can fail independently, so one namespace erroring
+ * while the others answer leaves us ignorant about exactly its configs — a partial answer, not a
+ * full one. We gate the whole swarm rather than the individual namespace: the spec allows either,
+ * and the coarser one cannot be got subtly wrong.
+ */
+function allConfigNamespacesAnswered(
+  results: RetrieveMessagesResultsMergedBatched,
+  type: ConversationTypeEnum
+) {
+  const isConfigNamespace =
+    type === ConversationTypeEnum.GROUPV2
+      ? SnodeNamespace.isGroupConfigNamespace
+      : SnodeNamespace.isUserConfigNamespace;
+
+  const configResults = results.filter(m => isConfigNamespace(m.namespace));
+
+  // no config namespace polled at all means there is nothing we could soundly act on either
+  return configResults.length > 0 && configResults.every(m => m.code === 200);
 }
 
 function swarmLog(msg: string) {
@@ -361,21 +386,23 @@ export class SwarmPolling {
     type: ConversationTypeEnum;
     pubkey: string;
     confMessages: Array<RetrieveMessageItemWithNamespace> | null;
-  }) {
+  }): Promise<boolean> {
     if (!confMessages) {
-      return;
+      // nothing was fetched, so nothing failed to be taken in
+      return true;
     }
 
     // first make sure to handle the shared user config message first
     if (type === ConversationTypeEnum.PRIVATE && UserUtils.isUsFromCache(pubkey)) {
-      // this does not throw, no matter what happens
-      await SwarmPollingUserConfig.handleUserSharedConfigMessages(confMessages);
-      return;
+      // Note: this does not throw, no matter what happens — a merge failure is swallowed and only
+      // logged, so its outcome has to come back as a value or the caller cannot see it at all.
+      return SwarmPollingUserConfig.handleUserSharedConfigMessages(confMessages);
     }
     if (type === ConversationTypeEnum.GROUPV2 && PubKey.is03Pubkey(pubkey)) {
       await sleepFor(100);
-      await SwarmPollingGroupConfig.handleGroupSharedConfigMessages(confMessages, pubkey);
+      return SwarmPollingGroupConfig.handleGroupSharedConfigMessages(confMessages, pubkey);
     }
+    return true;
   }
 
   public async handleRevokedMessages({
@@ -428,6 +455,11 @@ export class SwarmPolling {
     const swarmSnodes = await SnodePool.getSwarmFor(pubkey);
     let resultsFromAllNamespaces: RetrieveMessagesResultsMergedBatched | null;
 
+    // An empty result set is ambiguous: it can mean "the swarm has nothing for us" or "every snode
+    // we asked failed". Only the first tells us anything, so track whether a snode actually
+    // answered rather than inferring it from the emptiness.
+    let atLeastOneSnodeAnswered = false;
+
     let toPollFrom: Array<Snode> = [];
 
     try {
@@ -459,6 +491,12 @@ export class SwarmPolling {
         `SwarmPolling: pollNodeForKey of ${ed25519Str(pubkey)} namespaces: ${namespaces} returned ${resultsFromAllSnodesSettled.filter(m => m.status === 'fulfilled').length}/${RETRIEVE_SNODES_COUNT} fulfilled promises`
       );
 
+      // pollNodeForKey resolves to null when that snode's poll failed, so a fulfilled promise
+      // carrying a non-null value is the only thing that counts as an answer.
+      atLeastOneSnodeAnswered = resultsFromAllSnodesSettled.some(
+        m => m.status === 'fulfilled' && m.value !== null
+      );
+
       resultsFromAllNamespaces = mergeMultipleRetrieveResults(
         compact(
           resultsFromAllSnodesSettled.filter(m => m.status === 'fulfilled').flatMap(m => m.value)
@@ -479,6 +517,15 @@ export class SwarmPolling {
         pubkey,
         type,
       });
+
+      // A snode answered and had nothing for us, so there is no config on the swarm we have yet to
+      // merge — which is exactly what guard §4.1 asks for. This is the path a device with expired
+      // configs takes on every poll, so returning without considering recovery here would make the
+      // whole feature a no-op for the devices it exists to repair.
+      if (atLeastOneSnodeAnswered) {
+        ConfigRecovery.markLocalStateLevelWithSwarm(pubkey);
+        await ConfigRecovery.recoverIfNeeded(pubkey);
+      }
       return;
     }
     const { confMessages, otherMessages, revokedMessages } = filterMessagesPerTypeOfConvo(
@@ -489,7 +536,36 @@ export class SwarmPolling {
       `SwarmPolling: received for ${ed25519Str(pubkey)} confMessages:${confMessages?.length || 0}, revokedMessages:${revokedMessages?.length || 0}, , otherMessages:${otherMessages?.length || 0}, `
     );
     // We always handle the config messages first (for groups 03 or our own messages)
-    await this.handleUserOrGroupConfMessages({ confMessages, pubkey, type });
+    const mergedEverythingFetched = await this.handleUserOrGroupConfMessages({
+      confMessages,
+      pubkey,
+      type,
+    });
+
+    // Guard §4.1, evaluated in one place rather than inside the merge handler, because it depends
+    // on how the *poll* went and not on what the merge did.
+    // Three ways to fail to be level, and they fail differently, which is why all three are
+    // checked here rather than inferred from one another:
+    // - no snode answered at all;
+    // - a config namespace errored while others answered — a partial answer is not a full one;
+    // - the fetch succeeded but the merge failed. That one is neither a value nor an exception,
+    //   only a log line, so it has to be reported back deliberately.
+    if (!mergedEverythingFetched) {
+      // Withdraw this swarm for the session rather than just skipping this poll. The lastHash
+      // cursor already advanced past the message we failed to merge, so it will never be offered
+      // again — the next poll would come back empty, look clean, and re-authorise recovery over
+      // state we know we never took in. A per-poll refusal alone is cosmetic here.
+      ConfigRecovery.markMergeIncompleteForSwarm(pubkey);
+    }
+
+    if (
+      atLeastOneSnodeAnswered &&
+      allConfigNamespacesAnswered(resultsFromAllNamespaces, type) &&
+      mergedEverythingFetched
+    ) {
+      ConfigRecovery.markLocalStateLevelWithSwarm(pubkey);
+      await ConfigRecovery.recoverIfNeeded(pubkey);
+    }
 
     await this.handleRevokedMessages({ revokedMessages, groupPk: pubkey, type });
 
@@ -759,6 +835,14 @@ export class SwarmPolling {
           convo.setIsExpired03Group(false);
           await convo.commit();
         }
+
+        // Note: the check above answers "we hold nothing and nobody gave us anything". It cannot
+        // see the case where we *do* hold config hashes and the swarm has since dropped them,
+        // because nothing new arriving looks identical to nothing having changed. That case is
+        // what the expire response tells us, and it is handled once the wrapper can attribute a
+        // hash to GroupKeys — which is what decides an 03-group expired. Deliberately not
+        // approximated in the meantime: a heuristic that can disagree with that rule is the signal
+        // proliferation this was supposed to remove.
       }
       if (!results.length) {
         return [];
