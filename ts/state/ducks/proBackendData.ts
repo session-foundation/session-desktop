@@ -232,14 +232,19 @@ async function applyProofOutcome(
       }
       break;
     case 'not_subscribed':
-      // Clear the (absent) credential but leave pro_prepaid so a pending purchase keeps polling.
+      // Clear the (absent) credential AND the access-expiry (E), but leave pro_prepaid so a pending
+      // purchase keeps polling. Clearing E is required: libsession's renewal target now fires on
+      // "future E but no proof", so a stale future E left here would spin.
       if (!haveValidProof()) {
         await UserConfigWrapperActions.removeProConfig();
+        await UserConfigWrapperActions.setProAccessExpiry(null);
       }
       break;
     case 'revoked':
-      // Terminal: revocation must kill even an unexpired proof (bypasses the downgrade guard). No E.
+      // Terminal: revocation kills even an unexpired proof (bypasses the downgrade guard). With the
+      // proof gone we must also clear E, or the renewal target (future E, no proof) would spin.
       await UserConfigWrapperActions.removeProConfig();
+      await UserConfigWrapperActions.setProAccessExpiry(null);
       break;
     default:
       // Unrecognized error_code: fail closed, non-destructively — treat as transient (no write/clear).

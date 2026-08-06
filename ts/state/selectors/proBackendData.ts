@@ -280,14 +280,21 @@ function processProBackendData({
     ? !mockCancelled
     : (data?.autoRenewing ?? defaultProAccessDetailsSourceData.autoRenew);
 
+  // Auto-renew is due AT the paid-through end (`expiryMs`). user_status stays `active` through the
+  // grace window (the backend judges coverage against expiry + grace_period_duration), so being past
+  // expiry while still active IS the grace period. Subtracting grace here put "renew due" a whole
+  // grace period early, so inGracePeriod was perpetually true whenever grace exceeded the period.
   let beginAutoRenew = 0;
   if (data) {
-    beginAutoRenew = data.expiryMs - data.gracePeriodDurationMs;
+    beginAutoRenew = data.expiryMs;
   }
 
   let inGracePeriod = mockInGracePeriod;
   if (beginAutoRenew && !mockInGracePeriod) {
-    inGracePeriod = autoRenew && now >= beginAutoRenew && now < expiryTimeMs;
+    // Only surface "renewal unsuccessful" off data we actually fetched at/after the paid-through
+    // end — never off a pre-expiry snapshot that predates a possible renewal. The pro page refetches
+    // at the crossing (and polls through grace), so a stale snapshot resolves rather than sticking.
+    inGracePeriod = autoRenew && now >= expiryTimeMs && lastFetchedMs >= expiryTimeMs;
   }
 
   // Refund-requested is now a synced config flag (UserProfile key R), not a backend response field.
