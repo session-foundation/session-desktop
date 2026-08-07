@@ -203,7 +203,9 @@ function useBackendErrorDialogButtons() {
       {
         label: { token: 'retry' },
         dataTestId: 'pro-backend-error-retry-button',
-        onClick: refetch,
+        // Trigger #5, a manual retry: one of the two sanctioned `immediate` callers. Wrapped rather
+        // than passed as `onClick: refetch` so the click event isn't handed over as the options arg.
+        onClick: () => refetch({ immediate: true }),
         closeAfterClick: true,
       },
       {
@@ -231,6 +233,13 @@ const useCurrentNeverHadProInternal = useCurrentNeverHadPro;
 const useIsDarkThemeInternal = useIsDarkTheme;
 const usePinnedConversationsCountInternal = usePinnedConversationsCount;
 
+// Trigger #4's cadence (a cross-client contract, see the constants in ducks/proBackendData.ts).
+/** How long past the `user_expiry` crossing to wait before the first refetch. */
+const GRACE_POLL_CROSSING_SLACK_MS = 5 * DURATION.SECONDS;
+/** Then re-check on this cadence while still un-renewed. Equal to STATUS_FLOOR_MS by design, which
+ * is why #4 must bypass the floor rather than be halved by it. */
+const GRACE_POLL_INTERVAL_MS = 1 * DURATION.MINUTES;
+
 // Extracted into its own hook so the react compiler compiles a small, clean function rather than
 // choking on a raw useEffect inside the large ProSettings component.
 function useKeepProStatusFresh({
@@ -253,20 +262,31 @@ function useKeepProStatusFresh({
     if (isLoading || isError || userHasExpiredPro || !autoRenew || !expiryTimeMs) {
       return undefined;
     }
+    // Trigger #4 is exempt from the status floor: it is a bounded poll with its own cadence and its
+    // own termination (the guard above), and its 60s interval would otherwise sit right on the 60s
+    // floor and be dropped about half the time.
+    //
+    // ⚠️ The exemption and the `!autoRenew` guard above are a PAIR — the guard is what makes this
+    // bounded, and being unfloored is what makes an unbounded version expensive. `!autoRenew` means no
+    // renewal is in flight, so there is nothing to poll for; without it a lapsed non-renewing
+    // subscription would poll the backend every 60s, floor-exempt, for as long as the page is open.
+    // iOS shipped exactly that (no guard, no coverage bound) and is adding this guard to match.
+    // Removing it becomes correct only if this poll stops being floor-exempt, or gains an independent
+    // upper bound on its lifetime. Not before.
     const fire = () =>
       window.inboxStore?.dispatch(
-        proBackendDataActions.refreshGetProStatusFromProBackend({}) as any
+        proBackendDataActions.refreshGetProStatusFromProBackend({ immediate: true }) as any
       );
     const msUntilExpiry = expiryTimeMs - NetworkTime.now();
     if (msUntilExpiry > 0) {
       // Refetch just after the crossing, so a renewal (or a genuine failure) replaces the stale value.
-      const timeoutId = setTimeout(fire, msUntilExpiry + 5 * DURATION.SECONDS);
+      const timeoutId = setTimeout(fire, msUntilExpiry + GRACE_POLL_CROSSING_SLACK_MS);
       return () => clearTimeout(timeoutId);
     }
     // Past expiry and still auto-renewing (grace/renewal window): the renewal can succeed at any
     // point, so re-check until get_pro_status reports the new expiry (the deps change re-arms the
     // one-shot above) or the account flips to expired (the guard returns).
-    const intervalId = setInterval(fire, DURATION.MINUTES);
+    const intervalId = setInterval(fire, GRACE_POLL_INTERVAL_MS);
     return () => clearInterval(intervalId);
   }, [expiryTimeMs, autoRenew, userHasExpiredPro, isLoading, isError]);
 }

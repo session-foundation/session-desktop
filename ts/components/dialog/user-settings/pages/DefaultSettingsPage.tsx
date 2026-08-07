@@ -35,13 +35,9 @@ import { useHideRecoveryPasswordEnabled } from '../../../../state/selectors/sett
 import { OnionStatusLight } from '../../OnionStatusPathDialog';
 import { UserSettingsModalContainer } from '../components/UserSettingsModalContainer';
 import { useCurrentUserHasExpiredPro, useCurrentUserHasPro } from '../../../../hooks/useHasPro';
-import { NetworkTime } from '../../../../util/NetworkTime';
-import { APP_URL, DURATION } from '../../../../session/constants';
+import { APP_URL } from '../../../../session/constants';
 import { useUserSettingsCloseAction } from './userSettingsHooks';
-import {
-  useProBackendProStatus,
-  useProBackendRefetch,
-} from '../../../../state/selectors/proBackendData';
+import { useProBackendRefetch } from '../../../../state/selectors/proBackendData';
 import { focusVisibleBoxShadowOutsetStr } from '../../../../styles/focusVisible';
 import { createButtonOnKeyDownForClickEventHandler } from '../../../../util/keyboardShortcuts';
 import { useDebugMode } from '../../../../state/selectors/debug';
@@ -323,7 +319,6 @@ const SessionInfo = () => {
 export const DefaultSettingPage = (modalState: UserSettingsModalState) => {
   const dispatch = getAppDispatch();
   const closeAction = useUserSettingsCloseAction(modalState);
-  const { lastFetchedMs } = useProBackendProStatus();
   const refetch = useProBackendRefetch();
 
   const profileName = useOurConversationUsername() || '';
@@ -344,11 +339,13 @@ export const DefaultSettingPage = (modalState: UserSettingsModalState) => {
   }
 
   useMount(() => {
-    // Opportunistic refresh when opening the settings, throttled to once a minute (and always done
-    // when we haven't had a successful fetch yet this run, i.e. lastFetchedMs is still 0).
-    if (NetworkTime.now() > lastFetchedMs + 1 * DURATION.MINUTES) {
-      void refetch();
-    }
+    // Trigger #3: opportunistic refresh when opening the settings, floored (cached-if-fresh).
+    //
+    // This used to carry its own once-a-minute throttle off `details.lastFetchedMs`. That value is
+    // per-run — 0 again after every restart — so the throttle was defeated by relaunching, which on
+    // a desktop app is often. The status floor is the same 60s but persisted, so it subsumes this
+    // check; keeping both would just be two throttles disagreeing about the same question.
+    void refetch();
   });
 
   return (
