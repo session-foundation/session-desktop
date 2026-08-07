@@ -1,5 +1,12 @@
 import { isNumber } from 'lodash';
-import { MouseEventHandler, SessionDataTestId, useCallback, useMemo, type ReactNode } from 'react';
+import {
+  MouseEventHandler,
+  SessionDataTestId,
+  useCallback,
+  useEffect,
+  useMemo,
+  type ReactNode,
+} from 'react';
 import useUpdate from 'react-use/lib/useUpdate';
 import styled from 'styled-components';
 import { getAppDispatch } from '../../../../../state/dispatch';
@@ -61,6 +68,9 @@ import {
   useProBackendRefetch,
 } from '../../../../../state/selectors/proBackendData';
 import { formatNumber } from '../../../../../util/i18n/formatting/generics';
+import { NetworkTime } from '../../../../../util/NetworkTime';
+import { DURATION } from '../../../../../session/constants';
+import { proBackendDataActions } from '../../../../../state/ducks/proBackendData';
 
 type ProSettingsModalState = {
   fromCTA?: boolean;
@@ -220,6 +230,46 @@ const useCurrentUserHasExpiredProInternal = useCurrentUserHasExpiredPro;
 const useCurrentNeverHadProInternal = useCurrentNeverHadPro;
 const useIsDarkThemeInternal = useIsDarkTheme;
 const usePinnedConversationsCountInternal = usePinnedConversationsCount;
+
+// Extracted into its own hook so the react compiler compiles a small, clean function rather than
+// choking on a raw useEffect inside the large ProSettings component.
+function useKeepProStatusFresh({
+  expiryTimeMs,
+  autoRenew,
+  userHasExpiredPro,
+  isLoading,
+  isError,
+}: {
+  expiryTimeMs: number;
+  autoRenew: boolean;
+  userHasExpiredPro: boolean;
+  isLoading: boolean;
+  isError: boolean;
+}) {
+  // Keep get_pro_status fresh around the paid-through end while the pro page is open, so the "renewal
+  // unsuccessful" warning reflects reality rather than a pre-expiry snapshot. Without it, a renewal
+  // that lands while the page is open isn't picked up until the page is closed and reopened.
+  useEffect(() => {
+    if (isLoading || isError || userHasExpiredPro || !autoRenew || !expiryTimeMs) {
+      return undefined;
+    }
+    const fire = () =>
+      window.inboxStore?.dispatch(
+        proBackendDataActions.refreshGetProStatusFromProBackend({}) as any
+      );
+    const msUntilExpiry = expiryTimeMs - NetworkTime.now();
+    if (msUntilExpiry > 0) {
+      // Refetch just after the crossing, so a renewal (or a genuine failure) replaces the stale value.
+      const timeoutId = setTimeout(fire, msUntilExpiry + 5 * DURATION.SECONDS);
+      return () => clearTimeout(timeoutId);
+    }
+    // Past expiry and still auto-renewing (grace/renewal window): the renewal can succeed at any
+    // point, so re-check until get_pro_status reports the new expiry (the deps change re-arms the
+    // one-shot above) or the account flips to expired (the guard returns).
+    const intervalId = setInterval(fire, DURATION.MINUTES);
+    return () => clearInterval(intervalId);
+  }, [expiryTimeMs, autoRenew, userHasExpiredPro, isLoading, isError]);
+}
 
 function ProNonProContinueButton({ state }: SectionProps) {
   const { returnToThisModalAction, centerAlign, afterCloseAction } = state;
@@ -436,6 +486,14 @@ function ProSettings({ state }: SectionProps) {
   const userNeverHadPro = useCurrentNeverHadProInternal();
   const { data, isLoading, isError } = useProBackendProStatusInternal();
   const backendErrorButtons = useBackendErrorDialogButtons();
+
+  useKeepProStatusFresh({
+    expiryTimeMs: data.expiryTimeMs,
+    autoRenew: data.autoRenew,
+    userHasExpiredPro,
+    isLoading,
+    isError,
+  });
 
   const forceRefresh = useUpdate();
 
