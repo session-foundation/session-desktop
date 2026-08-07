@@ -93,6 +93,27 @@ export const SettingsKey = {
    */
   proRevocationListNextRunAtMs: 'proRevocationListNextRunAtMs',
   proStatus: 'proStatus',
+  /**
+   * When a get_pro_status request was last STARTED, number | undefined (ms since epoch, network
+   * time). Backs the 60s status-refresh floor, which exists to bound requests — a failing request
+   * costs the backend the same as a succeeding one, so this is stamped on attempt, not on success.
+   *
+   * Persisted rather than kept in redux because the floor's whole job is to survive a process
+   * restart; an in-memory timestamp resets on every cold start, which is the exact path the startup
+   * gate is about.
+   *
+   * ⚠️ NOT interchangeable with redux `proBackendData.details.lastFetchedMs`, which is per-run and
+   * stamped on COMPLETION. Anything asking "have we confirmed our status (since X)" — the grace
+   * warning's debounce, the home CTA gate — must use that one. Using this key there would let a
+   * *failed* request satisfy the check and surface the false alarm the debounce exists to prevent.
+   */
+  proStatusLastFetchAttemptMs: 'proStatusLastFetchAttemptMs',
+  /**
+   * When we last let a *cold start* fetch get_pro_status, number | undefined (ms since epoch,
+   * network time). Separate from proStatusLastFetchAttemptMs so the ~24h startup interval isn't reset by
+   * routine in-session refreshes.
+   */
+  proStatusLastStartupFetchMs: 'proStatusLastStartupFetchMs',
   // NOTE: for these CTAs undefined means it has never been shown in this cycle of pro access, true means it needs to be shown and false means it has been shown and dont show it again.
   proExpiringSoonCTA: 'proExpiringSoonCTA',
   proExpiredCTA: 'proExpiredCTA',
