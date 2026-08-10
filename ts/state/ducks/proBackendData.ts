@@ -258,21 +258,20 @@ async function applyProofOutcome(
     // false are the same bit), and `E - G` could pair a fresh expiry with a grace learned in a different
     // billing period.
     //
-    // ⚠️ All three writes are CONDITIONAL ON PRESENCE, and that is load-bearing rather than defensive.
-    // These are advisory optionals: absent means "the backend did not say", NOT false or zero. Writing a
-    // collapsed `?? false` / `?? 0` would ERASE the key — both are stored presence-only — so against a
-    // backend predating either field, every proof fetch would wipe a correct value learned from
-    // `get_pro_status`. That is strictly worse than not writing at all: today the value merely fails to
-    // be refreshed; collapsed, it would be actively destroyed.
+    // ⚠️ These writes belong INSIDE the success branch and must stay there. `accountAutoRenewing` and
+    // `accountGracePeriodMs` are non-null because core requires them on a successful parse — a response
+    // missing either is a parse error, not a defaulted value. But on a *failure* outcome core never fills
+    // them and its struct defaults (`false` / `0`) come through, which are indistinguishable from a
+    // backend that really said "not renewing, no grace". Both config keys are presence-only, so writing
+    // that false or zero would ERASE what a `get_pro_status` fetch had learned. The success branch is the
+    // only place these two mean anything.
+    //
+    // `accountExpiryMs` is still nullable — absent on `not_subscribed` and `revoked` — hence its guard.
     if (response.accountExpiryMs !== null) {
       await UserConfigWrapperActions.setProAccessExpiry(response.accountExpiryMs);
     }
-    if (response.accountAutoRenewing !== null) {
-      await writeProAutoRenewingToConfig(response.accountAutoRenewing);
-    }
-    if (response.accountGracePeriodMs !== null) {
-      await UserConfigWrapperActions.setProGracePeriod(response.accountGracePeriodMs);
-    }
+    await writeProAutoRenewingToConfig(response.accountAutoRenewing);
+    await UserConfigWrapperActions.setProGracePeriod(response.accountGracePeriodMs);
     return;
   }
   // Non-ok: the machine slug (error_code) decides.
