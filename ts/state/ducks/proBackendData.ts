@@ -470,8 +470,10 @@ export async function scheduleUserExpiryStatusWake(): Promise<void> {
   //
   // Only one when `G` is zero, which is every non-auto-renewing account: the two collapse to the same
   // moment and scheduling both would just double the fetch.
-  const wakeAtMs =
-    renewalDueAtMs === accessExpiryMs ? [accessExpiryMs] : [renewalDueAtMs, accessExpiryMs];
+  const wakeAtMs = [renewalDueAtMs];
+  if (accessExpiryMs !== renewalDueAtMs) {
+    wakeAtMs.push(accessExpiryMs);
+  }
 
   const now = NetworkTime.now();
   wakeAtMs.forEach(atMs => {
