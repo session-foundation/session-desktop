@@ -319,7 +319,23 @@ async function handleClearProProof() {
 // These are a deliberate cross-client contract: Android and iOS name the same values so
 // nobody tunes one platform in isolation. Change them here and the other two clients are wrong.
 
-/** Minimum gap between *routine* status fetches. Drop-on-fresh — see statusFetchIsFloored. */
+/**
+ * Minimum gap between *routine* status fetches. Drop-on-fresh — see statusFetchIsFloored.
+ *
+ * ⚠️ A SCHEDULED WAKE DEPENDS ON THIS NOT BEING CROSSED. `scheduleUserExpiryStatusWake` arms two
+ * instants `G` apart — the renewal date and coverage end — and both emit through the *floored* path, not
+ * the `immediate` one. So when `G < STATUS_FLOOR_MS` the second wake fires and its fetch is dropped.
+ *
+ * In production `G` is at least an hour, so this cannot happen. It happens on a **compressed testing
+ * backend**: the Google test provider sets the grace period to ~10s, and the backend deliberately scales
+ * its whole proof/renewal clock for compressed runs while this client-side constant does not participate
+ * in that compression.
+ *
+ * **The sanctioned escape hatch is an env-var override of this constant, owned by the Pro UI-test work
+ * and deliberately not built here.** If you are adding it, this is the value to hook, and note the
+ * second wake is unlikely to be the only casualty — any client interval shorter than the compressed
+ * equivalent has the same property.
+ */
 const STATUS_FLOOR_MS = 60 * DURATION.SECONDS;
 /** Cold-start fetches are additionally capped to one per this interval, by the startup gate. */
 const STATUS_STARTUP_MIN_INTERVAL_MS = 24 * DURATION.HOURS;
@@ -420,6 +436,19 @@ let userExpiryWakeIds: Array<ReturnType<typeof setTimeout>> = [];
  *
  * Re-derived from scratch on every call, so a renewal that advances `E` cannot leave a wake armed against
  * the old horizon.
+ *
+ * ⚠️ ON A COMPRESSED TESTING BACKEND THE SECOND WAKE WILL NOT FETCH, and the symptom is indistinguishable
+ * from it never having been scheduled — which is why this is written here rather than only at the floor.
+ * Both instants emit through the floored path (`refreshGetProStatusFromProBackend` with no `immediate`),
+ * and they are `G` apart. So whenever `G < STATUS_FLOOR_MS` (60s) the second one is inside the floor
+ * window and its fetch is dropped: the timer fires, nothing happens, and no log line distinguishes that
+ * from an unscheduled wake.
+ *
+ * Production `G` is at least an hour, so this is a test-environment property, not a wake defect. The
+ * Google test provider sets grace to ~10s and the backend scales its whole clock for compressed runs;
+ * this client's fixed floor doesn't. **An env-var override of `STATUS_FLOOR_MS` is the sanctioned escape
+ * hatch, owned by the Pro UI-test work and deliberately not built here** — so don't "fix" it in the
+ * client, and don't make this wake `immediate` to work around it.
  */
 export async function scheduleUserExpiryStatusWake(): Promise<void> {
   // Always clear before re-deriving. This function is called on startup and after every successful
