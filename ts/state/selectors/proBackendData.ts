@@ -281,64 +281,33 @@ function processProBackendData({
     ? !mockCancelled
     : (data?.autoRenewing ?? defaultProAccessDetailsSourceData.autoRenew);
 
-  // 🔴 THE PREMISE IN THE NEXT PARAGRAPH IS WRONG, AND IS UNDER REVIEW (F8). Marked rather than
-  // rewritten because correcting the behaviour has to land on Android, Desktop and iOS together — all
-  // three wrote this same premise down independently, which is why it read as corroboration instead of
-  // one mistake copied three times.
+  // `expiry_ts` is COVERAGE END, not the date the renewal is due: the backend folds the grace period
+  // into the stored expiry for auto-renewing subscriptions (`_lookup_user_expiry` -> `best_expiry`) and
+  // judges `user_status` against that same value. So the renewal falls due at `E - grace`, and the grace
+  // window — renewal overdue, account still covered — is `E - grace <= now < E`.
   //
-  // What is actually true: the backend folds grace INTO the stored expiry for auto-renewing accounts
-  // (`_lookup_user_expiry` → `best_expiry`) and judges `user_status` against that same value. So
-  // `expiry_ts` is **coverage end, not paid-through**; `now >= E` is the grace *exit*, not its entry;
-  // and the real grace window is `E - grace <= now < E`. Two consequences follow, both live:
-  //   - `inGracePeriod = now >= expiryTimeMs` sits inside an Active branch, and Active requires
-  //     `now <= E` — satisfiable only at a single boundary instant, so the indicator is ~dead code: the
-  //     grace state is unreachable, so nothing surfaces a renewal that is overdue but still covered.
-  //   - `renewingAt = E` renders the renewal date late by one grace period. **Magnitude depends on the
-  //     payment provider**, and Desktop has no in-app payment — every Desktop subscriber bought through
-  //     Apple or Google, so both cases are live here:
-  //       Apple  — the backend supplies the grace itself (~1h), so the date error is cosmetic.
-  //       Google — operator-configured on the base plan, in DAYS, and the backend only learns the real
-  //                value when the user ENTERS grace. So the error is largest exactly while the grace UI
-  //                is on screen, which is the screen whose purpose is that date.
-  //     Both consequences are therefore substantive on Desktop; neither is "just cosmetic".
-  //     (Provider split per the cross-client F8 analysis, traced in the backend. The Google magnitude
-  //     is "operator-configured days" — no specific range is traced, so don't quote one.)
-  // Paid-through IS computable here (`E - gracePeriodDurationMs`, safe unconditionally because the
-  // wire zeroes grace when `!auto_renewing`); it is the *startup gate* that cannot compute it, having
-  // only config. Don't "fix" this line on its own.
+  // The subtraction is unconditional and needs no provider branching: the wire sends `grace = 0`
+  // whenever the subscription isn't auto-renewing, so this is `E - 0 == E` for those accounts.
   //
-  // ── the superseded reasoning, kept for the diff it explains ──────────────────────────────────
-  // Auto-renew is due AT the paid-through end (`expiryMs`). user_status stays `active` through the
-  // grace window (the backend judges coverage against expiry + grace_period_duration), so being past
-  // expiry while still active IS the grace period. Subtracting grace here put "renew due" a whole
-  // grace period early, so inGracePeriod was perpetually true whenever grace exceeded the period.
-  //
-  // ⚠️ This instant is the boundary contested in F8, isolated here on purpose so a ruling is a
-  // one-line change per client rather than three independent re-derivations landing at different
-  // times. It implements the SPEC's version deliberately — do not pre-apply a local finding here,
-  // because a client quietly disagreeing with the other two about a user-visible date is exactly what
-  // this seam exists to prevent. Android's equivalent is `renewalDueAt()`.
-  //
-  // Android also has a `coverageEndsAt()` (= expiry + gracePeriod). Desktop has NO consumer for it —
-  // `gracePeriodDurationMs` is referenced nowhere in `ts/` — and adding one to mirror Android would be
-  // dead code, which in this repo is where typos live. If F8's ruling needs it, it gets added with its
-  // first consumer.
-  //
-  // ⚠️ And do not compute it as `expiryMs + gracePeriodDurationMs` when that day comes: the backend
-  // ALREADY folds grace into the stored expiry for auto-renewing accounts (`_lookup_user_expiry` →
-  // `best_expiry`, and `user_status` is judged against that same value), so `expiry_ts` IS coverage
-  // end and adding grace again double-counts it. The comment above about the backend judging coverage
-  // against `expiry + grace_period_duration` predates that finding and is under review — see F8.
-  const renewalDueAtMs = data ? data.expiryMs : 0;
+  // Both values here are already milliseconds (the response's own units). Core stores `G` in seconds and
+  // the nodejs wrapper converts, so anything reading grace from *config* rather than from a response is
+  // on the other side of that boundary — check which you have before subtracting.
+  const renewalDueAtMs = data ? data.expiryMs - data.gracePeriodDurationMs : 0;
   // Kept under its original name because it is threaded into the display strings below.
   const beginAutoRenew = renewalDueAtMs;
 
   let inGracePeriod = mockInGracePeriod;
   if (beginAutoRenew && !mockInGracePeriod) {
-    // Only surface "renewal unsuccessful" off data we actually fetched at/after the paid-through
-    // end — never off a pre-expiry snapshot that predates a possible renewal. The pro page refetches
-    // at the crossing (and polls through grace), so a stale snapshot resolves rather than sticking.
-    inGracePeriod = autoRenew && now >= expiryTimeMs && lastFetchedMs >= expiryTimeMs;
+    // Past the renewal date but still covered. Keyed on `renewalDueAtMs`, not on `expiryTimeMs`: the
+    // latter is coverage end, and `now >= E` inside a branch that requires `now <= E` is satisfiable
+    // only at a single instant — which is why this indicator was previously unreachable and nothing
+    // surfaced an overdue renewal at all.
+    //
+    // The `lastFetchedMs` term is the debounce: only surface "renewal unsuccessful" off a fetch that
+    // COMPLETED at or after the crossing, never off a snapshot predating a renewal that may since have
+    // landed. It is per-run and stamped on completion, so a request still in flight cannot satisfy it.
+    inGracePeriod =
+      autoRenew && now >= renewalDueAtMs && now < expiryTimeMs && lastFetchedMs >= renewalDueAtMs;
   }
 
   // Refund-requested is now a synced config flag (UserProfile key R), not a backend response field.
