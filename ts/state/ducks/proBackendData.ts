@@ -402,50 +402,66 @@ function statusFetchIsFloored(): boolean {
 
 // ===== #6 — the single wake at user_expiry =====
 
-let userExpiryWakeId: ReturnType<typeof setTimeout> | null = null;
+let userExpiryWakeIds: Array<ReturnType<typeof setTimeout>> = [];
 
 /**
- * Schedule one status refresh shortly past the renewal date (`E - G`).
+ * Schedule the background status refreshes around the end of a billing period.
  *
- * This is the background half of surfacing grace. Desktop already refetches across the crossing
- * while the Pro page is open (`useKeepProStatusFresh`, trigger #4), but that is screen-scoped: with
- * the page closed nothing re-checks between `E` and the proof loop's wake ~1h before *proof* expiry,
- * so a renewal that failed at `E` would only surface in that final hour. Android has had this wake
- * (`E+30s`) all along; this is Desktop's equivalent.
+ * This is the background half of surfacing grace. The Pro page refetches across the crossing while it is
+ * open, but that is screen-scoped: with the page closed nothing would re-check between the renewal date
+ * and the proof loop's own wake, so a renewal that failed would surface only in that final hour.
  *
- * Only ever armed for a *future* crossing. A crossing already in the past is not replayed on every
- * launch — that would duplicate the startup gate, which is the thing that decides whether a cold
- * start is allowed to fetch at all.
+ * Two instants, at `(E - G) + 30s` and `E + 30s`, collapsing to one when `G` is zero. The second is not
+ * redundant: the proof loop does wake near `E` by construction (the backend issues `proof_expiry` ~1h
+ * past `E`, and `pro_renewal_target` is ~1h before proof expiry), and a proof outcome now writes
+ * `E`/`A`/`G`, which fires the config-change trigger. But that chain is gated on `E` actually changing —
+ * so it covers a renewal that SUCCEEDED and not one that failed, which is the case the grace warning
+ * exists for.
  *
- * ⚠️ Note what this does NOT cover: the later transition at `E` itself, when grace ends and the account
- * genuinely expires. This is a one-shot at the renewal date, so nothing here fires at coverage end. The
- * proof loop wakes near `E` by construction — the backend issues `proof_expiry` ~1h past `E` and
- * `pro_renewal_target` is ~1h before proof expiry — and a proof outcome now writes `E`/`A`/`G`, which
- * fires the config-change trigger. But that path depends on `E` actually changing, so it covers a
- * renewal that SUCCEEDED and not one that failed. See the note on that trigger.
+ * Re-derived from scratch on every call, so a renewal that advances `E` cannot leave a wake armed against
+ * the old horizon.
  */
 export async function scheduleUserExpiryStatusWake(): Promise<void> {
-  if (userExpiryWakeId) {
-    clearTimeout(userExpiryWakeId);
-    userExpiryWakeId = null;
-  }
+  // Always clear before re-deriving. This function is called on startup and after every successful
+  // fetch, so a renewal that advances `E` re-arms both instants against the NEW horizon; leaving a
+  // stale wake armed would fire at an instant that no longer means anything.
+  userExpiryWakeIds.forEach(clearTimeout);
+  userExpiryWakeIds = [];
+
   const accessExpiryMs = await UserConfigWrapperActions.getProAccessExpiry();
   if (!accessExpiryMs) {
     return;
   }
-  // Fires just past the RENEWAL DATE (`E - G`), not past coverage end. `E` is grace-inclusive, so
-  // waking at `E` would arrive after the whole grace window had already elapsed — i.e. after the state
-  // this wake exists to surface had come and gone.
   const gracePeriodMs = await UserConfigWrapperActions.getProGracePeriod();
-  const wakeAtMs = accessExpiryMs - gracePeriodMs + USER_EXPIRY_WAKE_DELAY_MS;
-  const delayMs = wakeAtMs - NetworkTime.now();
-  if (delayMs <= 0) {
-    return;
-  }
-  userExpiryWakeId = setTimeout(() => {
-    // Floored, like every other routine trigger — the wake is a nudge, not a "go right now".
-    window.inboxStore?.dispatch(proBackendDataActions.refreshGetProStatusFromProBackend({}) as any);
-  }, delayMs);
+  const renewalDueAtMs = accessExpiryMs - gracePeriodMs;
+
+  // Two instants, because two distinct transitions matter and neither implies the other:
+  //
+  //   renewal due (E - G)   did the charge succeed, or has it silently failed?
+  //   coverage end (E)      did grace run out without a recovery?
+  //
+  // Only one when `G` is zero, which is every non-auto-renewing account: the two collapse to the same
+  // moment and scheduling both would just double the fetch.
+  const wakeAtMs =
+    renewalDueAtMs === accessExpiryMs ? [accessExpiryMs] : [renewalDueAtMs, accessExpiryMs];
+
+  const now = NetworkTime.now();
+  wakeAtMs.forEach(atMs => {
+    const delayMs = atMs + USER_EXPIRY_WAKE_DELAY_MS - now;
+    if (delayMs <= 0) {
+      // Already past. Not replayed on every launch — that is the startup gate's job, and it is the
+      // thing that decides whether a cold start may fetch at all.
+      return;
+    }
+    userExpiryWakeIds.push(
+      setTimeout(() => {
+        // Floored, like every other routine trigger — a nudge, not a "go right now".
+        window.inboxStore?.dispatch(
+          proBackendDataActions.refreshGetProStatusFromProBackend({}) as any
+        );
+      }, delayMs)
+    );
+  });
 }
 
 // ===== The startup gate =====
