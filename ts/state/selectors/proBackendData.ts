@@ -197,6 +197,7 @@ type ProAccessDetails = {
   variant: ProAccessVariant;
   variantString: string;
   expiryTimeMs: number;
+  coverageEndMs: number;
   expiryTimeDateString: string;
   expiryTimeRelativeString: string;
   isPlatformRefundAvailable: boolean;
@@ -329,6 +330,7 @@ function processProBackendData({
       variant,
       variantString,
       expiryTimeMs,
+      coverageEndMs,
       expiryTimeDateString: formatDateWithLocale({
         date: new Date(expiryTimeMs),
         formatStr: 'MMM d, yyyy',

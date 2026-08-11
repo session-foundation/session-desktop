@@ -427,7 +427,7 @@ export async function scheduleUserExpiryStatusWake(): Promise<void> {
   if (!accessExpiryMs) {
     return;
   }
-  const gracePeriodMs = await UserConfigWrapperActions.getProGracePeriod();
+  const gracePeriodMs = (await UserConfigWrapperActions.getProGracePeriod()) ?? 0;
   const coverageEndMs = accessExpiryMs + gracePeriodMs;
 
   // Two instants, because two distinct transitions matter and neither implies the other:
@@ -507,7 +507,7 @@ async function coldStartShouldFetchProStatus(): Promise<boolean> {
   // Measured from coverage end, not from `E`: an account is not treated as lapsed until `E + G`, so
   // measuring the elapsed time from `E` would shorten a renewing account's window by exactly its grace
   // period. `G` is 0 when not auto-renewing, which makes this `E + 30d` for those accounts.
-  const gracePeriodMs = await UserConfigWrapperActions.getProGracePeriod();
+  const gracePeriodMs = (await UserConfigWrapperActions.getProGracePeriod()) ?? 0;
   if (now >= accessExpiryMs + gracePeriodMs + PRO_EXPIRED_CTA_WINDOW_MS) {
     return false;
   }
