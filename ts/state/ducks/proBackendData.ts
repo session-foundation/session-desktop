@@ -564,13 +564,10 @@ async function coldStartShouldFetchProStatus(): Promise<boolean> {
  * from that path reads back as terminal.
  */
 async function getProAutoRenewingFromConfig(): Promise<boolean> {
-  // `A` cannot outlive the `E` it describes: libsession erases `A` and `G` alongside `E` whenever the
-  // expiry is cleared, so a renewing flag with no expiry beside it is not a reachable state. Every
-  // caller that clears `E` is handling an account with no entitlement, and none of those is renewing.
-  //
-  // ⚠️ The gate happens to read `E` before calling this, but for its own reason — no expiry means
-  // nothing a CTA could be about — so do not read that ordering as the thing upholding the invariant
-  // above. A caller that reads `A` without checking `E` first is equally correct.
+  // ⚠️ `A` is only meaningful beside the `E` it describes. It is presence-only, so an `A` left behind by
+  // an earlier subscription reads as "renewing" with no expiry to renew — indistinguishable from a live
+  // one. The single caller here establishes `E` first (for its own reason: no expiry means nothing a CTA
+  // could be about), so it never sees that pair. A new caller must establish `E` too, or read both.
   return UserConfigWrapperActions.getProAutoRenewing();
 }
 
