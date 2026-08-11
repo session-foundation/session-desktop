@@ -347,13 +347,19 @@ const PRO_EXPIRED_CTA_WINDOW_MS = 30 * DURATION.DAYS;
 
 async function handleExpiryCTAs(
   accessExpiryTsMs: number,
+  gracePeriodDurationMs: number,
   autoRenewing: boolean,
   status: ProStatus
 ) {
   const now = NetworkTime.now();
 
+  // The Expiring window is anchored at `E`: "your payment is due soon" is a statement about the payment
+  // date, so coverage doesn't enter into it.
   const sevenDaysBeforeExpiry = accessExpiryTsMs - PRO_EXPIRING_CTA_WINDOW_MS;
-  const thirtyDaysAfterExpiry = accessExpiryTsMs + PRO_EXPIRED_CTA_WINDOW_MS;
+  // The Expired window is anchored at coverage end. The backend reports `Expired` only once coverage has
+  // ended, at `E + G`, so measuring the 30 days from `E` instead shortens the window by exactly `G` —
+  // and closes it entirely when `G >= 30d`, which a store grace period can reach.
+  const expiredCTADeadlineMs = accessExpiryTsMs + gracePeriodDurationMs + PRO_EXPIRED_CTA_WINDOW_MS;
 
   const proExpiringSoonCTA = !isUndefined(Storage.get(SettingsKey.proExpiringSoonCTA));
   const proExpiredCTA = !isUndefined(Storage.get(SettingsKey.proExpiredCTA));
@@ -376,7 +382,7 @@ async function handleExpiryCTAs(
     if (status === ProStatus.Active && !autoRenewing && !proExpiringSoonCTA) {
       await Storage.put(SettingsKey.proExpiringSoonCTA, true);
     }
-  } else if (accessExpiryTsMs < now && now < thirtyDaysAfterExpiry) {
+  } else if (accessExpiryTsMs < now && now < expiredCTADeadlineMs) {
     // Between expiry and 30 days after expiry, Expired CTA needs to be marked to be shown if not already
     if (status === ProStatus.Expired && !proExpiredCTA) {
       await Storage.put(SettingsKey.proExpiredCTA, true);
@@ -759,6 +765,7 @@ const fetchGetProStatusFromProBackend = createAsyncThunk(
           }
           await handleExpiryCTAs(
             state.data.expiryMs,
+            state.data.gracePeriodDurationMs,
             state.data.autoRenewing,
             state.data.userStatus
           );
