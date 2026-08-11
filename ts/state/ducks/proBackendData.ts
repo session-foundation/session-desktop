@@ -369,6 +369,21 @@ async function handleExpiryCTAs(
     await Storage.remove(SettingsKey.proExpiredCTA);
   }
 
+  // `status` is the authority on whether the account has lapsed, and it accounts for revocation, which no
+  // date arithmetic here can see: a refund or chargeback reports Expired while the paid term is still in
+  // the future. Keyed on the status alone, so it must run ahead of the date chain below — a revoked
+  // account sits inside the active or expiring window and would be handled as one.
+  if (status === ProStatus.Expired && now < expiredCTADeadlineMs) {
+    if (!proExpiredCTA) {
+      await Storage.put(SettingsKey.proExpiredCTA, true);
+      // Shown again in a later cycle if needed.
+      if (proExpiringSoonCTA) {
+        await Storage.remove(SettingsKey.proExpiringSoonCTA);
+      }
+    }
+    return;
+  }
+
   if (now < sevenDaysBeforeExpiry) {
     // More than 7 days before expiry, remove CTA items if they exist. This means the items were set for a previous cycle of pro access.
     if (proExpiringSoonCTA) {
@@ -381,15 +396,6 @@ async function handleExpiryCTAs(
     // Between 7 days before expiry and expiry, Expiring Soon CTA needs to be marked to be shown if not already. Only shown if not auto-renewing
     if (status === ProStatus.Active && !autoRenewing && !proExpiringSoonCTA) {
       await Storage.put(SettingsKey.proExpiringSoonCTA, true);
-    }
-  } else if (accessExpiryTsMs < now && now < expiredCTADeadlineMs) {
-    // Between expiry and 30 days after expiry, Expired CTA needs to be marked to be shown if not already
-    if (status === ProStatus.Expired && !proExpiredCTA) {
-      await Storage.put(SettingsKey.proExpiredCTA, true);
-      // The expiring soon CTA should be removed if it's set as we want to show it again in the future if needed
-      if (proExpiringSoonCTA) {
-        await Storage.remove(SettingsKey.proExpiringSoonCTA);
-      }
     }
   }
 }
