@@ -504,18 +504,20 @@ export async function scheduleUserExpiryStatusWake(): Promise<void> {
  * hit the backend for every non-Pro and every comfortably-active user to learn nothing, so decide from
  * synced config whether a CTA could plausibly fire at all.
  *
- * The rule, keyed on `E` (the paid-through expiry) and never on coverage end:
+ * The rule. Every lower bound is keyed on `E` (the paid-through expiry); only the upper bound is keyed
+ * on coverage end:
  *
+ *   now >= E + G + 30d                            -> lapsed too long ago for any CTA, no fetch
  *   auto_renewing && now <  E                     -> comfortably active, no fetch
  *   auto_renewing && now >= E                     -> in grace or past it, unknowable from config,
  *                                                    FETCH and learn which from the response
  *   !auto_renewing && E within the CTA window     -> expiring, fetch / CTA
  *   !auto_renewing && now >= E                    -> expired, confirm-fetch before the Expired CTA
  *
- * `G` is in config and this gate still doesn't consult it, deliberately: coverage ends at `E + G`, but
- * grace and post-coverage both resolve to "fetch", so testing the later boundary would only delay the
- * first fetch without changing any outcome. Nothing here needs to know how long grace runs — only that
- * the paid term has ended.
+ * The lower bounds don't consult `G` and don't need to: grace and post-coverage both resolve to "fetch",
+ * so testing the later boundary would delay the first fetch without changing any outcome. The upper
+ * bound is the one place the LENGTH of grace does work, because "how long ago did this lapse" is
+ * measured from `E + G`.
  *
  * Capped either way at one cold-start fetch per STATUS_STARTUP_MIN_INTERVAL_MS.
  */
@@ -536,12 +538,25 @@ async function coldStartShouldFetchProStatus(): Promise<boolean> {
   const now = NetworkTime.now();
   const autoRenewing = await getProAutoRenewingFromConfig();
 
+  // The upper bound, and the one place this gate needs to know how LONG grace runs rather than just
+  // that the paid term has ended. Past the last instant an Expired CTA could be raised there is nothing
+  // left to learn, so an account that lapsed long ago must stop fetching — otherwise it fetches once
+  // per STATUS_STARTUP_MIN_INTERVAL_MS forever, for a CTA that can no longer fire.
+  //
+  // Measured from coverage end, not from `E`: an account is not treated as lapsed until `E + G`, so
+  // measuring the elapsed time from `E` would shorten a renewing account's window by exactly its grace
+  // period. `G` is 0 when not auto-renewing, which makes this `E + 30d` for those accounts.
+  const gracePeriodMs = await UserConfigWrapperActions.getProGracePeriod();
+  if (now >= accessExpiryMs + gracePeriodMs + PRO_EXPIRED_CTA_WINDOW_MS) {
+    return false;
+  }
+
   if (autoRenewing) {
     // `E` is the account's true expiry — what has been paid for. Past it the renewal has either landed
     // (and `E` should have moved) or it hasn't, and config alone cannot tell which, so fetch and find
-    // out. `G` is deliberately NOT read here: coverage ends at `E + G`, but both sides of that
-    // boundary want a fetch — inside grace to surface "renewal unsuccessful", past it to surface
-    // Expired — so the only instant that changes the answer is `E` itself.
+    // out. The lower bound is `E` and not coverage end: both sides of `E + G` want a fetch — inside
+    // grace to surface "renewal unsuccessful", past it to surface Expired — so the only instant that
+    // changes the answer is `E` itself.
     return now >= accessExpiryMs;
   }
 
