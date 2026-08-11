@@ -33,27 +33,17 @@ type RequestState<D = unknown> = {
   error: string | null;
   // When the last successful fetch COMPLETED (ms, network time). 0 if we never got one this run.
   //
-  // Per-run and completion-stamped, which makes it the answer to "has this process confirmed our
-  // status (since some threshold)": the floor's never-confirmed-this-process exemption, the home Pro
-  // CTA gate, and the grace warning's `lastFetchedMs >= E` debounce all read it.
+  // Per-run and completion-stamped: the answer to "has this process confirmed our status", which the
+  // floor's never-confirmed exemption, the home Pro CTA gate and the grace warning's debounce all read.
   //
-  // ⚠️ Do NOT substitute SettingsKey.proStatusLastFetchAttemptMs for any of those. That one is
-  // persisted and stamped on *attempt*, because it backs the 60s floor, whose job is to bound
-  // requests rather than to confirm anything. Similar names, opposite meanings.
+  // Not interchangeable with SettingsKey.proStatusLastFetchAttemptMs, which is persisted and stamped on
+  // *attempt* because it backs the 60s floor. Similar names, opposite meanings.
   //
-  // ⚠️ This field looks redundant next to the persisted one and is not. Deleting it as "subsumed by
-  // the floor" ships a permanent spinner on the Pro screen: a relaunch inside 60s hits the floor, the
-  // fetch is dropped, and nothing is left to resolve the initial loading state — which both the spinner
-  // and the CTAs gate on.
-  //
-  // WHEN DELETING IT BECOMES CORRECT, so this is a test rather than a prohibition: when no consumer
-  // needs a *this-process* confirmation any more. Concretely, all three of —
-  //   1. the Pro screen's loading state no longer resolves only via a completed fetch,
-  //   2. the home CTAs no longer gate on one (see handleTriggeredCTAs), and
-  //   3. the grace debounce has a persisted completion-stamped value to read AND it has been decided
-  //      that a *previous* process's confirmation may satisfy it.
-  // (3) is the one to be most careful with: accepting a prior process's confirmation for the CTA gate
-  // is exactly the false-expired window that gating startup opened. Until then, keep both values.
+  // Deleting this as "subsumed by the floor" ships a permanent spinner: a relaunch inside 60s hits the
+  // floor, the fetch is dropped, and nothing resolves the initial loading state, which both the spinner
+  // and the CTAs gate on. It becomes removable once no consumer needs a *this-process* confirmation —
+  // and note that letting a previous process's confirmation satisfy the CTA gate reopens the
+  // false-expired window that gating startup created.
   lastFetchedMs: number;
   data: D | null;
 };
@@ -107,17 +97,12 @@ type CreateProBackendFetchAsyncThunk<K extends keyof ProBackendDataPayloads> = {
 export type WithCallerContext = { callerContext?: 'recover' };
 
 /**
- * `immediate` means one thing only: bypass the status floor. It does NOT bypass the
- * single-flight guard and it does NOT touch the loading state — spinner UI is a separate concern
- * (trigger #3). The name is load-bearing: a permissive one like `force` reads as something any
- * routine background trigger may pass, and a floor that every caller bypasses is dead code.
+ * `immediate` means one thing only: bypass the status floor. It does not bypass the single-flight guard
+ * and does not touch the loading state. The name is load-bearing: a permissive one like `force` reads as
+ * something any routine trigger may pass, and a floor every caller bypasses is dead code.
  *
- * Sanctioned callers, and no others:
- *   #5 manual refresh / recover  — implied by `callerContext: 'recover'`, so a future recover caller
- *                                  gets it without having to remember
- *   #4 the while-open grace poll — a bounded poll with its own cadence and termination
- *   #7 the post-purchase poll    — N/A on Desktop: no in-app payment
- *   developer/debug refresh paths
+ * Sanctioned callers and no others: manual refresh/recover (implied by `callerContext: 'recover'`), the
+ * bounded while-open grace poll, and developer/debug paths.
  */
 export type WithImmediate = { immediate?: boolean };
 
@@ -249,24 +234,17 @@ async function applyProofOutcome(
       }
       await UserConfigWrapperActions.setProConfig({ proProof, rotatingSeedHex });
     }
-    // Refresh cached access-expiry from the advisory account_expiry (decoupled from the proof guard,
-    // so a mid-period horizon extension is still picked up). Guaranteed present on a success parse.
+    // Refresh cached access-expiry from the advisory account_expiry (decoupled from the proof guard, so
+    // a mid-period horizon extension is still picked up). `A` and `G` ride along, and must: otherwise
+    // `E + G` pairs a fresh expiry with a grace from a different billing period, and an unwritten `A`
+    // reads as not-renewing.
     //
-    // `A` and `G` ride along, and must: every path that writes `E` writes all three from the same
-    // response. Writing `E` alone breaks two things — an account whose expiry came only from a proof
-    // reads back as terminal while it is in fact renewing (`A` is presence-only, so unwritten and false
-    // are the same bit), and `E + G` pairs a fresh expiry with a grace learned in a different billing
-    // period.
+    // All three writes belong inside the success branch. On a failure outcome core never fills
+    // `accountAutoRenewing`/`accountGracePeriodMs`, so its struct defaults (`false`/`0`) come through,
+    // indistinguishable from a backend that said "not renewing, no grace" — and both keys are
+    // presence-only, so writing those would erase what a `get_pro_status` fetch had learned.
     //
-    // ⚠️ These writes belong INSIDE the success branch and must stay there. `accountAutoRenewing` and
-    // `accountGracePeriodMs` are non-null because core requires them on a successful parse — a response
-    // missing either is a parse error, not a defaulted value. But on a *failure* outcome core never fills
-    // them and its struct defaults (`false` / `0`) come through, which are indistinguishable from a
-    // backend that really said "not renewing, no grace". Both config keys are presence-only, so writing
-    // that false or zero would ERASE what a `get_pro_status` fetch had learned. The success branch is the
-    // only place these two mean anything.
-    //
-    // `accountExpiryMs` is still nullable — absent on `not_subscribed` and `revoked` — hence its guard.
+    // `accountExpiryMs` is nullable — absent on `not_subscribed` and `revoked` — hence its guard.
     if (response.accountExpiryMs !== null) {
       await UserConfigWrapperActions.setProAccessExpiry(response.accountExpiryMs);
     }
@@ -322,18 +300,11 @@ async function handleClearProProof() {
 /**
  * Minimum gap between *routine* status fetches. Drop-on-fresh — see statusFetchIsFloored.
  *
- * ⚠️ A SCHEDULED WAKE DEPENDS ON THIS NOT BEING CROSSED. `scheduleUserExpiryStatusWake` arms two
- * instants `G` apart — the expiry and coverage end — and both emit through the *floored* path, not
- * the `immediate` one. So when `G < STATUS_FLOOR_MS` the second wake fires and its fetch is dropped.
- *
- * In production `G` is at least an hour, so this cannot happen. It happens on a **compressed testing
- * backend**: the Google test provider sets the grace period to ~10s, and the backend deliberately scales
- * its whole proof/renewal clock for compressed runs while this client-side constant does not participate
- * in that compression.
- *
- * **The sanctioned escape hatch is an env-var override of this constant**, and this is the value to
- * hook if you are adding one. Note the second wake is unlikely to be the only casualty: any client
- * interval shorter than its compressed equivalent has the same property.
+ * A scheduled wake depends on this not being crossed: scheduleUserExpiryStatusWake arms two instants `G`
+ * apart, both through the floored path, so when `G < STATUS_FLOOR_MS` the second fires and its fetch is
+ * dropped with no log line to say so. `G` is at least an hour in production and ~10s on a compressed test
+ * backend, whose scaled clock this constant does not participate in — override it by env var for those
+ * runs rather than shortening it.
  */
 const STATUS_FLOOR_MS = 60 * DURATION.SECONDS;
 /** Cold-start fetches are additionally capped to one per this interval, by the startup gate. */
@@ -415,13 +386,12 @@ function lastStatusFetchAttemptAtMs(): number {
 /**
  * True when a routine status refresh should be *dropped* as too soon.
  *
- * Drop-on-fresh, deliberately NOT re-arm: a floor that rescheduled the skipped fetch would turn
- * the routine triggers into a self-sustaining once/60s poll, and during grace — when `E` sits static
- * and nothing new can arrive from a config change — that poll is pure noise. Dropping is safe
+ * Drop-on-fresh, not re-arm: rescheduling the skipped fetch would turn the routine triggers into a
+ * self-sustaining once/60s poll, and during grace `E` sits static so it would carry nothing new. Safe
  * because status is display-only and backstopped by many triggers.
  *
- * The *proof* loop is the opposite by design (reconcileProProof reschedules rather than skips),
- * because a throttled proof acquisition must still eventually happen. Don't unify the two.
+ * The proof loop is deliberately the opposite — a throttled proof acquisition must still eventually
+ * happen — so don't unify the two.
  */
 function statusFetchIsFloored(): boolean {
   return NetworkTime.now() < lastStatusFetchAttemptAtMs() + STATUS_FLOOR_MS;
@@ -434,32 +404,17 @@ let userExpiryWakeIds: Array<ReturnType<typeof setTimeout>> = [];
 /**
  * Schedule the background status refreshes around the end of a billing period.
  *
- * This is the background half of surfacing grace. The Pro page refetches across the crossing while it is
- * open, but that is screen-scoped: with the page closed nothing would re-check between the expiry and
- * the proof loop's own wake, so a renewal that failed would surface only in that final hour.
+ * With the Pro page closed, nothing else re-checks between the expiry and the proof loop's own wake.
  *
- * Two instants, at `E + 30s` and `(E + G) + 30s`, collapsing to one when `G` is zero. The second is not
- * redundant: the proof loop does wake near `E` by construction (the backend issues `proof_expiry` ~1h
- * past `E`, and `pro_renewal_target` is ~1h before proof expiry), and a proof outcome now writes
- * `E`/`A`/`G`, which fires the config-change trigger. But that chain is gated on `E` actually changing —
- * so it covers a renewal that SUCCEEDED and not one that failed, which is the case the grace warning
- * exists for.
+ * Two instants, `E + 30s` and `(E + G) + 30s`, collapsing to one when `G` is zero. The second is not
+ * redundant: the proof loop wakes near `E` by construction, but that chain fires only when `E` actually
+ * changes, so it covers a renewal that succeeded and not one that failed.
  *
- * Re-derived from scratch on every call, so a renewal that advances `E` cannot leave a wake armed against
- * the old horizon.
+ * Re-derived on every call, so a renewal that advances `E` cannot leave a wake armed against the old
+ * horizon.
  *
- * ⚠️ ON A COMPRESSED TESTING BACKEND THE SECOND WAKE WILL NOT FETCH, and the symptom is indistinguishable
- * from it never having been scheduled — which is why this is written here rather than only at the floor.
- * Both instants emit through the floored path (`refreshGetProStatusFromProBackend` with no `immediate`),
- * and they are `G` apart. So whenever `G < STATUS_FLOOR_MS` (60s) the second one is inside the floor
- * window and its fetch is dropped: the timer fires, nothing happens, and no log line distinguishes that
- * from an unscheduled wake.
- *
- * Production `G` is at least an hour, so this is a test-environment property, not a wake defect. The
- * Google test provider sets grace to ~10s and the backend scales its whole clock for compressed runs;
- * this client's fixed floor doesn't. **An env-var override of `STATUS_FLOOR_MS` is the sanctioned escape
- * hatch** — so don't "fix" it by shortening the floor, and don't make this wake `immediate` to work
- * around it.
+ * Both instants emit through the floored path and are `G` apart, so a short `G` drops the second one's
+ * fetch — see STATUS_FLOOR_MS.
  */
 export async function scheduleUserExpiryStatusWake(): Promise<void> {
   // Always clear before re-deriving. This function is called on startup and after every successful
@@ -511,13 +466,9 @@ export async function scheduleUserExpiryStatusWake(): Promise<void> {
 /**
  * Whether a *cold start* is allowed to fetch `get_pro_status`.
  *
- * Startup's only real consumer is the home CTAs — entitlement comes from the proof, the settings
- * screen refreshes on open, and account-expiry awareness is trigger #6. Fetching on every launch would
- * hit the backend for every non-Pro and every comfortably-active user to learn nothing, so decide from
- * synced config whether a CTA could plausibly fire at all.
- *
- * The rule. Every lower bound is keyed on `E` (the paid-through expiry); only the upper bound is keyed
- * on coverage end:
+ * Startup's only consumer is the home CTAs — entitlement comes from the proof and the settings screen
+ * refreshes on open — so decide from synced config whether a CTA could plausibly fire, rather than
+ * fetching on every launch for every non-Pro and comfortably-active user.
  *
  *   now >= E + G + 30d                            -> lapsed too long ago for any CTA, no fetch
  *   auto_renewing && now <  E                     -> comfortably active, no fetch
@@ -526,10 +477,8 @@ export async function scheduleUserExpiryStatusWake(): Promise<void> {
  *   !auto_renewing && E within the CTA window     -> expiring, fetch / CTA
  *   !auto_renewing && now >= E                    -> expired, confirm-fetch before the Expired CTA
  *
- * The lower bounds don't consult `G` and don't need to: grace and post-coverage both resolve to "fetch",
- * so testing the later boundary would delay the first fetch without changing any outcome. The upper
- * bound is the one place the LENGTH of grace does work, because "how long ago did this lapse" is
- * measured from `E + G`.
+ * Only the upper bound uses `G`: grace and post-coverage both resolve to "fetch", so the lower bounds
+ * need only "has the paid term ended", while "how long ago did this lapse" is measured from `E + G`.
  *
  * Capped either way at one cold-start fetch per STATUS_STARTUP_MIN_INTERVAL_MS.
  */
@@ -584,32 +533,19 @@ async function coldStartShouldFetchProStatus(): Promise<boolean> {
  * `A` is presence-only in core: `set_pro_auto_renewing` uses `set_nonzero_int`, so writing false erases
  * the key and the getter returns false for both "not auto-renewing" and "never written".
  *
- * ⚠️ That ambiguity is harmless only because every path that writes `E` also writes `A`, from the same
- * response — the status fetch and the proof outcome both do. Absent therefore means not-renewing rather
- * than unknown, which is what makes the gate's `!auto_renewing` rows sound. A new writer of `E` that
- * carries no renewing flag would silently reintroduce it: an account renewing under an `E` that came
- * from that path reads back as terminal.
+ * Harmless only while every path that writes `E` also writes `A` from the same response, and every reader
+ * establishes `E` first — an `A` left by an earlier subscription otherwise reads as renewing with no
+ * expiry to renew. A new writer or reader has to keep both.
  */
 async function getProAutoRenewingFromConfig(): Promise<boolean> {
-  // ⚠️ `A` is only meaningful beside the `E` it describes. It is presence-only, so an `A` left behind by
-  // an earlier subscription reads as "renewing" with no expiry to renew — indistinguishable from a live
-  // one. The single caller here establishes `E` first (for its own reason: no expiry means nothing a CTA
-  // could be about), so it never sees that pair. A new caller must establish `E` too, or read both.
   return UserConfigWrapperActions.getProAutoRenewing();
 }
 
 /**
- * Persist `auto_renewing` into synced config, mirroring how each fetch persists `E`. Without the
- * write side the config field is never populated and the startup gate has nothing to read.
+ * Persist `auto_renewing` into synced config, mirroring how each fetch persists `E`.
  *
- * Unconditional, and deliberately so: libSession already de-dupes a no-change write one layer down
- * (`assign_if_changed` / `erase` both no-op on a clean config), which is the same property the
- * unconditional `E` write beside it relies on. A client-side guard would add nothing, and a
- * *presence*-based one would be actively wrong — `A` is presence-only, so a `false` erases the key
- * and presence flips on every change.
- *
- * Note the config-change observer watches only `E` and `I`, so an `auto_renewing` change re-derives
- * the display without triggering a fetch — we already have the synced value.
+ * Unconditional: libSession de-dupes a no-change write one layer down. A *presence*-based guard would be
+ * actively wrong — `A` is presence-only, so a `false` erases the key and presence flips on every change.
  */
 async function writeProAutoRenewingToConfig(autoRenewing: boolean): Promise<void> {
   await UserConfigWrapperActions.setProAutoRenewing(autoRenewing);
@@ -857,26 +793,13 @@ const refreshGetProStatusFromProBackend = createAsyncThunk(
       return;
     }
 
-    // Three separate things can refuse to start a status fetch, and only one of them can refuse in a
-    // process that has never fetched:
+    // Of the three things that can refuse a status fetch, only the floor's persisted timestamp can
+    // refuse in a process that has never fetched — `isFetching` and `lastFetchedMs` are both per-run. So
+    // without this exemption the floor becomes a mutex on the cold-start path rather than a rate limit.
+    // Cold-start load stays bounded by the 24h startup interval, which is the stronger limit.
     //
-    //   in-flight    `details.isFetching`                     per-run, so it cannot refuse first time
-    //   unconfirmed  `details.lastFetchedMs`                  per-run, ditto
-    //   TOO SOON     `SettingsKey.proStatusLastFetchAttemptMs` PERSISTED — outlives the process
-    //
-    // ⚠️ THIS EXEMPTION EXISTS BECAUSE OF THE THIRD ONE. The floor reads a timestamp written by a
-    // *previous* run, so without an exemption it can decline the first fetch of a process that has no
-    // status at all — turning a rate limit into a mutex on exactly the cold-start path the startup gate
-    // is about. `lastFetchedMs` is per-run (0 until this process completes a fetch), so it is the right
-    // signal, and it is why the per-run value is kept alongside the persisted one rather than replaced
-    // by it. Cold-start load stays bounded by the 24h startup interval, which is the stronger limit.
-    //
-    // The visible symptom is a permanent spinner: relaunch within 60s of a previous fetch, the floor
-    // drops the fetch, and nothing resolves the initial loading state, so the Pro screen spins and no
-    // CTA fires — both gate on a confirmed fetch. **But the spinner is the symptom, not the reason.**
-    // Fixing the spinner some other way does not make this removable; the floor would still be able to
-    // refuse a never-fetched process. (This also replaces the older "on a cold start the load state is
-    // Init, so the floor doesn't apply anyway", which stops being true once the timestamp is persisted.)
+    // Fixing the resulting spinner elsewhere would not make this removable: the floor would still be
+    // able to refuse a never-fetched process.
     const noConfirmedStatusThisProcess = state.proBackendData.details.lastFetchedMs === 0;
 
     // Single-flight (above) prevents *concurrent* fetches; the floor prevents *frequent* ones. They

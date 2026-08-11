@@ -281,24 +281,19 @@ function processProBackendData({
     ? !mockCancelled
     : (data?.autoRenewing ?? defaultProAccessDetailsSourceData.autoRenew);
 
-  // `expiry_ts` is the account's TRUE expiry — what the user has paid through — so it is the date to
-  // show, with no arithmetic. Coverage runs a little past it: the backend keeps serving until
-  // `expiry_ts + grace_period_duration` and judges `user_status` against that coverage end rather than
-  // against the expiry it reports. So the grace window — expired, still served — is `[E, E + grace)`.
+  // `expiry_ts` is the account's true expiry — what the user has paid through — so it is the date to
+  // show, with no arithmetic. Coverage runs past it: the backend serves until `expiry_ts +
+  // grace_period_duration` and judges `user_status` against that, so the grace window is `[E, E + grace)`.
   //
   // `grace_period_duration` here is the ACCOUNT-level field at the response root. `latestPayment` carries
-  // a field of the same name holding one store's raw declaration, which is NOT gated on auto-renewal — a
-  // subscriber who cancels mid-retry keeps a nonzero value there and reading it would place coverage
-  // weeks late. Root for "how much longer are we served", payment for "what did the store say".
+  // one of the same name holding a store's raw declaration, NOT gated on auto-renewal — a subscriber who
+  // cancels mid-retry keeps a nonzero value there, and reading it would place coverage weeks late.
   //
-  // No provider branching is needed and none should be added: the root value is 0 whenever the
-  // subscription isn't auto-renewing, so this is `E + 0 == E` for those accounts. Stores differ in
-  // whether they state grace separately or fold it into their own expiry, and a client treats what it
-  // receives as correct — a store that folds it in simply sends a later `E` and a window that never opens.
+  // The root value is 0 whenever the subscription isn't auto-renewing, so no provider branching is needed
+  // or wanted: a store that folds grace into its own expiry just sends a later `E`.
   //
-  // Both values here are already milliseconds (the response's own units). Core stores `G` in seconds and
-  // the nodejs wrapper converts, so anything reading grace from *config* rather than from a response is
-  // on the other side of that boundary — check which you have before adding.
+  // Both values are milliseconds here; core stores `G` in seconds and the wrapper converts, so grace read
+  // from *config* is on the other side of that boundary.
   const coverageEndMs = expiryTimeMs ? expiryTimeMs + (data?.gracePeriodDurationMs ?? 0) : 0;
 
   let inGracePeriod = mockInGracePeriod;

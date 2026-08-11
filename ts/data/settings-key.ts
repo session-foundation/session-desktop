@@ -94,18 +94,14 @@ export const SettingsKey = {
   proRevocationListNextRunAtMs: 'proRevocationListNextRunAtMs',
   proStatus: 'proStatus',
   /**
-   * When a get_pro_status request was last STARTED, number | undefined (ms since epoch, network
-   * time). Backs the 60s status-refresh floor, which exists to bound requests — a failing request
-   * costs the backend the same as a succeeding one, so this is stamped on attempt, not on success.
+   * When a get_pro_status request was last STARTED, number | undefined (ms since epoch, network time).
+   * Backs the 60s status-refresh floor. Stamped on attempt rather than success because a failing request
+   * costs the backend the same as a succeeding one, and persisted because the floor has to survive the
+   * process restart that the startup gate is about.
    *
-   * Persisted rather than kept in redux because the floor's whole job is to survive a process
-   * restart; an in-memory timestamp resets on every cold start, which is the exact path the startup
-   * gate is about.
-   *
-   * ⚠️ NOT interchangeable with redux `proBackendData.details.lastFetchedMs`, which is per-run and
-   * stamped on COMPLETION. Anything asking "have we confirmed our status (since X)" — the grace
-   * warning's debounce, the home CTA gate — must use that one. Using this key there would let a
-   * *failed* request satisfy the check and surface the false alarm the debounce exists to prevent.
+   * Not interchangeable with redux `proBackendData.details.lastFetchedMs`, which is per-run and stamped
+   * on COMPLETION. Anything asking "have we confirmed our status" must use that one — this key would let
+   * a *failed* request satisfy the check.
    */
   proStatusLastFetchAttemptMs: 'proStatusLastFetchAttemptMs',
   /**

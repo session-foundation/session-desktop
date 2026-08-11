@@ -262,16 +262,13 @@ function useKeepProStatusFresh({
     if (isLoading || isError || userHasExpiredPro || !autoRenew || !expiryTimeMs) {
       return undefined;
     }
-    // Trigger #4 is exempt from the status floor: it is a bounded poll with its own cadence and its
-    // own termination (the guard above), and its 60s interval would otherwise sit right on the 60s
-    // floor and be dropped about half the time.
+    // Floor-exempt because its 60s interval would otherwise sit exactly on the 60s floor and be dropped
+    // about half the time.
     //
-    // ⚠️ The exemption and the `!autoRenew` guard above are a PAIR — the guard is what makes this
-    // bounded, and being unfloored is what makes an unbounded version expensive. `!autoRenew` means no
-    // renewal is in flight, so there is nothing to poll for; without it a lapsed non-renewing
-    // subscription would poll the backend every 60s, floor-exempt, for as long as the page is open.
-    // Removing it becomes correct only if this poll stops being floor-exempt, or gains an independent
-    // upper bound on its lifetime. Not before.
+    // The exemption and the `autoRenew` guard above are a pair: the guard is what bounds this, and being
+    // unfloored is what makes an unbounded version expensive. Without it a lapsed non-renewing
+    // subscription polls every 60s, floor-exempt, for as long as the page is open. Removing the guard
+    // needs this poll to either lose the exemption or gain an independent lifetime bound.
     const fire = () =>
       window.inboxStore?.dispatch(
         proBackendDataActions.refreshGetProStatusFromProBackend({ immediate: true }) as any

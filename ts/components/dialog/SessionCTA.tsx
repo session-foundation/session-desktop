@@ -489,13 +489,11 @@ export const useShowSessionCTACbWithVariant = () => {
 /**
  * Whether *this process* holds a `get_pro_status` it confirmed itself.
  *
- * `details.lastFetchedMs` is per-run (0 until a fetch completes) and is stamped on completion, so it
- * is the honest answer to "may we act on the Pro status we hold". Read straight off the store rather
- * than threaded in as a parameter, so a new call site cannot inherit an answer by copying a
- * neighbour — which is how the two unguarded callers below came about.
+ * `details.lastFetchedMs` is per-run and stamped on completion, so it answers "may we act on the Pro
+ * status we hold". Read off the store rather than threaded in as a parameter, so a new call site cannot
+ * inherit an answer by copying a neighbour.
  *
- * Deliberately not read via the proBackendData selectors: they import the duck, and the duck imports
- * this module.
+ * Not read via the proBackendData selectors: they import the duck, and the duck imports this module.
  */
 function haveConfirmedProStatusThisProcess(): boolean {
   const lastFetchedMs = (window.inboxStore?.getState() as StateType | undefined)?.proBackendData
@@ -504,14 +502,10 @@ function haveConfirmedProStatusThisProcess(): boolean {
 }
 
 export async function handleTriggeredCTAs(dispatch: Dispatch<any>, fromAppStart: boolean) {
-  // The Pro CTAs must never fire off an unconfirmed status. The flags are persisted, so a previous
-  // run's "expired" verdict outlives the entitlement it described, and showing it after an
-  // out-of-band renewal is the false-expired case this guard exists to prevent.
-  //
-  // This was `if (fromAppStart) return`, which worked only because startup fetched unconditionally —
-  // every non-startup caller was therefore guaranteed that a fetch had happened or was in flight.
-  // Gating the startup fetch removed that guarantee, leaving openConversationWithMessages and the
-  // settings-modal close able to display a stale flag with nothing confirming it this session.
+  // The Pro CTAs must never fire off an unconfirmed status: the flags are persisted, so a previous run's
+  // "expired" verdict outlives the entitlement it described, and showing it after an out-of-band renewal
+  // is the false-expired case this guard prevents. Every caller needs it — a status confirmed this
+  // session is not implied by having reached any particular entry point.
   //
   // `fromAppStart` is still needed below, where it *enables* the donate CTA rather than suppressing a
   // Pro one. Those are different questions and must not be collapsed into one flag.

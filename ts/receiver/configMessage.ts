@@ -144,13 +144,11 @@ async function mergeUserConfigsWithIncomingUpdates(
       // the GenericWrapperActions
       switch (variant) {
         case 'UserConfig': {
-          // Trigger #2 watches BOTH the access expiry (`E`) and the prepaid marker (`I`). `I` matters
-          // on its own: another device's purchase syncs a prepaid marker without `E` having moved
-          // yet, and that is exactly the moment we want to re-read our status.
-          //
-          // Deliberately NOT watching `auto_renewing` (`A`): a change there re-derives the display
-          // from the synced value we just received, and fetching to confirm what we were told would
-          // be a pointless round trip.
+          // Watches both the access expiry (`E`) and the prepaid marker (`I`). `I` matters on its own:
+          // another device's purchase syncs a prepaid marker before `E` moves, which is exactly when we
+          // want to re-read our status. `auto_renewing` is deliberately not watched — a change there
+          // re-derives the display from the value we just received, so fetching would confirm what we
+          // were already told.
           //
           // Note: those `?? 0` is here because android sets it to 0 even if it should be unset.
           const proAccessExpiryBefore = (await UserConfigWrapperActions.getProAccessExpiry()) ?? 0;
