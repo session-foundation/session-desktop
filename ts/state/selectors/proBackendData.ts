@@ -281,33 +281,38 @@ function processProBackendData({
     ? !mockCancelled
     : (data?.autoRenewing ?? defaultProAccessDetailsSourceData.autoRenew);
 
-  // `expiry_ts` is COVERAGE END, not the date the renewal is due: the backend folds the grace period
-  // into the stored expiry for auto-renewing subscriptions (`_lookup_user_expiry` -> `best_expiry`) and
-  // judges `user_status` against that same value. So the renewal falls due at `E - grace`, and the grace
-  // window — renewal overdue, account still covered — is `E - grace <= now < E`.
+  // `expiry_ts` is the account's TRUE expiry — what the user has paid through — so it is the date to
+  // show, with no arithmetic. Coverage runs a little past it: the backend keeps serving until
+  // `expiry_ts + grace_period_duration` and judges `user_status` against that coverage end rather than
+  // against the expiry it reports. So the grace window — expired, still served — is `[E, E + grace)`.
   //
-  // The subtraction is unconditional and needs no provider branching: the wire sends `grace = 0`
-  // whenever the subscription isn't auto-renewing, so this is `E - 0 == E` for those accounts.
+  // `grace_period_duration` here is the ACCOUNT-level field at the response root. `latestPayment` carries
+  // a field of the same name holding one store's raw declaration, which is NOT gated on auto-renewal — a
+  // subscriber who cancels mid-retry keeps a nonzero value there and reading it would place coverage
+  // weeks late. Root for "how much longer are we served", payment for "what did the store say".
+  //
+  // No provider branching is needed and none should be added: the root value is 0 whenever the
+  // subscription isn't auto-renewing, so this is `E + 0 == E` for those accounts. Stores differ in
+  // whether they state grace separately or fold it into their own expiry, and a client treats what it
+  // receives as correct — a store that folds it in simply sends a later `E` and a window that never opens.
   //
   // Both values here are already milliseconds (the response's own units). Core stores `G` in seconds and
   // the nodejs wrapper converts, so anything reading grace from *config* rather than from a response is
-  // on the other side of that boundary — check which you have before subtracting.
-  const renewalDueAtMs = data ? data.expiryMs - data.gracePeriodDurationMs : 0;
-  // Kept under its original name because it is threaded into the display strings below.
-  const beginAutoRenew = renewalDueAtMs;
+  // on the other side of that boundary — check which you have before adding.
+  const coverageEndMs = expiryTimeMs ? expiryTimeMs + (data?.gracePeriodDurationMs ?? 0) : 0;
 
   let inGracePeriod = mockInGracePeriod;
-  if (beginAutoRenew && !mockInGracePeriod) {
-    // Past the renewal date but still covered. Keyed on `renewalDueAtMs`, not on `expiryTimeMs`: the
-    // latter is coverage end, and `now >= E` inside a branch that requires `now <= E` is satisfiable
-    // only at a single instant — which is why this indicator was previously unreachable and nothing
-    // surfaced an overdue renewal at all.
+  if (expiryTimeMs && !mockInGracePeriod) {
+    // Past the expiry but still covered. The upper bound is coverage end, not the expiry: `now >= E`
+    // and `now < E` cannot both hold, so bounding this by `E` would make the indicator unreachable.
+    // When grace is 0 the window is empty by construction, which is correct — an account with no grace
+    // has no overdue-but-covered state to show.
     //
     // The `lastFetchedMs` term is the debounce: only surface "renewal unsuccessful" off a fetch that
     // COMPLETED at or after the crossing, never off a snapshot predating a renewal that may since have
     // landed. It is per-run and stamped on completion, so a request still in flight cannot satisfy it.
     inGracePeriod =
-      autoRenew && now >= renewalDueAtMs && now < expiryTimeMs && lastFetchedMs >= renewalDueAtMs;
+      autoRenew && now >= expiryTimeMs && now < coverageEndMs && lastFetchedMs >= expiryTimeMs;
   }
 
   // Refund-requested is now a synced config flag (UserProfile key R), not a backend response field.
@@ -330,10 +335,10 @@ function processProBackendData({
       variantString,
       expiryTimeMs,
       expiryTimeDateString: formatDateWithLocale({
-        date: new Date(beginAutoRenew),
+        date: new Date(expiryTimeMs),
         formatStr: 'MMM d, yyyy',
       }),
-      expiryTimeRelativeString: formatRoundedUpTimeUntilTimestamp(beginAutoRenew),
+      expiryTimeRelativeString: formatRoundedUpTimeUntilTimestamp(expiryTimeMs),
       isPlatformRefundAvailable,
       provider,
       providerConstants: getProProviderConstantsWithFallbacks(provider),

@@ -35,7 +35,7 @@ type RequestState<D = unknown> = {
   //
   // Per-run and completion-stamped, which makes it the answer to "has this process confirmed our
   // status (since some threshold)": the floor's never-confirmed-this-process exemption, the home Pro
-  // CTA gate, and the grace warning's `lastFetchedMs >= renewalDueAtMs` debounce all read it.
+  // CTA gate, and the grace warning's `lastFetchedMs >= E` debounce all read it.
   //
   // ⚠️ Do NOT substitute SettingsKey.proStatusLastFetchAttemptMs for any of those. That one is
   // persisted and stamped on *attempt*, because it backs the 60s floor, whose job is to bound
@@ -255,7 +255,7 @@ async function applyProofOutcome(
     // `A` and `G` ride along, so every path that writes `E` writes all three from the same response.
     // This path used to write `E` alone, with two consequences: an account whose expiry came only from a
     // proof read back as terminal while it was in fact renewing (`A` is presence-only, so unwritten and
-    // false are the same bit), and `E - G` could pair a fresh expiry with a grace learned in a different
+    // false are the same bit), and `E + G` could pair a fresh expiry with a grace learned in a different
     // billing period.
     //
     // ⚠️ These writes belong INSIDE the success branch and must stay there. `accountAutoRenewing` and
@@ -322,7 +322,7 @@ async function handleClearProProof() {
  * Minimum gap between *routine* status fetches. Drop-on-fresh — see statusFetchIsFloored.
  *
  * ⚠️ A SCHEDULED WAKE DEPENDS ON THIS NOT BEING CROSSED. `scheduleUserExpiryStatusWake` arms two
- * instants `G` apart — the renewal date and coverage end — and both emit through the *floored* path, not
+ * instants `G` apart — the expiry and coverage end — and both emit through the *floored* path, not
  * the `immediate` one. So when `G < STATUS_FLOOR_MS` the second wake fires and its fetch is dropped.
  *
  * In production `G` is at least an hour, so this cannot happen. It happens on a **compressed testing
@@ -423,10 +423,10 @@ let userExpiryWakeIds: Array<ReturnType<typeof setTimeout>> = [];
  * Schedule the background status refreshes around the end of a billing period.
  *
  * This is the background half of surfacing grace. The Pro page refetches across the crossing while it is
- * open, but that is screen-scoped: with the page closed nothing would re-check between the renewal date
- * and the proof loop's own wake, so a renewal that failed would surface only in that final hour.
+ * open, but that is screen-scoped: with the page closed nothing would re-check between the expiry and
+ * the proof loop's own wake, so a renewal that failed would surface only in that final hour.
  *
- * Two instants, at `(E - G) + 30s` and `E + 30s`, collapsing to one when `G` is zero. The second is not
+ * Two instants, at `E + 30s` and `(E + G) + 30s`, collapsing to one when `G` is zero. The second is not
  * redundant: the proof loop does wake near `E` by construction (the backend issues `proof_expiry` ~1h
  * past `E`, and `pro_renewal_target` is ~1h before proof expiry), and a proof outcome now writes
  * `E`/`A`/`G`, which fires the config-change trigger. But that chain is gated on `E` actually changing —
@@ -461,18 +461,18 @@ export async function scheduleUserExpiryStatusWake(): Promise<void> {
     return;
   }
   const gracePeriodMs = await UserConfigWrapperActions.getProGracePeriod();
-  const renewalDueAtMs = accessExpiryMs - gracePeriodMs;
+  const coverageEndMs = accessExpiryMs + gracePeriodMs;
 
   // Two instants, because two distinct transitions matter and neither implies the other:
   //
-  //   renewal due (E - G)   did the charge succeed, or has it silently failed?
-  //   coverage end (E)      did grace run out without a recovery?
+  //   expiry (E)              did the charge succeed, or has it silently failed?
+  //   coverage end (E + G)    did grace run out without a recovery?
   //
   // Only one when `G` is zero, which is every non-auto-renewing account: the two collapse to the same
   // moment and scheduling both would just double the fetch.
-  const wakeAtMs = [renewalDueAtMs];
-  if (accessExpiryMs !== renewalDueAtMs) {
-    wakeAtMs.push(accessExpiryMs);
+  const wakeAtMs = [accessExpiryMs];
+  if (coverageEndMs !== accessExpiryMs) {
+    wakeAtMs.push(coverageEndMs);
   }
 
   const now = NetworkTime.now();
@@ -504,15 +504,18 @@ export async function scheduleUserExpiryStatusWake(): Promise<void> {
  * every launch (which is what Desktop did, and what hammers the backend for every non-Pro and every
  * comfortably-active user), decide from synced config whether a CTA could plausibly fire.
  *
- * The architect's rule, which REPLACES the spec's `E + grace <= now` test — `grace` isn't knowable
- * until you are already in it, and libsession PR #121 adds `auto_renewing` only, so there is no
- * `grace` in config to test against:
+ * The rule, keyed on `E` (the paid-through expiry) and never on coverage end:
  *
  *   auto_renewing && now <  E                     -> comfortably active, no fetch
- *   auto_renewing && now >= E                     -> in/near grace, unknowable, FETCH and learn
- *                                                    `grace` from the response
+ *   auto_renewing && now >= E                     -> in grace or past it, unknowable from config,
+ *                                                    FETCH and learn which from the response
  *   !auto_renewing && E within the CTA window     -> expiring, fetch / CTA
  *   !auto_renewing && now >= E                    -> expired, confirm-fetch before the Expired CTA
+ *
+ * `G` is in config and this gate still doesn't consult it, deliberately: coverage ends at `E + G`, but
+ * grace and post-coverage both resolve to "fetch", so testing the later boundary would only delay the
+ * first fetch without changing any outcome. Nothing here needs to know how long grace runs — only that
+ * the paid term has ended.
  *
  * Capped either way at one cold-start fetch per STATUS_STARTUP_MIN_INTERVAL_MS.
  */
@@ -534,15 +537,12 @@ async function coldStartShouldFetchProStatus(): Promise<boolean> {
   const autoRenewing = await getProAutoRenewingFromConfig();
 
   if (autoRenewing) {
-    // `E` is coverage end, not the renewal date — the backend folds grace into the stored expiry for
-    // auto-renewing subscriptions. So the renewal falls due at `E - G`, and comparing against `E`
-    // itself would sleep through the entire grace window: exactly the state this gate exists to
-    // surface. Fetch from the renewal date onward.
-    //
-    // `G` is synced alongside `E` precisely so a config-only caller like this one can compute it. Both
-    // are milliseconds here; core stores `G` in seconds and the nodejs wrapper converts.
-    const gracePeriodMs = await UserConfigWrapperActions.getProGracePeriod();
-    return now >= accessExpiryMs - gracePeriodMs;
+    // `E` is the account's true expiry — what has been paid for. Past it the renewal has either landed
+    // (and `E` should have moved) or it hasn't, and config alone cannot tell which, so fetch and find
+    // out. `G` is deliberately NOT read here: coverage ends at `E + G`, but both sides of that
+    // boundary want a fetch — inside grace to surface "renewal unsuccessful", past it to surface
+    // Expired — so the only instant that changes the answer is `E` itself.
+    return now >= accessExpiryMs;
   }
 
   // Not auto-renewing. Expiring inside the CTA window, or already past `E` (where the fetch is the
