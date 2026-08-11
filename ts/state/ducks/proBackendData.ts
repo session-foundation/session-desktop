@@ -42,9 +42,9 @@ type RequestState<D = unknown> = {
   // requests rather than to confirm anything. Similar names, opposite meanings.
   //
   // ⚠️ This field looks redundant next to the persisted one and is not. Deleting it as "subsumed by
-  // the floor" was tried and would have shipped a permanent spinner on the Pro screen: a relaunch
-  // inside 60s hits the floor, the fetch is dropped, and nothing is left to resolve the initial
-  // loading state — which both the spinner and the CTAs gate on.
+  // the floor" ships a permanent spinner on the Pro screen: a relaunch inside 60s hits the floor, the
+  // fetch is dropped, and nothing is left to resolve the initial loading state — which both the spinner
+  // and the CTAs gate on.
   //
   // WHEN DELETING IT BECOMES CORRECT, so this is a test rather than a prohibition: when no consumer
   // needs a *this-process* confirmation any more. Concretely, all three of —
@@ -109,8 +109,8 @@ export type WithCallerContext = { callerContext?: 'recover' };
 /**
  * `immediate` means one thing only: bypass the status floor. It does NOT bypass the
  * single-flight guard and it does NOT touch the loading state — spinner UI is a separate concern
- * (trigger #3). Named `immediate` rather than `force` on purpose: `force` invited every routine
- * background trigger to pass it, which is how Android's 60s floor ended up dead.
+ * (trigger #3). The name is load-bearing: a permissive one like `force` reads as something any
+ * routine background trigger may pass, and a floor that every caller bypasses is dead code.
  *
  * Sanctioned callers, and no others:
  *   #5 manual refresh / recover  — implied by `callerContext: 'recover'`, so a future recover caller
@@ -252,11 +252,11 @@ async function applyProofOutcome(
     // Refresh cached access-expiry from the advisory account_expiry (decoupled from the proof guard,
     // so a mid-period horizon extension is still picked up). Guaranteed present on a success parse.
     //
-    // `A` and `G` ride along, so every path that writes `E` writes all three from the same response.
-    // This path used to write `E` alone, with two consequences: an account whose expiry came only from a
-    // proof read back as terminal while it was in fact renewing (`A` is presence-only, so unwritten and
-    // false are the same bit), and `E + G` could pair a fresh expiry with a grace learned in a different
-    // billing period.
+    // `A` and `G` ride along, and must: every path that writes `E` writes all three from the same
+    // response. Writing `E` alone breaks two things — an account whose expiry came only from a proof
+    // reads back as terminal while it is in fact renewing (`A` is presence-only, so unwritten and false
+    // are the same bit), and `E + G` pairs a fresh expiry with a grace learned in a different billing
+    // period.
     //
     // ⚠️ These writes belong INSIDE the success branch and must stay there. `accountAutoRenewing` and
     // `accountGracePeriodMs` are non-null because core requires them on a successful parse — a response
@@ -315,8 +315,9 @@ async function handleClearProProof() {
 }
 
 // ===== get_pro_status refresh discipline =====
-// These are a deliberate cross-client contract: Android and iOS name the same values so
-// nobody tunes one platform in isolation. Change them here and the other two clients are wrong.
+// Named rather than inlined because these are a cross-client contract, not local tuning: the same
+// quantities carry the same names on the other clients so that one platform cannot be retuned in
+// isolation. A change here needs the same change there, or the clients disagree about the same instant.
 
 /**
  * Minimum gap between *routine* status fetches. Drop-on-fresh — see statusFetchIsFloored.
@@ -330,10 +331,9 @@ async function handleClearProProof() {
  * its whole proof/renewal clock for compressed runs while this client-side constant does not participate
  * in that compression.
  *
- * **The sanctioned escape hatch is an env-var override of this constant, owned by the Pro UI-test work
- * and deliberately not built here.** If you are adding it, this is the value to hook, and note the
- * second wake is unlikely to be the only casualty — any client interval shorter than the compressed
- * equivalent has the same property.
+ * **The sanctioned escape hatch is an env-var override of this constant**, and this is the value to
+ * hook if you are adding one. Note the second wake is unlikely to be the only casualty: any client
+ * interval shorter than its compressed equivalent has the same property.
  */
 const STATUS_FLOOR_MS = 60 * DURATION.SECONDS;
 /** Cold-start fetches are additionally capped to one per this interval, by the startup gate. */
@@ -446,8 +446,8 @@ let userExpiryWakeIds: Array<ReturnType<typeof setTimeout>> = [];
  * Production `G` is at least an hour, so this is a test-environment property, not a wake defect. The
  * Google test provider sets grace to ~10s and the backend scales its whole clock for compressed runs;
  * this client's fixed floor doesn't. **An env-var override of `STATUS_FLOOR_MS` is the sanctioned escape
- * hatch, owned by the Pro UI-test work and deliberately not built here** — so don't "fix" it in the
- * client, and don't make this wake `immediate` to work around it.
+ * hatch** — so don't "fix" it by shortening the floor, and don't make this wake `immediate` to work
+ * around it.
  */
 export async function scheduleUserExpiryStatusWake(): Promise<void> {
   // Always clear before re-deriving. This function is called on startup and after every successful
@@ -500,9 +500,9 @@ export async function scheduleUserExpiryStatusWake(): Promise<void> {
  * Whether a *cold start* is allowed to fetch `get_pro_status`.
  *
  * Startup's only real consumer is the home CTAs — entitlement comes from the proof, the settings
- * screen refreshes on open, and account-expiry awareness is trigger #6. So instead of fetching on
- * every launch (which is what Desktop did, and what hammers the backend for every non-Pro and every
- * comfortably-active user), decide from synced config whether a CTA could plausibly fire.
+ * screen refreshes on open, and account-expiry awareness is trigger #6. Fetching on every launch would
+ * hit the backend for every non-Pro and every comfortably-active user to learn nothing, so decide from
+ * synced config whether a CTA could plausibly fire at all.
  *
  * The rule, keyed on `E` (the paid-through expiry) and never on coverage end:
  *
@@ -557,20 +557,20 @@ async function coldStartShouldFetchProStatus(): Promise<boolean> {
  * `A` is presence-only in core: `set_pro_auto_renewing` uses `set_nonzero_int`, so writing false erases
  * the key and the getter returns false for both "not auto-renewing" and "never written".
  *
- * That ambiguity used to matter, because the proof-success path wrote `E` without `A` — so an account
- * whose `E` came only from a proof read back as terminal while it was in fact renewing. The backend now
- * sends `account_auto_renewing` on the proof response and we write `A` from it there too, so every path
- * that writes `E` also writes `A`. Absent therefore genuinely means not-renewing, and the gate's
- * `!auto_renewing` rows are correct as written.
+ * ⚠️ That ambiguity is harmless only because every path that writes `E` also writes `A`, from the same
+ * response — the status fetch and the proof outcome both do. Absent therefore means not-renewing rather
+ * than unknown, which is what makes the gate's `!auto_renewing` rows sound. A new writer of `E` that
+ * carries no renewing flag would silently reintroduce it: an account renewing under an `E` that came
+ * from that path reads back as terminal.
  */
 async function getProAutoRenewingFromConfig(): Promise<boolean> {
   // `A` cannot outlive the `E` it describes: libsession erases `A` and `G` alongside `E` whenever the
   // expiry is cleared, so a renewing flag with no expiry beside it is not a reachable state. Every
   // caller that clears `E` is handling an account with no entitlement, and none of those is renewing.
   //
-  // The gate reads `E` before calling this, but for its own reason — no expiry means nothing a CTA
-  // could be about — rather than to guard against a stale flag. That guard used to be what held the
-  // invariant up; it no longer is.
+  // ⚠️ The gate happens to read `E` before calling this, but for its own reason — no expiry means
+  // nothing a CTA could be about — so do not read that ordering as the thing upholding the invariant
+  // above. A caller that reads `A` without checking `E` first is equally correct.
   return UserConfigWrapperActions.getProAutoRenewing();
 }
 
@@ -592,8 +592,8 @@ async function writeProAutoRenewingToConfig(autoRenewing: boolean): Promise<void
 }
 
 /**
- * The gated cold-start status refresh (trigger #1). Replaces the unconditional dispatch that used to
- * sit in startup.ts, and arms #6 for this session either way.
+ * The gated cold-start status refresh (trigger #1). Arms #6 for this session whether or not the gate
+ * allows the fetch.
  */
 export async function refreshProStatusOnStartupIfNeeded(): Promise<void> {
   void scheduleUserExpiryStatusWake();
@@ -772,7 +772,7 @@ const fetchGetProStatusFromProBackend = createAsyncThunk(
         // without reconciling, every trigger for the next 60s would be floored and skip its reconcile
         // as well; and when the proof loop is dormant (`pro_renewal_target` null) it has no wake of its
         // own, so a nudge it misses is LOST, not delayed. Moving this inside a data guard as a tidy-up
-        // ("why reconcile when we got nothing back?") is exactly how iOS acquired that bug.
+        // ("why reconcile when we got nothing back?") is what reintroduces it.
         void reconcileProProof();
         return state;
       },
@@ -874,8 +874,8 @@ const refreshGetProStatusFromProBackend = createAsyncThunk(
       // Desktop does not currently need this — the trailing reconcile in the fetch callback runs even
       // on a failed fetch, so nothing arms the floor without reconciling first. But that safety is an
       // invariant a reader has to hold two facts to see, and one plausible tidy-up from breaking (see
-      // the note on that call). Reconciling here makes the coverage unconditional instead, matching
-      // iOS. It costs no network: the reconcile is local and separately paced by COVERED_MS/DARK_*.
+      // the note on that call). Reconciling here makes that coverage unconditional rather than
+      // inferred. It costs no network: the reconcile is local and separately paced by COVERED_MS/DARK_*.
       void reconcileProProof();
       return;
     }

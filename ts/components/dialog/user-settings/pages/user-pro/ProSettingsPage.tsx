@@ -270,7 +270,6 @@ function useKeepProStatusFresh({
     // bounded, and being unfloored is what makes an unbounded version expensive. `!autoRenew` means no
     // renewal is in flight, so there is nothing to poll for; without it a lapsed non-renewing
     // subscription would poll the backend every 60s, floor-exempt, for as long as the page is open.
-    // iOS shipped exactly that (no guard, no coverage bound) and is adding this guard to match.
     // Removing it becomes correct only if this poll stops being floor-exempt, or gains an independent
     // upper bound on its lifetime. Not before.
     const fire = () =>

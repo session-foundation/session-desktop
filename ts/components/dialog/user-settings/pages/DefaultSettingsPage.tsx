@@ -341,10 +341,9 @@ export const DefaultSettingPage = (modalState: UserSettingsModalState) => {
   useMount(() => {
     // Trigger #3: opportunistic refresh when opening the settings, floored (cached-if-fresh).
     //
-    // This used to carry its own once-a-minute throttle off `details.lastFetchedMs`. That value is
-    // per-run — 0 again after every restart — so the throttle was defeated by relaunching, which on
-    // a desktop app is often. The status floor is the same 60s but persisted, so it subsumes this
-    // check; keeping both would just be two throttles disagreeing about the same question.
+    // Unthrottled on purpose: the status floor owns the 60s bound, and it is persisted, so it holds
+    // across the relaunches that a per-run throttle here would be defeated by. A second throttle would
+    // only give two answers to the same question.
     void refetch();
   });
 

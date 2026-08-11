@@ -146,8 +146,7 @@ async function mergeUserConfigsWithIncomingUpdates(
         case 'UserConfig': {
           // Trigger #2 watches BOTH the access expiry (`E`) and the prepaid marker (`I`). `I` matters
           // on its own: another device's purchase syncs a prepaid marker without `E` having moved
-          // yet, and that is exactly the moment we want to re-read our status. Android has always
-          // watched the pair; Desktop watched `E` alone.
+          // yet, and that is exactly the moment we want to re-read our status.
           //
           // Deliberately NOT watching `auto_renewing` (`A`): a change there re-derives the display
           // from the synced value we just received, and fetching to confirm what we were told would
@@ -173,10 +172,10 @@ async function mergeUserConfigsWithIncomingUpdates(
           }
 
           if (accessExpiryChanged) {
-            // The `E`-changed proof nudge, called directly rather than relied upon as a side effect
-            // of the status fetch above. It used to arrive that way (every completed fetch ends with
-            // a reconcile), but the status refresh is now floored and a dropped fetch never reaches
-            // that callback — so the nudge has to be independent of whether the fetch ran.
+            // The `E`-changed proof nudge, called directly rather than left to the status fetch above
+            // as a side effect. Every completed fetch does end with a reconcile, but that fetch is
+            // floored and a dropped one never reaches its callback, so the nudge has to hold whether or
+            // not the fetch ran.
             //
             // It is the one edge from config to the proof loop, and it is load-bearing: if the
             // account had lapsed and the proof expired, `pro_renewal_target` returns nothing and the
