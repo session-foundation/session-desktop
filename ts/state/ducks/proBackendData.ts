@@ -710,8 +710,16 @@ const fetchGetProStatusFromProBackend = createAsyncThunk(
               // Keep the cached access-expiry (E) fresh from the account horizon (catches a
               // horizon-only change the renewal path wouldn't). The proof itself is (re)obtained by
               // the reconcile loop, triggered below.
+              //
+              // All three are written from the SAME response, which is the only way they are jointly
+              // meaningful: `E + G` is coverage end, so a fresh `E` beside a `G` left over from an
+              // earlier subscription state describes an instant that was never true. `G` is the
+              // ACCOUNT-level `gracePeriodDurationMs` at the response root — not `latestPayment`'s
+              // field of the same name, which is one store's raw declaration and is not gated on
+              // auto-renewal.
               await UserConfigWrapperActions.setProAccessExpiry(state.data.expiryMs);
               await writeProAutoRenewingToConfig(state.data.autoRenewing);
+              await UserConfigWrapperActions.setProGracePeriod(state.data.gracePeriodDurationMs);
               break;
 
             case ProStatus.Never:
