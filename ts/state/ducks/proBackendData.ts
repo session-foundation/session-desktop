@@ -264,6 +264,15 @@ async function applyProofOutcome(
       if (!haveValidProof()) {
         await UserConfigWrapperActions.removeProConfig();
         await UserConfigWrapperActions.setProAccessExpiry(null);
+        // Entitlement ended, and nothing observes that: the config watch that would refresh our status
+        // runs on incoming merges, so a local write reaches no one. The Expired CTA needs a status fetch
+        // to be raised at all — it is written by one — and the clear above leaves the cold-start gate
+        // without a horizon to decide from, so this is the only edge from "we just lapsed" to "find out
+        // what to show". Floored like every routine trigger: when a status fetch has just run, this is
+        // dropped, which is right — that fetch already had the chance to raise it.
+        window.inboxStore?.dispatch(
+          proBackendDataActions.refreshGetProStatusFromProBackend({}) as any
+        );
       }
       break;
     case 'not_subscribed':
