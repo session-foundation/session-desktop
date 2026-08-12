@@ -470,6 +470,10 @@ export const MetaGroupWrapperActions: MetaGroupWrapperActionsCalls = {
     callLibSessionWorker([`MetaGroupConfig-${groupPk}`, 'push']) as Promise<
       ReturnType<MetaGroupWrapperActionsCalls['push']>
     >,
+  pushForRecovery: async (groupPk: GroupPubkeyType) =>
+    callLibSessionWorker([`MetaGroupConfig-${groupPk}`, 'pushForRecovery']) as Promise<
+      ReturnType<MetaGroupWrapperActionsCalls['pushForRecovery']>
+    >,
   needsDump: async (groupPk: GroupPubkeyType) =>
     callLibSessionWorker([`MetaGroupConfig-${groupPk}`, 'needsDump']) as Promise<
       ReturnType<MetaGroupWrapperActionsCalls['needsDump']>
@@ -641,6 +645,10 @@ export const MetaGroupWrapperActions: MetaGroupWrapperActionsCalls = {
   activeHashes: async (groupPk: GroupPubkeyType) =>
     callLibSessionWorker([`MetaGroupConfig-${groupPk}`, 'activeHashes']) as Promise<
       ReturnType<MetaGroupWrapperActionsCalls['activeHashes']>
+    >,
+  activeHashesByConfig: async (groupPk: GroupPubkeyType) =>
+    callLibSessionWorker([`MetaGroupConfig-${groupPk}`, 'activeHashesByConfig']) as Promise<
+      ReturnType<MetaGroupWrapperActionsCalls['activeHashesByConfig']>
     >,
   loadKeyMessage: async (
     groupPk: GroupPubkeyType,
