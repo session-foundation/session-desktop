@@ -255,12 +255,15 @@ async function applyProofOutcome(
   // Non-ok: the machine slug (error_code) decides.
   switch (response.errorCode) {
     case 'subscription_expired':
-      // The sub genuinely lapsed. Don't wipe a fresh proof a re-subscribe just landed.
+      // Lapsed, so not entitled — the same conclusion as the two outcomes below, and cleared the same
+      // way. A past expiry left in config has nothing left to compute: every window here is derived
+      // from `E`, and a lapse changes the grace and the renewing flag while typically leaving `E`
+      // itself alone, so refreshing only `E` would pair it with a grace the backend has stopped
+      // honouring. Clearing erases `A` and `G` alongside it instead, leaving absent keys rather than
+      // stored zeroes. Don't wipe a fresh proof a re-subscribe just landed.
       if (!haveValidProof()) {
-        if (response.accountExpiryMs !== null) {
-          await UserConfigWrapperActions.setProAccessExpiry(response.accountExpiryMs);
-        }
         await UserConfigWrapperActions.removeProConfig();
+        await UserConfigWrapperActions.setProAccessExpiry(null);
       }
       break;
     case 'not_subscribed':
@@ -483,17 +486,21 @@ export async function scheduleUserExpiryStatusWake(): Promise<void> {
  * Capped either way at one cold-start fetch per STATUS_STARTUP_MIN_INTERVAL_MS.
  */
 async function coldStartShouldFetchProStatus(): Promise<boolean> {
-  const accessExpiryMs = await UserConfigWrapperActions.getProAccessExpiry();
-  if (!accessExpiryMs) {
-    // Never had Pro (or `E` was cleared by an outcome that ended entitlement): nothing a CTA could
-    // be about, and the proof loop owns re-entry. This is the bulk of the load the gate removes.
-    return false;
-  }
-
+  // The interval cap comes first so that it bounds every row below it, including the no-expiry row, which
+  // is keyed on a stored flag rather than on a horizon and would otherwise fetch on every single launch.
   const lastStartupFetchMs =
     (Storage.get(SettingsKey.proStatusLastStartupFetchMs) as number | undefined) ?? 0;
   if (NetworkTime.now() < lastStartupFetchMs + STATUS_STARTUP_MIN_INTERVAL_MS) {
     return false;
+  }
+
+  const accessExpiryMs = await UserConfigWrapperActions.getProAccessExpiry();
+  if (!accessExpiryMs) {
+    // No expiry in config: Pro was never held, or an outcome that ended entitlement cleared it. There is
+    // no window left to compute — every bound below is derived from `E` — so the only thing that can still
+    // want a fetch is an Expired CTA already latched by an earlier fetch. It gates on a status confirmed in
+    // *this* process, so without a fetch here it can never be shown and the flag would sit set forever.
+    return !isUndefined(Storage.get(SettingsKey.proExpiredCTA));
   }
 
   const now = NetworkTime.now();
@@ -533,9 +540,10 @@ async function coldStartShouldFetchProStatus(): Promise<boolean> {
  * `A` is presence-only in core: `set_pro_auto_renewing` uses `set_nonzero_int`, so writing false erases
  * the key and the getter returns false for both "not auto-renewing" and "never written".
  *
- * Harmless only while every path that writes `E` also writes `A` from the same response, and every reader
- * establishes `E` first — an `A` left by an earlier subscription otherwise reads as renewing with no
- * expiry to renew. A new writer or reader has to keep both.
+ * That ambiguity is harmless because an `A` without an `E` beside it is not reachable here: the only two
+ * paths that write `E` — the status fetch and a successful proof — write `A` from the same response, and
+ * every outcome that ends entitlement *clears* `E`, which erases `A` and `G` with it. A new writer of `E`
+ * has to carry the renewing flag, or that stops being true.
  */
 async function getProAutoRenewingFromConfig(): Promise<boolean> {
   return UserConfigWrapperActions.getProAutoRenewing();
