@@ -1,8 +1,10 @@
 import { isEmpty } from 'lodash';
 import { isTestIntegration, isTestNet } from '../../../shared/env_vars';
-import type {
-  SessionBooleanFeatureFlags,
-  SessionDataFeatureFlags,
+import { ProStatus } from '../../../session/apis/pro_backend_api/types';
+import {
+  MockProAccessExpiryOptions,
+  type SessionBooleanFeatureFlags,
+  type SessionDataFeatureFlags,
 } from './releasedFeaturesReduxTypes';
 
 export const defaultProBooleanFeatureFlags = {
@@ -70,20 +72,95 @@ function getMockNetworkPageNodeCount() {
   }
 }
 
+/**
+ * An unrecognised value for a mock env var must not degrade to "no override". A typo would then
+ * surface as a failed assertion about the app, several steps from its cause, rather than as a
+ * setup error — so these throw.
+ */
+function invalidMockEnvVar(name: string, value: string, allowed: Array<string>): never {
+  const message = `${name}: "${value}" is not one of ${allowed.join(' | ')}`;
+  // eslint-disable-next-line no-console
+  console.error(message);
+  window?.log?.error(message);
+  throw new Error(message);
+}
+
+/**
+ * The Pro status the app should project, from the environment.
+ *
+ * The slugs are libsession's own (`ProStatus`) plus `useactual`, which is the shared vocabulary the
+ * iOS and Android harnesses also take, so one value in a cross-platform test config drives all
+ * three clients. `useactual` is spelled out rather than left to an unset variable so a config can
+ * say "no override" explicitly.
+ *
+ * Note for whoever maps the shared `active` token onto Desktop: on all three clients `active` means
+ * active *and not auto-renewing*, so the harness must pass SESSION_USER_HAS_PRO_CANCELLED alongside
+ * this. Deliberately not coupled here — this flag projects the status and nothing else, and having
+ * it silently move autoRenew would surprise every non-test reader of `mockProCurrentStatus`.
+ */
+function getMockProCurrentStatus(): ProStatus | null {
+  const envVar = process.env.SESSION_PRO_CURRENT_STATUS?.trim();
+  if (!envVar) {
+    return null;
+  }
+  const known = [ProStatus.Never, ProStatus.Active, ProStatus.Expired] as Array<ProStatus>;
+  if (known.includes(envVar)) {
+    return envVar;
+  }
+  if (envVar === 'useactual') {
+    return null;
+  }
+  return invalidMockEnvVar('SESSION_PRO_CURRENT_STATUS', envVar, [...known, 'useactual']);
+}
+
+/**
+ * Named rather than numeric, because the enum's numbering is an implementation detail that
+ * reorders whenever a case is inserted — an environment pinned to `2` would silently start
+ * meaning a different duration.
+ */
+function getMockProAccessExpiry(): MockProAccessExpiryOptions | null {
+  const envVar = process.env.SESSION_PRO_ACCESS_EXPIRY?.trim();
+  if (!envVar) {
+    return null;
+  }
+  const option = MockProAccessExpiryOptions[envVar as keyof typeof MockProAccessExpiryOptions];
+  if (typeof option === 'number') {
+    return option;
+  }
+  return invalidMockEnvVar(
+    'SESSION_PRO_ACCESS_EXPIRY',
+    envVar,
+    Object.keys(MockProAccessExpiryOptions).filter(k => Number.isNaN(Number(k)))
+  );
+}
+
+/**
+ * Path to an image for the test-integration avatar picker to return.
+ *
+ * Only emptiness is checked here — whether the file exists and is a usable image is settled in
+ * `pickFileForTestIntegration`, which owns the accepted-extension list. Duplicating that list here
+ * would give two sources of truth for one rule, and the picker's error is raised the moment a test
+ * uploads, which is loud enough.
+ */
+function getFakeAvatarPickerFile(): string | null {
+  return process.env.SESSION_FAKE_AVATAR_PICKER_FILE?.trim() || null;
+}
+
 export const defaultAvatarPickerColor = '#0000ff'; // defaults to blue
 
 export const defaultProDataFeatureFlags = {
   mockMessageProFeatures: null,
-  mockProCurrentStatus: null,
+  mockProCurrentStatus: getMockProCurrentStatus(),
   mockProPaymentProvider: null,
   mockProAccessVariant: null,
-  mockProAccessExpiry: null,
+  mockProAccessExpiry: getMockProAccessExpiry(),
   mockProLongerMessagesSent: null,
   mockProPinnedConversations: null,
   mockProBadgesSent: null,
   mockProGroupsUpgraded: null,
   mockNetworkPageNodeCount: getMockNetworkPageNodeCount(),
   fakeAvatarPickerColor: defaultAvatarPickerColor,
+  fakeAvatarPickerFile: getFakeAvatarPickerFile(),
 } as const;
 
 export const defaultDataFeatureFlags = {

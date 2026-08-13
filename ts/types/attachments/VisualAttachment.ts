@@ -2,6 +2,7 @@
 /* global document, URL, Blob */
 
 import { dataURLToBlob } from 'blob-util';
+import { existsSync, readFileSync } from 'fs';
 import { toLogFormat } from './Errors';
 
 import { DecryptedAttachmentsManager } from '../../session/crypto/DecryptedAttachmentsManager';
@@ -187,8 +188,28 @@ export const revokeObjectUrl = (objectUrl: string) => {
   URL.revokeObjectURL(objectUrl);
 };
 
+const AVATAR_MIME_BY_EXTENSION = {
+  '.png': 'image/png',
+  '.gif': 'image/gif',
+  '.jpeg': 'image/jpeg',
+  '.jpg': 'image/jpeg',
+  '.webp': 'image/webp',
+} as const;
+
+type AvatarExtension = keyof typeof AVATAR_MIME_BY_EXTENSION;
+
+/**
+ * The formats the avatar picker accepts, including `.webp` — the animated one, and so the Pro feature.
+ *
+ * Unconditional because Pro is permanently available; the gate that used to wrap `.webp` went with the
+ * flag it read. The map is what lets a path be turned back into a MIME type rather than guessed at.
+ */
+function acceptedAvatarExtensions(): Array<AvatarExtension> {
+  return ['.png', '.gif', '.jpeg', '.jpg', '.webp'];
+}
+
 async function pickFileForReal() {
-  const acceptedImages = ['.png', '.gif', '.jpeg', '.jpg', '.webp'];
+  const acceptedImages = acceptedAvatarExtensions();
 
   const [fileHandle] = await (window as any).showOpenFilePicker({
     types: [
@@ -225,7 +246,36 @@ function hexToRgb(hex: string) {
   };
 }
 
+/**
+ * The generated avatar is a solid colour and therefore never animated, so a test could not reach
+ * anything gated on `isAnimated` — nor assert anything about avatar content, since every avatar in
+ * every test was the same square. `fakeAvatarPickerFile` substitutes a real image from disk.
+ */
+function pickFileFromDisk(path: string) {
+  const accepted = acceptedAvatarExtensions();
+  const extension = accepted.find(ext => path.toLowerCase().endsWith(ext));
+
+  // Throwing rather than falling back to the generated avatar: a silent fallback would surface as a
+  // test asserting the wrong image, several steps from the typo that caused it.
+  if (!extension) {
+    throw new Error(`fakeAvatarPickerFile: "${path}" must end in one of ${accepted.join(', ')}`);
+  }
+  if (!existsSync(path)) {
+    throw new Error(`fakeAvatarPickerFile: no file at "${path}"`);
+  }
+
+  const buffer = readFileSync(path);
+  return new File([buffer], `fakeAvatarPickerFile${extension}`, {
+    type: AVATAR_MIME_BY_EXTENSION[extension],
+  });
+}
+
 async function pickFileForTestIntegration() {
+  const fakeAvatarPickerFile = getDataFeatureFlag('fakeAvatarPickerFile');
+  if (fakeAvatarPickerFile) {
+    return pickFileFromDisk(fakeAvatarPickerFile);
+  }
+
   const fakeAvatarPickerColor = getDataFeatureFlag('fakeAvatarPickerColor');
   const blueAvatarDetails = await ImageProcessor.testIntegrationFakeAvatar(
     maxAvatarDetails.maxSidePlanReupload,
