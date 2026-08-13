@@ -44,15 +44,17 @@ export function PanelLabelWithDescription({
   title,
   extraInlineNode,
   description,
+  dataTestId,
 }: {
   title: TrArgs;
   extraInlineNode?: ReactNode;
   description?: TrArgs;
+  dataTestId?: SessionDataTestId;
 }) {
   return (
     <StyledPanelLabelWithDescription>
       {/* less space between the label and the description */}
-      <StyledPanelLabel>
+      <StyledPanelLabel data-testid={dataTestId}>
         <Localizer {...title} />
         {extraInlineNode}
       </StyledPanelLabel>
