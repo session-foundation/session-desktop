@@ -280,17 +280,13 @@ function processProBackendData({
     ? !mockCancelled
     : (data?.autoRenewing ?? defaultProAccessDetailsSourceData.autoRenew);
 
-  // Auto-renew is due AT the paid-through end (`expiryMs`). user_status stays `active` through the
-  // grace window (the backend judges coverage against expiry + grace_period_duration), so being past
-  // expiry while still active IS the grace period. Subtracting grace here put "renew due" a whole
-  // grace period early, so inGracePeriod was perpetually true whenever grace exceeded the period.
-  let beginAutoRenew = 0;
-  if (data) {
-    beginAutoRenew = data.expiryMs;
-  }
-
+  // Auto-renew is due AT the paid-through end (`expiryMs`), which is `expiryTimeMs` above. user_status
+  // stays `active` through the grace window (the backend judges coverage against expiry +
+  // grace_period_duration), so being past expiry while still active IS the grace period. Subtracting
+  // grace here put "renew due" a whole grace period early, so inGracePeriod was perpetually true
+  // whenever grace exceeded the period.
   let inGracePeriod = mockInGracePeriod;
-  if (beginAutoRenew && !mockInGracePeriod) {
+  if (expiryTimeMs && !mockInGracePeriod) {
     // Only surface "renewal unsuccessful" off data we actually fetched at/after the paid-through
     // end — never off a pre-expiry snapshot that predates a possible renewal. The pro page refetches
     // at the crossing (and polls through grace), so a stale snapshot resolves rather than sticking.
@@ -317,10 +313,10 @@ function processProBackendData({
       variantString,
       expiryTimeMs,
       expiryTimeDateString: formatDateWithLocale({
-        date: new Date(beginAutoRenew),
+        date: new Date(expiryTimeMs),
         formatStr: 'MMM d, yyyy',
       }),
-      expiryTimeRelativeString: formatRoundedUpTimeUntilTimestamp(beginAutoRenew),
+      expiryTimeRelativeString: formatRoundedUpTimeUntilTimestamp(expiryTimeMs),
       isPlatformRefundAvailable,
       provider,
       providerConstants: getProProviderConstantsWithFallbacks(provider),
