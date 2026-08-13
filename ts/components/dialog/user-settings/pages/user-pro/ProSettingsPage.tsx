@@ -186,7 +186,9 @@ export function ProHeroImage({
         </HeroImageBgContainer>
       </SectionFlexContainer>
       {heroStatusText ? (
-        <StyledProStatusText $isError={isError}>{heroStatusText}</StyledProStatusText>
+        <StyledProStatusText $isError={isError} data-testid="pro-settings-status-banner">
+          {heroStatusText}
+        </StyledProStatusText>
       ) : null}
       {heroStatusText && heroText ? <SpacerMD /> : null}
       {heroText ? <StyledProHeroText>{heroText}</StyledProHeroText> : null}
@@ -385,6 +387,7 @@ function ProStats() {
     <SectionFlexContainer>
       <PanelLabelWithDescription
         title={{ token: 'proStats' }}
+        dataTestId="pro-settings-stats-header"
         extraInlineNode={
           <SessionTooltip
             content={tr('proStatsTooltip')}
@@ -771,7 +774,10 @@ function ProFeatures({ state }: SectionProps) {
 
   return (
     <SectionFlexContainer>
-      <PanelLabelWithDescription title={{ token: 'proBetaFeatures' }} />
+      <PanelLabelWithDescription
+        title={{ token: 'proBetaFeatures' }}
+        dataTestId="pro-settings-features-header"
+      />
       <PanelButtonGroup containerStyle={{ marginBlock: 'var(--margins-xs)' }}>
         {proFeatures.map((m, i) => {
           return (
@@ -831,7 +837,10 @@ function ManageProCurrentAccess({ state }: SectionProps) {
 
   return (
     <SectionFlexContainer>
-      <PanelLabelWithDescription title={{ token: 'managePro' }} />
+      <PanelLabelWithDescription
+        title={{ token: 'managePro' }}
+        dataTestId="pro-settings-manage-header"
+      />
       <PanelButtonGroup>
         {data.autoRenew ? (
           <PanelIconButton
@@ -908,7 +917,10 @@ function ManageProAccess({ state }: SectionProps) {
 
   return (
     <SectionFlexContainer>
-      <PanelLabelWithDescription title={{ token: 'managePro' }} />
+      <PanelLabelWithDescription
+        title={{ token: 'managePro' }}
+        dataTestId="pro-settings-manage-header"
+      />
       <PanelButtonGroup
         style={
           !isDarkTheme
