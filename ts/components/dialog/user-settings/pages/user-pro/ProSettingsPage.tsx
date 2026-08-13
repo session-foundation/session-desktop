@@ -203,7 +203,9 @@ function useBackendErrorDialogButtons() {
       {
         label: { token: 'retry' },
         dataTestId: 'pro-backend-error-retry-button',
-        onClick: refetch,
+        // Trigger #5, a manual retry: one of the two sanctioned `immediate` callers. Wrapped rather
+        // than passed as `onClick: refetch` so the click event isn't handed over as the options arg.
+        onClick: () => refetch({ immediate: true }),
         closeAfterClick: true,
       },
       {
@@ -231,16 +233,25 @@ const useCurrentNeverHadProInternal = useCurrentNeverHadPro;
 const useIsDarkThemeInternal = useIsDarkTheme;
 const usePinnedConversationsCountInternal = usePinnedConversationsCount;
 
+// Trigger #4's cadence (a cross-client contract, see the constants in ducks/proBackendData.ts).
+/** How long past the `user_expiry` crossing to wait before the first refetch. */
+const GRACE_POLL_CROSSING_SLACK_MS = 5 * DURATION.SECONDS;
+/** Then re-check on this cadence while still un-renewed. Equal to STATUS_FLOOR_MS by design, which
+ * is why #4 must bypass the floor rather than be halved by it. */
+const GRACE_POLL_INTERVAL_MS = 1 * DURATION.MINUTES;
+
 // Extracted into its own hook so the react compiler compiles a small, clean function rather than
 // choking on a raw useEffect inside the large ProSettings component.
 function useKeepProStatusFresh({
   expiryTimeMs,
+  coverageEndMs,
   autoRenew,
   userHasExpiredPro,
   isLoading,
   isError,
 }: {
   expiryTimeMs: number;
+  coverageEndMs: number;
   autoRenew: boolean;
   userHasExpiredPro: boolean;
   isLoading: boolean;
@@ -253,22 +264,42 @@ function useKeepProStatusFresh({
     if (isLoading || isError || userHasExpiredPro || !autoRenew || !expiryTimeMs) {
       return undefined;
     }
+    // Floor-exempt because its 60s interval would otherwise sit exactly on the 60s floor and be dropped
+    // about half the time.
+    //
+    // The exemption and the `autoRenew` guard above are a pair: the guard is what bounds this, and being
+    // unfloored is what makes an unbounded version expensive. Without it a lapsed non-renewing
+    // subscription polls every 60s, floor-exempt, for as long as the page is open. The coverage-end
+    // (`E + G`) bound below is that independent lifetime bound: the poll stops when the grace window
+    // closes rather than running for as long as the page stays open, matching Android/iOS, which bound
+    // their while-open poll at coverage end rather than leaning on `userHasExpiredPro` flipping.
     const fire = () =>
       window.inboxStore?.dispatch(
-        proBackendDataActions.refreshGetProStatusFromProBackend({}) as any
+        proBackendDataActions.refreshGetProStatusFromProBackend({ immediate: true }) as any
       );
-    const msUntilExpiry = expiryTimeMs - NetworkTime.now();
+    const now = NetworkTime.now();
+    // Nothing left to catch once coverage has ended, so never arm past it.
+    if (now >= coverageEndMs) {
+      return undefined;
+    }
+    const msUntilExpiry = expiryTimeMs - now;
     if (msUntilExpiry > 0) {
       // Refetch just after the crossing, so a renewal (or a genuine failure) replaces the stale value.
-      const timeoutId = setTimeout(fire, msUntilExpiry + 5 * DURATION.SECONDS);
+      const timeoutId = setTimeout(fire, msUntilExpiry + GRACE_POLL_CROSSING_SLACK_MS);
       return () => clearTimeout(timeoutId);
     }
-    // Past expiry and still auto-renewing (grace/renewal window): the renewal can succeed at any
-    // point, so re-check until get_pro_status reports the new expiry (the deps change re-arms the
-    // one-shot above) or the account flips to expired (the guard returns).
-    const intervalId = setInterval(fire, DURATION.MINUTES);
+    // In the grace window [E, E+G): the renewal can succeed at any point, so re-check until
+    // get_pro_status reports the new expiry (the deps change re-arms this) or coverage ends, whichever
+    // comes first. The interval clears itself at coverage end so it can never outlive the grace window.
+    const intervalId = setInterval(() => {
+      if (NetworkTime.now() >= coverageEndMs) {
+        clearInterval(intervalId);
+        return;
+      }
+      fire();
+    }, GRACE_POLL_INTERVAL_MS);
     return () => clearInterval(intervalId);
-  }, [expiryTimeMs, autoRenew, userHasExpiredPro, isLoading, isError]);
+  }, [expiryTimeMs, coverageEndMs, autoRenew, userHasExpiredPro, isLoading, isError]);
 }
 
 function ProNonProContinueButton({ state }: SectionProps) {
@@ -489,6 +520,7 @@ function ProSettings({ state }: SectionProps) {
 
   useKeepProStatusFresh({
     expiryTimeMs: data.expiryTimeMs,
+    coverageEndMs: data.coverageEndMs,
     autoRenew: data.autoRenew,
     userHasExpiredPro,
     isLoading,

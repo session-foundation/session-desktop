@@ -3,6 +3,7 @@ import { Dispatch, useMemo, type ReactNode } from 'react';
 import styled from 'styled-components';
 import type { CSSProperties } from 'styled-components';
 import { getAppDispatch } from '../../state/dispatch';
+import type { StateType } from '../../state/reducer';
 import {
   type SessionCTAState,
   updateSessionCTA,
@@ -24,7 +25,6 @@ import {
 import { SpacerSM, SpacerXL } from '../basic/Text';
 import type { MergedLocalizerTokens } from '../../localization/localeTools';
 import { SessionButtonShiny } from '../basic/SessionButtonShiny';
-import { getIsProAvailableMemo } from '../../hooks/useIsProAvailable';
 import { useCurrentUserHasPro } from '../../hooks/useHasPro';
 import { assertUnreachable } from '../../types/sqlSharedTypes';
 import { Storage } from '../../util/storage';
@@ -38,7 +38,6 @@ import {
   type ProCTAVariant,
   isProCTAFeatureVariant,
 } from './cta/types';
-import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 import { openUrlNoDialog, showLinkVisitWarningDialog } from './OpenUrlModal';
 import { APP_URL, DURATION } from '../../session/constants';
 import { Data } from '../../data/data';
@@ -475,33 +474,45 @@ export const showSessionCTA = (variant: CTAVariant, dispatch: Dispatch<any>) => 
 
 export const useShowSessionCTACb = (variant: CTAVariant) => {
   const dispatch = getAppDispatch();
-  const isProAvailable = getIsProAvailableMemo();
-  const isProCTA = useIsProCTAVariant(variant);
-  if (isProCTA && !isProAvailable) {
-    return () => null;
-  }
 
   return () => showSessionCTA(variant, dispatch);
 };
 
 export const useShowSessionCTACbWithVariant = () => {
   const dispatch = getAppDispatch();
-  const isProAvailable = getIsProAvailableMemo();
 
   return (variant: CTAVariant) => {
-    if (isProCTAVariant(variant) && !isProAvailable) {
-      return;
-    }
     showSessionCTA(variant, dispatch);
   };
 };
 
+/**
+ * Whether *this process* holds a `get_pro_status` it confirmed itself.
+ *
+ * `details.lastFetchedMs` is per-run and stamped on completion, so it answers "may we act on the Pro
+ * status we hold". Read off the store rather than threaded in as a parameter, so a new call site cannot
+ * inherit an answer by copying a neighbour.
+ *
+ * Not read via the proBackendData selectors: they import the duck, and the duck imports this module.
+ */
+function haveConfirmedProStatusThisProcess(): boolean {
+  const lastFetchedMs = (window.inboxStore?.getState() as StateType | undefined)?.proBackendData
+    ?.details?.lastFetchedMs;
+  return !!lastFetchedMs;
+}
+
 export async function handleTriggeredCTAs(dispatch: Dispatch<any>, fromAppStart: boolean) {
-  const proAvailable = getFeatureFlag('proAvailable');
+  // The Pro CTAs must never fire off an unconfirmed status: the flags are persisted, so a previous run's
+  // "expired" verdict outlives the entitlement it described, and showing it after an out-of-band renewal
+  // is the false-expired case this guard prevents. Every caller needs it — a status confirmed this
+  // session is not implied by having reached any particular entry point.
+  //
+  // `fromAppStart` is still needed below, where it *enables* the donate CTA rather than suppressing a
+  // Pro one. Those are different questions and must not be collapsed into one flag.
+  const mayShowProCTA = haveConfirmedProStatusThisProcess();
 
   if (Storage.get(SettingsKey.proExpiringSoonCTA)) {
-    // Note: postpone showing the pro CTAs as we need to make sure we've fetched our latest pro status from the backend
-    if (!proAvailable || fromAppStart) {
+    if (!mayShowProCTA) {
       return;
     }
     dispatch(
@@ -511,9 +522,7 @@ export async function handleTriggeredCTAs(dispatch: Dispatch<any>, fromAppStart:
     );
     await Storage.put(SettingsKey.proExpiringSoonCTA, false);
   } else if (Storage.get(SettingsKey.proExpiredCTA)) {
-    // Note: postpone showing the pro CTAs as we need to make sure we've fetched our latest pro status from the backend
-
-    if (!proAvailable || fromAppStart) {
+    if (!mayShowProCTA) {
       return;
     }
     dispatch(
