@@ -120,6 +120,16 @@ function proFeatureToVariant(proFeature: ProMessageFeature): CTAVariant {
  *
  * Depending on the context provided, different arguments are needed.
  *
+ * ⚠️ `currentUserHasPro` means a DIFFERENT thing per branch, and the argument name does not say which.
+ * Some branches ask whether we may use a Pro feature (ACCESS — the proof); others ask only whether to
+ * invite us to buy one (DISPLAY — the plan's state). The two are allowed to disagree: during the
+ * overhang a lapsed plan still has a working proof, and a freshly restored account has an active plan
+ * with no usable proof yet.
+ *
+ * So the caller has to decide which question its context is asking, and this hook cannot check that for
+ * it. Passing "whichever Pro boolean was already in scope" is how six Desktop surfaces came to offer an
+ * upgrade to users whose plan was already active. If you are adding a context, write down which of the
+ * two it needs and why, next to the call.
  */
 export function useProBadgeOnClickCb(
   opts: ProBadgeContext
