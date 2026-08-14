@@ -27,6 +27,7 @@ type SessionBaseBooleanFeatureFlags = {
   mockProRecoverButtonAlwaysFail: boolean;
   mockProBackendLoading: boolean;
   mockProBackendError: boolean;
+  mockProBackendSuccess: boolean;
   fsTTL30s: boolean;
   debugForceSeedNodeFailure: boolean;
 };

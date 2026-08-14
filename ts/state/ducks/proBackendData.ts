@@ -4,6 +4,7 @@ import { isUndefined } from 'lodash';
 import type { StateType } from '../reducer';
 import ProBackendAPI from '../../session/apis/pro_backend_api/ProBackendAPI';
 import { getFeatureFlag } from './types/releasedFeaturesReduxTypes';
+import { mockedProExpiryMs, proAutoRenewWithMock, proStatusWithMock } from './types/proMocks';
 import { UserUtils } from '../../session/utils';
 import { getProMasterKeyHex } from '../../session/utils/User';
 import { updateLocalizedPopupDialog } from './modalDialog';
@@ -202,6 +203,31 @@ async function putProStatusInStorage(details: ProStatusResultType) {
   await Storage.put(SettingsKey.proStatus, details);
 }
 
+export function getProStatusFromStorage(): ProStatusResultType | null {
+  const response = Storage.get(SettingsKey.proStatus);
+  if (!response) {
+    return null;
+  }
+  // We persist, verbatim, the JS object the libsession-util-nodejs glue produced from the backend
+  // response (see putProStatusInStorage) — not a raw libsession struct — and cast it back to the
+  // CURRENT ProStatusResultType (an alias of the glue's GetProStatusResponse). session-desktop and
+  // libsession-util-nodejs ship in lockstep, so within a single build the producer, the type and this
+  // consumer can't drift — but a cache written by an OLDER build can.
+  //
+  // ⚠️ TRANSITION REQUIRED IF YOU ADD A REQUIRED FIELD to this shape: an upgraded client would read a
+  // stale-shape cache here and cast it to the new type with that field undefined (the Array.isArray
+  // check below validates only the top level, not individual fields). Handle it as part of that change —
+  // e.g. drop this cache behind a stored shape/version marker, or keep the new field optional at this
+  // boundary. It's a transient, re-fetched cache, so drop-and-refetch is the simplest transition. This
+  // is left as a reminder rather than pre-built, since pre-building would just be guessing at the shape.
+  if (typeof response === 'object' && response !== null && 'userStatus' in response) {
+    return response as ProStatusResultType;
+  }
+  void Storage.remove(SettingsKey.proStatus);
+  window?.log?.error('pro status in storage were malformed; removing.');
+  return null;
+}
+
 /** A currently-usable proof is held (unexpired). Revocation is a separate clear path. */
 function haveValidProof(): boolean {
   const proof = getCachedUserConfig().proConfig?.proProof;
@@ -381,6 +407,50 @@ async function handleExpiryCTAs(
       await Storage.put(SettingsKey.proExpiringSoonCTA, true);
     }
   }
+}
+
+/**
+ * Arm the expiry CTAs from the mocks alone, with no backend round trip.
+ *
+ * The CTA decision on Desktop is *persisted*, not derived: `handleExpiryCTAs` writes
+ * `SettingsKey.proExpiringSoonCTA` from a fetched response, and `handleTriggeredCTAs` later reads the
+ * mark. A mock applied where status is *selected* therefore lands downstream of the decision, which is
+ * why the existing mocks can render a Pro screen but cannot arm this CTA. iOS reaches the same place
+ * with `LoadingState.simulate(.success)`.
+ *
+ * This deliberately runs the real `handleExpiryCTAs` rather than seeding the stored flag: the seven-day
+ * and thirty-day boundaries, and the clearing when an account goes active again, are the behaviour a
+ * spec exists to exercise.
+ *
+ * Returns whether it handled startup, so the caller can skip the real fetch — letting both run would
+ * have a genuine response overwrite the mocked decision moments later.
+ */
+export async function applyMockedProStatusAtStartup(
+  dispatch: Parameters<typeof handleTriggeredCTAs>[0]
+): Promise<boolean> {
+  if (!getFeatureFlag('mockProBackendSuccess')) {
+    return false;
+  }
+
+  let configExpiry: number | null = null;
+  try {
+    configExpiry = getCachedUserConfig().proAccessExpiry ?? null;
+  } catch {
+    // config not initialised yet: the mocked expiry is the only source, which is the normal case here.
+  }
+  const expiryMs = mockedProExpiryMs() ?? configExpiry ?? 0;
+  if (!expiryMs) {
+    // Every branch of handleExpiryCTAs is relative to the expiry, so without one it is a no-op and a
+    // spec would see nothing with no indication why.
+    window?.log?.warn(
+      'mockProBackendSuccess is set but no expiry is known: set SESSION_PRO_ACCESS_EXPIRY'
+    );
+  }
+
+  await handleExpiryCTAs(expiryMs, proAutoRenewWithMock(true), proStatusWithMock(ProStatus.Active));
+  void handleTriggeredCTAs(dispatch, false);
+  firstFetchProStatusHappened = true;
+  return true;
 }
 
 let firstFetchProStatusHappened = false;
@@ -722,11 +792,14 @@ const fetchGetProStatusFromProBackend = createAsyncThunk(
               );
               break;
           }
+          // The mocks have to be applied here too, not only in the settings selector: this reads the
+          // raw fetched response, so without them a mocked expiry or status never reaches the code
+          // that arms the CTAs and neither expiry CTA is reachable from a test.
           await handleExpiryCTAs(
-            state.data.expiryMs,
+            mockedProExpiryMs() ?? state.data.expiryMs,
             state.data.gracePeriodDurationMs,
-            state.data.autoRenewing,
-            state.data.userStatus
+            proAutoRenewWithMock(state.data.autoRenewing),
+            proStatusWithMock(state.data.userStatus)
           );
           // on the first fetch of our pro status after a restart, we want to show the CTAs if needed
           if (window.inboxStore?.dispatch && !firstFetchProStatusHappened) {

@@ -1,4 +1,5 @@
 import { useSelector } from 'react-redux';
+import { proStatusWithMock } from '../state/ducks/types/proMocks';
 import { getDataFeatureFlagMemo } from '../state/ducks/types/releasedFeaturesReduxTypes';
 import {
   defaultProAccessDetailsSourceData,
@@ -10,12 +11,9 @@ import type { StateType } from '../state/reducer';
 
 export function selectOurProStatus(state: StateType) {
   const proBackendCurrentUserStatus = getProBackendCurrentUserStatus(state);
-  const mockCurrentStatus = getDataFeatureFlagMemo('mockProCurrentStatus');
 
-  return (
-    mockCurrentStatus ??
-    proBackendCurrentUserStatus ??
-    defaultProAccessDetailsSourceData.currentStatus
+  return proStatusWithMock(
+    proBackendCurrentUserStatus ?? defaultProAccessDetailsSourceData.currentStatus
   );
 }
 

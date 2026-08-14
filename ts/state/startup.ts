@@ -27,6 +27,7 @@ import { initialThemeState } from './theme/ducks/theme';
 import { initialNetworkModalState } from './ducks/networkModal';
 import { initialNetworkDataState, networkDataActions } from './ducks/networkData';
 import {
+  applyMockedProStatusAtStartup,
   initialProBackendDataState,
   refreshProStatusOnStartupIfNeeded,
 } from './ducks/proBackendData';
@@ -168,6 +169,13 @@ export const doAppStartUp = async () => {
     })
   );
 
+  // Deliberately NOT inside the swarm-ready block below: the whole point of the mock is to reach the
+  // expiry CTAs without a backend round trip, and waiting on the swarm would put a network dependency
+  // back in front of it.
+  const proStatusMocked = window.inboxStore?.dispatch
+    ? await applyMockedProStatusAtStartup(window.inboxStore.dispatch)
+    : false;
+
   // eslint-disable-next-line more/no-then
   void SnodePool.getFreshSwarmFor(UserUtils.getOurPubKeyStrFromCache()).then(async () => {
     window.log.debug('appStartup: got our fresh swarm, starting polling');
@@ -175,7 +183,12 @@ export const doAppStartUp = async () => {
     window.inboxStore?.dispatch(networkDataActions.fetchInfoFromSeshServer() as any);
     // Trigger #1, gated: a cold start only fetches get_pro_status when a home CTA could plausibly
     // fire, and at most once/24h. Also arms the #6 wake at the account horizon for this session.
-    void refreshProStatusOnStartupIfNeeded();
+    //
+    // Suppressed when the mocks have already answered for this run: letting both go lets a real
+    // response land on top of a mocked CTA decision moments later.
+    if (!proStatusMocked) {
+      void refreshProStatusOnStartupIfNeeded();
+    }
     if (window.inboxStore) {
       const delayedTimeout = getDataFeatureFlag('useLocalDevNet') && isTestIntegration() ? 2000 : 0;
       /**

@@ -19,6 +19,9 @@ export const defaultProBooleanFeatureFlags = {
   mockProRecoverButtonAlwaysFail: !isEmpty(process.env.SESSION_PRO_RECOVER_ALWAYS_FAIL),
   mockProBackendLoading: !isEmpty(process.env.SESSION_PRO_BACKEND_LOADING),
   mockProBackendError: !isEmpty(process.env.SESSION_PRO_BACKEND_ERROR),
+  // Completes the triple: the other two mock the negative outcomes of a get_pro_status fetch, this
+  // one mocks a confirmed success, which is the state the expiry CTAs are armed from.
+  mockProBackendSuccess: !isEmpty(process.env.SESSION_PRO_BACKEND_SUCCESS),
 } as const;
 
 export const defaultBooleanFeatureFlags = {

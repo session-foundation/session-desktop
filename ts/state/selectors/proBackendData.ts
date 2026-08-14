@@ -1,21 +1,19 @@
 import { useSelector } from 'react-redux';
 import type { StateType } from '../reducer';
 import {
+  getProStatusFromStorage,
   proBackendDataActions,
   RequestActionArgs,
   WithCallerContext,
   WithImmediate,
   type ProBackendDataState,
 } from '../ducks/proBackendData';
-import { SettingsKey } from '../../data/settings-key';
-import { Storage } from '../../util/storage';
-import type { ProStatusResultType } from '../../session/apis/pro_backend_api/schemas';
 import {
   getDataFeatureFlag,
   getFeatureFlag,
   getFeatureFlagMemo,
-  MockProAccessExpiryOptions,
 } from '../ducks/types/releasedFeaturesReduxTypes';
+import { mockedProExpiryMs, proAutoRenewWithMock } from '../ducks/types/proMocks';
 import { NetworkTime } from '../../util/NetworkTime';
 import {
   formatDateWithLocale,
@@ -35,31 +33,6 @@ import { sleepFor } from '../../session/utils/Promise';
 const getProBackendData = (state: StateType): ProBackendDataState => {
   return state.proBackendData;
 };
-
-function getProStatusFromStorage(): ProStatusResultType | null {
-  const response = Storage.get(SettingsKey.proStatus);
-  if (!response) {
-    return null;
-  }
-  // We persist, verbatim, the JS object the libsession-util-nodejs glue produced from the backend
-  // response (see putProStatusInStorage) — not a raw libsession struct — and cast it back to the
-  // CURRENT ProStatusResultType (an alias of the glue's GetProStatusResponse). session-desktop and
-  // libsession-util-nodejs ship in lockstep, so within a single build the producer, the type and this
-  // consumer can't drift — but a cache written by an OLDER build can.
-  //
-  // ⚠️ TRANSITION REQUIRED IF YOU ADD A REQUIRED FIELD to this shape: an upgraded client would read a
-  // stale-shape cache here and cast it to the new type with that field undefined (the Array.isArray
-  // check below validates only the top level, not individual fields). Handle it as part of that change —
-  // e.g. drop this cache behind a stored shape/version marker, or keep the new field optional at this
-  // boundary. It's a transient, re-fetched cache, so drop-and-refetch is the simplest transition. This
-  // is left as a reminder rather than pre-built, since pre-building would just be guessing at the shape.
-  if (typeof response === 'object' && response !== null && 'userStatus' in response) {
-    return response as ProStatusResultType;
-  }
-  void Storage.remove(SettingsKey.proStatus);
-  window?.log?.error('pro status in storage were malformed; removing.');
-  return null;
-}
 
 export function proAccessVariantToString(variant: ProAccessVariant): string {
   switch (variant) {
@@ -144,39 +117,6 @@ export function getProProviderConstantsWithFallbacks(
   };
 }
 
-function getMockedProAccessExpiry(variant: MockProAccessExpiryOptions): number | null {
-  switch (variant) {
-    case MockProAccessExpiryOptions.P7D:
-      return 7 * 24 * 60 * 60 * 1000;
-    case MockProAccessExpiryOptions.P29D:
-      return 29 * 24 * 60 * 60 * 1000;
-    case MockProAccessExpiryOptions.P30D:
-      return 30 * 24 * 60 * 60 * 1000;
-    case MockProAccessExpiryOptions.P30DT1S:
-      return 30 * 24 * 60 * 61 * 1000;
-    case MockProAccessExpiryOptions.P90D:
-      return 90 * 24 * 60 * 60 * 1000;
-    case MockProAccessExpiryOptions.P300D:
-      return 300 * 24 * 60 * 60 * 1000;
-    case MockProAccessExpiryOptions.P365D:
-      return 365 * 24 * 60 * 60 * 1000;
-    case MockProAccessExpiryOptions.P24DT1M:
-      return 24 * 24 * 60 * 60 * 1000 + 60 * 60 * 1000;
-    case MockProAccessExpiryOptions.PT24H1M:
-      return 24 * 60 * 60 * 1000 + 60 * 60 * 1000;
-    case MockProAccessExpiryOptions.PT23H59M:
-      return 23 * 60 * 60 * 1000 + 59 * 60 * 1000;
-    case MockProAccessExpiryOptions.PT33M:
-      return 33 * 60 * 1000;
-    case MockProAccessExpiryOptions.PT1M:
-      return 1 * 60 * 1000;
-    case MockProAccessExpiryOptions.PT10S:
-      return 10 * 1000;
-    default:
-      return null;
-  }
-}
-
 type ProAccessDetailsSourceData = {
   currentStatus: ProStatus;
   autoRenew: boolean;
@@ -240,21 +180,11 @@ function processProBackendData({
 
   const mockVariant = getDataFeatureFlag('mockProAccessVariant');
   const mockPlatform = getDataFeatureFlag('mockProPaymentProvider');
-  const mockCancelled = getFeatureFlag('mockCurrentUserHasProCancelled');
   const mockInGracePeriod = getFeatureFlag('mockCurrentUserHasProInGracePeriod');
   const mockIsPlatformRefundAvailable = !getFeatureFlag(
     'mockCurrentUserHasProPlatformRefundExpired'
   );
-  const expiryVariant = getDataFeatureFlag('mockProAccessExpiry');
-  const mockedExpiryDuration =
-    expiryVariant !== null ? getMockedProAccessExpiry(expiryVariant) : null;
-  let mockExpiry = null;
-  if (mockedExpiryDuration !== null) {
-    // NOTE: the mock expiry time should be pinned to x - 250ms after "now", the -250ms ensures the string
-    // representation rounds up to the expected mock value and prevents render lag from changing the timestamp
-    const now = Date.now() - 250;
-    mockExpiry = now + mockedExpiryDuration;
-  }
+  const mockExpiry = mockedProExpiryMs();
 
   const isLoading = mockIsLoading || _isLoading;
   const isFetching = mockIsLoading || _isFetching;
@@ -278,9 +208,9 @@ function processProBackendData({
     (latestAccess?.platformRefundExpiryTsMs && now < latestAccess.platformRefundExpiryTsMs) ||
     defaultProAccessDetailsSourceData.isPlatformRefundAvailable;
 
-  const autoRenew = mockCancelled
-    ? !mockCancelled
-    : (data?.autoRenewing ?? defaultProAccessDetailsSourceData.autoRenew);
+  const autoRenew = proAutoRenewWithMock(
+    data?.autoRenewing ?? defaultProAccessDetailsSourceData.autoRenew
+  );
 
   // `expiry_ts` is the account's true expiry — what the user has paid through — so it is the date to
   // show, with no arithmetic. Coverage runs past it: the backend serves until `expiry_ts +
