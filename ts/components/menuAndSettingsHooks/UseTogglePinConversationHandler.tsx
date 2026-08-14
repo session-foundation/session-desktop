@@ -40,6 +40,10 @@ function usePinnedConversationCount() {
   return useSelector(getPinnedConversationsCount);
 }
 
+// ACCESS because pinning past the standard limit is a capability, not a plan state — someone with no
+// usable proof genuinely must not pin. ⚠️ The same read also picks the upsell below, which by the
+// gate/explanation rule should be DISPLAY; splitting them needs copy that does not exist yet, so this is
+// knowingly one read doing two jobs. Do not "tidy" it to a single value in either direction.
 // NOTE: [react-compiler] this convinces the compiler the hook is static
 const useHasProInternal = useCurrentUserHasProAccess;
 const useIsPinnedInternal = useIsPinned;

@@ -137,6 +137,10 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
 
   const isMe = useIsMe(conversationId);
   const isCommunity = useIsPublic(conversationId);
+  // ACCESS because uploading an animated avatar is a capability. ⚠️ The same read also chooses the CTA
+  // variant and triggers the upgrade prompt below, both of which are explanations and should be DISPLAY;
+  // splitting them needs copy for "your plan is active but we cannot verify it yet", which does not
+  // exist. Knowingly one read doing two jobs — do not flatten it to a single value either way.
   const weHavePro = useCurrentUserHasProAccess() && isMe;
 
   const avatarPath = useAvatarPath(conversationId) || '';
