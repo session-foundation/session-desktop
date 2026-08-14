@@ -6,6 +6,7 @@ import { StyledCTA } from '../../basic/StyledCTA';
 import { formatNumber } from '../../../util/i18n/formatting/generics';
 import { tr } from '../../../localization/localeTools';
 import { useCurrentUserHasPro } from '../../../hooks/useHasPro';
+import { currentUserProofIsValid } from '../../../session/utils/ProAccess';
 import { ProIconButton } from '../../buttons/ProButton';
 import { useProBadgeOnClickCb } from '../../menuAndSettingsHooks/useProBadgeOnClickCb';
 
@@ -54,11 +55,13 @@ function ProCta() {
 export function CharacterCount({ text }: CharacterCountProps) {
   const alwaysShowFlag = getFeatureFlagMemo('alwaysShowRemainingChars');
 
-  const currentUserHasPro = useCurrentUserHasPro();
-
   const codepointCount = [...text].length;
 
-  const charLimit = currentUserHasPro
+  // How many characters we may send is ACCESS, not DISPLAY: the recipient decides what to keep by
+  // validating the proof we attach, so counting against the Pro limit without one would promise an
+  // allowance every recipient will truncate. Read live rather than from redux — this re-renders on
+  // each keystroke, so it stays current on its own.
+  const charLimit = currentUserProofIsValid()
     ? LIBSESSION_CONSTANTS.MESSAGE_CHARACTER_LIMIT_PRO
     : LIBSESSION_CONSTANTS.MESSAGE_CHARACTER_LIMIT_STANDARD;
 

@@ -45,7 +45,19 @@ async function fullRefreshCachedUserConfig() {
   const proAutoRenewing = await UserConfigWrapperActions.getProAutoRenewing();
   const proGracePeriod = await UserConfigWrapperActions.getProGracePeriod();
 
-  if (!cachedUserConfig) {
+  // A relaunching subscriber loads its access expiry from a dump on every launch. Treating that first
+  // projection as a change would fetch on every cold launch and defeat the startup gate.
+  //
+  // The guard is scoped to the account session, not the process. On desktop those coincide: an account
+  // is only ever loaded into a fresh renderer, because deleting an account ends in `window.restart()`
+  // (`accountManager.ts:298`) and the registration view is unreachable once registration is done. If an
+  // in-process account switch is ever added, this must be re-armed by clearing `cachedUserConfig`.
+  // Aliased into a const so the checks below narrow; it is the same object `applyUserConfigIfChanged`
+  // mutates in place, so it reads back the updated values too.
+  const cached = cachedUserConfig;
+  const isFirstProjection = !cached;
+
+  if (isFirstProjection) {
     cachedUserConfig = {
       enableBlindedMsgRequest,
       noteToSelfExpirySeconds,
@@ -63,8 +75,8 @@ async function fullRefreshCachedUserConfig() {
     };
     return;
   }
-  const proAccessExpiryBefore = cachedUserConfig.proAccessExpiry;
-  const proPrepaidBefore = cachedUserConfig.proPrepaid;
+  const proAccessExpiryBefore = cached.proAccessExpiry;
+  const proPrepaidBefore = cached.proPrepaid;
 
   applyUserConfigIfChanged('priority', priority);
   applyUserConfigIfChanged('name', name);
@@ -81,8 +93,8 @@ async function fullRefreshCachedUserConfig() {
   applyUserConfigIfChanged('proGracePeriod', proGracePeriod);
 
   if (
-    !isEqual(proAccessExpiryBefore, cachedUserConfig.proAccessExpiry) ||
-    !isEqual(proPrepaidBefore, cachedUserConfig.proPrepaid)
+    !isEqual(proAccessExpiryBefore, cached.proAccessExpiry) ||
+    !isEqual(proPrepaidBefore, cached.proPrepaid)
   ) {
     // Contained deliberately: `user_base_actions` awaits this function as `modifiedCb` after both
     // `init` and `merge`, so an unguarded throw here would fail config initialisation or a config
@@ -104,10 +116,8 @@ async function fullRefreshCachedUserConfig() {
  * layer's job, and because the Pro duck already imports `getCachedUserConfig` from here — reaching
  * back the other way would make that a cycle.
  *
- * Deliberately not called for the FIRST population of the cache: that is the state the app started
- * with, not something arriving. A relaunching subscriber loads an expiry from its dump every time,
- * and treating that as a change would fetch on every launch — which is what the startup gate exists
- * to stop.
+ * Deliberately not called for the first population of the cache — that is the state the app started
+ * with, not something arriving. See `isFirstProjection` above.
  */
 let proAccessValuesChangedHandler: (() => void) | null = null;
 

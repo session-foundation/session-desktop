@@ -1,13 +1,13 @@
 import { useSelector } from 'react-redux';
 import type { StateType } from '../reducer';
 import {
-  getProStatusFromStorage,
   proBackendDataActions,
   RequestActionArgs,
   WithCallerContext,
   WithImmediate,
   type ProBackendDataState,
 } from '../ducks/proBackendData';
+import { currentUserProofIsValid } from '../../session/utils/ProAccess';
 import {
   getDataFeatureFlag,
   getFeatureFlag,
@@ -163,10 +163,55 @@ export type ProcessedProStatus = {
   isFetching: boolean;
   isError: boolean;
   // When the last successful fetch completed (ms, network time), 0 if none happened this run.
-  // Note: `data` can be non-null with a 0 here, as it falls back to the copy persisted on disk.
+  // Note: the displayed status can be non-default with a 0 here, as it is seeded from local state
+  // until a response arrives — see `displaySeedFromLocalState`.
   lastFetchedMs: number;
   data: ProAccessDetails;
 };
+
+/**
+ * DISPLAY, before any status response has arrived this run: what the plan state looks like from what
+ * we hold locally.
+ *
+ * Seeded from synced config rather than from the last response persisted to disk, because a stored
+ * response is never re-evaluated — it keeps asserting whatever the backend last said, for as long as
+ * the client stays offline. The access expiry and the proof both carry their own timeline, so they go
+ * stale honestly.
+ *
+ * This is DISPLAY only. It may say active while ACCESS says no (an entitlement we know about but hold
+ * no usable proof for), and it may say expired while ACCESS still says yes (the overhang on a proof
+ * that outlives the plan). Both are intended.
+ */
+function displaySeedFromLocalState(): { currentStatus: ProStatus; expiryTimeMs: number } {
+  let proAccessExpiry: number | null = null;
+  let haveProof = false;
+  try {
+    const cached = getCachedUserConfig();
+    proAccessExpiry = cached.proAccessExpiry ?? null;
+    haveProof = !!cached.proConfig?.proProof;
+  } catch {
+    // user config not initialised yet (e.g. pre-login): nothing to place on a timeline.
+    return { currentStatus: ProStatus.Never, expiryTimeMs: 0 };
+  }
+
+  // The access expiry (E) is the account's own paid-through instant, so it answers "what state is the
+  // plan in" more directly than the proof, whose expiry is clamped to a shorter credential lifetime.
+  if (proAccessExpiry) {
+    return {
+      currentStatus: NetworkTime.now() < proAccessExpiry ? ProStatus.Active : ProStatus.Expired,
+      expiryTimeMs: proAccessExpiry,
+    };
+  }
+
+  if (haveProof) {
+    return {
+      currentStatus: currentUserProofIsValid() ? ProStatus.Active : ProStatus.Expired,
+      expiryTimeMs: getCachedUserConfig().proConfig?.proProof.expiryMs ?? 0,
+    };
+  }
+
+  return { currentStatus: ProStatus.Never, expiryTimeMs: 0 };
+}
 
 function processProBackendData({
   isLoading: _isLoading,
@@ -192,8 +237,14 @@ function processProBackendData({
 
   const now = NetworkTime.now();
 
+  // No response this run: fall back to what config implies rather than to a stored response.
+  const seed = data ? null : displaySeedFromLocalState();
+
   const expiryTimeMs =
-    mockExpiry ?? data?.expiryMs ?? defaultProAccessDetailsSourceData.expiryTimeMs;
+    mockExpiry ??
+    data?.expiryMs ??
+    seed?.expiryTimeMs ??
+    defaultProAccessDetailsSourceData.expiryTimeMs;
 
   const latestAccess = data?.latestPayment ?? undefined;
   const provider =
@@ -253,7 +304,8 @@ function processProBackendData({
 
   return {
     data: {
-      currentStatus: data?.userStatus ?? defaultProAccessDetailsSourceData.currentStatus,
+      currentStatus:
+        data?.userStatus ?? seed?.currentStatus ?? defaultProAccessDetailsSourceData.currentStatus,
       autoRenew,
       inGracePeriod,
       isProcessingRefund,
@@ -278,10 +330,7 @@ function processProBackendData({
 }
 
 export const getProBackendProStatus = (state: StateType): ProcessedProStatus => {
-  const details = getProBackendData(state).details;
-  const mergedDetails = details.data ? details : { ...details, data: getProStatusFromStorage() };
-
-  return processProBackendData(mergedDetails);
+  return processProBackendData(getProBackendData(state).details);
 };
 
 export const getProBackendCurrentUserStatus = (state: StateType) => {
