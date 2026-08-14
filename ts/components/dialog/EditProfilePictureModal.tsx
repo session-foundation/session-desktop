@@ -43,7 +43,7 @@ import {
   useUpdateConversationDetailsModal,
 } from '../../state/selectors/modal';
 import { CTAVariant } from './cta/types';
-import { useCurrentUserHasProAccess } from '../../hooks/useHasPro';
+import { useCurrentUserHasPro, useCurrentUserHasProAccess } from '../../hooks/useHasPro';
 
 const StyledAvatarContainer = styled.div`
   cursor: pointer;
@@ -137,11 +137,10 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
 
   const isMe = useIsMe(conversationId);
   const isCommunity = useIsPublic(conversationId);
-  // ACCESS because uploading an animated avatar is a capability. ⚠️ The same read also chooses the CTA
-  // variant and triggers the upgrade prompt below, both of which are explanations and should be DISPLAY;
-  // splitting them needs copy for "your plan is active but we cannot verify it yet", which does not
-  // exist. Knowingly one read doing two jobs — do not flatten it to a single value either way.
+  // ACCESS gates the capability: uploading an animated avatar needs a usable proof, whatever the plan
+  // says. DISPLAY decides only what we tell the user about it — see both uses below.
   const weHavePro = useCurrentUserHasProAccess() && isMe;
+  const planReadsActive = useCurrentUserHasPro() && isMe;
 
   const avatarPath = useAvatarPath(conversationId) || '';
 
@@ -180,7 +179,9 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
     context: 'edit-profile-pic',
     args: {
       cta: {
-        variant: weHavePro
+        // DISPLAY: this badge explains the feature rather than granting it, so it describes the plan.
+        // A user mid-overhang (plan lapsed, proof still valid) is correctly offered the upgrade.
+        variant: planReadsActive
           ? CTAVariant.PRO_ANIMATED_DISPLAY_PICTURE_ACTIVATED
           : CTAVariant.PRO_ANIMATED_DISPLAY_PICTURE,
         afterActionButtonCallback,
@@ -232,14 +233,25 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
      * All of those are taken care of as part of the `isProUser` check in the conversation model
      */
     if (!weHavePro && isNewAvatarAnimated && !isCommunity) {
-      dispatch(
-        updateSessionCTA({
-          variant: CTAVariant.PRO_ANIMATED_DISPLAY_PICTURE,
-          afterActionButtonCallback,
-          actionButtonNextModalAfterCloseCallback,
-        })
+      // The refusal is ACCESS and unconditional. Whether we explain it by offering Pro is DISPLAY.
+      //
+      // TODO: an ACCEPTED trade, not an oversight. With an active plan and no usable proof this refuses
+      // the animated upload and says nothing, because every string that exists here offers a purchase
+      // and there is none for "your plan is active but we cannot verify it yet". Ruled deliberately so
+      // the two-value split was not blocked on a translation round for an edge case. When that copy
+      // exists, show it here — do NOT resolve this by putting the upsell back.
+      if (!planReadsActive) {
+        dispatch(
+          updateSessionCTA({
+            variant: CTAVariant.PRO_ANIMATED_DISPLAY_PICTURE,
+            afterActionButtonCallback,
+            actionButtonNextModalAfterCloseCallback,
+          })
+        );
+      }
+      window.log.debug(
+        `Attempted to upload an animated profile picture without pro! upsell shown: ${!planReadsActive}`
       );
-      window.log.debug('Attempted to upload an animated profile picture without pro!');
       return;
     }
 

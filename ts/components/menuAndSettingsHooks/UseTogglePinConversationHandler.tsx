@@ -10,7 +10,7 @@ import {
 import { useShowSessionCTACbWithVariant } from '../dialog/SessionCTA';
 import { Constants } from '../../session';
 import { useIsMessageRequestOverlayShown } from '../../state/selectors/section';
-import { useCurrentUserHasProAccess } from '../../hooks/useHasPro';
+import { useCurrentUserHasPro, useCurrentUserHasProAccess } from '../../hooks/useHasPro';
 import { CTAVariant } from '../dialog/cta/types';
 import { getPinnedConversationsCount } from '../../state/selectors/conversations';
 
@@ -40,12 +40,12 @@ function usePinnedConversationCount() {
   return useSelector(getPinnedConversationsCount);
 }
 
-// ACCESS because pinning past the standard limit is a capability, not a plan state — someone with no
-// usable proof genuinely must not pin. ⚠️ The same read also picks the upsell below, which by the
-// gate/explanation rule should be DISPLAY; splitting them needs copy that does not exist yet, so this is
-// knowingly one read doing two jobs. Do not "tidy" it to a single value in either direction.
+// ACCESS gates the pin: pinning past the standard limit is a capability, and someone holding no usable
+// proof genuinely must not do it whatever their plan says. DISPLAY decides only whether we then offer to
+// sell them something — see the split at the end of the hook.
 // NOTE: [react-compiler] this convinces the compiler the hook is static
 const useHasProInternal = useCurrentUserHasProAccess;
+const usePlanReadsActiveInternal = useCurrentUserHasPro;
 const useIsPinnedInternal = useIsPinned;
 const useCTACallbackInternal = useShowSessionCTACbWithVariant;
 
@@ -54,6 +54,7 @@ export function useTogglePinConversationHandler(id: string) {
   const isPinned = useIsPinnedInternal(id);
   const pinnedConversationsCount = usePinnedConversationCount();
   const hasPro = useHasProInternal();
+  const planReadsActive = usePlanReadsActiveInternal();
   const handleShowProDialog = useCTACallbackInternal();
 
   const showPinUnpin = useShowPinUnpin(id);
@@ -68,6 +69,23 @@ export function useTogglePinConversationHandler(id: string) {
     pinnedConversationsCount < Constants.CONVERSATION.MAX_PINNED_CONVERSATIONS_STANDARD
   ) {
     return () => conversation?.togglePinned();
+  }
+
+  // Refused either way — the gate above is ACCESS and has already decided. What differs is whether we
+  // explain the refusal by offering Pro, and that is DISPLAY: a plan reading active must not be sold a
+  // subscription it is already paying for.
+  //
+  // TODO: an ACCEPTED trade, not an oversight. In the active-plan-with-no-usable-proof state this
+  // refuses the pin and says nothing at all, because the only copy that exists here is upsell copy and
+  // there is no string for "your plan is active but we cannot verify it yet". Ruled deliberately rather
+  // than missed, so that the two-value split was not blocked on a translation round for an edge case.
+  // When that copy exists, show it here — do NOT resolve this by putting the upsell back.
+  if (planReadsActive) {
+    return () => {
+      window.log.debug(
+        '[pro] pin refused: no usable Pro proof, and the plan reads active so no upsell is shown'
+      );
+    };
   }
 
   return () =>
