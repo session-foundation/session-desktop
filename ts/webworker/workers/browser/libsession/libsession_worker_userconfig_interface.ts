@@ -48,10 +48,13 @@ async function fullRefreshCachedUserConfig() {
   // A relaunching subscriber loads its access expiry from a dump on every launch. Treating that first
   // projection as a change would fetch on every cold launch and defeat the startup gate.
   //
-  // The guard is scoped to the account session, not the process. On desktop those coincide: an account
-  // is only ever loaded into a fresh renderer, because deleting an account ends in `window.restart()`
-  // (`accountManager.ts:298`) and the registration view is unreachable once registration is done. If an
-  // in-process account switch is ever added, this must be re-armed by clearing `cachedUserConfig`.
+  // Note this asks about POSITION ("is this the first projection?") as a proxy for what we actually
+  // want to know, which is SEMANTICS ("is this config news?"). The two agree here because the cases
+  // separate cleanly: a relaunch projects a dump that already holds the expiry, and a restore projects
+  // empty wrappers first and only learns the expiry from the merge that follows. Do not assume that
+  // holds if the load order changes — a first projection that arrives already populated on a device
+  // that has never fetched a status would be news, and this would swallow it.
+  //
   // Aliased into a const so the checks below narrow; it is the same object `applyUserConfigIfChanged`
   // mutates in place, so it reads back the updated values too.
   const cached = cachedUserConfig;
