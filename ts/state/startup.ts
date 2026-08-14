@@ -32,7 +32,8 @@ import {
   initialProBackendDataState,
   refreshProStatusOnStartupIfNeeded,
 } from './ducks/proBackendData';
-import { setProAccessValuesChangedHandler } from '../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
+import { setProUserConfigChangedHandler } from '../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
+import { initialProAccessState, refreshProAccess } from './ducks/proAccess';
 import { MessageQueue } from '../session/sending';
 import { AvatarMigrate } from '../session/utils/job_runners/jobs/AvatarMigrateJob';
 import { handleTriggeredCTAs } from '../components/dialog/SessionCTA';
@@ -99,6 +100,7 @@ async function createSessionInboxStore() {
     networkModal: initialNetworkModalState,
     networkData: initialNetworkDataState,
     proBackendData: initialProBackendDataState,
+    proAccess: initialProAccessState,
     announcements: initialAnnouncementState,
   };
 
@@ -171,17 +173,30 @@ export const doAppStartUp = async () => {
     })
   );
 
-  // Trigger the Pro status refresh the unified trigger set asks for when synced config delivers a new
-  // access expiry or prepaid marker. Registered here rather than dispatched from the libsession layer,
-  // which reports the change but should not decide what it means.
-  setProAccessValuesChangedHandler(() => {
-    // Dispatched unconditionally: the thunk applies the persisted status floor itself, which is the
-    // right bound — a second one here would be per-run, so a relaunch would defeat it.
-    window.inboxStore?.dispatch(proBackendDataActions.refreshGetProStatusFromProBackend({}) as any);
-    // Explicit rather than left to the thunk's own trailing reconcile: this handler exists for the
-    // config-init path, and a floored fetch never reaches that callback.
-    void reconcileProProof();
+  // React to synced config delivering new Pro values. Registered here rather than dispatched from the
+  // libsession layer, which reports the change but should not decide what it means.
+  setProUserConfigChangedHandler(({ accessValuesChanged, proofChanged }) => {
+    if (proofChanged) {
+      // The proof is ACCESS, so the rendered mirror has to follow it immediately. No fetch: a new proof
+      // is not news about the plan, and treating it as such would hit the backend on every renewal.
+      refreshProAccess();
+    }
+    if (accessValuesChanged) {
+      if (claimProStatusFetchSlot()) {
+        window.inboxStore?.dispatch(
+          proBackendDataActions.refreshGetProStatusFromProBackend({}) as any
+        );
+      }
+      // Not floored: entitlement comes from the proof, and libsession decides on its own whether one is
+      // actually due.
+      void reconcileProProof();
+    }
   });
+
+  // Seed the rendered ACCESS value from the config we already hold. Deliberately outside the
+  // swarm-ready block below: what a held proof entitles us to is answerable with no network at all, and
+  // the first projection of an existing account is swallowed by design, so nothing else would set it.
+  refreshProAccess();
 
   // Deliberately NOT inside the swarm-ready block below: the whole point of the mock is to reach the
   // expiry CTAs without a backend round trip, and waiting on the swarm would put a network dependency

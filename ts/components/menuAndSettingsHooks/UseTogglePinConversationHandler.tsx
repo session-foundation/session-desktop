@@ -10,7 +10,7 @@ import {
 import { useShowSessionCTACbWithVariant } from '../dialog/SessionCTA';
 import { Constants } from '../../session';
 import { useIsMessageRequestOverlayShown } from '../../state/selectors/section';
-import { useCurrentUserHasPro } from '../../hooks/useHasPro';
+import { useCurrentUserHasProAccess } from '../../hooks/useHasPro';
 import { CTAVariant } from '../dialog/cta/types';
 import { getPinnedConversationsCount } from '../../state/selectors/conversations';
 
@@ -41,7 +41,7 @@ function usePinnedConversationCount() {
 }
 
 // NOTE: [react-compiler] this convinces the compiler the hook is static
-const useHasProInternal = useCurrentUserHasPro;
+const useHasProInternal = useCurrentUserHasProAccess;
 const useIsPinnedInternal = useIsPinned;
 const useCTACallbackInternal = useShowSessionCTACbWithVariant;
 

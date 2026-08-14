@@ -1,6 +1,7 @@
 import { useSelector } from 'react-redux';
 import type { StateType } from '../reducer';
 import {
+  getProStatusFromStorage,
   proBackendDataActions,
   RequestActionArgs,
   WithCallerContext,
@@ -164,7 +165,7 @@ export type ProcessedProStatus = {
   isError: boolean;
   // When the last successful fetch completed (ms, network time), 0 if none happened this run.
   // Note: the displayed status can be non-default with a 0 here, as it is seeded from local state
-  // until a response arrives — see `displaySeedFromLocalState`.
+  // until a response arrives — see `displayStatusSeedFromLocalState`.
   lastFetchedMs: number;
   data: ProAccessDetails;
 };
@@ -173,16 +174,23 @@ export type ProcessedProStatus = {
  * DISPLAY, before any status response has arrived this run: what the plan state looks like from what
  * we hold locally.
  *
+ * A STATUS ONLY — deliberately never a date. Only a response carries `latest_payment` and the values
+ * that have to agree with it, so a date shown before one lands would be a guess dressed as a fact. On
+ * the QA backend the compressed clock shortens the PROOF's lifetime without shortening the account's
+ * entitlement, so seeding a date from the proof would show an account paid for a month as expiring in
+ * minutes. The Pro settings screen — the only place a date is wanted — fetches on arrival, so
+ * withholding it costs a moment.
+ *
  * Seeded from synced config rather than from the last response persisted to disk, because a stored
- * response is never re-evaluated — it keeps asserting whatever the backend last said, for as long as
- * the client stays offline. The access expiry and the proof both carry their own timeline, so they go
+ * response is never re-evaluated: it keeps asserting whatever the backend last said, for as long as
+ * the client stays offline. The access expiry and the proof each carry their own timeline, so they go
  * stale honestly.
  *
  * This is DISPLAY only. It may say active while ACCESS says no (an entitlement we know about but hold
  * no usable proof for), and it may say expired while ACCESS still says yes (the overhang on a proof
  * that outlives the plan). Both are intended.
  */
-function displaySeedFromLocalState(): { currentStatus: ProStatus; expiryTimeMs: number } {
+function displayStatusSeedFromLocalState(): ProStatus {
   let proAccessExpiry: number | null = null;
   let haveProof = false;
   try {
@@ -191,26 +199,21 @@ function displaySeedFromLocalState(): { currentStatus: ProStatus; expiryTimeMs: 
     haveProof = !!cached.proConfig?.proProof;
   } catch {
     // user config not initialised yet (e.g. pre-login): nothing to place on a timeline.
-    return { currentStatus: ProStatus.Never, expiryTimeMs: 0 };
+    return ProStatus.Never;
   }
 
-  // The access expiry (E) is the account's own paid-through instant, so it answers "what state is the
-  // plan in" more directly than the proof, whose expiry is clamped to a shorter credential lifetime.
+  // E is the PAYMENT-DUE instant, not the end of coverage — that runs to E + G, and G only ever
+  // arrives on a response. Being past E therefore means "renewal due", not "lapsed", which is why this
+  // seeds a status and leaves the dates to the fetch that follows.
   if (proAccessExpiry) {
-    return {
-      currentStatus: NetworkTime.now() < proAccessExpiry ? ProStatus.Active : ProStatus.Expired,
-      expiryTimeMs: proAccessExpiry,
-    };
+    return NetworkTime.now() < proAccessExpiry ? ProStatus.Active : ProStatus.Expired;
   }
 
   if (haveProof) {
-    return {
-      currentStatus: currentUserProofIsValid() ? ProStatus.Active : ProStatus.Expired,
-      expiryTimeMs: getCachedUserConfig().proConfig?.proProof.expiryMs ?? 0,
-    };
+    return currentUserProofIsValid() ? ProStatus.Active : ProStatus.Expired;
   }
 
-  return { currentStatus: ProStatus.Never, expiryTimeMs: 0 };
+  return ProStatus.Never;
 }
 
 function processProBackendData({
@@ -237,23 +240,36 @@ function processProBackendData({
 
   const now = NetworkTime.now();
 
-  // No response this run: fall back to what config implies rather than to a stored response.
-  const seed = data ? null : displaySeedFromLocalState();
+  // No response this run: seed the STATUS from config, and nothing else. See
+  // `displayStatusSeedFromLocalState` for why the date is deliberately left unset.
+  const seededStatus = data ? null : displayStatusSeedFromLocalState();
 
   const expiryTimeMs =
-    mockExpiry ??
-    data?.expiryMs ??
-    seed?.expiryTimeMs ??
-    defaultProAccessDetailsSourceData.expiryTimeMs;
+    mockExpiry ?? data?.expiryMs ?? defaultProAccessDetailsSourceData.expiryTimeMs;
 
   const latestAccess = data?.latestPayment ?? undefined;
+
+  // The persisted response is read for the PLAN and the PROVIDER and for NOTHING ELSE. Those two alone
+  // come from `latest_payment` and have no config or proof equivalent, so without this exception they
+  // would read "N/A" on every cold launch until a fetch returned. Everything else here — the status,
+  // the dates, the refund window — either has a local source that can be re-evaluated or must wait for
+  // a response: a stored response is a snapshot of what the backend said once, not evidence about now.
+  // Note in particular that `platformRefundExpiryTsMs` below reads `latestAccess`, never this.
+  const storedPlanAndProvider = data ? undefined : getProStatusFromStorage()?.latestPayment;
+
   const provider =
-    mockPlatform ?? latestAccess?.paymentProvider ?? defaultProAccessDetailsSourceData.provider;
+    mockPlatform ??
+    latestAccess?.paymentProvider ??
+    storedPlanAndProvider?.paymentProvider ??
+    defaultProAccessDetailsSourceData.provider;
   const variant = mockVariant ?? defaultProAccessDetailsSourceData.variant;
   // Real data carries a parsed {planCount, planUnit}; the mock still uses a legacy variant slug.
   const variantString = mockVariant
     ? proAccessVariantToString(mockVariant)
-    : planPeriodToString(latestAccess?.planCount, latestAccess?.planUnit);
+    : planPeriodToString(
+        latestAccess?.planCount ?? storedPlanAndProvider?.planCount,
+        latestAccess?.planUnit ?? storedPlanAndProvider?.planUnit
+      );
   const isPlatformRefundAvailable =
     mockIsPlatformRefundAvailable ||
     (latestAccess?.platformRefundExpiryTsMs && now < latestAccess.platformRefundExpiryTsMs) ||
@@ -305,7 +321,7 @@ function processProBackendData({
   return {
     data: {
       currentStatus:
-        data?.userStatus ?? seed?.currentStatus ?? defaultProAccessDetailsSourceData.currentStatus,
+        data?.userStatus ?? seededStatus ?? defaultProAccessDetailsSourceData.currentStatus,
       autoRenew,
       inGracePeriod,
       isProcessingRefund,
@@ -313,11 +329,17 @@ function processProBackendData({
       variantString,
       expiryTimeMs,
       coverageEndMs,
-      expiryTimeDateString: formatDateWithLocale({
-        date: new Date(expiryTimeMs),
-        formatStr: 'MMM d, yyyy',
-      }),
-      expiryTimeRelativeString: formatRoundedUpTimeUntilTimestamp(expiryTimeMs),
+      // An unset expiry renders as ABSENT, never as the epoch. Formatting a 0 gave "Jan 1, 1970" on
+      // every screen that shows a date before a response has landed, which is now the specified
+      // pre-response state rather than a rare one. The screens carry their own loading and error
+      // states, so showing nothing is the honest option.
+      expiryTimeDateString: expiryTimeMs
+        ? formatDateWithLocale({
+            date: new Date(expiryTimeMs),
+            formatStr: 'MMM d, yyyy',
+          })
+        : '',
+      expiryTimeRelativeString: expiryTimeMs ? formatRoundedUpTimeUntilTimestamp(expiryTimeMs) : '',
       isPlatformRefundAvailable,
       provider,
       providerConstants: getProProviderConstantsWithFallbacks(provider),

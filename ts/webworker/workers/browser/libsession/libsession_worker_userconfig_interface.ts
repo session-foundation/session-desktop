@@ -80,6 +80,7 @@ async function fullRefreshCachedUserConfig() {
   }
   const proAccessExpiryBefore = cached.proAccessExpiry;
   const proPrepaidBefore = cached.proPrepaid;
+  const proConfigBefore = cached.proConfig;
 
   applyUserConfigIfChanged('priority', priority);
   applyUserConfigIfChanged('name', name);
@@ -95,25 +96,37 @@ async function fullRefreshCachedUserConfig() {
   applyUserConfigIfChanged('proAutoRenewing', proAutoRenewing);
   applyUserConfigIfChanged('proGracePeriod', proGracePeriod);
 
-  if (
+  const accessValuesChanged =
     !isEqual(proAccessExpiryBefore, cached.proAccessExpiry) ||
-    !isEqual(proPrepaidBefore, cached.proPrepaid)
-  ) {
+    !isEqual(proPrepaidBefore, cached.proPrepaid);
+  // The proof is reported separately because it answers a different question: it decides what this
+  // device may DO, where the expiry and prepaid marker describe what the plan is doing. One consumer
+  // wants each, and conflating them would fetch a status every time a proof renewed.
+  const proofChanged = !isEqual(proConfigBefore, cached.proConfig);
+
+  if (accessValuesChanged || proofChanged) {
     // Contained deliberately: `user_base_actions` awaits this function as `modifiedCb` after both
     // `init` and `merge`, so an unguarded throw here would fail config initialisation or a config
     // merge. Whatever the handler wants to do about Pro is not worth that blast radius.
     try {
-      proAccessValuesChangedHandler?.();
+      proUserConfigChangedHandler?.({ accessValuesChanged, proofChanged });
     } catch (e) {
       window.log.error(
-        `fullRefreshCachedUserConfig: proAccessValuesChangedHandler failed: ${e.message}`
+        `fullRefreshCachedUserConfig: proUserConfigChangedHandler failed: ${e.message}`
       );
     }
   }
 }
 
+export type ProUserConfigChange = {
+  /** The synced access expiry or prepaid marker moved — the plan's state may have changed. */
+  accessValuesChanged: boolean;
+  /** The proof itself moved — what this device may do may have changed. */
+  proofChanged: boolean;
+};
+
 /**
- * Notified when the synced access expiry or prepaid marker changes.
+ * Notified when the synced Pro values change: the access expiry or prepaid marker, the proof, or both.
  *
  * A callback rather than a direct dispatch because deciding what a config change means is not this
  * layer's job, and because the Pro duck already imports `getCachedUserConfig` from here — reaching
@@ -122,7 +135,7 @@ async function fullRefreshCachedUserConfig() {
  * Deliberately not called for the first population of the cache — that is the state the app started
  * with, not something arriving. See `isFirstProjection` above.
  */
-let proAccessValuesChangedHandler: (() => void) | null = null;
+let proUserConfigChangedHandler: ((changed: ProUserConfigChange) => void) | null = null;
 
 /**
  * Single-consumer by design: one slot, registered from `doAppStartUp`.
@@ -134,13 +147,13 @@ let proAccessValuesChangedHandler: (() => void) | null = null;
  * The warning is for the case that is actually a mistake: a SECOND consumer registering and silently
  * unhooking the first. If that is ever genuinely wanted, make this a list rather than dropping the log.
  */
-export function setProAccessValuesChangedHandler(handler: () => void) {
-  if (proAccessValuesChangedHandler) {
+export function setProUserConfigChangedHandler(handler: (changed: ProUserConfigChange) => void) {
+  if (proUserConfigChangedHandler) {
     window.log.warn(
-      'setProAccessValuesChangedHandler: replacing an existing handler — expected when app startup re-runs, a mistake if a second consumer is being added'
+      'setProUserConfigChangedHandler: replacing an existing handler — expected when app startup re-runs, a mistake if a second consumer is being added'
     );
   }
-  proAccessValuesChangedHandler = handler;
+  proUserConfigChangedHandler = handler;
 }
 
 function applyUserConfigIfChanged<T extends keyof CachedUserConfig>(

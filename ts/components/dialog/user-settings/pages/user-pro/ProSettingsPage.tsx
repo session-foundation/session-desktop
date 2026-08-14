@@ -259,7 +259,7 @@ function useKeepProStatusFresh({
   isLoading: boolean;
   isError: boolean;
 }) {
-  // Keep get_pro_status fresh around the paid-through end while the pro page is open, so the "renewal
+  // Keep get_pro_status fresh around the payment-due instant while the pro page is open, so the "renewal
   // unsuccessful" warning reflects reality rather than a pre-expiry snapshot. Without it, a renewal
   // that lands while the page is open isn't picked up until the page is closed and reopened.
   useEffect(() => {

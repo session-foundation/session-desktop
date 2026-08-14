@@ -35,7 +35,7 @@ import { Localizer } from '../../../../../basic/Localizer';
 import { LucideIcon } from '../../../../../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE } from '../../../../../icon/lucide';
 import { useProBadgeOnClickCb } from '../../../../../menuAndSettingsHooks/useProBadgeOnClickCb';
-import { useCurrentUserHasPro } from '../../../../../../hooks/useHasPro';
+import { useCurrentUserHasProAccess } from '../../../../../../hooks/useHasPro';
 import { ProIconButton } from '../../../../../buttons/ProButton';
 import { assertUnreachable } from '../../../../../../types/sqlSharedTypes';
 import { ProMessageFeature } from '../../../../../../models/proMessageFeature';
@@ -178,7 +178,7 @@ function proFeatureToTrKey(proFeature: ProMessageFeature) {
 }
 
 function ProMessageFeaturesDetails({ messageId }: { messageId: string }) {
-  const currentUserHasPro = useCurrentUserHasPro();
+  const currentUserHasPro = useCurrentUserHasProAccess();
 
   const messageSentWithProFeat = useMessageSentWithProFeatures(messageId);
 

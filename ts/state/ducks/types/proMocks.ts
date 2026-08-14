@@ -72,6 +72,25 @@ export function proStatusWithMock(actual: ProStatus): ProStatus {
   return getDataFeatureFlag('mockProCurrentStatus') ?? actual;
 }
 
+/**
+ * Whether our Pro ACCESS should be treated as granted, given what the proof actually says.
+ *
+ * A mocked run holds no real proof — the mock names a status, and no signed credential exists to go
+ * with it. So the status mock has to reach ACCESS as well, or every surface that reads ACCESS goes dark
+ * under exactly the mocks the tests drive Pro state with, and the mock would only be able to express
+ * "not Pro".
+ *
+ * This is the one place the two values are deliberately tied together, and only when mocked. Leave the
+ * real path alone: unmocked, ACCESS is the proof and nothing else.
+ */
+export function proAccessWithMock(actual: boolean): boolean {
+  const mocked = getDataFeatureFlag('mockProCurrentStatus');
+  if (mocked === null) {
+    return actual;
+  }
+  return mocked === ProStatus.Active;
+}
+
 /** Whether the plan should be treated as auto-renewing, given what the backend actually reported. */
 export function proAutoRenewWithMock(actual: boolean): boolean {
   return getFeatureFlag('mockCurrentUserHasProCancelled') ? false : actual;

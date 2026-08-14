@@ -43,7 +43,7 @@ import {
   useUpdateConversationDetailsModal,
 } from '../../state/selectors/modal';
 import { CTAVariant } from './cta/types';
-import { useCurrentUserHasPro } from '../../hooks/useHasPro';
+import { useCurrentUserHasProAccess } from '../../hooks/useHasPro';
 
 const StyledAvatarContainer = styled.div`
   cursor: pointer;
@@ -137,7 +137,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
 
   const isMe = useIsMe(conversationId);
   const isCommunity = useIsPublic(conversationId);
-  const weHavePro = useCurrentUserHasPro() && isMe;
+  const weHavePro = useCurrentUserHasProAccess() && isMe;
 
   const avatarPath = useAvatarPath(conversationId) || '';
 

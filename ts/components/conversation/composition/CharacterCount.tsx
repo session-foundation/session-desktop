@@ -5,8 +5,7 @@ import { SessionTooltip } from '../../SessionTooltip';
 import { StyledCTA } from '../../basic/StyledCTA';
 import { formatNumber } from '../../../util/i18n/formatting/generics';
 import { tr } from '../../../localization/localeTools';
-import { useCurrentUserHasPro } from '../../../hooks/useHasPro';
-import { currentUserProofIsValid } from '../../../session/utils/ProAccess';
+import { useCurrentUserHasPro, useCurrentUserHasProAccess } from '../../../hooks/useHasPro';
 import { ProIconButton } from '../../buttons/ProButton';
 import { useProBadgeOnClickCb } from '../../menuAndSettingsHooks/useProBadgeOnClickCb';
 
@@ -59,9 +58,11 @@ export function CharacterCount({ text }: CharacterCountProps) {
 
   // How many characters we may send is ACCESS, not DISPLAY: the recipient decides what to keep by
   // validating the proof we attach, so counting against the Pro limit without one would promise an
-  // allowance every recipient will truncate. Read live rather than from redux — this re-renders on
-  // each keystroke, so it stays current on its own.
-  const charLimit = currentUserProofIsValid()
+  // allowance every recipient will truncate. Subscribed rather than called, because this is a render —
+  // the send path itself calls the function directly, which is what actually has to be current.
+  const currentUserHasProAccess = useCurrentUserHasProAccess();
+
+  const charLimit = currentUserHasProAccess
     ? LIBSESSION_CONSTANTS.MESSAGE_CHARACTER_LIMIT_PRO
     : LIBSESSION_CONSTANTS.MESSAGE_CHARACTER_LIMIT_STANDARD;
 

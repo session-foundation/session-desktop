@@ -1,4 +1,5 @@
 import { NetworkTime } from '../../util/NetworkTime';
+import { proAccessWithMock } from '../../state/ducks/types/proMocks';
 import { ProRevocationCache } from '../revocation_list/pro_revocation_list';
 import { getCachedUserConfig } from '../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 
@@ -17,8 +18,16 @@ import { getCachedUserConfig } from '../../webworker/workers/browser/libsession/
  *
  * Answers only for ourselves. Other people's proofs travel on their messages and are checked against
  * the same revocation list in `ConversationModel.hasValidCurrentProProof`.
+ *
+ * The status mock is applied HERE rather than at each caller, so rendering and enforcement can never
+ * disagree about what a mocked run is entitled to. See `proAccessWithMock` for why a mock has to reach
+ * ACCESS at all. Unmocked — which is every real client — this is the proof and nothing else.
  */
 export function currentUserProofIsValid(): boolean {
+  return proAccessWithMock(realProofIsValid());
+}
+
+function realProofIsValid(): boolean {
   let proProof;
   try {
     proProof = getCachedUserConfig().proConfig?.proProof;
