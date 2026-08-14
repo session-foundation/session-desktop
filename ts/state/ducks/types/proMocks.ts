@@ -4,6 +4,7 @@ import {
   getDataFeatureFlag,
   getFeatureFlag,
   MockProAccessExpiryOptions,
+  MockProProofOptions,
 } from './releasedFeaturesReduxTypes';
 
 /**
@@ -75,20 +76,22 @@ export function proStatusWithMock(actual: ProStatus): ProStatus {
 /**
  * Whether our Pro ACCESS should be treated as granted, given what the proof actually says.
  *
- * A mocked run holds no real proof — the mock names a status, and no signed credential exists to go
- * with it. So the status mock has to reach ACCESS as well, or every surface that reads ACCESS goes dark
- * under exactly the mocks the tests drive Pro state with, and the mock would only be able to express
- * "not Pro".
+ * Driven by its OWN mock, not by the status mock. A mocked run holds no signed credential, so without a
+ * lever of its own every ACCESS surface would be dark in every mocked run — but tying it to the status
+ * mock instead would make the one interesting state unexpressible: a plan reading active while no usable
+ * proof exists, which is where a message is accepted at the Pro length and silently truncated for every
+ * recipient. Two levers, set independently, so a test can ask for either or for the disagreement.
  *
- * This is the one place the two values are deliberately tied together, and only when mocked. Leave the
- * real path alone: unmocked, ACCESS is the proof and nothing else.
+ * Applied at the single ACCESS function rather than at each caller, so rendering and enforcement can
+ * never differ about what a mocked run is entitled to. Unmocked — every real client — ACCESS is the
+ * proof and nothing else.
  */
 export function proAccessWithMock(actual: boolean): boolean {
-  const mocked = getDataFeatureFlag('mockProCurrentStatus');
+  const mocked = getDataFeatureFlag('mockProProof');
   if (mocked === null) {
     return actual;
   }
-  return mocked === ProStatus.Active;
+  return mocked === MockProProofOptions.Valid;
 }
 
 /** Whether the plan should be treated as auto-renewing, given what the backend actually reported. */

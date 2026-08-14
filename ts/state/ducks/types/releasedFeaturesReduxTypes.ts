@@ -70,10 +70,27 @@ export enum MockProAccessExpiryOptions {
   PT10S = 12,
 }
 
+/**
+ * What a mocked run should hold for a Pro PROOF, independent of what the plan's status says.
+ *
+ * Separate from `mockProCurrentStatus` because the two answer different questions and are allowed to
+ * disagree: the status is DISPLAY ("what state is the plan in"), the proof is ACCESS ("what may this
+ * device do"). One lever driving both made the state where they differ — a plan reading active with no
+ * usable proof, which is where messages get silently truncated — impossible to reach from a test.
+ *
+ * `null` means no override: use whatever proof the client actually holds.
+ */
+export const MockProProofOptions = {
+  Valid: 'valid',
+  None: 'none',
+} as const;
+export type MockProProofOptions = (typeof MockProProofOptions)[keyof typeof MockProProofOptions];
+
 export type SessionDataFeatureFlags = {
   useLocalDevNet: string | null;
   mockMessageProFeatures: Array<ProMessageFeature> | null;
   mockProCurrentStatus: ProStatus | null;
+  mockProProof: MockProProofOptions | null;
   mockProPaymentProvider: ProPaymentProvider | null;
   mockProAccessVariant: ProAccessVariant | null;
   mockProAccessExpiry: MockProAccessExpiryOptions | null;

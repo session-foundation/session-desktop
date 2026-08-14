@@ -3,6 +3,7 @@ import { isTestIntegration, isTestNet } from '../../../shared/env_vars';
 import { ProStatus } from '../../../session/apis/pro_backend_api/types';
 import {
   MockProAccessExpiryOptions,
+  MockProProofOptions,
   type SessionBooleanFeatureFlags,
   type SessionDataFeatureFlags,
 } from './releasedFeaturesReduxTypes';
@@ -117,6 +118,33 @@ function getMockProCurrentStatus(): ProStatus | null {
 }
 
 /**
+ * Whether a mocked run holds a usable Pro proof — ACCESS, as opposed to the plan status this
+ * deliberately does NOT touch.
+ *
+ * Split from `SESSION_PRO_CURRENT_STATUS` because one lever driving both made the interesting state
+ * unreachable: a plan that reads active while no usable proof exists is exactly where a message is
+ * accepted at the Pro length and then silently truncated for every recipient, and a test could not ask
+ * for it. Specs now set both, so what a client shows and what it may do are stated separately.
+ *
+ * `useactual` is spelled out rather than left to an unset variable, matching the other Pro mocks, so a
+ * config can say "no override" explicitly.
+ */
+function getMockProProof(): MockProProofOptions | null {
+  const envVar = process.env.SESSION_PRO_MOCK_PROOF?.trim();
+  if (!envVar) {
+    return null;
+  }
+  const known = Object.values(MockProProofOptions) as Array<string>;
+  if (known.includes(envVar)) {
+    return envVar as MockProProofOptions;
+  }
+  if (envVar === 'useactual') {
+    return null;
+  }
+  return invalidMockEnvVar('SESSION_PRO_MOCK_PROOF', envVar, [...known, 'useactual']);
+}
+
+/**
  * Named rather than numeric, because the enum's numbering is an implementation detail that
  * reorders whenever a case is inserted — an environment pinned to `2` would silently start
  * meaning a different duration.
@@ -154,6 +182,7 @@ export const defaultAvatarPickerColor = '#0000ff'; // defaults to blue
 export const defaultProDataFeatureFlags = {
   mockMessageProFeatures: null,
   mockProCurrentStatus: getMockProCurrentStatus(),
+  mockProProof: getMockProProof(),
   mockProPaymentProvider: null,
   mockProAccessVariant: null,
   mockProAccessExpiry: getMockProAccessExpiry(),
