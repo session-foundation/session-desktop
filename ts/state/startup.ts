@@ -28,9 +28,11 @@ import { initialNetworkModalState } from './ducks/networkModal';
 import { initialNetworkDataState, networkDataActions } from './ducks/networkData';
 import {
   applyMockedProStatusAtStartup,
+  claimProStatusFetchSlot,
   initialProBackendDataState,
   refreshProStatusOnStartupIfNeeded,
 } from './ducks/proBackendData';
+import { setProAccessValuesChangedHandler } from '../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 import { MessageQueue } from '../session/sending';
 import { AvatarMigrate } from '../session/utils/job_runners/jobs/AvatarMigrateJob';
 import { handleTriggeredCTAs } from '../components/dialog/SessionCTA';
@@ -42,7 +44,7 @@ import { DURATION } from '../session/constants';
 import { getSwarmPollingInstance } from '../session/apis/snode_api';
 import { getOpenGroupManager } from '../session/apis/open_group_api/opengroupV2/OpenGroupManagerV2';
 import { loadDefaultRooms } from '../session/apis/open_group_api/opengroupV2/ApiUtil';
-import { getDataFeatureFlag } from './ducks/types/releasedFeaturesReduxTypes';
+import { getDataFeatureFlag, getFeatureFlag } from './ducks/types/releasedFeaturesReduxTypes';
 import { isTestIntegration } from '../shared/env_vars';
 import { sleepFor } from '../session/utils/Promise';
 import { UpdateProRevocationList } from '../session/utils/job_runners/jobs/UpdateProRevocationListJob';
@@ -168,6 +170,18 @@ export const doAppStartUp = async () => {
       hasGiphyIntegrationEnabled: Storage.getBoolOr(SettingsKey.hasGiphyIntegrationEnabled, false),
     })
   );
+
+  // Trigger the Pro status refresh the unified trigger set asks for when synced config delivers a new
+  // access expiry or prepaid marker. Registered here rather than dispatched from the libsession layer,
+  // which reports the change but should not decide what it means.
+  setProAccessValuesChangedHandler(() => {
+    // Dispatched unconditionally: the thunk applies the persisted status floor itself, which is the
+    // right bound — a second one here would be per-run, so a relaunch would defeat it.
+    window.inboxStore?.dispatch(proBackendDataActions.refreshGetProStatusFromProBackend({}) as any);
+    // Explicit rather than left to the thunk's own trailing reconcile: this handler exists for the
+    // config-init path, and a floored fetch never reaches that callback.
+    void reconcileProProof();
+  });
 
   // Deliberately NOT inside the swarm-ready block below: the whole point of the mock is to reach the
   // expiry CTAs without a backend round trip, and waiting on the swarm would put a network dependency

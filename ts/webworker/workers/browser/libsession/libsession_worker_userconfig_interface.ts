@@ -63,6 +63,9 @@ async function fullRefreshCachedUserConfig() {
     };
     return;
   }
+  const proAccessExpiryBefore = cachedUserConfig.proAccessExpiry;
+  const proPrepaidBefore = cachedUserConfig.proPrepaid;
+
   applyUserConfigIfChanged('priority', priority);
   applyUserConfigIfChanged('name', name);
   applyUserConfigIfChanged('profilePic', profilePic);
@@ -76,6 +79,55 @@ async function fullRefreshCachedUserConfig() {
   applyUserConfigIfChanged('proPrepaid', proPrepaid);
   applyUserConfigIfChanged('proAutoRenewing', proAutoRenewing);
   applyUserConfigIfChanged('proGracePeriod', proGracePeriod);
+
+  if (
+    !isEqual(proAccessExpiryBefore, cachedUserConfig.proAccessExpiry) ||
+    !isEqual(proPrepaidBefore, cachedUserConfig.proPrepaid)
+  ) {
+    // Contained deliberately: `user_base_actions` awaits this function as `modifiedCb` after both
+    // `init` and `merge`, so an unguarded throw here would fail config initialisation or a config
+    // merge. Whatever the handler wants to do about Pro is not worth that blast radius.
+    try {
+      proAccessValuesChangedHandler?.();
+    } catch (e) {
+      window.log.error(
+        `fullRefreshCachedUserConfig: proAccessValuesChangedHandler failed: ${e.message}`
+      );
+    }
+  }
+}
+
+/**
+ * Notified when the synced access expiry or prepaid marker changes.
+ *
+ * A callback rather than a direct dispatch because deciding what a config change means is not this
+ * layer's job, and because the Pro duck already imports `getCachedUserConfig` from here — reaching
+ * back the other way would make that a cycle.
+ *
+ * Deliberately not called for the FIRST population of the cache: that is the state the app started
+ * with, not something arriving. A relaunching subscriber loads an expiry from its dump every time,
+ * and treating that as a change would fetch on every launch — which is what the startup gate exists
+ * to stop.
+ */
+let proAccessValuesChangedHandler: (() => void) | null = null;
+
+/**
+ * Single-consumer by design: one slot, registered from `doAppStartUp`.
+ *
+ * Replacing rather than throwing on a second call, because `doAppStartUp` legitimately runs more than
+ * once per renderer — opening the inbox from a notification, and the `openInbox` event registration
+ * fires after — so a hard failure here would break a real path to stop a hypothetical one.
+ *
+ * The warning is for the case that is actually a mistake: a SECOND consumer registering and silently
+ * unhooking the first. If that is ever genuinely wanted, make this a list rather than dropping the log.
+ */
+export function setProAccessValuesChangedHandler(handler: () => void) {
+  if (proAccessValuesChangedHandler) {
+    window.log.warn(
+      'setProAccessValuesChangedHandler: replacing an existing handler — expected when app startup re-runs, a mistake if a second consumer is being added'
+    );
+  }
+  proAccessValuesChangedHandler = handler;
 }
 
 function applyUserConfigIfChanged<T extends keyof CachedUserConfig>(

@@ -152,22 +152,10 @@ async function mergeUserConfigsWithIncomingUpdates(
           //
           // Note: those `?? 0` is here because android sets it to 0 even if it should be unset.
           const proAccessExpiryBefore = (await UserConfigWrapperActions.getProAccessExpiry()) ?? 0;
-          const proPrepaidBefore = (await UserConfigWrapperActions.getProPrepaid()) ?? 0;
           hashesMerged = await UserConfigWrapperActions.merge(toMerge);
           const proAccessExpiryAfter = (await UserConfigWrapperActions.getProAccessExpiry()) ?? 0;
-          const proPrepaidAfter = (await UserConfigWrapperActions.getProPrepaid()) ?? 0;
 
           const accessExpiryChanged = proAccessExpiryBefore !== proAccessExpiryAfter;
-          const prepaidChanged = proPrepaidBefore !== proPrepaidAfter;
-
-          if (accessExpiryChanged || prepaidChanged) {
-            window.log.debug(
-              `[mergeConfigsWithInboxUpdates] pro config changed (proAccessExpiry ${proAccessExpiryBefore} -> ${proAccessExpiryAfter}, proPrepaid ${proPrepaidBefore} -> ${proPrepaidAfter}). Refreshing our pro status.`
-            );
-            window.inboxStore?.dispatch(
-              proBackendDataActions.refreshGetProStatusFromProBackend({}) as any
-            );
-          }
 
           if (accessExpiryChanged) {
             // The `E`-changed proof nudge, called directly rather than left to the status fetch above
