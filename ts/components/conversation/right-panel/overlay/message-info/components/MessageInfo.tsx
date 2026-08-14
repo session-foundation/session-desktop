@@ -35,7 +35,7 @@ import { Localizer } from '../../../../../basic/Localizer';
 import { LucideIcon } from '../../../../../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE } from '../../../../../icon/lucide';
 import { useProBadgeOnClickCb } from '../../../../../menuAndSettingsHooks/useProBadgeOnClickCb';
-import { useCurrentUserHasProAccess } from '../../../../../../hooks/useHasPro';
+import { useCurrentUserHasPro } from '../../../../../../hooks/useHasPro';
 import { ProIconButton } from '../../../../../buttons/ProButton';
 import { assertUnreachable } from '../../../../../../types/sqlSharedTypes';
 import { ProMessageFeature } from '../../../../../../models/proMessageFeature';
@@ -178,7 +178,11 @@ function proFeatureToTrKey(proFeature: ProMessageFeature) {
 }
 
 function ProMessageFeaturesDetails({ messageId }: { messageId: string }) {
-  const currentUserHasPro = useCurrentUserHasProAccess();
+  // DISPLAY, not ACCESS: this only decides whether tapping someone else's badge invites us to buy
+  // Pro. The gate reads ACCESS; the thing that explains or sells the gate reads DISPLAY, so a user
+  // whose plan reads active is never upsold — and one in the overhang, whose plan has lapsed while
+  // the proof still works, is.
+  const currentUserHasPro = useCurrentUserHasPro();
 
   const messageSentWithProFeat = useMessageSentWithProFeatures(messageId);
 
