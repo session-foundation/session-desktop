@@ -584,7 +584,13 @@ function ProSettings({ state }: SectionProps) {
   } else if (isLoading) {
     subText = { token: 'proAccessLoadingEllipsis' };
   } else if (data.inGracePeriod) {
+    // Deliberately ahead of the two branches below: this one needs no date, so it must not be
+    // suppressed by the no-date case. It is the message that is most correct when a fetch is struggling.
     subText = { token: 'proRenewalUnsuccessful' };
+  } else if (!data.expiryTimeMs) {
+    // No date yet — only a status response carries one. Say we are still finding out rather than
+    // render "expiring in " with a hole where the time should be.
+    subText = { token: 'proAccessLoadingEllipsis' };
   } else if (data.autoRenew) {
     subText = { token: 'proAutoRenewTime', time: data.expiryTimeRelativeString };
   } else {

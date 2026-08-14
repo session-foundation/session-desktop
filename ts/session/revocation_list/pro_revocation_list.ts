@@ -111,6 +111,22 @@ function isB64HashEffectivelyRevoked(revocationTagBase64: string) {
   return !!found && NetworkTime.now() >= found.effectiveMs;
 }
 
+/**
+ * When a listed-but-not-yet-effective revocation starts to bite, or null if the hash is not listed or
+ * is already effective.
+ *
+ * Needed because a future-dated revocation changes the answer to "is this proof usable" with no event
+ * behind it: the list has already arrived, so nothing further will be fetched, and the instant simply
+ * passes. Anything holding a rendered copy of that answer has to arm a timer for it.
+ */
+function pendingRevocationMsForB64Hash(revocationTagBase64: string): number | null {
+  assertInitialFetchFromDBDone('pendingRevocationMsForB64Hash');
+
+  const found = cachedProRevocationListItems.find(m => m.revocationTagB64 === revocationTagBase64);
+
+  return found && found.effectiveMs > NetworkTime.now() ? found.effectiveMs : null;
+}
+
 export const ProRevocationCache = {
   getTicket,
   setTicket,
@@ -118,5 +134,6 @@ export const ProRevocationCache = {
   setListItems,
   clear,
   isB64HashEffectivelyRevoked,
+  pendingRevocationMsForB64Hash,
   loadFromDbIfNeeded,
 };

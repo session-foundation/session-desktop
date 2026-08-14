@@ -112,6 +112,13 @@ function useProStoresList(): string {
 
 function ProStatusTextUpdate() {
   const { data } = useProBackendProStatusLocal();
+
+  // Both strings below are a date and nothing else, so with no date there is no sentence to render.
+  // Absent beats a sentence with a hole in it, and beats a date we would have had to invent.
+  if (!data.expiryTimeMs) {
+    return null;
+  }
+
   return data.autoRenew ? (
     <Localizer
       token="proAccessActivatedAutoShort"
