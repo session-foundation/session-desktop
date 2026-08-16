@@ -79,6 +79,8 @@ describe('libsession_user_profile', () => {
           // sub-second value would come back floored. Use a second-aligned one to round-trip as-is.
           expiryMs: Math.floor(Date.now() / 1000) * 1000 + 1000,
           revocationTagB64: to_base64(ed25519Seed, base64_variants.ORIGINAL),
+          // Deliberately not v0: the version is required on the way in but is not persisted, so
+          // this must come back as 0. See the expectation below.
           version: 132,
           signatureHex: to_hex(randombytes_buf(64)),
         },
@@ -98,7 +100,14 @@ describe('libsession_user_profile', () => {
           rotatingPubkeyHex: rotatingPubKeyHex,
           expiryMs: proConfig.proProof.expiryMs,
           revocationTagB64: proConfig.proProof.revocationTagB64,
-          version: proConfig.proProof.version,
+          // Not `proConfig.proProof.version`: libsession stopped persisting the proof version in
+          // the config, because config dicts merge per-key and so an in-dict marker can't
+          // describe its sibling fields (a concurrent edit could stitch one update's version onto
+          // another update's fields). `ProConfig::load` assigns ProProofVersion_v0 directly, that
+          // being the only config proof format, so whatever we set above reads back as 0. Nothing
+          // is lost: the version is not part of the signed payload either — `verify_signature`
+          // covers the revocation tag, rotating pubkey and expiry only.
+          version: 0,
           signatureHex: proConfig.proProof.signatureHex,
         },
       };
