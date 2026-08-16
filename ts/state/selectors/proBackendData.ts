@@ -8,7 +8,6 @@ import {
   WithImmediate,
   type ProBackendDataState,
 } from '../ducks/proBackendData';
-import { currentUserProofIsValid } from '../../session/utils/ProAccess';
 import {
   getDataFeatureFlag,
   getFeatureFlag,
@@ -192,25 +191,33 @@ export type ProcessedProStatus = {
  */
 function displayStatusSeedFromLocalState(): ProStatus {
   let proAccessExpiry: number | null = null;
-  let haveProof = false;
+  let proofExpiryMs: number | null = null;
   try {
     const cached = getCachedUserConfig();
     proAccessExpiry = cached.proAccessExpiry ?? null;
-    haveProof = !!cached.proConfig?.proProof;
+    proofExpiryMs = cached.proConfig?.proProof.expiryMs ?? null;
   } catch {
     // user config not initialised yet (e.g. pre-login): nothing to place on a timeline.
     return ProStatus.Never;
   }
 
+  // One instant for both rungs. Reading the clock twice can straddle them, describing an account as it
+  // never was at any single moment.
+  const now = NetworkTime.now();
+
   // E is the PAYMENT-DUE instant, not the end of coverage — that runs to E + G, and G only ever
   // arrives on a response. Being past E therefore means "renewal due", not "lapsed", which is why this
   // seeds a status and leaves the dates to the fetch that follows.
   if (proAccessExpiry) {
-    return NetworkTime.now() < proAccessExpiry ? ProStatus.Active : ProStatus.Expired;
+    return now < proAccessExpiry ? ProStatus.Active : ProStatus.Expired;
   }
 
-  if (haveProof) {
-    return currentUserProofIsValid() ? ProStatus.Active : ProStatus.Expired;
+  // The proof's EXPIRY alone, deliberately — not whether it is usable. Revocation withdraws what this
+  // device may do, and says nothing about whether the account is still paid: a credential can be
+  // revoked and reissued while the plan runs on untouched. Reading usability here would also let an
+  // ACCESS input decide a DISPLAY value, which is the separation this pair of values exists to keep.
+  if (proofExpiryMs) {
+    return now < proofExpiryMs ? ProStatus.Active : ProStatus.Expired;
   }
 
   return ProStatus.Never;
