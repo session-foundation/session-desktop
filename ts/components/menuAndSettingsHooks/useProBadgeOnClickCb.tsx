@@ -126,10 +126,10 @@ function proFeatureToVariant(proFeature: ProMessageFeature): CTAVariant {
  * overhang a lapsed plan still has a working proof, and a freshly restored account has an active plan
  * with no usable proof yet.
  *
- * So the caller has to decide which question its context is asking, and this hook cannot check that for
- * it. Passing "whichever Pro boolean was already in scope" is how six Desktop surfaces came to offer an
- * upgrade to users whose plan was already active. If you are adding a context, write down which of the
- * two it needs and why, next to the call.
+ * Only the context knows which of the two it is asking, so this hook cannot check the caller's choice.
+ * Passing whichever Pro boolean happens to be in scope will compile and read plausibly while offering an
+ * upgrade to someone whose plan is already active. A new context should say which value it needs, and
+ * why, at the call.
  */
 export function useProBadgeOnClickCb(
   opts: ProBadgeContext
