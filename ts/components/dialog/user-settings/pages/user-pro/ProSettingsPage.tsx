@@ -1095,15 +1095,17 @@ function PageHero({ state }: SectionProps) {
     }
   };
 
+  const heroTextToken = isPro
+    ? 'proThanksForSupporting'
+    : proExpired
+      ? 'proAccessRenewStart'
+      : 'proFullestPotential';
+
   return (
     <ProHeroImage
       onClick={handleClick}
       heroStatusText={<HeroStatusText isError={isError} isLoading={isLoading} isPro={isPro} />}
-      heroText={
-        isPro || (proExpired && !state.fromCTA) ? null : (
-          <Localizer token={proExpired ? 'proAccessRenewStart' : 'proFullestPotential'} />
-        )
-      }
+      heroText={<Localizer token={heroTextToken} />}
       isError={isError}
       noColors={proExpired && !state.fromCTA}
     />
