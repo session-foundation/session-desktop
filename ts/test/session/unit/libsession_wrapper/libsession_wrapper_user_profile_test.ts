@@ -79,8 +79,8 @@ describe('libsession_user_profile', () => {
           // sub-second value would come back floored. Use a second-aligned one to round-trip as-is.
           expiryMs: Math.floor(Date.now() / 1000) * 1000 + 1000,
           revocationTagB64: to_base64(ed25519Seed, base64_variants.ORIGINAL),
-          // Deliberately not 0, to show the read-back below is the format's own value rather than
-          // whatever the setter was handed.
+          // Deliberately not v0: the version is required on the way in but is not persisted, so
+          // this must come back as 0. See the expectation below.
           version: 132,
           signatureHex: to_hex(randombytes_buf(64)),
         },
