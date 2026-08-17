@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import styled from 'styled-components';
-import useMount from 'react-use/lib/useMount';
 import { getAppDispatch } from '../../../../state/dispatch';
 import { useOurConversationUsername, useOurAvatarPath } from '../../../../hooks/useParamSelector';
 import { UserUtils, ToastUtils } from '../../../../session/utils';
@@ -37,7 +36,6 @@ import { UserSettingsModalContainer } from '../components/UserSettingsModalConta
 import { useCurrentUserHasExpiredPro, useCurrentUserHasPro } from '../../../../hooks/useHasPro';
 import { APP_URL } from '../../../../session/constants';
 import { useUserSettingsCloseAction } from './userSettingsHooks';
-import { useProBackendRefetch } from '../../../../state/selectors/proBackendData';
 import { focusVisibleBoxShadowOutsetStr } from '../../../../styles/focusVisible';
 import { createButtonOnKeyDownForClickEventHandler } from '../../../../util/keyboardShortcuts';
 import { useDebugMode } from '../../../../state/selectors/debug';
@@ -319,7 +317,6 @@ const SessionInfo = () => {
 export const DefaultSettingPage = (modalState: UserSettingsModalState) => {
   const dispatch = getAppDispatch();
   const closeAction = useUserSettingsCloseAction(modalState);
-  const refetch = useProBackendRefetch();
 
   const profileName = useOurConversationUsername() || '';
   const [enlargedImage, setEnlargedImage] = useState(false);
@@ -337,15 +334,6 @@ export const DefaultSettingPage = (modalState: UserSettingsModalState) => {
     window.clipboard.writeText(us);
     ToastUtils.pushCopiedToClipBoard();
   }
-
-  useMount(() => {
-    // Trigger #3: opportunistic refresh when opening the settings, floored (cached-if-fresh).
-    //
-    // Unthrottled on purpose: the status floor owns the 60s bound, and it is persisted, so it holds
-    // across the relaunches that a per-run throttle here would be defeated by. A second throttle would
-    // only give two answers to the same question.
-    void refetch();
-  });
 
   return (
     <UserSettingsModalContainer
