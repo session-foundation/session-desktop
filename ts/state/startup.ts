@@ -29,8 +29,10 @@ import { initialNetworkDataState, networkDataActions } from './ducks/networkData
 import {
   applyMockedProStatusAtStartup,
   claimProStatusFetchSlot,
+  evaluateStartupProStatusFetch,
   initialProBackendDataState,
-  refreshProStatusOnStartupIfNeeded,
+  proBackendDataActions,
+  reconcileProProof,
 } from './ducks/proBackendData';
 import { setProUserConfigChangedHandler } from '../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 import { initialProAccessState, refreshProAccess } from './ducks/proAccess';
@@ -210,13 +212,8 @@ export const doAppStartUp = async () => {
     window.log.debug('appStartup: got our fresh swarm, starting polling');
     // trigger any other actions that need to be done after the swarm is ready
     window.inboxStore?.dispatch(networkDataActions.fetchInfoFromSeshServer() as any);
-    // Trigger #1, gated: a cold start only fetches get_pro_status when a home CTA could plausibly
-    // fire, and at most once/24h. Also arms the #6 wake at the account horizon for this session.
-    //
-    // Suppressed when the mocks have already answered for this run: letting both go lets a real
-    // response land on top of a mocked CTA decision moments later.
     if (!proStatusMocked) {
-      void refreshProStatusOnStartupIfNeeded();
+      await evaluateStartupProStatusFetch();
     }
     if (window.inboxStore) {
       const delayedTimeout = getDataFeatureFlag('useLocalDevNet') && isTestIntegration() ? 2000 : 0;

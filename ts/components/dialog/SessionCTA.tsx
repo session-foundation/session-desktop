@@ -506,6 +506,20 @@ export function markProStatusConfirmedThisRun() {
   proStatusConfirmedThisRun = true;
 }
 
+/**
+ * Whether a Pro settings screen is open.
+ *
+ * These CTAs are raised by a DATA event — the first confirmed status of the run — so unlike a CTA raised
+ * from a view they can land wherever the user happens to be, including on the one screen that already
+ * states the plan and offers the same action. Raising it there talks over a better answer, so it waits;
+ * the mark is not cleared, and the next trigger shows it somewhere it adds something.
+ */
+function aProSettingsScreenIsOpen(): boolean {
+  const page = window.inboxStore?.getState().modals.userSettingsModal?.userSettingsPage;
+
+  return page === 'pro' || page === 'proNonOriginating';
+}
+
 export async function handleTriggeredCTAs(dispatch: Dispatch<any>, fromAppStart: boolean) {
   // The Pro CTAs must never fire off an unconfirmed status: the flags are persisted, so a previous run's
   // "expired" verdict outlives the entitlement it described, and showing it after an out-of-band renewal
@@ -522,7 +536,7 @@ export async function handleTriggeredCTAs(dispatch: Dispatch<any>, fromAppStart:
     // merely past startup: a launch that skips or fails the status fetch knows nothing newer than the
     // stored mark, and any later trigger — a conversation change, opening settings — would otherwise
     // display it off that.
-    if (!proAvailable || !proStatusConfirmedThisRun) {
+    if (!proAvailable || !proStatusConfirmedThisRun || aProSettingsScreenIsOpen()) {
       return;
     }
     dispatch(
@@ -532,7 +546,7 @@ export async function handleTriggeredCTAs(dispatch: Dispatch<any>, fromAppStart:
     );
     await Storage.put(SettingsKey.proExpiringSoonCTA, false);
   } else if (Storage.get(SettingsKey.proExpiredCTA)) {
-    if (!proAvailable || !proStatusConfirmedThisRun) {
+    if (!proAvailable || !proStatusConfirmedThisRun || aProSettingsScreenIsOpen()) {
       return;
     }
     dispatch(
