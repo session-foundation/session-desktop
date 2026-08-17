@@ -448,6 +448,9 @@ importers:
       ts-loader:
         specifier: ^9.5.2
         version: 9.6.2(loader-utils@2.0.4)(typescript@5.8.2)(webpack@5.103.0)
+      tsx:
+        specifier: ^4.23.12
+        version: 4.23.12
       typescript:
         specifier: 5.8.2
         version: 5.8.2
@@ -1177,6 +1180,162 @@ packages:
   '@emotion/unitless@0.8.1':
     resolution: {integrity: sha512-KOEGMu6dmJZtpadb476IsZBclKvILjopjUii3V+7MnXIQCYh8W3NgNcgwo21n9LXZX6EDIKvqfjYxXebDwxKmQ==}
 
+  '@esbuild/aix-ppc64@0.28.2':
+    resolution: {integrity: sha512-XExcO+dvLKvVtNTibSTBej1NCAbaGhWn9Ww1ZPx80qsahhPFe/8jgWP0IchNe0F3HwkU7n8ejhH8bjonqht8mQ==}
+    engines: {node: '>=18'}
+    cpu: [ppc64]
+    os: [aix]
+
+  '@esbuild/android-arm64@0.28.2':
+    resolution: {integrity: sha512-5YfKeeI8qWfBZIX+u2xZC3Zlb3Os/gLS2sbEKM+I4ZOcsWmHS2WLysCcQZDAFRslDUU5Oiq44gf6PYN1vGwG5A==}
+    engines: {node: '>=18'}
+    cpu: [arm64]
+    os: [android]
+
+  '@esbuild/android-arm@0.28.2':
+    resolution: {integrity: sha512-kXXoiPVVGQcnIYGOeaovwOURpniDBpSq4A03qkQ+BMQqtGG6HYap3xne9C1O1yo4TR3qxlCX5IqqmX6fFo2Lqg==}
+    engines: {node: '>=18'}
+    cpu: [arm]
+    os: [android]
+
+  '@esbuild/android-x64@0.28.2':
+    resolution: {integrity: sha512-O387ite7SzUyCcy3JQX4P4bLtEA7bLLkx+esve5JHnyYfNTxcVpXZo9jhdB0lTKN44gztELTdU7nS8Nr16Fs1Q==}
+    engines: {node: '>=18'}
+    cpu: [x64]
+    os: [android]
+
+  '@esbuild/darwin-arm64@0.28.2':
+    resolution: {integrity: sha512-n4KqkOQrraxHJcgjM1RvwbigfQKIKJVpM7xp+KsxiyUSrRdIXnt73VhrPAx0fV44hgfmIVKjxMN9J1t5jySVkw==}
+    engines: {node: '>=18'}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@esbuild/darwin-x64@0.28.2':
+    resolution: {integrity: sha512-uq6suIWYP37qzGddBKPw5QEQPi6HiLGsO7UmkpfyaYNQ3D+rN6w6WfwH+nuqcGXWvawGwxOEroO4YGnFh95azw==}
+    engines: {node: '>=18'}
+    cpu: [x64]
+    os: [darwin]
+
+  '@esbuild/freebsd-arm64@0.28.2':
+    resolution: {integrity: sha512-n+I0BTSRIoy+d6RPKnEVwql5UwBJolytvY4mAOIEJorKlqgPII8ix6slVVrfZ5Tnj7glIZvloylbB/EJPMWEXw==}
+    engines: {node: '>=18'}
+    cpu: [arm64]
+    os: [freebsd]
+
+  '@esbuild/freebsd-x64@0.28.2':
+    resolution: {integrity: sha512-78XJTJkvPs0kz2w61301PJjXl4g7q3JqiYMZ/M/yVI73EHBrCRTgkhu9oqG7vPqq+a/yadEW8aD+agKlk5xrmg==}
+    engines: {node: '>=18'}
+    cpu: [x64]
+    os: [freebsd]
+
+  '@esbuild/linux-arm64@0.28.2':
+    resolution: {integrity: sha512-pW4AC0P3it8c7do9MVM4p51FzHzdM/TZrerurgRcHJ2WTa1VQ1CIq18xncfpBJw4ojkiZZrKW2yIBWBP92j6Ug==}
+    engines: {node: '>=18'}
+    cpu: [arm64]
+    os: [linux]
+
+  '@esbuild/linux-arm@0.28.2':
+    resolution: {integrity: sha512-XlDnu2q5yoqems+xay6wSAcg9DDD7K9RLKZEBOMZm3ckNpJBvOX20tSfby8KfrrhINDyv9V2YVZKY/SpoGJI8w==}
+    engines: {node: '>=18'}
+    cpu: [arm]
+    os: [linux]
+
+  '@esbuild/linux-ia32@0.28.2':
+    resolution: {integrity: sha512-CYbnj78HsIeA+DhgUKgFCfvNsTHFhMMrinUrMZpDXJXKN8T3XViTZ/+wtHeVxEWY8ewSzTFN+nRmSwO2tZaLUQ==}
+    engines: {node: '>=18'}
+    cpu: [ia32]
+    os: [linux]
+
+  '@esbuild/linux-loong64@0.28.2':
+    resolution: {integrity: sha512-buwkd8nsph4R+ajRvw0qM5Hja/TXQow3ptzWO2EbG/cqcIkHloRrdlBtQlshyYGTNFvfkfJ5tpPLVkY4DtsPfQ==}
+    engines: {node: '>=18'}
+    cpu: [loong64]
+    os: [linux]
+
+  '@esbuild/linux-mips64el@0.28.2':
+    resolution: {integrity: sha512-ZVykbDyk7519VwiNb9Lcj9m8XM6v5V9uKPvrEMkkEedVewf+0itkhahp4HDpgERXhwLRpWFypsGbG/J8s0QjJA==}
+    engines: {node: '>=18'}
+    cpu: [mips64el]
+    os: [linux]
+
+  '@esbuild/linux-ppc64@0.28.2':
+    resolution: {integrity: sha512-CAXl+Dtd9UUuJd8pKKdwh6MLm3MUMiqMPmhZ3tTSXPqfyQ3vDl6R5hZdZ/kYojK4ofXtdfSv1tFq8XzWx3heNQ==}
+    engines: {node: '>=18'}
+    cpu: [ppc64]
+    os: [linux]
+
+  '@esbuild/linux-riscv64@0.28.2':
+    resolution: {integrity: sha512-GeXCej4IQtU1B+QlDV8W/RRvbzI3O/Stss+/bCXv4lZls5WGRtu2a+3JkA3i4qIUlMXpcHebWpF8AkJhATowuA==}
+    engines: {node: '>=18'}
+    cpu: [riscv64]
+    os: [linux]
+
+  '@esbuild/linux-s390x@0.28.2':
+    resolution: {integrity: sha512-3H1weTYZPxt/WOhByszQZybS9w5lKzUn1FDMsgEChbHWQwHYQQRfBxgCcZvPhjHfKyJjIievvMmEUawJrdY9Dg==}
+    engines: {node: '>=18'}
+    cpu: [s390x]
+    os: [linux]
+
+  '@esbuild/linux-x64@0.28.2':
+    resolution: {integrity: sha512-4xTZr1FUmSoQW4XIWmit3tzQrUTZM+N3P0XV8xROKYF50XfI7xeO90+1bZvNwxIufQ9hDQVRJH5YhgPVF8A/HQ==}
+    engines: {node: '>=18'}
+    cpu: [x64]
+    os: [linux]
+
+  '@esbuild/netbsd-arm64@0.28.2':
+    resolution: {integrity: sha512-sSATRjPeDBg3pdgHoQfoYBob11Kk1FGa9lui5RIHZCoCkJa9QKlvl3/vKz2usCmYYjs7ymJR/2Nnsqe+Hjt5nw==}
+    engines: {node: '>=18'}
+    cpu: [arm64]
+    os: [netbsd]
+
+  '@esbuild/netbsd-x64@0.28.2':
+    resolution: {integrity: sha512-lqnzCV+mM0gIADaKihiCg6ifgfU2L3h5E33rNQBN1Y4MaVGnzryzmvvf7UHxprpQdE8hpqLolJ9Rl+SkIRDpyw==}
+    engines: {node: '>=18'}
+    cpu: [x64]
+    os: [netbsd]
+
+  '@esbuild/openbsd-arm64@0.28.2':
+    resolution: {integrity: sha512-AL2qJILH7lNjrDmCQDvdxMfAUIv8KMNZOvrwAQ8i8//ntL9FflhOyMJ8OZSMBb8/AWXe3/5v5S20y3zCoZWKoQ==}
+    engines: {node: '>=18'}
+    cpu: [arm64]
+    os: [openbsd]
+
+  '@esbuild/openbsd-x64@0.28.2':
+    resolution: {integrity: sha512-QtiuPytchRyC4rwUKhexJdQKvDuZ6hWloi3igqPQNUJCS1/v9EiO3UTOXR6A3FoMo4fnAKbWJdqaIwhOzh8qEw==}
+    engines: {node: '>=18'}
+    cpu: [x64]
+    os: [openbsd]
+
+  '@esbuild/openharmony-arm64@0.28.2':
+    resolution: {integrity: sha512-WkhYDmpTjLvGlScA1rwjRUmhl4k8oXR3cIbtqWmELgU/dFeHHlEllxDvdWcNJV9rbzCexB5vz8gtNewWLgCT7Q==}
+    engines: {node: '>=18'}
+    cpu: [arm64]
+    os: [openharmony]
+
+  '@esbuild/sunos-x64@0.28.2':
+    resolution: {integrity: sha512-GPMSkTOtMnv2U2F8gxe4Io6qmVs+YKyp832Etqqxr0hFngmXQ3rzwytelm3GIn7T4VviRUlf3sOgBOiTdvaf7g==}
+    engines: {node: '>=18'}
+    cpu: [x64]
+    os: [sunos]
+
+  '@esbuild/win32-arm64@0.28.2':
+    resolution: {integrity: sha512-PIhhEkE9uPBleRBrQEJpUn7MBnibZzbGzYWPmY3x+YoVg/95zbjB4CxPPOQ8l5tYYM4mMaCthF8/1DIfBQQyWQ==}
+    engines: {node: '>=18'}
+    cpu: [arm64]
+    os: [win32]
+
+  '@esbuild/win32-ia32@0.28.2':
+    resolution: {integrity: sha512-YmJbfTlvU7Sdn9BB+4PRES4oB6pxgS37MAONj+hBr/cpXS1aBPKXxNnDbu+QCWPj0o9dgyxeq79g6c5P8KeuYA==}
+    engines: {node: '>=18'}
+    cpu: [ia32]
+    os: [win32]
+
+  '@esbuild/win32-x64@0.28.2':
+    resolution: {integrity: sha512-5ebpxr3nWMzrL/rnUI755Jkuee0bHL/Gq0WTF9lvcpv73wAp5eu8MfBUgWK9bhWvZjj7yX8etf/8tI8Ney695g==}
+    engines: {node: '>=18'}
+    cpu: [x64]
+    os: [win32]
+
   '@eslint-community/eslint-utils@4.10.1':
     resolution: {integrity: sha512-cuadcxVFE8sDK6iWJbs8Sn0av2Nrh2QSGQhVlBW9AaAHqHwjWsZHT8LJ4hFGPh7ASBV2deFdM7H/DPjulmh8rg==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
@@ -1221,72 +1380,72 @@ packages:
     engines: {node: '>=18'}
 
   '@img/sharp-darwin-arm64@https://github.com/session-foundation/sharp/releases/download/v0.34.5/img-sharp-darwin-arm64-0.34.5.tgz':
-    resolution: {integrity: sha512-0OrdgJ6O6iS3EJwhqIBKUCgFlXGj+IuTehPtkents2kfg7Bi6rOgxEH4E1tPBaPAvO1ot0np/DbJ5a8yTqxUEQ==, tarball: https://github.com/session-foundation/sharp/releases/download/v0.34.5/img-sharp-darwin-arm64-0.34.5.tgz}
+    resolution: {tarball: https://github.com/session-foundation/sharp/releases/download/v0.34.5/img-sharp-darwin-arm64-0.34.5.tgz}
     version: 0.34.5
     engines: {node: ^18.17.0 || ^20.3.0 || >=21.0.0}
     cpu: [arm64]
     os: [darwin]
 
   '@img/sharp-darwin-x64@https://github.com/session-foundation/sharp/releases/download/v0.34.5/img-sharp-darwin-x64-0.34.5.tgz':
-    resolution: {integrity: sha512-lDdMW6VAz8/lCLRVsdbepsqqohxpJqXDYxU6xHU+amtI9eE16VTqdMdTBU3cc3PqTWF/rX1qhIIi5UbhB69i+w==, tarball: https://github.com/session-foundation/sharp/releases/download/v0.34.5/img-sharp-darwin-x64-0.34.5.tgz}
+    resolution: {tarball: https://github.com/session-foundation/sharp/releases/download/v0.34.5/img-sharp-darwin-x64-0.34.5.tgz}
     version: 0.34.5
     engines: {node: ^18.17.0 || ^20.3.0 || >=21.0.0}
     cpu: [x64]
     os: [darwin]
 
   '@img/sharp-libvips-darwin-arm64@https://github.com/session-foundation/sharp-libvips/releases/download/v1.2.4/sharp-libvips-darwin-arm64-1.2.4.tar.gz':
-    resolution: {integrity: sha512-29f2Pg9m4JrkDn6Zw7bM8egPFfFVg6csVZt+CHvkjsEcxa86g9zFdsOOCiezlqeLx1Q8TtmzY5Qb1v7YAJd+ug==, tarball: https://github.com/session-foundation/sharp-libvips/releases/download/v1.2.4/sharp-libvips-darwin-arm64-1.2.4.tar.gz}
+    resolution: {tarball: https://github.com/session-foundation/sharp-libvips/releases/download/v1.2.4/sharp-libvips-darwin-arm64-1.2.4.tar.gz}
     version: 1.2.4
     cpu: [arm64]
     os: [darwin]
 
   '@img/sharp-libvips-darwin-x64@https://github.com/session-foundation/sharp-libvips/releases/download/v1.2.4/sharp-libvips-darwin-x64-1.2.4.tar.gz':
-    resolution: {integrity: sha512-kKENFPJsmcCApNQCClvu/CBfNZ2F3D7ne8QVfTQCNd4xOTAqbUSJIWjWk/O+8isR+Z7cRJel4bbDPkIPcAHfCg==, tarball: https://github.com/session-foundation/sharp-libvips/releases/download/v1.2.4/sharp-libvips-darwin-x64-1.2.4.tar.gz}
+    resolution: {tarball: https://github.com/session-foundation/sharp-libvips/releases/download/v1.2.4/sharp-libvips-darwin-x64-1.2.4.tar.gz}
     version: 1.2.4
     cpu: [x64]
     os: [darwin]
 
   '@img/sharp-libvips-linux-arm64@https://github.com/session-foundation/sharp-libvips/releases/download/v1.2.4/sharp-libvips-linux-arm64-1.2.4.tar.gz':
-    resolution: {integrity: sha512-yO7Tjt8yDg7gD0nco7MTkmn47JVRS+NvES4kDYleommmyZpyXIFSqxn1uej80O9+HJrBZNCI3joIb8UoyFkDIw==, tarball: https://github.com/session-foundation/sharp-libvips/releases/download/v1.2.4/sharp-libvips-linux-arm64-1.2.4.tar.gz}
+    resolution: {tarball: https://github.com/session-foundation/sharp-libvips/releases/download/v1.2.4/sharp-libvips-linux-arm64-1.2.4.tar.gz}
     version: 1.2.4
     cpu: [arm64]
     os: [linux]
 
   '@img/sharp-libvips-linux-sse2-x64@https://github.com/session-foundation/sharp-libvips/releases/download/v1.2.4/sharp-libvips-linux-sse2-x64-1.2.4.tar.gz':
-    resolution: {integrity: sha512-uEDadTSKFHrkW+spQBKEE+cIBGA7niUbAs0tdpmiWsXnFjvcmPlNM6vBikDcgUtkor7I1hS2OFWUusJhjO6kew==, tarball: https://github.com/session-foundation/sharp-libvips/releases/download/v1.2.4/sharp-libvips-linux-sse2-x64-1.2.4.tar.gz}
+    resolution: {tarball: https://github.com/session-foundation/sharp-libvips/releases/download/v1.2.4/sharp-libvips-linux-sse2-x64-1.2.4.tar.gz}
     version: 1.2.4
     cpu: [x64]
     os: [linux]
 
   '@img/sharp-libvips-linux-x64@https://github.com/session-foundation/sharp-libvips/releases/download/v1.2.4/sharp-libvips-linux-x64-1.2.4.tar.gz':
-    resolution: {integrity: sha512-2BRxNvxW4ZmjilIsS2MPBygl6PAQVFc2GE0+4bFrtUuVuMJG/+xwstfBIHWVzZY8zc436RFNlg11uIxMIy7WcQ==, tarball: https://github.com/session-foundation/sharp-libvips/releases/download/v1.2.4/sharp-libvips-linux-x64-1.2.4.tar.gz}
+    resolution: {tarball: https://github.com/session-foundation/sharp-libvips/releases/download/v1.2.4/sharp-libvips-linux-x64-1.2.4.tar.gz}
     version: 1.2.4
     cpu: [x64]
     os: [linux]
 
   '@img/sharp-linux-arm64@https://github.com/session-foundation/sharp/releases/download/v0.34.5/img-sharp-linux-arm64-0.34.5.tgz':
-    resolution: {integrity: sha512-yffSwlxntiFtk4rcAZDRdX6nMTfW7W4W8+tEOYLSYYwzmPGaRo1uLsKxJQZs1a02HXD1ToXs1mx6KItMY78SQw==, tarball: https://github.com/session-foundation/sharp/releases/download/v0.34.5/img-sharp-linux-arm64-0.34.5.tgz}
+    resolution: {tarball: https://github.com/session-foundation/sharp/releases/download/v0.34.5/img-sharp-linux-arm64-0.34.5.tgz}
     version: 0.34.5
     engines: {node: ^18.17.0 || ^20.3.0 || >=21.0.0}
     cpu: [arm64]
     os: [linux]
 
   '@img/sharp-linux-sse2-x64@https://github.com/session-foundation/sharp/releases/download/v0.34.5/img-sharp-linux-sse2-x64-0.34.5.tgz':
-    resolution: {integrity: sha512-Is4HvNKBGw2wIJuyO9zxmDnpO+AAOitAMXw44ioasiDSi1haOBH6knGu4pII0zwzX2XjR+Wp3OyksXZ43xqFcw==, tarball: https://github.com/session-foundation/sharp/releases/download/v0.34.5/img-sharp-linux-sse2-x64-0.34.5.tgz}
+    resolution: {tarball: https://github.com/session-foundation/sharp/releases/download/v0.34.5/img-sharp-linux-sse2-x64-0.34.5.tgz}
     version: 0.34.5
     engines: {node: ^18.17.0 || ^20.3.0 || >=21.0.0}
     cpu: [x64]
     os: [linux]
 
   '@img/sharp-linux-x64@https://github.com/session-foundation/sharp/releases/download/v0.34.5/img-sharp-linux-x64-0.34.5.tgz':
-    resolution: {integrity: sha512-Lta92mZ5KsN1GmAdQSfpIXxRy44TSY6ZUIKaTPw0LSUl3LtrqPeMJAHLulZpEBRLBh6lW/Cv0AENtvWEVZtu1A==, tarball: https://github.com/session-foundation/sharp/releases/download/v0.34.5/img-sharp-linux-x64-0.34.5.tgz}
+    resolution: {tarball: https://github.com/session-foundation/sharp/releases/download/v0.34.5/img-sharp-linux-x64-0.34.5.tgz}
     version: 0.34.5
     engines: {node: ^18.17.0 || ^20.3.0 || >=21.0.0}
     cpu: [x64]
     os: [linux]
 
   '@img/sharp-win32-x64@https://github.com/session-foundation/sharp/releases/download/v0.34.5/img-sharp-win32-x64-0.34.5.tgz':
-    resolution: {integrity: sha512-NkWwtSB5y/F3ACj3cW284BhgXsP2KIdW8k0WWj4hqGGbZd3lE5zpcZYdcZjvOPQQkSSX2ePw88PQ5WrK2llCHQ==, tarball: https://github.com/session-foundation/sharp/releases/download/v0.34.5/img-sharp-win32-x64-0.34.5.tgz}
+    resolution: {tarball: https://github.com/session-foundation/sharp/releases/download/v0.34.5/img-sharp-win32-x64-0.34.5.tgz}
     version: 0.34.5
     engines: {node: ^18.17.0 || ^20.3.0 || >=21.0.0}
     cpu: [x64]
@@ -3040,6 +3199,11 @@ packages:
 
   es6-error@4.1.1:
     resolution: {integrity: sha512-Um/+FxMr9CISWh0bi5Zv0iOD+4cFh5qLeks1qhAopKVAJw3drgKbKySikp7wGhDL0HPeaja0P5ULZrxLkniUVg==}
+
+  esbuild@0.28.2:
+    resolution: {integrity: sha512-HKVLS8dvII+xoKW9kmqxbRKrnWEXfJJr/FZhhJmiqIB0e053QNYFqOBouTMO/k5sID4MvCiUCvv8b9M4h32wIA==}
+    engines: {node: '>=18'}
+    hasBin: true
 
   escalade@3.2.0:
     resolution: {integrity: sha512-WUj2qlxaQtO4g6Pq5c29GTcWGDyd8itL8zTlipgECz3JesAiiOKotd8JU6otB3PACgG6xkJUyVhboMS+bje/jA==}
@@ -5581,6 +5745,11 @@ packages:
   tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
 
+  tsx@4.23.12:
+    resolution: {integrity: sha512-FDf4L4sYzKtzWYhU/Xm0AQFdTjdIxNo9ElTf2mxXM6k8YMHXzYUe4yODVaXP4V9uMFbVg8c0qyBccK2OOxb45Q==}
+    engines: {node: '>=18.0.0'}
+    hasBin: true
+
   type-check@0.3.2:
     resolution: {integrity: sha512-ZCmOJdvOWDBYJlzAoFkC+Q0+bUyEOS1ltgp1MGU03fqHG+dbi9tBFU2Rd9QKiDZFAYrhPh2JUf7rZRIuHRKtOg==}
     engines: {node: '>= 0.8.0'}
@@ -6913,6 +7082,84 @@ snapshots:
   '@emotion/memoize@0.8.1': {}
 
   '@emotion/unitless@0.8.1': {}
+
+  '@esbuild/aix-ppc64@0.28.2':
+    optional: true
+
+  '@esbuild/android-arm64@0.28.2':
+    optional: true
+
+  '@esbuild/android-arm@0.28.2':
+    optional: true
+
+  '@esbuild/android-x64@0.28.2':
+    optional: true
+
+  '@esbuild/darwin-arm64@0.28.2':
+    optional: true
+
+  '@esbuild/darwin-x64@0.28.2':
+    optional: true
+
+  '@esbuild/freebsd-arm64@0.28.2':
+    optional: true
+
+  '@esbuild/freebsd-x64@0.28.2':
+    optional: true
+
+  '@esbuild/linux-arm64@0.28.2':
+    optional: true
+
+  '@esbuild/linux-arm@0.28.2':
+    optional: true
+
+  '@esbuild/linux-ia32@0.28.2':
+    optional: true
+
+  '@esbuild/linux-loong64@0.28.2':
+    optional: true
+
+  '@esbuild/linux-mips64el@0.28.2':
+    optional: true
+
+  '@esbuild/linux-ppc64@0.28.2':
+    optional: true
+
+  '@esbuild/linux-riscv64@0.28.2':
+    optional: true
+
+  '@esbuild/linux-s390x@0.28.2':
+    optional: true
+
+  '@esbuild/linux-x64@0.28.2':
+    optional: true
+
+  '@esbuild/netbsd-arm64@0.28.2':
+    optional: true
+
+  '@esbuild/netbsd-x64@0.28.2':
+    optional: true
+
+  '@esbuild/openbsd-arm64@0.28.2':
+    optional: true
+
+  '@esbuild/openbsd-x64@0.28.2':
+    optional: true
+
+  '@esbuild/openharmony-arm64@0.28.2':
+    optional: true
+
+  '@esbuild/sunos-x64@0.28.2':
+    optional: true
+
+  '@esbuild/win32-arm64@0.28.2':
+    optional: true
+
+  '@esbuild/win32-ia32@0.28.2':
+    optional: true
+
+  '@esbuild/win32-x64@0.28.2':
+    optional: true
 
   '@eslint-community/eslint-utils@4.10.1(eslint@8.57.1)':
     dependencies:
@@ -9026,6 +9273,35 @@ snapshots:
 
   es6-error@4.1.1:
     optional: true
+
+  esbuild@0.28.2:
+    optionalDependencies:
+      '@esbuild/aix-ppc64': 0.28.2
+      '@esbuild/android-arm': 0.28.2
+      '@esbuild/android-arm64': 0.28.2
+      '@esbuild/android-x64': 0.28.2
+      '@esbuild/darwin-arm64': 0.28.2
+      '@esbuild/darwin-x64': 0.28.2
+      '@esbuild/freebsd-arm64': 0.28.2
+      '@esbuild/freebsd-x64': 0.28.2
+      '@esbuild/linux-arm': 0.28.2
+      '@esbuild/linux-arm64': 0.28.2
+      '@esbuild/linux-ia32': 0.28.2
+      '@esbuild/linux-loong64': 0.28.2
+      '@esbuild/linux-mips64el': 0.28.2
+      '@esbuild/linux-ppc64': 0.28.2
+      '@esbuild/linux-riscv64': 0.28.2
+      '@esbuild/linux-s390x': 0.28.2
+      '@esbuild/linux-x64': 0.28.2
+      '@esbuild/netbsd-arm64': 0.28.2
+      '@esbuild/netbsd-x64': 0.28.2
+      '@esbuild/openbsd-arm64': 0.28.2
+      '@esbuild/openbsd-x64': 0.28.2
+      '@esbuild/openharmony-arm64': 0.28.2
+      '@esbuild/sunos-x64': 0.28.2
+      '@esbuild/win32-arm64': 0.28.2
+      '@esbuild/win32-ia32': 0.28.2
+      '@esbuild/win32-x64': 0.28.2
 
   escalade@3.2.0: {}
 
@@ -11716,6 +11992,12 @@ snapshots:
   tslib@2.6.2: {}
 
   tslib@2.8.1: {}
+
+  tsx@4.23.12:
+    dependencies:
+      esbuild: 0.28.2
+    optionalDependencies:
+      fsevents: 2.3.3
 
   type-check@0.3.2:
     dependencies:
