@@ -61,7 +61,7 @@ import {
   getCachedUserConfig,
   UserConfigWrapperActions,
 } from '../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
-import { proBackendDataActions, reconcileProProof } from '../state/ducks/proBackendData';
+import { reconcileProProof } from '../state/ducks/proBackendData';
 
 type IncomingUserResult = {
   needsPush: boolean;

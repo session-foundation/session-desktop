@@ -47,7 +47,7 @@ import { DURATION } from '../session/constants';
 import { getSwarmPollingInstance } from '../session/apis/snode_api';
 import { getOpenGroupManager } from '../session/apis/open_group_api/opengroupV2/OpenGroupManagerV2';
 import { loadDefaultRooms } from '../session/apis/open_group_api/opengroupV2/ApiUtil';
-import { getDataFeatureFlag, getFeatureFlag } from './ducks/types/releasedFeaturesReduxTypes';
+import { getDataFeatureFlag } from './ducks/types/releasedFeaturesReduxTypes';
 import { isTestIntegration } from '../shared/env_vars';
 import { sleepFor } from '../session/utils/Promise';
 import { UpdateProRevocationList } from '../session/utils/job_runners/jobs/UpdateProRevocationListJob';

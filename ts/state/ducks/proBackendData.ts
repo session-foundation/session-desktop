@@ -1,6 +1,6 @@
 import type { WithMasterPrivKeyHex } from 'libsession_util_nodejs';
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { isUndefined } from 'lodash';
+import { isNumber, isUndefined } from 'lodash';
 import type { StateType } from '../reducer';
 import ProBackendAPI from '../../session/apis/pro_backend_api/ProBackendAPI';
 import { getFeatureFlag } from './types/releasedFeaturesReduxTypes';
@@ -553,8 +553,15 @@ export async function applyMockedProStatusAtStartup(
   }
 
   let configExpiry: number | null = null;
+  // `G` only ever reaches config from a real response, so a mocked run usually has none and the
+  // Expired window falls back to being measured from `E` alone. Read from the same place as the
+  // expiry rather than mocked separately: the two are written together, and a grace period that
+  // disagreed with the expiry beside it is not a state the backend can produce.
+  let configGraceMs = 0;
   try {
-    configExpiry = getCachedUserConfig().proAccessExpiry ?? null;
+    const cached = getCachedUserConfig();
+    configExpiry = cached.proAccessExpiry ?? null;
+    configGraceMs = cached.proGracePeriod ?? 0;
   } catch {
     // config not initialised yet: the mocked expiry is the only source, which is the normal case here.
   }
@@ -567,7 +574,12 @@ export async function applyMockedProStatusAtStartup(
     );
   }
 
-  await handleExpiryCTAs(expiryMs, proAutoRenewWithMock(true), proStatusWithMock(ProStatus.Active));
+  await handleExpiryCTAs(
+    expiryMs,
+    configGraceMs,
+    proAutoRenewWithMock(true),
+    proStatusWithMock(ProStatus.Active)
+  );
   // A simulated success confirms a status as far as the CTAs are concerned: the whole point is to reach
   // them without a round trip, and the guard they sit behind asks whether a status is known, not whether
   // the network produced it.
