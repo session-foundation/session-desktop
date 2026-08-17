@@ -565,6 +565,30 @@ export async function scheduleUserExpiryStatusWake(): Promise<void> {
 // ===== The startup gate =====
 
 /**
+ * Record the startup gate's verdict, the row that produced it, and the values that row read.
+ *
+ * A gate that declines silently is indistinguishable from one that never ran, so a log line that only
+ * said "no fetch" would not be worth its cost — the reason and the inputs are the whole point. Every
+ * row logs, including the ones that allow the fetch, because "which row let this through" is the same
+ * question asked from the other side.
+ *
+ * Pass-through: it returns what it is given, so it cannot move the gate's answer.
+ */
+function logGateDecision(
+  shouldFetch: boolean,
+  reason: string,
+  inputs: Record<string, unknown>
+): boolean {
+  const values = Object.entries(inputs)
+    .map(([key, value]) => `${key}=${value}`)
+    .join(' ');
+  window?.log?.debug(
+    `[proStartupGate] ${shouldFetch ? 'FETCH' : 'no fetch'}: ${reason} — ${values}`
+  );
+  return shouldFetch;
+}
+
+/**
  * Whether a *cold start* is allowed to fetch `get_pro_status`.
  *
  * Startup's only consumer is the home CTAs — entitlement comes from the proof and the settings screen
@@ -588,8 +612,13 @@ async function coldStartShouldFetchProStatus(): Promise<boolean> {
   // is keyed on a stored flag rather than on a horizon and would otherwise fetch on every single launch.
   const lastStartupFetchMs =
     (Storage.get(SettingsKey.proStatusLastStartupFetchMs) as number | undefined) ?? 0;
-  if (NetworkTime.now() < lastStartupFetchMs + STATUS_STARTUP_MIN_INTERVAL_MS) {
-    return false;
+  const nowAtEntry = NetworkTime.now();
+  if (nowAtEntry < lastStartupFetchMs + STATUS_STARTUP_MIN_INTERVAL_MS) {
+    return logGateDecision(false, 'inside the minimum interval since the last cold-start fetch', {
+      now: nowAtEntry,
+      lastStartupFetchMs,
+      minIntervalMs: STATUS_STARTUP_MIN_INTERVAL_MS,
+    });
   }
 
   const accessExpiryMs = await UserConfigWrapperActions.getProAccessExpiry();
@@ -598,7 +627,12 @@ async function coldStartShouldFetchProStatus(): Promise<boolean> {
     // no window left to compute — every bound below is derived from `E` — so the only thing that can still
     // want a fetch is an Expired CTA already latched by an earlier fetch. It gates on a status confirmed in
     // *this* process, so without a fetch here it can never be shown and the flag would sit set forever.
-    return !isUndefined(Storage.get(SettingsKey.proExpiredCTA));
+    const latchedExpiredCTA = Storage.get(SettingsKey.proExpiredCTA);
+    return logGateDecision(
+      !isUndefined(latchedExpiredCTA),
+      'no access expiry in config, so only a latched Expired CTA can still want a fetch',
+      { now: nowAtEntry, accessExpiryMs, latchedExpiredCTA, lastStartupFetchMs }
+    );
   }
 
   const now = NetworkTime.now();
@@ -613,8 +647,9 @@ async function coldStartShouldFetchProStatus(): Promise<boolean> {
   // measuring the elapsed time from `E` would shorten a renewing account's window by exactly its grace
   // period. `G` is 0 when not auto-renewing, which makes this `E + 30d` for those accounts.
   const gracePeriodMs = (await UserConfigWrapperActions.getProGracePeriod()) ?? 0;
+  const inputs = { now, accessExpiryMs, autoRenewing, gracePeriodMs, lastStartupFetchMs };
   if (now >= accessExpiryMs + gracePeriodMs + PRO_EXPIRED_CTA_WINDOW_MS) {
-    return false;
+    return logGateDecision(false, 'lapsed longer ago than any CTA window reaches back', inputs);
   }
 
   if (autoRenewing) {
@@ -623,13 +658,21 @@ async function coldStartShouldFetchProStatus(): Promise<boolean> {
     // out. The lower bound is `E` and not coverage end: both sides of `E + G` want a fetch — inside
     // grace to surface "renewal unsuccessful", past it to surface Expired — so the only instant that
     // changes the answer is `E` itself.
-    return now >= accessExpiryMs;
+    return logGateDecision(
+      now >= accessExpiryMs,
+      'auto-renewing, so nothing to learn until the paid term has ended',
+      inputs
+    );
   }
 
   // Not auto-renewing. Expiring inside the CTA window, or already past `E` (where the fetch is the
   // confirm-before-Expired-CTA step — config can say expired while a renewal that landed on another
   // device hasn't synced yet).
-  return now >= accessExpiryMs - PRO_EXPIRING_CTA_WINDOW_MS;
+  return logGateDecision(
+    now >= accessExpiryMs - PRO_EXPIRING_CTA_WINDOW_MS,
+    'not auto-renewing, so the expiring-soon window is the lower bound',
+    inputs
+  );
 }
 
 /**
