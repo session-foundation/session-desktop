@@ -310,6 +310,9 @@ declare module 'react' {
     | `pro-settings-${ProSettingsSections}-header`
     // Both the "checking" and the "backend unavailable" messages render into this one slot.
     | 'pro-settings-status-banner'
+    // The hero copy, which differs per status. Shared with the non-originating page, whose hero
+    // renders the same slot; a locator reads the text through the id to tell the states apart.
+    | 'pro-settings-description'
 
     // timer options
     | DisappearTimeOptionDataTestId

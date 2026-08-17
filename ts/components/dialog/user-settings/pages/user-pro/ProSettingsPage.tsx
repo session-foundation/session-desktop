@@ -191,7 +191,9 @@ export function ProHeroImage({
         </StyledProStatusText>
       ) : null}
       {heroStatusText && heroText ? <SpacerMD /> : null}
-      {heroText ? <StyledProHeroText>{heroText}</StyledProHeroText> : null}
+      {heroText ? (
+        <StyledProHeroText data-testid="pro-settings-description">{heroText}</StyledProHeroText>
+      ) : null}
     </SectionFlexContainer>
   );
 }

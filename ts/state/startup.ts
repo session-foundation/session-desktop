@@ -185,7 +185,9 @@ export const doAppStartUp = async () => {
     if (accessValuesChanged) {
       // Dispatched unconditionally: the thunk applies the persisted status floor itself, which is the
       // right bound — a second one here would be per-run, so a relaunch would defeat it.
-      window.inboxStore?.dispatch(proBackendDataActions.refreshGetProStatusFromProBackend({}) as any);
+      window.inboxStore?.dispatch(
+        proBackendDataActions.refreshGetProStatusFromProBackend({}) as any
+      );
       // Not floored: entitlement comes from the proof, and libsession decides on its own whether one is
       // actually due.
       void reconcileProProof();
