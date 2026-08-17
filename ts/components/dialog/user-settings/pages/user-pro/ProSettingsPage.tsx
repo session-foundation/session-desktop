@@ -7,6 +7,7 @@ import {
   useMemo,
   type ReactNode,
 } from 'react';
+import useMount from 'react-use/lib/useMount';
 import useUpdate from 'react-use/lib/useUpdate';
 import styled from 'styled-components';
 import { getAppDispatch } from '../../../../../state/dispatch';
@@ -1142,6 +1143,14 @@ export function ProSettingsPage(modalState: {
   const dispatch = getAppDispatch();
   const backAction = useUserSettingsBackAction(modalState);
   const closeAction = useUserSettingsCloseAction(modalState);
+  const refetch = useProBackendRefetch();
+
+  // Confirm our status on reaching this screen, so what it shows is not an arbitrarily old snapshot.
+  // Deliberately not `immediate`: the thunk's persisted floor is what keeps repeatedly reopening the
+  // page from repeatedly hitting the backend, and this is the trigger that floor exists to bound.
+  useMount(() => {
+    refetch();
+  });
 
   const returnToThisModalAction = useCallback(() => {
     dispatch(userSettingsModal(modalState));
