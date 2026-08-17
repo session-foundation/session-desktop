@@ -799,7 +799,10 @@ function ProConfigManager({ forceUpdate }: { forceUpdate: () => void }) {
   ) : (
     <div style={{ width: '100%' }}>
       <h2>Pro Config Manager</h2>
-      <DebugButton onClick={() => refetch()}>Generate New Proof From Backend (refresh)</DebugButton>
+      {/* Developer path: exempt from the status floor, so a debug button always does something. */}
+      <DebugButton onClick={() => refetch({ immediate: true })}>
+        Generate New Proof From Backend (refresh)
+      </DebugButton>
       <i>Changing the pro config may result in an invalid pro config</i>
       <ProConfigForm proConfig={proConfig ?? initialState.value} forceUpdate={_forceUpdate} />
     </div>
@@ -883,7 +886,11 @@ export const ProDebugSection = ({
       <DebugButton onClick={() => setPage(DEBUG_MENU_PAGE.Pro)}>Pro Playground</DebugButton>
       <DebugButton
         onClick={() => {
-          dispatch(proBackendDataActions.refreshGetProStatusFromProBackend({}) as any);
+          // Developer path: exempt from the status floor (a debug button that silently no-ops for
+          // 60s is worse than useless when you are trying to observe a backend change).
+          dispatch(
+            proBackendDataActions.refreshGetProStatusFromProBackend({ immediate: true }) as any
+          );
         }}
       >
         Refresh Pro Status

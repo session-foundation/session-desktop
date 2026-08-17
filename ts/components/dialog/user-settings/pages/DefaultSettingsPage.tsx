@@ -35,13 +35,9 @@ import { useHideRecoveryPasswordEnabled } from '../../../../state/selectors/sett
 import { OnionStatusLight } from '../../OnionStatusPathDialog';
 import { UserSettingsModalContainer } from '../components/UserSettingsModalContainer';
 import { useCurrentUserHasExpiredPro, useCurrentUserHasPro } from '../../../../hooks/useHasPro';
-import { NetworkTime } from '../../../../util/NetworkTime';
-import { APP_URL, DURATION } from '../../../../session/constants';
+import { APP_URL } from '../../../../session/constants';
 import { useUserSettingsCloseAction } from './userSettingsHooks';
-import {
-  useProBackendProStatus,
-  useProBackendRefetch,
-} from '../../../../state/selectors/proBackendData';
+import { useProBackendRefetch } from '../../../../state/selectors/proBackendData';
 import { focusVisibleBoxShadowOutsetStr } from '../../../../styles/focusVisible';
 import { createButtonOnKeyDownForClickEventHandler } from '../../../../util/keyboardShortcuts';
 import { useDebugMode } from '../../../../state/selectors/debug';
@@ -323,7 +319,6 @@ const SessionInfo = () => {
 export const DefaultSettingPage = (modalState: UserSettingsModalState) => {
   const dispatch = getAppDispatch();
   const closeAction = useUserSettingsCloseAction(modalState);
-  const { lastFetchedMs } = useProBackendProStatus();
   const refetch = useProBackendRefetch();
 
   const profileName = useOurConversationUsername() || '';
@@ -344,11 +339,12 @@ export const DefaultSettingPage = (modalState: UserSettingsModalState) => {
   }
 
   useMount(() => {
-    // Opportunistic refresh when opening the settings, throttled to once a minute (and always done
-    // when we haven't had a successful fetch yet this run, i.e. lastFetchedMs is still 0).
-    if (NetworkTime.now() > lastFetchedMs + 1 * DURATION.MINUTES) {
-      void refetch();
-    }
+    // Trigger #3: opportunistic refresh when opening the settings, floored (cached-if-fresh).
+    //
+    // Unthrottled on purpose: the status floor owns the 60s bound, and it is persisted, so it holds
+    // across the relaunches that a per-run throttle here would be defeated by. A second throttle would
+    // only give two answers to the same question.
+    void refetch();
   });
 
   return (
