@@ -11,7 +11,6 @@ import { ProWrapperActions } from '../../webworker/workers/browser/libsession_wo
 import { OutgoingUserProfile } from '../../types/message';
 import { SettingsKey } from '../../data/settings-key';
 import { OutgoingProMessageDetails } from '../../types/message/OutgoingProMessageDetails';
-import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 import {
   getCachedUserConfig,
   UserConfigWrapperActions,
@@ -142,9 +141,6 @@ export async function getOutgoingProMessageDetails({
 }: {
   utf16: string | null | undefined;
 }) {
-  if (!getFeatureFlag('proAvailable')) {
-    return null;
-  }
   const [proConfig, proProfileBitset] = await Promise.all([
     UserConfigWrapperActions.getProConfig(),
     UserConfigWrapperActions.getProProfileBitset(),

@@ -59,7 +59,6 @@ import {
 } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 import { useDebugKey } from '../../hooks/useDebugKey';
 import { UpdateProRevocationList } from '../../session/utils/job_runners/jobs/UpdateProRevocationListJob';
-import { getIsProAvailableMemo } from '../../hooks/useIsProAvailable';
 import { SettingsKey } from '../../data/settings-key';
 import { useKeyboardShortcut } from '../../hooks/useKeyboardShortcut';
 import { KbdShortcut } from '../../util/keyboardShortcuts';
@@ -119,12 +118,8 @@ function useUpdateBadgeCount() {
  * Note: a job will only be added if it wasn't fetched recently, so there is no harm in running this every minute.
  */
 function usePeriodicFetchRevocationList() {
-  const proAvailable = getIsProAvailableMemo();
   useInterval(
     () => {
-      if (!proAvailable) {
-        return;
-      }
       void UpdateProRevocationList.queueNewJobIfNeeded();
     },
     // Note: we tick every 15 minutes in prod, but the job won't be added unless it needs to

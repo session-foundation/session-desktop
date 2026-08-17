@@ -54,7 +54,6 @@ import {
 import { formatRoundedUpTimeUntilTimestamp } from '../../../util/i18n/formatting/generics';
 import { LucideIcon } from '../../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE } from '../../icon/lucide';
-import { getIsProAvailableMemo } from '../../../hooks/useIsProAvailable';
 import {
   clearAllCtaInteractions,
   getCtaInteractions,
@@ -319,12 +318,6 @@ export const LoggingDebugSection = ({ forceUpdate }: { forceUpdate: () => void }
 };
 
 export const Playgrounds = ({ setPage }: DebugMenuPageProps) => {
-  const proAvailable = getIsProAvailableMemo();
-
-  if (!proAvailable) {
-    return null;
-  }
-
   return (
     <DebugMenuSection title="Playgrounds" rowWrap={true}>
       <DebugButton onClick={() => setPage(DEBUG_MENU_PAGE.POPOVER)}>Popover Playground</DebugButton>

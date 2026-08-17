@@ -38,7 +38,6 @@ import { ed25519Str } from '../../session/utils/String';
 import { UserUtils } from '../../session/utils';
 import type { ProMessageFeature } from '../../models/proMessageFeature';
 import { handleTriggeredCTAs } from '../../components/dialog/SessionCTA';
-import { getFeatureFlag } from './types/releasedFeaturesReduxTypes';
 import type { Quote } from '../../session/messages/outgoing/visibleMessage/VisibleMessage';
 import { PopoverTriggerPosition } from '../../components/SessionTooltip';
 
@@ -1289,9 +1288,7 @@ export async function openConversationWithMessages(args: {
   window.inboxStore?.dispatch(sectionActions.resetRightOverlayMode());
 
   if (window.inboxStore) {
-    if (getFeatureFlag('proAvailable')) {
-      await handleTriggeredCTAs(window.inboxStore.dispatch, false);
-    }
+    await handleTriggeredCTAs(window.inboxStore.dispatch, false);
   }
 }
 

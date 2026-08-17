@@ -11,10 +11,7 @@ import { GoogleChrome } from '../../util';
 import { isAudio } from '../MIME';
 import { formatTimeDurationMs } from '../../util/i18n/formatting/generics';
 import { isTestIntegration } from '../../shared/env_vars';
-import {
-  getDataFeatureFlag,
-  getFeatureFlag,
-} from '../../state/ducks/types/releasedFeaturesReduxTypes';
+import { getDataFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 import { processAvatarData } from '../../util/avatar/processAvatarData';
 import type { ProcessedAvatarDataType } from '../../webworker/workers/node/image_processor/image_processor';
 import { ImageProcessor } from '../../webworker/workers/browser/image_processor_interface';
@@ -201,27 +198,15 @@ const AVATAR_MIME_BY_EXTENSION = {
 
 type AvatarExtension = keyof typeof AVATAR_MIME_BY_EXTENSION;
 
-/**
- * `.webp` is only offered when Pro is available, because it is the animated format — an animated
- * avatar is a Pro feature.
- */
-function acceptedAvatarExtensions(): Array<AvatarExtension> {
-  const accepted: Array<AvatarExtension> = ['.png', '.gif', '.jpeg', '.jpg'];
-  if (getFeatureFlag('proAvailable')) {
-    accepted.push('.webp');
-  }
-  return accepted;
-}
+const acceptedAvatarExtensions: Array<AvatarExtension> = ['.png', '.gif', '.jpeg', '.jpg', '.webp'];
 
 async function pickFileForReal() {
-  const acceptedImages = acceptedAvatarExtensions();
-
   const [fileHandle] = await (window as any).showOpenFilePicker({
     types: [
       {
         description: 'Images',
         accept: {
-          'image/*': acceptedImages,
+          'image/*': acceptedAvatarExtensions,
         },
       },
     ],
@@ -257,15 +242,13 @@ function hexToRgb(hex: string) {
  * every test was the same square. `fakeAvatarPickerFile` substitutes a real image from disk.
  */
 function pickFileFromDisk(path: string) {
-  const accepted = acceptedAvatarExtensions();
-  const extension = accepted.find(ext => path.toLowerCase().endsWith(ext));
+  const extension = acceptedAvatarExtensions.find(ext => path.toLowerCase().endsWith(ext));
 
   // Throwing rather than falling back to the generated avatar: a silent fallback would surface as a
   // test asserting the wrong image, several steps from the typo that caused it.
   if (!extension) {
-    const webpHint = getFeatureFlag('proAvailable') ? '' : ' (.webp needs SESSION_PRO)';
     throw new Error(
-      `fakeAvatarPickerFile: "${path}" must end in one of ${accepted.join(', ')}${webpHint}`
+      `fakeAvatarPickerFile: "${path}" must end in one of ${acceptedAvatarExtensions.join(', ')}`
     );
   }
   if (!existsSync(path)) {
