@@ -60,7 +60,7 @@ import {
 import { useDebugKey } from '../../hooks/useDebugKey';
 import { UpdateProRevocationList } from '../../session/utils/job_runners/jobs/UpdateProRevocationListJob';
 import { getIsAppFocused } from '../../state/selectors/section';
-import { evaluateStartupProStatusFetch } from '../../state/ducks/proBackendData';
+import { refreshProStatusOnStartupIfNeeded } from '../../state/ducks/proBackendData';
 import { SettingsKey } from '../../data/settings-key';
 import { useKeyboardShortcut } from '../../hooks/useKeyboardShortcut';
 import { KbdShortcut } from '../../util/keyboardShortcuts';
@@ -143,6 +143,10 @@ function usePeriodicFetchRevocationList() {
  * anything, so this cannot turn into a fetch per focus.
  */
 function useProStatusGateOnAppFocus() {
+  // The startup caller suppresses the gate when the mocks have already answered for this run; on this
+  // path there is no such caller, so the check belongs here. Without it a focus event lets a real
+  // response land on top of a mocked CTA decision, which is the case the startup suppression exists for.
+  const proStatusMocked = getFeatureFlagMemo('mockProBackendSuccess');
   const isAppFocused = useSelector(getIsAppFocused);
   const wasAppFocused = useRef(isAppFocused);
 
@@ -150,11 +154,11 @@ function useProStatusGateOnAppFocus() {
     const regainedFocus = isAppFocused && !wasAppFocused.current;
     wasAppFocused.current = isAppFocused;
 
-    if (!regainedFocus) {
+    if (proStatusMocked || !regainedFocus) {
       return;
     }
-    void evaluateStartupProStatusFetch();
-  }, [isAppFocused]);
+    void refreshProStatusOnStartupIfNeeded();
+  }, [isAppFocused, proStatusMocked]);
 }
 
 function useKeyboardShortcutsModalKeyboardShortcut() {

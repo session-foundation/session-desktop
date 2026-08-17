@@ -28,11 +28,10 @@ import { initialNetworkModalState } from './ducks/networkModal';
 import { initialNetworkDataState, networkDataActions } from './ducks/networkData';
 import {
   applyMockedProStatusAtStartup,
-  claimProStatusFetchSlot,
-  evaluateStartupProStatusFetch,
   initialProBackendDataState,
   proBackendDataActions,
   reconcileProProof,
+  refreshProStatusOnStartupIfNeeded,
 } from './ducks/proBackendData';
 import { setProUserConfigChangedHandler } from '../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 import { initialProAccessState, refreshProAccess } from './ducks/proAccess';
@@ -184,11 +183,9 @@ export const doAppStartUp = async () => {
       refreshProAccess();
     }
     if (accessValuesChanged) {
-      if (claimProStatusFetchSlot()) {
-        window.inboxStore?.dispatch(
-          proBackendDataActions.refreshGetProStatusFromProBackend({}) as any
-        );
-      }
+      // Dispatched unconditionally: the thunk applies the persisted status floor itself, which is the
+      // right bound — a second one here would be per-run, so a relaunch would defeat it.
+      window.inboxStore?.dispatch(proBackendDataActions.refreshGetProStatusFromProBackend({}) as any);
       // Not floored: entitlement comes from the proof, and libsession decides on its own whether one is
       // actually due.
       void reconcileProProof();
@@ -212,8 +209,13 @@ export const doAppStartUp = async () => {
     window.log.debug('appStartup: got our fresh swarm, starting polling');
     // trigger any other actions that need to be done after the swarm is ready
     window.inboxStore?.dispatch(networkDataActions.fetchInfoFromSeshServer() as any);
+    // Trigger #1, gated: a cold start only fetches get_pro_status when a home CTA could plausibly
+    // fire, and at most once/24h. Also arms the #6 wake at the account horizon for this session.
+    //
+    // Suppressed when the mocks have already answered for this run: letting both go lets a real
+    // response land on top of a mocked CTA decision moments later.
     if (!proStatusMocked) {
-      await evaluateStartupProStatusFetch();
+      await refreshProStatusOnStartupIfNeeded();
     }
     if (window.inboxStore) {
       const delayedTimeout = getDataFeatureFlag('useLocalDevNet') && isTestIntegration() ? 2000 : 0;

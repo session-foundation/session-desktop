@@ -1,6 +1,6 @@
 import type { WithMasterPrivKeyHex } from 'libsession_util_nodejs';
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { isNumber, isUndefined } from 'lodash';
+import { isUndefined } from 'lodash';
 import type { StateType } from '../reducer';
 import ProBackendAPI from '../../session/apis/pro_backend_api/ProBackendAPI';
 import { getFeatureFlag } from './types/releasedFeaturesReduxTypes';
@@ -410,123 +410,6 @@ async function handleExpiryCTAs(
       await Storage.put(SettingsKey.proExpiringSoonCTA, true);
     }
   }
-}
-
-/**
- * Shortest gap between two cold-launch status fetches. Desktop is relaunched many times a day, and
- * without a floor every launch spends an onion round trip re-confirming a status that cannot have
- * moved.
- *
- * 24h to match iOS (`SessionPro.StatusRefresh.startupMinIntervalSeconds`) and Android
- * (`ProRefreshWindows.STARTUP_MIN_INTERVAL`) — the consistency is the point of the gate.
- */
-const STARTUP_FETCH_MIN_INTERVAL_MS = 24 * DURATION.HOURS;
-
-/**
- * Whether the cold-launch get_pro_status fetch is worth making, matching the gate iOS
- * (`startupStatusFetchIsNeeded`) and Android (`startupGate`) already apply. The question both ask is
- * "could a CTA fire", so a comfortably-active account skips the fetch entirely.
- *
- * ⚠️ **Not all of the inputs are synced.** Only the expiry (`E`) and the proof arrive by config sync.
- * `autoRenewing` (`A`) and `gracePeriodDurationMs` (`G`) exist only on a fetched `GetProStatusResponse`,
- * so they can be read only from the last one persisted. A device that has never fetched knows `E` but
- * neither `A` nor `G`.
- *
- * Every unknown therefore resolves toward fetching, because the two errors are not symmetric: a
- * suppressed fetch can leave an account stranded on stale state, while a redundant one costs a request.
- * The gate stays quiet only when it positively knows the account is comfortably active.
- */
-/**
- * Evaluate the cold-launch gate and, if it says so, make the fetch and spend the interval.
- *
- * Run on returning to the foreground as well as at launch. The expiring-soon CTA arms seven days before
- * the access expiry, and nothing that survives backgrounding fires before that window opens — the proof
- * wakes land at the expiry and at the end of coverage. A subscriber who crosses into the window while
- * the app sits in the background would otherwise not be warned until it was next started cold.
- *
- * Evaluating more often is safe because the predicate is unchanged: a call inside the 24h interval
- * declines on the interval alone, before reading anything else, so this cannot become a fetch per
- * foreground.
- */
-export async function evaluateStartupProStatusFetch(): Promise<void> {
-  if (getFeatureFlag('mockProBackendSuccess')) {
-    // The mocked startup path already decided the CTAs without a round trip; a real response landing
-    // afterwards would overwrite that decision.
-    return;
-  }
-  if (!(await startupProStatusFetchIsNeeded())) {
-    return;
-  }
-  await Storage.put(SettingsKey.proStatusLastStartupFetchMs, Date.now());
-  window.inboxStore?.dispatch(proBackendDataActions.refreshGetProStatusFromProBackend({}) as any);
-}
-
-export async function startupProStatusFetchIsNeeded(): Promise<boolean> {
-  // Logged either way: a gate that declines silently is indistinguishable from a gate
-  // that never ran, and telling those apart is most of the work when a fetch shows up unexpectedly.
-  const decision = (needed: boolean, why: string) => {
-    window?.log?.debug(
-      `[startupProStatusFetch] ${needed ? 'fetching' : 'skipping the startup fetch'}: ${why}`
-    );
-    return needed;
-  };
-
-  const lastFetchMs = Storage.get(SettingsKey.proStatusLastStartupFetchMs);
-  const now = NetworkTime.now();
-  if (
-    isNumber(lastFetchMs) &&
-    lastFetchMs > 0 &&
-    now - lastFetchMs < STARTUP_FETCH_MIN_INTERVAL_MS
-  ) {
-    return decision(false, 'within the minimum interval since the last startup fetch');
-  }
-
-  let proAccessExpiry: number | null = null;
-  let haveProof = false;
-  try {
-    const cached = getCachedUserConfig();
-    proAccessExpiry = cached.proAccessExpiry ?? null;
-    haveProof = !!cached.proConfig?.proProof;
-  } catch {
-    // config not initialised yet (pre-login): nothing to reason about, and nothing to fetch for.
-    return decision(false, 'user config not initialised yet');
-  }
-
-  const lastResponse = getProStatusFromStorage();
-  const expiryMs = proAccessExpiry || lastResponse?.expiryMs || 0;
-
-  // Never had Pro and hold no proof: there is nothing local a CTA could be about.
-  // NOTE: an entitlement granted server-side that this device has never seen — a voucher, say — stays
-  // undiscovered until something else prompts a fetch. That is the cost of gating on local state.
-  if (!expiryMs && !haveProof) {
-    return decision(false, 'no access expiry and no proof');
-  }
-  if (!expiryMs) {
-    // A proof but no expiry: we cannot place ourselves on the timeline, so confirm.
-    return decision(true, 'a proof but no access expiry');
-  }
-
-  if (!lastResponse) {
-    // E is known but A and G are not, so no row of the table can be evaluated. Confirm.
-    return decision(true, 'an access expiry but no cached response for autoRenew/grace');
-  }
-
-  const { autoRenewing, gracePeriodDurationMs } = lastResponse;
-  const coverageEndMs = expiryMs + (gracePeriodDurationMs || 0);
-
-  if (now >= coverageEndMs) {
-    // Lapsed: confirm, so a renewal that landed on another device can't surface a false expiry here.
-    return decision(true, 'past the end of coverage');
-  }
-  if (autoRenewing) {
-    // Renewal is due at E and served through grace; only worth asking once we are past E.
-    return decision(now >= expiryMs, 'auto-renewing, renewal due at the access expiry');
-  }
-  // Not auto-renewing: the expiring-soon CTA arms seven days out, so ask once inside that window.
-  return decision(
-    now >= expiryMs - 7 * DURATION.DAYS,
-    'not auto-renewing, expiring-soon window opens seven days before the access expiry'
-  );
 }
 
 /**
