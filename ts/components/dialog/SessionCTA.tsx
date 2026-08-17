@@ -3,7 +3,6 @@ import { Dispatch, useMemo, type ReactNode } from 'react';
 import styled from 'styled-components';
 import type { CSSProperties } from 'styled-components';
 import { getAppDispatch } from '../../state/dispatch';
-import type { StateType } from '../../state/reducer';
 import {
   type SessionCTAState,
   updateSessionCTA,
@@ -528,7 +527,6 @@ export async function handleTriggeredCTAs(dispatch: Dispatch<any>, fromAppStart:
   //
   // `fromAppStart` is still needed below, where it *enables* the donate CTA rather than suppressing a
   // Pro one. Those are different questions and must not be collapsed into one flag.
-  const mayShowProCTA = haveConfirmedProStatusThisProcess();
 
   if (Storage.get(SettingsKey.proExpiringSoonCTA)) {
     // An expiry CTA states something about the account, and showing it clears the mark, so it cannot be
@@ -536,7 +534,7 @@ export async function handleTriggeredCTAs(dispatch: Dispatch<any>, fromAppStart:
     // merely past startup: a launch that skips or fails the status fetch knows nothing newer than the
     // stored mark, and any later trigger — a conversation change, opening settings — would otherwise
     // display it off that.
-    if (!proAvailable || !proStatusConfirmedThisRun || aProSettingsScreenIsOpen()) {
+    if (!proStatusConfirmedThisRun || aProSettingsScreenIsOpen()) {
       return;
     }
     dispatch(
@@ -546,7 +544,7 @@ export async function handleTriggeredCTAs(dispatch: Dispatch<any>, fromAppStart:
     );
     await Storage.put(SettingsKey.proExpiringSoonCTA, false);
   } else if (Storage.get(SettingsKey.proExpiredCTA)) {
-    if (!proAvailable || !proStatusConfirmedThisRun || aProSettingsScreenIsOpen()) {
+    if (!proStatusConfirmedThisRun || aProSettingsScreenIsOpen()) {
       return;
     }
     dispatch(

@@ -1,6 +1,5 @@
 import { useSelector } from 'react-redux';
 import { proStatusWithMock } from '../state/ducks/types/proMocks';
-import { getDataFeatureFlagMemo } from '../state/ducks/types/releasedFeaturesReduxTypes';
 import {
   defaultProAccessDetailsSourceData,
   getProBackendCurrentUserStatus,
@@ -61,9 +60,7 @@ export function useCurrentUserHasPro() {
  * animated avatar, a gate on a Pro-only action.
  */
 export function useCurrentUserHasProAccess() {
-  const haveAccess = useSelector(selectWeHaveProAccess);
-
-  return isProAvailable && haveAccess;
+  return useSelector(selectWeHaveProAccess);
 }
 
 /**

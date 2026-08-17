@@ -59,7 +59,6 @@ import {
 } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 import { useDebugKey } from '../../hooks/useDebugKey';
 import { UpdateProRevocationList } from '../../session/utils/job_runners/jobs/UpdateProRevocationListJob';
-import { getIsProAvailableMemo } from '../../hooks/useIsProAvailable';
 import { getIsAppFocused } from '../../state/selectors/section';
 import { evaluateStartupProStatusFetch } from '../../state/ducks/proBackendData';
 import { SettingsKey } from '../../data/settings-key';
@@ -144,7 +143,6 @@ function usePeriodicFetchRevocationList() {
  * anything, so this cannot turn into a fetch per focus.
  */
 function useProStatusGateOnAppFocus() {
-  const proAvailable = getIsProAvailableMemo();
   const isAppFocused = useSelector(getIsAppFocused);
   const wasAppFocused = useRef(isAppFocused);
 
@@ -152,11 +150,11 @@ function useProStatusGateOnAppFocus() {
     const regainedFocus = isAppFocused && !wasAppFocused.current;
     wasAppFocused.current = isAppFocused;
 
-    if (!proAvailable || !regainedFocus) {
+    if (!regainedFocus) {
       return;
     }
     void evaluateStartupProStatusFetch();
-  }, [isAppFocused, proAvailable]);
+  }, [isAppFocused]);
 }
 
 function useKeyboardShortcutsModalKeyboardShortcut() {

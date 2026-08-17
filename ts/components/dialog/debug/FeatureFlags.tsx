@@ -965,7 +965,6 @@ export const ProDebugSection = ({
         ]}
         forceUpdate={forceUpdate}
         unsetOption={{ label: 'Use the actual proof', value: null }}
-        visibleWithBooleanFlag="proAvailable"
       />
       <i>
         Status above is what the plan DISPLAYS; proof here is what the app may DO. They are separate
