@@ -219,6 +219,11 @@ export const doAppStartUp = async () => {
     if (!proStatusMocked) {
       await refreshProStatusOnStartupIfNeeded();
     }
+    // Deliberately outside the gate, mirroring iOS (`SessionProManager.swift`), where the gated status
+    // fetch and the proof reconcile are two separate statements. Entitlement comes from the proof, so a
+    // relaunch has to be able to notice a renewal is due even on a launch that skips the status fetch —
+    // the loop is otherwise only ever kicked by that fetch.
+    void reconcileProProof();
     if (window.inboxStore) {
       const delayedTimeout = getDataFeatureFlag('useLocalDevNet') && isTestIntegration() ? 2000 : 0;
       /**
