@@ -108,7 +108,6 @@ import { tStrippedWithObj, tr, tStripped } from '../localization/localeTools';
 import type { QuotedAttachmentType } from '../components/conversation/message/message-content/quote/Quote';
 import { ProFeatures, ProMessageFeature } from './proMessageFeature';
 import { privateSet, privateSetKey } from './modelFriends';
-import { getFeatureFlag } from '../state/ducks/types/releasedFeaturesReduxTypes';
 import type { OutgoingProMessageDetails } from '../types/message/OutgoingProMessageDetails';
 import { longOrNumberToBigInt } from '../types/Bigint';
 import type { WithLocalMessageDeletionType } from '../session/types/with';
@@ -1533,10 +1532,6 @@ export class MessageModel extends Model<MessageAttributes> {
   }
 
   private getProFeaturesUsed(): Array<ProMessageFeature> {
-    if (!getFeatureFlag('proAvailable')) {
-      return [];
-    }
-
     const proProfileBitset = this.get('proProfileBitset');
     const proMessageBitset = this.get('proMessageBitset');
     if (!proProfileBitset && !proMessageBitset) {
@@ -1557,9 +1552,6 @@ export class MessageModel extends Model<MessageAttributes> {
     proProfileBitset: bigint | null;
     proMessageBitset: bigint | null;
   }) {
-    if (!getFeatureFlag('proAvailable')) {
-      return false;
-    }
     const proProfileStr = proProfileBitset ? proProfileBitset.toString() : undefined;
     const proMessageStr = proMessageBitset ? proMessageBitset.toString() : undefined;
     if (

@@ -26,7 +26,10 @@ import type { UserGroupState } from './ducks/userGroups';
 import { initialThemeState } from './theme/ducks/theme';
 import { initialNetworkModalState } from './ducks/networkModal';
 import { initialNetworkDataState, networkDataActions } from './ducks/networkData';
-import { initialProBackendDataState, proBackendDataActions } from './ducks/proBackendData';
+import {
+  initialProBackendDataState,
+  refreshProStatusOnStartupIfNeeded,
+} from './ducks/proBackendData';
 import { MessageQueue } from '../session/sending';
 import { AvatarMigrate } from '../session/utils/job_runners/jobs/AvatarMigrateJob';
 import { handleTriggeredCTAs } from '../components/dialog/SessionCTA';
@@ -170,7 +173,9 @@ export const doAppStartUp = async () => {
     window.log.debug('appStartup: got our fresh swarm, starting polling');
     // trigger any other actions that need to be done after the swarm is ready
     window.inboxStore?.dispatch(networkDataActions.fetchInfoFromSeshServer() as any);
-    window.inboxStore?.dispatch(proBackendDataActions.refreshGetProStatusFromProBackend({}) as any);
+    // Trigger #1, gated: a cold start only fetches get_pro_status when a home CTA could plausibly
+    // fire, and at most once/24h. Also arms the #6 wake at the account horizon for this session.
+    void refreshProStatusOnStartupIfNeeded();
     if (window.inboxStore) {
       const delayedTimeout = getDataFeatureFlag('useLocalDevNet') && isTestIntegration() ? 2000 : 0;
       /**

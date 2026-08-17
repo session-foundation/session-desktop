@@ -100,13 +100,9 @@ describe('libsession_user_profile', () => {
           rotatingPubkeyHex: rotatingPubKeyHex,
           expiryMs: proConfig.proProof.expiryMs,
           revocationTagB64: proConfig.proProof.revocationTagB64,
-          // Not `proConfig.proProof.version`: libsession stopped persisting the proof version in
-          // the config, because config dicts merge per-key and so an in-dict marker can't
-          // describe its sibling fields (a concurrent edit could stitch one update's version onto
-          // another update's fields). `ProConfig::load` assigns ProProofVersion_v0 directly, that
-          // being the only config proof format, so whatever we set above reads back as 0. Nothing
-          // is lost: the version is not part of the signed payload either — `verify_signature`
-          // covers the revocation tag, rotating pubkey and expiry only.
+          // The stored credential is one opaque bt-encoded value carrying only `e`, `g`, `r` and `s`,
+          // so no version is written and load forces v0 (= 0). A version can't describe itself across
+          // a per-key merge, so a future format takes a new config key instead of an in-dict marker.
           version: 0,
           signatureHex: proConfig.proProof.signatureHex,
         },

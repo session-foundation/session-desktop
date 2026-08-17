@@ -4,6 +4,7 @@ import {
   proBackendDataActions,
   RequestActionArgs,
   WithCallerContext,
+  WithImmediate,
   type ProBackendDataState,
 } from '../ducks/proBackendData';
 import { SettingsKey } from '../../data/settings-key';
@@ -196,6 +197,7 @@ type ProAccessDetails = {
   variant: ProAccessVariant;
   variantString: string;
   expiryTimeMs: number;
+  coverageEndMs: number;
   expiryTimeDateString: string;
   expiryTimeRelativeString: string;
   isPlatformRefundAvailable: boolean;
@@ -280,14 +282,33 @@ function processProBackendData({
     ? !mockCancelled
     : (data?.autoRenewing ?? defaultProAccessDetailsSourceData.autoRenew);
 
-  let beginAutoRenew = 0;
-  if (data) {
-    beginAutoRenew = data.expiryMs - data.gracePeriodDurationMs;
-  }
+  // `expiry_ts` is the account's true expiry — what the user has paid through — so it is the date to
+  // show, with no arithmetic. Coverage runs past it: the backend serves until `expiry_ts +
+  // grace_period_duration` and judges `user_status` against that, so the grace window is `[E, E + grace)`.
+  //
+  // `grace_period_duration` here is the ACCOUNT-level field at the response root. `latestPayment` carries
+  // one of the same name holding a store's raw declaration, NOT gated on auto-renewal — a subscriber who
+  // cancels mid-retry keeps a nonzero value there, and reading it would place coverage weeks late.
+  //
+  // The root value is 0 whenever the subscription isn't auto-renewing, so no provider branching is needed
+  // or wanted: a store that folds grace into its own expiry just sends a later `E`.
+  //
+  // Both values are milliseconds here; core stores `G` in seconds and the wrapper converts, so grace read
+  // from *config* is on the other side of that boundary.
+  const coverageEndMs = expiryTimeMs ? expiryTimeMs + (data?.gracePeriodDurationMs ?? 0) : 0;
 
   let inGracePeriod = mockInGracePeriod;
-  if (beginAutoRenew && !mockInGracePeriod) {
-    inGracePeriod = autoRenew && now >= beginAutoRenew && now < expiryTimeMs;
+  if (expiryTimeMs && !mockInGracePeriod) {
+    // Past the expiry but still covered. The upper bound is coverage end, not the expiry: `now >= E`
+    // and `now < E` cannot both hold, so bounding this by `E` would make the indicator unreachable.
+    // When grace is 0 the window is empty by construction, which is correct — an account with no grace
+    // has no overdue-but-covered state to show.
+    //
+    // The `lastFetchedMs` term is the debounce: only surface "renewal unsuccessful" off a fetch that
+    // COMPLETED at or after the crossing, never off a snapshot predating a renewal that may since have
+    // landed. It is per-run and stamped on completion, so a request still in flight cannot satisfy it.
+    inGracePeriod =
+      autoRenew && now >= expiryTimeMs && now < coverageEndMs && lastFetchedMs >= expiryTimeMs;
   }
 
   // Refund-requested is now a synced config flag (UserProfile key R), not a backend response field.
@@ -309,11 +330,12 @@ function processProBackendData({
       variant,
       variantString,
       expiryTimeMs,
+      coverageEndMs,
       expiryTimeDateString: formatDateWithLocale({
-        date: new Date(beginAutoRenew),
+        date: new Date(expiryTimeMs),
         formatStr: 'MMM d, yyyy',
       }),
-      expiryTimeRelativeString: formatRoundedUpTimeUntilTimestamp(beginAutoRenew),
+      expiryTimeRelativeString: formatRoundedUpTimeUntilTimestamp(expiryTimeMs),
       isPlatformRefundAvailable,
       provider,
       providerConstants: getProProviderConstantsWithFallbacks(provider),
@@ -382,7 +404,7 @@ export function useProBackendRefetch() {
     setProBackendIsLoading({ key: 'details', result: false });
   };
 
-  const refetch = (args: WithCallerContext = {}) => {
+  const refetch = (args: WithCallerContext & WithImmediate = {}) => {
     if (details.isError || mockFail) {
       void mockRefetchFail();
       return;

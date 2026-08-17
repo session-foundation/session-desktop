@@ -2039,22 +2039,9 @@ export class ConversationModel extends Model<ConversationAttributes> {
    * If the user is not a pro user, return the fallback avatar path (first or only frame extracted)
    */
   public getProOrNotAvatarPath() {
-    const proAvailable = getFeatureFlag('proAvailable');
-    const avatarPicked =
-      proAvailable && !this.hasValidCurrentProProof()
-        ? this.getFallbackAvatarInProfilePath()
-        : this.getAvatarInProfilePath();
-
-    // window.log.debug(
-    //   `getProOrNotAvatarPath for ${ed25519Str(this.id)}: `,
-    //   JSON.stringify({
-    //     proAvailable,
-    //     validCurrentProof: this.hasValidCurrentProProof(),
-    //     avatarInProfilePath: this.getAvatarInProfilePath(),
-    //     fallbackAvatarInProfilePath: this.getFallbackAvatarInProfilePath(),
-    //     avatarPicked,
-    //   })
-    // );
+    const avatarPicked = !this.hasValidCurrentProProof()
+      ? this.getFallbackAvatarInProfilePath()
+      : this.getAvatarInProfilePath();
 
     return avatarPicked;
   }

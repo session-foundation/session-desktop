@@ -18,6 +18,8 @@ type CachedUserConfig = {
   proAccessExpiry: AwaitedReturn<UserConfigWrapperActionsCalls['getProAccessExpiry']>;
   refundRequested: AwaitedReturn<UserConfigWrapperActionsCalls['getRefundRequested']>;
   proPrepaid: AwaitedReturn<UserConfigWrapperActionsCalls['getProPrepaid']>;
+  proAutoRenewing: AwaitedReturn<UserConfigWrapperActionsCalls['getProAutoRenewing']>;
+  proGracePeriod: AwaitedReturn<UserConfigWrapperActionsCalls['getProGracePeriod']>;
 };
 
 let cachedUserConfig: CachedUserConfig | null = null;
@@ -40,6 +42,8 @@ async function fullRefreshCachedUserConfig() {
   const proAccessExpiry = await UserConfigWrapperActions.getProAccessExpiry();
   const refundRequested = await UserConfigWrapperActions.getRefundRequested();
   const proPrepaid = await UserConfigWrapperActions.getProPrepaid();
+  const proAutoRenewing = await UserConfigWrapperActions.getProAutoRenewing();
+  const proGracePeriod = await UserConfigWrapperActions.getProGracePeriod();
 
   if (!cachedUserConfig) {
     cachedUserConfig = {
@@ -50,6 +54,8 @@ async function fullRefreshCachedUserConfig() {
       proProfileBitset,
       refundRequested,
       proPrepaid,
+      proAutoRenewing,
+      proGracePeriod,
       profilePic,
       profileUpdatedSeconds,
       priority,
@@ -68,6 +74,8 @@ async function fullRefreshCachedUserConfig() {
   applyUserConfigIfChanged('proAccessExpiry', proAccessExpiry);
   applyUserConfigIfChanged('refundRequested', refundRequested);
   applyUserConfigIfChanged('proPrepaid', proPrepaid);
+  applyUserConfigIfChanged('proAutoRenewing', proAutoRenewing);
+  applyUserConfigIfChanged('proGracePeriod', proGracePeriod);
 }
 
 function applyUserConfigIfChanged<T extends keyof CachedUserConfig>(
@@ -191,6 +199,28 @@ export const UserConfigWrapperActions: UserConfigWrapperActionsCalls = {
     ...args: Parameters<UserConfigWrapperActionsCalls['setProAccessExpiry']>
   ) => {
     return callLibsessionWithUserConfigRefresh(['UserConfig', 'setProAccessExpiry', ...args]);
+  },
+  getProAutoRenewing: async (
+    ...args: Parameters<UserConfigWrapperActionsCalls['getProAutoRenewing']>
+  ) =>
+    callLibSessionWorker(['UserConfig', 'getProAutoRenewing', ...args]) as Promise<
+      ReturnType<UserConfigWrapperActionsCalls['getProAutoRenewing']>
+    >,
+  setProAutoRenewing: async (
+    ...args: Parameters<UserConfigWrapperActionsCalls['setProAutoRenewing']>
+  ) => {
+    return callLibsessionWithUserConfigRefresh(['UserConfig', 'setProAutoRenewing', ...args]);
+  },
+  getProGracePeriod: async (
+    ...args: Parameters<UserConfigWrapperActionsCalls['getProGracePeriod']>
+  ) =>
+    callLibSessionWorker(['UserConfig', 'getProGracePeriod', ...args]) as Promise<
+      ReturnType<UserConfigWrapperActionsCalls['getProGracePeriod']>
+    >,
+  setProGracePeriod: async (
+    ...args: Parameters<UserConfigWrapperActionsCalls['setProGracePeriod']>
+  ) => {
+    return callLibsessionWithUserConfigRefresh(['UserConfig', 'setProGracePeriod', ...args]);
   },
 
   generateProMasterKey: async (
