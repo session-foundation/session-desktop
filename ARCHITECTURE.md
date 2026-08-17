@@ -509,7 +509,7 @@ Session uses a feature flag system to be able to toggle features on and off at r
 
 | Category            | Type                              | Examples                                                          |
 | ------------------- | --------------------------------- | ----------------------------------------------------------------- |
-| Production booleans | `SessionBaseBooleanFeatureFlags`  | `proAvailable`, `canToggleGiphy`, `useTestNet`                    |
+| Production booleans | `SessionBaseBooleanFeatureFlags`  | `canToggleGiphy`, `useTestNet`                                    |
 | Typed data          | `SessionDataFeatureFlags`         | `useLocalDevNet`, `mockProCurrentStatus`, `fakeAvatarPickerColor` |
 | Debug logs booleans | `SessionDebugBooleanFeatureFlags` | `debugLogging`, `debugInsecureNodeFetch`, `debugOnionRequests`    |
 
@@ -517,7 +517,7 @@ Session uses a feature flag system to be able to toggle features on and off at r
 
 ```typescript
 // Read a boolean flag
-getFeatureFlag('proAvailable');
+getFeatureFlag('canToggleGiphy');
 
 // Read a data flag
 getDataFeatureFlag('useLocalDevNet');
