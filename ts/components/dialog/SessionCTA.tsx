@@ -487,18 +487,23 @@ export const useShowSessionCTACbWithVariant = () => {
 };
 
 /**
- * Whether *this process* holds a `get_pro_status` it confirmed itself.
+ * Whether a Pro status has been confirmed in this run — a completed fetch, or the mocked equivalent.
  *
- * `details.lastFetchedMs` is per-run and stamped on completion, so it answers "may we act on the Pro
- * status we hold". Read off the store rather than threaded in as a parameter, so a new call site cannot
- * inherit an answer by copying a neighbour.
+ * Per-run rather than persisted: a stored status says what the backend last reported, not what it
+ * reports now, and the expiry CTAs are irreversible once shown. A launch whose status fetch is skipped
+ * or fails has confirmed nothing, however recently a previous launch did.
  *
- * Not read via the proBackendData selectors: they import the duck, and the duck imports this module.
+ * Lives here rather than in the Pro duck because the duck already depends on this module, and the
+ * dependency has to run one way.
  */
-function haveConfirmedProStatusThisProcess(): boolean {
-  const lastFetchedMs = (window.inboxStore?.getState() as StateType | undefined)?.proBackendData
-    ?.details?.lastFetchedMs;
-  return !!lastFetchedMs;
+let proStatusConfirmedThisRun = false;
+
+/**
+ * Record that a Pro status has been confirmed. Must be called before anything that can display a CTA
+ * derived from it, since the guard below reads this at the moment of display.
+ */
+export function markProStatusConfirmedThisRun() {
+  proStatusConfirmedThisRun = true;
 }
 
 export async function handleTriggeredCTAs(dispatch: Dispatch<any>, fromAppStart: boolean) {
@@ -512,7 +517,12 @@ export async function handleTriggeredCTAs(dispatch: Dispatch<any>, fromAppStart:
   const mayShowProCTA = haveConfirmedProStatusThisProcess();
 
   if (Storage.get(SettingsKey.proExpiringSoonCTA)) {
-    if (!mayShowProCTA) {
+    // An expiry CTA states something about the account, and showing it clears the mark, so it cannot be
+    // taken back. It therefore waits for a status confirmed in this run rather than for a moment that is
+    // merely past startup: a launch that skips or fails the status fetch knows nothing newer than the
+    // stored mark, and any later trigger — a conversation change, opening settings — would otherwise
+    // display it off that.
+    if (!proAvailable || !proStatusConfirmedThisRun) {
       return;
     }
     dispatch(
@@ -522,7 +532,7 @@ export async function handleTriggeredCTAs(dispatch: Dispatch<any>, fromAppStart:
     );
     await Storage.put(SettingsKey.proExpiringSoonCTA, false);
   } else if (Storage.get(SettingsKey.proExpiredCTA)) {
-    if (!mayShowProCTA) {
+    if (!proAvailable || !proStatusConfirmedThisRun) {
       return;
     }
     dispatch(

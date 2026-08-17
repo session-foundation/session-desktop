@@ -21,7 +21,10 @@ import {
   UserConfigWrapperActions,
 } from '../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 import { ConvoHub } from '../../session/conversations';
-import { handleTriggeredCTAs } from '../../components/dialog/SessionCTA';
+import {
+  handleTriggeredCTAs,
+  markProStatusConfirmedThisRun,
+} from '../../components/dialog/SessionCTA';
 
 type RequestState<D = unknown> = {
   isFetching: boolean;
@@ -448,6 +451,10 @@ export async function applyMockedProStatusAtStartup(
   }
 
   await handleExpiryCTAs(expiryMs, proAutoRenewWithMock(true), proStatusWithMock(ProStatus.Active));
+  // A simulated success confirms a status as far as the CTAs are concerned: the whole point is to reach
+  // them without a round trip, and the guard they sit behind asks whether a status is known, not whether
+  // the network produced it.
+  markProStatusConfirmedThisRun();
   void handleTriggeredCTAs(dispatch, false);
   firstFetchProStatusHappened = true;
   return true;
@@ -801,6 +808,7 @@ const fetchGetProStatusFromProBackend = createAsyncThunk(
             proAutoRenewWithMock(state.data.autoRenewing),
             proStatusWithMock(state.data.userStatus)
           );
+          markProStatusConfirmedThisRun();
           // on the first fetch of our pro status after a restart, we want to show the CTAs if needed
           if (window.inboxStore?.dispatch && !firstFetchProStatusHappened) {
             void handleTriggeredCTAs(window.inboxStore?.dispatch, false);
