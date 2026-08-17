@@ -18,11 +18,29 @@ import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesRedux
 export default class ProBackendAPI {
   private static readonly server = new SessionBackendServerApi(PRO_API.PRO_BACKENDS.DEFAULT);
 
+  /**
+   * Built on first use rather than alongside `server`: the DEV target is only populated when the
+   * environment supplies one, so constructing it eagerly would mean building a server around an
+   * unresolvable host on every normal run.
+   */
+  private static devServer: SessionBackendServerApi | undefined;
+
   static getServer() {
     if (getFeatureFlag('useTestProBackend')) {
-      // There is no dev Pro backend configured yet (the DEV target holds no real URL/keys — see
-      // ProBackendTarget). Fail loudly rather than silently using the default backend or placeholders.
-      throw new Error('useTestProBackend is enabled but no dev Pro backend is configured yet');
+      if (!PRO_API.isDevProBackendConfigured()) {
+        // Fail loudly rather than silently falling back to the default backend: a test that asked for
+        // the dev backend and quietly got production would either fail confusingly or, worse, pass.
+        throw new Error(
+          'useTestProBackend is enabled but no dev Pro backend is configured. Set ' +
+            'TEST_PRO_BACKEND_URL, TEST_PRO_BACKEND_ED_PK and TEST_PRO_BACKEND_X_PK (the URL plus the ' +
+            "Ed25519 and X25519 pubkeys from the backend's startup banner), or unset " +
+            'TEST_PRO_BACKEND to use the default backend.'
+        );
+      }
+      if (!ProBackendAPI.devServer) {
+        ProBackendAPI.devServer = new SessionBackendServerApi(PRO_API.PRO_BACKENDS.DEV);
+      }
+      return ProBackendAPI.devServer;
     }
     return ProBackendAPI.server;
   }
