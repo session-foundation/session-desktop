@@ -4,12 +4,11 @@ import { SessionCTAState, updateSessionCTA } from '../../state/ducks/modalDialog
 import { assertUnreachable } from '../../types/sqlSharedTypes';
 import type { ContactNameContext } from '../conversation/ContactName/ContactNameContext';
 import { useShowSessionCTACbWithVariant } from '../dialog/SessionCTA';
+import { useCurrentUserHasExpiredPro, useCurrentUserHasPro } from '../../hooks/useHasPro';
 import { CTAVariant } from '../dialog/cta/types';
 
 type WithUserHasPro = { userHasPro: boolean };
 type WithMessageSentWithProFeat = { messageSentWithProFeat: Array<ProMessageFeature> | null };
-type WithCurrentUserHasPro = { currentUserHasPro: boolean };
-type WithCurrentUserHasExpiredPro = { currentUserHasExpiredPro: boolean };
 
 type WithIsMe = { isMe: boolean };
 type WithContactNameContext = { contactNameContext: ContactNameContext };
@@ -20,27 +19,17 @@ type WithProCTA = { cta: SessionCTAState };
 
 type ProBadgeContext =
   | { context: 'edit-profile-pic'; args: WithProCTA }
-  | {
-      context: 'show-our-profile-dialog';
-      args: WithCurrentUserHasPro & WithCurrentUserHasExpiredPro & WithProvidedCb;
-    }
+  | { context: 'show-our-profile-dialog'; args: WithProvidedCb }
   | {
       context: 'conversation-title-dialog'; // the title in the conversation settings ConversationSettingsHeader/UserProfileDialog
-      args: WithUserHasPro & WithCurrentUserHasPro & WithIsMe & WithIsGroupV2;
+      args: WithUserHasPro & WithIsMe & WithIsGroupV2;
     }
-  | { context: 'character-count'; args: WithCurrentUserHasPro }
+  | { context: 'character-count'; args: Record<string, never> }
   | { context: 'conversation-header-title'; args: WithUserHasPro & WithIsMe } // the title in the conversation header (i.e. title of the main screen of the app)
-  | {
-      context: 'message-info-sent-with-pro';
-      args: WithCurrentUserHasPro & WithMessageSentWithProFeat;
-    }
+  | { context: 'message-info-sent-with-pro'; args: WithMessageSentWithProFeat }
   | {
       context: 'contact-name';
-      args: WithUserHasPro &
-        WithIsMe &
-        WithCurrentUserHasPro &
-        WithContactNameContext &
-        WithIsBlinded;
+      args: WithUserHasPro & WithIsMe & WithContactNameContext & WithIsBlinded;
     };
 
 /**
@@ -120,12 +109,26 @@ function proFeatureToVariant(proFeature: ProMessageFeature): CTAVariant {
  *
  * Depending on the context provided, different arguments are needed.
  *
+ * Our own Pro state is read here rather than passed in. Every branch below uses it to decide whether to
+ * *sell* — show the upsell, or make the badge inert because there is nothing left to sell — so DISPLAY
+ * is the value they all want, and the branch that needs it is the only thing that knows that. A caller
+ * cannot supply the wrong one if it does not supply one at all.
+ *
+ * The distinction is worth holding onto: ACCESS (the proof) is what we may DO, DISPLAY (the plan's
+ * state) is what we are IN, and they disagree in both directions — a lapsed plan keeps a working proof
+ * through the overhang, and a freshly restored account has an active plan with no usable proof yet. A
+ * branch added here that gates a capability rather than selling one wants `useCurrentUserHasProAccess`,
+ * and should read it beside that branch for the same reason.
+ *
+ * `userHasPro` stays an argument: it describes the other participant, so it varies per conversation.
  */
 export function useProBadgeOnClickCb(
   opts: ProBadgeContext
 ): ShowTagWithCb | ShowTagNoCb | DoNotShowTag {
   const dispatch = getAppDispatch();
   const handleShowProInfoModal = useShowSessionCTACbWithVariant();
+  const currentUserHasPro = useCurrentUserHasPro();
+  const currentUserHasExpiredPro = useCurrentUserHasExpiredPro();
 
   const { context, args } = opts;
 
@@ -137,7 +140,7 @@ export function useProBadgeOnClickCb(
   }
 
   if (context === 'show-our-profile-dialog') {
-    if (args.currentUserHasPro || args.currentUserHasExpiredPro) {
+    if (currentUserHasPro || currentUserHasExpiredPro) {
       // if the current user already has or had pro, we want to show the badge, but use a custom callback
       // i.e. it won't open the CTA but allow to edit our name
       return { show: true, cb: args.providedCb };
@@ -159,7 +162,7 @@ export function useProBadgeOnClickCb(
     // - else:
     //   - if a single pro feature was used with this message: open the CTA corresponding to that one
     //   - if multiple pro features were used with this message: open the GENERIC CTA
-    return args.currentUserHasPro
+    return currentUserHasPro
       ? showNoCb
       : {
           show: true,
@@ -201,7 +204,7 @@ export function useProBadgeOnClickCb(
       };
     }
 
-    if (args.currentUserHasPro) {
+    if (currentUserHasPro) {
       // if we also have pro and this is a private conversation, clicking on the badge doesn't do anything
       return showNoCb;
     }
@@ -211,7 +214,7 @@ export function useProBadgeOnClickCb(
 
   if (context === 'character-count') {
     // if we already have pro, there is no point showing the `Upgrade to do more with Pro`
-    if (args.currentUserHasPro) {
+    if (currentUserHasPro) {
       return doNotShow;
     }
     // FOMO
@@ -246,7 +249,7 @@ export function useProBadgeOnClickCb(
       // in the message info screen, the badge should be shown if the corresponding user has pro and
       // - not be clickable if we also have pro
       // - be clickable if we do not have pro and open the generic CTA
-      if (args.currentUserHasPro) {
+      if (currentUserHasPro) {
         return showNoCb;
       }
 

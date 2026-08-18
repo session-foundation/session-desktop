@@ -12,7 +12,11 @@ import { DURATION } from '../../../constants';
 import { getFeatureFlag } from '../../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { ProRevocationCache } from '../../../revocation_list/pro_revocation_list';
 import { stringify } from '../../../../types/sqlSharedTypes';
-import { proBackendDataActions } from '../../../../state/ducks/proBackendData';
+import {
+  persistProConfigWrite,
+  proBackendDataActions,
+} from '../../../../state/ducks/proBackendData';
+import { refreshProAccess } from '../../../../state/ducks/proAccess';
 import {
   getCachedUserConfig,
   UserConfigWrapperActions,
@@ -126,6 +130,11 @@ class UpdateProRevocationListJob extends PersistedJob<UpdateProRevocationListPer
       await ProRevocationCache.setTicket(newTicket);
       await ProRevocationCache.setListItems(newItems);
 
+      // A revocation can invalidate our own proof without anything else moving, so the rendered ACCESS
+      // value has to be recomputed here. The enforcement paths read the list directly and are already
+      // correct at this point; this is only the mirror catching up.
+      refreshProAccess();
+
       window.log.info(
         `UpdateProRevocationListJob: new revocations from ticket #${ticketFromDb}: to #${newTicket}. itemsCount: ${response.items.length}`
       );
@@ -146,6 +155,7 @@ class UpdateProRevocationListJob extends PersistedJob<UpdateProRevocationListPer
           `UpdateProRevocationListJob: our current revocation tag is revoked. Clearing our pro proof.`
         );
         await UserConfigWrapperActions.removeProConfig();
+        await persistProConfigWrite();
         window.inboxStore?.dispatch(
           proBackendDataActions.refreshGetProStatusFromProBackend({}) as any
         );

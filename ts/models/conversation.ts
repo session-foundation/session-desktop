@@ -150,11 +150,9 @@ import type { LastMessageStatusType } from '../state/ducks/types';
 import { OutgoingUserProfile } from '../types/message';
 import { privateSet, privateSetKey } from './modelFriends';
 import { ProFeatures, ProMessageFeature } from './proMessageFeature';
-import {
-  getCachedUserConfig,
-  UserConfigWrapperActions,
-} from '../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
+import { UserConfigWrapperActions } from '../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 import { ProRevocationCache } from '../session/revocation_list/pro_revocation_list';
+import { currentUserProofIsValid } from '../session/utils/ProAccess';
 import { uuidV4 } from '../util/uuid';
 import { pushQuotedMessageToStoreIfNeeded } from '../receiver/queuedJob';
 
@@ -790,17 +788,9 @@ export class ConversationModel extends Model<ConversationAttributes> {
     }
 
     if (this.isMe()) {
-      // The logic for the pro proof for ourselves is coming from libsession.
-      const proProof = getCachedUserConfig().proConfig?.proProof;
-      if (!proProof) {
-        return false;
-      }
-      if (ProRevocationCache.isB64HashEffectivelyRevoked(proProof.revocationTagB64)) {
-        // `false` because the proof is not valid (revoked)
-        return false;
-      }
-      // if now() is before the proof's expiry, it is not expired yet
-      return NetworkTime.nowTs().isBeforeMs({ ms: proProof.expiryMs });
+      // Our own entitlement is ACCESS, and there is one function for it — the send path asks the same
+      // question and must not be able to answer it differently.
+      return currentUserProofIsValid();
     }
 
     const proDetails = this.dbContactProDetails();

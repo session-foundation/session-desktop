@@ -1,5 +1,5 @@
 import { ipcRenderer } from 'electron';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { debounce } from 'lodash';
 
 import { useSelector } from 'react-redux';
@@ -59,6 +59,8 @@ import {
 } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 import { useDebugKey } from '../../hooks/useDebugKey';
 import { UpdateProRevocationList } from '../../session/utils/job_runners/jobs/UpdateProRevocationListJob';
+import { getIsAppFocused } from '../../state/selectors/section';
+import { refreshProStatusOnStartupIfNeeded } from '../../state/ducks/proBackendData';
 import { SettingsKey } from '../../data/settings-key';
 import { useKeyboardShortcut } from '../../hooks/useKeyboardShortcut';
 import { KbdShortcut } from '../../util/keyboardShortcuts';
@@ -125,6 +127,38 @@ function usePeriodicFetchRevocationList() {
     // Note: we tick every 15 minutes in prod, but the job won't be added unless it needs to
     isDevProd() ? 15 * DURATION.SECONDS : 15 * DURATION.MINUTES
   );
+}
+
+/**
+ * Re-evaluate the cold-launch Pro status gate whenever the app regains focus.
+ *
+ * Desktop is left running for days, so "at launch" can be a long time ago. The expiring-soon CTA arms
+ * seven days before the access expiry and nothing else fires before that window opens, so a subscriber
+ * who crosses into it while the window sits in the background would not be warned until a cold start.
+ *
+ * Focus rather than `activate`: `activate` only fires on macOS and only re-shows the window, which
+ * raises focus anyway, so focus is the event that covers every platform and every way back in.
+ *
+ * The gate itself decides whether anything happens — inside the interval it declines before reading
+ * anything, so this cannot turn into a fetch per focus.
+ */
+function useProStatusGateOnAppFocus() {
+  // The startup caller suppresses the gate when the mocks have already answered for this run; on this
+  // path there is no such caller, so the check belongs here. Without it a focus event lets a real
+  // response land on top of a mocked CTA decision, which is the case the startup suppression exists for.
+  const proStatusMocked = getFeatureFlagMemo('mockProBackendSuccess');
+  const isAppFocused = useSelector(getIsAppFocused);
+  const wasAppFocused = useRef(isAppFocused);
+
+  useEffect(() => {
+    const regainedFocus = isAppFocused && !wasAppFocused.current;
+    wasAppFocused.current = isAppFocused;
+
+    if (proStatusMocked || !regainedFocus) {
+      return;
+    }
+    void refreshProStatusOnStartupIfNeeded();
+  }, [isAppFocused, proStatusMocked]);
 }
 
 function useKeyboardShortcutsModalKeyboardShortcut() {
@@ -259,6 +293,7 @@ export const ActionsPanel = () => {
   useDebugFocusScope();
   useUpdateBadgeCount();
   usePeriodicFetchRevocationList();
+  useProStatusGateOnAppFocus();
   useKeyboardShortcutsModalKeyboardShortcut();
   useUserSettingsModalKeyboardShortcut();
   useNewConversationKeyboardShortcut();

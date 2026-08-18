@@ -16,6 +16,7 @@ import {
   UserConfigWrapperActions,
 } from '../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 import { NetworkTime } from '../../util/NetworkTime';
+import { currentUserProofIsValid } from './ProAccess';
 
 export type HexKeyPair = {
   pubKey: string;
@@ -146,9 +147,14 @@ export async function getOutgoingProMessageDetails({
     UserConfigWrapperActions.getProProfileBitset(),
   ]);
 
-  // Note: if we do not have a proof we don't want to send a proMessage.
+  // Note: if we do not have a usable proof we don't want to send a proMessage.
   // Note: if we don't have a user pro feature enabled, we might still need to add one for the message itself, see below
-  if (!proConfig || isEmpty(proConfig?.proProof)) {
+  //
+  // ACCESS decides this, not proof presence: a proof that has expired or been revoked is still sitting
+  // in config until something clears it, and attaching one asserts an entitlement the recipient will
+  // reject anyway. `currentUserProofIsValid` is the same function the feature surfaces ask, so what we
+  // attach and what we let the user do cannot drift apart.
+  if (!currentUserProofIsValid() || !proConfig || isEmpty(proConfig?.proProof)) {
     return null;
   }
 

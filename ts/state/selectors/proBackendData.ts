@@ -1,21 +1,19 @@
 import { useSelector } from 'react-redux';
 import type { StateType } from '../reducer';
 import {
+  getProStatusFromStorage,
   proBackendDataActions,
   RequestActionArgs,
   WithCallerContext,
   WithImmediate,
   type ProBackendDataState,
 } from '../ducks/proBackendData';
-import { SettingsKey } from '../../data/settings-key';
-import { Storage } from '../../util/storage';
-import type { ProStatusResultType } from '../../session/apis/pro_backend_api/schemas';
 import {
   getDataFeatureFlag,
   getFeatureFlag,
   getFeatureFlagMemo,
-  MockProAccessExpiryOptions,
 } from '../ducks/types/releasedFeaturesReduxTypes';
+import { mockedProExpiryMs, proAutoRenewWithMock } from '../ducks/types/proMocks';
 import { NetworkTime } from '../../util/NetworkTime';
 import {
   formatDateWithLocale,
@@ -35,31 +33,6 @@ import { sleepFor } from '../../session/utils/Promise';
 const getProBackendData = (state: StateType): ProBackendDataState => {
   return state.proBackendData;
 };
-
-function getProStatusFromStorage(): ProStatusResultType | null {
-  const response = Storage.get(SettingsKey.proStatus);
-  if (!response) {
-    return null;
-  }
-  // We persist, verbatim, the JS object the libsession-util-nodejs glue produced from the backend
-  // response (see putProStatusInStorage) — not a raw libsession struct — and cast it back to the
-  // CURRENT ProStatusResultType (an alias of the glue's GetProStatusResponse). session-desktop and
-  // libsession-util-nodejs ship in lockstep, so within a single build the producer, the type and this
-  // consumer can't drift — but a cache written by an OLDER build can.
-  //
-  // ⚠️ TRANSITION REQUIRED IF YOU ADD A REQUIRED FIELD to this shape: an upgraded client would read a
-  // stale-shape cache here and cast it to the new type with that field undefined (the Array.isArray
-  // check below validates only the top level, not individual fields). Handle it as part of that change —
-  // e.g. drop this cache behind a stored shape/version marker, or keep the new field optional at this
-  // boundary. It's a transient, re-fetched cache, so drop-and-refetch is the simplest transition. This
-  // is left as a reminder rather than pre-built, since pre-building would just be guessing at the shape.
-  if (typeof response === 'object' && response !== null && 'userStatus' in response) {
-    return response as ProStatusResultType;
-  }
-  void Storage.remove(SettingsKey.proStatus);
-  window?.log?.error('pro status in storage were malformed; removing.');
-  return null;
-}
 
 export function proAccessVariantToString(variant: ProAccessVariant): string {
   switch (variant) {
@@ -144,39 +117,6 @@ export function getProProviderConstantsWithFallbacks(
   };
 }
 
-function getMockedProAccessExpiry(variant: MockProAccessExpiryOptions): number | null {
-  switch (variant) {
-    case MockProAccessExpiryOptions.P7D:
-      return 7 * 24 * 60 * 60 * 1000;
-    case MockProAccessExpiryOptions.P29D:
-      return 29 * 24 * 60 * 60 * 1000;
-    case MockProAccessExpiryOptions.P30D:
-      return 30 * 24 * 60 * 60 * 1000;
-    case MockProAccessExpiryOptions.P30DT1S:
-      return 30 * 24 * 60 * 61 * 1000;
-    case MockProAccessExpiryOptions.P90D:
-      return 90 * 24 * 60 * 60 * 1000;
-    case MockProAccessExpiryOptions.P300D:
-      return 300 * 24 * 60 * 60 * 1000;
-    case MockProAccessExpiryOptions.P365D:
-      return 365 * 24 * 60 * 60 * 1000;
-    case MockProAccessExpiryOptions.P24DT1M:
-      return 24 * 24 * 60 * 60 * 1000 + 60 * 60 * 1000;
-    case MockProAccessExpiryOptions.PT24H1M:
-      return 24 * 60 * 60 * 1000 + 60 * 60 * 1000;
-    case MockProAccessExpiryOptions.PT23H59M:
-      return 23 * 60 * 60 * 1000 + 59 * 60 * 1000;
-    case MockProAccessExpiryOptions.PT33M:
-      return 33 * 60 * 1000;
-    case MockProAccessExpiryOptions.PT1M:
-      return 1 * 60 * 1000;
-    case MockProAccessExpiryOptions.PT10S:
-      return 10 * 1000;
-    default:
-      return null;
-  }
-}
-
 type ProAccessDetailsSourceData = {
   currentStatus: ProStatus;
   autoRenew: boolean;
@@ -223,10 +163,65 @@ export type ProcessedProStatus = {
   isFetching: boolean;
   isError: boolean;
   // When the last successful fetch completed (ms, network time), 0 if none happened this run.
-  // Note: `data` can be non-null with a 0 here, as it falls back to the copy persisted on disk.
+  // Note: the displayed status can be non-default with a 0 here, as it is seeded from local state
+  // until a response arrives — see `displayStatusSeedFromLocalState`.
   lastFetchedMs: number;
   data: ProAccessDetails;
 };
+
+/**
+ * DISPLAY, before any status response has arrived this run: what the plan state looks like from what
+ * we hold locally.
+ *
+ * A STATUS ONLY — deliberately never a date. Only a response carries `latest_payment` and the values
+ * that have to agree with it, so a date shown before one lands would be a guess dressed as a fact. On
+ * the QA backend the compressed clock shortens the PROOF's lifetime without shortening the account's
+ * entitlement, so seeding a date from the proof would show an account paid for a month as expiring in
+ * minutes. The Pro settings screen — the only place a date is wanted — fetches on arrival, so
+ * withholding it costs a moment.
+ *
+ * Seeded from synced config rather than from the last response persisted to disk, because a stored
+ * response is never re-evaluated: it keeps asserting whatever the backend last said, for as long as
+ * the client stays offline. The access expiry and the proof each carry their own timeline, so they go
+ * stale honestly.
+ *
+ * This is DISPLAY only. It may say active while ACCESS says no (an entitlement we know about but hold
+ * no usable proof for), and it may say expired while ACCESS still says yes (the overhang on a proof
+ * that outlives the plan). Both are intended.
+ */
+function displayStatusSeedFromLocalState(): ProStatus {
+  let proAccessExpiry: number | null = null;
+  let proofExpiryMs: number | null = null;
+  try {
+    const cached = getCachedUserConfig();
+    proAccessExpiry = cached.proAccessExpiry ?? null;
+    proofExpiryMs = cached.proConfig?.proProof.expiryMs ?? null;
+  } catch {
+    // user config not initialised yet (e.g. pre-login): nothing to place on a timeline.
+    return ProStatus.Never;
+  }
+
+  // One instant for both rungs. Reading the clock twice can straddle them, describing an account as it
+  // never was at any single moment.
+  const now = NetworkTime.now();
+
+  // E is the PAYMENT-DUE instant, not the end of coverage — that runs to E + G, and G only ever
+  // arrives on a response. Being past E therefore means "renewal due", not "lapsed", which is why this
+  // seeds a status and leaves the dates to the fetch that follows.
+  if (proAccessExpiry) {
+    return now < proAccessExpiry ? ProStatus.Active : ProStatus.Expired;
+  }
+
+  // The proof's EXPIRY alone, deliberately — not whether it is usable. Revocation withdraws what this
+  // device may do, and says nothing about whether the account is still paid: a credential can be
+  // revoked and reissued while the plan runs on untouched. Reading usability here would also let an
+  // ACCESS input decide a DISPLAY value, which is the separation this pair of values exists to keep.
+  if (proofExpiryMs) {
+    return now < proofExpiryMs ? ProStatus.Active : ProStatus.Expired;
+  }
+
+  return ProStatus.Never;
+}
 
 function processProBackendData({
   isLoading: _isLoading,
@@ -240,21 +235,11 @@ function processProBackendData({
 
   const mockVariant = getDataFeatureFlag('mockProAccessVariant');
   const mockPlatform = getDataFeatureFlag('mockProPaymentProvider');
-  const mockCancelled = getFeatureFlag('mockCurrentUserHasProCancelled');
   const mockInGracePeriod = getFeatureFlag('mockCurrentUserHasProInGracePeriod');
   const mockIsPlatformRefundAvailable = !getFeatureFlag(
     'mockCurrentUserHasProPlatformRefundExpired'
   );
-  const expiryVariant = getDataFeatureFlag('mockProAccessExpiry');
-  const mockedExpiryDuration =
-    expiryVariant !== null ? getMockedProAccessExpiry(expiryVariant) : null;
-  let mockExpiry = null;
-  if (mockedExpiryDuration !== null) {
-    // NOTE: the mock expiry time should be pinned to x - 250ms after "now", the -250ms ensures the string
-    // representation rounds up to the expected mock value and prevents render lag from changing the timestamp
-    const now = Date.now() - 250;
-    mockExpiry = now + mockedExpiryDuration;
-  }
+  const mockExpiry = mockedProExpiryMs();
 
   const isLoading = mockIsLoading || _isLoading;
   const isFetching = mockIsLoading || _isFetching;
@@ -262,25 +247,44 @@ function processProBackendData({
 
   const now = NetworkTime.now();
 
+  // No response this run: seed the STATUS from config, and nothing else. See
+  // `displayStatusSeedFromLocalState` for why the date is deliberately left unset.
+  const seededStatus = data ? null : displayStatusSeedFromLocalState();
+
   const expiryTimeMs =
     mockExpiry ?? data?.expiryMs ?? defaultProAccessDetailsSourceData.expiryTimeMs;
 
   const latestAccess = data?.latestPayment ?? undefined;
+
+  // The persisted response is read for the PLAN and the PROVIDER and for NOTHING ELSE. Those two alone
+  // come from `latest_payment` and have no config or proof equivalent, so without this exception they
+  // would read "N/A" on every cold launch until a fetch returned. Everything else here — the status,
+  // the dates, the refund window — either has a local source that can be re-evaluated or must wait for
+  // a response: a stored response is a snapshot of what the backend said once, not evidence about now.
+  // Note in particular that `platformRefundExpiryTsMs` below reads `latestAccess`, never this.
+  const storedPlanAndProvider = data ? undefined : getProStatusFromStorage()?.latestPayment;
+
   const provider =
-    mockPlatform ?? latestAccess?.paymentProvider ?? defaultProAccessDetailsSourceData.provider;
+    mockPlatform ??
+    latestAccess?.paymentProvider ??
+    storedPlanAndProvider?.paymentProvider ??
+    defaultProAccessDetailsSourceData.provider;
   const variant = mockVariant ?? defaultProAccessDetailsSourceData.variant;
   // Real data carries a parsed {planCount, planUnit}; the mock still uses a legacy variant slug.
   const variantString = mockVariant
     ? proAccessVariantToString(mockVariant)
-    : planPeriodToString(latestAccess?.planCount, latestAccess?.planUnit);
+    : planPeriodToString(
+        latestAccess?.planCount ?? storedPlanAndProvider?.planCount,
+        latestAccess?.planUnit ?? storedPlanAndProvider?.planUnit
+      );
   const isPlatformRefundAvailable =
     mockIsPlatformRefundAvailable ||
     (latestAccess?.platformRefundExpiryTsMs && now < latestAccess.platformRefundExpiryTsMs) ||
     defaultProAccessDetailsSourceData.isPlatformRefundAvailable;
 
-  const autoRenew = mockCancelled
-    ? !mockCancelled
-    : (data?.autoRenewing ?? defaultProAccessDetailsSourceData.autoRenew);
+  const autoRenew = proAutoRenewWithMock(
+    data?.autoRenewing ?? defaultProAccessDetailsSourceData.autoRenew
+  );
 
   // `expiry_ts` is the account's true expiry — what the user has paid through — so it is the date to
   // show, with no arithmetic. Coverage runs past it: the backend serves until `expiry_ts +
@@ -291,16 +295,17 @@ function processProBackendData({
   // cancels mid-retry keeps a nonzero value there, and reading it would place coverage weeks late.
   //
   // The root value is 0 whenever the subscription isn't auto-renewing, so no provider branching is needed
-  // or wanted: a store that folds grace into its own expiry just sends a later `E`.
+  // or wanted: a store that folds grace into its own expiry just sends a later access expiry.
   //
-  // Both values are milliseconds here; core stores `G` in seconds and the wrapper converts, so grace read
-  // from *config* is on the other side of that boundary.
+  // Both values are milliseconds here; core stores the grace period in seconds and the wrapper converts,
+  // so grace read from *config* is on the other side of that boundary.
   const coverageEndMs = expiryTimeMs ? expiryTimeMs + (data?.gracePeriodDurationMs ?? 0) : 0;
 
   let inGracePeriod = mockInGracePeriod;
   if (expiryTimeMs && !mockInGracePeriod) {
-    // Past the expiry but still covered. The upper bound is coverage end, not the expiry: `now >= E`
-    // and `now < E` cannot both hold, so bounding this by `E` would make the indicator unreachable.
+    // Past the expiry but still covered. The upper bound is coverage end, not the expiry: "now is past
+    // the expiry" and "now is before it" cannot both hold, so bounding this by the expiry would make the
+    // indicator unreachable.
     // When grace is 0 the window is empty by construction, which is correct — an account with no grace
     // has no overdue-but-covered state to show.
     //
@@ -323,7 +328,8 @@ function processProBackendData({
 
   return {
     data: {
-      currentStatus: data?.userStatus ?? defaultProAccessDetailsSourceData.currentStatus,
+      currentStatus:
+        data?.userStatus ?? seededStatus ?? defaultProAccessDetailsSourceData.currentStatus,
       autoRenew,
       inGracePeriod,
       isProcessingRefund,
@@ -331,11 +337,17 @@ function processProBackendData({
       variantString,
       expiryTimeMs,
       coverageEndMs,
-      expiryTimeDateString: formatDateWithLocale({
-        date: new Date(expiryTimeMs),
-        formatStr: 'MMM d, yyyy',
-      }),
-      expiryTimeRelativeString: formatRoundedUpTimeUntilTimestamp(expiryTimeMs),
+      // An unset expiry renders as ABSENT, never as the epoch. Formatting a 0 gave "Jan 1, 1970" on
+      // every screen that shows a date before a response has landed, which is now the specified
+      // pre-response state rather than a rare one. The screens carry their own loading and error
+      // states, so showing nothing is the honest option.
+      expiryTimeDateString: expiryTimeMs
+        ? formatDateWithLocale({
+            date: new Date(expiryTimeMs),
+            formatStr: 'MMM d, yyyy',
+          })
+        : '',
+      expiryTimeRelativeString: expiryTimeMs ? formatRoundedUpTimeUntilTimestamp(expiryTimeMs) : '',
       isPlatformRefundAvailable,
       provider,
       providerConstants: getProProviderConstantsWithFallbacks(provider),
@@ -348,10 +360,7 @@ function processProBackendData({
 }
 
 export const getProBackendProStatus = (state: StateType): ProcessedProStatus => {
-  const details = getProBackendData(state).details;
-  const mergedDetails = details.data ? details : { ...details, data: getProStatusFromStorage() };
-
-  return processProBackendData(mergedDetails);
+  return processProBackendData(getProBackendData(state).details);
 };
 
 export const getProBackendCurrentUserStatus = (state: StateType) => {

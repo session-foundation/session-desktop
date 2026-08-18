@@ -7,6 +7,7 @@ import {
   useMemo,
   type ReactNode,
 } from 'react';
+import useMount from 'react-use/lib/useMount';
 import useUpdate from 'react-use/lib/useUpdate';
 import styled from 'styled-components';
 import { getAppDispatch } from '../../../../../state/dispatch';
@@ -191,7 +192,9 @@ export function ProHeroImage({
         </StyledProStatusText>
       ) : null}
       {heroStatusText && heroText ? <SpacerMD /> : null}
-      {heroText ? <StyledProHeroText>{heroText}</StyledProHeroText> : null}
+      {heroText ? (
+        <StyledProHeroText data-testid="pro-settings-description">{heroText}</StyledProHeroText>
+      ) : null}
     </SectionFlexContainer>
   );
 }
@@ -259,7 +262,7 @@ function useKeepProStatusFresh({
   isLoading: boolean;
   isError: boolean;
 }) {
-  // Keep get_pro_status fresh around the paid-through end while the pro page is open, so the "renewal
+  // Keep get_pro_status fresh around the payment-due instant while the pro page is open, so the "renewal
   // unsuccessful" warning reflects reality rather than a pre-expiry snapshot. Without it, a renewal
   // that lands while the page is open isn't picked up until the page is closed and reopened.
   useEffect(() => {
@@ -578,13 +581,28 @@ function ProSettings({ state }: SectionProps) {
     return null;
   }
 
-  let subText: TrArgs;
+  let subText: TrArgs | undefined;
   if (isError) {
     subText = { token: 'errorLoadingProAccess' };
   } else if (isLoading) {
     subText = { token: 'proAccessLoadingEllipsis' };
   } else if (data.inGracePeriod) {
+    // Deliberately ahead of the two branches below: this one needs no date, so it must not be
+    // suppressed by the no-date case. It is the message that is most correct when a fetch is struggling.
     subText = { token: 'proRenewalUnsuccessful' };
+  } else if (!data.expiryTimeMs) {
+    // No date, so no second line. Every string available here is about when access ends, and inventing
+    // one from a missing value produces a plausible-looking lie rather than an obvious gap: "expiring in
+    // " with a hole in it, or "expires in 0 minutes". iOS and Android both render nothing here for the
+    // same reason.
+    //
+    // "Still loading" would be the same mistake in a quieter form — it asserts that a date is on its way,
+    // which is true while a fetch is in flight and false for a plan that simply has no expiry.
+    // libsession's plan grammar already includes a `lifetime` unit (planCount 0), which
+    // `planPeriodToString` renders as "Lifetime" a few rows up; the backend cannot issue one yet, and
+    // what `account_expiry_ts` would carry for a perpetual entitlement is not specified. Rendering
+    // nothing is correct either way, which is why this needs no case of its own.
+    subText = undefined;
   } else if (data.autoRenew) {
     subText = { token: 'proAutoRenewTime', time: data.expiryTimeRelativeString };
   } else {
@@ -1134,6 +1152,14 @@ export function ProSettingsPage(modalState: {
   const dispatch = getAppDispatch();
   const backAction = useUserSettingsBackAction(modalState);
   const closeAction = useUserSettingsCloseAction(modalState);
+  const refetch = useProBackendRefetch();
+
+  // Confirm our status on reaching this screen, so what it shows is not an arbitrarily old snapshot.
+  // Deliberately not `immediate`: the thunk's persisted floor is what keeps repeatedly reopening the
+  // page from repeatedly hitting the backend, and this is the trigger that floor exists to bound.
+  useMount(() => {
+    refetch();
+  });
 
   const returnToThisModalAction = useCallback(() => {
     dispatch(userSettingsModal(modalState));

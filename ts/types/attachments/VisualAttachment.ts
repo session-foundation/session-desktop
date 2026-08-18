@@ -198,6 +198,12 @@ const AVATAR_MIME_BY_EXTENSION = {
 
 type AvatarExtension = keyof typeof AVATAR_MIME_BY_EXTENSION;
 
+/**
+ * The formats the avatar picker accepts, including `.webp` — the animated one, and so the Pro feature.
+ *
+ * Unconditional because Pro is permanently available; the gate that used to wrap `.webp` went with the
+ * flag it read. The map is what lets a path be turned back into a MIME type rather than guessed at.
+ */
 const acceptedAvatarExtensions: Array<AvatarExtension> = ['.png', '.gif', '.jpeg', '.jpg', '.webp'];
 
 async function pickFileForReal() {

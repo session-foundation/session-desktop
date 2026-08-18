@@ -1,4 +1,4 @@
-import { useCurrentUserHasPro, useShowProBadgeFor } from '../../../hooks/useHasPro';
+import { useShowProBadgeFor } from '../../../hooks/useHasPro';
 import {
   useIsPublic,
   useIsClosedGroup,
@@ -27,7 +27,10 @@ function useOnTitleClickCb(conversationId: string, editable: boolean) {
 }
 
 function ProBadge({ conversationId }: WithConvoId) {
-  const weArePro = useCurrentUserHasPro();
+  // DISPLAY, not ACCESS: this only decides whether tapping someone else's badge invites us to buy
+  // Pro. The gate reads ACCESS; the thing that explains or sells the gate reads DISPLAY, so a user
+  // whose plan reads active is never upsold — and one in the overhang, whose plan has lapsed while
+  // the proof still works, is.
 
   const showProBadgeForUser = useShowProBadgeFor(conversationId);
   const isMe = useIsMe(conversationId);
@@ -35,7 +38,7 @@ function ProBadge({ conversationId }: WithConvoId) {
 
   const onProClickCb = useProBadgeOnClickCb({
     context: 'conversation-title-dialog',
-    args: { userHasPro: showProBadgeForUser, currentUserHasPro: weArePro, isMe, isGroupV2 },
+    args: { userHasPro: showProBadgeForUser, isMe, isGroupV2 },
   });
 
   if (!onProClickCb.show) {

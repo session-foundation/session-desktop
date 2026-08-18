@@ -60,6 +60,7 @@ import { showSessionCTA } from '../../dialog/SessionCTA';
 import type { ProcessedLinkPreviewThumbnailType } from '../../../webworker/workers/node/image_processor/image_processor';
 import { CTAVariant } from '../../dialog/cta/types';
 import { selectWeAreProUser } from '../../../hooks/useHasPro';
+import { currentUserProofIsValid } from '../../../session/utils/ProAccess';
 import { closeContextMenus } from '../../../util/contextMenu';
 import type { MessageAttributes } from '../../../models/messageType';
 import { updateOutgoingLightBoxOptions } from '../../../state/ducks/modalDialog';
@@ -660,7 +661,13 @@ class CompositionBoxInner extends Component<Props, State> {
 
     this.linkPreviewAbortController?.abort();
 
-    const charLimit = hasPro
+    // The limit is ACCESS — read live, at the moment of sending, because that is when it has to be
+    // true. `hasPro` below is DISPLAY, and is only used to pick which explanation the user gets: a
+    // plan that reads active but holds no usable proof should be told the message is too long, not
+    // invited to buy what it already has.
+    const weCanSendProLength = currentUserProofIsValid();
+
+    const charLimit = weCanSendProLength
       ? LIBSESSION_CONSTANTS.MESSAGE_CHARACTER_LIMIT_PRO
       : LIBSESSION_CONSTANTS.MESSAGE_CHARACTER_LIMIT_STANDARD;
 

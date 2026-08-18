@@ -61,7 +61,7 @@ import {
   getCachedUserConfig,
   UserConfigWrapperActions,
 } from '../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
-import { proBackendDataActions, reconcileProProof } from '../state/ducks/proBackendData';
+import { reconcileProProof } from '../state/ducks/proBackendData';
 
 type IncomingUserResult = {
   needsPush: boolean;
@@ -144,40 +144,28 @@ async function mergeUserConfigsWithIncomingUpdates(
       // the GenericWrapperActions
       switch (variant) {
         case 'UserConfig': {
-          // Watches both the access expiry (`E`) and the prepaid marker (`I`). `I` matters on its own:
-          // another device's purchase syncs a prepaid marker before `E` moves, which is exactly when we
-          // want to re-read our status. `auto_renewing` is deliberately not watched — a change there
-          // re-derives the display from the value we just received, so fetching would confirm what we
-          // were already told.
+          // Watches both the access expiry and the prepaid marker. The prepaid marker matters on its
+          // own: another device's purchase syncs one before the expiry moves, which is exactly when we
+          // want to re-read our status. The auto-renewing flag is deliberately not watched — a change
+          // there re-derives the display from the value we just received, so fetching would confirm what
+          // we were already told.
           //
           // Note: those `?? 0` is here because android sets it to 0 even if it should be unset.
           const proAccessExpiryBefore = (await UserConfigWrapperActions.getProAccessExpiry()) ?? 0;
-          const proPrepaidBefore = (await UserConfigWrapperActions.getProPrepaid()) ?? 0;
           hashesMerged = await UserConfigWrapperActions.merge(toMerge);
           const proAccessExpiryAfter = (await UserConfigWrapperActions.getProAccessExpiry()) ?? 0;
-          const proPrepaidAfter = (await UserConfigWrapperActions.getProPrepaid()) ?? 0;
 
           const accessExpiryChanged = proAccessExpiryBefore !== proAccessExpiryAfter;
-          const prepaidChanged = proPrepaidBefore !== proPrepaidAfter;
-
-          if (accessExpiryChanged || prepaidChanged) {
-            window.log.debug(
-              `[mergeConfigsWithInboxUpdates] pro config changed (proAccessExpiry ${proAccessExpiryBefore} -> ${proAccessExpiryAfter}, proPrepaid ${proPrepaidBefore} -> ${proPrepaidAfter}). Refreshing our pro status.`
-            );
-            window.inboxStore?.dispatch(
-              proBackendDataActions.refreshGetProStatusFromProBackend({}) as any
-            );
-          }
 
           if (accessExpiryChanged) {
-            // The `E`-changed proof nudge, called directly rather than left to the status fetch above
+            // The expiry-changed proof nudge, called directly rather than left to the status fetch above
             // as a side effect. Every completed fetch does end with a reconcile, but that fetch is
             // floored and a dropped one never reaches its callback, so the nudge has to hold whether or
             // not the fetch ran.
             //
             // It is the one edge from config to the proof loop, and it is load-bearing: if the
             // account had lapsed and the proof expired, `pro_renewal_target` returns nothing and the
-            // loop sits dormant with no wake. A synced `E` that advances means it would now say
+            // loop sits dormant with no wake. A synced expiry that advances means it would now say
             // "renew now", and nothing else re-evaluates that. A nudge the reconcile ignores (valid
             // proof, future target) is a harmless no-op, so any change is nudged, not just
             // past -> future.

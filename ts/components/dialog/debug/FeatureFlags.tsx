@@ -8,6 +8,7 @@ import {
   getDataFeatureFlag,
   getFeatureFlag,
   MockProAccessExpiryOptions,
+  MockProProofOptions,
   SessionDataFeatureFlags,
   getDataFeatureFlagMemo,
   type SessionDataFeatureFlagKeys,
@@ -955,6 +956,21 @@ export const ProDebugSection = ({
         forceUpdate={forceUpdate}
         unsetOption={{ label: 'Select Current Status', value: null }}
       />
+      <FlagEnumDropdownInput
+        label="Proof (access)"
+        flag="mockProProof"
+        options={[
+          { label: 'Holds a valid proof', value: MockProProofOptions.Valid },
+          { label: 'Holds no usable proof', value: MockProProofOptions.None },
+        ]}
+        forceUpdate={forceUpdate}
+        unsetOption={{ label: 'Use the actual proof', value: null }}
+      />
+      <i>
+        Status above is what the plan DISPLAYS; proof here is what the app may DO. They are separate
+        on purpose — active-with-no-proof is the state where a long message is accepted and then
+        truncated for the recipient.
+      </i>
       {proBooleanFlags.map(props => (
         <FlagToggle {...props} key={props.flag} forceUpdate={forceUpdate} />
       ))}
