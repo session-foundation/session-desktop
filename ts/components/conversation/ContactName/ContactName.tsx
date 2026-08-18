@@ -14,7 +14,7 @@ import { tr } from '../../../localization/localeTools';
 import { isUsAnySogsFromCache } from '../../../session/apis/open_group_api/sogsv3/knownBlindedkeys';
 import type { ContactNameContext } from './ContactNameContext';
 import { useProBadgeOnClickCb } from '../../menuAndSettingsHooks/useProBadgeOnClickCb';
-import { useCurrentUserHasPro, useShowProBadgeFor } from '../../../hooks/useHasPro';
+import { useShowProBadgeFor } from '../../../hooks/useHasPro';
 import { ProIconButton } from '../../buttons/ProButton';
 import { useMessageIdFromContext } from '../../../contexts/MessageIdContext';
 import { useMessageDirection } from '../../../state/selectors';
@@ -233,7 +233,6 @@ export const ContactName = ({
   // Pro. The gate reads ACCESS; the thing that explains or sells the gate reads DISPLAY, so a user
   // whose plan reads active is never upsold — and one in the overhang, whose plan has lapsed while
   // the proof still works, is.
-  const currentUserHasPro = useCurrentUserHasPro();
 
   const msgId = useMessageIdFromContext();
 
@@ -272,7 +271,6 @@ export const ContactName = ({
       userHasPro,
       isMe,
       contactNameContext,
-      currentUserHasPro,
       isBlinded: PubKey.isBlinded(pubkey),
     },
   });

@@ -5,7 +5,7 @@ import { SessionTooltip } from '../../SessionTooltip';
 import { StyledCTA } from '../../basic/StyledCTA';
 import { formatNumber } from '../../../util/i18n/formatting/generics';
 import { tr } from '../../../localization/localeTools';
-import { useCurrentUserHasPro, useCurrentUserHasProAccess } from '../../../hooks/useHasPro';
+import { useCurrentUserHasProAccess } from '../../../hooks/useHasPro';
 import { ProIconButton } from '../../buttons/ProButton';
 import { useProBadgeOnClickCb } from '../../menuAndSettingsHooks/useProBadgeOnClickCb';
 
@@ -32,11 +32,9 @@ const StyledRemainingNumber = styled.span<{ $pastLimit: boolean }>`
 `;
 
 function ProCta() {
-  const currentUserHasPro = useCurrentUserHasPro();
-
   const proBadgeCb = useProBadgeOnClickCb({
     context: 'character-count',
-    args: { currentUserHasPro },
+    args: {},
   });
 
   if (!proBadgeCb.show || !proBadgeCb.cb) {
