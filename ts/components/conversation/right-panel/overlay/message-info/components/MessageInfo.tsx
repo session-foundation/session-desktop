@@ -1,3 +1,4 @@
+import type { SessionDataTestId } from 'react';
 import styled from 'styled-components';
 import { MessageFrom } from '.';
 import {
@@ -177,6 +178,26 @@ function proFeatureToTrKey(proFeature: ProMessageFeature) {
   }
 }
 
+/**
+ * The test id of a feature row.
+ *
+ * A cross-platform contract, not a local convention: Android and iOS tag the same rows with these
+ * exact strings, so one Appium locator serves all three clients.
+ */
+function proFeatureToTestId(proFeature: ProMessageFeature): SessionDataTestId {
+  switch (proFeature) {
+    case ProMessageFeature.PRO_BADGE:
+      return 'pro-message-feature-badges';
+    case ProMessageFeature.PRO_INCREASED_MESSAGE_LENGTH:
+      return 'pro-message-feature-longer-messages';
+    case ProMessageFeature.PRO_ANIMATED_DISPLAY_PICTURE:
+      return 'pro-message-feature-animated-display-picture';
+    default:
+      assertUnreachable(proFeature, 'proFeatureToTestId: unknown case');
+      throw new Error('unreachable');
+  }
+}
+
 function ProMessageFeaturesDetails({ messageId }: { messageId: string }) {
   const currentUserHasPro = useCurrentUserHasPro();
 
@@ -211,7 +232,7 @@ function ProMessageFeaturesDetails({ messageId }: { messageId: string }) {
       </StyledProDescription>
       <StyledProFeaturesContainer>
         {messageSentWithProFeat.map(feature => (
-          <StyledProFeatureRow key={feature}>
+          <StyledProFeatureRow key={feature} data-testid={proFeatureToTestId(feature)}>
             <LucideIcon
               unicode={LUCIDE_ICONS_UNICODE.CIRCLE_CHECK}
               iconSize="medium"
