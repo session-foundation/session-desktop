@@ -21,6 +21,7 @@ import {
   UserConfigWrapperActions,
 } from '../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 import { ConvoHub } from '../../session/conversations';
+import { LibSessionUtil } from '../../session/utils/libsession/libsession_utils';
 import {
   handleTriggeredCTAs,
   markProStatusConfirmedThisRun,
@@ -242,6 +243,34 @@ function haveValidProof(): boolean {
  * agent-comms/pro-proof-renewal-loop-design.md §4). A stale response must never reduce coverage:
  * upgrades are gated on a strictly-newer expiry, clears on there being no valid proof to protect.
  */
+/**
+ * Put a Pro config write on disk, now rather than whenever something else happens to.
+ *
+ * A setter leaves its value in the in-memory wrapper, and the only writer of the dump is `UserSyncJob`,
+ * whose periodic tick does not exist until the 20s timeout in `doAppStartUp` has scheduled the first
+ * one. A process that ends before then loses the write outright.
+ *
+ * Local durability only — deliberately not a push. The wrapper records that a change still needs
+ * pushing and that state rides the dump, so the ordinary sync job sends this whenever it next runs. The
+ * delay before that first job is not a gap to be worked around: it is there so a client that is still
+ * receiving its own config does not publish a partial one over it.
+ *
+ * Call once per write group, not per setter. `E`, `A` and `G` are only jointly meaningful and are always
+ * written together, and each dump costs a worker round trip plus an IPC round trip to the main process.
+ *
+ * ⚠️ Never throws. A failed dump is a transient IPC/DB problem and the value is still correct in the
+ * wrapper, so the next dump carries it; throwing here would abort the rest of the caller's write group
+ * and leave `E` stored without the `A` and `G` that qualify it — the mismatch the callers go out of
+ * their way to avoid.
+ */
+export async function persistProConfigWrite(): Promise<void> {
+  try {
+    await LibSessionUtil.saveDumpsToDb(UserUtils.getOurPubKeyStrFromCache());
+  } catch (e) {
+    window?.log?.warn(`persistProConfigWrite: saving the config dump failed: ${e.message}`);
+  }
+}
+
 async function applyProofOutcome(
   response: Awaited<ReturnType<typeof ProBackendAPI.generateProProof>>,
   rotatingSeedHex: string
@@ -279,6 +308,7 @@ async function applyProofOutcome(
     }
     await writeProAutoRenewingToConfig(response.accountAutoRenewing);
     await UserConfigWrapperActions.setProGracePeriod(response.accountGracePeriodMs);
+    await persistProConfigWrite();
     return;
   }
   // Non-ok: the machine slug (error_code) decides.
@@ -293,6 +323,7 @@ async function applyProofOutcome(
       if (!haveValidProof()) {
         await UserConfigWrapperActions.removeProConfig();
         await UserConfigWrapperActions.setProAccessExpiry(null);
+        await persistProConfigWrite();
         // Entitlement ended, and nothing observes that: the config watch that would refresh our status
         // runs on incoming merges, so a local write reaches no one. The Expired CTA needs a status fetch
         // to be raised at all — it is written by one — and the clear above leaves the cold-start gate
@@ -311,6 +342,7 @@ async function applyProofOutcome(
       if (!haveValidProof()) {
         await UserConfigWrapperActions.removeProConfig();
         await UserConfigWrapperActions.setProAccessExpiry(null);
+        await persistProConfigWrite();
       }
       break;
     case 'revoked':
@@ -318,6 +350,7 @@ async function applyProofOutcome(
       // proof gone we must also clear E, or the renewal target (future E, no proof) would spin.
       await UserConfigWrapperActions.removeProConfig();
       await UserConfigWrapperActions.setProAccessExpiry(null);
+      await persistProConfigWrite();
       break;
     default:
       // Unrecognized error_code: fail closed, non-destructively — treat as transient (no write/clear).
@@ -331,6 +364,7 @@ async function applyProofOutcome(
 async function handleClearProProof() {
   await UserConfigWrapperActions.removeProConfig();
   await UserConfigWrapperActions.setProAccessExpiry(null);
+  await persistProConfigWrite();
 }
 
 // ===== get_pro_status refresh discipline =====
@@ -829,6 +863,7 @@ const fetchGetProStatusFromProBackend = createAsyncThunk(
               await UserConfigWrapperActions.setProAccessExpiry(state.data.expiryMs);
               await writeProAutoRenewingToConfig(state.data.autoRenewing);
               await UserConfigWrapperActions.setProGracePeriod(state.data.gracePeriodDurationMs);
+              await persistProConfigWrite();
               break;
 
             case ProStatus.Never:

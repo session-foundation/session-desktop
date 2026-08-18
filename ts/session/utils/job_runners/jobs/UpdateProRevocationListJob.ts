@@ -12,7 +12,10 @@ import { DURATION } from '../../../constants';
 import { getFeatureFlag } from '../../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { ProRevocationCache } from '../../../revocation_list/pro_revocation_list';
 import { stringify } from '../../../../types/sqlSharedTypes';
-import { proBackendDataActions } from '../../../../state/ducks/proBackendData';
+import {
+  persistProConfigWrite,
+  proBackendDataActions,
+} from '../../../../state/ducks/proBackendData';
 import { refreshProAccess } from '../../../../state/ducks/proAccess';
 import {
   getCachedUserConfig,
@@ -152,6 +155,7 @@ class UpdateProRevocationListJob extends PersistedJob<UpdateProRevocationListPer
           `UpdateProRevocationListJob: our current revocation tag is revoked. Clearing our pro proof.`
         );
         await UserConfigWrapperActions.removeProConfig();
+        await persistProConfigWrite();
         window.inboxStore?.dispatch(
           proBackendDataActions.refreshGetProStatusFromProBackend({}) as any
         );
