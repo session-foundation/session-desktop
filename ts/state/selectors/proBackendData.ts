@@ -295,16 +295,17 @@ function processProBackendData({
   // cancels mid-retry keeps a nonzero value there, and reading it would place coverage weeks late.
   //
   // The root value is 0 whenever the subscription isn't auto-renewing, so no provider branching is needed
-  // or wanted: a store that folds grace into its own expiry just sends a later `E`.
+  // or wanted: a store that folds grace into its own expiry just sends a later access expiry.
   //
-  // Both values are milliseconds here; core stores `G` in seconds and the wrapper converts, so grace read
-  // from *config* is on the other side of that boundary.
+  // Both values are milliseconds here; core stores the grace period in seconds and the wrapper converts,
+  // so grace read from *config* is on the other side of that boundary.
   const coverageEndMs = expiryTimeMs ? expiryTimeMs + (data?.gracePeriodDurationMs ?? 0) : 0;
 
   let inGracePeriod = mockInGracePeriod;
   if (expiryTimeMs && !mockInGracePeriod) {
-    // Past the expiry but still covered. The upper bound is coverage end, not the expiry: `now >= E`
-    // and `now < E` cannot both hold, so bounding this by `E` would make the indicator unreachable.
+    // Past the expiry but still covered. The upper bound is coverage end, not the expiry: "now is past
+    // the expiry" and "now is before it" cannot both hold, so bounding this by the expiry would make the
+    // indicator unreachable.
     // When grace is 0 the window is empty by construction, which is correct — an account with no grace
     // has no overdue-but-covered state to show.
     //

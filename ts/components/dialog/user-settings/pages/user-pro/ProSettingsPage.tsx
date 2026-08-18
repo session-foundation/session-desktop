@@ -593,6 +593,14 @@ function ProSettings({ state }: SectionProps) {
   } else if (!data.expiryTimeMs) {
     // No date yet — only a status response carries one. Say we are still finding out rather than
     // render "expiring in " with a hole where the time should be.
+    //
+    // ⚠️ This reads "still finding out" from the ABSENCE of a date, so it assumes every plan that exists
+    // has one. That holds for the periodic plans, but libsession's plan grammar already includes a
+    // `lifetime` unit (planCount 0), which `planPeriodToString` renders as "Lifetime" a few rows up. If a
+    // lifetime account ever reports an expiry of 0 rather than a far-future instant, this branch is
+    // permanent and the row sits on "loading…" forever beside a plan name that is perfectly healthy.
+    // Whoever wires lifetime up needs a third case here — no expiry BECAUSE there is none — distinct
+    // from no expiry YET.
     subText = { token: 'proAccessLoadingEllipsis' };
   } else if (data.autoRenew) {
     subText = { token: 'proAutoRenewTime', time: data.expiryTimeRelativeString };

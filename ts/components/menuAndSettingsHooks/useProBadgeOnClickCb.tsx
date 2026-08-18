@@ -130,6 +130,11 @@ function proFeatureToVariant(proFeature: ProMessageFeature): CTAVariant {
  * Passing whichever Pro boolean happens to be in scope will compile and read plausibly while offering an
  * upgrade to someone whose plan is already active. A new context should say which value it needs, and
  * why, at the call.
+ *
+ * As it stands every branch below reads this to decide whether to *sell* — show the upsell, or make the
+ * badge inert because there is nothing left to sell — which is DISPLAY, and DISPLAY is what the callers
+ * pass. Nothing here gates a capability. A branch that did would need ACCESS instead, and adding one
+ * without saying so is how the two quietly get crossed.
  */
 export function useProBadgeOnClickCb(
   opts: ProBadgeContext
