@@ -250,10 +250,9 @@ function haveValidProof(): boolean {
  * whose periodic tick does not exist until the 20s timeout in `doAppStartUp` has scheduled the first
  * one. A process that ends before then loses the write outright.
  *
- * Local durability only — deliberately not a push. The wrapper records that a change still needs
- * pushing and that state rides the dump, so the ordinary sync job sends this whenever it next runs. The
- * delay before that first job is not a gap to be worked around: it is there so a client that is still
- * receiving its own config does not publish a partial one over it.
+ * The first sync job is delayed so a client still receiving its own config does not publish a partial one
+ * over it, so this dumps without pushing; the wrapper records that a push is still needed and that state
+ * rides the dump, so the ordinary job sends it whenever it next runs.
  *
  * Call once per write group, not per setter. The access expiry, the auto-renewing flag and the grace
  * period are only jointly meaningful and are always written together, and each dump costs a worker round
