@@ -75,12 +75,8 @@ export function useTogglePinConversationHandler(id: string) {
   // explain the refusal by offering Pro, and that is DISPLAY: a plan reading active must not be sold a
   // subscription it is already paying for.
   //
-  // Blocked on copy, and an accepted trade rather than an oversight. In the active-plan-with-no-usable-
-  // proof state this refuses the pin and says nothing at all, because the only copy that exists here is
-  // upsell copy and there is no string for "your plan is active but we cannot verify it yet". Accepted
-  // deliberately rather than missed, so that the two-value split was not held up by a translation round
-  // for an edge case. When that string lands, show it here — do NOT resolve this by putting the upsell
-  // back.
+  // Which leaves the active-plan-with-no-usable-proof state refused silently: the only copy available
+  // here is upsell copy, and there is none for a plan that is already active.
   if (planReadsActive) {
     return () => {
       window.log.debug(

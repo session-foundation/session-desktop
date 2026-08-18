@@ -235,12 +235,9 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
     if (!weHavePro && isNewAvatarAnimated && !isCommunity) {
       // The refusal is ACCESS and unconditional. Whether we explain it by offering Pro is DISPLAY.
       //
-      // Blocked on copy, and an accepted trade rather than an oversight. With an active plan and no
-      // usable proof this refuses the animated upload and says nothing, because every string that
-      // exists here offers a purchase and there is none for "your plan is active but we cannot verify
-      // it yet". Accepted deliberately so the two-value split was not held up by a translation round
-      // for an edge case. When that string lands, show it here — do NOT resolve this by putting the
-      // upsell back.
+      // With an active plan and no usable proof, the refusal is silent: every string available here
+      // offers a purchase, and there is none for a plan that is already active. Reaching for the upsell
+      // anyway would sell a subscription the user is already paying for.
       if (!planReadsActive) {
         dispatch(
           updateSessionCTA({

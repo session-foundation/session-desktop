@@ -131,10 +131,9 @@ function proFeatureToVariant(proFeature: ProMessageFeature): CTAVariant {
  * upgrade to someone whose plan is already active. A new context should say which value it needs, and
  * why, at the call.
  *
- * As it stands every branch below reads this to decide whether to *sell* — show the upsell, or make the
- * badge inert because there is nothing left to sell — which is DISPLAY, and DISPLAY is what the callers
- * pass. Nothing here gates a capability. A branch that did would need ACCESS instead, and adding one
- * without saying so is how the two quietly get crossed.
+ * Every branch below reads it to decide whether to *sell* — show the upsell, or make the badge inert
+ * because there is nothing left to sell — so DISPLAY is the value they all want. A branch that gated a
+ * capability would need ACCESS instead, and adding one without saying so is how the two get crossed.
  */
 export function useProBadgeOnClickCb(
   opts: ProBadgeContext
