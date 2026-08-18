@@ -134,6 +134,8 @@ declare module 'react' {
     | 'preferences'
     | 'donate';
 
+  type ProSettingsSections = 'stats' | 'manage' | 'features';
+
   type ProFeatureItems =
     | 'longer-messages'
     | 'more-pins'
@@ -305,6 +307,9 @@ declare module 'react' {
 
     // Pro settings
     | `${ProFeatureItems}-pro-settings-menu-item`
+    | `pro-settings-${ProSettingsSections}-header`
+    // Both the "checking" and the "backend unavailable" messages render into this one slot.
+    | 'pro-settings-status-banner'
 
     // timer options
     | DisappearTimeOptionDataTestId

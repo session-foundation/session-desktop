@@ -82,6 +82,9 @@ export type SessionDataFeatureFlags = {
   mockProGroupsUpgraded: number | null;
   mockNetworkPageNodeCount: number | null;
   fakeAvatarPickerColor: string | null; // defaults to defaultAvatarPickerColor
+  // Absolute path to an image the test-integration avatar picker returns instead of the generated
+  // solid colour. The only way a test can supply an animated avatar, or any specific content.
+  fakeAvatarPickerFile: string | null;
 };
 
 export type SessionBooleanFeatureFlagKeys = keyof SessionBooleanFeatureFlags;

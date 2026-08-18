@@ -44,7 +44,13 @@ export const uploadFileToFsWithOnionV4 = async (
     return null;
   }
 
-  const target = process.env.POTATO_FS ? 'POTATO' : 'DEFAULT';
+  // TEST wins over POTATO: a run that configured a local file server meant it, and falling through to
+  // a remote one would put the upload somewhere the test cannot reach.
+  const target = FS.isTestFileServerConfigured()
+    ? 'TEST'
+    : process.env.POTATO_FS
+      ? 'POTATO'
+      : 'DEFAULT';
 
   const result = await OnionSending.sendBinaryViaOnionV4ToFileServer({
     abortSignal: new AbortController().signal,
