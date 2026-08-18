@@ -143,6 +143,21 @@ declare module 'react' {
     | 'badges'
     | 'loads-more';
 
+  /**
+   * The subset of `ProFeatureItems` a single message can carry, as listed on its message-info panel.
+   *
+   * Derived rather than restated so the two surfaces cannot drift into naming the same feature
+   * differently, and so a feature that stops being per-message fails to compile here.
+   *
+   * These exact strings are a cross-platform contract: Android defines them in its
+   * `content-descriptions` module and iOS in `SessionProUI.AccessibilityIdentifier`, so one Appium
+   * locator serves all three clients.
+   */
+  type ProMessageFeatureItems = Extract<
+    ProFeatureItems,
+    'longer-messages' | 'badges' | 'animated-display-picture'
+  >;
+
   type MenuItems = 'block' | 'delete' | 'accept';
 
   type Inputs =
@@ -462,6 +477,7 @@ declare module 'react' {
     | `${NotificationRadioButtons}`
     | `avatar-${Avatars}`
     | `pro-badge-${ProBadges}`
+    | `pro-message-feature-${ProMessageFeatureItems}`
     // empty msg view ids
     | 'empty-msg-view-account-created'
     | 'empty-msg-view-welcome'
