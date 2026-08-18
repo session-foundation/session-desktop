@@ -581,7 +581,7 @@ function ProSettings({ state }: SectionProps) {
     return null;
   }
 
-  let subText: TrArgs;
+  let subText: TrArgs | undefined;
   if (isError) {
     subText = { token: 'errorLoadingProAccess' };
   } else if (isLoading) {
@@ -591,17 +591,18 @@ function ProSettings({ state }: SectionProps) {
     // suppressed by the no-date case. It is the message that is most correct when a fetch is struggling.
     subText = { token: 'proRenewalUnsuccessful' };
   } else if (!data.expiryTimeMs) {
-    // No date yet — only a status response carries one. Say we are still finding out rather than
-    // render "expiring in " with a hole where the time should be.
+    // No date, so no second line. Every string available here is about when access ends, and inventing
+    // one from a missing value produces a plausible-looking lie rather than an obvious gap: "expiring in
+    // " with a hole in it, or "expires in 0 minutes". iOS and Android both render nothing here for the
+    // same reason.
     //
-    // ⚠️ This reads "still finding out" from the ABSENCE of a date, so it assumes every plan that exists
-    // has one. That holds for the periodic plans, but libsession's plan grammar already includes a
-    // `lifetime` unit (planCount 0), which `planPeriodToString` renders as "Lifetime" a few rows up. If a
-    // lifetime account ever reports an expiry of 0 rather than a far-future instant, this branch is
-    // permanent and the row sits on "loading…" forever beside a plan name that is perfectly healthy.
-    // Whoever wires lifetime up needs a third case here — no expiry BECAUSE there is none — distinct
-    // from no expiry YET.
-    subText = { token: 'proAccessLoadingEllipsis' };
+    // "Still loading" would be the same mistake in a quieter form — it asserts that a date is on its way,
+    // which is true while a fetch is in flight and false for a plan that simply has no expiry.
+    // libsession's plan grammar already includes a `lifetime` unit (planCount 0), which
+    // `planPeriodToString` renders as "Lifetime" a few rows up; the backend cannot issue one yet, and
+    // what `account_expiry_ts` would carry for a perpetual entitlement is not specified. Rendering
+    // nothing is correct either way, which is why this needs no case of its own.
+    subText = undefined;
   } else if (data.autoRenew) {
     subText = { token: 'proAutoRenewTime', time: data.expiryTimeRelativeString };
   } else {
