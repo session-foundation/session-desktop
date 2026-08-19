@@ -54,6 +54,7 @@ export const defaultBooleanFeatureFlags = {
   debugInsecureNodeFetch: !isEmpty(process.env.SESSION_DEBUG_INSECURE_NODE_FETCH),
   debugOnlineState: !isEmpty(process.env.SESSION_DEBUG_ONLINE_STATE),
   debugForceSeedNodeFailure: !isEmpty(process.env.SESSION_DEBUG_FORCE_SEED_NODE_FAILURE),
+  forceProRevocationRefresh: getForceProRevocationRefresh(),
   debugKeyboardShortcuts: !isEmpty(process.env.SESSION_DEBUG_KEYBOARD_SHORTCUTS),
   debugFocusScope: !isEmpty(process.env.SESSION_DEBUG_FOCUS_SCOPE),
   debugFocusTrap: !isEmpty(process.env.SESSION_DEBUG_FOCUS_TRAP),
@@ -175,6 +176,27 @@ function getMockProAccessExpiry(): MockProAccessExpiryOptions | null {
  */
 function getFakeAvatarPickerFile(): string | null {
   return process.env.SESSION_FAKE_AVATAR_PICKER_FILE?.trim() || null;
+}
+
+/**
+ * Force the revocation-list poll on the next launch, by backdating the persisted next-run instant.
+ *
+ * The QA backend serves the production `retry_in` of 24h, so a client that has polled once will not poll
+ * again for a day and no revocation is observable within a test. This does not shorten the interval or
+ * add a second fetch path — it moves the stored instant into the past and lets the existing gate reach
+ * its own conclusion, so a spec exercises the polling path that ships rather than one built beside it.
+ *
+ * `isTestIntegration()` first, so the variable is inert outside a test-integration run however it is set.
+ *
+ * Explicitly `true`/`1` rather than a presence check: `SESSION_...=0` reads as "off" to whoever wrote it,
+ * and a presence check would turn it on.
+ */
+function getForceProRevocationRefresh(): boolean {
+  if (!isTestIntegration()) {
+    return false;
+  }
+  const envVar = process.env.SESSION_FORCE_PRO_REVOCATION_REFRESH?.trim().toLowerCase();
+  return envVar === 'true' || envVar === '1';
 }
 
 export const defaultAvatarPickerColor = '#0000ff'; // defaults to blue
