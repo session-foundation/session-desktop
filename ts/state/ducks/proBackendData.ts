@@ -412,9 +412,16 @@ async function handleExpiryCTAs(
   const expiredCTADeadlineMs = accessExpiryTsMs + gracePeriodDurationMs + PRO_EXPIRED_CTA_WINDOW_MS;
 
   const proExpiringSoonCTA = !isUndefined(Storage.get(SettingsKey.proExpiringSoonCTA));
+  // Presence, not truth. Each key carries three states: absent means never armed this cycle, `true` armed
+  // and not yet shown, `false` armed and already shown — the CTA writes `false` over its own flag as it
+  // displays. Testing presence is what makes an expiry happen once per Pro cycle rather than once per
+  // status fetch: a shown CTA leaves `false` behind, which reads as armed and blocks the re-arm below.
+  // Reading these as booleans instead would re-raise the same expiry on every launch that confirms a
+  // status.
   const proExpiredCTA = !isUndefined(Storage.get(SettingsKey.proExpiredCTA));
 
-  // Remove the pro expired cta item if the user gets pro again
+  // Removing the key, rather than setting it false, is what ends the cycle: it is the only path back to
+  // "never armed", so a subsequent lapse can raise the CTA again.
   if (status === ProStatus.Active && proExpiredCTA) {
     await Storage.remove(SettingsKey.proExpiredCTA);
   }
