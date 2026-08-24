@@ -8,6 +8,7 @@ import {
   getDataFeatureFlag,
   getFeatureFlag,
   MockProAccessExpiryOptions,
+  MockProPlatformRefundWindowOptions,
   MockProProofOptions,
   SessionDataFeatureFlags,
   getDataFeatureFlagMemo,
@@ -427,14 +428,6 @@ function formatDefaultFlagName(key: string) {
 }
 
 const proBooleanFlags: BooleanFlags = [
-  {
-    label: 'Platform Refund Expired',
-    flag: 'mockCurrentUserHasProPlatformRefundExpired',
-    visibleWithEnumFlag: {
-      flag: 'mockProCurrentStatus',
-      isVisible: v => v === ProStatus.Active,
-    },
-  },
   {
     label: 'Cancelled',
     flag: 'mockCurrentUserHasProCancelled',
@@ -965,6 +958,26 @@ export const ProDebugSection = ({
         ]}
         forceUpdate={forceUpdate}
         unsetOption={{ label: 'Use the actual proof', value: null }}
+      />
+      <FlagEnumDropdownInput
+        label="Quick-refund window"
+        flag="mockProPlatformRefundWindow"
+        options={[
+          {
+            label: "The store's window is still open",
+            value: MockProPlatformRefundWindowOptions.Open,
+          },
+          {
+            label: "The store's window has closed",
+            value: MockProPlatformRefundWindowOptions.Closed,
+          },
+        ]}
+        forceUpdate={forceUpdate}
+        unsetOption={{ label: "Use the payment's own refund expiry", value: null }}
+        visibleWithEnumFlag={{
+          flag: 'mockProCurrentStatus',
+          isVisible: v => v === ProStatus.Active,
+        }}
       />
       <i>
         Status above is what the plan DISPLAYS; proof here is what the app may DO. They are separate

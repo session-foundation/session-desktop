@@ -20,7 +20,6 @@ type SessionBaseBooleanFeatureFlags = {
   debugInputCommands: boolean;
   proGroupsAvailable: boolean;
   canToggleGiphy: boolean;
-  mockCurrentUserHasProPlatformRefundExpired: boolean;
   mockCurrentUserHasProCancelled: boolean;
   mockCurrentUserHasProInGracePeriod: boolean;
   mockProRecoverButtonAlwaysSucceed: boolean;
@@ -86,11 +85,30 @@ export const MockProProofOptions = {
 } as const;
 export type MockProProofOptions = (typeof MockProProofOptions)[keyof typeof MockProProofOptions];
 
+/**
+ * Whether the store's own quick-refund window is still open, which decides between the store-refund
+ * route and the Session-support one.
+ *
+ * `null` means no override: the window is read from the payment's own `platformRefundExpiryTsMs`.
+ *
+ * Tri-state rather than a boolean because this used to be `mockCurrentUserHasProPlatformRefundExpired`,
+ * whose *unset* state forced the window open — it short-circuited the real expiry comparison, in every
+ * build, so a released client never consulted the payment at all. A mock's absence has to mean "defer",
+ * which a two-state flag on an env-presence check cannot express.
+ */
+export const MockProPlatformRefundWindowOptions = {
+  Open: 'open',
+  Closed: 'closed',
+} as const;
+export type MockProPlatformRefundWindowOptions =
+  (typeof MockProPlatformRefundWindowOptions)[keyof typeof MockProPlatformRefundWindowOptions];
+
 export type SessionDataFeatureFlags = {
   useLocalDevNet: string | null;
   mockMessageProFeatures: Array<ProMessageFeature> | null;
   mockProCurrentStatus: ProStatus | null;
   mockProProof: MockProProofOptions | null;
+  mockProPlatformRefundWindow: MockProPlatformRefundWindowOptions | null;
   mockProPaymentProvider: ProPaymentProvider | null;
   mockProAccessVariant: ProAccessVariant | null;
   mockProAccessExpiry: MockProAccessExpiryOptions | null;

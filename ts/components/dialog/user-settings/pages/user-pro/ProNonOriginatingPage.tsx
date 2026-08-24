@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { type ReactNode, useEffect, useState } from 'react';
+import { type ReactNode, type SessionDataTestId, useEffect, useState } from 'react';
 import type { ProviderUrls } from 'libsession_util_nodejs';
 import { getAppDispatch } from '../../../../../state/dispatch';
 import { isSimpleTokenNoArgs, tr } from '../../../../../localization/localeTools';
@@ -290,12 +290,14 @@ function ProInfoBlockWebsite({
 }
 
 function ProInfoBlockLayout({
+  dataTestId,
   titleElement,
   descriptionElement,
   descriptionOnClick,
   subtitleElement,
   blockItems,
 }: {
+  dataTestId?: SessionDataTestId;
   titleElement: ReactNode;
   descriptionElement: ReactNode;
   descriptionOnClick?: () => void;
@@ -304,6 +306,7 @@ function ProInfoBlockLayout({
 }) {
   return (
     <PanelButtonGroup
+      dataTestId={dataTestId}
       containerStyle={{
         paddingBlock: 'var(--margins-lg)',
         paddingInline: 'var(--margins-lg)',
@@ -498,7 +501,10 @@ const containerStyle = {
 
 function ProInfoBlockRefundSessionSupport() {
   return (
-    <PanelButtonGroup containerStyle={containerStyle}>
+    <PanelButtonGroup
+      containerStyle={containerStyle}
+      dataTestId="pro-screen-refund-session-support"
+    >
       <ProInfoBlockRefundTitle>
         <Localizer token="proRefunding" />
       </ProInfoBlockRefundTitle>
@@ -514,7 +520,7 @@ function ProInfoBlockRefundSessionSupport() {
 function ProInfoBlockRefundGooglePlay() {
   const { data } = useProBackendProStatusLocal();
   return (
-    <PanelButtonGroup containerStyle={containerStyle}>
+    <PanelButtonGroup containerStyle={containerStyle} dataTestId="pro-screen-refund-store-policies">
       <ProInfoBlockRefundTitle>
         <Localizer token="proRefunding" />
       </ProInfoBlockRefundTitle>
@@ -531,6 +537,7 @@ function ProInfoBlockRefundIOS() {
   const { data } = useProBackendProStatusLocal();
   return (
     <ProInfoBlockLayout
+      dataTestId="pro-screen-refund-platform-account"
       titleElement={tr('proRefunding')}
       descriptionElement={
         <Localizer

@@ -1,8 +1,9 @@
 import { isEmpty } from 'lodash';
 import { isTestIntegration, isTestNet } from '../../../shared/env_vars';
-import { ProStatus } from '../../../session/apis/pro_backend_api/types';
+import { ProPaymentProvider, ProStatus } from '../../../session/apis/pro_backend_api/types';
 import {
   MockProAccessExpiryOptions,
+  MockProPlatformRefundWindowOptions,
   MockProProofOptions,
   type SessionBooleanFeatureFlags,
   type SessionDataFeatureFlags,
@@ -11,9 +12,6 @@ import {
 export const defaultProBooleanFeatureFlags = {
   proGroupsAvailable: !isEmpty(process.env.SESSION_PRO_GROUPS),
   useTestProBackend: !isEmpty(process.env.TEST_PRO_BACKEND),
-  mockCurrentUserHasProPlatformRefundExpired: !isEmpty(
-    process.env.SESSION_USER_HAS_PRO_PLATFORM_REFUND_EXPIRED
-  ),
   mockCurrentUserHasProCancelled: !isEmpty(process.env.SESSION_USER_HAS_PRO_CANCELLED),
   mockCurrentUserHasProInGracePeriod: !isEmpty(process.env.SESSION_USER_HAS_PRO_IN_GRACE),
   mockProRecoverButtonAlwaysSucceed: !isEmpty(process.env.SESSION_PRO_RECOVER_ALWAYS_SUCCEED),
@@ -145,6 +143,55 @@ function getMockProProof(): MockProProofOptions | null {
 }
 
 /**
+ * Whether the store's own quick-refund window is still open.
+ *
+ * Unset means "defer to the payment": the window is decided by `platformRefundExpiryTsMs`. That is the
+ * whole point of the flag being tri-state — its predecessor
+ * (`SESSION_USER_HAS_PRO_PLATFORM_REFUND_EXPIRED`, a boolean presence check) forced the window OPEN
+ * whenever it was absent, short-circuiting the payment comparison in every build including release.
+ *
+ * `useactual` is spelled out as well, matching the other Pro mocks, so a config can say "no override"
+ * explicitly rather than by omission.
+ */
+function getMockProPlatformRefundWindow(): MockProPlatformRefundWindowOptions | null {
+  const envVar = process.env.SESSION_PRO_PLATFORM_REFUND_WINDOW?.trim();
+  if (!envVar) {
+    return null;
+  }
+  const known = Object.values(MockProPlatformRefundWindowOptions) as Array<string>;
+  if (known.includes(envVar)) {
+    return envVar as MockProPlatformRefundWindowOptions;
+  }
+  if (envVar === 'useactual') {
+    return null;
+  }
+  return invalidMockEnvVar('SESSION_PRO_PLATFORM_REFUND_WINDOW', envVar, [...known, 'useactual']);
+}
+
+/**
+ * Which store a mocked plan was bought from. Every non-originating Pro page branches on it, and the
+ * refund page uses it to pick between the store-policy, platform-account and Session-support routes.
+ *
+ * Unset resolves the provider to `''`, whose display constants fall back to the slug and whose refund
+ * route is Session support — so a spec meaning "bought on Google Play" has to say so, and cannot get
+ * there by omission.
+ */
+function getMockProPaymentProvider(): ProPaymentProvider | null {
+  const envVar = process.env.SESSION_PRO_PAYMENT_PROVIDER?.trim();
+  if (!envVar) {
+    return null;
+  }
+  const known = Object.values(ProPaymentProvider) as Array<string>;
+  if (known.includes(envVar)) {
+    return envVar;
+  }
+  if (envVar === 'useactual') {
+    return null;
+  }
+  return invalidMockEnvVar('SESSION_PRO_PAYMENT_PROVIDER', envVar, [...known, 'useactual']);
+}
+
+/**
  * Named rather than numeric, because the enum's numbering is an implementation detail that
  * reorders whenever a case is inserted — an environment pinned to `2` would silently start
  * meaning a different duration.
@@ -183,7 +230,8 @@ export const defaultProDataFeatureFlags = {
   mockMessageProFeatures: null,
   mockProCurrentStatus: getMockProCurrentStatus(),
   mockProProof: getMockProProof(),
-  mockProPaymentProvider: null,
+  mockProPlatformRefundWindow: getMockProPlatformRefundWindow(),
+  mockProPaymentProvider: getMockProPaymentProvider(),
   mockProAccessVariant: null,
   mockProAccessExpiry: getMockProAccessExpiry(),
   mockProLongerMessagesSent: null,
