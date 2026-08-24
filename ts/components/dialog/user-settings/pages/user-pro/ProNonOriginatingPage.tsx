@@ -63,6 +63,15 @@ const useCurrentNeverHadProLocal = useCurrentNeverHadPro;
  * For some texts, we want `Apple website` for apple but `Google Play Store website` for google...
  * Those two are not stored in the same field, so this hook can be used to fetch the right one
  */
+/**
+ * The two Session-owned refund links. Duplicated here rather than read from libsession: the
+ * quick-refund one has no `url_pro_*` entry, and adding one would gate a copy change on a libsession
+ * bump across three clients. session-android's `ProUrls` and iOS's url string provider carry the same
+ * pair.
+ */
+const PRO_QUICK_REFUND_URL = 'https://getsession.org/android-refund';
+const PRO_SUPPORT_URL = LIBSESSION_CONSTANTS.LIBSESSION_PRO_URLS.support_url;
+
 function useStoreOrPlatformFromProvider(data: ProcessedProStatus['data']) {
   return data.provider === ProPaymentProvider.AppStore
     ? data.providerConstants.platform // we want `Apple website` for apple
@@ -687,9 +696,14 @@ function ProPageButtonRefund() {
       {...proButtonProps}
       buttonColor={SessionButtonColor.Danger}
       onClick={() => {
-        void openProviderUrl(
-          data.provider,
-          u => (data.isPlatformRefundAvailable ? u.refundPlatformUrl : u.refundSupportUrl),
+        // Two Session-owned links, chosen on the window alone — not the provider's own
+        // refund_platform_url/refund_support_url. Being ours, the destinations can be repointed without
+        // a client release, and all three clients agree on them.
+        //
+        // The window is what decides who can act: while it is open the store takes the request, and
+        // once it closes only Session can, which is what the copy beside this button promises.
+        showLinkVisitWarningDialog(
+          data.isPlatformRefundAvailable ? PRO_QUICK_REFUND_URL : PRO_SUPPORT_URL,
           dispatch
         );
       }}
