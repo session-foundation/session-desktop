@@ -29,7 +29,6 @@ export const defaultBooleanFeatureFlags = {
   ...defaultProBooleanFeatureFlags,
   replaceLocalizedStringsWithKeys: false,
   useClosedGroupV2QAButtons: !isEmpty(process.env.GROUPV2_QA_BUTTONS),
-  useDeterministicEncryption: !isEmpty(process.env.SESSION_ATTACH_DETERMINISTIC_ENCRYPTION),
   disableOnionRequests: false,
   disableImageProcessor: !isEmpty(process.env.SESSION_DISABLE_IMAGE_PROCESSOR),
   disableLocalAttachmentEncryption: !isEmpty(

@@ -1,11 +1,8 @@
-import * as crypto from 'crypto';
 import { isEmpty, isString } from 'lodash';
 import Long from 'long';
 
 import { Attachment } from '../../types/Attachment';
 
-import { encryptAttachment } from '../../util/crypto/attachmentsEncrypter';
-import { addAttachmentPadding } from '../crypto/BufferPadding';
 import {
   AttachmentPointer,
   AttachmentPointerWithUrl,
@@ -15,15 +12,9 @@ import { uploadFileToFsWithOnionV4 } from '../apis/file_server_api/FileServerApi
 import { MultiEncryptWrapperActions } from '../../webworker/workers/browser/libsession_worker_interface';
 import { UserUtils } from '.';
 import { extractLastPathSegment } from '../url';
-import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 
 type UploadParams = {
   attachment: Attachment;
-
-  /**
-   * Explicit padding is only needed for the legacy encryption, as libsession deterministic encryption already pads the data.
-   */
-  shouldPad?: boolean;
 };
 
 export interface RawPreview {
@@ -39,7 +30,7 @@ export interface RawQuoteAttachment {
 }
 
 async function uploadToFileServer(params: UploadParams): Promise<AttachmentPointerWithUrl> {
-  const { attachment, shouldPad = false } = params;
+  const { attachment } = params;
   if (typeof attachment !== 'object' || attachment == null) {
     throw new Error('Invalid attachment passed.');
   }
@@ -59,38 +50,18 @@ async function uploadToFileServer(params: UploadParams): Promise<AttachmentPoint
     height: attachment.height,
   };
 
-  let attachmentData: ArrayBuffer;
-
-  const deterministicEncryption = getFeatureFlag('useDeterministicEncryption');
-
-  if (deterministicEncryption) {
-    // this throws if the encryption fails
-    window?.log?.debug(
-      'Using deterministic encryption for attachment upload: ',
-      attachment.fileName
-    );
-    const seed = await UserUtils.getUserEd25519Seed();
-    const encryptedContent = await MultiEncryptWrapperActions.attachmentEncrypt({
-      allowLarge: false,
-      seed,
-      data: new Uint8Array(attachment.data),
-      domain: 'attachment',
-    });
-    pointer.key = encryptedContent.encryptionKey;
-    attachmentData = encryptedContent.encryptedData;
-  } else {
-    // this is the legacy attachment encryption
-    pointer.key = new Uint8Array(crypto.randomBytes(64));
-    const iv = new Uint8Array(crypto.randomBytes(16));
-
-    const dataToEncrypt = !shouldPad ? attachment.data : addAttachmentPadding(attachment.data);
-    const data = await encryptAttachment(dataToEncrypt, pointer.key.buffer, iv.buffer);
-    pointer.digest = new Uint8Array(data.digest);
-    attachmentData = data.ciphertext;
-  }
+  // this throws if the encryption fails
+  const seed = await UserUtils.getUserEd25519Seed();
+  const encryptedContent = await MultiEncryptWrapperActions.attachmentEncrypt({
+    allowLarge: false,
+    seed,
+    data: new Uint8Array(attachment.data),
+    domain: 'attachment',
+  });
+  pointer.key = encryptedContent.encryptionKey;
 
   // use file server v2
-  const uploadToV2Result = await uploadFileToFsWithOnionV4(attachmentData, deterministicEncryption);
+  const uploadToV2Result = await uploadFileToFsWithOnionV4(encryptedContent.encryptedData);
   if (uploadToV2Result) {
     const pointerWithUrl: AttachmentPointerWithUrl = {
       ...pointer,
@@ -105,12 +76,7 @@ async function uploadToFileServer(params: UploadParams): Promise<AttachmentPoint
 export async function uploadAttachmentsToFileServer(
   attachments: Array<Attachment>
 ): Promise<Array<AttachmentPointerWithUrl>> {
-  const promises = (attachments || []).map(async attachment =>
-    uploadToFileServer({
-      attachment,
-      shouldPad: true,
-    })
-  );
+  const promises = (attachments || []).map(async attachment => uploadToFileServer({ attachment }));
 
   return Promise.all(promises);
 }

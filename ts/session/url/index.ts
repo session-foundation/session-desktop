@@ -17,6 +17,23 @@ function parseSearchParamsFromFragment(url: URL) {
 }
 
 /**
+ * Serialises fragment params, writing a valueless key bare rather than with a trailing '='.
+ *
+ * libSession splits the fragment on '&' and compares each part against 'd' with string equality, so
+ * the 'd=' that URLSearchParams.toString() produces is not recognised as the stream-encryption flag
+ * and iOS reads the file as legacy-encrypted. Every fragment we hand to another platform has to go
+ * through here, including the ones rebuilt while adding or stripping the profile key.
+ */
+export function stringifyFragmentParams(searchParams: URLSearchParams) {
+  const parts: Array<string> = [];
+  searchParams.forEach((value, key) => {
+    parts.push(value === '' ? key : `${key}=${encodeURIComponent(value)}`);
+  });
+
+  return parts.join('&');
+}
+
+/**
  * Returns the serverPk/deterministicEncryption/profileKey from the provided url fragment
  * Note:
  * - for the default file server, the serverPk is hardcoded.
@@ -56,7 +73,7 @@ export function addProfileKeyToUrl(url: URL, profileKeyHex: string) {
   }
   const urlCopy = new URL(url.toString());
   searchParams.set(queryParamEncryptionKey, profileKeyHex);
-  urlCopy.hash = searchParams.toString() ?? '';
+  urlCopy.hash = stringifyFragmentParams(searchParams);
 
   return urlCopy;
 }
@@ -70,7 +87,7 @@ function removeProfileKey(url: URL) {
   }
   const urlCopy = new URL(url.toString());
   searchParams.delete(queryParamEncryptionKey);
-  urlCopy.hash = searchParams.toString() ?? '';
+  urlCopy.hash = stringifyFragmentParams(searchParams);
 
   return urlCopy;
 }
@@ -85,7 +102,7 @@ function removeDefaultServerPk(url: URL) {
 
   const urlCopy = new URL(url.toString());
   searchParams.delete(queryParamEncryptionKey);
-  urlCopy.hash = searchParams.toString() ?? '';
+  urlCopy.hash = stringifyFragmentParams(searchParams);
 
   return urlCopy;
 }

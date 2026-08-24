@@ -11,7 +11,6 @@ type SessionBaseBooleanFeatureFlags = {
   disableOnionRequests: boolean;
   disableImageProcessor: boolean;
   disableLocalAttachmentEncryption: boolean;
-  useDeterministicEncryption: boolean;
   useTestNet: boolean;
   useTestProBackend: boolean;
   useClosedGroupV2QAButtons: boolean;
