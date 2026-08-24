@@ -94,6 +94,19 @@ abstract class ExpireSubRequest extends SnodeAPISubRequest<'expire'> {
   }
 }
 
+/**
+ * The flag the storage server expects on the wire, for a given ShortenOrExtend.
+ * Note: the same value has to be used to build the signature, otherwise the request is signed
+ * for one behaviour and asks the server for another (and the server won't complain).
+ */
+function shortenOrExtendToParams(shortenOrExtend: ShortenOrExtend) {
+  return shortenOrExtend === 'extend'
+    ? { extend: true }
+    : shortenOrExtend === 'shorten'
+      ? { shorten: true }
+      : {};
+}
+
 abstract class StoreSubRequest extends SnodeAPISubRequest<'store'> {
   public readonly getNow: () => number;
 
@@ -775,13 +788,6 @@ export class UpdateExpiryOnNodeUserSubRequest extends ExpireSubRequest {
       );
     }
 
-    const shortenOrExtend =
-      this.shortenOrExtend === 'extend'
-        ? { extend: true }
-        : this.shortenOrExtend === 'shorten'
-          ? { shorten: true }
-          : {};
-
     return {
       method: this.method,
       params: {
@@ -790,7 +796,7 @@ export class UpdateExpiryOnNodeUserSubRequest extends ExpireSubRequest {
         signature: signResult.signature,
         messages: this.messageHashes,
         expiry: this.expiryMs,
-        ...shortenOrExtend,
+        ...shortenOrExtendToParams(this.shortenOrExtend),
       },
     };
   }
@@ -807,6 +813,12 @@ export class UpdateExpiryOnNodeUserSubRequest extends ExpireSubRequest {
 export class UpdateExpiryOnNodeGroupSubRequest extends ExpireSubRequest {
   public readonly messageHashes: Array<string>;
   public readonly expiryMs: number;
+  /**
+   * Same shape as the user request deliberately: the storage server supports shorten on group
+   * expiries too, so narrowing this to 'extend' would state something false about the endpoint.
+   * Note the value is read TWICE — for the signature and for the wire flag — and the two must
+   * agree, which is why both derive from this one field rather than from a literal.
+   */
   public readonly shortenOrExtend: ShortenOrExtend;
   public readonly groupDetailsNeededForSignature: GroupDetailsNeededForSignature;
 
@@ -846,18 +858,11 @@ export class UpdateExpiryOnNodeGroupSubRequest extends ExpireSubRequest {
       );
     }
 
-    const shortenOrExtend =
-      this.shortenOrExtend === 'extend'
-        ? { extends: true }
-        : this.shortenOrExtend === 'shorten'
-          ? { shorten: true }
-          : {};
-
     return {
       method: this.method,
       params: {
         messages: this.messageHashes,
-        ...shortenOrExtend,
+        ...shortenOrExtendToParams(this.shortenOrExtend),
         ...signResult,
 
         // pubkey_ed25519 is forbidden for the group one
