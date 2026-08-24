@@ -420,7 +420,7 @@ function ProInfoBlockRenew() {
         />
       }
       descriptionOnClick={() =>
-        showLinkVisitWarningDialog('https://getsession.org/pro-roadmap', dispatch)
+        showLinkVisitWarningDialog(LIBSESSION_CONSTANTS.LIBSESSION_PRO_URLS.roadmap, dispatch)
       }
       subtitleElement={
         <ProInfoBlockSectionSubtitle>
@@ -700,12 +700,16 @@ function ProPageButtonRefund() {
         // usable route for a plan bought there. An App Store plan reports its window as open for the
         // whole subscription, so gating on the window alone would send an Apple subscriber to the
         // wrong store's refund flow.
-        const canUseStoreRoute =
-          data.isPlatformRefundAvailable && data.provider === ProPaymentProvider.GooglePlay;
-        if (canUseStoreRoute) {
+        if (data.isPlatformRefundAvailable) {
           // libsession's own per-provider value. Note the slot: for Google Play its
           // `refund_support_url` IS the Session short link that redirects into the Play store, so the
           // url wanted for the window-OPEN route sits under libsession's "support" name.
+          //
+          // No provider check on top of the window: `providerUrls` is looked up by the ORIGINATING
+          // provider, so an App Store plan yields Apple's own refund page here rather than the
+          // Play-store link. Checking the provider as well would replace that correct page with
+          // Session's form — and Apple's two refund urls are the same value, so the window is the only
+          // thing that can distinguish anything for it.
           void openProviderUrl(data.provider, u => u.refundSupportUrl, dispatch);
           return;
         }

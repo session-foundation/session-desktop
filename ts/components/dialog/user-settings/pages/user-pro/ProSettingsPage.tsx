@@ -238,6 +238,18 @@ const useCurrentNeverHadProInternal = useCurrentNeverHadPro;
 const useIsDarkThemeInternal = useIsDarkTheme;
 const usePinnedConversationsCountInternal = usePinnedConversationsCount;
 
+/**
+ * Mirror of libsession's `url_pro_faq` (`session_protocol.cpp`). libsession owns the Pro URL
+ * registry as the single source of truth, but the Node binding does not expose this entry yet:
+ * `constants.cpp` builds `LIBSESSION_PRO_URLS` out of `url_pro_roadmap`, `url_privacy_policy`,
+ * `url_terms_of_service`, `url_pro_access_not_found` and `url_pro_support` only, so
+ * `ProBackendUrlsType` has no `faq` field (nor `pro_page` / `upgrade`, the other two omissions).
+ *
+ * This literal is therefore a copy under protest, not a choice — delete it and read the constant
+ * the moment libsession_util_nodejs surfaces `url_pro_faq`.
+ */
+const PRO_FAQ_URL = 'https://getsession.org/pro#faq';
+
 // Trigger #4's cadence (a cross-client contract, see the constants in ducks/proBackendData.ts).
 /** How long past the `user_expiry` crossing to wait before the first refetch. */
 const GRACE_POLL_CROSSING_SLACK_MS = 5 * DURATION.SECONDS;
@@ -1026,7 +1038,13 @@ function ProHelp() {
           text={{ token: 'proFaq' }}
           subText={{ token: 'proFaqDescription' }}
           onClick={async () =>
-            showLinkVisitWarningDialog('https://getsession.org/faq#pro', dispatch)
+            // A copy under protest, not a choice: this mirrors libsession's `url_pro_faq`
+            // (session_protocol.cpp), which the Node binding does NOT surface —
+            // `constants.cpp` builds `LIBSESSION_PRO_URLS` from only `url_pro_roadmap`,
+            // `url_privacy_policy`, `url_terms_of_service`, `url_pro_access_not_found` and
+            // `url_pro_support`, so there is no `faq` field on `ProBackendUrlsType` to read.
+            // Replace this literal with the constant as soon as the binding exports it.
+            showLinkVisitWarningDialog(PRO_FAQ_URL, dispatch)
           }
         />
         <SettingsExternalLinkBasic

@@ -9,6 +9,7 @@ import { UserUtils } from '../../session/utils';
 import { getProMasterKeyHex } from '../../session/utils/User';
 import { updateLocalizedPopupDialog } from './modalDialog';
 import { showLinkVisitWarningDialog } from '../../components/dialog/OpenUrlModal';
+import LIBSESSION_CONSTANTS from '../../session/utils/libsession/libsession_constants';
 import { ProStatus } from '../../session/apis/pro_backend_api/types';
 import { SettingsKey } from '../../data/settings-key';
 import { ProStatusResultType } from '../../session/apis/pro_backend_api/schemas';
@@ -957,7 +958,7 @@ const fetchGetProStatusFromProBackend = createAsyncThunk(
                     dataTestId: 'pro-backend-error-support-button',
                     onClick: () => {
                       showLinkVisitWarningDialog(
-                        'https://sessionapp.zendesk.com/hc/sections/4416517450649-Support',
+                        LIBSESSION_CONSTANTS.LIBSESSION_PRO_URLS.pro_access_not_found,
                         payloadCreator.dispatch
                       );
                     },
