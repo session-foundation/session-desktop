@@ -8,6 +8,7 @@ import { ExpirableMessageNoProfile, ExpirableMessageParams } from '../ExpirableM
 import { NetworkTime } from '../../../../util/NetworkTime';
 import { MessageQueue } from '../../../sending';
 import { uuidV4 } from '../../../../util/uuid';
+import { ed25519Str } from '../../../utils/String';
 
 type DataExtractionNotificationMessageParams = ExpirableMessageParams & {
   referencedAttachmentTimestamp: number;
@@ -60,7 +61,9 @@ export const sendDataExtractionNotification = async (
     UserUtils.isUsFromCache(attachmentSender) ||
     convo.isBlocked()
   ) {
-    window.log.warn('Not sending saving attachment notification for', attachmentSender);
+    window.log.warn(
+      `Not sending saving attachment notification for ${ed25519Str(attachmentSender)}`
+    );
     return;
   }
   const { expirationType, expireTimer } =

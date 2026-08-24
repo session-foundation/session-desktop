@@ -152,6 +152,7 @@ export const MessageContent = (props: Props) => {
       role="button"
       title={toolTipTitle}
       $msgDirection={direction}
+      data-testid="message-content-inner"
     >
       {hideAvatar ? null : (
         <StyledAvatarContainer>
@@ -171,6 +172,9 @@ export const MessageContent = (props: Props) => {
           flexDirection: 'column',
           gap: 'var(--margins-xs)',
           maxWidth: '100%',
+          // this is needed to make sure a message with a short body and attachments
+          // is not forced to take the attachments width
+          alignItems: direction === 'incoming' ? 'flex-start' : 'flex-end',
         }}
       >
         <IsMessageVisibleContext.Provider value={isMessageVisible}>
