@@ -63,13 +63,7 @@ const useCurrentNeverHadProLocal = useCurrentNeverHadPro;
  * For some texts, we want `Apple website` for apple but `Google Play Store website` for google...
  * Those two are not stored in the same field, so this hook can be used to fetch the right one
  */
-/**
- * The two Session-owned refund links. Duplicated here rather than read from libsession: the
- * quick-refund one has no `url_pro_*` entry, and adding one would gate a copy change on a libsession
- * bump across three clients. session-android's `ProUrls` and iOS's url string provider carry the same
- * pair.
- */
-const PRO_QUICK_REFUND_URL = 'https://getsession.org/android-refund';
+/** The route once the store's window has closed — libsession's `url_pro_support`. */
 const PRO_SUPPORT_URL = LIBSESSION_CONSTANTS.LIBSESSION_PRO_URLS.support_url;
 
 function useStoreOrPlatformFromProvider(data: ProcessedProStatus['data']) {
@@ -702,10 +696,20 @@ function ProPageButtonRefund() {
         //
         // The window is what decides who can act: while it is open the store takes the request, and
         // once it closes only Session can, which is what the copy beside this button promises.
-        showLinkVisitWarningDialog(
-          data.isPlatformRefundAvailable ? PRO_QUICK_REFUND_URL : PRO_SUPPORT_URL,
-          dispatch
-        );
+        // The quick-refund link is Google Play's: it redirects into the Play store, so it is only a
+        // usable route for a plan bought there. An App Store plan reports its window as open for the
+        // whole subscription, so gating on the window alone would send an Apple subscriber to the
+        // wrong store's refund flow.
+        const canUseStoreRoute =
+          data.isPlatformRefundAvailable && data.provider === ProPaymentProvider.GooglePlay;
+        if (canUseStoreRoute) {
+          // libsession's own per-provider value. Note the slot: for Google Play its
+          // `refund_support_url` IS the Session short link that redirects into the Play store, so the
+          // url wanted for the window-OPEN route sits under libsession's "support" name.
+          void openProviderUrl(data.provider, u => u.refundSupportUrl, dispatch);
+          return;
+        }
+        showLinkVisitWarningDialog(PRO_SUPPORT_URL, dispatch);
       }}
       dataTestId="pro-open-platform-website-button"
     >
