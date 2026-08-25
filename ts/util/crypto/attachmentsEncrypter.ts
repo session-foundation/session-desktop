@@ -8,22 +8,12 @@ async function sign(key: any, data: any) {
     });
 }
 
-async function encrypt(key: any, data: any, iv: any) {
-  return crypto.subtle
-    .importKey('raw', key, { name: 'AES-CBC' }, false, ['encrypt'])
-    .then(async secondKey => {
-      return crypto.subtle.encrypt({ name: 'AES-CBC', iv: new Uint8Array(iv) }, secondKey, data);
-    });
-}
 async function decrypt(key: any, data: any, iv: any) {
   return crypto.subtle
     .importKey('raw', key, { name: 'AES-CBC' }, false, ['decrypt'])
     .then(async secondKey => {
       return crypto.subtle.decrypt({ name: 'AES-CBC', iv: new Uint8Array(iv) }, secondKey, data);
     });
-}
-async function calculateMAC(key: any, data: any) {
-  return sign(key, data);
 }
 async function verifyMAC(data: any, key: any, mac: any, length: any) {
   return sign(key, data).then(calculatedMac => {
@@ -57,9 +47,6 @@ async function verifyDigest(data: ArrayBuffer, theirDigest: ArrayBuffer) {
     }
   });
 }
-async function calculateDigest(data: ArrayBuffer) {
-  return crypto.subtle.digest({ name: 'SHA-256' }, data);
-}
 
 export async function decryptAttachment(
   encryptedBin: ArrayBuffer,
@@ -89,41 +76,4 @@ export async function decryptAttachment(
       return verifyDigest(encryptedBin, theirDigest);
     })
     .then(() => decrypt(aesKey, ciphertext, iv));
-}
-
-export async function encryptAttachment(
-  plaintext: ArrayBuffer,
-  keys: ArrayBuffer,
-  iv: ArrayBuffer
-) {
-  if (!(plaintext instanceof ArrayBuffer) && !ArrayBuffer.isView(plaintext)) {
-    throw new TypeError(
-      `\`plaintext\` must be an \`ArrayBuffer\` or \`ArrayBufferView\`; got: ${typeof plaintext}`
-    );
-  }
-
-  if (keys.byteLength !== 64) {
-    throw new Error(`Got invalid length attachment keys: ${keys.byteLength}`);
-  }
-  if (iv.byteLength !== 16) {
-    throw new Error(`Got invalid length attachment iv: ${iv.byteLength}`);
-  }
-  const aesKey = keys.slice(0, 32);
-  const macKey = keys.slice(32, 64);
-
-  return encrypt(aesKey, plaintext, iv).then(async (ciphertext: any) => {
-    const ivAndCiphertext = new Uint8Array(16 + ciphertext.byteLength);
-    ivAndCiphertext.set(new Uint8Array(iv));
-    ivAndCiphertext.set(new Uint8Array(ciphertext), 16);
-
-    return calculateMAC(macKey, ivAndCiphertext.buffer).then(async (mac: any) => {
-      const encryptedBin = new Uint8Array(16 + ciphertext.byteLength + 32);
-      encryptedBin.set(ivAndCiphertext);
-      encryptedBin.set(new Uint8Array(mac), 16 + ciphertext.byteLength);
-      return calculateDigest(encryptedBin.buffer).then(digest => ({
-        ciphertext: encryptedBin.buffer,
-        digest,
-      }));
-    });
-  });
 }

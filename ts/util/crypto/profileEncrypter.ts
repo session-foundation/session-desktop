@@ -1,5 +1,4 @@
 /* eslint-disable more/no-then */
-import { getSodiumRenderer } from '../../session/crypto';
 
 const PROFILE_IV_LENGTH = 12; // bytes
 const PROFILE_KEY_LENGTH = 32; // bytes
@@ -36,32 +35,6 @@ export async function decryptProfile(data: ArrayBuffer, key: ArrayBuffer): Promi
             throw error;
           }
           throw error;
-        })
-    );
-}
-
-async function getRandomBytesFromLength(n: number) {
-  return (await getSodiumRenderer()).randombytes_buf(n);
-}
-
-export async function encryptProfile(data: ArrayBuffer, key: ArrayBuffer): Promise<ArrayBuffer> {
-  const iv = await getRandomBytesFromLength(PROFILE_IV_LENGTH);
-  if (key.byteLength !== PROFILE_KEY_LENGTH) {
-    throw new Error('Got invalid length profile key');
-  }
-  if (iv.byteLength !== PROFILE_IV_LENGTH) {
-    throw new Error('Got invalid length profile iv');
-  }
-  return crypto.subtle
-    .importKey('raw', key, { name: 'AES-GCM' }, false, ['encrypt'])
-    .then(keyForEncryption =>
-      crypto.subtle
-        .encrypt({ name: 'AES-GCM', iv, tagLength: PROFILE_TAG_LENGTH }, keyForEncryption, data)
-        .then(ciphertext => {
-          const ivAndCiphertext = new Uint8Array(PROFILE_IV_LENGTH + ciphertext.byteLength);
-          ivAndCiphertext.set(new Uint8Array(iv));
-          ivAndCiphertext.set(new Uint8Array(ciphertext), PROFILE_IV_LENGTH);
-          return ivAndCiphertext.buffer;
         })
     );
 }
