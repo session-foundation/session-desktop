@@ -36,6 +36,7 @@ async function handlePublicMessageSentSuccess(
       sentSync: true,
     });
     await foundMessage.commit();
+    await foundMessage.addProFeaturesToStats();
     foundMessage.getConversation()?.updateLastMessage();
   } catch (e) {
     window?.log?.error('Error setting public on message');
@@ -173,6 +174,7 @@ async function handleSwarmMessageSentSuccess({
   }
 
   await fetchedMessage.commit();
+  await fetchedMessage.addProFeaturesToStats();
   fetchedMessage.getConversation()?.updateLastMessage();
 }
 

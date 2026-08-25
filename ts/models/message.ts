@@ -1593,26 +1593,49 @@ export class MessageModel extends Model<MessageAttributes> {
         proProfileBitset: longOrNumberToBigInt(proDetails.profileBitset),
       });
       await this.commit();
-      const proFeaturesUsed = this.getProFeaturesUsed();
-      await Promise.all(
-        proFeaturesUsed.map(async proFeature => {
-          switch (proFeature) {
-            case ProMessageFeature.PRO_INCREASED_MESSAGE_LENGTH:
-              await Storage.increment(SettingsKey.proLongerMessagesSent);
-              break;
-            case ProMessageFeature.PRO_BADGE:
-              await Storage.increment(SettingsKey.proBadgesSent);
-              break;
-            case ProMessageFeature.PRO_ANIMATED_DISPLAY_PICTURE:
-              // nothing to do for animated display picture
-              break;
-
-            default:
-              assertUnreachable(proFeature, 'Unknown pro feature');
-          }
-        })
-      );
     }
+  }
+
+  /**
+   * Add this message's Pro features to the lifetime stats, once, when a send has succeeded.
+   *
+   * Separate from the bitset written by applyProFeatures because the two answer different questions at
+   * different times. The bitset describes what this message claims and has to be set before it goes on
+   * the wire; the stats count what was actually sent, so they cannot be known until the send comes back.
+   * Incrementing at the earlier point counted a message that never left.
+   *
+   * Guarded by its own flag rather than by the state of the send. One success can be reported more than
+   * once — a 1:1 message reports again for its own sync copy — and `sent` is set by the failure handler
+   * as well, so neither is a usable answer to "has this already been counted".
+   */
+  public async addProFeaturesToStats() {
+    if (this.get('proStatsCounted')) {
+      return;
+    }
+    const proFeaturesUsed = this.getProFeaturesUsed();
+    if (!proFeaturesUsed.length) {
+      return;
+    }
+    await Promise.all(
+      proFeaturesUsed.map(async proFeature => {
+        switch (proFeature) {
+          case ProMessageFeature.PRO_INCREASED_MESSAGE_LENGTH:
+            await Storage.increment(SettingsKey.proLongerMessagesSent);
+            break;
+          case ProMessageFeature.PRO_BADGE:
+            await Storage.increment(SettingsKey.proBadgesSent);
+            break;
+          case ProMessageFeature.PRO_ANIMATED_DISPLAY_PICTURE:
+            // nothing to do for animated display picture
+            break;
+
+          default:
+            assertUnreachable(proFeature, 'Unknown pro feature');
+        }
+      })
+    );
+    this.set({ proStatsCounted: true });
+    await this.commit();
   }
 
   private dispatchMessageUpdate() {
