@@ -369,7 +369,11 @@ message GroupUpdateDeleteMemberContentMessage {
 }
 
 message ProProof {
-  optional uint32 version           = 1;
+  // Numbering starts at 2: field 1 was `version`, dropped because a proof's format is its type
+  // rather than a value it carries -- the format is bound into the signature by the domain prefix
+  // it picks, and a future format arrives as its own message/field.
+  reserved 1;
+  reserved "version";
   optional bytes  revocationTag      = 2;
   optional bytes  rotatingPublicKey = 3;
   optional uint64 expiryUnixTs      = 4; // Epoch timestamp in whole seconds (what the Session Pro backend signs over)

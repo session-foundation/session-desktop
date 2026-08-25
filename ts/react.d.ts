@@ -135,6 +135,11 @@ declare module 'react' {
     | 'donate';
 
   type ProSettingsSections = 'stats' | 'manage' | 'features';
+  /**
+   * The refund route the non-originating page offered. Its hero copy is the same string in all
+   * three, so the info block is the only thing that says which route the app chose.
+   */
+  type ProRefundRoutes = 'store-policies' | 'platform-account' | 'session-support';
 
   type ProFeatureItems =
     | 'longer-messages'
@@ -323,6 +328,7 @@ declare module 'react' {
     // Pro settings
     | `${ProFeatureItems}-pro-settings-menu-item`
     | `pro-settings-${ProSettingsSections}-header`
+    | `pro-screen-refund-${ProRefundRoutes}`
     // Both the "checking" and the "backend unavailable" messages render into this one slot.
     | 'pro-settings-status-banner'
     // The hero copy, which differs per status. Shared with the non-originating page, whose hero

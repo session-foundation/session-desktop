@@ -107,15 +107,17 @@ type PanelButtonGroupProps = {
   style?: CSSProperties;
   isSidePanel?: boolean;
   withBorder?: boolean;
+  dataTestId?: SessionDataTestId;
 };
 
 export const PanelButtonGroup = (
   props: PanelButtonGroupProps & { containerStyle?: CSSProperties }
 ) => {
-  const { children, style, containerStyle, isSidePanel, withBorder } = props;
+  const { children, style, containerStyle, isSidePanel, withBorder, dataTestId } = props;
   const isDarkTheme = useIsDarkTheme();
   return (
     <StyledRoundedPanelButtonGroup
+      data-testid={dataTestId}
       style={style}
       $isSidePanel={isSidePanel}
       $withBorder={withBorder}

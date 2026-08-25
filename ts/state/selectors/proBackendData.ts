@@ -12,6 +12,7 @@ import {
   getDataFeatureFlag,
   getFeatureFlag,
   getFeatureFlagMemo,
+  MockProPlatformRefundWindowOptions,
 } from '../ducks/types/releasedFeaturesReduxTypes';
 import { mockedProExpiryMs, proAutoRenewWithMock } from '../ducks/types/proMocks';
 import { NetworkTime } from '../../util/NetworkTime';
@@ -236,9 +237,7 @@ function processProBackendData({
   const mockVariant = getDataFeatureFlag('mockProAccessVariant');
   const mockPlatform = getDataFeatureFlag('mockProPaymentProvider');
   const mockInGracePeriod = getFeatureFlag('mockCurrentUserHasProInGracePeriod');
-  const mockIsPlatformRefundAvailable = !getFeatureFlag(
-    'mockCurrentUserHasProPlatformRefundExpired'
-  );
+  const mockRefundWindow = getDataFeatureFlag('mockProPlatformRefundWindow');
   const mockExpiry = mockedProExpiryMs();
 
   const isLoading = mockIsLoading || _isLoading;
@@ -277,10 +276,14 @@ function processProBackendData({
         latestAccess?.planCount ?? storedPlanAndProvider?.planCount,
         latestAccess?.planUnit ?? storedPlanAndProvider?.planUnit
       );
-  const isPlatformRefundAvailable =
-    mockIsPlatformRefundAvailable ||
-    (latestAccess?.platformRefundExpiryTsMs && now < latestAccess.platformRefundExpiryTsMs) ||
-    defaultProAccessDetailsSourceData.isPlatformRefundAvailable;
+  // The payment decides this unless a mock says otherwise. The mock used to be a boolean whose unset
+  // state read as "window open", which short-circuited the comparison below in every build — so a
+  // release client never consulted `platformRefundExpiryTsMs` at all, and every subscriber was routed to
+  // the store-refund screen however old the payment was. A null override defers; only an explicit one
+  // wins. No payment means no window, which is `defaultProAccessDetailsSourceData` too.
+  const isPlatformRefundAvailable = mockRefundWindow
+    ? mockRefundWindow === MockProPlatformRefundWindowOptions.Open
+    : !!latestAccess?.platformRefundExpiryTsMs && now < latestAccess.platformRefundExpiryTsMs;
 
   const autoRenew = proAutoRenewWithMock(
     data?.autoRenewing ?? defaultProAccessDetailsSourceData.autoRenew

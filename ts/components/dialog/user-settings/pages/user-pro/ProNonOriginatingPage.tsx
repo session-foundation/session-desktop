@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { type ReactNode, useEffect, useState } from 'react';
+import { type ReactNode, type SessionDataTestId, useEffect, useState } from 'react';
 import type { ProviderUrls } from 'libsession_util_nodejs';
 import { getAppDispatch } from '../../../../../state/dispatch';
 import { isSimpleTokenNoArgs, tr } from '../../../../../localization/localeTools';
@@ -63,6 +63,9 @@ const useCurrentNeverHadProLocal = useCurrentNeverHadPro;
  * For some texts, we want `Apple website` for apple but `Google Play Store website` for google...
  * Those two are not stored in the same field, so this hook can be used to fetch the right one
  */
+/** The route once the store's window has closed — libsession's `url_pro_support`. */
+const PRO_SUPPORT_URL = LIBSESSION_CONSTANTS.LIBSESSION_PRO_URLS.support_url;
+
 function useStoreOrPlatformFromProvider(data: ProcessedProStatus['data']) {
   return data.provider === ProPaymentProvider.AppStore
     ? data.providerConstants.platform // we want `Apple website` for apple
@@ -290,12 +293,14 @@ function ProInfoBlockWebsite({
 }
 
 function ProInfoBlockLayout({
+  dataTestId,
   titleElement,
   descriptionElement,
   descriptionOnClick,
   subtitleElement,
   blockItems,
 }: {
+  dataTestId?: SessionDataTestId;
   titleElement: ReactNode;
   descriptionElement: ReactNode;
   descriptionOnClick?: () => void;
@@ -304,6 +309,7 @@ function ProInfoBlockLayout({
 }) {
   return (
     <PanelButtonGroup
+      dataTestId={dataTestId}
       containerStyle={{
         paddingBlock: 'var(--margins-lg)',
         paddingInline: 'var(--margins-lg)',
@@ -414,7 +420,7 @@ function ProInfoBlockRenew() {
         />
       }
       descriptionOnClick={() =>
-        showLinkVisitWarningDialog('https://getsession.org/pro-roadmap', dispatch)
+        showLinkVisitWarningDialog(LIBSESSION_CONSTANTS.LIBSESSION_PRO_URLS.roadmap, dispatch)
       }
       subtitleElement={
         <ProInfoBlockSectionSubtitle>
@@ -498,7 +504,10 @@ const containerStyle = {
 
 function ProInfoBlockRefundSessionSupport() {
   return (
-    <PanelButtonGroup containerStyle={containerStyle}>
+    <PanelButtonGroup
+      containerStyle={containerStyle}
+      dataTestId="pro-screen-refund-session-support"
+    >
       <ProInfoBlockRefundTitle>
         <Localizer token="proRefunding" />
       </ProInfoBlockRefundTitle>
@@ -514,7 +523,7 @@ function ProInfoBlockRefundSessionSupport() {
 function ProInfoBlockRefundGooglePlay() {
   const { data } = useProBackendProStatusLocal();
   return (
-    <PanelButtonGroup containerStyle={containerStyle}>
+    <PanelButtonGroup containerStyle={containerStyle} dataTestId="pro-screen-refund-store-policies">
       <ProInfoBlockRefundTitle>
         <Localizer token="proRefunding" />
       </ProInfoBlockRefundTitle>
@@ -531,6 +540,7 @@ function ProInfoBlockRefundIOS() {
   const { data } = useProBackendProStatusLocal();
   return (
     <ProInfoBlockLayout
+      dataTestId="pro-screen-refund-platform-account"
       titleElement={tr('proRefunding')}
       descriptionElement={
         <Localizer
@@ -680,11 +690,30 @@ function ProPageButtonRefund() {
       {...proButtonProps}
       buttonColor={SessionButtonColor.Danger}
       onClick={() => {
-        void openProviderUrl(
-          data.provider,
-          u => (data.isPlatformRefundAvailable ? u.refundPlatformUrl : u.refundSupportUrl),
-          dispatch
-        );
+        // Two Session-owned links, chosen on the window alone — not the provider's own
+        // refund_platform_url/refund_support_url. Being ours, the destinations can be repointed without
+        // a client release, and all three clients agree on them.
+        //
+        // The window is what decides who can act: while it is open the store takes the request, and
+        // once it closes only Session can, which is what the copy beside this button promises.
+        // The quick-refund link is Google Play's: it redirects into the Play store, so it is only a
+        // usable route for a plan bought there. An App Store plan reports its window as open for the
+        // whole subscription, so gating on the window alone would send an Apple subscriber to the
+        // wrong store's refund flow.
+        if (data.isPlatformRefundAvailable) {
+          // libsession's own per-provider value. Note the slot: for Google Play its
+          // `refund_support_url` IS the Session short link that redirects into the Play store, so the
+          // url wanted for the window-OPEN route sits under libsession's "support" name.
+          //
+          // No provider check on top of the window: `providerUrls` is looked up by the ORIGINATING
+          // provider, so an App Store plan yields Apple's own refund page here rather than the
+          // Play-store link. Checking the provider as well would replace that correct page with
+          // Session's form — and Apple's two refund urls are the same value, so the window is the only
+          // thing that can distinguish anything for it.
+          void openProviderUrl(data.provider, u => u.refundSupportUrl, dispatch);
+          return;
+        }
+        showLinkVisitWarningDialog(PRO_SUPPORT_URL, dispatch);
       }}
       dataTestId="pro-open-platform-website-button"
     >

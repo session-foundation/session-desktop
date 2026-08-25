@@ -1026,7 +1026,7 @@ function ProHelp() {
           text={{ token: 'proFaq' }}
           subText={{ token: 'proFaqDescription' }}
           onClick={async () =>
-            showLinkVisitWarningDialog('https://getsession.org/faq#pro', dispatch)
+            showLinkVisitWarningDialog(LIBSESSION_CONSTANTS.LIBSESSION_PRO_URLS.faq, dispatch)
           }
         />
         <SettingsExternalLinkBasic
