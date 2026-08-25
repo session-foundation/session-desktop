@@ -329,6 +329,15 @@ declare module 'react' {
     // renders the same slot; a locator reads the text through the id to tell the states apart.
     | 'pro-settings-description'
 
+    // The four "Your Pro Stats" cells. Named the same as Android and iOS
+    // (`content-descriptions` / `SessionProUI.AccessibilityIdentifier`) so one harness
+    // locator serves every client. Desktop puts the id on the label holding the count
+    // itself rather than on a container, because that is where the text is.
+    | 'pro-stats-longer-messages'
+    | 'pro-stats-pinned-conversations'
+    | 'pro-stats-badges-sent'
+    | 'pro-stats-groups-upgraded'
+
     // timer options
     | DisappearTimeOptionDataTestId
     | DisappearOptionDataTestId
