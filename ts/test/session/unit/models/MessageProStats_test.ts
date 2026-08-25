@@ -6,14 +6,16 @@ import type { ConversationModel } from '../../../../models/conversation';
 import { SettingsKey } from '../../../../data/settings-key';
 import { TestUtils } from '../../../test-utils';
 import { UserUtils } from '../../../../session/utils';
+import { OutgoingProMessageDetails } from '../../../../types/message/OutgoingProMessageDetails';
 
 describe('addProFeaturesToStats', () => {
   let increment: Sinon.SinonStub;
+  let saveMessage: Sinon.SinonStub;
 
   beforeEach(() => {
     TestUtils.stubWindowLog();
     Sinon.stub(UserUtils, 'getOurPubKeyStrFromCache').returns(TestUtils.generateFakePubKeyStr());
-    Sinon.stub(Data, 'saveMessage').resolves('fake-id');
+    saveMessage = Sinon.stub(Data, 'saveMessage').resolves('fake-id');
     increment = TestUtils.stubStorage('increment');
   });
 
@@ -60,5 +62,46 @@ describe('addProFeaturesToStats', () => {
     await message.addProFeaturesToStats();
 
     expect(increment.called).to.equal(false);
+  });
+
+  it('does not count while the message is only being composed', async () => {
+    // The regression this exists to hold: the counters used to be incremented here, before the message
+    // was ever sent, so anything that failed to send was counted anyway. Moving them back would pass
+    // every other test in this file.
+    const message = TestUtils.generateFakeOutgoingPrivateMessage();
+    Sinon.stub(message, 'getConversation').returns({
+      updateLastMessage: Sinon.stub(),
+    } as unknown as ConversationModel);
+
+    // toProtobufDetails() is stubbed rather than fed a real proof: this test is about whether composing
+    // touches the counters, and building a valid proof would only add crypto helpers to the setup. The
+    // bitset assertion below is what proves the store actually ran, so the test cannot pass vacuously.
+    const details = new OutgoingProMessageDetails({ proMessageBitset: BigInt(1) });
+    Sinon.stub(details, 'toProtobufDetails').returns({
+      messageBitset: 1,
+      profileBitset: 0,
+    } as unknown as ReturnType<OutgoingProMessageDetails['toProtobufDetails']>);
+
+    await message.applyProFeatures(details);
+
+    expect(
+      message.get('proMessageBitset'),
+      'the bitset must still be stored at compose time'
+    ).to.not.equal(undefined);
+    expect(increment.called, 'composing a message must not touch the stats').to.equal(false);
+  });
+
+  it('persists the counted flag with the message', async () => {
+    // The once-only guard is only worth anything if it survives a restart, so assert it reaches what
+    // gets written rather than only the in-memory model.
+    const message = makeSentProMessage();
+
+    await message.addProFeaturesToStats();
+
+    const saved = saveMessage.lastCall.args[0] as { proStatsCounted?: boolean };
+    expect(
+      saved.proStatsCounted,
+      'proStatsCounted must be part of the persisted attributes'
+    ).to.equal(true);
   });
 });

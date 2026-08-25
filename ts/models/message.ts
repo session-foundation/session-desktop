@@ -1579,9 +1579,10 @@ export class MessageModel extends Model<MessageAttributes> {
       //  - We already have some bitset set for this message in the DB,
       //  - or the proMessageDetails is empty
       //  - or the proMessageDetails has no bitset set
-      // then,
-      // - we do not need to apply the bitset from the details.
-      // - we also don't need the update the pro stats with this change (as we can assume the change was already counted).
+      // then there is no bitset to apply from the details.
+      //
+      // The stats are not decided here: they are counted from this bitset once a send succeeds, and
+      // guarded there by `proStatsCounted` rather than by this early return.
 
       return;
     }
