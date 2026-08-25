@@ -229,7 +229,20 @@ async function handleRegularMessage(
 
   handleLinkPreviews(rawDataMessage.body, rawDataMessage.preview, message);
 
-  const maxChars = sendingDeviceConversation.hasValidCurrentProProof()
+  // Sized from the proof THIS message carried, not from what we had stored for its sender. The stored
+  // record is only ever refreshed by a message that also carries a profile block
+  // (buildPrivateProfileChangeFromSwarmDataMessage returns null without one), so sizing from it made the
+  // limit depend on the profile rather than on the proof: a first message from a newly-Pro sender, or any
+  // message sent without a profile, would be cut against a record that had never heard of their proof.
+  // iOS and Android both read the arriving proof here.
+  //
+  // Our own synced messages keep reading our own access instead: that path resolves through our config
+  // rather than a contact record, so it never had the coupling this removes.
+  const senderIsProForThisMessage = sendingDeviceConversation.isMe()
+    ? sendingDeviceConversation.hasValidCurrentProProof()
+    : decodedEnvelope.proProofEntitlesFeaturesNow();
+
+  const maxChars = senderIsProForThisMessage
     ? LIBSESSION_CONSTANTS.MESSAGE_CHARACTER_LIMIT_PRO
     : LIBSESSION_CONSTANTS.MESSAGE_CHARACTER_LIMIT_STANDARD;
 

@@ -30,6 +30,9 @@ type SessionBaseBooleanFeatureFlags = {
   mockProBackendSuccess: boolean;
   fsTTL30s: boolean;
   debugForceSeedNodeFailure: boolean;
+  // Backdates the persisted next-revocation-poll instant at launch so the startup gate polls now. The QA
+  // backend serves the production 24h `retry_in`, which otherwise puts a client's second poll a day out.
+  forceProRevocationRefresh: boolean;
 };
 
 export type SessionDebugBooleanFeatureFlags = {

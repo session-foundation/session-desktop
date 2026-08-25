@@ -1,6 +1,7 @@
 import type { DecodedPro } from 'libsession_util_nodejs';
 import { isNil } from 'lodash';
 import { ProRevocationCache } from '../session/revocation_list/pro_revocation_list';
+import { NetworkTime } from '../util/NetworkTime';
 
 type DecodedProConstructorArgs = {
   id: string;
@@ -101,6 +102,28 @@ export abstract class BaseDecodedEnvelope {
       return false;
     }
     return this.validPro.proProof.expiryMs < timestampMs;
+  }
+
+  /**
+   * Whether the proof this message arrived with entitles the message to Pro features right now.
+   *
+   * The three checks are separate because `validPro` is only the decode verdict — a signature the backend
+   * issued — and says nothing about whether that proof has since expired or been revoked. Reading it alone
+   * would hand Pro features to both.
+   *
+   * Judged at the current instant rather than at `sentAtMs`, matching what the sender's stored record
+   * answers today: a message is sized by whether the proof behind it is usable, not by whether it was
+   * usable when it was written. The per-message feature bitset asks the same question at send time — see
+   * processProDetailsForMsg — and the two instants have never agreed.
+   */
+  public proProofEntitlesFeaturesNow() {
+    if (!this.validPro) {
+      return false;
+    }
+    if (this.isProProofRevoked()) {
+      return false;
+    }
+    return !this.isProProofExpiredAtMs(NetworkTime.now());
   }
 
   /**

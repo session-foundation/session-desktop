@@ -233,11 +233,32 @@ async function queueNewJobIfNeeded() {
 }
 
 /**
+ * Backdate the next-run instant so the startup gate below decides, on its own terms, to poll now.
+ *
+ * The gate is left exactly as it is: this changes what it reads, not what it does, so a spec that relies
+ * on a poll is still exercising the path that ships. Bypassing the gate with a direct fetch would let the
+ * spec pass while the real polling path was broken.
+ *
+ * One-shot. The poll it releases stores a fresh `retry_in` from the backend — 24h against the QA
+ * backend — so the next launch is gated again unless the variable is still set.
+ */
+async function backdateNextRunIfForced() {
+  if (!getFeatureFlag('forceProRevocationRefresh')) {
+    return;
+  }
+  window.log.info(
+    'UpdateProRevocationListJob: SESSION_FORCE_PRO_REVOCATION_REFRESH is set; backdating the next-run instant so the startup gate polls now.'
+  );
+  await updateNextRunAtMs(Date.now() - 1);
+}
+
+/**
  * Run, and await the UpdateProRevocationListJob on startup.
  * Note: this is only run if the nextRunAtMs is unset or is already passed.
  */
 async function runOnStartup() {
   try {
+    await backdateNextRunIfForced();
     const now = Date.now();
     const refreshedNextRunAtMs = await refreshNextRunAtMsIfNeeded();
 
