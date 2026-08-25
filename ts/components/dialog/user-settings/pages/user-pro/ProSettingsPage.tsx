@@ -238,7 +238,6 @@ const useCurrentNeverHadProInternal = useCurrentNeverHadPro;
 const useIsDarkThemeInternal = useIsDarkTheme;
 const usePinnedConversationsCountInternal = usePinnedConversationsCount;
 
-
 // Trigger #4's cadence (a cross-client contract, see the constants in ducks/proBackendData.ts).
 /** How long past the `user_expiry` crossing to wait before the first refetch. */
 const GRACE_POLL_CROSSING_SLACK_MS = 5 * DURATION.SECONDS;
