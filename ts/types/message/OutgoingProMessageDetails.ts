@@ -58,8 +58,7 @@ export class OutgoingProMessageDetails {
       }
       return null;
     }
-    const { expiryMs, revocationTagB64, rotatingPubkeyHex, signatureHex, version } =
-      this.proConfig.proProof;
+    const { expiryMs, revocationTagB64, rotatingPubkeyHex, signatureHex } = this.proConfig.proProof;
 
     return new SignalService.ProMessage({
       profileBitset: bigIntToLong(this.proProfileBitset),
@@ -70,7 +69,6 @@ export class OutgoingProMessageDetails {
         expiryUnixTs: Math.floor(expiryMs / 1000),
         revocationTag: from_base64(revocationTagB64, base64_variants.ORIGINAL),
         rotatingPublicKey: from_hex(rotatingPubkeyHex),
-        version,
         sig: from_hex(signatureHex),
       },
     });

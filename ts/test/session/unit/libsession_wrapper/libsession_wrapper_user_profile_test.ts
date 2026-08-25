@@ -79,9 +79,6 @@ describe('libsession_user_profile', () => {
           // sub-second value would come back floored. Use a second-aligned one to round-trip as-is.
           expiryMs: Math.floor(Date.now() / 1000) * 1000 + 1000,
           revocationTagB64: to_base64(ed25519Seed, base64_variants.ORIGINAL),
-          // Deliberately not v0: the version is required on the way in but is not persisted, so
-          // this must come back as 0. See the expectation below.
-          version: 132,
           signatureHex: to_hex(randombytes_buf(64)),
         },
       };
@@ -100,10 +97,9 @@ describe('libsession_user_profile', () => {
           rotatingPubkeyHex: rotatingPubKeyHex,
           expiryMs: proConfig.proProof.expiryMs,
           revocationTagB64: proConfig.proProof.revocationTagB64,
-          // The stored credential is one opaque bt-encoded value carrying only `e`, `g`, `r` and `s`,
-          // so no version is written and load forces v0 (= 0). A version can't describe itself across
-          // a per-key merge, so a future format takes a new config key instead of an in-dict marker.
-          version: 0,
+          // The stored credential is one opaque bt-encoded value carrying only `e`, `g`, `r` and `s`
+          // -- there is no version to round-trip. A version can't describe itself across a per-key
+          // merge, so a future format takes a new config key instead of an in-dict marker.
           signatureHex: proConfig.proProof.signatureHex,
         },
       };
