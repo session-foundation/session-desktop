@@ -730,17 +730,12 @@ function ProConfigForm({
   const [genHashInput, setGenHashInput] = useState<string>(
     proConfig?.proProof.revocationTagB64 ?? ''
   );
-  const [versionInput, setVersionInput] = useState<string>(
-    proConfig?.proProof.version.toString() ?? ''
-  );
-
   const removeConfig = useCallback(async () => {
     await UserConfigWrapperActions.removeProConfig();
     setRotatingPrivKeyInput('');
     setExpiryInput('');
     setSigInput('');
     setGenHashInput('');
-    setVersionInput('');
     await forceUpdate();
   }, [forceUpdate]);
 
@@ -762,7 +757,6 @@ function ProConfigForm({
       <DebugInput label="Expiry Timestamp (ms)" value={expiryInput} setValue={setExpiryInput} />
       <DebugInput label="Signature" value={sigInput} setValue={setSigInput} />
       <DebugInput label="Gen Hash" value={genHashInput} setValue={setGenHashInput} />
-      <DebugInput label="Version" value={versionInput} setValue={setVersionInput} />
     </div>
   );
 }
