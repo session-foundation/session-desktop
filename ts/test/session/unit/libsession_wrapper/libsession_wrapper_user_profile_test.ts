@@ -97,9 +97,6 @@ describe('libsession_user_profile', () => {
           rotatingPubkeyHex: rotatingPubKeyHex,
           expiryMs: proConfig.proProof.expiryMs,
           revocationTagB64: proConfig.proProof.revocationTagB64,
-          // The stored credential is one opaque bt-encoded value carrying only `e`, `g`, `r` and `s`
-          // -- there is no version to round-trip. A version can't describe itself across a per-key
-          // merge, so a future format takes a new config key instead of an in-dict marker.
           signatureHex: proConfig.proProof.signatureHex,
         },
       };
