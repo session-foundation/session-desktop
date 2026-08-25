@@ -449,7 +449,7 @@ function ProStats() {
                 iconSize="huge"
                 unicode={LUCIDE_ICONS_UNICODE.MESSAGE_SQUARE}
               />
-              <StatsLabel>
+              <StatsLabel data-testid="pro-stats-longer-messages">
                 {tr('proLongerMessagesSent', {
                   count: proLongerMessagesSent,
                   total: formatProStats(proLongerMessagesSent),
@@ -462,7 +462,7 @@ function ProStats() {
                 iconSize="huge"
                 unicode={LUCIDE_ICONS_UNICODE.PIN}
               />
-              <StatsLabel>
+              <StatsLabel data-testid="pro-stats-pinned-conversations">
                 {tr('proPinnedConversations', {
                   count: proPinnedConversations,
                   total: formatProStats(proPinnedConversations),
@@ -477,7 +477,7 @@ function ProStats() {
                 iconSize="huge"
                 unicode={LUCIDE_ICONS_UNICODE.RECTANGLE_ELLIPSES}
               />
-              <StatsLabel>
+              <StatsLabel data-testid="pro-stats-badges-sent">
                 {tr('proBadgesSent', {
                   count: proBadgesSent,
                   total: formatProStats(proBadgesSent),
@@ -490,7 +490,7 @@ function ProStats() {
                 iconSize="huge"
                 unicode={LUCIDE_ICONS_UNICODE.USERS_ROUND}
               />
-              <StatsLabel disabled={!proGroupsAvailable}>
+              <StatsLabel disabled={!proGroupsAvailable} data-testid="pro-stats-groups-upgraded">
                 {tr('proGroupsUpgraded', {
                   count: proGroupsUpgraded,
                   total: formatProStats(proGroupsUpgraded),
