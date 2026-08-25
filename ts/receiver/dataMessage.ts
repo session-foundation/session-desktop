@@ -345,5 +345,16 @@ async function handleSwarmMessage(
       toRegularMessage(rawDataMessage),
       decodedEnvelope
     );
+
+    // A copy of a message we sent, arriving from one of our other devices, is still a message we sent,
+    // so it counts here as it would have on the device that composed it. This is the only path that
+    // sees it: that device counts on its own send success, which this one never observes.
+    //
+    // Safe from double counting on the device that did compose it, because its own copy is dropped as a
+    // duplicate above, before this runs — and the counted flag lives on the message, so the record
+    // created here is a different one and starts uncounted.
+    if (msgModel.get('type') === 'outgoing') {
+      await msgModel.addProFeaturesToStats();
+    }
   });
 }

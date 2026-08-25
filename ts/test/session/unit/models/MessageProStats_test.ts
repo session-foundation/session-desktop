@@ -104,4 +104,22 @@ describe('addProFeaturesToStats', () => {
       'proStatsCounted must be part of the persisted attributes'
     ).to.equal(true);
   });
+
+  it('counts a copy of our own message synced from another device', async () => {
+    // That copy is a different message record from the one the sending device counted, so it starts
+    // uncounted — which is what lets a linked device stay level rather than the flag suppressing it.
+    const synced = TestUtils.generateFakeOutgoingPrivateMessage();
+    synced.setProFeaturesUsed({ proMessageBitset: BigInt(1), proProfileBitset: null });
+    Sinon.stub(synced, 'getConversation').returns({
+      updateLastMessage: Sinon.stub(),
+    } as unknown as ConversationModel);
+
+    expect(synced.get('proStatsCounted'), 'a freshly received copy must start uncounted').to.equal(
+      undefined
+    );
+
+    await synced.addProFeaturesToStats();
+
+    expect(increment.calledOnceWith(SettingsKey.proLongerMessagesSent)).to.equal(true);
+  });
 });
