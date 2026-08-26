@@ -125,6 +125,13 @@ async function handleSwarmMessageSentSuccess({
   const isPrivateSyncMessage = isOurDevice && fetchedMessage.get('sentSync');
   const shouldMarkMessageAsSynced = isPrivateSyncMessage || isClosedGroupMessage;
 
+  fetchedMessage.set({
+    sent_at: sentAtMs,
+    sent: true,
+    errors: undefined,
+  });
+  await fetchedMessage.commit();
+  await fetchedMessage.addProFeaturesToStats();
   // Handle the sync logic here
   if (shouldTriggerSyncMessage && plainTextBuffer) {
     try {
@@ -161,7 +168,6 @@ async function handleSwarmMessageSentSuccess({
   fetchedMessage.set({
     sent_to: sentTo,
     sent: true,
-    sent_at: sentAtMs,
     errors: undefined,
   });
 
