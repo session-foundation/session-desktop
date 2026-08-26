@@ -341,6 +341,7 @@ declare module 'react' {
     // itself rather than on a container, because that is where the text is.
     | 'pro-stats-longer-messages'
     | 'pro-stats-pinned-conversations'
+    | 'pin-conversation-menu-item'
     | 'pro-stats-badges-sent'
     | 'pro-stats-groups-upgraded'
 
