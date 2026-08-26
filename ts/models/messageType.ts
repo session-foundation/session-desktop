@@ -162,6 +162,15 @@ type NotSharedMessageAttributes = {
    * This is a string, because bigints cannot be sent over ipc.
    */
   proProfileBitset?: string;
+
+  /**
+   * Set once this message's Pro features have been added to the lifetime stats.
+   *
+   * The stats count messages, not send attempts, so the increment has to happen when a send succeeds
+   * and exactly once however many times that success is reported. `sent` cannot carry that: the failure
+   * handler sets it too, deliberately, and records the failure in `errors` instead.
+   */
+  proStatsCounted?: boolean;
 };
 
 export type MessageAttributes = SharedMessageAttributes & NotSharedMessageAttributes;
