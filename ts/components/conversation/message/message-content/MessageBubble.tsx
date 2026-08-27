@@ -98,11 +98,11 @@ export function MessageBubble({ children }: { children: ReactNode }) {
 
   return (
     <>
-      <StyledMessageBubble ref={msgBubbleRef} $expanded={expanded}>
+      <StyledMessageBubble ref={msgBubbleRef} $expanded={expanded} data-testid="message-bubble">
         {children}
       </StyledMessageBubble>
       {showReadMore && !expanded ? (
-        <ReadMoreButton onClick={onClick} onKeyDown={onKeyDown}>
+        <ReadMoreButton onClick={onClick} onKeyDown={onKeyDown} data-testid="read-more-button">
           {tr('messageBubbleReadMore')}
         </ReadMoreButton>
       ) : null}
