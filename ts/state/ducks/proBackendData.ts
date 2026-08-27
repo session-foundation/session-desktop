@@ -108,7 +108,7 @@ export type WithCallerContext = { callerContext?: 'recover' };
  * something any routine trigger may pass, and a floor every caller bypasses is dead code.
  *
  * Sanctioned callers and no others: manual refresh/recover (implied by `callerContext: 'recover'`), the
- * bounded while-open grace poll, and developer/debug paths.
+ * bounded while-open grace poll, a proof revocation, and developer/debug paths.
  */
 export type WithImmediate = { immediate?: boolean };
 
@@ -348,11 +348,23 @@ async function applyProofOutcome(
       }
       break;
     case 'revoked':
-      // Terminal: revocation kills even an unexpired proof (bypasses the downgrade guard). With the
-      // proof gone we must also clear E, or the renewal target (future E, no proof) would spin.
+      // Revocation kills even an unexpired proof, bypassing the downgrade guard. It says the proof is
+      // void; it says nothing about the subscription. A revocation with `revoke_payments` false is a
+      // rotation — the account stays paid and re-provable — and locally that is indistinguishable from
+      // a refund, so the proof goes and the access expiry stays.
+      //
+      // `E` is synced config rather than device-local, so clearing it here would erase from every
+      // device the record that this account ever subscribed, leaving a lapsed subscriber
+      // indistinguishable from someone who never had Pro.
+      //
+      // Immediate rather than floored: the expiry alone cannot describe this state — it is the old,
+      // still-future one either way — so what to display is unknown until the status lands, and a
+      // fetch that ran before the revocation cannot have seen it.
       await UserConfigWrapperActions.removeProConfig();
-      await UserConfigWrapperActions.setProAccessExpiry(null);
       await persistProConfigWrite();
+      window.inboxStore?.dispatch(
+        proBackendDataActions.refreshGetProStatusFromProBackend({ immediate: true }) as any
+      );
       break;
     default:
       // Unrecognized error_code: fail closed, non-destructively — treat as transient (no write/clear).
