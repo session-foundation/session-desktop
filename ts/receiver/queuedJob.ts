@@ -293,8 +293,15 @@ async function handleRegularMessage(
         : null
     );
 
-    // a new message was received for that conversation. If it was not it should not be hidden anymore
-    await conversation.unhideIfNeeded(false);
+    // A conversation is resurfaced by someone else messaging you. A copy of our own message, synced
+    // from another of our devices, arrives here the same way but is not that — nobody has contacted
+    // us — so a conversation we hid stays hidden.
+    //
+    // Keyed on the sender rather than on the conversation: Note to Self is where our own messages
+    // always land, but they can sync into any conversation, and the question is who sent it.
+    if (!isUsFromCache(decodedEnvelope.getAuthor())) {
+      await conversation.unhideIfNeeded(false);
+    }
   }
 
   // we just received a message from that user so we reset the typing indicator for this convo
