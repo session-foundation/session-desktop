@@ -108,7 +108,7 @@ export type WithCallerContext = { callerContext?: 'recover' };
  * something any routine trigger may pass, and a floor every caller bypasses is dead code.
  *
  * Sanctioned callers and no others: manual refresh/recover (implied by `callerContext: 'recover'`), the
- * bounded while-open grace poll, and developer/debug paths.
+ * bounded while-open grace poll, a proof outcome that ended entitlement, and developer/debug paths.
  */
 export type WithImmediate = { immediate?: boolean };
 
@@ -298,12 +298,16 @@ async function applyProofOutcome(
     // along, and must: otherwise coverage end pairs a fresh expiry with a grace from a different billing
     // period, and an unwritten auto-renewing flag reads as not-renewing.
     //
-    // All three writes belong inside the success branch. On a failure outcome core never fills
-    // `accountAutoRenewing`/`accountGracePeriodMs`, so its struct defaults (`false`/`0`) come through,
-    // indistinguishable from a backend that said "not renewing, no grace" — and both keys are
-    // presence-only, so writing those would erase what a `get_pro_status` fetch had learned.
+    // `accountAutoRenewing` and `accountGracePeriodMs` may only be read on an outcome that carries the
+    // account block — a success or a `subscription_expired`. Every other outcome leaves them at the
+    // struct defaults `false`/`0`, indistinguishable from a backend that said "not renewing, no grace",
+    // and both config keys are presence-only, so writing those defaults erases what a `get_pro_status`
+    // fetch had learned.
     //
-    // `accountExpiryMs` is nullable — absent on `not_subscribed` and `revoked` — hence its guard.
+    // Only the expiry is guarded, because it is the only one whose absence is representable: it arrives
+    // nullable, and the sole way to write "absent" is to clear `E`, which would erase from every device
+    // the record that this account ever subscribed. An absent grace or renewing flag arrives as `0`/
+    // `false`, which core defines as "does not apply" rather than "unknown", so writing it is correct.
     if (response.accountExpiryMs !== null) {
       await UserConfigWrapperActions.setProAccessExpiry(response.accountExpiryMs);
     }
@@ -315,25 +319,35 @@ async function applyProofOutcome(
   // Non-ok: the machine slug (error_code) decides.
   switch (response.errorCode) {
     case 'subscription_expired':
-      // Lapsed, so not entitled — the same conclusion as the two outcomes below, and cleared the same
-      // way. A past expiry left in config has nothing left to compute: every window here is derived
-      // from the access expiry, and a lapse changes the grace period and the renewing flag while
-      // typically leaving the expiry itself alone, so refreshing only the expiry would pair it with a
-      // grace the backend has stopped honouring. Clearing erases the auto-renewing flag and grace period
-      // alongside it instead, leaving absent keys rather than stored zeroes. Don't wipe a fresh proof a
-      // re-subscribe just landed.
+      // Lapsed, so not entitled. The three account values this response carries are recorded rather
+      // than cleared: they are what the backend last said, and the surfaces describing the plan are
+      // seeded from them, so absent values state "never subscribed" where past ones state "lapsed".
+      // They are synced config, so the difference reaches every device.
+      //
+      // All three together, never the expiry alone. Coverage ends at the expiry plus the grace, and on
+      // a lapse or cancellation it is usually the expiry that has NOT moved while the grace and the
+      // renewing flag have — so refreshing the expiry by itself would pair it with a grace the backend
+      // has stopped honouring. This is one of the two outcomes carrying the account block, which is why
+      // all three are available here.
+      //
+      // Don't wipe a fresh proof a re-subscribe just landed.
       if (!haveValidProof()) {
         await UserConfigWrapperActions.removeProConfig();
-        await UserConfigWrapperActions.setProAccessExpiry(null);
+        if (response.accountExpiryMs !== null) {
+          await UserConfigWrapperActions.setProAccessExpiry(response.accountExpiryMs);
+        }
+        await writeProAutoRenewingToConfig(response.accountAutoRenewing);
+        await UserConfigWrapperActions.setProGracePeriod(response.accountGracePeriodMs);
         await persistProConfigWrite();
         // Entitlement ended, and nothing observes that: the config watch that would refresh our status
         // runs on incoming merges, so a local write reaches no one. The Expired CTA needs a status fetch
-        // to be raised at all — it is written by one — and the clear above leaves the cold-start gate
-        // without a horizon to decide from, so this is the only edge from "we just lapsed" to "find out
-        // what to show". Floored like every routine trigger: when a status fetch has just run, this is
-        // dropped, which is right — that fetch already had the chance to raise it.
+        // to be raised at all — it is written by one — so this is the only edge from "we just lapsed" to
+        // "find out what to show".
+        //
+        // Immediate: a fetch from before this lapse cannot have seen it, which is what the routine floor
+        // assumes when it drops one.
         window.inboxStore?.dispatch(
-          proBackendDataActions.refreshGetProStatusFromProBackend({}) as any
+          proBackendDataActions.refreshGetProStatusFromProBackend({ immediate: true }) as any
         );
       }
       break;
@@ -345,14 +359,36 @@ async function applyProofOutcome(
         await UserConfigWrapperActions.removeProConfig();
         await UserConfigWrapperActions.setProAccessExpiry(null);
         await persistProConfigWrite();
+        // A status fetch binds any payment registered for this key but not yet redeemed, so it can
+        // find a purchase that existed and simply was not bound when the proof was requested — which
+        // is the state a client sits in immediately after paying. Immediate for the same reason as the
+        // rows above: a fetch from before the purchase cannot have seen it.
+        //
+        // Nothing to loop on: the expiry has just been cleared, so the renewal target stays dormant,
+        // and a `never` status writes nothing back.
+        window.inboxStore?.dispatch(
+          proBackendDataActions.refreshGetProStatusFromProBackend({ immediate: true }) as any
+        );
       }
       break;
     case 'revoked':
-      // Terminal: revocation kills even an unexpired proof (bypasses the downgrade guard). With the
-      // proof gone we must also clear E, or the renewal target (future E, no proof) would spin.
+      // Revocation kills even an unexpired proof, bypassing the downgrade guard. It says the proof is
+      // void; it says nothing about the subscription. A revocation with `revoke_payments` false is a
+      // rotation — the account stays paid and re-provable — and locally that is indistinguishable from
+      // a refund, so the proof goes and the access expiry stays.
+      //
+      // `E` is synced config rather than device-local, so clearing it here would erase from every
+      // device the record that this account ever subscribed, leaving a lapsed subscriber
+      // indistinguishable from someone who never had Pro.
+      //
+      // Immediate rather than floored: the expiry alone cannot describe this state — it is the old,
+      // still-future one either way — so what to display is unknown until the status lands, and a
+      // fetch that ran before the revocation cannot have seen it.
       await UserConfigWrapperActions.removeProConfig();
-      await UserConfigWrapperActions.setProAccessExpiry(null);
       await persistProConfigWrite();
+      window.inboxStore?.dispatch(
+        proBackendDataActions.refreshGetProStatusFromProBackend({ immediate: true }) as any
+      );
       break;
     default:
       // Unrecognized error_code: fail closed, non-destructively — treat as transient (no write/clear).
