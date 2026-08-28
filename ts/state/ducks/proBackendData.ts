@@ -108,7 +108,7 @@ export type WithCallerContext = { callerContext?: 'recover' };
  * something any routine trigger may pass, and a floor every caller bypasses is dead code.
  *
  * Sanctioned callers and no others: manual refresh/recover (implied by `callerContext: 'recover'`), the
- * bounded while-open grace poll, a proof revocation, and developer/debug paths.
+ * bounded while-open grace poll, a proof outcome that ended entitlement, and developer/debug paths.
  */
 export type WithImmediate = { immediate?: boolean };
 
@@ -315,14 +315,15 @@ async function applyProofOutcome(
   // Non-ok: the machine slug (error_code) decides.
   switch (response.errorCode) {
     case 'subscription_expired':
-      // Lapsed, so not entitled. The access expiry is set to the past one this response carries rather
-      // than cleared: it is what the backend last said, and the surfaces that describe the plan are
-      // seeded from it, so an absent expiry states "never subscribed" where a past one states "lapsed".
-      // It is synced config, so the difference reaches every device.
+      // Lapsed, so not entitled. The three account values this response carries are recorded rather
+      // than cleared: they are what the backend last said, and the surfaces describing the plan are
+      // seeded from them, so absent values state "never subscribed" where past ones state "lapsed".
+      // They are synced config, so the difference reaches every device.
       //
-      // The expiry alone, and not the renewing flag or the grace period beside it: core fills those two
-      // only on a successful parse, and their struct defaults would erase what a status fetch had
-      // learned — key `A` is presence-only and a zero `G` reads as no grace.
+      // All three together, never the expiry alone. Coverage ends at the expiry plus the grace, and on
+      // a lapse or cancellation it is usually the expiry that has NOT moved while the grace and the
+      // renewing flag have — so refreshing the expiry by itself would pair it with a grace the backend
+      // has stopped honouring. `parse_pro_proof` fills all three on this slug for that reason.
       //
       // Don't wipe a fresh proof a re-subscribe just landed.
       if (!haveValidProof()) {
@@ -330,15 +331,18 @@ async function applyProofOutcome(
         if (response.accountExpiryMs !== null) {
           await UserConfigWrapperActions.setProAccessExpiry(response.accountExpiryMs);
         }
+        await writeProAutoRenewingToConfig(response.accountAutoRenewing);
+        await UserConfigWrapperActions.setProGracePeriod(response.accountGracePeriodMs);
         await persistProConfigWrite();
         // Entitlement ended, and nothing observes that: the config watch that would refresh our status
         // runs on incoming merges, so a local write reaches no one. The Expired CTA needs a status fetch
-        // to be raised at all — it is written by one — and the clear above leaves the cold-start gate
-        // without a horizon to decide from, so this is the only edge from "we just lapsed" to "find out
-        // what to show". Floored like every routine trigger: when a status fetch has just run, this is
-        // dropped, which is right — that fetch already had the chance to raise it.
+        // to be raised at all — it is written by one — so this is the only edge from "we just lapsed" to
+        // "find out what to show".
+        //
+        // Immediate: a fetch from before this lapse cannot have seen it, which is what the routine floor
+        // assumes when it drops one.
         window.inboxStore?.dispatch(
-          proBackendDataActions.refreshGetProStatusFromProBackend({}) as any
+          proBackendDataActions.refreshGetProStatusFromProBackend({ immediate: true }) as any
         );
       }
       break;
