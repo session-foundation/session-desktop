@@ -298,12 +298,16 @@ async function applyProofOutcome(
     // along, and must: otherwise coverage end pairs a fresh expiry with a grace from a different billing
     // period, and an unwritten auto-renewing flag reads as not-renewing.
     //
-    // All three writes belong inside the success branch. On a failure outcome core never fills
-    // `accountAutoRenewing`/`accountGracePeriodMs`, so its struct defaults (`false`/`0`) come through,
-    // indistinguishable from a backend that said "not renewing, no grace" — and both keys are
-    // presence-only, so writing those would erase what a `get_pro_status` fetch had learned.
+    // `accountAutoRenewing` and `accountGracePeriodMs` may only be read on an outcome that carries the
+    // account block — a success or a `subscription_expired`. Every other outcome leaves them at the
+    // struct defaults `false`/`0`, indistinguishable from a backend that said "not renewing, no grace",
+    // and both config keys are presence-only, so writing those defaults erases what a `get_pro_status`
+    // fetch had learned.
     //
-    // `accountExpiryMs` is nullable — absent on `not_subscribed` and `revoked` — hence its guard.
+    // Only the expiry is guarded, because it is the only one whose absence is representable: it arrives
+    // nullable, and the sole way to write "absent" is to clear `E`, which would erase from every device
+    // the record that this account ever subscribed. An absent grace or renewing flag arrives as `0`/
+    // `false`, which core defines as "does not apply" rather than "unknown", so writing it is correct.
     if (response.accountExpiryMs !== null) {
       await UserConfigWrapperActions.setProAccessExpiry(response.accountExpiryMs);
     }
@@ -323,7 +327,8 @@ async function applyProofOutcome(
       // All three together, never the expiry alone. Coverage ends at the expiry plus the grace, and on
       // a lapse or cancellation it is usually the expiry that has NOT moved while the grace and the
       // renewing flag have — so refreshing the expiry by itself would pair it with a grace the backend
-      // has stopped honouring. `parse_pro_proof` fills all three on this slug for that reason.
+      // has stopped honouring. This is one of the two outcomes carrying the account block, which is why
+      // all three are available here.
       //
       // Don't wipe a fresh proof a re-subscribe just landed.
       if (!haveValidProof()) {
