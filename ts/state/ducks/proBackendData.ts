@@ -354,6 +354,16 @@ async function applyProofOutcome(
         await UserConfigWrapperActions.removeProConfig();
         await UserConfigWrapperActions.setProAccessExpiry(null);
         await persistProConfigWrite();
+        // A status fetch binds any payment registered for this key but not yet redeemed, so it can
+        // find a purchase that existed and simply was not bound when the proof was requested — which
+        // is the state a client sits in immediately after paying. Immediate for the same reason as the
+        // rows above: a fetch from before the purchase cannot have seen it.
+        //
+        // Nothing to loop on: the expiry has just been cleared, so the renewal target stays dormant,
+        // and a `never` status writes nothing back.
+        window.inboxStore?.dispatch(
+          proBackendDataActions.refreshGetProStatusFromProBackend({ immediate: true }) as any
+        );
       }
       break;
     case 'revoked':
