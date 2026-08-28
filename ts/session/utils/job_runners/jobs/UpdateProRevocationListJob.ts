@@ -150,14 +150,18 @@ class UpdateProRevocationListJob extends PersistedJob<UpdateProRevocationListPer
         // Our own proof is revoked: clear it directly. The renewal loop won't do this for us —
         // renewal_target treats a still-unexpired proof as "not due", so a revoked-but-unexpired
         // proof would otherwise linger in config (and stay attachable, §6.1) until natural expiry.
-        // Also refresh status so the UI reflects the change.
+        //
+        // The status fetch is immediate: what the account is now cannot be known locally — the access
+        // expiry is still the old, future one — and a fetch from before this revocation cannot have
+        // observed it, which is the assumption the routine floor rests on. It also ends the acquire
+        // loop, which libsession runs while the access expiry is still ahead of now.
         window.log.info(
           `UpdateProRevocationListJob: our current revocation tag is revoked. Clearing our pro proof.`
         );
         await UserConfigWrapperActions.removeProConfig();
         await persistProConfigWrite();
         window.inboxStore?.dispatch(
-          proBackendDataActions.refreshGetProStatusFromProBackend({}) as any
+          proBackendDataActions.refreshGetProStatusFromProBackend({ immediate: true }) as any
         );
       }
       // find all the conversations that have a revoked revocation tag and trigger a UI refresh on them

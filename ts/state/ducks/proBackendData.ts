@@ -315,16 +315,21 @@ async function applyProofOutcome(
   // Non-ok: the machine slug (error_code) decides.
   switch (response.errorCode) {
     case 'subscription_expired':
-      // Lapsed, so not entitled — the same conclusion as the two outcomes below, and cleared the same
-      // way. A past expiry left in config has nothing left to compute: every window here is derived
-      // from the access expiry, and a lapse changes the grace period and the renewing flag while
-      // typically leaving the expiry itself alone, so refreshing only the expiry would pair it with a
-      // grace the backend has stopped honouring. Clearing erases the auto-renewing flag and grace period
-      // alongside it instead, leaving absent keys rather than stored zeroes. Don't wipe a fresh proof a
-      // re-subscribe just landed.
+      // Lapsed, so not entitled. The access expiry is set to the past one this response carries rather
+      // than cleared: it is what the backend last said, and the surfaces that describe the plan are
+      // seeded from it, so an absent expiry states "never subscribed" where a past one states "lapsed".
+      // It is synced config, so the difference reaches every device.
+      //
+      // The expiry alone, and not the renewing flag or the grace period beside it: core fills those two
+      // only on a successful parse, and their struct defaults would erase what a status fetch had
+      // learned — key `A` is presence-only and a zero `G` reads as no grace.
+      //
+      // Don't wipe a fresh proof a re-subscribe just landed.
       if (!haveValidProof()) {
         await UserConfigWrapperActions.removeProConfig();
-        await UserConfigWrapperActions.setProAccessExpiry(null);
+        if (response.accountExpiryMs !== null) {
+          await UserConfigWrapperActions.setProAccessExpiry(response.accountExpiryMs);
+        }
         await persistProConfigWrite();
         // Entitlement ended, and nothing observes that: the config watch that would refresh our status
         // runs on incoming merges, so a local write reaches no one. The Expired CTA needs a status fetch
