@@ -50,6 +50,7 @@ import { Mention } from '../AddMentions';
 import { useDebugInputCommands } from '../../dialog/debug/hooks/useDebugInputCommands';
 import { useKeyboardShortcut } from '../../../hooks/useKeyboardShortcut';
 import { isEnterKey, isEscapeKey, KbdShortcut } from '../../../util/keyboardShortcuts';
+import { isEditableTarget } from '../../../util/isEditableTarget';
 import { PopoverTriggerPosition } from '../../SessionTooltip';
 import { getAppDispatch } from '../../../state/dispatch';
 import { setIsCompositionTextAreaFocused } from '../../../state/ducks/conversations';
@@ -65,16 +66,6 @@ type Props = {
 };
 
 type SearchableSuggestion = SessionSuggestionDataItem & { searchable?: Array<string> };
-
-function isEditableTarget(target: EventTarget | null) {
-  if (!(target instanceof HTMLElement)) {
-    return false;
-  }
-
-  const editableSelector =
-    'input, textarea, select, [contenteditable="true"], [contenteditable="plaintext-only"]';
-  return !!target.closest(editableSelector);
-}
 
 function isPrintableTypingEvent(event: globalThis.KeyboardEvent) {
   return (
