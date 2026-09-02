@@ -134,12 +134,34 @@ declare module 'react' {
     | 'preferences'
     | 'donate';
 
+  type ProSettingsSections = 'stats' | 'manage' | 'features';
+  /**
+   * The refund route the non-originating page offered. Its hero copy is the same string in all
+   * three, so the info block is the only thing that says which route the app chose.
+   */
+  type ProRefundRoutes = 'store-policies' | 'platform-account' | 'session-support';
+
   type ProFeatureItems =
     | 'longer-messages'
     | 'more-pins'
     | 'animated-display-picture'
     | 'badges'
     | 'loads-more';
+
+  /**
+   * The subset of `ProFeatureItems` a single message can carry, as listed on its message-info panel.
+   *
+   * Derived rather than restated so the two surfaces cannot drift into naming the same feature
+   * differently, and so a feature that stops being per-message fails to compile here.
+   *
+   * These exact strings are a cross-platform contract: Android defines them in its
+   * `content-descriptions` module and iOS in `SessionProUI.AccessibilityIdentifier`, so one Appium
+   * locator serves all three clients.
+   */
+  type ProMessageFeatureItems = Extract<
+    ProFeatureItems,
+    'longer-messages' | 'badges' | 'animated-display-picture'
+  >;
 
   type MenuItems = 'block' | 'delete' | 'accept';
 
@@ -305,6 +327,23 @@ declare module 'react' {
 
     // Pro settings
     | `${ProFeatureItems}-pro-settings-menu-item`
+    | `pro-settings-${ProSettingsSections}-header`
+    | `pro-screen-refund-${ProRefundRoutes}`
+    // Both the "checking" and the "backend unavailable" messages render into this one slot.
+    | 'pro-settings-status-banner'
+    // The hero copy, which differs per status. Shared with the non-originating page, whose hero
+    // renders the same slot; a locator reads the text through the id to tell the states apart.
+    | 'pro-settings-description'
+
+    // The four "Your Pro Stats" cells. Named the same as Android and iOS
+    // (`content-descriptions` / `SessionProUI.AccessibilityIdentifier`) so one harness
+    // locator serves every client. Desktop puts the id on the label holding the count
+    // itself rather than on a container, because that is where the text is.
+    | 'pro-stats-longer-messages'
+    | 'pro-stats-pinned-conversations'
+    | 'pin-conversation-menu-item'
+    | 'pro-stats-badges-sent'
+    | 'pro-stats-groups-upgraded'
 
     // timer options
     | DisappearTimeOptionDataTestId
@@ -318,6 +357,8 @@ declare module 'react' {
     // generic readably message (not control message)
     | 'message-content'
     | 'message-container'
+    | 'message-bubble'
+    | 'read-more-button'
 
     // control message types
     | 'message-request-response-message'
@@ -454,6 +495,7 @@ declare module 'react' {
     | `${NotificationRadioButtons}`
     | `avatar-${Avatars}`
     | `pro-badge-${ProBadges}`
+    | `pro-message-feature-${ProMessageFeatureItems}`
     // empty msg view ids
     | 'empty-msg-view-account-created'
     | 'empty-msg-view-welcome'

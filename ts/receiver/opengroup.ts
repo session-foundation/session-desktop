@@ -133,5 +133,18 @@ export const handleOpenGroupMessage = async ({
       toRegularMessage(cleanedDataMessage),
       decodedEnvelope
     );
+
+    // As on the swarm side: a message we sent, reaching us here from another of our devices, is still
+    // one we sent and counts the same.
+    //
+    // The device that composed it does see its own message come back from the server, but not this far.
+    // It is dropped by the deduplication noted above, which compares the sender the server reports
+    // against the one stored locally — and for a blinded room that stored sender is our blinded id, the
+    // same one the server echoes, because the resolution back to our real account id happens after that
+    // comparison. That match is what keeps this from counting twice, and it is a database lookup rather
+    // than anything held in memory, so it survives a restart mid-send.
+    if (msgModel.get('type') === 'outgoing') {
+      await msgModel.addProFeaturesToStats();
+    }
   });
 };

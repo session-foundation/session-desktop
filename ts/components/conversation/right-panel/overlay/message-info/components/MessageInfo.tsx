@@ -1,5 +1,5 @@
+import type { SessionDataTestId } from 'react';
 import styled from 'styled-components';
-import { useEffect, useState } from 'react';
 import { MessageFrom } from '.';
 import {
   useMessageBody,
@@ -36,12 +36,10 @@ import { Localizer } from '../../../../../basic/Localizer';
 import { LucideIcon } from '../../../../../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE } from '../../../../../icon/lucide';
 import { useProBadgeOnClickCb } from '../../../../../menuAndSettingsHooks/useProBadgeOnClickCb';
-import { useCurrentUserHasPro } from '../../../../../../hooks/useHasPro';
 import { ProIconButton } from '../../../../../buttons/ProButton';
 import { assertUnreachable } from '../../../../../../types/sqlSharedTypes';
 import { ProMessageFeature } from '../../../../../../models/proMessageFeature';
 import { SessionButtonColor } from '../../../../../basic/SessionButton';
-import { ProWrapperActions } from '../../../../../../webworker/workers/browser/libsession_worker_interface';
 
 export const MessageInfoLabel = styled.label<{ color?: string }>`
   font-size: var(--font-size-lg);
@@ -102,17 +100,7 @@ const DebugMessageInfo = ({ messageId }: { messageId: string }) => {
   const serverTimestamp = useMessageServerTimestamp(messageId);
   const message = useMessageBody(messageId);
 
-  const [codepointCount, setCodepointCount] = useState(0);
-
-  useEffect(() => {
-    async function getCodepointCount() {
-      const { codepointCount: fromLibsession } = await ProWrapperActions.utf16Count({
-        utf16: message ?? '',
-      });
-      setCodepointCount(fromLibsession);
-    }
-    void getCodepointCount();
-  }, [message]);
+  const codepointCount = [...(message ?? '')].length;
 
   if (!isDevProd()) {
     return null;
@@ -189,14 +177,36 @@ function proFeatureToTrKey(proFeature: ProMessageFeature) {
   }
 }
 
-function ProMessageFeaturesDetails({ messageId }: { messageId: string }) {
-  const currentUserHasPro = useCurrentUserHasPro();
+/**
+ * The test id of a feature row.
+ *
+ * A cross-platform contract, not a local convention: Android and iOS tag the same rows with these
+ * exact strings, so one Appium locator serves all three clients.
+ */
+function proFeatureToTestId(proFeature: ProMessageFeature): SessionDataTestId {
+  switch (proFeature) {
+    case ProMessageFeature.PRO_BADGE:
+      return 'pro-message-feature-badges';
+    case ProMessageFeature.PRO_INCREASED_MESSAGE_LENGTH:
+      return 'pro-message-feature-longer-messages';
+    case ProMessageFeature.PRO_ANIMATED_DISPLAY_PICTURE:
+      return 'pro-message-feature-animated-display-picture';
+    default:
+      assertUnreachable(proFeature, 'proFeatureToTestId: unknown case');
+      throw new Error('unreachable');
+  }
+}
 
+function ProMessageFeaturesDetails({ messageId }: { messageId: string }) {
+  // DISPLAY, not ACCESS: this only decides whether tapping someone else's badge invites us to buy
+  // Pro. The gate reads ACCESS; the thing that explains or sells the gate reads DISPLAY, so a user
+  // whose plan reads active is never upsold — and one in the overhang, whose plan has lapsed while
+  // the proof still works, is.
   const messageSentWithProFeat = useMessageSentWithProFeatures(messageId);
 
   const showPro = useProBadgeOnClickCb({
     context: 'message-info-sent-with-pro',
-    args: { messageSentWithProFeat, currentUserHasPro },
+    args: { messageSentWithProFeat },
   });
 
   if (!showPro.show || !messageSentWithProFeat?.length) {
@@ -223,7 +233,7 @@ function ProMessageFeaturesDetails({ messageId }: { messageId: string }) {
       </StyledProDescription>
       <StyledProFeaturesContainer>
         {messageSentWithProFeat.map(feature => (
-          <StyledProFeatureRow key={feature}>
+          <StyledProFeatureRow key={feature} data-testid={proFeatureToTestId(feature)}>
             <LucideIcon
               unicode={LUCIDE_ICONS_UNICODE.CIRCLE_CHECK}
               iconSize="medium"

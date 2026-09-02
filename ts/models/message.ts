@@ -108,10 +108,8 @@ import { tStrippedWithObj, tr, tStripped } from '../localization/localeTools';
 import type { QuotedAttachmentType } from '../components/conversation/message/message-content/quote/Quote';
 import { ProFeatures, ProMessageFeature } from './proMessageFeature';
 import { privateSet, privateSetKey } from './modelFriends';
-import { getFeatureFlag } from '../state/ducks/types/releasedFeaturesReduxTypes';
 import type { OutgoingProMessageDetails } from '../types/message/OutgoingProMessageDetails';
 import { longOrNumberToBigInt } from '../types/Bigint';
-import { toSqliteBoolean } from '../node/database_utility';
 import type { WithLocalMessageDeletionType } from '../session/types/with';
 
 // tslint:disable: cyclomatic-complexity
@@ -967,7 +965,8 @@ export class MessageModel extends Model<MessageAttributes> {
     requestedDeleteType: Extract<
       WithLocalMessageDeletionType['deletionType'],
       'markDeletedGlobally' | 'markDeletedThisDevice'
-    >
+    >,
+    { shouldMarkAsRead }: { shouldMarkAsRead: boolean }
   ) {
     const isDeletedType = this.get('isDeleted');
     const requestedDeleteLocallyOnly = requestedDeleteType === 'markDeletedThisDevice';
@@ -1006,16 +1005,13 @@ export class MessageModel extends Model<MessageAttributes> {
       reaction: undefined,
       messageRequestResponse: undefined,
       errors: undefined,
-      unread: toSqliteBoolean(false),
+      ...(shouldMarkAsRead ? { unread: READ_MESSAGE_STATE.read } : {}),
     });
     // Only overwrite the messageHash when we are deleting globally.
     // This is because a locally deleted message should be able to be marked as deleted globally
     if (requestedDeleteGlobally) {
       this.set({ messageHash: undefined });
     }
-    // we can ignore the result of that markMessageReadNoCommit as it would only be used
-    // to refresh the expiry of it(but it is already marked as "deleted", so we don't care)
-    this.markMessageReadNoCommit(Date.now());
     await this.commit();
     // the line below makes sure that getNextExpiringMessage will find this message as expiring.
     // getNextExpiringMessage is used on app start to clean already expired messages which should have been removed already, but are not
@@ -1536,10 +1532,6 @@ export class MessageModel extends Model<MessageAttributes> {
   }
 
   private getProFeaturesUsed(): Array<ProMessageFeature> {
-    if (!getFeatureFlag('proAvailable')) {
-      return [];
-    }
-
     const proProfileBitset = this.get('proProfileBitset');
     const proMessageBitset = this.get('proMessageBitset');
     if (!proProfileBitset && !proMessageBitset) {
@@ -1560,9 +1552,6 @@ export class MessageModel extends Model<MessageAttributes> {
     proProfileBitset: bigint | null;
     proMessageBitset: bigint | null;
   }) {
-    if (!getFeatureFlag('proAvailable')) {
-      return false;
-    }
     const proProfileStr = proProfileBitset ? proProfileBitset.toString() : undefined;
     const proMessageStr = proMessageBitset ? proMessageBitset.toString() : undefined;
     if (
@@ -1590,9 +1579,10 @@ export class MessageModel extends Model<MessageAttributes> {
       //  - We already have some bitset set for this message in the DB,
       //  - or the proMessageDetails is empty
       //  - or the proMessageDetails has no bitset set
-      // then,
-      // - we do not need to apply the bitset from the details.
-      // - we also don't need the update the pro stats with this change (as we can assume the change was already counted).
+      // then there is no bitset to apply from the details.
+      //
+      // The stats are not decided here: they are counted from this bitset once a send succeeds, and
+      // guarded there by `proStatsCounted` rather than by this early return.
 
       return;
     }
@@ -1604,26 +1594,49 @@ export class MessageModel extends Model<MessageAttributes> {
         proProfileBitset: longOrNumberToBigInt(proDetails.profileBitset),
       });
       await this.commit();
-      const proFeaturesUsed = this.getProFeaturesUsed();
-      await Promise.all(
-        proFeaturesUsed.map(async proFeature => {
-          switch (proFeature) {
-            case ProMessageFeature.PRO_INCREASED_MESSAGE_LENGTH:
-              await Storage.increment(SettingsKey.proLongerMessagesSent);
-              break;
-            case ProMessageFeature.PRO_BADGE:
-              await Storage.increment(SettingsKey.proBadgesSent);
-              break;
-            case ProMessageFeature.PRO_ANIMATED_DISPLAY_PICTURE:
-              // nothing to do for animated display picture
-              break;
-
-            default:
-              assertUnreachable(proFeature, 'Unknown pro feature');
-          }
-        })
-      );
     }
+  }
+
+  /**
+   * Add this message's Pro features to the lifetime stats, once, when a send has succeeded.
+   *
+   * Separate from the bitset written by applyProFeatures because the two answer different questions at
+   * different times. The bitset describes what this message claims and has to be set before it goes on
+   * the wire; the stats count what was actually sent, so they cannot be known until the send comes back.
+   * Incrementing at the earlier point counted a message that never left.
+   *
+   * Guarded by its own flag rather than by the state of the send. One success can be reported more than
+   * once — a 1:1 message reports again for its own sync copy — and `sent` is set by the failure handler
+   * as well, so neither is a usable answer to "has this already been counted".
+   */
+  public async addProFeaturesToStats() {
+    if (this.get('proStatsCounted')) {
+      return;
+    }
+    const proFeaturesUsed = this.getProFeaturesUsed();
+    if (!proFeaturesUsed.length) {
+      return;
+    }
+    await Promise.all(
+      proFeaturesUsed.map(async proFeature => {
+        switch (proFeature) {
+          case ProMessageFeature.PRO_INCREASED_MESSAGE_LENGTH:
+            await Storage.increment(SettingsKey.proLongerMessagesSent);
+            break;
+          case ProMessageFeature.PRO_BADGE:
+            await Storage.increment(SettingsKey.proBadgesSent);
+            break;
+          case ProMessageFeature.PRO_ANIMATED_DISPLAY_PICTURE:
+            // nothing to do for animated display picture
+            break;
+
+          default:
+            assertUnreachable(proFeature, 'Unknown pro feature');
+        }
+      })
+    );
+    this.set({ proStatsCounted: true });
+    await this.commit();
   }
 
   private dispatchMessageUpdate() {

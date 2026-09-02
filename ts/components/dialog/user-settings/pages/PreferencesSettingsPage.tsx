@@ -19,6 +19,7 @@ import { ToastUtils } from '../../../../session/utils';
 import { PanelRadioButton } from '../../../buttons/panel/PanelRadioButton';
 import { useHasEnterSendEnabled } from '../../../../state/selectors/settings';
 import { UserSettingsModalContainer } from '../components/UserSettingsModalContainer';
+import { fetchLatestReleaseFromFileServerIfEnabled } from '../../../../hooks/useFetchLatestReleaseFromFileServer';
 
 async function toggleStartInTray() {
   try {
@@ -122,7 +123,11 @@ export function PreferencesSettingsPage(modalState: UserSettingsModalState) {
           subText={{ token: 'permissionsAutoUpdateDescription' }}
           onClick={async () => {
             const old = Boolean(window.getSettingValue(SettingsKey.settingsAutoUpdate));
-            await window.setSettingValue(SettingsKey.settingsAutoUpdate, !old);
+            const enabled = !old;
+            await window.setSettingValue(SettingsKey.settingsAutoUpdate, enabled);
+            if (enabled) {
+              await fetchLatestReleaseFromFileServerIfEnabled();
+            }
             forceUpdate();
           }}
           active={Boolean(window.getSettingValue(SettingsKey.settingsAutoUpdate))}

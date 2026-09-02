@@ -6,13 +6,10 @@ import type {
 
 import { PRO_API } from './ProBackendTarget';
 import SessionBackendServerApi from '../session_backend_server';
-import {
-  GenerateProProofResponseSchema,
+import type {
   GenerateProProofResponseType,
   GetProRevocationsResponseType,
-  GetProDetailsResponseSchema,
-  GetProDetailsResponseType,
-  GetProRevocationsResponseAPISchema,
+  ProStatusResultType,
 } from './schemas';
 import { ProWrapperActions } from '../../../webworker/workers/browser/libsession_worker_interface';
 import { NetworkTime } from '../../../util/NetworkTime';
@@ -20,74 +17,86 @@ import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesRedux
 
 export default class ProBackendAPI {
   private static readonly server = new SessionBackendServerApi(PRO_API.PRO_BACKENDS.DEFAULT);
-  private static readonly testServer = new SessionBackendServerApi(PRO_API.PRO_BACKENDS.DEV);
 
-  static readonly requestVersion = 0;
-
-  static getProSigningArgs({ masterPrivKeyHex }: WithMasterPrivKeyHex) {
-    return {
-      requestVersion: ProBackendAPI.requestVersion,
-      masterPrivKeyHex,
-      unixTsMs: NetworkTime.now(),
-    };
-  }
+  /**
+   * Built on first use rather than alongside `server`: the DEV target is only populated when the
+   * environment supplies one, so constructing it eagerly would mean building a server around an
+   * unresolvable host on every normal run.
+   */
+  private static devServer: SessionBackendServerApi | undefined;
 
   static getServer() {
-    return getFeatureFlag('useTestProBackend') ? ProBackendAPI.testServer : ProBackendAPI.server;
+    if (getFeatureFlag('useTestProBackend')) {
+      if (!PRO_API.isDevProBackendConfigured()) {
+        // Fail loudly rather than silently falling back to the default backend: a test that asked for
+        // the dev backend and quietly got production would either fail confusingly or, worse, pass.
+        throw new Error(
+          'useTestProBackend is enabled but no dev Pro backend is configured. Set ' +
+            'TEST_PRO_BACKEND_URL, TEST_PRO_BACKEND_ED_PK and TEST_PRO_BACKEND_X_PK (the URL plus the ' +
+            "Ed25519 and X25519 pubkeys from the backend's startup banner), or unset " +
+            'TEST_PRO_BACKEND to use the default backend.'
+        );
+      }
+      if (!ProBackendAPI.devServer) {
+        ProBackendAPI.devServer = new SessionBackendServerApi(PRO_API.PRO_BACKENDS.DEV);
+      }
+      return ProBackendAPI.devServer;
+    }
+    return ProBackendAPI.server;
   }
 
-  private static async getProProofBody({
-    masterPrivKeyHex,
-    rotatingPrivKeyHex,
-  }: WithMasterPrivKeyHex & WithRotatingPrivKeyHex) {
-    return ProWrapperActions.proProofRequestBody({
-      ...ProBackendAPI.getProSigningArgs({ masterPrivKeyHex }),
-      rotatingPrivKeyHex,
-    });
+  /**
+   * POST a libsession-built request (`{ endpoint, body }`) and relay the RAW response bytes to
+   * libsession's parser — desktop never parses or interprets the wire itself (that's a
+   * libsession<->backend contract). Returns null on transport failure or a missing body; app-level
+   * (backend) errors surface via the parsed struct's `errors` (and non-success `status`).
+   */
+  private static async sendAndParse<T>(
+    request: { endpoint: string; contentType: string; body: string },
+    parse: (body: Uint8Array) => Promise<T>
+  ): Promise<T | null> {
+    const { status_code, bodyBinary } = await ProBackendAPI.getServer().makeRequestReturningRawBody(
+      {
+        path: `/${request.endpoint}`,
+        method: 'POST',
+        contentType: request.contentType,
+        bodyGetter: async () => request.body,
+      }
+    );
+
+    if (status_code !== 200 || !bodyBinary) {
+      return null;
+    }
+
+    return parse(bodyBinary);
   }
 
   static async generateProProof(
     args: WithMasterPrivKeyHex & WithRotatingPrivKeyHex
   ): Promise<GenerateProProofResponseType | null> {
-    return ProBackendAPI.getServer().makeRequestWithSchema({
-      path: '/generate_pro_proof',
-      method: 'POST',
-      bodyGetter: () => ProBackendAPI.getProProofBody(args),
-      withZodSchema: GenerateProProofResponseSchema,
+    const request = await ProWrapperActions.proProofRequest({
+      ...args,
+      unixTsMs: NetworkTime.now(),
     });
+    return ProBackendAPI.sendAndParse(request, body =>
+      ProWrapperActions.parseProProofResponse({ body })
+    );
   }
 
-  private static async getProDetailsBody(args: WithMasterPrivKeyHex) {
-    const request = await ProWrapperActions.proStatusRequestBody({
-      ...ProBackendAPI.getProSigningArgs(args),
-      // NOTE: The latest payment is the only one required for state derivation
-      count: 1,
+  static async getProStatus(args: WithMasterPrivKeyHex): Promise<ProStatusResultType | null> {
+    const request = await ProWrapperActions.proStatusRequest({
+      ...args,
+      unixTsMs: NetworkTime.now(),
     });
-    return request;
-  }
-
-  private static async getRevocationListBody(args: WithTicket) {
-    const body = await ProWrapperActions.proRevocationsRequestBody({ requestVersion: 0, ...args });
-    return body;
-  }
-
-  static async getProDetails(
-    args: WithMasterPrivKeyHex
-  ): Promise<GetProDetailsResponseType | null> {
-    return ProBackendAPI.getServer().makeRequestWithSchema({
-      path: '/get_pro_details',
-      method: 'POST',
-      bodyGetter: () => ProBackendAPI.getProDetailsBody(args),
-      withZodSchema: GetProDetailsResponseSchema,
-    });
+    return ProBackendAPI.sendAndParse(request, body =>
+      ProWrapperActions.parseProStatusResponse({ body })
+    );
   }
 
   static async getRevocationList(args: WithTicket): Promise<GetProRevocationsResponseType | null> {
-    return ProBackendAPI.getServer().makeRequestWithSchema({
-      path: '/get_pro_revocations',
-      method: 'POST',
-      bodyGetter: () => ProBackendAPI.getRevocationListBody(args),
-      withZodSchema: GetProRevocationsResponseAPISchema,
-    });
+    const request = await ProWrapperActions.proRevocationsRequest(args);
+    return ProBackendAPI.sendAndParse(request, body =>
+      ProWrapperActions.parseRevocationsResponse({ body })
+    );
   }
 }

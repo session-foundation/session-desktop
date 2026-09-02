@@ -470,6 +470,10 @@ export const MetaGroupWrapperActions: MetaGroupWrapperActionsCalls = {
     callLibSessionWorker([`MetaGroupConfig-${groupPk}`, 'push']) as Promise<
       ReturnType<MetaGroupWrapperActionsCalls['push']>
     >,
+  pushForRecovery: async (groupPk: GroupPubkeyType) =>
+    callLibSessionWorker([`MetaGroupConfig-${groupPk}`, 'pushForRecovery']) as Promise<
+      ReturnType<MetaGroupWrapperActionsCalls['pushForRecovery']>
+    >,
   needsDump: async (groupPk: GroupPubkeyType) =>
     callLibSessionWorker([`MetaGroupConfig-${groupPk}`, 'needsDump']) as Promise<
       ReturnType<MetaGroupWrapperActionsCalls['needsDump']>
@@ -642,6 +646,10 @@ export const MetaGroupWrapperActions: MetaGroupWrapperActionsCalls = {
     callLibSessionWorker([`MetaGroupConfig-${groupPk}`, 'activeHashes']) as Promise<
       ReturnType<MetaGroupWrapperActionsCalls['activeHashes']>
     >,
+  activeHashesByConfig: async (groupPk: GroupPubkeyType) =>
+    callLibSessionWorker([`MetaGroupConfig-${groupPk}`, 'activeHashesByConfig']) as Promise<
+      ReturnType<MetaGroupWrapperActionsCalls['activeHashesByConfig']>
+    >,
   loadKeyMessage: async (
     groupPk: GroupPubkeyType,
     hash: string,
@@ -773,25 +781,37 @@ export const ProWrapperActions: ProActionsCalls = {
     callLibSessionWorker(['Pro', 'proFeaturesForMessage', first]) as Promise<
       ReturnType<ProActionsCalls['proFeaturesForMessage']>
     >,
-  utf16Count: async first =>
-    callLibSessionWorker(['Pro', 'utf16Count', first]) as Promise<
-      ReturnType<ProActionsCalls['utf16Count']>
+  proProofRequest: async first =>
+    callLibSessionWorker(['Pro', 'proProofRequest', first]) as Promise<
+      ReturnType<ProActionsCalls['proProofRequest']>
     >,
-  utf16CountTruncatedToCodepoints: async first =>
-    callLibSessionWorker(['Pro', 'utf16CountTruncatedToCodepoints', first]) as Promise<
-      ReturnType<ProActionsCalls['utf16CountTruncatedToCodepoints']>
+  proRevocationsRequest: async first =>
+    callLibSessionWorker(['Pro', 'proRevocationsRequest', first]) as Promise<
+      ReturnType<ProActionsCalls['proRevocationsRequest']>
     >,
-  proProofRequestBody: async first =>
-    callLibSessionWorker(['Pro', 'proProofRequestBody', first]) as Promise<
-      ReturnType<ProActionsCalls['proProofRequestBody']>
+  proStatusRequest: async first =>
+    callLibSessionWorker(['Pro', 'proStatusRequest', first]) as Promise<
+      ReturnType<ProActionsCalls['proStatusRequest']>
     >,
-  proRevocationsRequestBody: async first =>
-    callLibSessionWorker(['Pro', 'proRevocationsRequestBody', first]) as Promise<
-      ReturnType<ProActionsCalls['proRevocationsRequestBody']>
+  parseProProofResponse: async first =>
+    callLibSessionWorker(['Pro', 'parseProProofResponse', first]) as Promise<
+      ReturnType<ProActionsCalls['parseProProofResponse']>
     >,
-  proStatusRequestBody: async first =>
-    callLibSessionWorker(['Pro', 'proStatusRequestBody', first]) as Promise<
-      ReturnType<ProActionsCalls['proStatusRequestBody']>
+  parseRevocationsResponse: async first =>
+    callLibSessionWorker(['Pro', 'parseRevocationsResponse', first]) as Promise<
+      ReturnType<ProActionsCalls['parseRevocationsResponse']>
+    >,
+  parseProStatusResponse: async first =>
+    callLibSessionWorker(['Pro', 'parseProStatusResponse', first]) as Promise<
+      ReturnType<ProActionsCalls['parseProStatusResponse']>
+    >,
+  providerUrls: async first =>
+    callLibSessionWorker(['Pro', 'providerUrls', first]) as Promise<
+      ReturnType<ProActionsCalls['providerUrls']>
+    >,
+  visiblePlatforms: async () =>
+    callLibSessionWorker(['Pro', 'visiblePlatforms']) as Promise<
+      ReturnType<ProActionsCalls['visiblePlatforms']>
     >,
 };
 

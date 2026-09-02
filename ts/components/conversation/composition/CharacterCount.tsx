@@ -1,15 +1,13 @@
 import styled from 'styled-components';
-import { useThrottledAsyncFn } from '../../../hooks/useThrottledAsyncFn';
-import { Constants } from '../../../session';
+import LIBSESSION_CONSTANTS from '../../../session/utils/libsession/libsession_constants';
 import { getFeatureFlagMemo } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { SessionTooltip } from '../../SessionTooltip';
 import { StyledCTA } from '../../basic/StyledCTA';
 import { formatNumber } from '../../../util/i18n/formatting/generics';
 import { tr } from '../../../localization/localeTools';
-import { useCurrentUserHasPro } from '../../../hooks/useHasPro';
+import { useCurrentUserHasProAccess } from '../../../hooks/useHasPro';
 import { ProIconButton } from '../../buttons/ProButton';
 import { useProBadgeOnClickCb } from '../../menuAndSettingsHooks/useProBadgeOnClickCb';
-import { ProWrapperActions } from '../../../webworker/workers/browser/libsession_worker_interface';
 
 export type CharacterCountProps = {
   text: string;
@@ -34,11 +32,9 @@ const StyledRemainingNumber = styled.span<{ $pastLimit: boolean }>`
 `;
 
 function ProCta() {
-  const currentUserHasPro = useCurrentUserHasPro();
-
   const proBadgeCb = useProBadgeOnClickCb({
     context: 'character-count',
-    args: { currentUserHasPro },
+    args: {},
   });
 
   if (!proBadgeCb.show || !proBadgeCb.cb) {
@@ -53,27 +49,22 @@ function ProCta() {
   );
 }
 
-const REFRESH_INTERVAL_MS = 200;
-
 export function CharacterCount({ text }: CharacterCountProps) {
   const alwaysShowFlag = getFeatureFlagMemo('alwaysShowRemainingChars');
 
-  const currentUserHasPro = useCurrentUserHasPro();
+  const codepointCount = [...text].length;
 
-  const countResult = useThrottledAsyncFn(
-    () => {
-      const result = ProWrapperActions.utf16Count({ utf16: text });
-      return result;
-    },
-    REFRESH_INTERVAL_MS,
-    [text]
-  );
+  // How many characters we may send is ACCESS, not DISPLAY: the recipient decides what to keep by
+  // validating the proof we attach, so counting against the Pro limit without one would promise an
+  // allowance every recipient will truncate. Subscribed rather than called, because this is a render —
+  // the send path itself calls the function directly, which is what actually has to be current.
+  const currentUserHasProAccess = useCurrentUserHasProAccess();
 
-  const charLimit = currentUserHasPro
-    ? Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_PRO
-    : Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_STANDARD;
+  const charLimit = currentUserHasProAccess
+    ? LIBSESSION_CONSTANTS.MESSAGE_CHARACTER_LIMIT_PRO
+    : LIBSESSION_CONSTANTS.MESSAGE_CHARACTER_LIMIT_STANDARD;
 
-  const remaining = charLimit - (countResult?.codepointCount ?? 0);
+  const remaining = charLimit - codepointCount;
   const pastLimit = remaining < 0;
 
   return alwaysShowFlag || remaining <= CHARACTER_SHOW_REMAINING_BUFFER ? (

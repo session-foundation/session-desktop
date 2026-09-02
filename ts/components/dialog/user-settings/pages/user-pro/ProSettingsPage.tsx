@@ -1,5 +1,13 @@
 import { isNumber } from 'lodash';
-import { MouseEventHandler, SessionDataTestId, useCallback, useMemo, type ReactNode } from 'react';
+import {
+  MouseEventHandler,
+  SessionDataTestId,
+  useCallback,
+  useEffect,
+  useMemo,
+  type ReactNode,
+} from 'react';
+import useMount from 'react-use/lib/useMount';
 import useUpdate from 'react-use/lib/useUpdate';
 import styled from 'styled-components';
 import { getAppDispatch } from '../../../../../state/dispatch';
@@ -57,10 +65,13 @@ import {
 } from '../../../../../models/proMessageFeature';
 import { usePinnedConversationsCount } from '../../../../../state/selectors/conversations';
 import {
-  useProBackendProDetails,
+  useProBackendProStatus,
   useProBackendRefetch,
 } from '../../../../../state/selectors/proBackendData';
 import { formatNumber } from '../../../../../util/i18n/formatting/generics';
+import { NetworkTime } from '../../../../../util/NetworkTime';
+import { DURATION } from '../../../../../session/constants';
+import { proBackendDataActions } from '../../../../../state/ducks/proBackendData';
 
 type ProSettingsModalState = {
   fromCTA?: boolean;
@@ -176,10 +187,14 @@ export function ProHeroImage({
         </HeroImageBgContainer>
       </SectionFlexContainer>
       {heroStatusText ? (
-        <StyledProStatusText $isError={isError}>{heroStatusText}</StyledProStatusText>
+        <StyledProStatusText $isError={isError} data-testid="pro-settings-status-banner">
+          {heroStatusText}
+        </StyledProStatusText>
       ) : null}
       {heroStatusText && heroText ? <SpacerMD /> : null}
-      {heroText ? <StyledProHeroText>{heroText}</StyledProHeroText> : null}
+      {heroText ? (
+        <StyledProHeroText data-testid="pro-settings-description">{heroText}</StyledProHeroText>
+      ) : null}
     </SectionFlexContainer>
   );
 }
@@ -193,7 +208,9 @@ function useBackendErrorDialogButtons() {
       {
         label: { token: 'retry' },
         dataTestId: 'pro-backend-error-retry-button',
-        onClick: refetch,
+        // Trigger #5, a manual retry: one of the two sanctioned `immediate` callers. Wrapped rather
+        // than passed as `onClick: refetch` so the click event isn't handed over as the options arg.
+        onClick: () => refetch({ immediate: true }),
         closeAfterClick: true,
       },
       {
@@ -214,18 +231,87 @@ function useBackendErrorDialogButtons() {
 }
 
 // NOTE: [react-compiler] this convinces the compiler the hook is static
-const useProBackendProDetailsInternal = useProBackendProDetails;
+const useProBackendProStatusInternal = useProBackendProStatus;
 const useCurrentUserHasProInternal = useCurrentUserHasPro;
 const useCurrentUserHasExpiredProInternal = useCurrentUserHasExpiredPro;
 const useCurrentNeverHadProInternal = useCurrentNeverHadPro;
 const useIsDarkThemeInternal = useIsDarkTheme;
 const usePinnedConversationsCountInternal = usePinnedConversationsCount;
 
+// Trigger #4's cadence (a cross-client contract, see the constants in ducks/proBackendData.ts).
+/** How long past the `user_expiry` crossing to wait before the first refetch. */
+const GRACE_POLL_CROSSING_SLACK_MS = 5 * DURATION.SECONDS;
+/** Then re-check on this cadence while still un-renewed. Equal to STATUS_FLOOR_MS by design, which
+ * is why #4 must bypass the floor rather than be halved by it. */
+const GRACE_POLL_INTERVAL_MS = 1 * DURATION.MINUTES;
+
+// Extracted into its own hook so the react compiler compiles a small, clean function rather than
+// choking on a raw useEffect inside the large ProSettings component.
+function useKeepProStatusFresh({
+  expiryTimeMs,
+  coverageEndMs,
+  autoRenew,
+  userHasExpiredPro,
+  isLoading,
+  isError,
+}: {
+  expiryTimeMs: number;
+  coverageEndMs: number;
+  autoRenew: boolean;
+  userHasExpiredPro: boolean;
+  isLoading: boolean;
+  isError: boolean;
+}) {
+  // Keep get_pro_status fresh around the payment-due instant while the pro page is open, so the "renewal
+  // unsuccessful" warning reflects reality rather than a pre-expiry snapshot. Without it, a renewal
+  // that lands while the page is open isn't picked up until the page is closed and reopened.
+  useEffect(() => {
+    if (isLoading || isError || userHasExpiredPro || !autoRenew || !expiryTimeMs) {
+      return undefined;
+    }
+    // Floor-exempt because its 60s interval would otherwise sit exactly on the 60s floor and be dropped
+    // about half the time.
+    //
+    // The exemption and the `autoRenew` guard above are a pair: the guard is what bounds this, and being
+    // unfloored is what makes an unbounded version expensive. Without it a lapsed non-renewing
+    // subscription polls every 60s, floor-exempt, for as long as the page is open. The coverage-end
+    // (`E + G`) bound below is that independent lifetime bound: the poll stops when the grace window
+    // closes rather than running for as long as the page stays open, matching Android/iOS, which bound
+    // their while-open poll at coverage end rather than leaning on `userHasExpiredPro` flipping.
+    const fire = () =>
+      window.inboxStore?.dispatch(
+        proBackendDataActions.refreshGetProStatusFromProBackend({ immediate: true }) as any
+      );
+    const now = NetworkTime.now();
+    // Nothing left to catch once coverage has ended, so never arm past it.
+    if (now >= coverageEndMs) {
+      return undefined;
+    }
+    const msUntilExpiry = expiryTimeMs - now;
+    if (msUntilExpiry > 0) {
+      // Refetch just after the crossing, so a renewal (or a genuine failure) replaces the stale value.
+      const timeoutId = setTimeout(fire, msUntilExpiry + GRACE_POLL_CROSSING_SLACK_MS);
+      return () => clearTimeout(timeoutId);
+    }
+    // In the grace window [E, E+G): the renewal can succeed at any point, so re-check until
+    // get_pro_status reports the new expiry (the deps change re-arms this) or coverage ends, whichever
+    // comes first. The interval clears itself at coverage end so it can never outlive the grace window.
+    const intervalId = setInterval(() => {
+      if (NetworkTime.now() >= coverageEndMs) {
+        clearInterval(intervalId);
+        return;
+      }
+      fire();
+    }, GRACE_POLL_INTERVAL_MS);
+    return () => clearInterval(intervalId);
+  }, [expiryTimeMs, coverageEndMs, autoRenew, userHasExpiredPro, isLoading, isError]);
+}
+
 function ProNonProContinueButton({ state }: SectionProps) {
   const { returnToThisModalAction, centerAlign, afterCloseAction } = state;
   const dispatch = getAppDispatch();
   const neverHadPro = useCurrentNeverHadProInternal();
-  const { isLoading, isError } = useProBackendProDetailsInternal();
+  const { isLoading, isError } = useProBackendProStatusInternal();
 
   const backendErrorButtons = useBackendErrorDialogButtons();
 
@@ -335,6 +421,7 @@ function ProStats() {
     <SectionFlexContainer>
       <PanelLabelWithDescription
         title={{ token: 'proStats' }}
+        dataTestId="pro-settings-stats-header"
         extraInlineNode={
           <SessionTooltip
             content={tr('proStatsTooltip')}
@@ -362,7 +449,7 @@ function ProStats() {
                 iconSize="huge"
                 unicode={LUCIDE_ICONS_UNICODE.MESSAGE_SQUARE}
               />
-              <StatsLabel>
+              <StatsLabel data-testid="pro-stats-longer-messages">
                 {tr('proLongerMessagesSent', {
                   count: proLongerMessagesSent,
                   total: formatProStats(proLongerMessagesSent),
@@ -375,7 +462,7 @@ function ProStats() {
                 iconSize="huge"
                 unicode={LUCIDE_ICONS_UNICODE.PIN}
               />
-              <StatsLabel>
+              <StatsLabel data-testid="pro-stats-pinned-conversations">
                 {tr('proPinnedConversations', {
                   count: proPinnedConversations,
                   total: formatProStats(proPinnedConversations),
@@ -390,7 +477,7 @@ function ProStats() {
                 iconSize="huge"
                 unicode={LUCIDE_ICONS_UNICODE.RECTANGLE_ELLIPSES}
               />
-              <StatsLabel>
+              <StatsLabel data-testid="pro-stats-badges-sent">
                 {tr('proBadgesSent', {
                   count: proBadgesSent,
                   total: formatProStats(proBadgesSent),
@@ -403,7 +490,7 @@ function ProStats() {
                 iconSize="huge"
                 unicode={LUCIDE_ICONS_UNICODE.USERS_ROUND}
               />
-              <StatsLabel disabled={!proGroupsAvailable}>
+              <StatsLabel disabled={!proGroupsAvailable} data-testid="pro-stats-groups-upgraded">
                 {tr('proGroupsUpgraded', {
                   count: proGroupsUpgraded,
                   total: formatProStats(proGroupsUpgraded),
@@ -434,8 +521,17 @@ function ProSettings({ state }: SectionProps) {
   const userHasPro = useCurrentUserHasProInternal();
   const userHasExpiredPro = useCurrentUserHasExpiredProInternal();
   const userNeverHadPro = useCurrentNeverHadProInternal();
-  const { data, isLoading, isError } = useProBackendProDetailsInternal();
+  const { data, isLoading, isError } = useProBackendProStatusInternal();
   const backendErrorButtons = useBackendErrorDialogButtons();
+
+  useKeepProStatusFresh({
+    expiryTimeMs: data.expiryTimeMs,
+    coverageEndMs: data.coverageEndMs,
+    autoRenew: data.autoRenew,
+    userHasExpiredPro,
+    isLoading,
+    isError,
+  });
 
   const forceRefresh = useUpdate();
 
@@ -485,13 +581,28 @@ function ProSettings({ state }: SectionProps) {
     return null;
   }
 
-  let subText: TrArgs;
+  let subText: TrArgs | undefined;
   if (isError) {
     subText = { token: 'errorLoadingProAccess' };
   } else if (isLoading) {
     subText = { token: 'proAccessLoadingEllipsis' };
   } else if (data.inGracePeriod) {
+    // Deliberately ahead of the two branches below: this one needs no date, so it must not be
+    // suppressed by the no-date case. It is the message that is most correct when a fetch is struggling.
     subText = { token: 'proRenewalUnsuccessful' };
+  } else if (!data.expiryTimeMs) {
+    // No date, so no second line. Every string available here is about when access ends, and inventing
+    // one from a missing value produces a plausible-looking lie rather than an obvious gap: "expiring in
+    // " with a hole in it, or "expires in 0 minutes". iOS and Android both render nothing here for the
+    // same reason.
+    //
+    // "Still loading" would be the same mistake in a quieter form — it asserts that a date is on its way,
+    // which is true while a fetch is in flight and false for a plan that simply has no expiry.
+    // libsession's plan grammar already includes a `lifetime` unit (planCount 0), which
+    // `planPeriodToString` renders as "Lifetime" a few rows up; the backend cannot issue one yet, and
+    // what `account_expiry_ts` would carry for a perpetual entitlement is not specified. Rendering
+    // nothing is correct either way, which is why this needs no case of its own.
+    subText = undefined;
   } else if (data.autoRenew) {
     subText = { token: 'proAutoRenewTime', time: data.expiryTimeRelativeString };
   } else {
@@ -713,7 +824,10 @@ function ProFeatures({ state }: SectionProps) {
 
   return (
     <SectionFlexContainer>
-      <PanelLabelWithDescription title={{ token: 'proBetaFeatures' }} />
+      <PanelLabelWithDescription
+        title={{ token: 'proBetaFeatures' }}
+        dataTestId="pro-settings-features-header"
+      />
       <PanelButtonGroup containerStyle={{ marginBlock: 'var(--margins-xs)' }}>
         {proFeatures.map((m, i) => {
           return (
@@ -765,7 +879,7 @@ function ProFeatures({ state }: SectionProps) {
 
 function ManageProCurrentAccess({ state }: SectionProps) {
   const dispatch = getAppDispatch();
-  const { data } = useProBackendProDetailsInternal();
+  const { data } = useProBackendProStatusInternal();
   const userHasPro = useCurrentUserHasProInternal();
   if (!userHasPro) {
     return null;
@@ -773,7 +887,10 @@ function ManageProCurrentAccess({ state }: SectionProps) {
 
   return (
     <SectionFlexContainer>
-      <PanelLabelWithDescription title={{ token: 'managePro' }} />
+      <PanelLabelWithDescription
+        title={{ token: 'managePro' }}
+        dataTestId="pro-settings-manage-header"
+      />
       <PanelButtonGroup>
         {data.autoRenew ? (
           <PanelIconButton
@@ -822,7 +939,7 @@ function ManageProAccess({ state }: SectionProps) {
 
   const { returnToThisModalAction, centerAlign } = state;
 
-  const { isLoading, isError } = useProBackendProDetailsInternal();
+  const { isLoading, isError } = useProBackendProStatusInternal();
 
   const backendErrorButtons = useBackendErrorDialogButtons();
 
@@ -850,7 +967,10 @@ function ManageProAccess({ state }: SectionProps) {
 
   return (
     <SectionFlexContainer>
-      <PanelLabelWithDescription title={{ token: 'managePro' }} />
+      <PanelLabelWithDescription
+        title={{ token: 'managePro' }}
+        dataTestId="pro-settings-manage-header"
+      />
       <PanelButtonGroup
         style={
           !isDarkTheme
@@ -906,7 +1026,7 @@ function ProHelp() {
           text={{ token: 'proFaq' }}
           subText={{ token: 'proFaqDescription' }}
           onClick={async () =>
-            showLinkVisitWarningDialog('https://getsession.org/faq#pro', dispatch)
+            showLinkVisitWarningDialog(LIBSESSION_CONSTANTS.LIBSESSION_PRO_URLS.faq, dispatch)
           }
         />
         <SettingsExternalLinkBasic
@@ -962,7 +1082,7 @@ function PageHero({ state }: SectionProps) {
   const dispatch = getAppDispatch();
   const isPro = useCurrentUserHasProInternal();
   const proExpired = useCurrentUserHasExpiredProInternal();
-  const { isLoading, isError } = useProBackendProDetailsInternal();
+  const { isLoading, isError } = useProBackendProStatusInternal();
 
   const backendErrorButtons = useBackendErrorDialogButtons();
 
@@ -1005,15 +1125,17 @@ function PageHero({ state }: SectionProps) {
     }
   };
 
+  const heroTextToken = isPro
+    ? 'proThanksForSupporting'
+    : proExpired
+      ? 'proAccessRenewStart'
+      : 'proFullestPotential';
+
   return (
     <ProHeroImage
       onClick={handleClick}
       heroStatusText={<HeroStatusText isError={isError} isLoading={isLoading} isPro={isPro} />}
-      heroText={
-        isPro || (proExpired && !state.fromCTA) ? null : (
-          <Localizer token={proExpired ? 'proAccessRenewStart' : 'proFullestPotential'} />
-        )
-      }
+      heroText={<Localizer token={heroTextToken} />}
       isError={isError}
       noColors={proExpired && !state.fromCTA}
     />
@@ -1030,6 +1152,14 @@ export function ProSettingsPage(modalState: {
   const dispatch = getAppDispatch();
   const backAction = useUserSettingsBackAction(modalState);
   const closeAction = useUserSettingsCloseAction(modalState);
+  const refetch = useProBackendRefetch();
+
+  // Confirm our status on reaching this screen, so what it shows is not an arbitrarily old snapshot.
+  // Deliberately not `immediate`: the thunk's persisted floor is what keeps repeatedly reopening the
+  // page from repeatedly hitting the backend, and this is the trigger that floor exists to bound.
+  useMount(() => {
+    refetch();
+  });
 
   const returnToThisModalAction = useCallback(() => {
     dispatch(userSettingsModal(modalState));

@@ -51,19 +51,18 @@ import { CompositionTextArea } from './CompositionTextArea';
 import { HTMLDirection } from '../../../util/i18n/rtlSupport';
 import type { FixedBaseEmoji } from '../../../types/Reaction';
 import { CharacterCount } from './CharacterCount';
-import { Constants } from '../../../session';
+import LIBSESSION_CONSTANTS from '../../../session/utils/libsession/libsession_constants';
 import type { CompositionInputRef } from './CompositionInput';
 import { useShowBlockUnblock } from '../../menuAndSettingsHooks/useShowBlockUnblock';
 import { showLocalizedPopupDialog } from '../../dialog/LocalizedPopupDialog';
 import { formatNumber } from '../../../util/i18n/formatting/generics';
-import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { showSessionCTA } from '../../dialog/SessionCTA';
 import type { ProcessedLinkPreviewThumbnailType } from '../../../webworker/workers/node/image_processor/image_processor';
 import { CTAVariant } from '../../dialog/cta/types';
 import { selectWeAreProUser } from '../../../hooks/useHasPro';
+import { currentUserProofIsValid } from '../../../session/utils/ProAccess';
 import { closeContextMenus } from '../../../util/contextMenu';
 import type { MessageAttributes } from '../../../models/messageType';
-import { ProWrapperActions } from '../../../webworker/workers/browser/libsession_worker_interface';
 import { updateOutgoingLightBoxOptions } from '../../../state/ducks/modalDialog';
 import { isEnterKey, isEscapeKey } from '../../../util/keyboardShortcuts';
 import type { CommunityInvitation } from '../../../session/messages/outgoing/visibleMessage/VisibleMessage';
@@ -103,6 +102,7 @@ export type StagedLinkPreviewData = {
 };
 
 export type StagedAttachmentType = AttachmentType & {
+  stagedAttachmentId: string;
   file: File;
   path?: string; // a bit hacky, but this is the only way to make our sending audio message be playable, this must be used only for those message
 };
@@ -661,20 +661,24 @@ class CompositionBoxInner extends Component<Props, State> {
 
     this.linkPreviewAbortController?.abort();
 
-    const isProAvailable = getFeatureFlag('proAvailable');
+    // The limit is ACCESS — read live, at the moment of sending, because that is when it has to be
+    // true. `hasPro` below is DISPLAY, and is only used to pick which explanation the user gets: a
+    // plan that reads active but holds no usable proof should be told the message is too long, not
+    // invited to buy what it already has.
+    const weCanSendProLength = currentUserProofIsValid();
 
-    const charLimit = hasPro
-      ? Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_PRO
-      : Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_STANDARD;
+    const charLimit = weCanSendProLength
+      ? LIBSESSION_CONSTANTS.MESSAGE_CHARACTER_LIMIT_PRO
+      : LIBSESSION_CONSTANTS.MESSAGE_CHARACTER_LIMIT_STANDARD;
 
     const text = this.getSendableTextFromDraft();
 
-    const { codepointCount } = await ProWrapperActions.utf16Count({ utf16: text });
+    const codepointCount = [...text].length;
 
     if (codepointCount > charLimit) {
       const dispatch = window.inboxStore?.dispatch;
       if (dispatch) {
-        if (isProAvailable && !hasPro) {
+        if (!hasPro) {
           showSessionCTA(CTAVariant.PRO_MESSAGE_CHARACTER_LIMIT, dispatch);
         } else {
           showLocalizedPopupDialog(
@@ -807,15 +811,12 @@ class CompositionBoxInner extends Component<Props, State> {
       contentType: MIME.AUDIO_MP3,
     });
     // { ...savedAudioFile, path: savedAudioFile.path },
-    const audioAttachment: StagedAttachmentType = {
-      file: new File([], 'session-audio-message'), // this is just to emulate a file for the staged attachment type of that audio file
+    const audioAttachment: StagedAttachmentImportedType = {
       contentType: MIME.AUDIO_MP3,
       size: savedAudioFile.size,
-      fileSize: null,
       screenshot: null,
       fileName: 'session-audio-message',
       thumbnail: null,
-      url: '',
       isVoiceMessage: true,
       path: savedAudioFile.path,
     };

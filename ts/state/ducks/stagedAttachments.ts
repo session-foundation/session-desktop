@@ -32,13 +32,22 @@ const stagedAttachmentsSlice = createSlice({
       }
       const currentStagedAttachments = state.stagedAttachments[conversationKey] || [];
 
-      if (newAttachments.some(a => a.isVoiceMessage) && currentStagedAttachments.length > 0) {
-        window?.log?.warn('A voice note cannot be sent with other attachments');
+      const hasCurrentVoiceMessage = currentStagedAttachments.some(a => a.isVoiceMessage);
+      const hasNewVoiceMessage = newAttachments.some(a => a.isVoiceMessage);
+
+      if (
+        (hasNewVoiceMessage &&
+          (currentStagedAttachments.length > 0 || newAttachments.length > 1)) ||
+        (hasCurrentVoiceMessage && newAttachments.length > 0)
+      ) {
+        window?.log?.warn(
+          'Only one voice note can be staged, and it cannot be mixed with other attachments'
+        );
         return state;
       }
 
       const allAttachments = _.concat(currentStagedAttachments, newAttachments);
-      const uniqAttachments = _.uniqBy(allAttachments, m => m.fileName);
+      const uniqAttachments = _.uniqBy(allAttachments, m => m.stagedAttachmentId);
 
       state.stagedAttachments[conversationKey] = uniqAttachments;
       return state;
@@ -67,16 +76,18 @@ const stagedAttachmentsSlice = createSlice({
     },
     removeStagedAttachmentInConversation(
       state: StagedAttachmentsStateType,
-      action: PayloadAction<{ conversationKey: string; filename: string }>
+      action: PayloadAction<{ conversationKey: string; stagedAttachmentId: string }>
     ) {
-      const { conversationKey, filename } = action.payload;
+      const { conversationKey, stagedAttachmentId } = action.payload;
 
       const currentStagedAttachments = state.stagedAttachments[conversationKey];
 
       if (!currentStagedAttachments || _.isEmpty(currentStagedAttachments)) {
         return state;
       }
-      const attachmentToRemove = currentStagedAttachments.find(m => m.fileName === filename);
+      const attachmentToRemove = currentStagedAttachments.find(
+        m => m.stagedAttachmentId === stagedAttachmentId
+      );
 
       if (!attachmentToRemove) {
         return state;
@@ -89,7 +100,7 @@ const stagedAttachmentsSlice = createSlice({
         URL.revokeObjectURL(attachmentToRemove.videoUrl);
       }
       state.stagedAttachments[conversationKey] = state.stagedAttachments[conversationKey].filter(
-        a => a.fileName !== filename
+        a => a.stagedAttachmentId !== stagedAttachmentId
       );
       return state;
     },

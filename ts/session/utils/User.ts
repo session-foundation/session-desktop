@@ -11,12 +11,12 @@ import { ProWrapperActions } from '../../webworker/workers/browser/libsession_wo
 import { OutgoingUserProfile } from '../../types/message';
 import { SettingsKey } from '../../data/settings-key';
 import { OutgoingProMessageDetails } from '../../types/message/OutgoingProMessageDetails';
-import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 import {
   getCachedUserConfig,
   UserConfigWrapperActions,
 } from '../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
-import { getSodiumRenderer } from '../crypto';
+import { NetworkTime } from '../../util/NetworkTime';
+import { currentUserProofIsValid } from './ProAccess';
 
 export type HexKeyPair = {
   pubKey: string;
@@ -142,22 +142,24 @@ export async function getOutgoingProMessageDetails({
 }: {
   utf16: string | null | undefined;
 }) {
-  if (!getFeatureFlag('proAvailable')) {
-    return null;
-  }
   const [proConfig, proProfileBitset] = await Promise.all([
     UserConfigWrapperActions.getProConfig(),
     UserConfigWrapperActions.getProProfileBitset(),
   ]);
 
-  // Note: if we do not have a proof we don't want to send a proMessage.
+  // Note: if we do not have a usable proof we don't want to send a proMessage.
   // Note: if we don't have a user pro feature enabled, we might still need to add one for the message itself, see below
-  if (!proConfig || isEmpty(proConfig?.proProof)) {
+  //
+  // ACCESS decides this, not proof presence: a proof that has expired or been revoked is still sitting
+  // in config until something clears it, and attaching one asserts an entitlement the recipient will
+  // reject anyway. `currentUserProofIsValid` is the same function the feature surfaces ask, so what we
+  // attach and what we let the user do cannot drift apart.
+  if (!currentUserProofIsValid() || !proConfig || isEmpty(proConfig?.proProof)) {
     return null;
   }
 
   const { proMessageBitset, status } = await ProWrapperActions.proFeaturesForMessage({
-    utf16: utf16 ?? '',
+    codepointCount: [...(utf16 ?? '')].length,
   });
 
   if (status !== 'SUCCESS') {
@@ -193,24 +195,29 @@ export async function getProMasterKeyHex() {
 }
 
 /**
- * Return the pro rotating private key (hex) from user config, or generate it before returning it.
+ * The deterministic rotating key for `now`, derived from the Pro master key (libsession owns the
+ * rotation schedule). Used to REQUEST a proof: every device deriving from the same master key +
+ * time converges on the same key so concurrent (re)generations don't race, and libsession persists
+ * the seed alongside the returned proof (that seed is then what signs Pro messages).
+ */
+export async function deriveCurrentProRotatingKey() {
+  const proMasterKeyHex = await getProMasterKeyHex();
+  return UserConfigWrapperActions.deriveProRotatingKey({
+    proMasterKeyHex,
+    nowMs: NetworkTime.now(),
+  });
+}
+
+/**
+ * The rotating private key (hex) that the current persisted proof authorizes — used to sign Pro
+ * messages. Falls back to the deterministic key for the current period when there is no persisted
+ * proof yet.
  */
 export async function getProRotatingPrivateKeyHex() {
   const proConfig = getCachedUserConfig().proConfig;
   if (proConfig?.rotatingPrivKeyHex) {
     return proConfig.rotatingPrivKeyHex;
   }
-
-  const { rotatingPrivKeyHex } = await UserConfigWrapperActions.generateRotatingPrivKeyHex();
-  if (!rotatingPrivKeyHex) {
-    throw new Error('Failed to generate pro rotating private key');
-  }
+  const { rotatingPrivKeyHex } = await deriveCurrentProRotatingKey();
   return rotatingPrivKeyHex;
-}
-
-export async function getProRotatingSeedHex() {
-  const sodium = await getSodiumRenderer();
-  const proSeedHex = await getProRotatingPrivateKeyHex();
-
-  return sodium.to_hex(sodium.crypto_sign_ed25519_sk_to_seed(sodium.from_hex(proSeedHex)));
 }

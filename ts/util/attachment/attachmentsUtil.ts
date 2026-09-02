@@ -55,7 +55,7 @@ export async function autoScaleFile(file: File, maxMeasurements?: MaxScaleSize) 
 
 export type StagedAttachmentImportedType = Omit<
   StagedAttachmentType,
-  'file' | 'url' | 'fileSize'
+  'file' | 'url' | 'fileSize' | 'stagedAttachmentId'
 > & { flags?: number };
 
 /**

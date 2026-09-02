@@ -30,6 +30,7 @@ import { ReduxConversationType } from '../../state/ducks/conversations';
 import { SessionScrollButton } from '../SessionScrollButton';
 import { ConvoHub } from '../../session/conversations';
 import { SessionMessageInteractables } from './SessionMessageInteractables';
+import { isEditableTarget } from '../../util/isEditableTarget';
 
 export const MESSAGE_LIST_MESSAGE_PADDING_PX = 'var(--margins-lg)' as const;
 
@@ -67,7 +68,7 @@ const StyledTypingBubbleContainer = styled.div`
 `;
 
 function isNotTextboxEvent(e: KeyboardEvent) {
-  return (e?.target as any)?.type === undefined;
+  return (e?.target as any)?.type === undefined && !isEditableTarget(e.target);
 }
 
 let previousRenderedConvo: string | undefined;

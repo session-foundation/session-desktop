@@ -19,9 +19,10 @@ import { AriaLabels } from '../../util/hardcodedAriaLabels';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { THEME_GLOBALS } from '../../themes/globals';
+import type { StagedAttachmentType } from './composition/CompositionBox';
 
 type Props = {
-  attachments: Array<AttachmentType>;
+  attachments: Array<StagedAttachmentType>;
   onClickAttachment: (attachment: AttachmentType) => void;
   onAddAttachment: () => void;
 };
@@ -64,11 +65,11 @@ export const StagedAttachmentList = (props: Props) => {
     dispatch(removeAllStagedAttachmentsInConversation({ conversationId: conversationKey }));
   };
 
-  const onRemoveByFilename = (filename: string) => {
+  const onRemoveByStagedAttachmentId = (stagedAttachmentId: string) => {
     if (!conversationKey) {
       return;
     }
-    dispatch(removeStagedAttachmentInConversation({ conversationKey, filename }));
+    dispatch(removeStagedAttachmentInConversation({ conversationKey, stagedAttachmentId }));
   };
 
   if (!attachments.length) {
@@ -100,7 +101,8 @@ export const StagedAttachmentList = (props: Props) => {
       <StyledRail>
         {(attachments || []).map((attachment, index) => {
           const { contentType } = attachment;
-          const key = getUrl(attachment) || attachment.fileName || index;
+          const key =
+            attachment.stagedAttachmentId || getUrl(attachment) || attachment.fileName || index;
           if (isImageTypeSupported(contentType) || isVideoTypeSupported(contentType)) {
             return (
               <Image
@@ -116,7 +118,7 @@ export const StagedAttachmentList = (props: Props) => {
                 closeButton={true}
                 onClick={onClickAttachment}
                 onClickClose={() => {
-                  onRemoveByFilename(attachment.fileName);
+                  onRemoveByStagedAttachmentId(attachment.stagedAttachmentId);
                 }}
               />
             );
@@ -127,7 +129,7 @@ export const StagedAttachmentList = (props: Props) => {
               key={key}
               attachment={attachment}
               onClose={() => {
-                onRemoveByFilename(attachment.fileName);
+                onRemoveByStagedAttachmentId(attachment.stagedAttachmentId);
               }}
             />
           );

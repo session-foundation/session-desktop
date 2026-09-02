@@ -143,6 +143,7 @@ export const PinConversationMenuItem = (): JSX.Element | null => {
   const menuText = tr(isPinned ? 'pinUnpin' : 'pin');
   return (
     <MenuItem
+      dataTestId="pin-conversation-menu-item"
       onClick={togglePinConversation}
       iconType={isPinned ? LUCIDE_ICONS_UNICODE.PIN_OFF : LUCIDE_ICONS_UNICODE.PIN}
       isDangerAction={false}

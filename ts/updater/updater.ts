@@ -18,6 +18,12 @@ import { isDebianBased, isRunningViaAppImage } from '../OS';
 
 let isUpdating = false;
 let downloadIgnored = false;
+/**
+ * The version the user dismissed when we last showed the download dialog.
+ * Used so a check triggered by a freshly-fetched release only re-prompts when
+ * the release is strictly newer than the one they already said no to.
+ */
+let ignoredVersion: string | undefined;
 let interval: NodeJS.Timeout | undefined;
 let stopped = false;
 
@@ -72,11 +78,17 @@ export function stop() {
 export async function checkForUpdates(
   getMainWindow: () => BrowserWindow | null,
   logger: LoggerType,
-  force?: boolean
+  force?: boolean,
+  triggeredByNewRelease?: boolean
 ) {
-  if (stopped || isUpdating || (downloadIgnored && !force)) {
+  // `force` (from the debug menu) always re-prompts. A check triggered because we
+  // just fetched a new release from the file server should only re-prompt when that
+  // release is strictly newer than the one the user previously dismissed.
+  const bypassDownloadIgnored = force || (triggeredByNewRelease && isNewReleaseNewerThanIgnored());
+
+  if (stopped || isUpdating || (downloadIgnored && !bypassDownloadIgnored)) {
     logger.info(
-      `[updater] checkForUpdates is returning early stopped ${stopped} isUpdating ${isUpdating} downloadIgnored ${downloadIgnored}`
+      `[updater] checkForUpdates is returning early stopped ${stopped} isUpdating ${isUpdating} downloadIgnored ${downloadIgnored} bypassDownloadIgnored ${bypassDownloadIgnored}`
     );
     return false;
   }
@@ -149,6 +161,7 @@ export async function checkForUpdates(
 
       if (!shouldDownload) {
         downloadIgnored = true;
+        ignoredVersion = result.updateInfo.version;
         logger.info('[updater] download cancelled by user');
         return true;
       }
@@ -183,6 +196,18 @@ export async function checkForUpdates(
   } finally {
     isUpdating = false;
   }
+}
+
+/**
+ * Whether the release currently advertised by the file server is strictly newer than
+ * the version the user dismissed. Returns true when nothing has been dismissed yet.
+ */
+function isNewReleaseNewerThanIgnored(): boolean {
+  if (!ignoredVersion) {
+    return true;
+  }
+  const [updateVersionFromFs] = getLatestRelease();
+  return Boolean(updateVersionFromFs && isVersionGreaterThan(updateVersionFromFs, ignoredVersion));
 }
 
 function isUpdateAvailable(updateInfo: UpdateInfo): boolean {

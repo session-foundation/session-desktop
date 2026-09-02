@@ -141,7 +141,7 @@ class AvatarMigrateJob extends PersistedJob<AvatarMigratePersistedData> {
           // as we can't decrypt it.
           profileUpdatedAtSeconds: NetworkTime.nowSeconds(),
           // Don't overwrite those if they are set
-          proDetails: { bitsetProFeatures: null, proExpiryTsMs: null, proGenIndexHashB64: null },
+          proDetails: { bitsetProFeatures: null, proExpiryTsMs: null, proRevocationTagB64: null },
         });
         await profile.applyChangesIfNeeded();
 
@@ -196,7 +196,7 @@ class AvatarMigrateJob extends PersistedJob<AvatarMigratePersistedData> {
           // as we can't decrypt it.
           profileUpdatedAtSeconds: NetworkTime.nowSeconds(),
           // Don't overwrite those if they are set
-          proDetails: { bitsetProFeatures: null, proExpiryTsMs: null, proGenIndexHashB64: null },
+          proDetails: { bitsetProFeatures: null, proExpiryTsMs: null, proRevocationTagB64: null },
         });
         await profile.applyChangesIfNeeded();
       }

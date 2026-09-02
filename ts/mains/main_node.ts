@@ -598,6 +598,35 @@ ipc.handle('force-update-check', async () => {
   }
 });
 
+// Softer counterpart to 'force-update-check': triggered by the renderer when routine
+// polling fetches a newer release from the file server. Unlike force-update-check it does
+// not force a file server refetch and stays quiet (no throw/toast); it only re-prompts a
+// user who dismissed a download when the new release is strictly newer than the one they
+// dismissed. See checkForUpdates' triggeredByNewRelease argument.
+ipc.handle('trigger-update-check', async () => {
+  try {
+    if (!log) {
+      throw new Error('Must provide logger!');
+    }
+
+    if (!isReadyForUpdates) {
+      log.info('[updater] trigger-update-check: not ready for updates yet, skipping');
+      return false;
+    }
+
+    const canUpdate = await canAutoUpdate();
+    if (!canUpdate) {
+      log.info('[updater] trigger-update-check: cannot auto update, skipping');
+      return false;
+    }
+
+    return await checkForUpdates(getMainWindow, log, false, true);
+  } catch (error) {
+    console.error('[updater] trigger-update-check', error && error.stack ? error.stack : error);
+    return false;
+  }
+});
+
 // Forcefully call readyForUpdates after 10 minutes.
 // This ensures we start the updater.
 const TEN_MINUTES = 10 * 60 * 1000;

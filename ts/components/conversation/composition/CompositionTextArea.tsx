@@ -50,6 +50,7 @@ import { Mention } from '../AddMentions';
 import { useDebugInputCommands } from '../../dialog/debug/hooks/useDebugInputCommands';
 import { useKeyboardShortcut } from '../../../hooks/useKeyboardShortcut';
 import { isEnterKey, isEscapeKey, KbdShortcut } from '../../../util/keyboardShortcuts';
+import { isEditableTarget } from '../../../util/isEditableTarget';
 import { PopoverTriggerPosition } from '../../SessionTooltip';
 import { getAppDispatch } from '../../../state/dispatch';
 import { setIsCompositionTextAreaFocused } from '../../../state/ducks/conversations';
@@ -65,6 +66,16 @@ type Props = {
 };
 
 type SearchableSuggestion = SessionSuggestionDataItem & { searchable?: Array<string> };
+
+function isPrintableTypingEvent(event: globalThis.KeyboardEvent) {
+  return (
+    event.key.length === 1 &&
+    !event.altKey &&
+    !event.ctrlKey &&
+    !event.metaKey &&
+    !event.defaultPrevented
+  );
+}
 
 function useMembersInThisChat(): Array<SearchableSuggestion> {
   const selectedConvoKey = useSelectedConversationKey();
@@ -584,6 +595,33 @@ export function CompositionTextArea(props: Props) {
       }
     },
   });
+
+  useEffect(() => {
+    if (!selectedConversationKey || !typingEnabled) {
+      return undefined;
+    }
+
+    const handleTypingFocus = (event: globalThis.KeyboardEvent) => {
+      if (!isPrintableTypingEvent(event) || isEditableTarget(event.target)) {
+        return;
+      }
+
+      const input = inputRef.current;
+      if (!input) {
+        return;
+      }
+
+      event.preventDefault();
+      input.focus();
+      input.typeAtCaret(event.key);
+    };
+
+    document.addEventListener('keydown', handleTypingFocus, true);
+
+    return () => {
+      document.removeEventListener('keydown', handleTypingFocus, true);
+    };
+  }, [inputRef, selectedConversationKey, typingEnabled]);
 
   const onFocus = () => {
     dispatch(setIsCompositionTextAreaFocused(true));

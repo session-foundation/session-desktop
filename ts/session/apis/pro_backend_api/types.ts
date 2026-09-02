@@ -1,70 +1,37 @@
-import { ProOriginatingPlatform } from 'libsession_util_nodejs';
-import { assertUnreachable } from '../../../types/sqlSharedTypes';
+// The Session Pro wire no longer uses fixed integer enums: account status, per-payment status, plan,
+// and payment provider are all opaque string codes that libsession parses and passes through verbatim.
+// We keep the canonical slugs as named constants; an unknown/future value passes through as-is (map the
+// known ones for display, never hard-fail on a new one). Human-readable NAMES are translation data owned
+// by the client (i18n), keyed on these slugs.
 
-// Mirrors backend enum
-export enum ProStatus {
-  NeverBeenPro = 0,
-  Active = 1,
-  Expired = 2,
-}
+export const ProStatus = {
+  Never: 'never',
+  Active: 'active',
+  Expired: 'expired',
+} as const;
+/** Account-level Pro status slug (canonical values in {@link ProStatus}); may be an unknown slug. */
+export type ProStatus = string;
 
-// Mirrors backend enum
-export enum ProAccessVariant {
-  Nil = 0,
-  OneMonth = 1,
-  ThreeMonth = 2,
-  TwelveMonth = 3,
-}
+export const ProItemStatus = {
+  Redeemed: 'redeemed',
+  Expired: 'expired',
+  Revoked: 'revoked',
+} as const;
+/** Per-payment status slug (canonical values in {@link ProItemStatus}); may be an unknown slug. */
+export type ProItemStatus = string;
 
-// Mirrors backend enum
-export enum ProItemStatus {
-  Nil = 0,
-  Unredeemed = 1,
-  Redeemed = 2,
-  Expired = 3,
-  Revoked = 4,
-}
+export const ProAccessVariant = {
+  OneMonth: '1m',
+  ThreeMonth: '3m',
+  TwelveMonth: '1y',
+} as const;
+/** Billing-period slug (canonical values in {@link ProAccessVariant}); may be an unknown slug. */
+export type ProAccessVariant = string;
 
-// Mirrors backend enum
-export enum ProPaymentProvider {
-  Nil = 0,
-  GooglePlayStore = 1,
-  iOSAppStore = 2,
-  Rangeproof = 3,
-}
-
-export function getProPaymentProviderFromProOriginatingPlatform(
-  v: ProOriginatingPlatform
-): ProPaymentProvider {
-  switch (v) {
-    case 'Nil':
-      return ProPaymentProvider.Nil;
-    case 'Google':
-      return ProPaymentProvider.GooglePlayStore;
-    case 'iOS':
-      return ProPaymentProvider.iOSAppStore;
-    case 'Rangeproof':
-      return ProPaymentProvider.Rangeproof;
-    default:
-      assertUnreachable(v, 'getProPaymentProviderFromProOriginatingPlatform');
-      throw new Error('getProPaymentProviderFromProOriginatingPlatform: case not handled');
-  }
-}
-
-export function getProOriginatingPlatformFromProPaymentProvider(
-  v: ProPaymentProvider
-): ProOriginatingPlatform {
-  switch (v) {
-    case ProPaymentProvider.Nil:
-      return 'Nil';
-    case ProPaymentProvider.GooglePlayStore:
-      return 'Google';
-    case ProPaymentProvider.iOSAppStore:
-      return 'iOS';
-    case ProPaymentProvider.Rangeproof:
-      return 'Rangeproof';
-    default:
-      assertUnreachable(v, 'getProOriginatingPlatformFromProPaymentProvider');
-      throw new Error('getProOriginatingPlatformFromProPaymentProvider: case not handled');
-  }
-}
+export const ProPaymentProvider = {
+  GooglePlay: 'google_play',
+  AppStore: 'app_store',
+  Stf: 'stf',
+} as const;
+/** Payment-provider slug (canonical values in {@link ProPaymentProvider}); may be an unknown slug. */
+export type ProPaymentProvider = string;

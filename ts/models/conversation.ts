@@ -150,11 +150,9 @@ import type { LastMessageStatusType } from '../state/ducks/types';
 import { OutgoingUserProfile } from '../types/message';
 import { privateSet, privateSetKey } from './modelFriends';
 import { ProFeatures, ProMessageFeature } from './proMessageFeature';
-import {
-  getCachedUserConfig,
-  UserConfigWrapperActions,
-} from '../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
+import { UserConfigWrapperActions } from '../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 import { ProRevocationCache } from '../session/revocation_list/pro_revocation_list';
+import { currentUserProofIsValid } from '../session/utils/ProAccess';
 import { uuidV4 } from '../util/uuid';
 import { pushQuotedMessageToStoreIfNeeded } from '../receiver/queuedJob';
 
@@ -790,26 +788,18 @@ export class ConversationModel extends Model<ConversationAttributes> {
     }
 
     if (this.isMe()) {
-      // The logic for the pro proof for ourselves is coming from libsession.
-      const proProof = getCachedUserConfig().proConfig?.proProof;
-      if (!proProof) {
-        return false;
-      }
-      if (ProRevocationCache.isB64HashEffectivelyRevoked(proProof.genIndexHashB64)) {
-        // `false` because the proof is not valid (revoked)
-        return false;
-      }
-      // if now() is before the proof's expiry, it is not expired yet
-      return NetworkTime.nowTs().isBeforeMs({ ms: proProof.expiryMs });
+      // Our own entitlement is ACCESS, and there is one function for it — the send path asks the same
+      // question and must not be able to answer it differently.
+      return currentUserProofIsValid();
     }
 
     const proDetails = this.dbContactProDetails();
-    if (!proDetails || !proDetails.proExpiryTsMs || !proDetails.proGenIndexHashB64) {
+    if (!proDetails || !proDetails.proExpiryTsMs || !proDetails.proRevocationTagB64) {
       return false;
     }
 
-    // make sure that genIndexHash was not revoked first
-    if (ProRevocationCache.isB64HashEffectivelyRevoked(proDetails.proGenIndexHashB64)) {
+    // make sure that revocation tag was not revoked first
+    if (ProRevocationCache.isB64HashEffectivelyRevoked(proDetails.proRevocationTagB64)) {
       // `false` because the proof is not valid (revoked)
       return false;
     }
@@ -1731,11 +1721,11 @@ export class ConversationModel extends Model<ConversationAttributes> {
     ) {
       return null;
     }
-    const proGenIndexHashB64 = this.get('proGenIndexHashB64');
+    const proRevocationTagB64 = this.get('proRevocationTagB64');
     const proExpiryTsMs = this.get('proExpiryTsMs');
     const bitsetProFeatures = this.get('bitsetProFeatures');
     return {
-      proGenIndexHashB64,
+      proRevocationTagB64,
       proExpiryTsMs,
       bitsetProFeatures,
     };
@@ -2039,22 +2029,9 @@ export class ConversationModel extends Model<ConversationAttributes> {
    * If the user is not a pro user, return the fallback avatar path (first or only frame extracted)
    */
   public getProOrNotAvatarPath() {
-    const proAvailable = getFeatureFlag('proAvailable');
-    const avatarPicked =
-      proAvailable && !this.hasValidCurrentProProof()
-        ? this.getFallbackAvatarInProfilePath()
-        : this.getAvatarInProfilePath();
-
-    // window.log.debug(
-    //   `getProOrNotAvatarPath for ${ed25519Str(this.id)}: `,
-    //   JSON.stringify({
-    //     proAvailable,
-    //     validCurrentProof: this.hasValidCurrentProProof(),
-    //     avatarInProfilePath: this.getAvatarInProfilePath(),
-    //     fallbackAvatarInProfilePath: this.getFallbackAvatarInProfilePath(),
-    //     avatarPicked,
-    //   })
-    // );
+    const avatarPicked = !this.hasValidCurrentProProof()
+      ? this.getFallbackAvatarInProfilePath()
+      : this.getAvatarInProfilePath();
 
     return avatarPicked;
   }

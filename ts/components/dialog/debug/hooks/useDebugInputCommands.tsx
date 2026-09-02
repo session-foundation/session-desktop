@@ -1,6 +1,6 @@
 import { type Dispatch, useEffect } from 'react';
 import { isDevProd } from '../../../../shared/env_vars';
-import { Constants } from '../../../../session';
+import LIBSESSION_CONSTANTS from '../../../../session/utils/libsession/libsession_constants';
 import { getFeatureFlagMemo } from '../../../../state/ducks/types/releasedFeaturesReduxTypes';
 
 type DebugInputCommandsArgs = {
@@ -10,12 +10,12 @@ type DebugInputCommandsArgs = {
 
 const isDev = isDevProd();
 const maxMessageStandard = Array.from({
-  length: Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_STANDARD,
+  length: LIBSESSION_CONSTANTS.MESSAGE_CHARACTER_LIMIT_STANDARD,
 })
   .fill('a')
   .join('');
 
-const maxMessagePro = Array.from({ length: Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_PRO })
+const maxMessagePro = Array.from({ length: LIBSESSION_CONSTANTS.MESSAGE_CHARACTER_LIMIT_PRO })
   .fill('a')
   .join('');
 

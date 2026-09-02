@@ -3,8 +3,10 @@ onlyBuiltDependencies:
   - '@signalapp/sqlcipher'
   - electron
   - electron-winstaller
+  - esbuild
   - libsession_util_nodejs
   - protobufjs
   - sharp
+
 publicHoistPattern:
   - '@img/*'

@@ -30,6 +30,7 @@ import { ed25519Str } from '../../session/utils/String';
 import { stringify, toFixedUint8ArrayOfLength } from '../../types/sqlSharedTypes';
 import {
   MetaGroupWrapperActions,
+  MultiEncryptWrapperActions,
   UserGroupsWrapperActions,
 } from '../../webworker/workers/browser/libsession_worker_interface';
 import { StateType } from '../reducer';
@@ -48,7 +49,6 @@ import { tr } from '../../localization/localeTools';
 import { type GroupMemberGetRedux, makeGroupMemberGetRedux } from './types/groupReduxTypes';
 import { uploadFileToFsWithOnionV4 } from '../../session/apis/file_server_api/FileServerApi';
 import { urlToBlob } from '../../types/attachments/VisualAttachment';
-import { encryptProfile } from '../../util/crypto/profileEncrypter';
 import { processNewAttachment } from '../../types/MessageAttachment';
 import type { StoreGroupMessageSubRequest } from '../../session/apis/snode_api/SnodeRequestTypes';
 import { sectionActions } from './section';
@@ -968,18 +968,16 @@ async function handleAvatarChangeFromUI({
     throw new Error('Failed to process avatar');
   }
 
-  // generate a new profile key for this group
-  const profileKey = (await getSodiumRenderer()).randombytes_buf(32);
-  // encrypt the avatar data with the profile key
-  const encryptedData = await encryptProfile(processed.mainAvatarDetails.outputBuffer, profileKey);
+  // the key is derived from the uploader's seed and the content, so it is not ours to generate
+  const encryptedContent = await MultiEncryptWrapperActions.attachmentEncrypt({
+    allowLarge: false,
+    seed: await UserUtils.getUserEd25519Seed(),
+    data: new Uint8Array(processed.mainAvatarDetails.outputBuffer),
+    domain: 'profilePic',
+  });
+  const profileKey = encryptedContent.encryptionKey;
 
-  // Note: currently deterministic encryption is not supported for group's avatars
-  const deterministicEncryption = false;
-
-  const uploadedFileDetails = await uploadFileToFsWithOnionV4(
-    encryptedData,
-    deterministicEncryption
-  );
+  const uploadedFileDetails = await uploadFileToFsWithOnionV4(encryptedContent.encryptedData);
   if (!uploadedFileDetails || !uploadedFileDetails.fileUrl) {
     window?.log?.warn('File upload for groupv2 to file server failed');
     throw new Error('File upload for groupv2 to file server failed');

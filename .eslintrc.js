@@ -237,5 +237,13 @@ module.exports = {
         ],
       },
     },
+    {
+      // generated/locales.ts emits a superset of `WithXxx` arg-shape types, some of which are
+      // unused for the current string set (e.g. WithPlatformStoreOther). The matching
+      // `noUnusedLocals: false` in ts/localization/tsconfig.json only silences tsc (TS6196),
+      // so the eslint rule has to be turned off separately.
+      files: ['ts/localization/generated/*.ts'],
+      rules: { '@typescript-eslint/no-unused-vars': 'off' },
+    },
   ],
 };

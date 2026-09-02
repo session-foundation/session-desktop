@@ -68,6 +68,8 @@ import {
 } from '../../state/selectors/selectedConversation';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { sleepFor } from '../../session/utils/Promise';
+import { uuidV4 } from '../../util/uuid';
+import { shouldScrollAfterSend } from './shouldScrollAfterSend';
 
 interface State {
   isDraggingFile: boolean;
@@ -217,7 +219,14 @@ export class SessionConversation extends Component<Props, State> {
       // this needs to be awaited otherwise, the scrollToNow won't find the new message in the db.
       // and this make the showScrollButton to be visible (even if we just scrolled to now)
       await conversationModel.sendMessage(msg);
-      await this.scrollToNowWithRetries(5);
+      if (
+        shouldScrollAfterSend({
+          selectedConversationKey: this.props.selectedConversationKey,
+          sentConversationId: msg.conversationId,
+        })
+      ) {
+        await this.scrollToNowWithRetries(5);
+      }
     };
 
     const recoveryPhrase = getCurrentRecoveryPhrase();
@@ -478,6 +487,7 @@ export class SessionConversation extends Component<Props, State> {
         this.addAttachments([attachmentWithVideoPreview]);
       } else {
         const attachment: StagedAttachmentType = {
+          stagedAttachmentId: uuidV4(),
           file,
           size: file.size,
           contentType,
@@ -509,6 +519,7 @@ export class SessionConversation extends Component<Props, State> {
       );
       this.addAttachments([
         {
+          stagedAttachmentId: uuidV4(),
           file,
           size: file.size,
           contentType,
@@ -617,6 +628,7 @@ const renderVideoPreview = async (contentType: string, file: File, fileName: str
       type,
     });
     return {
+      stagedAttachmentId: uuidV4(),
       file,
       size: file.size,
       fileName,
@@ -642,6 +654,7 @@ const renderImagePreview = async (contentType: string, file: File, fileName: str
       throw new Error('Failed to create object url for image!');
     }
     return {
+      stagedAttachmentId: uuidV4(),
       file,
       size: file.size,
       fileName,
@@ -666,6 +679,7 @@ const renderImagePreview = async (contentType: string, file: File, fileName: str
   });
 
   return {
+    stagedAttachmentId: uuidV4(),
     file,
     size: file.size,
     fileName,

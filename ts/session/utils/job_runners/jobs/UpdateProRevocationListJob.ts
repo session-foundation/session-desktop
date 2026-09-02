@@ -12,8 +12,15 @@ import { DURATION } from '../../../constants';
 import { getFeatureFlag } from '../../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { ProRevocationCache } from '../../../revocation_list/pro_revocation_list';
 import { stringify } from '../../../../types/sqlSharedTypes';
-import { proBackendDataActions } from '../../../../state/ducks/proBackendData';
-import { getCachedUserConfig } from '../../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
+import {
+  persistProConfigWrite,
+  proBackendDataActions,
+} from '../../../../state/ducks/proBackendData';
+import { refreshProAccess } from '../../../../state/ducks/proAccess';
+import {
+  getCachedUserConfig,
+  UserConfigWrapperActions,
+} from '../../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 import { ConvoHub } from '../../../conversations';
 import { uuidV4 } from '../../../../util/uuid';
 import { SettingsKey } from '../../../../data/settings-key';
@@ -74,9 +81,6 @@ class UpdateProRevocationListJob extends PersistedJob<UpdateProRevocationListPer
   }
 
   public async run(): Promise<RunJobResult> {
-    if (!getFeatureFlag('proAvailable')) {
-      return RunJobResult.Success;
-    }
     const start = Date.now();
 
     try {
@@ -93,75 +97,87 @@ class UpdateProRevocationListJob extends PersistedJob<UpdateProRevocationListPer
         );
       }
 
-      if (response?.status_code !== 200) {
+      if (!response || response.status !== 'ok') {
         window.log.debug(`UpdateProRevocationListJob run() failed: ${JSON.stringify(response)}`);
         window.log.warn(`UpdateProRevocationListJob run() failed. Will retry soon if possible`);
         return RunJobResult.RetryJobIfPossible;
       }
 
-      const retryInSecondsFromBackend = response.result.retry_in_s;
-      const retryInSeconds = Math.max(retryInSecondsFromBackend, 0);
-
-      const retryAtMs = Date.now() + toNumber(retryInSeconds) * DURATION.SECONDS;
+      // libsession already resolved the backend's retry-after into an absolute unix instant (ms),
+      // clamped to now; we just persist it as the next run time — no arithmetic here.
+      const { retryAtMs } = response;
 
       window.log.debug(
-        `UpdateProRevocationListJob: got 'retry_in_s' from server: ${retryInSeconds}, i.e we will retryAtMs: ${retryAtMs}`
+        `UpdateProRevocationListJob: next revocation refresh at retryAtMs: ${retryAtMs}`
       );
       await updateNextRunAtMs(retryAtMs);
 
-      if (response.result.ticket <= ticketFromDb) {
+      if (response.ticket <= ticketFromDb) {
         window.log.debug(
           `UpdateProRevocationListJob: no new revocations from our existing ticket #${ticketFromDb}`
         );
 
         return RunJobResult.Success;
       }
-      const newTicket = response.result.ticket;
-      const newItems = response.result.items;
+      const newTicket = response.ticket;
+      const newItems = response.items;
 
       window.log.debug(
-        `UpdateProRevocationListJob: new revocations from ticket #${ticketFromDb}: to #${newTicket}. items: ${stringify(response.result.items)}`
+        `UpdateProRevocationListJob: new revocations from ticket #${ticketFromDb}: to #${newTicket}. items: ${stringify(response.items)}`
       );
 
       // Note: we only want to update the lastRunAt once we have successfully fetched the new revocations
       await ProRevocationCache.setTicket(newTicket);
       await ProRevocationCache.setListItems(newItems);
 
+      // A revocation can invalidate our own proof without anything else moving, so the rendered ACCESS
+      // value has to be recomputed here. The enforcement paths read the list directly and are already
+      // correct at this point; this is only the mirror catching up.
+      refreshProAccess();
+
       window.log.info(
-        `UpdateProRevocationListJob: new revocations from ticket #${ticketFromDb}: to #${newTicket}. itemsCount: ${response.result.items.length}`
+        `UpdateProRevocationListJob: new revocations from ticket #${ticketFromDb}: to #${newTicket}. itemsCount: ${response.items.length}`
       );
 
       const ourProConfig = getCachedUserConfig().proConfig;
 
       if (
         ourProConfig &&
-        ourProConfig.proProof.genIndexHashB64 &&
+        ourProConfig.proProof.revocationTagB64 &&
         // `ProRevocationCache.setListItems` above updated the cache, so we can use it here
-        ProRevocationCache.isB64HashEffectivelyRevoked(ourProConfig.proProof.genIndexHashB64)
+        ProRevocationCache.isB64HashEffectivelyRevoked(ourProConfig.proProof.revocationTagB64)
       ) {
-        // if we've been revoked, refresh our pro proof.
-        // this will fetch the new one if one is provided or just remove it from our config.
+        // Our own proof is revoked: clear it directly. The renewal loop won't do this for us —
+        // renewal_target treats a still-unexpired proof as "not due", so a revoked-but-unexpired
+        // proof would otherwise linger in config (and stay attachable, §6.1) until natural expiry.
+        //
+        // The status fetch is immediate: what the account is now cannot be known locally — the access
+        // expiry is still the old, future one — and a fetch from before this revocation cannot have
+        // observed it, which is the assumption the routine floor rests on. It also ends the acquire
+        // loop, which libsession runs while the access expiry is still ahead of now.
         window.log.info(
-          `UpdateProRevocationListJob: our current genIndexHash is revoked. Refreshing our pro proof.`
+          `UpdateProRevocationListJob: our current revocation tag is revoked. Clearing our pro proof.`
         );
+        await UserConfigWrapperActions.removeProConfig();
+        await persistProConfigWrite();
         window.inboxStore?.dispatch(
-          proBackendDataActions.refreshGetProDetailsFromProBackend({}) as any
+          proBackendDataActions.refreshGetProStatusFromProBackend({ immediate: true }) as any
         );
       }
-      // find all the conversations that have a revoked genIndexHAsh and trigger a UI refresh on them
+      // find all the conversations that have a revoked revocation tag and trigger a UI refresh on them
       const convos = ConvoHub.use().getConversations();
       convos.forEach(m => {
         const proDetails = m.dbContactProDetails();
-        if (!proDetails?.proGenIndexHashB64) {
+        if (!proDetails?.proRevocationTagB64) {
           return;
         }
         const revoked = ProRevocationCache.isB64HashEffectivelyRevoked(
-          proDetails.proGenIndexHashB64
+          proDetails.proRevocationTagB64
         );
 
         if (revoked) {
           window.log.debug(
-            `UpdateProRevocationListJob: found an effectively revoked genIndexHash for convo ${m.idForLogging()}. Triggering UI refresh.`
+            `UpdateProRevocationListJob: found an effectively revoked revocation tag for convo ${m.idForLogging()}. Triggering UI refresh.`
           );
           m.triggerUIRefresh();
         }
@@ -221,11 +237,32 @@ async function queueNewJobIfNeeded() {
 }
 
 /**
+ * Backdate the next-run instant so the startup gate below decides, on its own terms, to poll now.
+ *
+ * The gate is left exactly as it is: this changes what it reads, not what it does, so a spec that relies
+ * on a poll is still exercising the path that ships. Bypassing the gate with a direct fetch would let the
+ * spec pass while the real polling path was broken.
+ *
+ * One-shot. The poll it releases stores a fresh `retry_in` from the backend — 24h against the QA
+ * backend — so the next launch is gated again unless the variable is still set.
+ */
+async function backdateNextRunIfForced() {
+  if (!getFeatureFlag('forceProRevocationRefresh')) {
+    return;
+  }
+  window.log.info(
+    'UpdateProRevocationListJob: SESSION_FORCE_PRO_REVOCATION_REFRESH is set; backdating the next-run instant so the startup gate polls now.'
+  );
+  await updateNextRunAtMs(Date.now() - 1);
+}
+
+/**
  * Run, and await the UpdateProRevocationListJob on startup.
  * Note: this is only run if the nextRunAtMs is unset or is already passed.
  */
 async function runOnStartup() {
   try {
+    await backdateNextRunIfForced();
     const now = Date.now();
     const refreshedNextRunAtMs = await refreshNextRunAtMsIfNeeded();
 

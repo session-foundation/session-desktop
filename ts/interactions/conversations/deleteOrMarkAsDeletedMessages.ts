@@ -30,7 +30,7 @@ export async function deleteOrMarkAsDeletedMessages({
       await conversation.removeMessage(message.id);
     } else {
       // just mark the message as deleted but still show in conversation
-      await message.markAsDeleted(deletionType);
+      await message.markAsDeleted(deletionType, { shouldMarkAsRead: actionContextIsUI });
     }
   }
 }

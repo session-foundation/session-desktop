@@ -147,21 +147,21 @@ describe('fillConvoAttributesWithDefaults', () => {
     });
   });
 
-  describe('proGenIndexHashB64', () => {
-    it('initialize proGenIndexHashB64 if not given', () => {
+  describe('proRevocationTagB64', () => {
+    it('initialize proRevocationTagB64 if not given', () => {
       expect(fillConvoAttributesWithDefaults({} as ConversationAttributes)).to.have.deep.property(
-        'proGenIndexHashB64',
+        'proRevocationTagB64',
         undefined
       );
     });
 
-    it('do not override proGenIndexHashB64 if given', () => {
+    it('do not override proRevocationTagB64 if given', () => {
       expect(
         fillConvoAttributesWithDefaults({
-          proGenIndexHashB64: to_base64('123456789123456789123456789123456789'),
+          proRevocationTagB64: to_base64('123456789123456789123456789123456789'),
         } as ConversationAttributes)
       ).to.have.deep.property(
-        'proGenIndexHashB64',
+        'proRevocationTagB64',
         to_base64('123456789123456789123456789123456789')
       );
     });

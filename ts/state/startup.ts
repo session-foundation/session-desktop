@@ -26,7 +26,15 @@ import type { UserGroupState } from './ducks/userGroups';
 import { initialThemeState } from './theme/ducks/theme';
 import { initialNetworkModalState } from './ducks/networkModal';
 import { initialNetworkDataState, networkDataActions } from './ducks/networkData';
-import { initialProBackendDataState, proBackendDataActions } from './ducks/proBackendData';
+import {
+  applyMockedProStatusAtStartup,
+  initialProBackendDataState,
+  proBackendDataActions,
+  reconcileProProof,
+  refreshProStatusOnStartupIfNeeded,
+} from './ducks/proBackendData';
+import { setProUserConfigChangedHandler } from '../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
+import { initialProAccessState, refreshProAccess } from './ducks/proAccess';
 import { MessageQueue } from '../session/sending';
 import { AvatarMigrate } from '../session/utils/job_runners/jobs/AvatarMigrateJob';
 import { handleTriggeredCTAs } from '../components/dialog/SessionCTA';
@@ -93,6 +101,7 @@ async function createSessionInboxStore() {
     networkModal: initialNetworkModalState,
     networkData: initialNetworkDataState,
     proBackendData: initialProBackendDataState,
+    proAccess: initialProAccessState,
     announcements: initialAnnouncementState,
   };
 
@@ -165,14 +174,56 @@ export const doAppStartUp = async () => {
     })
   );
 
+  // React to synced config delivering new Pro values. Registered here rather than dispatched from the
+  // libsession layer, which reports the change but should not decide what it means.
+  setProUserConfigChangedHandler(({ accessValuesChanged, proofChanged }) => {
+    if (proofChanged) {
+      // The proof is ACCESS, so the rendered mirror has to follow it immediately. No fetch: a new proof
+      // is not news about the plan, and treating it as such would hit the backend on every renewal.
+      refreshProAccess();
+    }
+    if (accessValuesChanged) {
+      // Dispatched unconditionally: the thunk applies the persisted status floor itself, which is the
+      // right bound — a second one here would be per-run, so a relaunch would defeat it.
+      window.inboxStore?.dispatch(
+        proBackendDataActions.refreshGetProStatusFromProBackend({}) as any
+      );
+      // Not floored: entitlement comes from the proof, and libsession decides on its own whether one is
+      // actually due.
+      void reconcileProProof();
+    }
+  });
+
+  // Seed the rendered ACCESS value from the config we already hold. Deliberately outside the
+  // swarm-ready block below: what a held proof entitles us to is answerable with no network at all, and
+  // the first projection of an existing account is swallowed by design, so nothing else would set it.
+  refreshProAccess();
+
+  // Deliberately NOT inside the swarm-ready block below: the whole point of the mock is to reach the
+  // expiry CTAs without a backend round trip, and waiting on the swarm would put a network dependency
+  // back in front of it.
+  const proStatusMocked = window.inboxStore?.dispatch
+    ? await applyMockedProStatusAtStartup(window.inboxStore.dispatch)
+    : false;
+
   // eslint-disable-next-line more/no-then
   void SnodePool.getFreshSwarmFor(UserUtils.getOurPubKeyStrFromCache()).then(async () => {
     window.log.debug('appStartup: got our fresh swarm, starting polling');
     // trigger any other actions that need to be done after the swarm is ready
     window.inboxStore?.dispatch(networkDataActions.fetchInfoFromSeshServer() as any);
-    window.inboxStore?.dispatch(
-      proBackendDataActions.refreshGetProDetailsFromProBackend({}) as any
-    );
+    // Trigger #1, gated: a cold start only fetches get_pro_status when a home CTA could plausibly
+    // fire, and at most once/24h. Also arms the #6 wake at the account horizon for this session.
+    //
+    // Suppressed when the mocks have already answered for this run: letting both go lets a real
+    // response land on top of a mocked CTA decision moments later.
+    if (!proStatusMocked) {
+      await refreshProStatusOnStartupIfNeeded();
+    }
+    // Deliberately outside the gate, mirroring iOS (`SessionProManager.swift`), where the gated status
+    // fetch and the proof reconcile are two separate statements. Entitlement comes from the proof, so a
+    // relaunch has to be able to notice a renewal is due even on a launch that skips the status fetch —
+    // the loop is otherwise only ever kicked by that fetch.
+    void reconcileProProof();
     if (window.inboxStore) {
       const delayedTimeout = getDataFeatureFlag('useLocalDevNet') && isTestIntegration() ? 2000 : 0;
       /**

@@ -16,15 +16,13 @@ import { lookupQuoteInStore, pushQuotedMessageDetails } from '../state/ducks/con
 import { selectMemberInviteSentOutsideRedux } from '../state/selectors/groups';
 import { LinkPreviews } from '../util/linkPreviews';
 import { GroupV2Receiver } from './groupv2/handleGroupV2Message';
-import { Constants } from '../session';
+import LIBSESSION_CONSTANTS from '../session/utils/libsession/libsession_constants';
 import { longOrNumberToNumber } from '../types/long/longOrNumberToNumber';
 import { getHideMessageRequestBannerOutsideRedux } from '../state/selectors/settings';
 import { showMessageRequestBannerOutsideRedux } from '../state/ducks/settings';
-import { getFeatureFlag } from '../state/ducks/types/releasedFeaturesReduxTypes';
 import type { StateType } from '../state/reducer';
 import { isUsFromCache } from '../session/utils/User';
 import { isUsAnySogsFromCache } from '../session/apis/open_group_api/sogsv3/knownBlindedkeys';
-import { ProWrapperActions } from '../webworker/workers/browser/libsession_worker_interface';
 
 export async function pushQuotedMessageToStoreIfNeeded(quoteDetails: {
   id: Long | number;
@@ -231,18 +229,24 @@ async function handleRegularMessage(
 
   handleLinkPreviews(rawDataMessage.body, rawDataMessage.preview, message);
 
-  // NOTE: The truncation value must be the Pro count so when Pro is released older clients wont truncate pro messages.
-  const maxChars =
-    !getFeatureFlag('proAvailable') || sendingDeviceConversation.hasValidCurrentProProof()
-      ? Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_PRO
-      : Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_STANDARD;
+  // Sized from the proof THIS message carried, not from what we had stored for its sender. The stored
+  // record is only ever refreshed by a message that also carries a profile block
+  // (buildPrivateProfileChangeFromSwarmDataMessage returns null without one), so sizing from it made the
+  // limit depend on the profile rather than on the proof: a first message from a newly-Pro sender, or any
+  // message sent without a profile, would be cut against a record that had never heard of their proof.
+  // iOS and Android both read the arriving proof here.
+  //
+  // Our own synced messages keep reading our own access instead: that path resolves through our config
+  // rather than a contact record, so it never had the coupling this removes.
+  const senderIsProForThisMessage = sendingDeviceConversation.isMe()
+    ? sendingDeviceConversation.hasValidCurrentProProof()
+    : decodedEnvelope.proProofEntitlesFeaturesNow();
 
-  const { truncateAt } = await ProWrapperActions.utf16CountTruncatedToCodepoints({
-    utf16: rawDataMessage.body,
-    codepointLen: maxChars,
-  });
+  const maxChars = senderIsProForThisMessage
+    ? LIBSESSION_CONSTANTS.MESSAGE_CHARACTER_LIMIT_PRO
+    : LIBSESSION_CONSTANTS.MESSAGE_CHARACTER_LIMIT_STANDARD;
 
-  const body = rawDataMessage.body.slice(0, truncateAt);
+  const body = [...rawDataMessage.body].slice(0, maxChars).join('');
 
   message.set({
     // quote: rawDataMessage.quote, // do not do this copy here, it must be done only in copyFromQuotedMessage()
@@ -289,8 +293,15 @@ async function handleRegularMessage(
         : null
     );
 
-    // a new message was received for that conversation. If it was not it should not be hidden anymore
-    await conversation.unhideIfNeeded(false);
+    // A conversation is resurfaced by someone else messaging you. A copy of our own message, synced
+    // from another of our devices, arrives here the same way but is not that — nobody has contacted
+    // us — so a conversation we hid stays hidden.
+    //
+    // Keyed on the sender rather than on the conversation: Note to Self is where our own messages
+    // always land, but they can sync into any conversation, and the question is who sent it.
+    if (!isUsFromCache(decodedEnvelope.getAuthor())) {
+      await conversation.unhideIfNeeded(false);
+    }
   }
 
   // we just received a message from that user so we reset the typing indicator for this convo

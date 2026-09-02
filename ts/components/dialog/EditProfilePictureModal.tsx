@@ -29,7 +29,6 @@ import {
   ModalBasicHeader,
   SessionWrapperModal,
 } from '../SessionWrapperModal';
-import { getIsProAvailableMemo } from '../../hooks/useIsProAvailable';
 import { SpacerLG, SpacerSM } from '../basic/Text';
 import { AvatarSize } from '../avatar/Avatar';
 import { ProIconButton } from '../buttons/ProButton';
@@ -44,7 +43,7 @@ import {
   useUpdateConversationDetailsModal,
 } from '../../state/selectors/modal';
 import { CTAVariant } from './cta/types';
-import { useCurrentUserHasPro } from '../../hooks/useHasPro';
+import { useCurrentUserHasPro, useCurrentUserHasProAccess } from '../../hooks/useHasPro';
 
 const StyledAvatarContainer = styled.div`
   cursor: pointer;
@@ -138,8 +137,10 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
 
   const isMe = useIsMe(conversationId);
   const isCommunity = useIsPublic(conversationId);
-  const weHavePro = useCurrentUserHasPro() && isMe;
-  const isProAvailable = getIsProAvailableMemo();
+  // ACCESS gates the capability: uploading an animated avatar needs a usable proof, whatever the plan
+  // says. DISPLAY decides only what we tell the user about it — see both uses below.
+  const weHavePro = useCurrentUserHasProAccess() && isMe;
+  const planReadsActive = useCurrentUserHasPro() && isMe;
 
   const avatarPath = useAvatarPath(conversationId) || '';
 
@@ -178,7 +179,9 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
     context: 'edit-profile-pic',
     args: {
       cta: {
-        variant: weHavePro
+        // DISPLAY: this badge explains the feature rather than granting it, so it describes the plan.
+        // A user mid-overhang (plan lapsed, proof still valid) is correctly offered the upgrade.
+        variant: planReadsActive
           ? CTAVariant.PRO_ANIMATED_DISPLAY_PICTURE_ACTIVATED
           : CTAVariant.PRO_ANIMATED_DISPLAY_PICTURE,
         afterActionButtonCallback,
@@ -229,15 +232,24 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
      * C. Community admin uploading a community profile picture
      * All of those are taken care of as part of the `isProUser` check in the conversation model
      */
-    if (isProAvailable && !weHavePro && isNewAvatarAnimated && !isCommunity) {
-      dispatch(
-        updateSessionCTA({
-          variant: CTAVariant.PRO_ANIMATED_DISPLAY_PICTURE,
-          afterActionButtonCallback,
-          actionButtonNextModalAfterCloseCallback,
-        })
+    if (!weHavePro && isNewAvatarAnimated && !isCommunity) {
+      // The refusal is ACCESS and unconditional. Whether we explain it by offering Pro is DISPLAY.
+      //
+      // With an active plan and no usable proof, the refusal is silent: every string available here
+      // offers a purchase, and there is none for a plan that is already active. Reaching for the upsell
+      // anyway would sell a subscription the user is already paying for.
+      if (!planReadsActive) {
+        dispatch(
+          updateSessionCTA({
+            variant: CTAVariant.PRO_ANIMATED_DISPLAY_PICTURE,
+            afterActionButtonCallback,
+            actionButtonNextModalAfterCloseCallback,
+          })
+        );
+      }
+      window.log.debug(
+        `Attempted to upload an animated profile picture without pro! upsell shown: ${!planReadsActive}`
       );
-      window.log.debug('Attempted to upload an animated profile picture without pro!');
       return;
     }
 

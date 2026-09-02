@@ -43,7 +43,7 @@ type WithOptionalName = {
 };
 
 type ProDetailsContact = {
-  proGenIndexHashB64: string | null;
+  proRevocationTagB64: string | null;
   proExpiryTsMs: number | null;
   bitsetProFeatures: bigint | string | null;
 };
@@ -190,7 +190,7 @@ abstract class SessionProfileChanges {
   }
 
   protected applyProDetailsChange(
-    { bitsetProFeatures, proExpiryTsMs, proGenIndexHashB64 }: ProDetailsContact,
+    { bitsetProFeatures, proExpiryTsMs, proRevocationTagB64 }: ProDetailsContact,
     newProfileUpdatedAtSeconds: number | null
   ) {
     let proDetailsChanged = false;
@@ -216,8 +216,11 @@ abstract class SessionProfileChanges {
       this.convo[privateSetKey]('bitsetProFeatures', undefined);
       proDetailsChanged = true;
     }
-    if (!isNil(proGenIndexHashB64) && this.convo.get('proGenIndexHashB64') !== proGenIndexHashB64) {
-      this.convo[privateSetKey]('proGenIndexHashB64', proGenIndexHashB64);
+    if (
+      !isNil(proRevocationTagB64) &&
+      this.convo.get('proRevocationTagB64') !== proRevocationTagB64
+    ) {
+      this.convo[privateSetKey]('proRevocationTagB64', proRevocationTagB64);
       proDetailsChanged = true;
     }
     if (!isNil(proExpiryTsMs) && this.convo.get('proExpiryTsMs') !== proExpiryTsMs) {
@@ -530,7 +533,7 @@ const emptyProDetails = {
   proDetails: {
     bitsetProFeatures: null,
     proExpiryTsMs: null,
-    proGenIndexHashB64: null,
+    proRevocationTagB64: null,
   },
 };
 
@@ -545,7 +548,7 @@ function buildProProfileDetailsFromContact({
     proDetails: {
       bitsetProFeatures: contact?.proProfileBitset ?? null,
       proExpiryTsMs: convoVolatileDetails?.proExpiryTsMs ?? null,
-      proGenIndexHashB64: convoVolatileDetails?.genIndexHashB64 ?? null,
+      proRevocationTagB64: convoVolatileDetails?.revocationTagB64 ?? null,
     },
   };
 }
@@ -560,7 +563,7 @@ function buildProProfileDetailsFromEnvelope({
   }
   if (
     !decodedEnvelope.validPro.proProfileBitset ||
-    !decodedEnvelope.validPro.proProof.genIndexHashB64
+    !decodedEnvelope.validPro.proProof.revocationTagB64
   ) {
     return emptyProDetails;
   }
@@ -571,7 +574,7 @@ function buildProProfileDetailsFromEnvelope({
         proDetails: {
           bitsetProFeatures: decodedEnvelope.validPro.proProfileBitset,
           proExpiryTsMs: decodedEnvelope.validPro.proProof.expiryMs,
-          proGenIndexHashB64: decodedEnvelope.validPro.proProof.genIndexHashB64,
+          proRevocationTagB64: decodedEnvelope.validPro.proProof.revocationTagB64,
         },
       }
     : emptyProDetails;
@@ -625,7 +628,7 @@ export function buildPrivateProfileChangeFromMetaGroupMember({
       // Pass null to the fields so we don't overwrite them.
       bitsetProFeatures: null, // The member object has no pro details.
       proExpiryTsMs: null, // The member object has no pro details.
-      proGenIndexHashB64: null, // The member object has no pro details.
+      proRevocationTagB64: null, // The member object has no pro details.
     },
   };
   if (member.profilePicture?.url && member.profilePicture?.key) {
@@ -684,7 +687,7 @@ export function buildPrivateProfileChangeFromSwarmDataMessage({
     proDetails: {
       bitsetProFeatures: decodedPro?.proProfileBitset ?? null,
       proExpiryTsMs: decodedPro?.proProof.expiryMs ?? null,
-      proGenIndexHashB64: decodedPro?.proProof.genIndexHashB64 ?? null,
+      proRevocationTagB64: decodedPro?.proProof.revocationTagB64 ?? null,
     },
   };
 
@@ -713,7 +716,7 @@ export async function buildPrivateProfileChangeFromUserProfileUpdate(ourConvo: C
     proDetails: {
       bitsetProFeatures: null, // NTS case, we don't care about those
       proExpiryTsMs: null, // NTS case, we don't care about those
-      proGenIndexHashB64: null, // NTS case, we don't care about those
+      proRevocationTagB64: null, // NTS case, we don't care about those
     },
   };
   return profilePic.url && profilePic.key

@@ -117,7 +117,7 @@ export interface ConversationAttributes {
    */
   bitsetProFeatures?: string;
 
-  proGenIndexHashB64?: string;
+  proRevocationTagB64?: string;
   proExpiryTsMs?: number;
 
   triggerNotificationsFor: ConversationNotificationSettingType;
@@ -181,7 +181,7 @@ export const fillConvoAttributesWithDefaults = (
     lastMessageInteractionStatus: null,
 
     bitsetProFeatures: undefined,
-    proGenIndexHashB64: undefined,
+    proRevocationTagB64: undefined,
     proExpiryTsMs: undefined,
 
     triggerNotificationsFor: 'all', // if the settings is not set in the db, this is the default

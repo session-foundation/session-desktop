@@ -9,7 +9,7 @@ import { formatNumber } from '../../util/i18n/formatting/generics';
 import { assertUnreachable } from '../../types/sqlSharedTypes';
 import { ProIconButton } from '../buttons/ProButton';
 import { CTAVariant, type ProCTAVariant } from './cta/types';
-import { useProBackendProDetails } from '../../state/selectors/proBackendData';
+import { useProBackendProStatus } from '../../state/selectors/proBackendData';
 
 const variantsWithoutFeatureList = [
   CTAVariant.PRO_GROUP_NON_ADMIN,
@@ -96,7 +96,7 @@ function FeatureList({ variant }: { variant: CTAVariant }) {
 }
 
 function ProExpiringSoonDescription() {
-  const { data } = useProBackendProDetails();
+  const { data } = useProBackendProStatus();
   return <Localizer token="proExpiringSoonDescription" time={data.expiryTimeRelativeString} />;
 }
 

@@ -44,15 +44,17 @@ export function PanelLabelWithDescription({
   title,
   extraInlineNode,
   description,
+  dataTestId,
 }: {
   title: TrArgs;
   extraInlineNode?: ReactNode;
   description?: TrArgs;
+  dataTestId?: SessionDataTestId;
 }) {
   return (
     <StyledPanelLabelWithDescription>
       {/* less space between the label and the description */}
-      <StyledPanelLabel>
+      <StyledPanelLabel data-testid={dataTestId}>
         <Localizer {...title} />
         {extraInlineNode}
       </StyledPanelLabel>
@@ -105,15 +107,17 @@ type PanelButtonGroupProps = {
   style?: CSSProperties;
   isSidePanel?: boolean;
   withBorder?: boolean;
+  dataTestId?: SessionDataTestId;
 };
 
 export const PanelButtonGroup = (
   props: PanelButtonGroupProps & { containerStyle?: CSSProperties }
 ) => {
-  const { children, style, containerStyle, isSidePanel, withBorder } = props;
+  const { children, style, containerStyle, isSidePanel, withBorder, dataTestId } = props;
   const isDarkTheme = useIsDarkTheme();
   return (
     <StyledRoundedPanelButtonGroup
+      data-testid={dataTestId}
       style={style}
       $isSidePanel={isSidePanel}
       $withBorder={withBorder}

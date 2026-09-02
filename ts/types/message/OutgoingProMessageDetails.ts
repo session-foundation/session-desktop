@@ -58,17 +58,17 @@ export class OutgoingProMessageDetails {
       }
       return null;
     }
-    const { expiryMs, genIndexHashB64, rotatingPubkeyHex, signatureHex, version } =
-      this.proConfig.proProof;
+    const { expiryMs, revocationTagB64, rotatingPubkeyHex, signatureHex } = this.proConfig.proProof;
 
     return new SignalService.ProMessage({
       profileBitset: bigIntToLong(this.proProfileBitset),
       messageBitset: bigIntToLong(this.proMessageBitset),
       proof: {
-        expireAtMs: expiryMs,
-        genIndexHash: from_base64(genIndexHashB64, base64_variants.ORIGINAL),
+        // The proof expiry travels as whole seconds on the wire (what libsession signs over and
+        // parses via `as_sys_seconds`); our JS domain keeps it in ms, so convert back down here.
+        expiryUnixTs: Math.floor(expiryMs / 1000),
+        revocationTag: from_base64(revocationTagB64, base64_variants.ORIGINAL),
         rotatingPublicKey: from_hex(rotatingPubkeyHex),
-        version,
         sig: from_hex(signatureHex),
       },
     });

@@ -14,7 +14,11 @@ import { isReleaseChannel, type ReleaseChannels } from '../../../updater/types';
 import { Storage } from '../../../util/storage';
 import { OnionV4 } from '../../onions/onionv4';
 import { FileFromFileServerDetails } from './types';
-import { queryParamDeterministicEncryption, queryParamServerEd25519Pubkey } from '../../url';
+import {
+  queryParamDeterministicEncryption,
+  queryParamServerEd25519Pubkey,
+  stringifyFragmentParams,
+} from '../../url';
 import { FS, type FILE_SERVER_TARGET_TYPE } from './FileServerTarget';
 import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { stringify } from '../../../types/sqlSharedTypes';
@@ -33,18 +37,22 @@ function getShortTTLHeadersIfNeeded(): Record<string, string> {
 /**
  * Upload a file to the file server v2 using the onion v4 encoding
  * @param fileContent the data to send
- * @param deterministicEncryption whether the file is deterministically encrypted or not
  * @returns null or the complete URL to share this file
  */
 export const uploadFileToFsWithOnionV4 = async (
-  fileContent: ArrayBuffer,
-  deterministicEncryption: boolean
+  fileContent: ArrayBuffer
 ): Promise<{ fileUrl: string; expiresMs: number } | null> => {
   if (!fileContent || !fileContent.byteLength) {
     return null;
   }
 
-  const target = process.env.POTATO_FS ? 'POTATO' : 'DEFAULT';
+  // TEST wins over POTATO: a run that configured a local file server meant it, and falling through to
+  // a remote one would put the upload somewhere the test cannot reach.
+  const target = FS.isTestFileServerConfigured()
+    ? 'TEST'
+    : process.env.POTATO_FS
+      ? 'POTATO'
+      : 'DEFAULT';
 
   const result = await OnionSending.sendBinaryViaOnionV4ToFileServer({
     abortSignal: new AbortController().signal,
@@ -79,10 +87,8 @@ export const uploadFileToFsWithOnionV4 = async (
   if (target !== 'DEFAULT') {
     urlParams.set(queryParamServerEd25519Pubkey, FS.FILE_SERVERS[target].edPk);
   }
-  if (deterministicEncryption) {
-    urlParams.set(queryParamDeterministicEncryption, '');
-  }
-  const urlParamStr = urlParams.toString();
+  urlParams.set(queryParamDeterministicEncryption, '');
+  const urlParamStr = stringifyFragmentParams(urlParams);
   const fileUrl = `${FS.FILE_SERVERS[target].url}${FILE_ENDPOINT}/${fileId}${urlParamStr ? `#${urlParamStr}` : ''}`;
   const expiresMs = Math.floor(expires * 1000);
   return {

@@ -36,6 +36,7 @@ async function handlePublicMessageSentSuccess(
       sentSync: true,
     });
     await foundMessage.commit();
+    await foundMessage.addProFeaturesToStats();
     foundMessage.getConversation()?.updateLastMessage();
   } catch (e) {
     window?.log?.error('Error setting public on message');
@@ -124,6 +125,13 @@ async function handleSwarmMessageSentSuccess({
   const isPrivateSyncMessage = isOurDevice && fetchedMessage.get('sentSync');
   const shouldMarkMessageAsSynced = isPrivateSyncMessage || isClosedGroupMessage;
 
+  fetchedMessage.set({
+    sent_at: sentAtMs,
+    sent: true,
+    errors: undefined,
+  });
+  await fetchedMessage.commit();
+  await fetchedMessage.addProFeaturesToStats();
   // Handle the sync logic here
   if (shouldTriggerSyncMessage && plainTextBuffer) {
     try {
@@ -160,7 +168,6 @@ async function handleSwarmMessageSentSuccess({
   fetchedMessage.set({
     sent_to: sentTo,
     sent: true,
-    sent_at: sentAtMs,
     errors: undefined,
   });
 
@@ -173,6 +180,7 @@ async function handleSwarmMessageSentSuccess({
   }
 
   await fetchedMessage.commit();
+  await fetchedMessage.addProFeaturesToStats();
   fetchedMessage.getConversation()?.updateLastMessage();
 }
 
