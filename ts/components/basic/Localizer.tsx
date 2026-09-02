@@ -46,6 +46,29 @@ export type WithClassName = { className?: string };
  */
 export type WithHtmlArgs = { htmlArgs?: Array<string> };
 
+const allowedHtmlArgsWithFormattingTags = ['pro_stores'];
+
+/**
+ * True when one of the trusted `htmlArgs` values carries formatting tags of its own. Such a value
+ * needs the HTML render path even when the template has no tags at all, or its markup is displayed
+ * as text (e.g. the `<br/>•` list substituted into `{pro_stores}`).
+ */
+function htmlArgsContainFormattingTags(
+  args: Record<string, number | string> | undefined,
+  htmlArgKeys: Array<string> | undefined
+): boolean {
+  if (!args || !htmlArgKeys?.length) {
+    return false;
+  }
+  return Object.entries(args).some(
+    ([key, value]) =>
+      htmlArgKeys.includes(key) &&
+      allowedHtmlArgsWithFormattingTags.includes(key) &&
+      typeof value === 'string' &&
+      createSupportedFormattingTagsRegex().test(value)
+  );
+}
+
 /**
  * Retrieve a localized message string, substituting dynamic parts where necessary and formatting it as HTML if necessary.
  *
@@ -59,19 +82,21 @@ export const Localizer = <T extends MergedLocalizerTokens>(
   props: GetMessageArgs<T> & WithAsTag & WithClassName & WithHtmlArgs
 ) => {
   const args = messageArgsToArgsOnly(props);
+  const htmlArgKeys = props.htmlArgs;
 
   let rawString: string = getRawMessage<T>(getCrowdinLocale(), props);
 
-  const containsFormattingTags = createSupportedFormattingTagsRegex().test(rawString);
-  // When the template has formatting tags we HTML-escape the args so dynamic values can't inject
-  // markup. Args named in `htmlArgs` opt out of that escaping so they can carry trusted, pre-formatted
-  // HTML (e.g. a client-built <br/>• list) — still XSS-safe because SessionHtmlRenderer runs DOMPurify
+  const containsFormattingTags =
+    createSupportedFormattingTagsRegex().test(rawString) ||
+    htmlArgsContainFormattingTags(args as Record<string, number | string> | undefined, htmlArgKeys);
+  // When the result is rendered as HTML we escape the args so dynamic values can't inject markup.
+  // Args named in `htmlArgs` opt out of that escaping so they can carry trusted, pre-formatted HTML
+  // (e.g. a client-built <br/>• list) — still XSS-safe because SessionHtmlRenderer runs DOMPurify
   // (supportedFormattingTags whitelist) on the final string.
   const cleanArgs = ((): typeof args => {
     if (!args || !containsFormattingTags) {
       return args;
     }
-    const htmlArgKeys = props.htmlArgs;
     if (!htmlArgKeys?.length) {
       return sanitizeArgs(args) as typeof args;
     }
