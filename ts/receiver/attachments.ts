@@ -13,6 +13,7 @@ import { OpenGroupRequestCommonType } from '../data/types';
 import { downloadFileFromFileServer } from '../session/apis/file_server_api/FileServerApi';
 import { FileFromFileServerDetails } from '../session/apis/file_server_api/types';
 import { MultiEncryptWrapperActions } from '../webworker/workers/browser/libsession_worker_interface';
+import { validateDownloadedSogsAttachment } from './sogsAttachmentDownload';
 
 /**
  * Note: the url must have the serverPubkey as a query parameter
@@ -105,9 +106,10 @@ export async function downloadAttachmentFs(attachment: {
 export async function downloadAttachmentSogsV3(
   attachment: {
     url: string;
-    size: number | null;
+    size?: number | null;
   },
-  roomInfos: OpenGroupRequestCommonType
+  roomInfos: OpenGroupRequestCommonType,
+  options: { allowUnknownSize?: boolean } = {}
 ) {
   const roomDetails = OpenGroupData.getV2OpenGroupRoomByRoomId(roomInfos);
   if (!roomDetails) {
@@ -124,33 +126,11 @@ export async function downloadAttachmentSogsV3(
     throw new Error(`Failed to download attachment. Length is 0 for ${attachment.url}`);
   }
 
-  if (attachment.size === null) {
-    return {
-      ...omit(attachment, 'digest', 'key'),
-      data: dataUint.buffer,
-    };
-  }
-
-  let data = dataUint;
-  if (attachment.size !== dataUint.length) {
-    // we might have padding, check that all the remaining bytes are padding bytes
-    // otherwise we have an error.
-    const unpaddedData = getUnpaddedAttachment(dataUint.buffer, attachment.size);
-    if (!unpaddedData) {
-      throw new Error(
-        `downloadAttachment: Size ${attachment.size} did not match downloaded attachment size ${data.byteLength}`
-      );
-    }
-    data = new Uint8Array(unpaddedData);
-  } else {
-    // nothing to do, the attachment has already the correct size.
-    // There is just no padding included, which is what we agreed on
-    // window?.log?.info('Received opengroupv2 unpadded attachment size:', attachment.size);
-  }
+  const data = validateDownloadedSogsAttachment(attachment, dataUint, options);
 
   return {
     ...omit(attachment, 'digest', 'key'),
-    data: data.buffer,
+    data,
   };
 }
 
