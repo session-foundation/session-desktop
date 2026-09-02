@@ -51,7 +51,10 @@ import { useDebugInputCommands } from '../../dialog/debug/hooks/useDebugInputCom
 import { useKeyboardShortcut } from '../../../hooks/useKeyboardShortcut';
 import { isEnterKey, isEscapeKey, KbdShortcut } from '../../../util/keyboardShortcuts';
 import { isEditableTarget } from '../../../util/isEditableTarget';
-import { PopoverTriggerPosition } from '../../SessionTooltip';
+import {
+  getTriggerPositionFromBoundingClientRect,
+  PopoverTriggerPosition,
+} from '../../SessionTooltip';
 import { getAppDispatch } from '../../../state/dispatch';
 import { setIsCompositionTextAreaFocused } from '../../../state/ducks/conversations';
 
@@ -66,6 +69,9 @@ type Props = {
 };
 
 type SearchableSuggestion = SessionSuggestionDataItem & { searchable?: Array<string> };
+
+/** Gap between the caret's line and the suggestion list anchored to it. */
+const CARET_POPOVER_MARGIN_PX = 4;
 
 function isPrintableTypingEvent(event: globalThis.KeyboardEvent) {
   return (
@@ -525,9 +531,9 @@ export function CompositionTextArea(props: Props) {
   });
 
   const handleUpdatePopoverPosition = useCallback(() => {
-    const pos = inputRef.current?.getCaretCoordinates();
-    if (pos) {
-      setPopoverTriggerPos({ x: pos.left, y: pos.top - 6, height: 18, width: 1 });
+    const caret = inputRef.current?.getCaretRect();
+    if (caret) {
+      setPopoverTriggerPos(getTriggerPositionFromBoundingClientRect(caret));
     }
   }, [inputRef]);
 
@@ -667,6 +673,9 @@ export function CompositionTextArea(props: Props) {
           triggerPosition={popoverTriggerPos}
           horizontalPosition="right"
           verticalPosition="top"
+          // Clear of the line being typed: a list flush against the caret covers the input, so clicking
+          // back into the text lands on a suggestion instead of moving the caret.
+          contentMargin={CARET_POPOVER_MARGIN_PX}
         >
           {popoverContent}
         </SessionPopoverContent>

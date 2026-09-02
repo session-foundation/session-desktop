@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { type ReactNode, useMemo, useRef } from 'react';
+import { type ReactNode, useLayoutEffect, useMemo, useState } from 'react';
 import { getFeatureFlagMemo } from '../state/ducks/types/releasedFeaturesReduxTypes';
 import { clampNumber } from '../util/maths';
 import { PopoverTriggerPosition } from './SessionTooltip';
@@ -138,15 +138,46 @@ export const SessionPopoverContent = (props: PopoverProps) => {
   } = props;
   const showPopoverAnchors = getFeatureFlagMemo('showPopoverAnchors');
 
-  const ref = useRef<HTMLDivElement | null>(null);
+  const [content, setContent] = useState<HTMLDivElement | null>(null);
+  const [measured, setMeasured] = useState<{ width: number; height: number } | null>(null);
 
-  const contentWidth = ref.current?.offsetWidth;
-  const contentHeight = ref.current?.offsetHeight;
+  /**
+   * Where the popover goes depends on how big it is, and that is only knowable once it has been laid
+   * out. Reading the size off a ref during render answers with the PREVIOUS render's size — nothing at
+   * all on the first one — and a ref read schedules no re-render, so a popover that mounted before its
+   * content had a size kept the position computed for a 0x0 box until something unrelated happened to
+   * re-render it. Observing the element instead makes the measurement a state change, so the position
+   * follows the content, including when the content resizes under it.
+   */
+  useLayoutEffect(() => {
+    if (!content) {
+      setMeasured(null);
+      return undefined;
+    }
+    const observer = new ResizeObserver(() => {
+      setMeasured({ width: content.offsetWidth, height: content.offsetHeight });
+    });
+    observer.observe(content);
+    return () => {
+      observer.disconnect();
+    };
+  }, [content]);
+
+  const contentWidth = measured?.width;
+  const contentHeight = measured?.height;
 
   const viewportWidth = window.innerWidth;
   const viewportHeight = window.innerHeight;
 
   const show = open && !loading && !!triggerPosition;
+
+  /**
+   * Until the size is known the computed position is not a position at all, just the trigger's own
+   * coordinates — which is to say, on top of whatever the popover was meant to sit clear of. Stay
+   * hidden until the content has been measured, unless the caller supplied the size up front.
+   */
+  const positioned =
+    !!(contentWidth && contentHeight) || !!(fallbackContentWidth && fallbackContentHeight);
 
   const { x, y, pointerOffset, anchorX, finalVerticalPos, bounds } = useMemo(() => {
     if (!show) {
@@ -240,8 +271,8 @@ export const SessionPopoverContent = (props: PopoverProps) => {
   return (
     <>
       <StyledPopover
-        ref={ref}
-        $readyToShow={show}
+        ref={setContent}
+        $readyToShow={show && positioned}
         onClick={onClick}
         x={x}
         y={y}
