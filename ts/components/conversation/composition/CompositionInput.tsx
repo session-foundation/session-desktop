@@ -242,7 +242,8 @@ export type ContentEditableEvent = ContentEditableEventWithoutTarget & {
 
 export interface CompositionInputRef {
   focus: () => void;
-  getCaretCoordinates: () => { left: number; top: number } | null;
+  /** The caret's own box, in viewport coordinates — what a popover anchored to the caret is placed against. */
+  getCaretRect: () => DOMRect | null;
   /**
    * Get the basic visible text.
    *
@@ -361,7 +362,7 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
           return clone.innerText;
         },
 
-        getCaretCoordinates: () => {
+        getCaretRect: () => {
           const el = elRef.current;
           const sel = window.getSelection();
           if (!el || !sel || !sel.rangeCount || !el.contains(sel.anchorNode)) {
@@ -382,7 +383,7 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
             }
           }
 
-          return { left: rect.left + window.pageXOffset, top: rect.bottom + window.pageYOffset };
+          return rect;
         },
 
         getCaretIndex: () => {
