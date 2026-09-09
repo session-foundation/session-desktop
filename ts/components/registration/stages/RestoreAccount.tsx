@@ -1,6 +1,6 @@
 import { Dispatch } from '@reduxjs/toolkit';
 import { isEmpty } from 'lodash';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { getAppDispatch } from '../../../state/dispatch';
 import { ONBOARDING_TIMES } from '../../../session/constants';
 import { InvalidWordsError, NotEnoughWordsError } from '../../../session/crypto/mnemonic';
@@ -165,6 +165,7 @@ export const RestoreAccount = () => {
   const dispatch = getAppDispatch();
 
   const [cannotContinue, setCannotContinue] = useState(true);
+  const signInInFlight = useRef(false);
 
   useRecoveryProgressEffect();
 
@@ -212,6 +213,13 @@ export const RestoreAccount = () => {
       return;
     }
 
+    // A second call racing the first breaks both: `updateOurProfileDisplayNameOnboarding` init/frees
+    // the single UserConfig wrapper, so the loser throws "already init" and frees the wrapper the
+    // winner is still using. Guarding here rather than on the button: enter-to-submit bypasses it.
+    if (signInInFlight.current) {
+      return;
+    }
+    signInInFlight.current = true;
     try {
       const sanitizedName = sanitizeDisplayNameOrToast(displayName);
 
@@ -246,6 +254,8 @@ export const RestoreAccount = () => {
         // The error reported by libsession is not localized
         dispatch(setDisplayNameError(tr('displayNameErrorDescriptionShorter')));
       }
+    } finally {
+      signInInFlight.current = false;
     }
   };
 
