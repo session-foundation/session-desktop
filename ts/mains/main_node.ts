@@ -86,6 +86,7 @@ const appInstance = config.util.getEnv('NODE_APP_INSTANCE') || 0;
 import { initAttachmentsChannel } from '../node/attachment_channel';
 
 import * as updater from '../updater/index';
+import { autoUpdateDisabled } from '../updater/auto_update_disabled';
 
 import { ephemeralConfig } from '../node/config/ephemeral_config';
 import { createTemplate } from '../node/menu';
@@ -551,6 +552,11 @@ let isReadyForUpdates = false;
 async function readyForUpdates() {
   console.log('[updater] isReadyForUpdates', isReadyForUpdates);
   if (isReadyForUpdates) {
+    return;
+  }
+
+  if (autoUpdateDisabled(userConfig.get('autoUpdate'))) {
+    console.log('[updater] updates disabled');
     return;
   }
 
