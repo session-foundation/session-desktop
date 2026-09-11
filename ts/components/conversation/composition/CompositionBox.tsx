@@ -67,6 +67,7 @@ import { updateOutgoingLightBoxOptions } from '../../../state/ducks/modalDialog'
 import { isEnterKey, isEscapeKey } from '../../../util/keyboardShortcuts';
 import type { CommunityInvitation } from '../../../session/messages/outgoing/visibleMessage/VisibleMessage';
 import { SessionGifPanel } from './gif/SessionGifPanel';
+import { createMessageSendGuard } from './messageSendGuard';
 
 export interface ReplyingToMessageProps {
   convoId: string;
@@ -243,6 +244,7 @@ class CompositionBoxInner extends Component<Props, State> {
   private readonly emojiPanel: RefObject<HTMLDivElement | null>;
   private readonly emojiPanelButton: any;
   private readonly showGifsButtonRef: RefObject<HTMLButtonElement | null>;
+  private readonly messageSendGuard = createMessageSendGuard();
   private linkPreviewAbortController?: AbortController;
 
   constructor(props: Props) {
@@ -640,7 +642,16 @@ class CompositionBoxInner extends Component<Props, State> {
     return text.length > 0;
   }
 
-  private async onSendMessage() {
+  private onSendMessage() {
+    const { selectedConversationKey } = this.props;
+    if (!selectedConversationKey) {
+      return this.sendCurrentMessage();
+    }
+
+    return this.messageSendGuard(selectedConversationKey, () => this.sendCurrentMessage());
+  }
+
+  private async sendCurrentMessage() {
     const {
       selectedConversationKey,
       selectedConversation,
