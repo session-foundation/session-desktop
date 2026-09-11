@@ -63,6 +63,7 @@ export const SettingsKey = {
   proLongerMessagesSent,
   proBadgesSent,
   audioAutoplay: 'audioAutoplay',
+  lightboxVideoVolume: 'lightboxVideoVolume',
   showRecoveryPhrasePrompt: 'showRecoveryPhrasePrompt',
   dismissedRecoveryPhrasePrompt: 'dismissedRecoveryPhrasePrompt',
   hideMessageRequests: 'hideMessageRequests',

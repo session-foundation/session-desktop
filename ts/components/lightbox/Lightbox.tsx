@@ -23,6 +23,7 @@ import { AriaLabels } from '../../util/hardcodedAriaLabels';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { SessionFocusTrap } from '../SessionFocusTrap';
+import { LightboxVideo } from './LightboxVideo';
 
 type Props = {
   contentType: MIME.MIMEType | undefined;
@@ -443,9 +444,12 @@ const LightboxObject = ({
     }
 
     return (
-      <video role="button" ref={renderedRef} controls={true} style={styles.object} key={urlToLoad}>
-        <source src={urlToLoad} />
-      </video>
+      <LightboxVideo
+        key={urlToLoad}
+        renderedRef={renderedRef}
+        style={styles.object}
+        urlToLoad={urlToLoad}
+      />
     );
   }
 
