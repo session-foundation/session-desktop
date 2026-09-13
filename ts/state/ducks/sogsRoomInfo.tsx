@@ -100,7 +100,9 @@ const roomAvatarChange = createAsyncThunk(
     const { fileUrl } = uploadedFileDetails;
 
     // this is kind of a hack just made to avoid having a specific function downloading from sogs by URL rather than fileID
-    const downloaded = await downloadAttachmentSogsV3({ size: null, url: fileUrl }, roomInfos);
+    const downloaded = await downloadAttachmentSogsV3({ size: null, url: fileUrl }, roomInfos, {
+      allowUnknownSize: true,
+    });
 
     if (!downloaded || !(downloaded.data instanceof ArrayBuffer)) {
       const typeFound = typeof downloaded;
