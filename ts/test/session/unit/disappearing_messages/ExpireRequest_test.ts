@@ -1,8 +1,13 @@
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import { PubkeyType } from 'libsession_util_nodejs';
+import { GroupPubkeyType, PubkeyType } from 'libsession_util_nodejs';
 import Sinon from 'sinon';
-import { UpdateExpiryOnNodeUserSubRequest } from '../../../../session/apis/snode_api/SnodeRequestTypes';
+import { from_hex, to_hex } from 'libsodium-wrappers-sumo';
+import { ShortenOrExtend } from '../../../../session/types/with';
+import {
+  UpdateExpiryOnNodeGroupSubRequest,
+  UpdateExpiryOnNodeUserSubRequest,
+} from '../../../../session/apis/snode_api/SnodeRequestTypes';
 import {
   ExpireMessageWithExpiryOnSnodeProps,
   ExpireRequestResponseResults,
@@ -11,10 +16,12 @@ import {
   verifyExpireMsgsResponseSignature,
   verifyExpireMsgsResponseSignatureProps,
 } from '../../../../session/apis/snode_api/expireRequest';
-import { UserUtils } from '../../../../session/utils';
+import { StringUtils, UserUtils } from '../../../../session/utils';
 import { isValidUnixTimestamp } from '../../../../session/utils/Timestamps';
 import { generateFakeSnode } from '../../../test-utils/utils';
 import { NetworkTime } from '../../../../util/NetworkTime';
+import { getSodiumRenderer } from '../../../../session/crypto';
+import { fromBase64ToArray } from '../../../../session/utils/String';
 
 chai.use(chaiAsPromised as any);
 
@@ -125,6 +132,76 @@ describe('ExpireRequest', () => {
       expect(signedReq.params.extend, 'extend should be undefined').to.be.undefined;
       expect(signedReq.params.shorten, 'shorten should be true').to.be.true;
       expect(signedReq.params.signature, 'signature should not be empty').to.not.be.empty;
+    });
+  });
+
+  /**
+   * The group builder had no coverage at all, which is how it managed to send `extends` instead of
+   * `extend` for as long as it did: the server ignores keys it doesn't know about and raises no
+   * error, so nothing anywhere would have failed.
+   */
+  describe('UpdateExpiryOnNodeGroupSubRequest', () => {
+    const messagesHashes = ['groupHash1', 'groupHash2'];
+    const expiryMs = 12340000 + 30 * 24 * 3600 * 1000;
+
+    async function buildForGroup(shortenOrExtend: ShortenOrExtend = 'extend') {
+      const sodium = await getSodiumRenderer();
+      const groupKeypair = sodium.crypto_sign_keypair();
+      const groupPk: GroupPubkeyType = `03${to_hex(groupKeypair.publicKey)}`;
+
+      const request = new UpdateExpiryOnNodeGroupSubRequest({
+        expiryMs,
+        messagesHashes,
+        shortenOrExtend,
+        groupDetailsNeededForSignature: {
+          pubkeyHex: groupPk,
+          secretKey: groupKeypair.privateKey,
+          authData: null,
+        },
+      });
+      return { request, signedReq: await request.build(), groupPk };
+    }
+
+    it('sends "extend", not "extends"', async () => {
+      const { signedReq } = await buildForGroup();
+
+      expect(signedReq.params.extend, 'extend should be true').to.be.true;
+      expect(
+        (signedReq.params as Record<string, unknown>).extends,
+        'extends is not a key the storage server reads, so it must not be sent'
+      ).to.be.undefined;
+      expect(signedReq.params.shorten, 'shorten should be undefined').to.be.undefined;
+    });
+
+    it('supports shorten too — the type does not narrow what the server accepts', async () => {
+      // The only production call site passes 'extend', but the endpoint supports shorten and this
+      // request models it, same as the user one. Narrowing it here would state something false
+      // about the endpoint — and would make the group and user paths disagree about what the same
+      // operation is.
+      const { signedReq } = await buildForGroup('shorten');
+
+      expect(signedReq.params.shorten, 'shorten should be true').to.be.true;
+      expect(signedReq.params.extend, 'extend should be undefined').to.be.undefined;
+    });
+
+    it('signs the same shortenOrExtend that it puts on the wire', async () => {
+      const { signedReq, groupPk } = await buildForGroup();
+      const sodium = await getSodiumRenderer();
+
+      // "expire" || ShortenOrExtend || expiry || messages[0] || ... || messages[N]
+      const verificationData = new Uint8Array(
+        StringUtils.encode(`expireextend${expiryMs}${messagesHashes.join('')}`, 'utf8')
+      );
+      // note this pins the SIGNED value against the SENT one: the pair below is what the
+      // `extends` typo broke, and unifying the parameter must not reintroduce a way to diverge.
+
+      const isValid = sodium.crypto_sign_verify_detached(
+        fromBase64ToArray(signedReq.params.signature as string),
+        verificationData,
+        from_hex(groupPk.slice(2))
+      );
+
+      expect(isValid, 'the signature must cover "extend", matching the flag sent').to.be.true;
     });
   });
 

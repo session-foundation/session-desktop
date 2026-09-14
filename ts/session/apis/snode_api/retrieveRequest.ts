@@ -1,4 +1,4 @@
-import { GroupPubkeyType } from 'libsession_util_nodejs';
+import { GroupPubkeyType, PubkeyType } from 'libsession_util_nodejs';
 import { isArray } from 'lodash';
 import { Snode } from '../../../data/types';
 import { SnodeNamespace, SnodeNamespaces, SnodeNamespacesGroup } from './namespaces';
@@ -14,9 +14,16 @@ import {
   UpdateExpiryOnNodeUserSubRequest,
 } from './SnodeRequestTypes';
 import { BatchRequests } from './batchRequest';
-import { RetrieveMessagesResultsBatched, RetrieveMessagesResultsContent } from './types';
+import {
+  ExpireMessagesResultsContent,
+  RetrieveMessagesResultsBatched,
+  RetrieveMessagesResultsContent,
+} from './types';
 import { ed25519Str } from '../../utils/String';
 import { NetworkTime } from '../../../util/NetworkTime';
+import { detectMissingConfigHashes } from './configExpiryDetection';
+import { ConfigRecovery } from './configRecovery';
+import { BatchResultEntry } from './BatchResultEntry';
 
 type RetrieveParams = {
   pubkey: string;
@@ -127,7 +134,9 @@ async function buildRetrieveRequest(
     const request = new UpdateExpiryOnNodeUserSubRequest({
       expiryMs,
       messagesHashes: configHashesToBump,
-      shortenOrExtend: '',
+      // extend-only: bumping a config TTL must never be able to shorten it, and it is what makes
+      // the server return the `unchanged` array we need to detect configs expired from the swarm.
+      shortenOrExtend: 'extend',
     });
     retrieveRequestsParams.push(request);
     return retrieveRequestsParams;
@@ -149,12 +158,59 @@ async function buildRetrieveRequest(
       new UpdateExpiryOnNodeGroupSubRequest({
         expiryMs,
         messagesHashes: configHashesToBump,
-        shortenOrExtend: '',
+        // extend-only, same as the user path above: bumping a config TTL must never shorten it,
+        // and it is what makes the server return the `unchanged` array detection needs.
+        shortenOrExtend: 'extend',
         groupDetailsNeededForSignature: group,
       })
     );
   }
   return retrieveRequestsParams;
+}
+
+/**
+ * Read the `expire` sub-response we piggyback on every poll to work out whether any of our config
+ * messages have expired from the swarm, and record it. Acting on it happens after the merge, in
+ * `swarmPolling`, once we know our local state is level with the swarm.
+ *
+ * This only ever records; it must not throw into the polling path.
+ */
+function detectExpiredConfigs({
+  associatedWith,
+  configHashesToBump,
+  expireSubRequest,
+  expireResult,
+}: {
+  associatedWith: PubkeyType | GroupPubkeyType;
+  configHashesToBump: Array<string>;
+  expireSubRequest: RetrieveSubRequestType | undefined;
+  expireResult: BatchResultEntry;
+}) {
+  try {
+    if (expireSubRequest?.method !== 'expire') {
+      return;
+    }
+
+    // Note: read from the request we actually built rather than assuming. A response to a request
+    // that didn't set `extend` omits `unchanged` entirely, which makes every hash we didn't update
+    // look missing — so if that flag ever changes, detection has to switch itself off rather than
+    // report the whole config gone on every poll.
+    const detection = detectMissingConfigHashes({
+      requestedHashes: configHashesToBump,
+      swarm: (expireResult.body as { swarm?: ExpireMessagesResultsContent })?.swarm,
+      requestSetExtend: expireSubRequest.shortenOrExtend === 'extend',
+    });
+
+    if (detection.status === 'conclusive' && detection.missingHashes.length) {
+      window.log.warn(
+        `SwarmPolling: ${detection.missingHashes.length} config message(s) missing from the swarm of ${ed25519Str(associatedWith)}`
+      );
+    }
+
+    ConfigRecovery.recordDetection(associatedWith, detection);
+  } catch (e) {
+    window.log.warn('detectExpiredConfigs failed with:', e.message);
+  }
 }
 
 /**
@@ -208,13 +264,20 @@ async function retrieveNextMessagesNoRetries(
       );
     }
 
-    // the +1 is to take care of the extra `expire` method added once user config is released
-    if (
-      results.length !== namespacesAndLastHashes.length &&
-      results.length !== namespacesAndLastHashes.length + 1
-    ) {
+    // One result per sub-request, and it must STAY a throw rather than becoming a filter or a
+    // tolerance: everything below pairs `results[index]` with `namespacesAndLastHashes[index]` by
+    // position, so a missing result does not drop a namespace — it shifts every later one onto its
+    // neighbour's messages.
+    //
+    // Compare against `rawRequests`, never against `namespacesAndLastHashes.length` or that +1.
+    // The `expire` sub-request is appended only when there are config hashes to bump, so a bound
+    // written to allow for both admits two lengths — and two accepted lengths is the same hole as a
+    // filter: with `expire` appended, a response that dropped one retrieve result lands on the lower
+    // bound, passes, and then the LAST namespace is handed the expire result as its messages.
+    // `rawRequests` already accounts for the conditional sub-request, so it admits exactly one.
+    if (results.length !== rawRequests.length) {
       throw new Error(
-        `We asked for updates about ${namespacesAndLastHashes.length} messages but got results of length ${results.length}`
+        `We asked for ${rawRequests.length} sub-requests but got results of length ${results.length}`
       );
     }
 
@@ -227,6 +290,10 @@ async function retrieveNextMessagesNoRetries(
         `_retrieveNextMessages - retrieve result is not 200 with ${targetNode.ip}:${targetNode.port} but ${firstResult.code}`
       );
     }
+    // Safe to read both `length - 1` slots as a pair only because the check above admits exactly
+    // one length: `configHashesToBump` being set means `buildRetrieveRequest` appended the expire
+    // sub-request last, and the result array is now known to be the same length. Loosen that check
+    // and this pairs an expire request with a retrieve response.
     if (configHashesToBump?.length) {
       const lastResult = results[results.length - 1];
       if (lastResult?.code !== 200) {
@@ -234,6 +301,17 @@ async function retrieveNextMessagesNoRetries(
         window.log.warn(
           `the update expiry of our tracked config hashes didn't work: ${JSON.stringify(lastResult)}`
         );
+      } else if (PubKey.is03Pubkey(associatedWith) || PubKey.is05Pubkey(associatedWith)) {
+        // Narrowed with a real check rather than a cast. `associatedWith` is a `string` all the way
+        // down the poller, but recovery keys its per-swarm state on an ACCOUNT pubkey, and anything
+        // that is neither `03` nor `05` names no swarm we could recover — so skipping is right, not
+        // merely type-convenient.
+        detectExpiredConfigs({
+          associatedWith,
+          configHashesToBump,
+          expireSubRequest: rawRequests[rawRequests.length - 1],
+          expireResult: lastResult,
+        });
       }
     }
 

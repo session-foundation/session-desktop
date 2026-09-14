@@ -108,14 +108,21 @@ async function printDumpForDebug(prefix: string, variant: ConfigWrapperObjectTyp
   window.log.info(prefix, StringUtils.toHex(metaGroupDumps));
 }
 
+/**
+ * Note the `mergedCount` in the result. libSession's `merge()` reports which hashes it actually
+ * took in, and a message it could not merge is simply absent from that list — no throw, no error.
+ * So 2-of-3 looks exactly like 3-of-3 to a caller that only checks for an exception, and anything
+ * relying on "we incorporated what we fetched" has to compare the counts instead.
+ */
 async function mergeUserConfigsWithIncomingUpdates(
   incomingConfigs: Array<RetrieveMessageItemWithNamespace>
-): Promise<Map<ConfigWrapperUser, IncomingUserResult>> {
+): Promise<{ results: Map<ConfigWrapperUser, IncomingUserResult>; mergedCount: number }> {
   // first, group by namespaces so we do a single merge call
   // Note: this call throws if given a non user kind as this function should only handle user variants/kinds
   const groupedByNamespaces = byUserNamespace(incomingConfigs);
 
   const groupedResults: Map<ConfigWrapperUser, IncomingUserResult> = new Map();
+  let mergedCount = 0;
 
   const us = UserUtils.getOurPubKeyStrFromCache();
 
@@ -187,6 +194,8 @@ async function mergeUserConfigsWithIncomingUpdates(
           assertUnreachable(variant, `mergeConfigsWithInboxUpdates unhandled case "${variant}"`);
       }
 
+      mergedCount += hashesMerged.length;
+
       const needsDump = await UserGenericWrapperActions.needsDump(variant);
       const needsPush = await UserGenericWrapperActions.needsPush(variant);
       const mergedTimestamps = sameVariant
@@ -211,7 +220,7 @@ async function mergeUserConfigsWithIncomingUpdates(
       groupedResults.set(variant, incomingConfResult);
     }
 
-    return groupedResults;
+    return { results: groupedResults, mergedCount };
   } catch (e) {
     window.log.error('mergeConfigsWithIncomingUpdates failed with', e);
     throw e;
@@ -981,11 +990,16 @@ async function processUserMergingResults(results: Map<ConfigWrapperUser, Incomin
   }
 }
 
+/**
+ * @returns whether every message handed in was actually merged. A partial merge is not an error
+ * here — libSession skips what it can't take and carries on, which is what we want — but the
+ * caller must be able to tell, because "no exception" does not mean "all of it landed".
+ */
 async function handleUserConfigMessagesViaLibSession(
   configMessages: Array<RetrieveMessageItemWithNamespace>
-) {
+): Promise<boolean> {
   if (isEmpty(configMessages)) {
-    return;
+    return true;
   }
 
   window?.log?.debug(
@@ -997,8 +1011,16 @@ async function handleUserConfigMessagesViaLibSession(
     )}`
   );
 
-  const incomingMergeResult = await mergeUserConfigsWithIncomingUpdates(configMessages);
-  await processUserMergingResults(incomingMergeResult);
+  const { results, mergedCount } = await mergeUserConfigsWithIncomingUpdates(configMessages);
+  await processUserMergingResults(results);
+
+  if (mergedCount !== configMessages.length) {
+    window.log.warn(
+      `handleUserConfigMessagesViaLibSession: merged ${mergedCount}/${configMessages.length} config messages`
+    );
+  }
+
+  return mergedCount === configMessages.length;
 }
 
 async function updateOurProfileFromLibSession({

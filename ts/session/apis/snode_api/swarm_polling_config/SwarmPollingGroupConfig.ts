@@ -195,10 +195,21 @@ async function handleMetaMergeResults(groupPk: GroupPubkeyType) {
   }
 }
 
+/**
+ * @returns whether everything fetched was actually taken in. See the note on the user equivalent:
+ * the catch below is deliberate, which is exactly why the outcome has to be returned rather than
+ * inferred from the call completing.
+ *
+ * Note: this currently reports only whether the merge THREW, not whether it was lossy. libSession's
+ * metaMerge does return how many messages it took in, but the pinned wrapper's typings declare it
+ * `void` and discard the value — fixed in the wrapper alongside the group-recovery work, and the
+ * count comparison lands here once that release is pinned. Inert until then: nothing acts on a
+ * group swarm being marked level, because group recovery is not implemented yet.
+ */
 async function handleGroupSharedConfigMessages(
   groupConfigMessages: Array<RetrieveMessageItemWithNamespace>,
   groupPk: GroupPubkeyType
-) {
+): Promise<boolean> {
   try {
     window.log.info(
       `received groupConfigMessages count: ${groupConfigMessages.length} for groupPk:${ed25519Str(
@@ -255,11 +266,13 @@ async function handleGroupSharedConfigMessages(
         groupPk,
       }) as any
     );
+    return true;
   } catch (e) {
     window.log.warn(
       `handleGroupSharedConfigMessages of ${groupConfigMessages.length} failed with ${e.message}`
     );
     // not rethrowing
+    return false;
   }
 }
 

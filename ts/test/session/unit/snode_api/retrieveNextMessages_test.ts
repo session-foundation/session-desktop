@@ -15,6 +15,7 @@ import { WithShortenOrExtend } from '../../../../session/types/with';
 import { TestUtils } from '../../../test-utils';
 import { expectAsyncToThrow, stubLibSessionWorker } from '../../../test-utils/utils';
 import { NetworkTime } from '../../../../util/NetworkTime';
+import { TTL_DEFAULT } from '../../../../session/constants';
 
 const { expect } = chai;
 
@@ -44,8 +45,10 @@ function expectExpireWith({
 } & WithShortenOrExtend) {
   expect(request.messageHashes).to.be.deep.eq(hashes);
   expect(request.shortenOrExtend).to.be.eq(shortenOrExtend);
-  expect(request.expiryMs).to.be.above(NetworkTime.now() + 14 * 24 * 3600 * 1000 - 100);
-  expect(request.expiryMs).to.be.above(NetworkTime.now() + 14 * 24 * 3600 * 1000 + 100);
+  // Both bounds are required, and the second must be `below`: two `above` assertions typecheck,
+  // read as a range, and leave the expiry unbounded upwards.
+  expect(request.expiryMs).to.be.above(NetworkTime.now() + TTL_DEFAULT.CONFIG_MESSAGE - 1000);
+  expect(request.expiryMs).to.be.below(NetworkTime.now() + TTL_DEFAULT.CONFIG_MESSAGE + 1000);
 }
 
 describe('SnodeAPI:buildRetrieveRequest', () => {
@@ -153,7 +156,7 @@ describe('SnodeAPI:buildRetrieveRequest', () => {
       expectExpireWith({
         request: req3,
         hashes: ['hashbump1', 'hashbump2'],
-        shortenOrExtend: '',
+        shortenOrExtend: 'extend',
       });
     });
 
@@ -172,7 +175,7 @@ describe('SnodeAPI:buildRetrieveRequest', () => {
       expectExpireWith({
         request: req1,
         hashes: ['hashbump1', 'hashbump2'],
-        shortenOrExtend: '',
+        shortenOrExtend: 'extend',
       });
     });
 
@@ -308,7 +311,7 @@ describe('SnodeAPI:buildRetrieveRequest', () => {
       expectExpireWith({
         request: req3,
         hashes: ['hashbump1', 'hashbump2'],
-        shortenOrExtend: '',
+        shortenOrExtend: 'extend',
       });
     });
 
@@ -327,7 +330,7 @@ describe('SnodeAPI:buildRetrieveRequest', () => {
       expectExpireWith({
         request: req1,
         hashes: ['hashbump1', 'hashbump2'],
-        shortenOrExtend: '',
+        shortenOrExtend: 'extend',
       });
     });
 

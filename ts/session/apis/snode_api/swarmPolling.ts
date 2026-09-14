@@ -35,6 +35,8 @@ import { MultiEncryptUtils } from '../../utils/libsession/libsession_utils_multi
 import { SnodeNamespace, SnodeNamespaces, SnodeNamespacesUserConfig } from './namespaces';
 import { PollForGroup, PollForLegacy, PollForUs } from './pollingTypes';
 import { SnodeAPIRetrieve } from './retrieveRequest';
+import { ConfigRecovery } from './configRecovery';
+import { ConfigRecoveryForceRekey } from './configRecoveryForceRekey';
 import { SnodePool } from './snodePool';
 import { SwarmPollingGroupConfig } from './swarm_polling_config/SwarmPollingGroupConfig';
 import { SwarmPollingUserConfig } from './swarm_polling_config/SwarmPollingUserConfig';
@@ -106,11 +108,55 @@ function mergeMultipleRetrieveResults(
   }
 
   // Convert the merged map back to an array
-  return Array.from(mapped.entries()).map(([namespace, messagesMap]) => ({
-    code: results.find(m => m.namespace === namespace)?.code || 200,
-    namespace,
-    messages: { messages: Array.from(messagesMap.values()) },
-  }));
+  return Array.from(mapped.entries()).map(([namespace, messagesMap]) => {
+    // A namespace ANSWERED if any snode we polled returned 200 for it: the messages above are the
+    // union across snodes, so one snode failing does not cost us that namespace's content.
+    //
+    // The verdict has to come from ALL codes for the namespace, and a missing code must never
+    // default to a pass. Taking the first entry (`find`) makes it depend on which snode happens to
+    // come back first — arbitrary in BOTH directions, so not conservative either — and a `|| 200`
+    // fallback turns a missing or zero code into an answer, defaulting the one direction that
+    // must not default.
+    //
+    // The only consumer is allConfigNamespacesAnswered, which decides whether we are level with the
+    // swarm — so an unanswered namespace reading as answered is the failure that matters.
+    const codes = results.filter(m => m.namespace === namespace).map(m => m.code);
+
+    return {
+      code: codes.includes(200) ? 200 : (codes[0] ?? 0),
+      namespace,
+      messages: { messages: Array.from(messagesMap.values()) },
+    };
+  });
+}
+
+/**
+ * Whether every config namespace we polled actually answered.
+ *
+ * Being "level with the swarm" is about knowing the swarm state for the configs we are about to act
+ * on. A poll fetches several namespaces at once and they can fail independently, so one namespace
+ * erroring while the others answer leaves us ignorant about exactly its configs — a partial answer,
+ * not a full one.
+ *
+ * We gate the WHOLE SWARM rather than the individual namespace, and the reason is local: gating per
+ * namespace means mapping each hash we are about to act on back to the namespace it came from, and
+ * keeping that mapping correct as either side changes. Get it wrong and we act on a config we are
+ * ignorant about, silently. Gating the whole swarm is coarser — we skip a repair we could safely
+ * have made — but its failure mode is doing nothing, which the next poll fixes.
+ */
+function allConfigNamespacesAnswered(
+  results: RetrieveMessagesResultsMergedBatched,
+  type: ConversationTypeEnum
+) {
+  const isConfigNamespace =
+    type === ConversationTypeEnum.GROUPV2
+      ? SnodeNamespace.isGroupConfigNamespace
+      : SnodeNamespace.isUserConfigNamespace;
+
+  const configResults = results.filter(m => isConfigNamespace(m.namespace));
+
+  // no config namespace polled at all means there is nothing we could soundly act on either
+  return configResults.length > 0 && configResults.every(m => m.code === 200);
 }
 
 function swarmLog(msg: string) {
@@ -361,21 +407,23 @@ export class SwarmPolling {
     type: ConversationTypeEnum;
     pubkey: string;
     confMessages: Array<RetrieveMessageItemWithNamespace> | null;
-  }) {
+  }): Promise<boolean> {
     if (!confMessages) {
-      return;
+      // nothing was fetched, so nothing failed to be taken in
+      return true;
     }
 
     // first make sure to handle the shared user config message first
     if (type === ConversationTypeEnum.PRIVATE && UserUtils.isUsFromCache(pubkey)) {
-      // this does not throw, no matter what happens
-      await SwarmPollingUserConfig.handleUserSharedConfigMessages(confMessages);
-      return;
+      // Note: this does not throw, no matter what happens — a merge failure is swallowed and only
+      // logged, so its outcome has to come back as a value or the caller cannot see it at all.
+      return SwarmPollingUserConfig.handleUserSharedConfigMessages(confMessages);
     }
     if (type === ConversationTypeEnum.GROUPV2 && PubKey.is03Pubkey(pubkey)) {
       await sleepFor(100);
-      await SwarmPollingGroupConfig.handleGroupSharedConfigMessages(confMessages, pubkey);
+      return SwarmPollingGroupConfig.handleGroupSharedConfigMessages(confMessages, pubkey);
     }
+    return true;
   }
 
   public async handleRevokedMessages({
@@ -424,9 +472,19 @@ export class SwarmPolling {
    * Only exposed as public for testing
    */
   public async pollOnceForKey([pubkey, type]: PollForUs | PollForLegacy | PollForGroup) {
+    // A poll for this swarm starts here, which invalidates any earlier level mark for anything
+    // asking the poll-scoped question. Minted at the START deliberately: a token taken at the end
+    // would be the poll that just finished, and the rekey would compare a mark against its own poll
+    // and always agree.
+    ConfigRecovery.beginPollForSwarm(pubkey);
     const namespaces = this.getNamespacesToPollFrom(type);
     const swarmSnodes = await SnodePool.getSwarmFor(pubkey);
     let resultsFromAllNamespaces: RetrieveMessagesResultsMergedBatched | null;
+
+    // An empty result set is ambiguous: it can mean "the swarm has nothing for us" or "every snode
+    // we asked failed". Only the first tells us anything, so track whether a snode actually
+    // answered rather than inferring it from the emptiness.
+    let atLeastOneSnodeAnswered = false;
 
     let toPollFrom: Array<Snode> = [];
 
@@ -459,6 +517,12 @@ export class SwarmPolling {
         `SwarmPolling: pollNodeForKey of ${ed25519Str(pubkey)} namespaces: ${namespaces} returned ${resultsFromAllSnodesSettled.filter(m => m.status === 'fulfilled').length}/${RETRIEVE_SNODES_COUNT} fulfilled promises`
       );
 
+      // pollNodeForKey resolves to null when that snode's poll failed, so a fulfilled promise
+      // carrying a non-null value is the only thing that counts as an answer.
+      atLeastOneSnodeAnswered = resultsFromAllSnodesSettled.some(
+        m => m.status === 'fulfilled' && m.value !== null
+      );
+
       resultsFromAllNamespaces = mergeMultipleRetrieveResults(
         compact(
           resultsFromAllSnodesSettled.filter(m => m.status === 'fulfilled').flatMap(m => m.value)
@@ -479,6 +543,22 @@ export class SwarmPolling {
         pubkey,
         type,
       });
+
+      // A snode answered and had nothing for us, so there is no config on the swarm we have yet to
+      // merge — which is exactly what being level asks for. This is the path a device with expired
+      // configs takes on every poll, so returning without considering recovery here would make the
+      // whole feature a no-op for the devices it exists to repair.
+      if (atLeastOneSnodeAnswered) {
+        ConfigRecovery.markLocalStateLevelWithSwarm(pubkey);
+        // NOT awaited. A recovery round is up to 20 sub-requests per batch and possibly several
+        // batches, and this poll loop is shared by every other pubkey — holding it here delays their
+        // polls for a repair that is by design best-effort and can just as well finish after we
+        // return.
+        // The usual objection to `void` does not apply: recoverIfNeeded wraps its whole body in
+        // try/catch and logs, so it cannot produce an unhandled rejection. It also guards against
+        // overlapping rounds internally, which voiding it here is what makes necessary.
+        void ConfigRecovery.recoverIfNeeded(pubkey);
+      }
       return;
     }
     const { confMessages, otherMessages, revokedMessages } = filterMessagesPerTypeOfConvo(
@@ -489,7 +569,53 @@ export class SwarmPolling {
       `SwarmPolling: received for ${ed25519Str(pubkey)} confMessages:${confMessages?.length || 0}, revokedMessages:${revokedMessages?.length || 0}, , otherMessages:${otherMessages?.length || 0}, `
     );
     // We always handle the config messages first (for groups 03 or our own messages)
-    await this.handleUserOrGroupConfMessages({ confMessages, pubkey, type });
+    const mergedEverythingFetched = await this.handleUserOrGroupConfMessages({
+      confMessages,
+      pubkey,
+      type,
+    });
+
+    // The level-with-swarm decision, evaluated in one place rather than inside the merge handler,
+    // because it depends
+    // on how the *poll* went and not on what the merge did.
+    // Three ways to fail to be level, and they fail differently, which is why all three are
+    // checked here rather than inferred from one another:
+    // - no snode answered at all;
+    // - a config namespace errored while others answered — a partial answer is not a full one;
+    // - the fetch succeeded but the merge failed. That one is neither a value nor an exception,
+    //   only a log line, so it has to be reported back deliberately.
+    if (!mergedEverythingFetched) {
+      // Withdraw this swarm for the session rather than just skipping this poll. The lastHash
+      // cursor already advanced past the message we failed to merge, so it will never be offered
+      // again — the next poll would come back empty, look clean, and re-authorise recovery over
+      // state we know we never took in. A per-poll refusal alone is cosmetic here.
+      ConfigRecovery.markMergeIncompleteForSwarm(pubkey);
+    }
+
+    const levelWithSwarmThisPoll =
+      atLeastOneSnodeAnswered &&
+      allConfigNamespacesAnswered(resultsFromAllNamespaces, type) &&
+      mergedEverythingFetched;
+
+    if (levelWithSwarmThisPoll) {
+      ConfigRecovery.markLocalStateLevelWithSwarm(pubkey);
+      // not awaited — see the note on the other call site above
+      void ConfigRecovery.recoverIfNeeded(pubkey);
+
+      // The keys backfill runs PROACTIVELY, beside recovery rather than inside it. Recovery acts on
+      // a hash the swarm has LOST; the backfill acts on a hash the swarm still HAS but whose bytes
+      // we never retained. Hanging it off the detection path would be nearly useless — by the time
+      // detection fires, the message it needed to fetch is gone.
+      if (PubKey.is03Pubkey(pubkey)) {
+        void ConfigRecovery.backfillGroupKeysIfNeeded(pubkey);
+
+        // The freshness fact is computed HERE and passed in, because it is a property of this poll
+        // and nothing downstream can reconstruct it: the level marker is set once per process and
+        // never says whether it is still true. A rekey encrypts to our current view of the members,
+        // so a stale view silently drops anyone added since.
+        void ConfigRecoveryForceRekey.forceRekeyIfPossible(pubkey);
+      }
+    }
 
     await this.handleRevokedMessages({ revokedMessages, groupPk: pubkey, type });
 
@@ -739,6 +865,17 @@ export class SwarmPolling {
             window.log.info(
               `no configs before and after fetch of group: ${ed25519Str(pubkey)} from snode ${ed25519Str(snodeEdkey)}, but another snode has config hash fetched already (${ed25519Str(swarmSnodes?.[swarmIndex]?.pubkey_ed25519)}). Group is not expired.`
             );
+          } else if (await ConfigRecovery.canRepairGroupKeys(pubkey)) {
+            // We hold the keys messages verbatim, so this is recoverable BY US: recovery will put
+            // them back on the next pass. Flagging expired here would tell the user the group is
+            // gone at the exact moment we are able to fix it.
+            //
+            // The verdict is DEFERRED behind bytes-held rather than merely corrected afterwards —
+            // setting the flag and clearing it a moment later is a visible flicker on a group that
+            // was never unrecoverable from this device.
+            window.log.info(
+              `no configs before and after fetch of group: ${ed25519Str(pubkey)}, but we retain its keys messages. Not flagging expired — recovery can repair it.`
+            );
           } else {
             // the group appears to be expired.
             window.log.warn(
@@ -759,6 +896,14 @@ export class SwarmPolling {
           convo.setIsExpired03Group(false);
           await convo.commit();
         }
+
+        // Note: the check above answers "we hold nothing and nobody gave us anything". It cannot
+        // see the case where we *do* hold config hashes and the swarm has since dropped them,
+        // because nothing new arriving looks identical to nothing having changed. That case is
+        // what the expire response tells us, and it is handled once the wrapper can attribute a
+        // hash to GroupKeys — which is what decides an 03-group expired. Deliberately not
+        // approximated in the meantime: a heuristic that can disagree with that rule is the signal
+        // proliferation this was supposed to remove.
       }
       if (!results.length) {
         return [];

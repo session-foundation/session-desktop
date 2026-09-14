@@ -94,6 +94,19 @@ abstract class ExpireSubRequest extends SnodeAPISubRequest<'expire'> {
   }
 }
 
+/**
+ * The flag the storage server expects on the wire, for a given ShortenOrExtend.
+ * Note: the same value has to be used to build the signature, otherwise the request is signed
+ * for one behaviour and asks the server for another (and the server won't complain).
+ */
+function shortenOrExtendToParams(shortenOrExtend: ShortenOrExtend) {
+  return shortenOrExtend === 'extend'
+    ? { extend: true }
+    : shortenOrExtend === 'shorten'
+      ? { shorten: true }
+      : {};
+}
+
 abstract class StoreSubRequest extends SnodeAPISubRequest<'store'> {
   public readonly getNow: () => number;
 
@@ -775,13 +788,6 @@ export class UpdateExpiryOnNodeUserSubRequest extends ExpireSubRequest {
       );
     }
 
-    const shortenOrExtend =
-      this.shortenOrExtend === 'extend'
-        ? { extend: true }
-        : this.shortenOrExtend === 'shorten'
-          ? { shorten: true }
-          : {};
-
     return {
       method: this.method,
       params: {
@@ -790,7 +796,7 @@ export class UpdateExpiryOnNodeUserSubRequest extends ExpireSubRequest {
         signature: signResult.signature,
         messages: this.messageHashes,
         expiry: this.expiryMs,
-        ...shortenOrExtend,
+        ...shortenOrExtendToParams(this.shortenOrExtend),
       },
     };
   }
@@ -807,6 +813,12 @@ export class UpdateExpiryOnNodeUserSubRequest extends ExpireSubRequest {
 export class UpdateExpiryOnNodeGroupSubRequest extends ExpireSubRequest {
   public readonly messageHashes: Array<string>;
   public readonly expiryMs: number;
+  /**
+   * Same shape as the user request deliberately: the storage server supports shorten on group
+   * expiries too, so narrowing this to 'extend' would state something false about the endpoint.
+   * Note the value is read TWICE — for the signature and for the wire flag — and the two must
+   * agree, which is why both derive from this one field rather than from a literal.
+   */
   public readonly shortenOrExtend: ShortenOrExtend;
   public readonly groupDetailsNeededForSignature: GroupDetailsNeededForSignature;
 
@@ -846,18 +858,11 @@ export class UpdateExpiryOnNodeGroupSubRequest extends ExpireSubRequest {
       );
     }
 
-    const shortenOrExtend =
-      this.shortenOrExtend === 'extend'
-        ? { extends: true }
-        : this.shortenOrExtend === 'shorten'
-          ? { shorten: true }
-          : {};
-
     return {
       method: this.method,
       params: {
         messages: this.messageHashes,
-        ...shortenOrExtend,
+        ...shortenOrExtendToParams(this.shortenOrExtend),
         ...signResult,
 
         // pubkey_ed25519 is forbidden for the group one
@@ -966,8 +971,15 @@ abstract class StoreGroupConfigSubRequest<
   public readonly destination: GroupPubkeyType;
   public readonly ttlMs: number;
   public readonly encryptedData: Uint8Array;
-  // this is mandatory for a group config store, if it is null, we throw
   public readonly secretKey: Uint8Array | null;
+  /**
+   * A member's subaccount auth, used when we have no admin `secretKey`.
+   *
+   * Only config RECOVERY takes this path: a member cannot change group config, so the normal push
+   * always has the admin key. But a member CAN put its own unmodified copy back after it expires
+   * from the swarm, and its subaccount token carries Read+Write for exactly that.
+   */
+  public readonly authData: Uint8Array | null;
 
   constructor(
     args: WithGroupPubkey &
@@ -975,6 +987,7 @@ abstract class StoreGroupConfigSubRequest<
         namespace: T;
         encryptedData: Uint8Array;
         secretKey: Uint8Array | null;
+        authData?: Uint8Array | null;
         ttlMs: number;
       }
   ) {
@@ -984,6 +997,7 @@ abstract class StoreGroupConfigSubRequest<
     this.ttlMs = args.ttlMs;
     this.encryptedData = args.encryptedData;
     this.secretKey = args.secretKey;
+    this.authData = args.authData ?? null;
 
     if (isEmpty(this.encryptedData)) {
       throw new Error('this.encryptedData cannot be empty');
@@ -991,8 +1005,10 @@ abstract class StoreGroupConfigSubRequest<
     if (!PubKey.is03Pubkey(this.destination)) {
       throw new Error('StoreGroupConfigSubRequest: group config namespace required a 03 pubkey');
     }
-    if (isEmpty(this.secretKey)) {
-      throw new Error('StoreGroupConfigSubRequest needs secretKey to be set');
+    // Either credential will do, but not neither: `getSnodeGroupSignature` prefers the admin key
+    // and falls back to the subaccount, and with both empty it cannot sign at all.
+    if (isEmpty(this.secretKey) && isEmpty(this.authData)) {
+      throw new Error('StoreGroupConfigSubRequest needs secretKey or authData to be set');
     }
   }
 
@@ -1006,7 +1022,7 @@ abstract class StoreGroupConfigSubRequest<
     const signDetails = await SnodeGroupSignature.getSnodeGroupSignature({
       method: this.method,
       namespace: this.namespace,
-      group: { authData: null, pubkeyHex: this.destination, secretKey: this.secretKey },
+      group: { authData: this.authData, pubkeyHex: this.destination, secretKey: this.secretKey },
     });
 
     if (!signDetails) {

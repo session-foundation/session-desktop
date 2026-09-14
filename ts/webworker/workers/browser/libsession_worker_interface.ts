@@ -650,6 +650,10 @@ export const MetaGroupWrapperActions: MetaGroupWrapperActionsCalls = {
     callLibSessionWorker([`MetaGroupConfig-${groupPk}`, 'activeHashesByConfig']) as Promise<
       ReturnType<MetaGroupWrapperActionsCalls['activeHashesByConfig']>
     >,
+  activeKeyMessages: async (groupPk: GroupPubkeyType) =>
+    callLibSessionWorker([`MetaGroupConfig-${groupPk}`, 'activeKeyMessages']) as Promise<
+      ReturnType<MetaGroupWrapperActionsCalls['activeKeyMessages']>
+    >,
   loadKeyMessage: async (
     groupPk: GroupPubkeyType,
     hash: string,
