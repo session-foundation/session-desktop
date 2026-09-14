@@ -339,14 +339,6 @@ function recordDetection(pubkey: AccountPubkey, detection: ConfigExpiryDetection
 }
 
 /**
- * Drop bars that have expired, rather than merely reading past them.
- *
- * The read below already ignores an expired entry, so omitting this looks correct and leaks for the
- * life of the process instead. And the population it leaks against is long-lived sessions — which
- * is exactly the population the time-bound was added for, so the leak would target the same people
- * as the defect it fixes.
- */
-/**
  * Drop detections we have finished with, so the accumulator cannot grow for the life of the process.
  *
  * Same leak `pruneExpiredBars` was written for, one map over and against the same population: hashes
@@ -371,6 +363,14 @@ function pruneSettledDetections(pubkey: AccountPubkey) {
   }
 }
 
+/**
+ * Drop bars that have expired, rather than merely reading past them.
+ *
+ * The read below already ignores an expired entry, so omitting this looks correct and leaks for the
+ * life of the process instead. And the population it leaks against is long-lived sessions — which
+ * is exactly the population the time-bound was added for, so the leak would target the same people
+ * as the defect it fixes.
+ */
 function pruneExpiredBars() {
   const now = nowMs();
   hashSettledAt.forEach((settledAt, hash) => {
