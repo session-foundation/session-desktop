@@ -8,6 +8,7 @@ import {
   app,
   BrowserWindow,
   crashReporter,
+  desktopCapturer,
   protocol as electronProtocol,
   ipcMain as ipc,
   ipcMain,
@@ -20,6 +21,7 @@ import {
 } from 'electron';
 
 import crypto from 'crypto';
+import { spawn } from 'child_process';
 import fs from 'fs';
 import os from 'os';
 import path, { join } from 'path';
@@ -76,10 +78,25 @@ import { config } from '../node/config';
 // Very important to put before the single instance check, since it is based on the
 //   userData directory.
 import { userConfig } from '../node/config/user_config';
+import {
+  addAccount,
+  BACKGROUND_ARG,
+  forgetAccount,
+  getSelectedAccount,
+  isBackgroundLaunch,
+  isSpawnedSibling,
+  listAccounts,
+  markAccountUsed,
+  PROFILE_ARG_PREFIX,
+  renameAccount,
+  setAccountRunInBackground,
+  SPAWNED_SIBLING_ARG,
+  updateAccountMeta,
+  userDataPathFor,
+} from '../node/config/profiles';
 import * as PasswordUtil from '../util/passwordUtils';
 
 const development = (config as any).environment === 'development';
-const appInstance = config.util.getEnv('NODE_APP_INSTANCE') || 0;
 
 // We generally want to pull in our own modules after this point, after the user
 //   data directory has been set.
@@ -138,11 +155,19 @@ if (!process.mas) {
   console.log('making app single instance');
   const gotLock = app.requestSingleInstanceLock();
   if (!gotLock) {
-    // Don't allow second instance if we are in prod
-    if (appInstance === 0) {
-      console.log('quitting; we are the second instance');
-      app.exit();
-    }
+    /**
+     * Electron's single-instance lock lives in the userData directory, and every account has its
+     * own, so failing to take it means *this account* is already running. Hand our arguments to
+     * that process - it focuses its window, which is exactly what "switch to this account" wants -
+     * and quit.
+     *
+     * This used to exempt dev instances (`NODE_APP_INSTANCE !== 0`) so a developer could run
+     * several copies. That exemption is both unnecessary and unsafe now: different instances
+     * already get different data directories, and two processes opening one account's SQLCipher
+     * database is not something to leave possible.
+     */
+    console.log('quitting; this account is already running in another process');
+    app.exit();
   } else {
     app.on('second-instance', () => {
       // Someone tried to run a second instance, we should focus our window
@@ -295,6 +320,228 @@ function getStartInTray() {
   return { usingTrayIcon, startInTray };
 }
 
+/**
+ * Multi-account plumbing.
+ *
+ * Each account is its own process against its own data directory (see node/config/profiles.ts),
+ * so all of them poll and notify at the same time. Launching an account which is already running
+ * cannot start a second copy: Electron's single-instance lock is per data directory, so the
+ * second process hands its argv to the running one - which focuses its window - and exits. That
+ * is exactly the behaviour "switch to this account" wants, so switching and starting are the same
+ * operation.
+ */
+function launchArgsForAccount(accountId: string, background: boolean): Array<string> {
+  const passthrough = process.argv.slice(1).filter(
+    arg =>
+      !arg.startsWith(PROFILE_ARG_PREFIX) &&
+      arg !== BACKGROUND_ARG &&
+      arg !== SPAWNED_SIBLING_ARG &&
+      // two processes cannot share a debug port
+      !arg.startsWith('--inspect') &&
+      !arg.startsWith('--remote-debugging-port')
+  );
+
+  const args = [...passthrough, `${PROFILE_ARG_PREFIX}${accountId}`, SPAWNED_SIBLING_ARG];
+  if (background) {
+    args.push(BACKGROUND_ARG);
+  }
+  return args;
+}
+
+function launchAccount(accountId: string, background: boolean) {
+  const args = launchArgsForAccount(accountId, background);
+  console.log(`accounts: launching ${accountId}${background ? ' (background)' : ''}`);
+  try {
+    const child = spawn(process.execPath, args, {
+      detached: true,
+      stdio: 'ignore',
+      env: { ...process.env, SESSION_PROFILE: accountId },
+    });
+    child.unref();
+    return true;
+  } catch (e) {
+    console.error('accounts: failed to launch', accountId, e);
+    return false;
+  }
+}
+
+function startBackgroundAccounts() {
+  const current = getSelectedAccount().id;
+  const others = listAccounts().filter(a => a.id !== current && a.runInBackground);
+  if (!others.length) {
+    return;
+  }
+  // stagger them: several Session processes opening their databases at once is a cold-start spike
+  others.forEach((account, index) => {
+    setTimeout(
+      () => {
+        launchAccount(account.id, true);
+      },
+      1500 * (index + 1)
+    );
+  });
+}
+
+ipc.handle('get-accounts', () => {
+  const currentId = getSelectedAccount().id;
+  return {
+    currentId,
+    accounts: listAccounts().map(a => ({
+      id: a.id,
+      label: a.label,
+      displayName: a.displayName,
+      sessionId: a.sessionId,
+      isDefault: a.isDefault,
+      runInBackground: a.runInBackground,
+      lastUsedAt: a.lastUsedAt,
+      isCurrent: a.id === currentId,
+    })),
+  };
+});
+
+ipc.handle('switch-account', (_event, accountId: string) => {
+  if (accountId === getSelectedAccount().id) {
+    showWindow();
+    return true;
+  }
+  return launchAccount(accountId, false);
+});
+
+ipc.handle('add-account', (_event, label: string | undefined) => {
+  const account = addAccount(label);
+  launchAccount(account.id, false);
+  return { id: account.id, label: account.label };
+});
+
+ipc.handle('rename-account', (_event, accountId: string, label: string) => {
+  renameAccount(accountId, label);
+  return true;
+});
+
+ipc.handle('set-account-run-in-background', (_event, accountId: string, value: boolean) => {
+  setAccountRunInBackground(accountId, value);
+  return true;
+});
+
+/**
+ * Forgetting an account removes it from the switcher and leaves its data on disk. The directory is
+ * returned so the caller can tell the user where their messages still are.
+ */
+ipc.handle('forget-account', (_event, accountId: string) => {
+  if (accountId === getSelectedAccount().id) {
+    return { removed: false, dataDir: null, reason: 'cannot forget the account you are using' };
+  }
+  return forgetAccount(accountId);
+});
+
+/**
+ * The renderer is the only thing that knows who is logged in, so it tells us once it does. This is
+ * what puts a real name and Account ID next to each entry in the switcher.
+ */
+ipc.handle('update-account-meta', (_event, meta: { sessionId?: string; displayName?: string }) => {
+  updateAccountMeta(getSelectedAccount().id, meta);
+  return true;
+});
+
+ipc.handle('get-account-data-dir', (_event, accountId: string) => {
+  const account = listAccounts().find(a => a.id === accountId);
+  return account ? userDataPathFor(account) : null;
+});
+
+/**
+ * True while the *page* is what put the window in full screen (a call), as opposed to the user
+ * having full-screened the Session window themselves.
+ */
+let isInHtmlFullScreen = false;
+
+/**
+ * The source the user picked in Session's own screen-share picker, consumed by the
+ * display-media request handler below.
+ */
+let pendingScreenShareSourceId: string | null = null;
+
+const screenShareThumbnailSize = { width: 320, height: 180 };
+
+/**
+ * `navigator.mediaDevices.getDisplayMedia()` rejects in an Electron renderer unless the main
+ * process answers the request here — Electron ships no picker of its own. Session shows its own
+ * picker in the renderer *before* calling getDisplayMedia, and the id it settled on arrives via
+ * the 'set-screen-share-source' channel, so by the time this runs there is nothing to ask.
+ */
+function setupScreenShareHandler(windowToSetup: BrowserWindow) {
+  windowToSetup.webContents.session.setDisplayMediaRequestHandler(
+    async (_request, callback) => {
+      const chosenId = pendingScreenShareSourceId;
+      pendingScreenShareSourceId = null;
+
+      if (!chosenId) {
+        // deny: nothing was picked, so nothing is shared
+        callback({});
+        return;
+      }
+      try {
+        const sources = await desktopCapturer.getSources({
+          types: ['screen', 'window'],
+          thumbnailSize: { width: 0, height: 0 },
+        });
+        const source = sources.find(m => m.id === chosenId);
+        if (!source) {
+          console.log('setDisplayMediaRequestHandler: picked source is gone');
+          callback({});
+          return;
+        }
+        callback({ video: source });
+      } catch (e) {
+        console.error('setDisplayMediaRequestHandler getSources failed', e);
+        callback({});
+      }
+    },
+    // we always show Session's own picker, so the OS one would be a second, redundant prompt
+    { useSystemPicker: false }
+  );
+}
+
+ipc.handle('get-screen-share-sources', async () => {
+  // on macOS, getSources() silently returns useless thumbnails without this permission
+  const screenAccess =
+    osPlatform === 'darwin' ? systemPreferences.getMediaAccessStatus('screen') : 'granted';
+
+  if (screenAccess !== 'granted') {
+    return { screenAccess, sources: [] };
+  }
+
+  const sources = await desktopCapturer.getSources({
+    types: ['screen', 'window'],
+    thumbnailSize: screenShareThumbnailSize,
+    fetchWindowIcons: false,
+  });
+
+  return {
+    screenAccess,
+    sources: sources.map(m => ({
+      id: m.id,
+      name: m.name,
+      isScreen: m.id.startsWith('screen:'),
+      thumbnailDataUrl: m.thumbnail.isEmpty() ? null : m.thumbnail.toDataURL(),
+    })),
+  };
+});
+
+ipc.handle('set-screen-share-source', (_event, sourceId: string | null) => {
+  pendingScreenShareSourceId = sourceId;
+  return true;
+});
+
+ipc.handle('open-screen-recording-settings', () => {
+  if (osPlatform === 'darwin') {
+    void shell.openExternal(
+      'x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture'
+    );
+    return true;
+  }
+  return false;
+});
+
 async function createWindow() {
   const { minWidth, minHeight, width, height } = getWindowSize();
   windowConfig = windowConfig || {};
@@ -318,7 +565,10 @@ async function createWindow() {
   }
 
   const windowOptions = {
-    show: true,
+    // an account started in the background is fully live - polling, notifications, the lot - it
+    // just does not put a window in your face. It is reachable from the tray and from the
+    // account switcher of any other account.
+    show: !isBackgroundLaunch(),
     minWidth,
     minHeight,
     fullscreen: false as boolean | undefined,
@@ -378,6 +628,21 @@ async function createWindow() {
 
   setupSpellChecker(mainWindow);
 
+  /**
+   * A call going full screen puts the window into HTML full screen, which fires 'resize' and so
+   * would make captureAndSaveWindowStats() persist `fullscreen: true`. Session would then reopen
+   * full screen forever after. Window full screen the user asked for (green button / F11) does not
+   * raise these events, so it is unaffected.
+   */
+  mainWindow.webContents.on('enter-html-full-screen', () => {
+    isInHtmlFullScreen = true;
+  });
+  mainWindow.webContents.on('leave-html-full-screen', () => {
+    isInHtmlFullScreen = false;
+  });
+
+  setupScreenShareHandler(mainWindow);
+
   const setWindowFocus = () => {
     if (!mainWindow) {
       return;
@@ -432,9 +697,10 @@ async function createWindow() {
       fullscreen: false as boolean | undefined,
     };
 
-    if (mainWindow.isFullScreen()) {
+    if (mainWindow.isFullScreen() && !isInHtmlFullScreen) {
       // Only include this property if true, because when explicitly set to
-      // false the fullscreen button will be disabled on osx
+      // false the fullscreen button will be disabled on osx.
+      // Note: never persisted while a page element (i.e. a call) is what put us in full screen.
       (windowConfig as any).fullscreen = true;
     }
 
@@ -869,8 +1135,20 @@ async function showMainWindow(sqlKey: string, passwordAttempt = false) {
 
   await createWindow();
 
-  if (getStartInTray().usingTrayIcon) {
+  if (getStartInTray().usingTrayIcon || isBackgroundLaunch()) {
     tray = createTrayIcon(getMainWindow);
+  }
+
+  // "which account opens by default" should mean the one the user last actually opened, so an
+  // account started in the background on someone else's behalf must not claim it
+  if (!isBackgroundLaunch()) {
+    markAccountUsed(getSelectedAccount().id);
+  }
+
+  // every account the user wants live gets its own process, started once by whichever instance
+  // the user launched. A spawned sibling never fans out again.
+  if (!isSpawnedSibling()) {
+    startBackgroundAccounts();
   }
 
   setupMenu();

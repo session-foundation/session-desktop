@@ -9,6 +9,7 @@ import {
   useChangeNickNameDialog,
   useUserSettingsModal,
   useOnionPathDialog,
+  useAccountSwitcherModal,
   useEnterPasswordModal,
   useDeleteAccountModal,
   useBanOrUnbanUserModal,
@@ -36,6 +37,7 @@ import { InviteContactsDialog } from './InviteContactsDialog';
 import { AddModeratorsDialog } from './ModeratorsAddDialog';
 import { RemoveModeratorsDialog } from './ModeratorsRemoveDialog';
 import { OnionPathModal } from './OnionStatusPathDialog';
+import { AccountSwitcherModal } from './AccountSwitcherModal';
 import { ReactClearAllModal } from './ReactClearAllModal';
 import { ReactListModal } from './ReactListModal';
 import { SessionNicknameDialog } from './SessionNicknameDialog';
@@ -64,6 +66,7 @@ export const ModalContainer = () => {
   const changeNicknameModal = useChangeNickNameDialog();
   const userSettingsModalState = useUserSettingsModal();
   const onionPathModalState = useOnionPathDialog();
+  const accountSwitcherModalState = useAccountSwitcherModal();
   const enterPasswordModalState = useEnterPasswordModal();
   const deleteAccountModalState = useDeleteAccountModal();
   const banOrUnbanUserModalState = useBanOrUnbanUserModal();
@@ -92,6 +95,7 @@ export const ModalContainer = () => {
       )}
       {userSettingsModalState && <UserSettingsDialog {...userSettingsModalState} />}
       {onionPathModalState && <OnionPathModal {...onionPathModalState} />}
+      {accountSwitcherModalState && <AccountSwitcherModal />}
       {reactListModalState && <ReactListModal {...reactListModalState} />}
       {debugMenuModalState && <DebugMenuModal {...debugMenuModalState} />}
       {/* Actions */}

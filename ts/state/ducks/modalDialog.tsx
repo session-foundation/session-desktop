@@ -76,6 +76,7 @@ type UpdateConversationDetailsModalState = WithConvoId | null;
 export type ChangeNickNameModalState = InviteContactModalState;
 export type UserSettingsModalState = WithUserSettingsPage | null;
 export type OnionPathModalState = object | null;
+export type AccountSwitcherModalState = object | null;
 export type EnterPasswordModalState = EnterPasswordModalProps | null;
 export type DeleteAccountModalState = object | null;
 export type OpenUrlModalState = { urlToOpen: string } | null;
@@ -161,6 +162,7 @@ export type ModalId =
   | 'nickNameModal'
   | 'userSettingsModal'
   | 'onionPathModal'
+  | 'accountSwitcherModal'
   | 'enterPasswordModal'
   | 'deleteAccountModal'
   | 'reactListModal'
@@ -189,6 +191,7 @@ export type ModalState = {
   nickNameModal: ChangeNickNameModalState;
   userSettingsModal: UserSettingsModalState;
   onionPathModal: OnionPathModalState;
+  accountSwitcherModal: AccountSwitcherModalState;
   enterPasswordModal: EnterPasswordModalState;
   deleteAccountModal: DeleteAccountModalState;
   reactListModal: ReactModalsState;
@@ -220,6 +223,7 @@ export const initialModalState: ModalState = {
   nickNameModal: null,
   userSettingsModal: null,
   onionPathModal: null,
+  accountSwitcherModal: null,
   enterPasswordModal: null,
   deleteAccountModal: null,
   reactListModal: null,
@@ -317,6 +321,9 @@ const ModalSlice = createSlice({
     onionPathModal(state, action: PayloadAction<OnionPathModalState | null>) {
       return pushOrPopModal(state, 'onionPathModal', action.payload);
     },
+    accountSwitcherModal(state, action: PayloadAction<AccountSwitcherModalState | null>) {
+      return pushOrPopModal(state, 'accountSwitcherModal', action.payload);
+    },
     updateEnterPasswordModal(state, action: PayloadAction<EnterPasswordModalState | null>) {
       return pushOrPopModal(state, 'enterPasswordModal', action.payload);
     },
@@ -396,6 +403,7 @@ export const {
   changeNickNameModal,
   userSettingsModal,
   onionPathModal,
+  accountSwitcherModal,
   updateEnterPasswordModal,
   updateDeleteAccountModal,
   updateBanOrUnbanUserModal,

@@ -22,6 +22,7 @@ import { DecryptedAttachmentsManager } from '../../session/crypto/DecryptedAttac
 import { DURATION } from '../../session/constants';
 
 import {
+  accountSwitcherModal,
   onionPathModal,
   updateDebugMenuModal,
   updateKeyboardShortcutsMenuModal,
@@ -375,6 +376,18 @@ export const ActionsPanel = () => {
               dispatch(onionPathModal({}));
             }}
             inActionPanel={true}
+          />
+          <SessionLucideIconButton
+            margin="0 0 0 0"
+            iconSize="medium"
+            padding="var(--margins-md)"
+            unicode={LUCIDE_ICONS_UNICODE.USERS_ROUND}
+            dataTestId="accounts-section"
+            title="Accounts"
+            ariaLabel="Accounts"
+            onClick={() => {
+              dispatch(accountSwitcherModal({}));
+            }}
           />
           <SessionLucideIconButton
             margin="0 0 0 0"

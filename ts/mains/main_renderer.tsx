@@ -19,6 +19,7 @@ import { switchPrimaryColorTo } from '../themes/switchPrimaryColor';
 import { switchThemeTo } from '../themes/switchTheme';
 import { BlockedNumberController } from '../util';
 import { initialiseEmojiData } from '../util/emoji';
+import { startReportingAccountIdentity } from '../util/accounts';
 import { Notifications } from '../util/notifications';
 import { Registration } from '../util/registration';
 import { Storage, isSignInByLinking } from '../util/storage';
@@ -244,6 +245,8 @@ async function start() {
     if (!window.inboxStore) {
       throw new Error('window.inboxStore is not defined in openInbox');
     }
+    // let the account switcher label this account with its real name and Account ID
+    startReportingAccountIdentity();
     root.render(<SessionInboxView />);
   }
 

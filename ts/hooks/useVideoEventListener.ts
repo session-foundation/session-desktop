@@ -24,8 +24,17 @@ export function useVideoCallEventsListener(uniqueId: string, onSame: boolean) {
   const [currentSelectedAudioOutput, setCurrentSelectedAudioOutput] =
     useState(DEVICE_DISABLED_DEVICE_ID);
   const [remoteStreamVideoIsMuted, setRemoteStreamVideoIsMuted] = useState(true);
-  const mountedStateFunc = useMountedState();
-  const mountedState = mountedStateFunc();
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [isRemoteScreenSharing, setIsRemoteScreenSharing] = useState(false);
+  /**
+   * Note: this is the getter, deliberately called inside the listener rather than during render.
+   * `useMountedState()()` evaluated at render time is `false` on the very first render, so a
+   * listener registered with that value captured would ignore every update it was ever given.
+   * The full screen call overlay mounts once and is not re-rendered by anything else, so it was
+   * stuck showing the state the call had when it opened: no remote video, and no idea that a
+   * screen share was running.
+   */
+  const isMounted = useMountedState();
 
   const [currentConnectedCameras, setCurrentConnectedCameras] = useState<Array<InputItem>>([]);
   const [currentConnectedAudioInputs, setCurrentConnectedAudioInputs] = useState<Array<InputItem>>(
@@ -52,14 +61,18 @@ export function useVideoCallEventsListener(uniqueId: string, onSame: boolean) {
           remoteStream: lRemoteStream,
           isAudioMuted,
           currentSelectedAudioOutput: outputSelected,
+          isScreenSharing: lIsScreenSharing,
+          isRemoteScreenSharing: lIsRemoteScreenSharing,
         } = options;
-        if (mountedState) {
+        if (isMounted()) {
           setLocalStream(lLocalStream);
           setRemoteStream(lRemoteStream);
           setRemoteStreamVideoIsMuted(isRemoteVideoStreamMuted);
           setLocalStreamVideoIsMuted(isLocalVideoStreamMuted);
           setOurAudioIsMuted(isAudioMuted);
           setCurrentSelectedAudioOutput(outputSelected);
+          setIsScreenSharing(lIsScreenSharing);
+          setIsRemoteScreenSharing(lIsRemoteScreenSharing);
 
           setCurrentConnectedCameras(camerasList);
           setCurrentConnectedAudioInputs(audioInputsList);
@@ -71,7 +84,7 @@ export function useVideoCallEventsListener(uniqueId: string, onSame: boolean) {
     return () => {
       removeVideoEventsListener(uniqueId);
     };
-  }, [ongoingCallPubkey, selectedConversationKey, isFullScreen, mountedState, onSame, uniqueId]);
+  }, [ongoingCallPubkey, selectedConversationKey, isFullScreen, isMounted, onSame, uniqueId]);
 
   return {
     currentConnectedAudioInputs,
@@ -84,5 +97,7 @@ export function useVideoCallEventsListener(uniqueId: string, onSame: boolean) {
     remoteStream,
     isAudioMuted: ourAudioIsMuted,
     isAudioOutputMuted: currentSelectedAudioOutput === DEVICE_DISABLED_DEVICE_ID,
+    isScreenSharing,
+    isRemoteScreenSharing,
   };
 }

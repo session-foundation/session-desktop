@@ -37,6 +37,7 @@ import { NetworkTime } from '../../../util/NetworkTime';
 import { sleepFor } from '../Promise';
 import { tr } from '../../../localization/localeTools';
 import { uuidV4 } from '../../../util/uuid';
+import { setScreenShareSource } from '../../../util/screenShare';
 
 export type InputItem = { deviceId: string; label: string };
 
@@ -65,6 +66,17 @@ export type CallManagerOptionsType = {
   isRemoteVideoStreamMuted: boolean;
   isAudioMuted: boolean;
   currentSelectedAudioOutput: string;
+  /**
+   * True while we are sending our screen (or a window) instead of our camera.
+   * Tracked separately from `selectedCameraId` because a screen share is *video being sent*
+   * even though no camera is selected.
+   */
+  isScreenSharing: boolean;
+  /**
+   * True while the remote peer told us (over the data channel) that they are sharing their screen.
+   * Always false when talking to a client which does not send the `screenShare` field.
+   */
+  isRemoteScreenSharing: boolean;
 };
 
 export type CallManagerListener = ((options: CallManagerOptionsType) => void) | null;
@@ -80,9 +92,12 @@ function callVideoListeners() {
         audioInputsList,
         audioOutputsList,
         isRemoteVideoStreamMuted: remoteVideoStreamIsMuted,
-        isLocalVideoStreamMuted: selectedCameraId === DEVICE_DISABLED_DEVICE_ID,
+        // while sharing our screen we *are* sending video, even though no camera is selected
+        isLocalVideoStreamMuted: !isScreenSharing && selectedCameraId === DEVICE_DISABLED_DEVICE_ID,
         isAudioMuted: selectedAudioInputId === DEVICE_DISABLED_DEVICE_ID,
         currentSelectedAudioOutput: selectedAudioOutputId,
+        isScreenSharing,
+        isRemoteScreenSharing: remoteIsScreenSharing,
       });
     });
   }
@@ -101,7 +116,9 @@ export function addVideoEventsListener(uniqueId: string, listener: CallManagerLi
 export function removeVideoEventsListener(uniqueId: string) {
   const indexFound = videoEventsListeners.findIndex(m => m.id === uniqueId);
   if (indexFound !== -1) {
-    videoEventsListeners.splice(indexFound);
+    // note: `splice(indexFound)` (one argument) removes *every* listener from that index onwards,
+    // which silently killed the listeners of components unmounted after this one.
+    videoEventsListeners.splice(indexFound, 1);
   }
   callVideoListeners();
 }
@@ -188,6 +205,22 @@ const configuration: RTCConfiguration = {
 let selectedCameraId: string = DEVICE_DISABLED_DEVICE_ID;
 let selectedAudioInputId: string = DEVICE_DISABLED_DEVICE_ID;
 let selectedAudioOutputId: string = DEVICE_DISABLED_DEVICE_ID;
+
+/**
+ * Screen sharing state.
+ *
+ * Session builds a single video transceiver per call and swaps tracks under it with
+ * `replaceTrack()`. We deliberately reuse that single sender for the screen share rather than
+ * adding a second video m-line: Session's call signalling has no mid-call renegotiation, so an
+ * extra m-line would break calls with unmodified Session clients.
+ *
+ * The consequence, which is by design: while sharing, the camera is off. The camera which was
+ * selected before the share started is restored when the share stops.
+ */
+let isScreenSharing = false;
+let screenShareTrack: MediaStreamTrack | null = null;
+let cameraIdBeforeScreenShare: string = DEVICE_DISABLED_DEVICE_ID;
+let remoteIsScreenSharing = false;
 let camerasList: Array<InputItem> = [];
 let audioInputsList: Array<InputItem> = [];
 let audioOutputsList: Array<InputItem> = [];
@@ -232,9 +265,12 @@ async function updateConnectedDevices() {
 }
 
 function sendVideoStatusViaDataChannel() {
-  const videoEnabledLocally = selectedCameraId !== DEVICE_DISABLED_DEVICE_ID;
+  // a screen share is video from the remote peer's point of view, even with no camera selected
+  const videoEnabledLocally = isScreenSharing || selectedCameraId !== DEVICE_DISABLED_DEVICE_ID;
   const stringToSend = JSON.stringify({
     video: videoEnabledLocally,
+    // additive field: clients which don't know about it just ignore it when parsing
+    screenShare: isScreenSharing,
   });
   if (dataChannel && dataChannel.readyState === 'open') {
     dataChannel?.send(stringToSend);
@@ -250,7 +286,158 @@ function sendHangupViaDataChannel() {
   }
 }
 
+/**
+ * Stop the display capture track and drop our screen-sharing state, WITHOUT restoring anything on
+ * the video sender. Callers are responsible for whatever goes on the sender next.
+ */
+function cleanupScreenShareTrack() {
+  if (screenShareTrack) {
+    screenShareTrack.onended = null;
+    screenShareTrack.stop();
+    screenShareTrack = null;
+  }
+  isScreenSharing = false;
+}
+
+export function getIsScreenSharing() {
+  return isScreenSharing;
+}
+
+/**
+ * Put `newTrack` on the call's single video sender and mirror the same change on our local
+ * self-view stream. Every video swap in a call goes through this shape: sender first, then the
+ * local stream, stopping whatever was there before.
+ */
+async function putTrackOnVideoSender(newTrack: MediaStreamTrack) {
+  const videoSender = peerConnection
+    ?.getTransceivers()
+    .find(t => t.sender.track?.kind === 'video')?.sender;
+
+  if (!videoSender) {
+    throw new Error(
+      'We should always have a videoSender as we are using a black video when no camera are in use'
+    );
+  }
+  newTrack.enabled = true;
+  await videoSender.replaceTrack(newTrack);
+
+  localStream?.getVideoTracks().forEach(t => {
+    t.stop();
+    localStream?.removeTrack(t);
+  });
+  localStream?.addTrack(newTrack);
+}
+
+/**
+ * Start sharing a screen or a window into the ongoing call.
+ *
+ * The captured track replaces whatever is currently on the (single) video sender, exactly the way
+ * `selectCameraByDeviceId` swaps camera tracks. See the comment on `isScreenSharing` for why we do
+ * not add a second video track.
+ */
+export async function startScreenShare(sourceId: string) {
+  if (isScreenSharing) {
+    return;
+  }
+  if (!peerConnection) {
+    window.log.warn('startScreenShare: no peer connection');
+    return;
+  }
+  const cameraBefore = selectedCameraId;
+  let acquiredTrack: MediaStreamTrack | null = null;
+  try {
+    // Electron has no built-in picker: the main process answers getDisplayMedia() with whatever
+    // source we hand it here, which is the one the user just picked in Session's own picker.
+    await setScreenShareSource(sourceId);
+
+    const displayStream = await navigator.mediaDevices.getDisplayMedia({
+      video: true,
+      audio: false,
+    });
+    const displayTrack = displayStream.getVideoTracks()[0];
+    if (!displayTrack) {
+      throw new Error('getDisplayMedia returned no video track');
+    }
+    acquiredTrack = displayTrack;
+
+    // remember what to go back to when the share stops
+    cameraIdBeforeScreenShare = cameraBefore;
+    selectedCameraId = DEVICE_DISABLED_DEVICE_ID;
+
+    await putTrackOnVideoSender(displayTrack);
+
+    // the OS "Stop sharing" affordance ends the track without telling us any other way
+    displayTrack.onended = () => {
+      void stopScreenShare();
+    };
+
+    screenShareTrack = displayTrack;
+    isScreenSharing = true;
+
+    sendVideoStatusViaDataChannel();
+    callVideoListeners();
+  } catch (e) {
+    // the user cancelling the picker lands here too, and must not be reported as an error
+    const cancelled = e?.name === 'NotAllowedError' || e?.name === 'AbortError';
+    window.log.warn('startScreenShare failed with', e.message);
+    if (!cancelled) {
+      ToastUtils.pushToastError('startScreenShare', e.message);
+    }
+    // never leave a capture running that we failed to put on the wire
+    if (acquiredTrack && acquiredTrack !== screenShareTrack) {
+      acquiredTrack.stop();
+    }
+    cleanupScreenShareTrack();
+    selectedCameraId = cameraBefore;
+    cameraIdBeforeScreenShare = DEVICE_DISABLED_DEVICE_ID;
+    callVideoListeners();
+  }
+}
+
+/**
+ * Stop an ongoing screen share and put the camera which was selected before the share back on the
+ * video sender (or the black-silence track when no camera was in use).
+ */
+export async function stopScreenShare() {
+  if (!isScreenSharing) {
+    return;
+  }
+  const cameraToRestore = cameraIdBeforeScreenShare;
+  cameraIdBeforeScreenShare = DEVICE_DISABLED_DEVICE_ID;
+  cleanupScreenShareTrack();
+
+  if (
+    cameraToRestore !== DEVICE_DISABLED_DEVICE_ID &&
+    camerasList.some(m => m.deviceId === cameraToRestore)
+  ) {
+    // selectCameraByDeviceId owns the whole track lifecycle (sender, local stream, data channel,
+    // listeners) for a real camera. Reusing it is what keeps the restore path from drifting away
+    // from the normal camera path.
+    await selectCameraByDeviceId(cameraToRestore);
+    return;
+  }
+
+  // No camera to go back to. We explicitly push the black-silence track onto the sender rather
+  // than reusing selectCameraByDeviceId(DEVICE_DISABLED_DEVICE_ID): that path only sets
+  // `enabled = false` on whatever track the sender already holds, which would leave the peer
+  // looking at the last frame of our screen. Stopping a share must stop the peer seeing it.
+  selectedCameraId = DEVICE_DISABLED_DEVICE_ID;
+  try {
+    await putTrackOnVideoSender(getBlackSilenceMediaStream().getVideoTracks()[0]);
+  } catch (e) {
+    window.log.warn('stopScreenShare could not restore the black silence track:', e.message);
+  }
+  sendVideoStatusViaDataChannel();
+  callVideoListeners();
+}
+
 export async function selectCameraByDeviceId(cameraDeviceId: string) {
+  if (isScreenSharing) {
+    // there is only one video sender, so touching the camera necessarily ends the screen share.
+    // Note: cleanup only — the code below is what puts the next track on the sender.
+    cleanupScreenShareTrack();
+    cameraIdBeforeScreenShare = DEVICE_DISABLED_DEVICE_ID;
+  }
   if (cameraDeviceId === DEVICE_DISABLED_DEVICE_ID) {
     selectedCameraId = DEVICE_DISABLED_DEVICE_ID;
 
@@ -723,6 +910,10 @@ function closeVideoCall() {
     peerConnection = null;
   }
 
+  cleanupScreenShareTrack();
+  cameraIdBeforeScreenShare = DEVICE_DISABLED_DEVICE_ID;
+  remoteIsScreenSharing = false;
+
   localStream = null;
   remoteStream = null;
   selectedCameraId = DEVICE_DISABLED_DEVICE_ID;
@@ -768,6 +959,9 @@ function onDataChannelReceivedMessage(ev: MessageEvent<string>) {
     if (parsed.video !== undefined) {
       remoteVideoStreamIsMuted = !parsed.video;
     }
+
+    // additive field, only sent by clients which support screen sharing
+    remoteIsScreenSharing = parsed.screenShare === true;
   } catch (e) {
     window.log.warn('onDataChannelReceivedMessage Could not parse data in event', ev);
   }

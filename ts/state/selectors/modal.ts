@@ -55,6 +55,10 @@ export function useOnionPathDialog() {
   return useSelector((state: StateType) => getModal(state).onionPathModal);
 }
 
+export function useAccountSwitcherModal() {
+  return useSelector((state: StateType) => getModal(state).accountSwitcherModal);
+}
+
 export function useEnterPasswordModal() {
   return useSelector((state: StateType) => getModal(state).enterPasswordModal);
 }
