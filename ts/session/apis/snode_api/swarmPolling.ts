@@ -126,11 +126,20 @@ export class SwarmPolling {
    * lastHashes[snode_edkey][pubkey_polled][namespace_polled] = last_hash
    */
   private readonly lastHashes: Record<string, Record<string, Record<number, string>>>;
+  /**
+   * conversationId -> how many times its cursor has been reset.
+   *
+   * A poll compares this before and after its fetch rather than the cursor values themselves,
+   * because a value comparison cannot see a reset of a cursor that was already empty, and a poll
+   * that misses the reset writes its newest hash back and undoes it.
+   */
+  private readonly cursorResets: Map<string, number>;
   private hasStarted = false;
 
   constructor() {
     this.groupPolling = [];
     this.lastHashes = {};
+    this.cursorResets = new Map();
   }
 
   public async start(waitForFirstPoll = false): Promise<void> {
@@ -658,6 +667,8 @@ export class SwarmPolling {
     const snodeEdkey = node.pubkey_ed25519;
 
     try {
+      // taken before anything is read, so a reset at any point from here on is seen
+      const resetsAtStart = this.cursorResetCount(pubkey);
       const configHashesToBump = await this.getHashesToBump(type, pubkey);
       const namespacesAndLastHashes = await Promise.all(
         namespaces.map(async namespace => {
@@ -680,17 +691,11 @@ export class SwarmPolling {
         allow401s
       );
 
-      const namespacesAndLastHashesAfterFetch = await Promise.all(
-        namespaces.map(async namespace => {
-          const lastHash = await this.getLastHash(snodeEdkey, pubkey, namespace);
-          return { namespace, lastHash };
-        })
-      );
-
-      if (
-        namespacesAndLastHashes.some(m => m) &&
-        namespacesAndLastHashesAfterFetch.every(m => !m)
-      ) {
+      // The cursor was reset while this fetch was in flight, so it was made against a cursor that
+      // no longer exists. Writing its newest hash back would undo the reset and the history it
+      // asked for would never be fetched. Its messages are dropped with it: the next poll fetches
+      // them again from the start, and seen-message dedupe absorbs the overlap.
+      if (this.cursorResetCount(pubkey) !== resetsAtStart) {
         swarmLog(
           `SwarmPolling: hashes for ${ed25519Str(pubkey)} have been reset while we were fetching new messages. discarding them....`
         );
@@ -786,6 +791,7 @@ export class SwarmPolling {
             namespace: namespaces[index],
             hash: lastMessage.hash,
             expiration: lastMessage.expiration,
+            resetsAtStart,
           });
         })
       );
@@ -887,15 +893,23 @@ export class SwarmPolling {
     hash,
     namespace,
     pubkey,
+    resetsAtStart,
   }: {
     edkey: string;
     pubkey: string;
     namespace: number;
     hash: string;
     expiration: number;
+    /** the reset count when the poll writing this started; see cursorResets */
+    resetsAtStart: number;
   }): Promise<void> {
     const cached = await this.getLastHash(edkey, pubkey, namespace);
 
+    // Checked again before each write, not only once before the loop: a reset can land during the
+    // awaits in here, and either write landing after it undoes it.
+    if (this.cursorResetCount(pubkey) !== resetsAtStart) {
+      return;
+    }
     if (!cached || cached !== hash) {
       await Data.updateLastHash({
         convoId: pubkey,
@@ -906,6 +920,9 @@ export class SwarmPolling {
       });
     }
 
+    if (this.cursorResetCount(pubkey) !== resetsAtStart) {
+      return;
+    }
     if (!this.lastHashes[edkey]) {
       this.lastHashes[edkey] = {};
     }
@@ -913,6 +930,10 @@ export class SwarmPolling {
       this.lastHashes[edkey][pubkey] = {};
     }
     this.lastHashes[edkey][pubkey][namespace] = hash;
+  }
+
+  private cursorResetCount(pubkey: string) {
+    return this.cursorResets.get(pubkey) ?? 0;
   }
 
   private async getLastHash(nodeEdKey: string, pubkey: string, namespace: number): Promise<string> {
@@ -933,6 +954,9 @@ export class SwarmPolling {
   }
 
   public async resetLastHashesForConversation(conversationId: string) {
+    // Counted before the first await, so a poll checking at any point after this call starts sees
+    // it, including one whose cursor write would otherwise land between the clears below.
+    this.cursorResets.set(conversationId, this.cursorResetCount(conversationId) + 1);
     await Data.clearLastHashesForConvoId(conversationId);
     const snodeKeys = Object.keys(this.lastHashes);
     for (let index = 0; index < snodeKeys.length; index++) {
