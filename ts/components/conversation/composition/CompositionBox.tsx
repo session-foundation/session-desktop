@@ -56,6 +56,7 @@ import type { CompositionInputRef } from './CompositionInput';
 import { useShowBlockUnblock } from '../../menuAndSettingsHooks/useShowBlockUnblock';
 import { showLocalizedPopupDialog } from '../../dialog/LocalizedPopupDialog';
 import { formatNumber } from '../../../util/i18n/formatting/generics';
+import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
 import { showSessionCTA } from '../../dialog/SessionCTA';
 import type { ProcessedLinkPreviewThumbnailType } from '../../../webworker/workers/node/image_processor/image_processor';
 import { CTAVariant } from '../../dialog/cta/types';
@@ -678,7 +679,7 @@ class CompositionBoxInner extends Component<Props, State> {
     if (codepointCount > charLimit) {
       const dispatch = window.inboxStore?.dispatch;
       if (dispatch) {
-        if (!hasPro) {
+        if (getFeatureFlag('proAvailable') && !hasPro) {
           showSessionCTA(CTAVariant.PRO_MESSAGE_CHARACTER_LIMIT, dispatch);
         } else {
           showLocalizedPopupDialog(

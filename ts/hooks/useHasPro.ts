@@ -7,6 +7,7 @@ import {
 import { ProStatus } from '../session/apis/pro_backend_api/types';
 import { UserUtils } from '../session/utils';
 import type { StateType } from '../state/reducer';
+import { getIsProAvailableMemo } from './useIsProAvailable';
 
 export function selectOurProStatus(state: StateType) {
   const proBackendCurrentUserStatus = getProBackendCurrentUserStatus(state);
@@ -48,9 +49,10 @@ function useCurrentUserProStatus() {
  * features.
  */
 export function useCurrentUserHasPro() {
+  const isProAvailable = getIsProAvailableMemo();
   const status = useCurrentUserProStatus();
 
-  return status === ProStatus.Active;
+  return isProAvailable && status === ProStatus.Active;
 }
 
 /**
@@ -60,16 +62,20 @@ export function useCurrentUserHasPro() {
  * animated avatar, a gate on a Pro-only action.
  */
 export function useCurrentUserHasProAccess() {
-  return useSelector(selectWeHaveProAccess);
+  const isProAvailable = getIsProAvailableMemo();
+  const haveAccess = useSelector(selectWeHaveProAccess);
+
+  return isProAvailable && haveAccess;
 }
 
 /**
  * Returns true if pro is available, and the current user has expired pro.
  */
 export function useCurrentUserHasExpiredPro() {
+  const isProAvailable = getIsProAvailableMemo();
   const status = useCurrentUserProStatus();
 
-  return status === ProStatus.Expired;
+  return isProAvailable && status === ProStatus.Expired;
 }
 
 /**
@@ -77,9 +83,10 @@ export function useCurrentUserHasExpiredPro() {
  * (i.e. the user does not have pro currently and doesn't have an expired pro either)
  */
 export function useCurrentNeverHadPro() {
+  const isProAvailable = getIsProAvailableMemo();
   const status = useCurrentUserProStatus();
 
-  return status === ProStatus.Never;
+  return isProAvailable && status === ProStatus.Never;
 }
 
 /**

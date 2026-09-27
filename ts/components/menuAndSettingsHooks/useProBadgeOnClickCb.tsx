@@ -1,4 +1,5 @@
 import { getAppDispatch } from '../../state/dispatch';
+import { getIsProAvailableMemo } from '../../hooks/useIsProAvailable';
 import { ProMessageFeature } from '../../models/proMessageFeature';
 import { SessionCTAState, updateSessionCTA } from '../../state/ducks/modalDialog';
 import { assertUnreachable } from '../../types/sqlSharedTypes';
@@ -122,7 +123,7 @@ function proFeatureToVariant(proFeature: ProMessageFeature): CTAVariant {
  *
  * `userHasPro` stays an argument: it describes the other participant, so it varies per conversation.
  */
-export function useProBadgeOnClickCb(
+function useProBadgeOnClickCbWhenProAvailable(
   opts: ProBadgeContext
 ): ShowTagWithCb | ShowTagNoCb | DoNotShowTag {
   const dispatch = getAppDispatch();
@@ -260,4 +261,27 @@ export function useProBadgeOnClickCb(
 
   assertUnreachable(context, 'useProBadgeOnClickCb: context not handled');
   return doNotShow;
+}
+
+export function useProBadgeOnClickCb(
+  opts: ProBadgeContext
+): ShowTagWithCb | ShowTagNoCb | DoNotShowTag {
+  const isProAvailable = getIsProAvailableMemo();
+  const tag = useProBadgeOnClickCbWhenProAvailable(opts);
+
+  if (isProAvailable) {
+    return tag;
+  }
+
+  // With Pro off, other people's badges still show — they are Pro whatever this client thinks — but a badge
+  // never sells anything, and the badges that only exist to present our own Pro are gone.
+  if (
+    !tag.show ||
+    opts.context === 'edit-profile-pic' ||
+    opts.context === 'show-our-profile-dialog' ||
+    opts.context === 'character-count'
+  ) {
+    return doNotShow;
+  }
+  return showNoCb;
 }

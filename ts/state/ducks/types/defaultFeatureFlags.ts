@@ -10,6 +10,9 @@ import {
 } from './releasedFeaturesReduxTypes';
 
 export const defaultProBooleanFeatureFlags = {
+  // Master gate for Session Pro. Off, this account can neither use nor buy Pro and nothing is restricted for
+  // lacking it, while other people's Pro is still honoured.
+  proAvailable: !isEmpty(process.env.SESSION_PRO),
   proGroupsAvailable: !isEmpty(process.env.SESSION_PRO_GROUPS),
   useTestProBackend: !isEmpty(process.env.TEST_PRO_BACKEND),
   mockCurrentUserHasProCancelled: !isEmpty(process.env.SESSION_USER_HAS_PRO_CANCELLED),
