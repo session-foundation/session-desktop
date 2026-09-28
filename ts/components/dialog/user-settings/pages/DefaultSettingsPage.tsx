@@ -33,6 +33,7 @@ import { setDebugMode } from '../../../../state/ducks/debug';
 import { useHideRecoveryPasswordEnabled } from '../../../../state/selectors/settings';
 import { OnionStatusLight } from '../../OnionStatusPathDialog';
 import { UserSettingsModalContainer } from '../components/UserSettingsModalContainer';
+import { getIsProAvailableMemo } from '../../../../hooks/useIsProAvailable';
 import { useCurrentUserHasExpiredPro, useCurrentUserHasPro } from '../../../../hooks/useHasPro';
 import { APP_URL } from '../../../../session/constants';
 import { useUserSettingsCloseAction } from './userSettingsHooks';
@@ -65,8 +66,13 @@ function LucideIconForSettings(props: Omit<LucideIconProps, 'iconSize' | 'style'
 function SessionProSection() {
   const dispatch = getAppDispatch();
 
+  const isProAvailable = getIsProAvailableMemo();
   const userHasPro = useCurrentUserHasPro();
   const currentUserHasExpiredPro = useCurrentUserHasExpiredPro();
+
+  if (!isProAvailable) {
+    return null;
+  }
 
   return (
     <PanelButtonGroup>
