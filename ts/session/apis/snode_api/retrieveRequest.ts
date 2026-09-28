@@ -17,6 +17,7 @@ import { BatchRequests } from './batchRequest';
 import { RetrieveMessagesResultsBatched, RetrieveMessagesResultsContent } from './types';
 import { ed25519Str } from '../../utils/String';
 import { NetworkTime } from '../../../util/NetworkTime';
+import { ConfigTtlExtensionThrottle } from './configTtlExtensionThrottle';
 
 type RetrieveParams = {
   pubkey: string;
@@ -177,11 +178,15 @@ async function retrieveNextMessagesNoRetries(
   configHashesToBump: Array<string> | null,
   allow401s: boolean
 ): Promise<RetrieveMessagesResultsBatched> {
+  const hashesToExtend =
+    configHashesToBump?.length && ConfigTtlExtensionThrottle.isDue(associatedWith)
+      ? configHashesToBump
+      : null;
   const rawRequests = await buildRetrieveRequest(
     namespacesAndLastHashes,
     associatedWith,
     ourPubkey,
-    configHashesToBump
+    hashesToExtend
   );
 
   // let exceptions bubble up
@@ -227,13 +232,15 @@ async function retrieveNextMessagesNoRetries(
         `_retrieveNextMessages - retrieve result is not 200 with ${targetNode.ip}:${targetNode.port} but ${firstResult.code}`
       );
     }
-    if (configHashesToBump?.length) {
+    if (hashesToExtend?.length && results.length === namespacesAndLastHashes.length + 1) {
       const lastResult = results[results.length - 1];
       if (lastResult?.code !== 200) {
         // the update expiry of our config messages didn't work.
         window.log.warn(
           `the update expiry of our tracked config hashes didn't work: ${JSON.stringify(lastResult)}`
         );
+      } else {
+        ConfigTtlExtensionThrottle.recordSuccessfulExtension(associatedWith);
       }
     }
 
