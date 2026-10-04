@@ -1,0 +1,26 @@
+diff --git a/node_modules/linkify-it/build/index.cjs.js b/node_modules/linkify-it/build/index.cjs.js
+--- a/node_modules/linkify-it/build/index.cjs.js
++++ b/node_modules/linkify-it/build/index.cjs.js
+@@ -69,7 +69,8 @@
+           // - parts of file path
+           // - params separator
+           // until more examples found.
+-          '\\.{2,}[a-zA-Z0-9%/&]|' +
++          // Backport https://github.com/markdown-it/linkify-it/commit/c93cccc3df999c2f60ddfbd2df1c1137bb49ca8d
++          '\\.{2,}[:]?[a-zA-Z0-9%/&]|' +
+
+           `\\.(?!${re.src_ZCc}|[.]|$)|` +
+           (opts['---']
+diff --git a/node_modules/linkify-it/lib/re.mjs b/node_modules/linkify-it/lib/re.mjs
+--- a/node_modules/linkify-it/lib/re.mjs
++++ b/node_modules/linkify-it/lib/re.mjs
+@@ -67,7 +67,8 @@
+           // - parts of file path
+           // - params separator
+           // until more examples found.
+-          '\\.{2,}[a-zA-Z0-9%/&]|' +
++          // Backport https://github.com/markdown-it/linkify-it/commit/c93cccc3df999c2f60ddfbd2df1c1137bb49ca8d
++          '\\.{2,}[:]?[a-zA-Z0-9%/&]|' +
+
+           `\\.(?!${re.src_ZCc}|[.]|$)|` +
+           (opts['---']
