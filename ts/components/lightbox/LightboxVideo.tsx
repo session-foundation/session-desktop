@@ -1,4 +1,6 @@
+import { debounce } from 'lodash';
 import type { CSSProperties, Ref, SyntheticEvent } from 'react';
+import useUnmount from 'react-use/lib/useUnmount';
 
 import { SettingsKey } from '../../data/settings-key';
 
@@ -11,6 +13,15 @@ type Props = {
 const isValidVolume = (volume: unknown): volume is number =>
   typeof volume === 'number' && Number.isFinite(volume) && volume >= 0 && volume <= 1;
 
+// Dragging the volume slider fires a volumechange per step, and each save is a database write.
+export const saveLightboxVideoVolume = debounce(
+  (volume: number) => {
+    void window.setSettingValue(SettingsKey.lightboxVideoVolume, volume);
+  },
+  500,
+  { leading: false, trailing: true }
+);
+
 export const LightboxVideo = ({ renderedRef, style, urlToLoad }: Props) => {
   const handleLoadedMetadata = (event: SyntheticEvent<HTMLVideoElement>) => {
     const savedVolume = window.getSettingValue(SettingsKey.lightboxVideoVolume);
@@ -21,8 +32,12 @@ export const LightboxVideo = ({ renderedRef, style, urlToLoad }: Props) => {
   };
 
   const handleVolumeChange = (event: SyntheticEvent<HTMLVideoElement>) => {
-    void window.setSettingValue(SettingsKey.lightboxVideoVolume, event.currentTarget.volume);
+    saveLightboxVideoVolume(event.currentTarget.volume);
   };
+
+  useUnmount(() => {
+    saveLightboxVideoVolume.flush();
+  });
 
   return (
     <video
