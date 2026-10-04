@@ -20,6 +20,7 @@ import LIBSESSION_CONSTANTS from '../session/utils/libsession/libsession_constan
 import { longOrNumberToNumber } from '../types/long/longOrNumberToNumber';
 import { getHideMessageRequestBannerOutsideRedux } from '../state/selectors/settings';
 import { showMessageRequestBannerOutsideRedux } from '../state/ducks/settings';
+import { getFeatureFlag } from '../state/ducks/types/releasedFeaturesReduxTypes';
 import type { StateType } from '../state/reducer';
 import { isUsFromCache } from '../session/utils/User';
 import { isUsAnySogsFromCache } from '../session/apis/open_group_api/sogsv3/knownBlindedkeys';
@@ -242,9 +243,11 @@ async function handleRegularMessage(
     ? sendingDeviceConversation.hasValidCurrentProProof()
     : decodedEnvelope.proProofEntitlesFeaturesNow();
 
-  const maxChars = senderIsProForThisMessage
-    ? LIBSESSION_CONSTANTS.MESSAGE_CHARACTER_LIMIT_PRO
-    : LIBSESSION_CONSTANTS.MESSAGE_CHARACTER_LIMIT_STANDARD;
+  // NOTE: The truncation value must be the Pro count so when Pro is released older clients wont truncate pro messages.
+  const maxChars =
+    !getFeatureFlag('proAvailable') || senderIsProForThisMessage
+      ? LIBSESSION_CONSTANTS.MESSAGE_CHARACTER_LIMIT_PRO
+      : LIBSESSION_CONSTANTS.MESSAGE_CHARACTER_LIMIT_STANDARD;
 
   const body = [...rawDataMessage.body].slice(0, maxChars).join('');
 

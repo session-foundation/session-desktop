@@ -12,6 +12,7 @@ import {
   MockProProofOptions,
   SessionDataFeatureFlags,
   getDataFeatureFlagMemo,
+  getFeatureFlagMemo,
   type SessionDataFeatureFlagKeys,
   type SessionBooleanFeatureFlagKeys,
 } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
@@ -40,6 +41,7 @@ import {
   defaultProDataFeatureFlags,
 } from '../../../state/ducks/types/defaultFeatureFlags';
 import { UserConfigWrapperActions } from '../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
+import { isDebugMode } from '../../../shared/env_vars';
 import {
   useProBackendProStatus,
   useProBackendRefetch,
@@ -484,6 +486,7 @@ const handledBooleanFeatureFlags = proBooleanFlags
   .concat(proBackendBooleanFlags.map(({ flag: key }) => key))
   .concat(debugFeatureFlags.map(({ flag: key }) => key))
   .concat([
+    'proAvailable',
     'proGroupsAvailable',
     'useTestProBackend',
     'debugLogging',
@@ -803,6 +806,7 @@ export const ProDebugSection = ({
 }: DebugMenuPageProps & { forceUpdate: () => void }) => {
   const dispatch = getAppDispatch();
   const mockExpiry = getDataFeatureFlagMemo('mockProAccessExpiry');
+  const proAvailable = getFeatureFlagMemo('proAvailable');
 
   const resetPro = useCallback(async () => {
     await UserConfigWrapperActions.removeProConfig();
@@ -866,224 +870,241 @@ export const ProDebugSection = ({
     };
   }, [proExpiredCTASetting]);
 
+  if (!proAvailable && !isDebugMode()) {
+    return null;
+  }
+
   return (
     <DebugMenuSection title="Session Pro">
-      <DebugButton buttonColor={SessionButtonColor.Danger} onClick={resetPro}>
-        Reset All Pro State
-      </DebugButton>
-      <DebugButton onClick={() => setPage(DEBUG_MENU_PAGE.Pro)}>Pro Playground</DebugButton>
-      <DebugButton
-        onClick={() => {
-          // Developer path: exempt from the status floor (a debug button that silently no-ops for
-          // 60s is worse than useless when you are trying to observe a backend change).
-          dispatch(
-            proBackendDataActions.refreshGetProStatusFromProBackend({ immediate: true }) as any
-          );
-        }}
-      >
-        Refresh Pro Status
-      </DebugButton>
-      <DebugButton
-        onClick={async () => {
-          const masterPrivKeyHex = await getProMasterKeyHex();
-          const { rotatingSeedHex, rotatingPrivKeyHex } =
-            await UserUtils.deriveCurrentProRotatingKey();
-          const response = await ProBackendAPI.generateProProof({
-            masterPrivKeyHex,
-            rotatingPrivKeyHex,
-          });
-          if (getFeatureFlag('debugServerRequests')) {
-            window?.log?.debug('getProProof response: ', response);
-          }
-          if (response && response.status === 'ok') {
-            // libsession returns a ready-made ProProof; relay it verbatim.
-            await UserConfigWrapperActions.setProConfig({
-              proProof: response.proof,
-              rotatingSeedHex,
-            });
-          }
-        }}
-      >
-        Get Pro Proof
-      </DebugButton>
-      <DebugButton
-        onClick={async () => {
-          const masterPrivKeyHex = await getProMasterKeyHex();
-          const response = await ProBackendAPI.getProStatus({ masterPrivKeyHex });
-          if (getFeatureFlag('debugServerRequests')) {
-            window?.log?.debug('Pro Status: ', response);
-          }
-        }}
-      >
-        Get Pro Status
-      </DebugButton>
-      <DebugButton
-        onClick={async () => {
-          const response = await ProBackendAPI.getRevocationList({ ticket: 0 });
-          window?.log?.debug('Pro Revocation List: ', response);
-        }}
-      >
-        Get Pro Revocation List (from ticket 0)
-      </DebugButton>
+      <FlagToggle forceUpdate={forceUpdate} flag="proAvailable" label="Pro Beta Released" />
+      {proAvailable ? (
+        <>
+          <DebugButton buttonColor={SessionButtonColor.Danger} onClick={resetPro}>
+            Reset All Pro State
+          </DebugButton>
+          <DebugButton onClick={() => setPage(DEBUG_MENU_PAGE.Pro)}>Pro Playground</DebugButton>
+          <DebugButton
+            onClick={() => {
+              // Developer path: exempt from the status floor (a debug button that silently no-ops for
+              // 60s is worse than useless when you are trying to observe a backend change).
+              dispatch(
+                proBackendDataActions.refreshGetProStatusFromProBackend({ immediate: true }) as any
+              );
+            }}
+          >
+            Refresh Pro Status
+          </DebugButton>
+          <DebugButton
+            onClick={async () => {
+              const masterPrivKeyHex = await getProMasterKeyHex();
+              const { rotatingSeedHex, rotatingPrivKeyHex } =
+                await UserUtils.deriveCurrentProRotatingKey();
+              const response = await ProBackendAPI.generateProProof({
+                masterPrivKeyHex,
+                rotatingPrivKeyHex,
+              });
+              if (getFeatureFlag('debugServerRequests')) {
+                window?.log?.debug('getProProof response: ', response);
+              }
+              if (response && response.status === 'ok') {
+                // libsession returns a ready-made ProProof; relay it verbatim.
+                await UserConfigWrapperActions.setProConfig({
+                  proProof: response.proof,
+                  rotatingSeedHex,
+                });
+              }
+            }}
+          >
+            Get Pro Proof
+          </DebugButton>
+          <DebugButton
+            onClick={async () => {
+              const masterPrivKeyHex = await getProMasterKeyHex();
+              const response = await ProBackendAPI.getProStatus({ masterPrivKeyHex });
+              if (getFeatureFlag('debugServerRequests')) {
+                window?.log?.debug('Pro Status: ', response);
+              }
+            }}
+          >
+            Get Pro Status
+          </DebugButton>
+          <DebugButton
+            onClick={async () => {
+              const response = await ProBackendAPI.getRevocationList({ ticket: 0 });
+              window?.log?.debug('Pro Revocation List: ', response);
+            }}
+          >
+            Get Pro Revocation List (from ticket 0)
+          </DebugButton>
 
-      <FlagToggle forceUpdate={forceUpdate} flag="useTestProBackend" label="Use Test Pro Backend" />
-      <FlagToggle forceUpdate={forceUpdate} flag="proGroupsAvailable" label="Pro Groups Released" />
-      <DebugButton buttonColor={SessionButtonColor.Danger} onClick={resetProMocking}>
-        Reset Pro Mocking
-      </DebugButton>
+          <FlagToggle
+            forceUpdate={forceUpdate}
+            flag="useTestProBackend"
+            label="Use Test Pro Backend"
+          />
+          <FlagToggle
+            forceUpdate={forceUpdate}
+            flag="proGroupsAvailable"
+            label="Pro Groups Released"
+          />
+          <DebugButton buttonColor={SessionButtonColor.Danger} onClick={resetProMocking}>
+            Reset Pro Mocking
+          </DebugButton>
 
-      <FlagEnumDropdownInput
-        label="Current Status"
-        flag="mockProCurrentStatus"
-        options={[
-          { label: 'Never Had Pro', value: ProStatus.Never },
-          { label: 'Active', value: ProStatus.Active },
-          { label: 'Expired', value: ProStatus.Expired },
-        ]}
-        forceUpdate={forceUpdate}
-        unsetOption={{ label: 'Select Current Status', value: null }}
-      />
-      <FlagEnumDropdownInput
-        label="Proof (access)"
-        flag="mockProProof"
-        options={[
-          { label: 'Holds a valid proof', value: MockProProofOptions.Valid },
-          { label: 'Holds no usable proof', value: MockProProofOptions.None },
-        ]}
-        forceUpdate={forceUpdate}
-        unsetOption={{ label: 'Use the actual proof', value: null }}
-      />
-      <FlagEnumDropdownInput
-        label="Quick-refund window"
-        flag="mockProPlatformRefundWindow"
-        options={[
-          {
-            label: "The store's window is still open",
-            value: MockProPlatformRefundWindowOptions.Open,
-          },
-          {
-            label: "The store's window has closed",
-            value: MockProPlatformRefundWindowOptions.Closed,
-          },
-        ]}
-        forceUpdate={forceUpdate}
-        unsetOption={{ label: "Use the payment's own refund expiry", value: null }}
-        visibleWithEnumFlag={{
-          flag: 'mockProCurrentStatus',
-          isVisible: v => v === ProStatus.Active,
-        }}
-      />
-      <i>
-        Status above is what the plan DISPLAYS; proof here is what the app may DO. They are separate
-        on purpose — active-with-no-proof is the state where a long message is accepted and then
-        truncated for the recipient.
-      </i>
-      {proBooleanFlags.map(props => (
-        <FlagToggle {...props} key={props.flag} forceUpdate={forceUpdate} />
-      ))}
-      <FlagEnumDropdownInput
-        label="Payment Provider"
-        flag="mockProPaymentProvider"
-        options={[
-          { label: 'Google Play', value: ProPaymentProvider.GooglePlay },
-          { label: 'iOS App Store', value: ProPaymentProvider.AppStore },
-          { label: 'STF', value: ProPaymentProvider.Stf },
-        ]}
-        forceUpdate={forceUpdate}
-        unsetOption={{ label: 'Select originating platform', value: null }}
-        visibleWithEnumFlag={{
-          flag: 'mockProCurrentStatus',
-          isVisible: v => v !== ProStatus.Never,
-        }}
-      />
-      <FlagEnumDropdownInput
-        label="Access Variant"
-        flag="mockProAccessVariant"
-        options={[
-          { label: '1 Month', value: ProAccessVariant.OneMonth },
-          { label: '3 Months', value: ProAccessVariant.ThreeMonth },
-          { label: '12 Months', value: ProAccessVariant.TwelveMonth },
-        ]}
-        forceUpdate={forceUpdate}
-        unsetOption={{ label: 'Select access variant', value: null }}
-        visibleWithEnumFlag={{
-          flag: 'mockProCurrentStatus',
-          isVisible: v => v !== ProStatus.Never,
-        }}
-      />
-      <FlagEnumDropdownInput
-        label="Expiry"
-        flag="mockProAccessExpiry"
-        options={[
-          { label: '7 Days', value: MockProAccessExpiryOptions.P7D },
-          { label: '29 Days', value: MockProAccessExpiryOptions.P29D },
-          { label: '30 Days', value: MockProAccessExpiryOptions.P30D },
-          { label: '30 Days 1 Second', value: MockProAccessExpiryOptions.P30DT1S },
-          { label: '90 Days', value: MockProAccessExpiryOptions.P90D },
-          { label: '300 Days', value: MockProAccessExpiryOptions.P300D },
-          { label: '365 Days', value: MockProAccessExpiryOptions.P365D },
-          { label: '24 Days 1 Minute', value: MockProAccessExpiryOptions.P24DT1M },
-          { label: '24 Hours 1 Minute', value: MockProAccessExpiryOptions.PT24H1M },
-          { label: '23 Hours 59 Minutes', value: MockProAccessExpiryOptions.PT23H59M },
-          { label: '33 Minutes', value: MockProAccessExpiryOptions.PT33M },
-          { label: '1 Minute', value: MockProAccessExpiryOptions.PT1M },
-          { label: '10 Seconds', value: MockProAccessExpiryOptions.PT10S },
-        ]}
-        forceUpdate={forceUpdate}
-        unsetOption={{ label: 'Select expiry', value: null }}
-        visibleWithEnumFlag={{
-          flag: 'mockProCurrentStatus',
-          isVisible: v => v === ProStatus.Active,
-        }}
-      />
-      {mockExpiry ? (
-        <i>Mocked expiry time does not tick, it will keep being set to now + mock_expiry.</i>
+          <FlagEnumDropdownInput
+            label="Current Status"
+            flag="mockProCurrentStatus"
+            options={[
+              { label: 'Never Had Pro', value: ProStatus.Never },
+              { label: 'Active', value: ProStatus.Active },
+              { label: 'Expired', value: ProStatus.Expired },
+            ]}
+            forceUpdate={forceUpdate}
+            unsetOption={{ label: 'Select Current Status', value: null }}
+          />
+          <FlagEnumDropdownInput
+            label="Proof (access)"
+            flag="mockProProof"
+            options={[
+              { label: 'Holds a valid proof', value: MockProProofOptions.Valid },
+              { label: 'Holds no usable proof', value: MockProProofOptions.None },
+            ]}
+            forceUpdate={forceUpdate}
+            unsetOption={{ label: 'Use the actual proof', value: null }}
+          />
+          <FlagEnumDropdownInput
+            label="Quick-refund window"
+            flag="mockProPlatformRefundWindow"
+            options={[
+              {
+                label: "The store's window is still open",
+                value: MockProPlatformRefundWindowOptions.Open,
+              },
+              {
+                label: "The store's window has closed",
+                value: MockProPlatformRefundWindowOptions.Closed,
+              },
+            ]}
+            forceUpdate={forceUpdate}
+            unsetOption={{ label: "Use the payment's own refund expiry", value: null }}
+            visibleWithEnumFlag={{
+              flag: 'mockProCurrentStatus',
+              isVisible: v => v === ProStatus.Active,
+            }}
+          />
+          <i>
+            Status above is what the plan DISPLAYS; proof here is what the app may DO. They are
+            separate on purpose — active-with-no-proof is the state where a long message is accepted
+            and then truncated for the recipient.
+          </i>
+          {proBooleanFlags.map(props => (
+            <FlagToggle {...props} key={props.flag} forceUpdate={forceUpdate} />
+          ))}
+          <FlagEnumDropdownInput
+            label="Payment Provider"
+            flag="mockProPaymentProvider"
+            options={[
+              { label: 'Google Play', value: ProPaymentProvider.GooglePlay },
+              { label: 'iOS App Store', value: ProPaymentProvider.AppStore },
+              { label: 'STF', value: ProPaymentProvider.Stf },
+            ]}
+            forceUpdate={forceUpdate}
+            unsetOption={{ label: 'Select originating platform', value: null }}
+            visibleWithEnumFlag={{
+              flag: 'mockProCurrentStatus',
+              isVisible: v => v !== ProStatus.Never,
+            }}
+          />
+          <FlagEnumDropdownInput
+            label="Access Variant"
+            flag="mockProAccessVariant"
+            options={[
+              { label: '1 Month', value: ProAccessVariant.OneMonth },
+              { label: '3 Months', value: ProAccessVariant.ThreeMonth },
+              { label: '12 Months', value: ProAccessVariant.TwelveMonth },
+            ]}
+            forceUpdate={forceUpdate}
+            unsetOption={{ label: 'Select access variant', value: null }}
+            visibleWithEnumFlag={{
+              flag: 'mockProCurrentStatus',
+              isVisible: v => v !== ProStatus.Never,
+            }}
+          />
+          <FlagEnumDropdownInput
+            label="Expiry"
+            flag="mockProAccessExpiry"
+            options={[
+              { label: '7 Days', value: MockProAccessExpiryOptions.P7D },
+              { label: '29 Days', value: MockProAccessExpiryOptions.P29D },
+              { label: '30 Days', value: MockProAccessExpiryOptions.P30D },
+              { label: '30 Days 1 Second', value: MockProAccessExpiryOptions.P30DT1S },
+              { label: '90 Days', value: MockProAccessExpiryOptions.P90D },
+              { label: '300 Days', value: MockProAccessExpiryOptions.P300D },
+              { label: '365 Days', value: MockProAccessExpiryOptions.P365D },
+              { label: '24 Days 1 Minute', value: MockProAccessExpiryOptions.P24DT1M },
+              { label: '24 Hours 1 Minute', value: MockProAccessExpiryOptions.PT24H1M },
+              { label: '23 Hours 59 Minutes', value: MockProAccessExpiryOptions.PT23H59M },
+              { label: '33 Minutes', value: MockProAccessExpiryOptions.PT33M },
+              { label: '1 Minute', value: MockProAccessExpiryOptions.PT1M },
+              { label: '10 Seconds', value: MockProAccessExpiryOptions.PT10S },
+            ]}
+            forceUpdate={forceUpdate}
+            unsetOption={{ label: 'Select expiry', value: null }}
+            visibleWithEnumFlag={{
+              flag: 'mockProCurrentStatus',
+              isVisible: v => v === ProStatus.Active,
+            }}
+          />
+          {mockExpiry ? (
+            <i>Mocked expiry time does not tick, it will keep being set to now + mock_expiry.</i>
+          ) : null}
+          <FlagIntegerInput
+            label="Longer Messages Sent"
+            flag="mockProLongerMessagesSent"
+            forceUpdate={forceUpdate}
+          />
+          <FlagIntegerInput
+            label="Pinned Conversations"
+            flag="mockProPinnedConversations"
+            forceUpdate={forceUpdate}
+          />
+          <FlagIntegerInput
+            label="Pro Badges Sent"
+            flag="mockProBadgesSent"
+            forceUpdate={forceUpdate}
+          />
+          <FlagIntegerInput
+            label="Groups Upgraded"
+            flag="mockProGroupsUpgraded"
+            forceUpdate={forceUpdate}
+          />
+          {proBackendBooleanFlags.map(props => (
+            <FlagToggle {...props} key={props.flag} forceUpdate={forceUpdate} />
+          ))}
+          <MessageProFeatures forceUpdate={forceUpdate} />
+          <i>
+            The CTAs will show when a conversation is next opened or the user settings modal is next
+            closed
+          </i>
+          <DebugButton
+            onClick={async () => {
+              await handleSetExpiringSoonCTA();
+              forceUpdate();
+            }}
+          >
+            {setExpiringSoonCTAString}
+          </DebugButton>
+          <DebugButton
+            onClick={async () => {
+              await handleSetExpiredCTA();
+              forceUpdate();
+            }}
+          >
+            {setExpiredCTAString}
+          </DebugButton>
+          <ProConfigManager forceUpdate={forceUpdate} />
+        </>
       ) : null}
-      <FlagIntegerInput
-        label="Longer Messages Sent"
-        flag="mockProLongerMessagesSent"
-        forceUpdate={forceUpdate}
-      />
-      <FlagIntegerInput
-        label="Pinned Conversations"
-        flag="mockProPinnedConversations"
-        forceUpdate={forceUpdate}
-      />
-      <FlagIntegerInput
-        label="Pro Badges Sent"
-        flag="mockProBadgesSent"
-        forceUpdate={forceUpdate}
-      />
-      <FlagIntegerInput
-        label="Groups Upgraded"
-        flag="mockProGroupsUpgraded"
-        forceUpdate={forceUpdate}
-      />
-      {proBackendBooleanFlags.map(props => (
-        <FlagToggle {...props} key={props.flag} forceUpdate={forceUpdate} />
-      ))}
-      <MessageProFeatures forceUpdate={forceUpdate} />
-      <i>
-        The CTAs will show when a conversation is next opened or the user settings modal is next
-        closed
-      </i>
-      <DebugButton
-        onClick={async () => {
-          await handleSetExpiringSoonCTA();
-          forceUpdate();
-        }}
-      >
-        {setExpiringSoonCTAString}
-      </DebugButton>
-      <DebugButton
-        onClick={async () => {
-          await handleSetExpiredCTA();
-          forceUpdate();
-        }}
-      >
-        {setExpiredCTAString}
-      </DebugButton>
-      <ProConfigManager forceUpdate={forceUpdate} />
     </DebugMenuSection>
   );
 };

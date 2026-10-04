@@ -11,7 +11,10 @@ import { GoogleChrome } from '../../util';
 import { isAudio } from '../MIME';
 import { formatTimeDurationMs } from '../../util/i18n/formatting/generics';
 import { isTestIntegration } from '../../shared/env_vars';
-import { getDataFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
+import {
+  getDataFeatureFlag,
+  getFeatureFlag,
+} from '../../state/ducks/types/releasedFeaturesReduxTypes';
 import { processAvatarData } from '../../util/avatar/processAvatarData';
 import type { ProcessedAvatarDataType } from '../../webworker/workers/node/image_processor/image_processor';
 import { ImageProcessor } from '../../webworker/workers/browser/image_processor_interface';
@@ -199,12 +202,17 @@ const AVATAR_MIME_BY_EXTENSION = {
 type AvatarExtension = keyof typeof AVATAR_MIME_BY_EXTENSION;
 
 /**
- * The formats the avatar picker accepts, including `.webp` — the animated one, and so the Pro feature.
- *
- * Unconditional because Pro is permanently available; the gate that used to wrap `.webp` went with the
- * flag it read. The map is what lets a path be turned back into a MIME type rather than guessed at.
+ * `.webp` is only offered when Pro is available, because it is the animated format — an animated
+ * avatar is a Pro feature. The map is what lets a path be turned back into a MIME type rather than
+ * guessed at.
  */
-const acceptedAvatarExtensions: Array<AvatarExtension> = ['.png', '.gif', '.jpeg', '.jpg', '.webp'];
+function acceptedAvatarExtensions(): Array<AvatarExtension> {
+  const accepted: Array<AvatarExtension> = ['.png', '.gif', '.jpeg', '.jpg'];
+  if (getFeatureFlag('proAvailable')) {
+    accepted.push('.webp');
+  }
+  return accepted;
+}
 
 async function pickFileForReal() {
   const [fileHandle] = await (window as any).showOpenFilePicker({
@@ -212,7 +220,7 @@ async function pickFileForReal() {
       {
         description: 'Images',
         accept: {
-          'image/*': acceptedAvatarExtensions,
+          'image/*': acceptedAvatarExtensions(),
         },
       },
     ],
@@ -248,13 +256,15 @@ function hexToRgb(hex: string) {
  * every test was the same square. `fakeAvatarPickerFile` substitutes a real image from disk.
  */
 function pickFileFromDisk(path: string) {
-  const extension = acceptedAvatarExtensions.find(ext => path.toLowerCase().endsWith(ext));
+  const accepted = acceptedAvatarExtensions();
+  const extension = accepted.find(ext => path.toLowerCase().endsWith(ext));
 
   // Throwing rather than falling back to the generated avatar: a silent fallback would surface as a
   // test asserting the wrong image, several steps from the typo that caused it.
   if (!extension) {
+    const webpHint = getFeatureFlag('proAvailable') ? '' : ' (.webp needs SESSION_PRO)';
     throw new Error(
-      `fakeAvatarPickerFile: "${path}" must end in one of ${acceptedAvatarExtensions.join(', ')}`
+      `fakeAvatarPickerFile: "${path}" must end in one of ${accepted.join(', ')}${webpHint}`
     );
   }
   if (!existsSync(path)) {
