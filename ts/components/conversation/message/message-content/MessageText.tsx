@@ -34,6 +34,12 @@ const StyledMessageDeleted = styled.div`
   align-items: center;
 `;
 
+// matches the muted italic placeholder on iOS and Android, so it doesn't read as an ordinary message
+const StyledUnsupportedMessage = styled(StyledMessageDeleted)`
+  font-style: italic;
+  opacity: 0.7;
+`;
+
 export const MessageText = ({ messageId }: Props) => {
   const multiSelectMode = useIsMessageSelectionMode();
   const direction = useMessageDirection(messageId);
@@ -51,7 +57,7 @@ export const MessageText = ({ messageId }: Props) => {
 
   if (isUnsupported) {
     return (
-      <StyledMessageDeleted data-testid="unsupported-message">
+      <StyledUnsupportedMessage data-testid="unsupported-message">
         <LucideIcon
           unicode={LUCIDE_ICONS_UNICODE.CIRCLE_ALERT}
           iconSize="small"
@@ -59,7 +65,7 @@ export const MessageText = ({ messageId }: Props) => {
           style={{ padding: '0 var(--margins-xs)' }}
         />
         {UNSUPPORTED_MESSAGE_PLACEHOLDER_TEXT}
-      </StyledMessageDeleted>
+      </StyledUnsupportedMessage>
     );
   }
 
