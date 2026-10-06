@@ -3,6 +3,7 @@ import { messagesExpired } from '../../state/ducks/conversations';
 import { initWallClockListener } from '../../util/wallClockListener';
 
 import { Data } from '../../data/data';
+import { UnsupportedMessageData } from '../../data/unsupportedMessage/unsupportedMessage';
 import { ConversationModel } from '../../models/conversation';
 import { READ_MESSAGE_STATE } from '../../models/conversationAttributes';
 import { MessageModel } from '../../models/message';
@@ -85,6 +86,8 @@ async function destroyExpiredMessages() {
     });
 
     await destroyMessagesAndUpdateRedux(messagesExpiredDetails);
+    // retained messages without a placeholder carry their own expiry, swept with everything else
+    await UnsupportedMessageData.enforceUnsupportedMessageLimits(NetworkTime.now());
     const convosToRefresh = uniq(messagesExpiredDetails.map(m => m.conversationKey));
     window.log.info('destroyExpiredMessages: convosToRefresh:', convosToRefresh);
     await Promise.all(

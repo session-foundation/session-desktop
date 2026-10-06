@@ -41,6 +41,7 @@ import {
 import { CONVERSATION_PRIORITIES } from '../../models/types';
 import { MessageDeletedType } from '../../models/messageType';
 import { CTAVariant } from '../../components/dialog/cta/types';
+import { UNSUPPORTED_MESSAGE_TABLE } from '../../session/unsupported_messages/types';
 
 // eslint:disable: quotemark one-variable-per-declaration no-unused-expression
 
@@ -133,6 +134,7 @@ const LOKI_SCHEMA_VERSIONS: Array<(currentVersion: number, db: Database) => void
     updateToSessionSchemaVersion55,
     updateToSessionSchemaVersion56,
     updateToSessionSchemaVersion57,
+    updateToSessionSchemaVersion58,
   ];
 
 function updateToSessionSchemaVersion1(currentVersion: number, db: Database) {
@@ -2473,6 +2475,47 @@ async function updateToSessionSchemaVersion57(currentVersion: number, db: Databa
     }
     // else: the new column already exists — nothing to do.
 
+    writeSessionSchemaVersion(targetVersion, db);
+  })();
+
+  console.log(`updateToSessionSchemaVersion${targetVersion}: success!`);
+}
+
+/**
+ * The table and column names are shared with the iOS and Android clients so a future import can read one
+ * shape from all of them. Unlike iOS there is no foreign key to the messages table: Desktop removes the
+ * rows explicitly wherever it deletes messages.
+ */
+export function createUnsupportedMessageTableV58(db: Database) {
+  db.exec(`
+    CREATE TABLE ${UNSUPPORTED_MESSAGE_TABLE}(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      kind TEXT NOT NULL,
+      swarm_public_key TEXT NOT NULL,
+      namespace INTEGER NOT NULL,
+      hash TEXT NOT NULL UNIQUE,
+      server_timestamp_ms INTEGER NOT NULL,
+      server_expiry_ms INTEGER,
+      data BLOB NOT NULL,
+      placeholder_message_id INTEGER,
+      expires_at_ms INTEGER,
+      received_at_ms INTEGER NOT NULL,
+      last_attempt_version TEXT NOT NULL
+    );
+    CREATE INDEX index_${UNSUPPORTED_MESSAGE_TABLE}_on_placeholder_message_id ON ${UNSUPPORTED_MESSAGE_TABLE}(placeholder_message_id);
+    CREATE INDEX index_${UNSUPPORTED_MESSAGE_TABLE}_on_expires_at_ms ON ${UNSUPPORTED_MESSAGE_TABLE}(expires_at_ms);
+  `);
+}
+
+async function updateToSessionSchemaVersion58(currentVersion: number, db: Database) {
+  const targetVersion = 58;
+  if (currentVersion >= targetVersion) {
+    return;
+  }
+  console.log(`updateToSessionSchemaVersion${targetVersion}: starting...`);
+
+  db.transaction(() => {
+    createUnsupportedMessageTableV58(db);
     writeSessionSchemaVersion(targetVersion, db);
   })();
 

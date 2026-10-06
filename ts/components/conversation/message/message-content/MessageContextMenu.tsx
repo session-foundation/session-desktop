@@ -18,6 +18,7 @@ import {
 import {
   useMessageIsControlMessage,
   useMessageIsDeleted,
+  useMessageIsUnsupported,
   useMessageSender,
   useMessageSenderIsAdmin,
 } from '../../../../state/selectors';
@@ -331,6 +332,7 @@ export const MessageContextMenu = ({
   const isLegacyGroup = useSelectedIsLegacyGroup();
   const convoId = useSelectedConversationKey();
   const isDeleted = useMessageIsDeleted(messageId);
+  const isUnsupported = useMessageIsUnsupported(messageId);
   const sender = useMessageSender(messageId);
   const isControlMessage = useMessageIsControlMessage(messageId);
 
@@ -375,7 +377,9 @@ export const MessageContextMenu = ({
           onContextMenuCapture={onClickCapture}
           viewportMargin={12}
         >
-          {!messageId ? null : isDeleted || isControlMessage ? (
+          {!messageId ? null : isUnsupported ? (
+            <DeleteItem messageId={messageId} />
+          ) : isDeleted || isControlMessage ? (
             <>
               <SelectMessageMenuItem messageId={messageId} />
               <DeleteItem messageId={messageId} />

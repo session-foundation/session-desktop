@@ -34,6 +34,8 @@ import {
 } from './messageType';
 
 import { Data } from '../data/data';
+import { UnsupportedMessageData } from '../data/unsupportedMessage/unsupportedMessage';
+import { UNSUPPORTED_MESSAGE_PLACEHOLDER_TEXT } from '../session/unsupported_messages/types';
 import { OpenGroupData } from '../data/opengroups';
 import { SettingsKey } from '../data/settings-key';
 import { isUsAnySogsFromCache } from '../session/apis/open_group_api/sogsv3/knownBlindedkeys';
@@ -188,10 +190,15 @@ export class MessageModel extends Model<MessageAttributes> {
                       propsForMessageRequestResponse: {},
                       isControlMessage: true,
                     } as const)
-                  : ({
-                      messageType: 'regular-message',
-                      isControlMessage: false,
-                    } as const);
+                  : this.isUnsupportedMessage()
+                    ? ({
+                        messageType: 'unsupported-message',
+                        isControlMessage: false,
+                      } as const)
+                    : ({
+                        messageType: 'regular-message',
+                        isControlMessage: false,
+                      } as const);
 
     const messageProps: MessageModelPropsWithoutConvoProps = {
       propsForMessage,
@@ -222,6 +229,10 @@ export class MessageModel extends Model<MessageAttributes> {
 
   public hasAttachments() {
     return !!this.get('hasAttachments');
+  }
+
+  public isUnsupportedMessage() {
+    return !!this.get('unsupportedMessage');
   }
 
   /**
@@ -287,6 +298,9 @@ export class MessageModel extends Model<MessageAttributes> {
   }
 
   public getNotificationText(): string {
+    if (this.isUnsupportedMessage()) {
+      return UNSUPPORTED_MESSAGE_PLACEHOLDER_TEXT;
+    }
     const groupUpdate = this.getGroupUpdateAsArray();
     if (groupUpdate) {
       const isGroupV2 = PubKey.is03Pubkey(this.get('conversationId'));
@@ -1005,6 +1019,7 @@ export class MessageModel extends Model<MessageAttributes> {
       reaction: undefined,
       messageRequestResponse: undefined,
       errors: undefined,
+      unsupportedMessage: undefined,
       ...(shouldMarkAsRead ? { unread: READ_MESSAGE_STATE.read } : {}),
     });
     // Only overwrite the messageHash when we are deleting globally.
@@ -1013,6 +1028,8 @@ export class MessageModel extends Model<MessageAttributes> {
       this.set({ messageHash: undefined });
     }
     await this.commit();
+    // the row survives as a "deleted" bubble, so the explicit delete in removeMessage never runs for it
+    await UnsupportedMessageData.removeUnsupportedMessagesByPlaceholderIds([this.id]);
     // the line below makes sure that getNextExpiringMessage will find this message as expiring.
     // getNextExpiringMessage is used on app start to clean already expired messages which should have been removed already, but are not
     await this.setToExpire();

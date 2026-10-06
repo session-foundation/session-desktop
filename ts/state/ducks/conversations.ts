@@ -50,7 +50,8 @@ export type UIMessageType =
   | 'call-notification'
   | 'interaction-notification'
   | 'message-request-response'
-  | 'regular-message';
+  | 'regular-message'
+  | 'unsupported-message';
 
 type MessageTypeIsControlMessage<T extends UIMessageType> = Extract<
   T,
@@ -97,6 +98,8 @@ type WithMessageRequestResponse = WithMessageTypeDetails<'message-request-respon
 
 type WithRegularMessage = WithMessageTypeDetails<'regular-message'>;
 
+type WithUnsupportedMessage = WithMessageTypeDetails<'unsupported-message'>;
+
 export type MessageModelPropsWithoutConvoProps = {
   propsForMessage: PropsForMessageWithoutConvoProps;
 } & (
@@ -107,6 +110,7 @@ export type MessageModelPropsWithoutConvoProps = {
   | WithMessageRequestResponse
   | WithInteractionNotification
   | WithRegularMessage
+  | WithUnsupportedMessage
   | WithGroupUpdateNotification
 );
 

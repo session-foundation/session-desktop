@@ -5,6 +5,7 @@ import { MessageBody } from './MessageBody';
 import {
   useMessageDirection,
   useMessageIsDeleted,
+  useMessageIsUnsupported,
   useMessageText,
 } from '../../../../state/selectors';
 import {
@@ -18,6 +19,7 @@ import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 import { MessageBubble } from './MessageBubble';
 import { MessageDeletedType } from '../../../../models/messageType';
 import { tr } from '../../../../localization';
+import { UNSUPPORTED_MESSAGE_PLACEHOLDER_TEXT } from '../../../../session/unsupported_messages/types';
 
 type Props = WithMessageId;
 
@@ -36,6 +38,7 @@ export const MessageText = ({ messageId }: Props) => {
   const multiSelectMode = useIsMessageSelectionMode();
   const direction = useMessageDirection(messageId);
   const isDeleted = useMessageIsDeleted(messageId);
+  const isUnsupported = useMessageIsUnsupported(messageId);
   const text = useMessageText(messageId);
   const isOpenOrClosedGroup = useSelectedIsGroupOrCommunity();
   const isPublic = useSelectedIsPublic();
@@ -45,6 +48,20 @@ export const MessageText = ({ messageId }: Props) => {
     direction === 'incoming'
       ? 'var(--message-bubble-incoming-text-color)'
       : 'var(--message-bubble-outgoing-text-color)';
+
+  if (isUnsupported) {
+    return (
+      <StyledMessageDeleted data-testid="unsupported-message">
+        <LucideIcon
+          unicode={LUCIDE_ICONS_UNICODE.CIRCLE_ALERT}
+          iconSize="small"
+          iconColor={iconColor}
+          style={{ padding: '0 var(--margins-xs)' }}
+        />
+        {UNSUPPORTED_MESSAGE_PLACEHOLDER_TEXT}
+      </StyledMessageDeleted>
+    );
+  }
 
   if (isDeleted) {
     return (
