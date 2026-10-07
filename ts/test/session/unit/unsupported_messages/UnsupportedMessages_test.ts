@@ -371,6 +371,19 @@ describe('UnsupportedMessages', () => {
       expect(remainingHashes()).to.deep.eq([first.hash]);
     });
 
+    it('keeps the id of a re-retained record so it keeps its place in the eviction order', () => {
+      const oldest = record();
+      insertUnsupportedMessage(oldest, db);
+      insertUnsupportedMessage(record(), db);
+      const oldestId = db
+        .prepare('SELECT id FROM unsupported_message WHERE hash = $hash;')
+        .get<{ id: number }>({ hash: oldest.hash })?.id;
+      db.prepare('DELETE FROM unsupported_message WHERE hash = $hash;').run({ hash: oldest.hash });
+
+      expect(insertUnsupportedMessage({ ...oldest, id: oldestId }, db)).to.eq(true);
+      expect(remainingHashes()[0]).to.eq(oldest.hash);
+    });
+
     it('round-trips the raw data and a uuid placeholder id', () => {
       const placeholderId = '0e9c4e46-7b9f-4b4e-9b3c-6c4b1c1a2f00';
       insertUnsupportedMessage(record({ placeholder_message_id: placeholderId }), db);

@@ -1,4 +1,3 @@
-import { omit } from 'lodash';
 import { UnsupportedMessageData } from '../../data/unsupportedMessage/unsupportedMessage';
 import { Data } from '../../data/data';
 import { SignalService } from '../../protobuf';
@@ -172,7 +171,7 @@ export async function reprocessRow(
   // The placeholder is already gone, so the record goes back without one, and a later version retries it.
   window.log.info(`UnsupportedMessages: replay of ${row.hash} was dropped, retaining it again`);
   await UnsupportedMessageData.insertUnsupportedMessage({
-    ...omit(row, 'id'),
+    ...row,
     placeholder_message_id: null,
     expires_at_ms: retainedExpiryMs({
       afterSendExpiresAtMs: afterSendExpiryFromContent(content, decodedEnvelope.sentAtMs),

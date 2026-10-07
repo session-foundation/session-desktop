@@ -52,8 +52,8 @@ function evictOldestOfKind(db: Database, kind: UnsupportedMessageKind, count: nu
 }
 
 /**
- * Cap the `newerFormat` rows, then evict the oldest rows, `newerFormat` first, until the total cost
- * fits the byte budget.
+ * Cap the `newerFormat` rows, then evict the oldest rows (lowest id, so insertion order), `newerFormat`
+ * first, until the total cost fits the byte budget.
  *
  * Runs after every insert, so it must stay O(1) when under the limits: it only reads the running
  * totals, and every eviction query is served by the `(kind, id)` index.
@@ -106,6 +106,7 @@ export function insertUnsupportedMessage(
   const result = db
     .prepare(
       `INSERT OR IGNORE INTO ${UNSUPPORTED_MESSAGE_TABLE} (
+        id,
         kind,
         swarm_public_key,
         namespace,
@@ -120,6 +121,7 @@ export function insertUnsupportedMessage(
         received_at_ms,
         last_attempt_version
       ) VALUES (
+        $id,
         $kind,
         $swarm_public_key,
         $namespace,
@@ -135,7 +137,7 @@ export function insertUnsupportedMessage(
         $last_attempt_version
       );`
     )
-    .run(record);
+    .run({ ...record, id: record.id ?? null });
 
   // a failure here must not undo or hide the insert: the next run catches up
   try {

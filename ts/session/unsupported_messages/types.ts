@@ -13,6 +13,10 @@ export const UNSUPPORTED_MESSAGE_STATS_TABLE = 'unsupported_message_stats';
 /**
  * What a row counts for against the byte budget on top of its `data`, so that many tiny rows (which
  * anyone can deposit as `newerFormat`) still use up the budget.
+ *
+ * Written into the `unsupported_message_stats` triggers when migration v58 runs, so changing it needs a
+ * migration which recreates those triggers and recomputes `total_bytes`, otherwise existing databases
+ * keep counting the old value.
  */
 export const UNSUPPORTED_MESSAGE_ROW_OVERHEAD_BYTES = 256;
 
@@ -75,7 +79,8 @@ export type UnsupportedMessageRow = {
   last_attempt_version: string;
 };
 
-export type UnsupportedMessageInsert = Omit<UnsupportedMessageRow, 'id'>;
+/** `id` is only given when re-retaining a row, so it keeps its place in the eviction order */
+export type UnsupportedMessageInsert = Omit<UnsupportedMessageRow, 'id'> & { id?: number };
 
 export type UnsupportedMessageDataNode = {
   /**
