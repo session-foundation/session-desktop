@@ -177,7 +177,6 @@ async function reprocessRow(row: UnsupportedMessageRow, version: string): Promis
 }
 
 let running: Promise<void> | null = null;
-let startupRunDone = false;
 
 async function enforceLimits() {
   try {
@@ -216,10 +215,12 @@ async function reprocess() {
  * version hasn't tried yet, so a type added by an update replaces its placeholder in place.
  * Version-gated, so repeating it on an unchanged app only costs the limit check and one query.
  *
- * Single-flight, as it runs from startup (which can run more than once per process) and from every
- * focus of the app.
+ * Must only be called once the group keys are loaded: a group message replayed without them fails, and
+ * a failure is not retried until the next version.
+ *
+ * Single-flight, as startup can run more than once per process.
  */
-async function runMaintenance() {
+export async function runUnsupportedMessageMaintenance() {
   if (running) {
     return running;
   }
@@ -232,24 +233,4 @@ async function runMaintenance() {
     }
   })();
   return running;
-}
-
-/**
- * Must only be called once the group keys are loaded: a group message replayed without them fails, and
- * a failure is not retried until the next version.
- */
-export async function runUnsupportedMessageMaintenanceOnStartup() {
-  startupRunDone = true;
-  return runMaintenance();
-}
-
-/**
- * A no-op until the startup run has happened, for the reason given on
- * `runUnsupportedMessageMaintenanceOnStartup`.
- */
-export async function runUnsupportedMessageMaintenanceOnAppActive() {
-  if (!startupRunDone) {
-    return undefined;
-  }
-  return runMaintenance();
 }
