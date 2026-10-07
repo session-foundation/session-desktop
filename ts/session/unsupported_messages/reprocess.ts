@@ -1,8 +1,10 @@
+import { omit } from 'lodash';
 import { UnsupportedMessageData } from '../../data/unsupportedMessage/unsupportedMessage';
 import { Data } from '../../data/data';
 import { SignalService } from '../../protobuf';
 import { innerHandleSwarmContentMessage } from '../../receiver/contentMessage';
 import { NetworkTime } from '../../util/NetworkTime';
+import type { SwarmDecodedEnvelope } from '../../receiver/types';
 import {
   MetaGroupWrapperActions,
   MultiEncryptWrapperActions,
@@ -13,10 +15,14 @@ import { ConvoHub } from '../conversations';
 import { PubKey } from '../types';
 import { UserUtils } from '../utils';
 import { isNewerFormatData, isUnknownTypeContent } from './detection';
-import { currentUnsupportedMessageVersion } from './UnsupportedMessages';
+import {
+  afterSendExpiryFromContent,
+  currentUnsupportedMessageVersion,
+  retainedExpiryMs,
+} from './UnsupportedMessages';
 import type { UnsupportedMessageRow } from './types';
 
-type ReprocessResult = 'replaced' | 'stillUnsupported' | 'dropped';
+type ReprocessResult = 'replaced' | 'stillUnsupported' | 'failed';
 
 async function decryptRecord(row: UnsupportedMessageRow) {
   const toDecrypt = [{ envelopePayload: row.data, messageHash: row.hash }];
@@ -43,6 +49,44 @@ async function decryptRecord(row: UnsupportedMessageRow) {
   return decrypted ?? null;
 }
 
+function describeError(e: unknown) {
+  return e instanceof Error ? `${e.name}: ${e.message}` : 'unknown error';
+}
+
+/**
+ * Whether handling `content` normally ends with a row in the messages table. Only then can a dropped
+ * replay be told apart from a handled one: the handlers swallow their own errors.
+ */
+function replayShouldStoreMessage(content: SignalService.Content) {
+  return (
+    !!content.dataMessage &&
+    !content.dataMessage.reaction &&
+    !content.dataMessage.groupUpdateMessage
+  );
+}
+
+/**
+ * Message saves are queued per conversation and not awaited by the receive path, so wait for the queue
+ * of the conversation the replay was added to before looking for it.
+ */
+async function replayedMessageLanded({
+  decodedEnvelope,
+  content,
+}: {
+  decodedEnvelope: SwarmDecodedEnvelope;
+  content: SignalService.Content;
+}) {
+  const conversationId = content.dataMessage?.syncTarget || decodedEnvelope.source;
+  const convo = ConvoHub.use().get(conversationId);
+  if (convo) {
+    await convo.queueJob(async () => {});
+  }
+  const found = await Data.getMessagesBySenderAndSentAt([
+    { source: decodedEnvelope.getAuthor(), timestamp: decodedEnvelope.sentAtMs },
+  ]);
+  return !!found?.length;
+}
+
 async function reprocessRow(row: UnsupportedMessageRow, version: string): Promise<ReprocessResult> {
   // no legacy version will ever decrypt these: only an importer with the newer protocol can
   if (isNewerFormatData(row.data)) {
@@ -50,24 +94,25 @@ async function reprocessRow(row: UnsupportedMessageRow, version: string): Promis
     return 'stillUnsupported';
   }
 
-  let decrypted: Awaited<ReturnType<typeof decryptRecord>>;
+  let decrypted: NonNullable<Awaited<ReturnType<typeof decryptRecord>>>;
+  let content: SignalService.Content;
   try {
-    decrypted = await decryptRecord(row);
-    const plaintext = decrypted?.decodedEnvelope?.contentPlaintextUnpadded;
-    if (!decrypted || !plaintext?.length) {
+    const result = await decryptRecord(row);
+    const plaintext = result?.decodedEnvelope?.contentPlaintextUnpadded;
+    if (!result || !plaintext?.length) {
       throw new Error('could not decrypt');
     }
-    const content = SignalService.Content.decode(plaintext);
+    decrypted = result;
+    content = SignalService.Content.decode(plaintext);
     if (isUnknownTypeContent(content, plaintext)) {
       await UnsupportedMessageData.setUnsupportedMessageAttemptVersion(row.id, version);
       return 'stillUnsupported';
     }
   } catch (e) {
-    // This version can't process it either and never will (eg. the group keys are gone), so stop
-    // retaining the bytes but leave the placeholder as a permanent "can't be displayed".
-    window.log.info(`UnsupportedMessages: dropping retained ${row.hash}: ${e.message}`);
-    await UnsupportedMessageData.removeUnsupportedMessageById(row.id);
-    return 'dropped';
+    // Kept: a later version may manage it (eg. after a fix), and the byte budget still bounds it.
+    window.log.info(`UnsupportedMessages: failed to reprocess ${row.hash}: ${describeError(e)}`);
+    await UnsupportedMessageData.setUnsupportedMessageAttemptVersion(row.id, version);
+    return 'failed';
   }
 
   let wasRead = false;
@@ -87,60 +132,124 @@ async function reprocessRow(row: UnsupportedMessageRow, version: string): Promis
   }
   await UnsupportedMessageData.removeUnsupportedMessageById(row.id);
 
-  await innerHandleSwarmContentMessage({
-    decodedEnvelope: buildSwarmDecodedEnvelope({
-      decrypted,
-      groupPk: PubKey.is03Pubkey(row.swarm_public_key) ? row.swarm_public_key : null,
-      swarmOrigin: {
-        swarmPublicKey: row.swarm_public_key,
-        namespace: row.namespace,
-        rawData: row.data,
-        storedAtMs: row.server_timestamp_ms,
-      },
-      messageExpirationFromRetrieve: row.server_expiry_ms,
-      replayedPlaceholder: { wasRead },
-    }),
+  const decodedEnvelope = buildSwarmDecodedEnvelope({
+    decrypted,
+    groupPk: PubKey.is03Pubkey(row.swarm_public_key) ? row.swarm_public_key : null,
+    swarmOrigin: {
+      swarmPublicKey: row.swarm_public_key,
+      namespace: row.namespace,
+      rawData: row.data,
+      storedAtMs: row.server_timestamp_ms,
+    },
+    messageExpirationFromRetrieve: row.server_expiry_ms,
+    replayedPlaceholder: { wasRead },
   });
-  return 'replaced';
+
+  let landed = false;
+  try {
+    await innerHandleSwarmContentMessage({ decodedEnvelope });
+    landed =
+      !replayShouldStoreMessage(content) ||
+      (await replayedMessageLanded({ decodedEnvelope, content }));
+  } catch (e) {
+    window.log.info(`UnsupportedMessages: replay of ${row.hash} threw: ${describeError(e)}`);
+  }
+  if (landed) {
+    return 'replaced';
+  }
+
+  // The placeholder is already gone, so the record goes back without one, and a later version retries it.
+  window.log.info(`UnsupportedMessages: replay of ${row.hash} was dropped, retaining it again`);
+  await UnsupportedMessageData.insertUnsupportedMessage(
+    {
+      ...omit(row, 'id'),
+      placeholder_message_id: null,
+      expires_at_ms: retainedExpiryMs({
+        afterSendExpiresAtMs: afterSendExpiryFromContent(content, decodedEnvelope.sentAtMs),
+        serverTimestampMs: row.server_timestamp_ms,
+        serverExpiryMs: row.server_expiry_ms,
+      }),
+      last_attempt_version: version,
+    },
+    NetworkTime.now()
+  );
+  return 'failed';
 }
 
 let running: Promise<void> | null = null;
+let startupRunDone = false;
+
+async function enforceLimits() {
+  try {
+    await UnsupportedMessageData.enforceUnsupportedMessageLimits(NetworkTime.now());
+  } catch (e) {
+    window.log.warn(`UnsupportedMessages: enforcing the limits failed: ${describeError(e)}`);
+  }
+}
+
+async function reprocess() {
+  try {
+    const version = currentUnsupportedMessageVersion();
+    const rows = await UnsupportedMessageData.getUnsupportedMessagesToReprocess(version);
+    if (!rows.length) {
+      return;
+    }
+    const counts: Record<ReprocessResult, number> = {
+      replaced: 0,
+      stillUnsupported: 0,
+      failed: 0,
+    };
+    for (let index = 0; index < rows.length; index++) {
+      // eslint-disable-next-line no-await-in-loop
+      counts[await reprocessRow(rows[index], version)]++;
+    }
+    window.log.info(
+      `UnsupportedMessages: reprocessed ${rows.length} retained message(s): ${JSON.stringify(counts)}`
+    );
+  } catch (e) {
+    window.log.warn(`UnsupportedMessages: reprocessing failed: ${describeError(e)}`);
+  }
+}
 
 /**
- * Replays every retained message the current version hasn't tried yet, so a type added by an update
- * replaces its placeholder in place. Version-gated, so an unchanged app never retries.
+ * Removes expired records, applies the byte budget, then replays every retained message the current
+ * version hasn't tried yet, so a type added by an update replaces its placeholder in place.
+ * Version-gated, so repeating it on an unchanged app only costs the limit check and one query.
  *
- * `doAppStartUp` can run more than once per process, hence the single-flight.
+ * Single-flight, as it runs from startup (which can run more than once per process) and from every
+ * focus of the app.
  */
-export async function reprocessUnsupportedMessagesOnStartup() {
+async function runMaintenance() {
   if (running) {
     return running;
   }
   running = (async () => {
     try {
-      await UnsupportedMessageData.enforceUnsupportedMessageLimits(NetworkTime.now());
-      const version = currentUnsupportedMessageVersion();
-      const rows = await UnsupportedMessageData.getUnsupportedMessagesToReprocess(version);
-      if (!rows.length) {
-        return;
-      }
-      const counts: Record<ReprocessResult, number> = {
-        replaced: 0,
-        stillUnsupported: 0,
-        dropped: 0,
-      };
-      for (let index = 0; index < rows.length; index++) {
-        // eslint-disable-next-line no-await-in-loop
-        counts[await reprocessRow(rows[index], version)]++;
-      }
-      window.log.info(
-        `UnsupportedMessages: reprocessed ${rows.length} retained message(s): ${JSON.stringify(counts)}`
-      );
-    } catch (e) {
-      window.log.warn('UnsupportedMessages: reprocessing failed: ', e.message);
+      await enforceLimits();
+      await reprocess();
     } finally {
       running = null;
     }
   })();
   return running;
+}
+
+/**
+ * Must only be called once the group keys are loaded: a group message replayed without them fails, and
+ * a failure is not retried until the next version.
+ */
+export async function runUnsupportedMessageMaintenanceOnStartup() {
+  startupRunDone = true;
+  return runMaintenance();
+}
+
+/**
+ * A no-op until the startup run has happened, for the reason given on
+ * `runUnsupportedMessageMaintenanceOnStartup`.
+ */
+export async function runUnsupportedMessageMaintenanceOnAppActive() {
+  if (!startupRunDone) {
+    return undefined;
+  }
+  return runMaintenance();
 }

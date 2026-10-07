@@ -35,6 +35,7 @@ import { LeftPaneSectionContainer } from './LeftPaneSectionContainer';
 
 import { SnodePool } from '../../session/apis/snode_api/snodePool';
 import { forceSyncConfigurationNowIfNeeded } from '../../session/utils/sync/syncUtils';
+import { runUnsupportedMessageMaintenanceOnAppActive } from '../../session/unsupported_messages/reprocess';
 import { useFetchLatestReleaseFromFileServer } from '../../hooks/useFetchLatestReleaseFromFileServer';
 import { useIsDarkTheme } from '../../state/theme/selectors/theme';
 import { switchThemeTo } from '../../themes/switchTheme';
@@ -161,6 +162,24 @@ function useProStatusGateOnAppFocus() {
     }
     void refreshProStatusOnStartupIfNeeded();
   }, [isAppFocused, proAvailable, proStatusMocked]);
+}
+
+/**
+ * Desktop is left running for days, so a retained unsupported message's expiry and the retained byte
+ * budget can't wait for the next cold start.
+ */
+function useUnsupportedMessageMaintenanceOnAppFocus() {
+  const isAppFocused = useSelector(getIsAppFocused);
+  const wasAppFocused = useRef(isAppFocused);
+
+  useEffect(() => {
+    const regainedFocus = isAppFocused && !wasAppFocused.current;
+    wasAppFocused.current = isAppFocused;
+
+    if (regainedFocus) {
+      void runUnsupportedMessageMaintenanceOnAppActive();
+    }
+  }, [isAppFocused]);
 }
 
 function useKeyboardShortcutsModalKeyboardShortcut() {
@@ -296,6 +315,7 @@ export const ActionsPanel = () => {
   useUpdateBadgeCount();
   usePeriodicFetchRevocationList();
   useProStatusGateOnAppFocus();
+  useUnsupportedMessageMaintenanceOnAppFocus();
   useKeyboardShortcutsModalKeyboardShortcut();
   useUserSettingsModalKeyboardShortcut();
   useNewConversationKeyboardShortcut();

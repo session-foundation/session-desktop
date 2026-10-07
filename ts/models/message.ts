@@ -998,6 +998,8 @@ export class MessageModel extends Model<MessageAttributes> {
       return;
     }
 
+    const wasUnsupported = this.isUnsupportedMessage();
+
     this.set({
       isDeleted:
         requestedDeleteType === 'markDeletedThisDevice'
@@ -1028,8 +1030,10 @@ export class MessageModel extends Model<MessageAttributes> {
       this.set({ messageHash: undefined });
     }
     await this.commit();
-    // the row survives as a "deleted" bubble, so the explicit delete in removeMessage never runs for it
-    await UnsupportedMessageData.removeUnsupportedMessagesByPlaceholderIds([this.id]);
+    if (wasUnsupported) {
+      // the row survives as a "deleted" bubble, so the explicit delete in removeMessage never runs for it
+      await UnsupportedMessageData.removeUnsupportedMessagesByPlaceholderIds([this.id]);
+    }
     // the line below makes sure that getNextExpiringMessage will find this message as expiring.
     // getNextExpiringMessage is used on app start to clean already expired messages which should have been removed already, but are not
     await this.setToExpire();

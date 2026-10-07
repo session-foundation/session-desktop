@@ -22,6 +22,8 @@ import {
   enforceUnsupportedMessageLimitsWith,
   insertUnsupportedMessage,
   removeUnsupportedMessagesByPlaceholderIds,
+  removeUnsupportedMessagesBySenderAndSentTimestamp,
+  setUnsupportedMessageExpiry,
 } from '../../../../node/sql_calls/unsupported_message';
 import { sqlNode } from '../../../../node/sql';
 import type { UnsupportedMessageInsert } from '../../../../session/unsupported_messages/types';
@@ -306,6 +308,8 @@ describe('UnsupportedMessages', () => {
         swarm_public_key: ourPk,
         namespace: 0,
         hash: `hash-${nextHash}`,
+        sender: otherPk,
+        sent_timestamp_ms: 900,
         server_timestamp_ms: 1000,
         server_expiry_ms: null,
         data: new Uint8Array(10).fill(nextHash),
@@ -398,6 +402,48 @@ describe('UnsupportedMessages', () => {
         db
       );
       expect(remainingHashes()).to.deep.eq([newer.hash]);
+    });
+
+    it('round-trips the sender and sent timestamp, and allows them to be null', () => {
+      insertUnsupportedMessage(record(), 0, db);
+      insertUnsupportedMessage(
+        record({ kind: 'newerFormat', sender: null, sent_timestamp_ms: null }),
+        0,
+        db
+      );
+      const rows = db
+        .prepare('SELECT sender, sent_timestamp_ms FROM unsupported_message ORDER BY id;')
+        .all<{ sender: string | null; sent_timestamp_ms: number | null }>();
+      expect(rows).to.deep.eq([
+        { sender: otherPk, sent_timestamp_ms: 900 },
+        { sender: null, sent_timestamp_ms: null },
+      ]);
+    });
+
+    it('removes only the records matching both the sender and sent timestamp of an unsend', () => {
+      const unsent = record({ sender: otherPk, sent_timestamp_ms: 900 });
+      const otherTimestamp = record({ sender: otherPk, sent_timestamp_ms: 901 });
+      const otherSender = record({ sender: ourPk, sent_timestamp_ms: 900 });
+      const newerFormat = record({ kind: 'newerFormat', sender: null, sent_timestamp_ms: null });
+      [unsent, otherTimestamp, otherSender, newerFormat].forEach(r =>
+        insertUnsupportedMessage(r, 0, db)
+      );
+
+      removeUnsupportedMessagesBySenderAndSentTimestamp(otherPk, 900, db);
+      expect(remainingHashes()).to.deep.eq([
+        otherTimestamp.hash,
+        otherSender.hash,
+        newerFormat.hash,
+      ]);
+    });
+
+    it('gives a record an expiry once it is known it will have no placeholder', () => {
+      const unplaced = record();
+      insertUnsupportedMessage(unplaced, 0, db);
+      setUnsupportedMessageExpiry(unplaced.hash, 1000, db);
+
+      enforceUnsupportedMessageLimitsWith(db, 1000, Number.MAX_SAFE_INTEGER);
+      expect(remainingHashes()).to.deep.eq([]);
     });
 
     it('removes the record of a placeholder marked as deleted', () => {

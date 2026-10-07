@@ -48,7 +48,7 @@ export function retainedExpiryMs({
   return null;
 }
 
-function afterSendExpiryFromContent(content: SignalService.Content, sentAtMs: number) {
+export function afterSendExpiryFromContent(content: SignalService.Content, sentAtMs: number) {
   const timerSeconds = content.expirationTimer ?? 0;
   if (
     content.expirationType === SignalService.Content.ExpirationType.DELETE_AFTER_SEND &&
@@ -88,6 +88,8 @@ function buildRecord({
   kind,
   origin,
   hash,
+  sender,
+  sentTimestampMs,
   serverExpiryMs,
   expiresAtMs,
   nowMs,
@@ -95,6 +97,8 @@ function buildRecord({
   kind: UnsupportedMessageInsert['kind'];
   origin: SwarmOrigin;
   hash: string;
+  sender: string | null;
+  sentTimestampMs: number | null;
   serverExpiryMs: number | null;
   expiresAtMs: number | null;
   nowMs: number;
@@ -104,6 +108,8 @@ function buildRecord({
     swarm_public_key: origin.swarmPublicKey,
     namespace: origin.namespace,
     hash,
+    sender,
+    sent_timestamp_ms: sentTimestampMs,
     server_timestamp_ms: origin.storedAtMs,
     server_expiry_ms: serverExpiryMs,
     data: origin.rawData,
@@ -125,6 +131,9 @@ async function handleNewerFormatMessage({
       kind: 'newerFormat',
       origin,
       hash,
+      // the sender is inside the encrypted payload, and the prefix is unauthenticated
+      sender: null,
+      sentTimestampMs: null,
       serverExpiryMs: expirationMs,
       expiresAtMs: retainedExpiryMs({
         afterSendExpiresAtMs: null,
@@ -144,8 +153,8 @@ async function handleNewerFormatMessage({
 }
 
 /**
- * Only an existing, visible conversation gets a placeholder: something we can't show must never be
- * what creates a conversation or a message request.
+ * Only an existing, active and not hidden conversation gets a placeholder: something we can't show must
+ * never be what creates, activates or un-hides a conversation or a message request.
  */
 function conversationForPlaceholder(threadId: string | null): ConversationModel | null {
   if (!threadId) {
@@ -163,12 +172,27 @@ async function addPlaceholder({
   decodedEnvelope,
   content,
   placement,
+  expiresAtMsWithoutPlaceholder,
 }: {
   convo: ConversationModel;
   decodedEnvelope: SwarmDecodedEnvelope;
   content: SignalService.Content;
   placement: Exclude<Placement, 'none'>;
+  expiresAtMsWithoutPlaceholder: number | null;
 }) {
+  // The conversation was checked before this job was queued, and may have been hidden or deleted since.
+  // `setActiveAt` below would otherwise re-activate it.
+  if (conversationForPlaceholder(convo.id) !== convo) {
+    window.log.info(
+      `UnsupportedMessages: ${decodedEnvelope.messageHash} not placed, convo ${ed25519Str(convo.id)} is no longer visible`
+    );
+    await UnsupportedMessageData.setUnsupportedMessageExpiry(
+      decodedEnvelope.messageHash,
+      expiresAtMsWithoutPlaceholder
+    );
+    return;
+  }
+
   const shared = {
     conversationId: convo.id,
     messageHash: decodedEnvelope.messageHash,
@@ -227,20 +251,21 @@ async function handleUnknownTypeMessage(
   });
   const convo = placement === 'none' ? null : conversationForPlaceholder(threadId);
   const nowMs = NetworkTime.now();
+  const expiresAtMsWithoutPlaceholder = retainedExpiryMs({
+    afterSendExpiresAtMs: afterSendExpiryFromContent(content, decodedEnvelope.sentAtMs),
+    serverTimestampMs: origin.storedAtMs,
+    serverExpiryMs: decodedEnvelope.messageExpirationFromRetrieve,
+  });
 
   const inserted = await UnsupportedMessageData.insertUnsupportedMessage(
     buildRecord({
       kind: 'unknownType',
       origin,
       hash: decodedEnvelope.messageHash,
+      sender: author,
+      sentTimestampMs: decodedEnvelope.sentAtMs,
       serverExpiryMs: decodedEnvelope.messageExpirationFromRetrieve,
-      expiresAtMs: convo
-        ? null
-        : retainedExpiryMs({
-            afterSendExpiresAtMs: afterSendExpiryFromContent(content, decodedEnvelope.sentAtMs),
-            serverTimestampMs: origin.storedAtMs,
-            serverExpiryMs: decodedEnvelope.messageExpirationFromRetrieve,
-          }),
+      expiresAtMs: convo ? null : expiresAtMsWithoutPlaceholder,
       nowMs,
     }),
     nowMs
@@ -254,7 +279,13 @@ async function handleUnknownTypeMessage(
 
   if (convo && placement !== 'none') {
     await convo.queueJob(async () =>
-      addPlaceholder({ convo, decodedEnvelope, content, placement })
+      addPlaceholder({
+        convo,
+        decodedEnvelope,
+        content,
+        placement,
+        expiresAtMsWithoutPlaceholder,
+      })
     );
     return;
   }

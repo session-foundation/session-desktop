@@ -2482,9 +2482,11 @@ async function updateToSessionSchemaVersion57(currentVersion: number, db: Databa
 }
 
 /**
- * The table and column names are shared with the iOS and Android clients so a future import can read one
- * shape from all of them. Unlike iOS there is no foreign key to the messages table: Desktop removes the
- * rows explicitly wherever it deletes messages.
+ * The table and column names are shared with the other Session clients so a future import can read one
+ * shape from all of them.
+ *
+ * There is no foreign key to the messages table, so every path deleting messages has to remove the
+ * matching rows explicitly (see `removeUnsupportedMessagesForMessagesWhere`).
  */
 export function createUnsupportedMessageTableV58(db: Database) {
   db.exec(`
@@ -2494,6 +2496,8 @@ export function createUnsupportedMessageTableV58(db: Database) {
       swarm_public_key TEXT NOT NULL,
       namespace INTEGER NOT NULL,
       hash TEXT NOT NULL UNIQUE,
+      sender TEXT,
+      sent_timestamp_ms INTEGER,
       server_timestamp_ms INTEGER NOT NULL,
       server_expiry_ms INTEGER,
       data BLOB NOT NULL,

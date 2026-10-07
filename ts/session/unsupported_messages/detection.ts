@@ -10,7 +10,8 @@ import { messageHasVisibleContent } from '../../receiver/dataMessage';
  */
 export const HIGHEST_KNOWN_CONTENT_FIELD_NUMBER = 18;
 
-// matches the bound iOS applies, so the clients agree on what counts as malformed
+// Deliberately looser than protobuf's own 2^29 - 1: this bound is part of what all Session clients must
+// agree counts as malformed, so changing it changes which messages get a placeholder on this one only.
 const MAX_FIELD_NUMBER = 2 ** 31 - 1;
 const MAX_VARINT_BYTES = 10;
 

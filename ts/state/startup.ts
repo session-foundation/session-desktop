@@ -37,7 +37,7 @@ import { setProUserConfigChangedHandler } from '../webworker/workers/browser/lib
 import { initialProAccessState, refreshProAccess } from './ducks/proAccess';
 import { MessageQueue } from '../session/sending';
 import { AvatarMigrate } from '../session/utils/job_runners/jobs/AvatarMigrateJob';
-import { reprocessUnsupportedMessagesOnStartup } from '../session/unsupported_messages/reprocess';
+import { runUnsupportedMessageMaintenanceOnStartup } from '../session/unsupported_messages/reprocess';
 import { handleTriggeredCTAs } from '../components/dialog/SessionCTA';
 import { UserSync } from '../session/utils/job_runners/jobs/UserSyncJob';
 import { forceSyncConfigurationNowIfNeeded } from '../session/utils/sync/syncUtils';
@@ -280,7 +280,7 @@ export const doAppStartUp = async () => {
 
   global.setTimeout(() => {
     // the group dumps are loaded above, so group messages have their keys by now
-    void reprocessUnsupportedMessagesOnStartup();
+    void runUnsupportedMessageMaintenanceOnStartup();
   }, 10000);
 
   global.setTimeout(() => {

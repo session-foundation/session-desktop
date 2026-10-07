@@ -27,6 +27,10 @@ export type UnsupportedMessageRow = {
   swarm_public_key: string;
   namespace: number;
   hash: string;
+  /** the authenticated sender, `unknownType` only */
+  sender: string | null;
+  /** the sender's sent timestamp, `unknownType` only: with `sender`, what an unsend request matches */
+  sent_timestamp_ms: number | null;
   server_timestamp_ms: number;
   server_expiry_ms: number | null;
   /** the raw swarm data, exactly as retrieved (base64-decoded) */
@@ -56,4 +60,9 @@ export type UnsupportedMessageDataNode = {
   setUnsupportedMessageAttemptVersion: (id: number, version: string) => void;
   removeUnsupportedMessageById: (id: number) => void;
   removeUnsupportedMessagesByPlaceholderIds: (placeholderMessageIds: Array<string>) => void;
+  removeUnsupportedMessagesBySenderAndSentTimestamp: (
+    sender: string,
+    sentTimestampMs: number
+  ) => void;
+  setUnsupportedMessageExpiry: (hash: string, expiresAtMs: number | null) => void;
 };

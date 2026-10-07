@@ -34,7 +34,7 @@ const StyledMessageDeleted = styled.div`
   align-items: center;
 `;
 
-// matches the muted italic placeholder on iOS and Android, so it doesn't read as an ordinary message
+// muted and italic so it doesn't read as an ordinary message
 const StyledUnsupportedMessage = styled(StyledMessageDeleted)`
   font-style: italic;
   opacity: 0.7;

@@ -28,4 +28,10 @@ export const UnsupportedMessageData: AsyncObjectWrapper<UnsupportedMessageDataNo
   removeUnsupportedMessagesByPlaceholderIds: (placeholderMessageIds: Array<string>) => {
     return channels.removeUnsupportedMessagesByPlaceholderIds(placeholderMessageIds);
   },
+  removeUnsupportedMessagesBySenderAndSentTimestamp: (sender: string, sentTimestampMs: number) => {
+    return channels.removeUnsupportedMessagesBySenderAndSentTimestamp(sender, sentTimestampMs);
+  },
+  setUnsupportedMessageExpiry: (hash: string, expiresAtMs: number | null) => {
+    return channels.setUnsupportedMessageExpiry(hash, expiresAtMs);
+  },
 };

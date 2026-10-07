@@ -66,6 +66,8 @@ export function insertUnsupportedMessage(
         swarm_public_key,
         namespace,
         hash,
+        sender,
+        sent_timestamp_ms,
         server_timestamp_ms,
         server_expiry_ms,
         data,
@@ -78,6 +80,8 @@ export function insertUnsupportedMessage(
         $swarm_public_key,
         $namespace,
         $hash,
+        $sender,
+        $sent_timestamp_ms,
         $server_timestamp_ms,
         $server_expiry_ms,
         $data,
@@ -89,7 +93,12 @@ export function insertUnsupportedMessage(
     )
     .run(record);
 
-  enforceUnsupportedMessageLimitsWith(db, nowMs, UNSUPPORTED_MESSAGE_MAX_RETAINED_BYTES);
+  // a failure here must not undo or hide the insert: the next run catches up
+  try {
+    enforceUnsupportedMessageLimitsWith(db, nowMs, UNSUPPORTED_MESSAGE_MAX_RETAINED_BYTES);
+  } catch (e) {
+    console.error(`unsupported_message: enforcing the limits after an insert failed: ${e.message}`);
+  }
   return result.changes > 0;
 }
 
@@ -157,6 +166,34 @@ export function removeUnsupportedMessagesByPlaceholderIds(
 }
 
 /**
+ * Only the sender can unsend their message, so the caller must have checked that the unsend request came
+ * from `sender`.
+ */
+export function removeUnsupportedMessagesBySenderAndSentTimestamp(
+  sender: string,
+  sentTimestampMs: number,
+  instance?: Database
+) {
+  assertGlobalInstanceOrInstance(instance)
+    .prepare(
+      `DELETE FROM ${UNSUPPORTED_MESSAGE_TABLE} WHERE sender = $sender AND sent_timestamp_ms = $sentTimestampMs;`
+    )
+    .run({ sender, sentTimestampMs });
+}
+
+export function setUnsupportedMessageExpiry(
+  hash: string,
+  expiresAtMs: number | null,
+  instance?: Database
+) {
+  assertGlobalInstanceOrInstance(instance)
+    .prepare(
+      `UPDATE ${UNSUPPORTED_MESSAGE_TABLE} SET expires_at_ms = $expiresAtMs WHERE hash = $hash;`
+    )
+    .run({ hash, expiresAtMs });
+}
+
+/**
  * There is no foreign key from `unsupported_message` to `messages`, so every statement deleting from
  * `messages` has to call this first with the same WHERE clause, or the retained data of a deleted
  * placeholder would outlive it.
@@ -181,4 +218,6 @@ export const unsupportedMessageData: UnsupportedMessageDataNode = {
   setUnsupportedMessageAttemptVersion,
   removeUnsupportedMessageById,
   removeUnsupportedMessagesByPlaceholderIds,
+  removeUnsupportedMessagesBySenderAndSentTimestamp,
+  setUnsupportedMessageExpiry,
 };

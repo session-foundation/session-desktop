@@ -34,6 +34,7 @@ import { buildPrivateProfileChangeFromMsgRequestResponse } from '../models/profi
 import { deleteOrMarkAsDeletedMessages } from '../interactions/conversations/deleteOrMarkAsDeletedMessages';
 import { isUnknownTypeContent } from '../session/unsupported_messages/detection';
 import { UnsupportedMessages } from '../session/unsupported_messages/UnsupportedMessages';
+import { UnsupportedMessageData } from '../data/unsupportedMessage/unsupportedMessage';
 
 async function shouldDropIncomingPrivateMessage(
   envelope: BaseDecodedEnvelope,
@@ -482,6 +483,19 @@ async function handleUnsendMessage(
     window?.log?.error('handleUnsendMessage: Invalid timestamp -- dropping message');
 
     return;
+  }
+  // A retained message without a placeholder has nothing below to find it by, and would otherwise be
+  // replayed after an update, restoring a message its sender deleted.
+  try {
+    await UnsupportedMessageData.removeUnsupportedMessagesBySenderAndSentTimestamp(
+      messageAuthor,
+      longOrNumberToNumber(timestamp)
+    );
+  } catch (e) {
+    window.log.warn(
+      'handleUnsendMessage: failed to remove retained unsupported messages',
+      e.message
+    );
   }
   const messageToDelete = (
     await Data.getMessagesBySenderAndSentAt([
