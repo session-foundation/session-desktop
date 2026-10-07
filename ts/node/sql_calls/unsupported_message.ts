@@ -2,60 +2,104 @@ import { type Database, type StatementParameters } from '@signalapp/sqlcipher';
 import { MESSAGES_TABLE } from '../database_utility';
 import { assertGlobalInstanceOrInstance } from '../sqlInstance';
 import {
+  UNSUPPORTED_MESSAGE_EVICTION_BATCH_SIZE,
+  UNSUPPORTED_MESSAGE_MAX_NEWER_FORMAT_ROWS,
   UNSUPPORTED_MESSAGE_MAX_RETAINED_BYTES,
+  UNSUPPORTED_MESSAGE_STATS_TABLE,
   UNSUPPORTED_MESSAGE_TABLE,
   type UnsupportedMessageDataNode,
   type UnsupportedMessageInsert,
+  type UnsupportedMessageKind,
   type UnsupportedMessageRow,
 } from '../../session/unsupported_messages/types';
 
+export type UnsupportedMessageLimits = {
+  maxBytes: number;
+  maxNewerFormatRows: number;
+  evictionBatchSize: number;
+};
+
+const DEFAULT_LIMITS: UnsupportedMessageLimits = {
+  maxBytes: UNSUPPORTED_MESSAGE_MAX_RETAINED_BYTES,
+  maxNewerFormatRows: UNSUPPORTED_MESSAGE_MAX_NEWER_FORMAT_ROWS,
+  evictionBatchSize: UNSUPPORTED_MESSAGE_EVICTION_BATCH_SIZE,
+};
+
+// `newerFormat` rows go first: anyone can deposit data with the newer-format prefix into a 1o1
+// namespace, whereas an `unknownType` message came from an authenticated sender.
+const EVICTION_ORDER: Array<UnsupportedMessageKind> = ['newerFormat', 'unknownType'];
+
+function readStats(db: Database) {
+  const stats = db
+    .prepare(
+      `SELECT total_bytes, newer_format_count FROM ${UNSUPPORTED_MESSAGE_STATS_TABLE} WHERE id = 1;`
+    )
+    .get<{ total_bytes: number; newer_format_count: number }>();
+  if (!stats) {
+    throw new Error(`${UNSUPPORTED_MESSAGE_STATS_TABLE} has no row`);
+  }
+  return stats;
+}
+
+function evictOldestOfKind(db: Database, kind: UnsupportedMessageKind, count: number) {
+  return db
+    .prepare(
+      `DELETE FROM ${UNSUPPORTED_MESSAGE_TABLE} WHERE id IN (
+        SELECT id FROM ${UNSUPPORTED_MESSAGE_TABLE} WHERE kind = $kind ORDER BY id ASC LIMIT $count
+      );`
+    )
+    .run({ kind, count }).changes;
+}
+
 /**
- * Remove rows past their own expiry, then evict the oldest rows until the retained data fits the budget.
+ * Cap the `newerFormat` rows, then evict the oldest rows, `newerFormat` first, until the total cost
+ * fits the byte budget.
  *
- * `newerFormat` rows go before `unknownType` ones: anyone can deposit data with the newer-format prefix
- * into a 1o1 namespace, whereas an `unknownType` message came from an authenticated sender.
+ * Runs after every insert, so it must stay O(1) when under the limits: it only reads the running
+ * totals, and every eviction query is served by the `(kind, id)` index.
  */
-export function enforceUnsupportedMessageLimitsWith(db: Database, nowMs: number, maxBytes: number) {
+export function enforceUnsupportedMessageBudgetWith(
+  db: Database,
+  limits: Partial<UnsupportedMessageLimits> = {}
+) {
+  const { maxBytes, maxNewerFormatRows, evictionBatchSize } = { ...DEFAULT_LIMITS, ...limits };
+  let evicted = 0;
+
+  const { newer_format_count: newerFormatCount } = readStats(db);
+  if (newerFormatCount > maxNewerFormatRows) {
+    evicted += evictOldestOfKind(db, 'newerFormat', newerFormatCount - maxNewerFormatRows);
+  }
+
+  let kindIndex = 0;
+  while (kindIndex < EVICTION_ORDER.length && readStats(db).total_bytes > maxBytes) {
+    const removed = evictOldestOfKind(db, EVICTION_ORDER[kindIndex], evictionBatchSize);
+    if (removed === 0) {
+      kindIndex++;
+    }
+    evicted += removed;
+  }
+
+  if (evicted) {
+    console.info(`unsupported_message: evicted ${evicted} row(s) to fit the limits`);
+  }
+}
+
+/**
+ * Remove rows past their own expiry, then apply `enforceUnsupportedMessageBudgetWith`.
+ */
+export function enforceUnsupportedMessageLimitsWith(
+  db: Database,
+  nowMs: number,
+  limits: Partial<UnsupportedMessageLimits> = {}
+) {
   db.prepare(
     `DELETE FROM ${UNSUPPORTED_MESSAGE_TABLE} WHERE expires_at_ms IS NOT NULL AND expires_at_ms <= $nowMs;`
   ).run({ nowMs });
-
-  let totalBytes =
-    db
-      .prepare(`SELECT IFNULL(SUM(length(data)), 0) AS total FROM ${UNSUPPORTED_MESSAGE_TABLE};`)
-      .get<{ total: number }>()?.total ?? 0;
-
-  if (totalBytes <= maxBytes) {
-    return;
-  }
-
-  const candidates = db
-    .prepare(
-      `SELECT id, length(data) AS size FROM ${UNSUPPORTED_MESSAGE_TABLE}
-       ORDER BY (kind = 'newerFormat') DESC, received_at_ms ASC, id ASC;`
-    )
-    .all<{ id: number; size: number }>();
-
-  const idsToRemove: Array<number> = [];
-  for (const candidate of candidates) {
-    if (totalBytes <= maxBytes) {
-      break;
-    }
-    idsToRemove.push(candidate.id);
-    totalBytes -= candidate.size;
-  }
-
-  if (idsToRemove.length) {
-    db.prepare(
-      `DELETE FROM ${UNSUPPORTED_MESSAGE_TABLE} WHERE id IN ( ${idsToRemove.map(() => '?').join(', ')} );`
-    ).run(idsToRemove);
-  }
-  console.info(`unsupported_message: evicted ${idsToRemove.length} row(s) to fit the byte budget`);
+  enforceUnsupportedMessageBudgetWith(db, limits);
 }
 
 export function insertUnsupportedMessage(
   record: UnsupportedMessageInsert,
-  nowMs: number,
   instance?: Database
 ): boolean {
   const db = assertGlobalInstanceOrInstance(instance);
@@ -95,7 +139,7 @@ export function insertUnsupportedMessage(
 
   // a failure here must not undo or hide the insert: the next run catches up
   try {
-    enforceUnsupportedMessageLimitsWith(db, nowMs, UNSUPPORTED_MESSAGE_MAX_RETAINED_BYTES);
+    enforceUnsupportedMessageBudgetWith(db);
   } catch (e) {
     console.error(`unsupported_message: enforcing the limits after an insert failed: ${e.message}`);
   }
@@ -115,22 +159,34 @@ export function setUnsupportedMessagePlaceholder(
 }
 
 export function enforceUnsupportedMessageLimits(nowMs: number, instance?: Database) {
-  enforceUnsupportedMessageLimitsWith(
-    assertGlobalInstanceOrInstance(instance),
-    nowMs,
-    UNSUPPORTED_MESSAGE_MAX_RETAINED_BYTES
-  );
+  enforceUnsupportedMessageLimitsWith(assertGlobalInstanceOrInstance(instance), nowMs);
 }
 
-export function getUnsupportedMessagesToReprocess(
+export function markNewerFormatUnsupportedMessagesAttempted(
   currentVersion: string,
+  instance?: Database
+): number {
+  return assertGlobalInstanceOrInstance(instance)
+    .prepare(
+      `UPDATE ${UNSUPPORTED_MESSAGE_TABLE} SET last_attempt_version = $currentVersion
+       WHERE kind = 'newerFormat' AND last_attempt_version != $currentVersion;`
+    )
+    .run({ currentVersion }).changes;
+}
+
+export function getUnknownTypeUnsupportedMessagesToReprocess(
+  currentVersion: string,
+  afterId: number,
+  limit: number,
   instance?: Database
 ): Array<UnsupportedMessageRow> {
   return assertGlobalInstanceOrInstance(instance)
     .prepare(
-      `SELECT * FROM ${UNSUPPORTED_MESSAGE_TABLE} WHERE last_attempt_version != $currentVersion ORDER BY id ASC;`
+      `SELECT * FROM ${UNSUPPORTED_MESSAGE_TABLE}
+       WHERE kind = 'unknownType' AND id > $afterId AND last_attempt_version != $currentVersion
+       ORDER BY id ASC LIMIT $limit;`
     )
-    .all<UnsupportedMessageRow>({ currentVersion });
+    .all<UnsupportedMessageRow>({ currentVersion, afterId, limit });
 }
 
 export function setUnsupportedMessageAttemptVersion(
@@ -214,7 +270,8 @@ export const unsupportedMessageData: UnsupportedMessageDataNode = {
   insertUnsupportedMessage,
   setUnsupportedMessagePlaceholder,
   enforceUnsupportedMessageLimits,
-  getUnsupportedMessagesToReprocess,
+  markNewerFormatUnsupportedMessagesAttempted,
+  getUnknownTypeUnsupportedMessagesToReprocess,
   setUnsupportedMessageAttemptVersion,
   removeUnsupportedMessageById,
   removeUnsupportedMessagesByPlaceholderIds,

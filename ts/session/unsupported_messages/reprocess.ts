@@ -14,13 +14,13 @@ import { buildSwarmDecodedEnvelope } from '../apis/snode_api/swarmPolling';
 import { ConvoHub } from '../conversations';
 import { PubKey } from '../types';
 import { UserUtils } from '../utils';
-import { isNewerFormatData, isUnknownTypeContent } from './detection';
+import { isUnknownTypeContent } from './detection';
 import {
   afterSendExpiryFromContent,
   currentUnsupportedMessageVersion,
   retainedExpiryMs,
 } from './UnsupportedMessages';
-import type { UnsupportedMessageRow } from './types';
+import { UNSUPPORTED_MESSAGE_REPLAY_PAGE_SIZE, type UnsupportedMessageRow } from './types';
 
 type ReprocessResult = 'replaced' | 'stillUnsupported' | 'failed';
 
@@ -54,10 +54,15 @@ function describeError(e: unknown) {
 }
 
 /**
- * Whether handling `content` normally ends with a row in the messages table. Only then can a dropped
- * replay be told apart from a handled one: the handlers swallow their own errors.
+ * Whether to verify, after replaying `content`, that a message row landed (findable by sender and sent
+ * timestamp). Every row is replayed regardless: this only decides whether a dropped replay can be told
+ * apart from a handled one, which the handlers can't report as they swallow their own errors.
+ *
+ * Control-type content (reactions, group updates) never lands as such a row, so it is never verified.
+ * Call, data-extraction, receipt and similar content can never be in the table at all: the receive
+ * path only retains a message when no known type in it is usable (`hasValidKnownContent`).
  */
-function replayShouldStoreMessage(content: SignalService.Content) {
+function shouldCheckReplayLanded(content: SignalService.Content) {
   return (
     !!content.dataMessage &&
     !content.dataMessage.reaction &&
@@ -87,9 +92,14 @@ async function replayedMessageLanded({
   return !!found?.length;
 }
 
-async function reprocessRow(row: UnsupportedMessageRow, version: string): Promise<ReprocessResult> {
-  // no legacy version will ever decrypt these: only an importer with the newer protocol can
-  if (isNewerFormatData(row.data)) {
+export async function reprocessRow(
+  row: UnsupportedMessageRow,
+  version: string
+): Promise<ReprocessResult> {
+  // Decided by kind, never by the bytes: group data is encrypted with a random nonce first, so it can
+  // start with the newer-format prefix too.
+  // No legacy version will ever decrypt a newerFormat row: only an importer with the newer protocol can.
+  if (row.kind === 'newerFormat') {
     await UnsupportedMessageData.setUnsupportedMessageAttemptVersion(row.id, version);
     return 'stillUnsupported';
   }
@@ -142,6 +152,7 @@ async function reprocessRow(row: UnsupportedMessageRow, version: string): Promis
       storedAtMs: row.server_timestamp_ms,
     },
     messageExpirationFromRetrieve: row.server_expiry_ms,
+    // a replayed message is old, so it never notifies
     replayedPlaceholder: { wasRead },
   });
 
@@ -149,7 +160,7 @@ async function reprocessRow(row: UnsupportedMessageRow, version: string): Promis
   try {
     await innerHandleSwarmContentMessage({ decodedEnvelope });
     landed =
-      !replayShouldStoreMessage(content) ||
+      !shouldCheckReplayLanded(content) ||
       (await replayedMessageLanded({ decodedEnvelope, content }));
   } catch (e) {
     window.log.info(`UnsupportedMessages: replay of ${row.hash} threw: ${describeError(e)}`);
@@ -160,19 +171,16 @@ async function reprocessRow(row: UnsupportedMessageRow, version: string): Promis
 
   // The placeholder is already gone, so the record goes back without one, and a later version retries it.
   window.log.info(`UnsupportedMessages: replay of ${row.hash} was dropped, retaining it again`);
-  await UnsupportedMessageData.insertUnsupportedMessage(
-    {
-      ...omit(row, 'id'),
-      placeholder_message_id: null,
-      expires_at_ms: retainedExpiryMs({
-        afterSendExpiresAtMs: afterSendExpiryFromContent(content, decodedEnvelope.sentAtMs),
-        serverTimestampMs: row.server_timestamp_ms,
-        serverExpiryMs: row.server_expiry_ms,
-      }),
-      last_attempt_version: version,
-    },
-    NetworkTime.now()
-  );
+  await UnsupportedMessageData.insertUnsupportedMessage({
+    ...omit(row, 'id'),
+    placeholder_message_id: null,
+    expires_at_ms: retainedExpiryMs({
+      afterSendExpiresAtMs: afterSendExpiryFromContent(content, decodedEnvelope.sentAtMs),
+      serverTimestampMs: row.server_timestamp_ms,
+      serverExpiryMs: row.server_expiry_ms,
+    }),
+    last_attempt_version: version,
+  });
   return 'failed';
 }
 
@@ -189,22 +197,37 @@ async function enforceLimits() {
 async function reprocess() {
   try {
     const version = currentUnsupportedMessageVersion();
-    const rows = await UnsupportedMessageData.getUnsupportedMessagesToReprocess(version);
-    if (!rows.length) {
-      return;
-    }
     const counts: Record<ReprocessResult, number> = {
       replaced: 0,
       stillUnsupported: 0,
       failed: 0,
     };
-    for (let index = 0; index < rows.length; index++) {
+    // Never loaded: no legacy version can decrypt them, and they can be large.
+    counts.stillUnsupported +=
+      await UnsupportedMessageData.markNewerFormatUnsupportedMessagesAttempted(version);
+
+    // Paged by id so a row the replay neither stamps nor removes can't be fetched again forever.
+    let afterId = 0;
+    let page: Array<UnsupportedMessageRow>;
+    do {
       // eslint-disable-next-line no-await-in-loop
-      counts[await reprocessRow(rows[index], version)]++;
+      page = await UnsupportedMessageData.getUnknownTypeUnsupportedMessagesToReprocess(
+        version,
+        afterId,
+        UNSUPPORTED_MESSAGE_REPLAY_PAGE_SIZE
+      );
+      for (let index = 0; index < page.length; index++) {
+        // eslint-disable-next-line no-await-in-loop
+        counts[await reprocessRow(page[index], version)]++;
+      }
+      afterId = page.length ? page[page.length - 1].id : afterId;
+    } while (page.length === UNSUPPORTED_MESSAGE_REPLAY_PAGE_SIZE);
+
+    if (counts.replaced || counts.stillUnsupported || counts.failed) {
+      window.log.info(
+        `UnsupportedMessages: reprocessed retained messages: ${JSON.stringify(counts)}`
+      );
     }
-    window.log.info(
-      `UnsupportedMessages: reprocessed ${rows.length} retained message(s): ${JSON.stringify(counts)}`
-    );
   } catch (e) {
     window.log.warn(`UnsupportedMessages: reprocessing failed: ${describeError(e)}`);
   }
@@ -213,7 +236,7 @@ async function reprocess() {
 /**
  * Removes expired records, applies the byte budget, then replays every retained message the current
  * version hasn't tried yet, so a type added by an update replaces its placeholder in place.
- * Version-gated, so repeating it on an unchanged app only costs the limit check and one query.
+ * Version-gated, so repeating it on an unchanged app only costs the limit check and two queries.
  *
  * Must only be called once the group keys are loaded: a group message replayed without them fails, and
  * a failure is not retried until the next version.

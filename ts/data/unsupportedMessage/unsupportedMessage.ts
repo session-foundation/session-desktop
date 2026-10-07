@@ -7,8 +7,8 @@ import { channels } from '../channels';
 
 // Not passed through cleanData: it would turn the raw `data` bytes into a plain object.
 export const UnsupportedMessageData: AsyncObjectWrapper<UnsupportedMessageDataNode> = {
-  insertUnsupportedMessage: (record: UnsupportedMessageInsert, nowMs: number) => {
-    return channels.insertUnsupportedMessage(record, nowMs);
+  insertUnsupportedMessage: (record: UnsupportedMessageInsert) => {
+    return channels.insertUnsupportedMessage(record);
   },
   setUnsupportedMessagePlaceholder: (hash: string, placeholderMessageId: string) => {
     return channels.setUnsupportedMessagePlaceholder(hash, placeholderMessageId);
@@ -16,8 +16,15 @@ export const UnsupportedMessageData: AsyncObjectWrapper<UnsupportedMessageDataNo
   enforceUnsupportedMessageLimits: (nowMs: number) => {
     return channels.enforceUnsupportedMessageLimits(nowMs);
   },
-  getUnsupportedMessagesToReprocess: (currentVersion: string) => {
-    return channels.getUnsupportedMessagesToReprocess(currentVersion);
+  markNewerFormatUnsupportedMessagesAttempted: (currentVersion: string) => {
+    return channels.markNewerFormatUnsupportedMessagesAttempted(currentVersion);
+  },
+  getUnknownTypeUnsupportedMessagesToReprocess: (
+    currentVersion: string,
+    afterId: number,
+    limit: number
+  ) => {
+    return channels.getUnknownTypeUnsupportedMessagesToReprocess(currentVersion, afterId, limit);
   },
   setUnsupportedMessageAttemptVersion: (id: number, version: string) => {
     return channels.setUnsupportedMessageAttemptVersion(id, version);

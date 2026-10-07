@@ -19,14 +19,32 @@ import {
 } from '../../../../session/unsupported_messages/banner';
 import { createUnsupportedMessageTableV58 } from '../../../../node/migration/sessionMigrations';
 import {
+  enforceUnsupportedMessageBudgetWith,
   enforceUnsupportedMessageLimitsWith,
+  getUnknownTypeUnsupportedMessagesToReprocess,
   insertUnsupportedMessage,
+  markNewerFormatUnsupportedMessagesAttempted,
   removeUnsupportedMessagesByPlaceholderIds,
   removeUnsupportedMessagesBySenderAndSentTimestamp,
   setUnsupportedMessageExpiry,
 } from '../../../../node/sql_calls/unsupported_message';
 import { sqlNode } from '../../../../node/sql';
-import type { UnsupportedMessageInsert } from '../../../../session/unsupported_messages/types';
+import {
+  UNSUPPORTED_MESSAGE_ROW_OVERHEAD_BYTES,
+  type UnsupportedMessageInsert,
+  type UnsupportedMessageRow,
+} from '../../../../session/unsupported_messages/types';
+import { reprocessRow } from '../../../../session/unsupported_messages/reprocess';
+import { UnsupportedMessageData } from '../../../../data/unsupportedMessage/unsupportedMessage';
+import * as ContentMessage from '../../../../receiver/contentMessage';
+import {
+  MetaGroupWrapperActions,
+  MultiEncryptWrapperActions,
+} from '../../../../webworker/workers/browser/libsession_worker_interface';
+import ProBackendAPI from '../../../../session/apis/pro_backend_api/ProBackendAPI';
+import { SnodeNamespaces } from '../../../../session/apis/snode_api/namespaces';
+import { ConvoHub } from '../../../../session/conversations';
+import type { SwarmDecodedEnvelope } from '../../../../receiver/types';
 import { DURATION } from '../../../../session/constants';
 import { TestUtils } from '../../../test-utils';
 
@@ -348,14 +366,14 @@ describe('UnsupportedMessages', () => {
 
     it('keeps the hash unique', () => {
       const first = record();
-      expect(insertUnsupportedMessage(first, 0, db)).to.eq(true);
-      expect(insertUnsupportedMessage({ ...first }, 0, db)).to.eq(false);
+      expect(insertUnsupportedMessage(first, db)).to.eq(true);
+      expect(insertUnsupportedMessage({ ...first }, db)).to.eq(false);
       expect(remainingHashes()).to.deep.eq([first.hash]);
     });
 
     it('round-trips the raw data and a uuid placeholder id', () => {
       const placeholderId = '0e9c4e46-7b9f-4b4e-9b3c-6c4b1c1a2f00';
-      insertUnsupportedMessage(record({ placeholder_message_id: placeholderId }), 0, db);
+      insertUnsupportedMessage(record({ placeholder_message_id: placeholderId }), db);
       const row = db.prepare('SELECT * FROM unsupported_message;').get<any>();
       expect(row.placeholder_message_id).to.eq(placeholderId);
       expect(Array.from(row.data)).to.deep.eq(new Array(10).fill(nextHash));
@@ -365,8 +383,8 @@ describe('UnsupportedMessages', () => {
       addMessage('msg-1', otherPk);
       addMessage('msg-2', otherPk);
       const kept = record({ placeholder_message_id: 'msg-2' });
-      insertUnsupportedMessage(record({ placeholder_message_id: 'msg-1' }), 0, db);
-      insertUnsupportedMessage(kept, 0, db);
+      insertUnsupportedMessage(record({ placeholder_message_id: 'msg-1' }), db);
+      insertUnsupportedMessage(kept, db);
 
       sqlNode.removeMessage('msg-1', db);
       expect(remainingHashes()).to.deep.eq([kept.hash]);
@@ -381,10 +399,10 @@ describe('UnsupportedMessages', () => {
       addMessage('msg-3', groupPk);
       const elsewhere = record({ placeholder_message_id: 'msg-3' });
       const noPlaceholder = record();
-      insertUnsupportedMessage(record({ placeholder_message_id: 'msg-1' }), 0, db);
-      insertUnsupportedMessage(record({ placeholder_message_id: 'msg-2' }), 0, db);
-      insertUnsupportedMessage(elsewhere, 0, db);
-      insertUnsupportedMessage(noPlaceholder, 0, db);
+      insertUnsupportedMessage(record({ placeholder_message_id: 'msg-1' }), db);
+      insertUnsupportedMessage(record({ placeholder_message_id: 'msg-2' }), db);
+      insertUnsupportedMessage(elsewhere, db);
+      insertUnsupportedMessage(noPlaceholder, db);
 
       sqlNode.removeAllMessagesInConversation(otherPk, db);
       expect(remainingHashes()).to.deep.eq([elsewhere.hash, noPlaceholder.hash]);
@@ -394,8 +412,8 @@ describe('UnsupportedMessages', () => {
       addMessage('msg-old', groupPk, 1000);
       addMessage('msg-new', groupPk, 5000);
       const newer = record({ placeholder_message_id: 'msg-new' });
-      insertUnsupportedMessage(record({ placeholder_message_id: 'msg-old' }), 0, db);
-      insertUnsupportedMessage(newer, 0, db);
+      insertUnsupportedMessage(record({ placeholder_message_id: 'msg-old' }), db);
+      insertUnsupportedMessage(newer, db);
 
       sqlNode.removeAllMessagesInConversationSentBefore(
         { conversationId: groupPk, deleteBeforeSeconds: 2 },
@@ -405,10 +423,9 @@ describe('UnsupportedMessages', () => {
     });
 
     it('round-trips the sender and sent timestamp, and allows them to be null', () => {
-      insertUnsupportedMessage(record(), 0, db);
+      insertUnsupportedMessage(record(), db);
       insertUnsupportedMessage(
         record({ kind: 'newerFormat', sender: null, sent_timestamp_ms: null }),
-        0,
         db
       );
       const rows = db
@@ -426,7 +443,7 @@ describe('UnsupportedMessages', () => {
       const otherSender = record({ sender: ourPk, sent_timestamp_ms: 900 });
       const newerFormat = record({ kind: 'newerFormat', sender: null, sent_timestamp_ms: null });
       [unsent, otherTimestamp, otherSender, newerFormat].forEach(r =>
-        insertUnsupportedMessage(r, 0, db)
+        insertUnsupportedMessage(r, db)
       );
 
       removeUnsupportedMessagesBySenderAndSentTimestamp(otherPk, 900, db);
@@ -439,15 +456,15 @@ describe('UnsupportedMessages', () => {
 
     it('gives a record an expiry once it is known it will have no placeholder', () => {
       const unplaced = record();
-      insertUnsupportedMessage(unplaced, 0, db);
+      insertUnsupportedMessage(unplaced, db);
       setUnsupportedMessageExpiry(unplaced.hash, 1000, db);
 
-      enforceUnsupportedMessageLimitsWith(db, 1000, Number.MAX_SAFE_INTEGER);
+      enforceUnsupportedMessageLimitsWith(db, 1000);
       expect(remainingHashes()).to.deep.eq([]);
     });
 
     it('removes the record of a placeholder marked as deleted', () => {
-      insertUnsupportedMessage(record({ placeholder_message_id: 'msg-1' }), 0, db);
+      insertUnsupportedMessage(record({ placeholder_message_id: 'msg-1' }), db);
       removeUnsupportedMessagesByPlaceholderIds(['msg-1'], db);
       expect(remainingHashes()).to.deep.eq([]);
     });
@@ -455,12 +472,73 @@ describe('UnsupportedMessages', () => {
     it('removes expired records', () => {
       const kept = record({ expires_at_ms: 2000 });
       const neverExpires = record();
-      insertUnsupportedMessage(record({ expires_at_ms: 1000 }), 0, db);
-      insertUnsupportedMessage(kept, 0, db);
-      insertUnsupportedMessage(neverExpires, 0, db);
+      insertUnsupportedMessage(record({ expires_at_ms: 1000 }), db);
+      insertUnsupportedMessage(kept, db);
+      insertUnsupportedMessage(neverExpires, db);
 
-      enforceUnsupportedMessageLimitsWith(db, 1000, Number.MAX_SAFE_INTEGER);
+      enforceUnsupportedMessageLimitsWith(db, 1000);
       expect(remainingHashes()).to.deep.eq([kept.hash, neverExpires.hash]);
+    });
+
+    function stats() {
+      return db
+        .prepare('SELECT total_bytes, newer_format_count FROM unsupported_message_stats;')
+        .all<{ total_bytes: number; newer_format_count: number }>();
+    }
+
+    function recount() {
+      return db
+        .prepare(
+          `SELECT IFNULL(SUM(length(data) + ${UNSUPPORTED_MESSAGE_ROW_OVERHEAD_BYTES}), 0) AS total_bytes,
+             IFNULL(SUM(kind = 'newerFormat'), 0) AS newer_format_count
+           FROM unsupported_message;`
+        )
+        .all<{ total_bytes: number; newer_format_count: number }>();
+    }
+
+    // each record() row holds 10 bytes of data
+    const ROW_COST = 10 + UNSUPPORTED_MESSAGE_ROW_OVERHEAD_BYTES;
+
+    it('starts with a single zeroed stats row', () => {
+      expect(stats()).to.deep.eq([{ total_bytes: 0, newer_format_count: 0 }]);
+    });
+
+    it('keeps the stats exact across inserts, ignored duplicates, updates and deletes', () => {
+      const first = record({ kind: 'newerFormat' });
+      insertUnsupportedMessage(first, db);
+      insertUnsupportedMessage(record({ data: new Uint8Array(1) }), db);
+      insertUnsupportedMessage({ ...first }, db);
+      insertUnsupportedMessage(record({ kind: 'newerFormat', data: new Uint8Array(300) }), db);
+      expect(stats()).to.deep.eq([
+        {
+          total_bytes: 10 + 1 + 300 + 3 * UNSUPPORTED_MESSAGE_ROW_OVERHEAD_BYTES,
+          newer_format_count: 2,
+        },
+      ]);
+      expect(stats()).to.deep.eq(recount());
+
+      db.prepare(
+        "UPDATE unsupported_message SET kind = 'unknownType', data = $data WHERE hash = $hash;"
+      ).run({ hash: first.hash, data: new Uint8Array(42) });
+      expect(stats()).to.deep.eq(recount());
+
+      db.prepare('DELETE FROM unsupported_message WHERE hash = $hash;').run({ hash: first.hash });
+      expect(stats()).to.deep.eq(recount());
+
+      db.exec('DELETE FROM unsupported_message;');
+      expect(stats()).to.deep.eq([{ total_bytes: 0, newer_format_count: 0 }]);
+    });
+
+    it('counts the per row overhead against the byte budget', () => {
+      const tiny = [record(), record(), record()].map(r => ({ ...r, data: new Uint8Array(1) }));
+      tiny.forEach(r => insertUnsupportedMessage(r, db));
+
+      // 3 bytes of data, but 3 rows of overhead
+      enforceUnsupportedMessageBudgetWith(db, {
+        maxBytes: 2 * (1 + UNSUPPORTED_MESSAGE_ROW_OVERHEAD_BYTES),
+        evictionBatchSize: 1,
+      });
+      expect(remainingHashes()).to.deep.eq([tiny[1].hash, tiny[2].hash]);
     });
 
     it('evicts the oldest newer format records first to fit the byte budget', () => {
@@ -468,14 +546,140 @@ describe('UnsupportedMessages', () => {
       const oldNewer = record({ kind: 'newerFormat' });
       const newUnknown = record({ kind: 'unknownType' });
       const newNewer = record({ kind: 'newerFormat' });
-      [oldUnknown, oldNewer, newUnknown, newNewer].forEach(r => insertUnsupportedMessage(r, 0, db));
+      [oldUnknown, oldNewer, newUnknown, newNewer].forEach(r => insertUnsupportedMessage(r, db));
 
-      // 4 rows of 10 bytes each
-      enforceUnsupportedMessageLimitsWith(db, 0, 30);
+      enforceUnsupportedMessageBudgetWith(db, { maxBytes: 3 * ROW_COST, evictionBatchSize: 1 });
       expect(remainingHashes()).to.deep.eq([oldUnknown.hash, newUnknown.hash, newNewer.hash]);
 
-      enforceUnsupportedMessageLimitsWith(db, 0, 15);
+      enforceUnsupportedMessageBudgetWith(db, { maxBytes: 1.5 * ROW_COST, evictionBatchSize: 1 });
       expect(remainingHashes()).to.deep.eq([newUnknown.hash]);
+      expect(stats()).to.deep.eq([{ total_bytes: ROW_COST, newer_format_count: 0 }]);
+    });
+
+    it('evicts in batches, re-reading the total between them', () => {
+      const unknown = [record(), record(), record()];
+      const newer = [record({ kind: 'newerFormat' }), record({ kind: 'newerFormat' })];
+      [...unknown, ...newer].forEach(r => insertUnsupportedMessage(r, db));
+
+      // one batch takes every newer format row, which is enough
+      enforceUnsupportedMessageBudgetWith(db, { maxBytes: 4 * ROW_COST, evictionBatchSize: 2 });
+      expect(remainingHashes()).to.deep.eq(unknown.map(r => r.hash));
+
+      // a second batch of unknown type rows is needed
+      enforceUnsupportedMessageBudgetWith(db, { maxBytes: ROW_COST, evictionBatchSize: 2 });
+      expect(remainingHashes()).to.deep.eq([unknown[2].hash]);
+    });
+
+    it('caps the number of newer format records, evicting the oldest', () => {
+      const newer = [
+        record({ kind: 'newerFormat' }),
+        record({ kind: 'newerFormat' }),
+        record({ kind: 'newerFormat' }),
+      ];
+      const unknown = record();
+      [newer[0], unknown, newer[1], newer[2]].forEach(r => insertUnsupportedMessage(r, db));
+
+      enforceUnsupportedMessageBudgetWith(db, { maxNewerFormatRows: 2 });
+      expect(remainingHashes()).to.deep.eq([unknown.hash, newer[1].hash, newer[2].hash]);
+      expect(stats()).to.deep.eq([{ total_bytes: 3 * ROW_COST, newer_format_count: 2 }]);
+    });
+
+    it('stamps newer format records without returning them, and pages unknown type ones by id', () => {
+      const newerToStamp = record({ kind: 'newerFormat', last_attempt_version: '1.0.0' });
+      const newerDone = record({ kind: 'newerFormat', last_attempt_version: '2.0.0' });
+      const unknownDone = record({ last_attempt_version: '2.0.0' });
+      const unknown = [record(), record(), record()];
+      [newerToStamp, unknown[0], newerDone, unknownDone, unknown[1], unknown[2]].forEach(r =>
+        insertUnsupportedMessage(r, db)
+      );
+
+      expect(markNewerFormatUnsupportedMessagesAttempted('2.0.0', db)).to.eq(1);
+      expect(
+        db
+          .prepare(
+            "SELECT last_attempt_version FROM unsupported_message WHERE kind = 'newerFormat';"
+          )
+          .all<{ last_attempt_version: string }>()
+          .map(r => r.last_attempt_version)
+      ).to.deep.eq(['2.0.0', '2.0.0']);
+
+      const firstPage = getUnknownTypeUnsupportedMessagesToReprocess('2.0.0', 0, 2, db);
+      expect(firstPage.map(r => r.hash)).to.deep.eq([unknown[0].hash, unknown[1].hash]);
+      const secondPage = getUnknownTypeUnsupportedMessagesToReprocess(
+        '2.0.0',
+        firstPage[1].id,
+        2,
+        db
+      );
+      expect(secondPage.map(r => r.hash)).to.deep.eq([unknown[2].hash]);
+    });
+  });
+
+  describe('reprocessRow', () => {
+    const version = '2.0.0';
+    const senderPk = TestUtils.generateFakePubKeyStr();
+    const sentAtMs = 1_700_000_000_000;
+
+    function groupRow(data: Uint8Array): UnsupportedMessageRow {
+      return {
+        id: 7,
+        kind: 'unknownType',
+        swarm_public_key: groupPk,
+        namespace: SnodeNamespaces.ClosedGroupMessages,
+        hash: 'group-hash',
+        sender: senderPk,
+        sent_timestamp_ms: sentAtMs,
+        server_timestamp_ms: sentAtMs,
+        server_expiry_ms: null,
+        data,
+        placeholder_message_id: null,
+        expires_at_ms: null,
+        received_at_ms: sentAtMs,
+        last_attempt_version: '1.0.0',
+      };
+    }
+
+    it('replays a group unknown type record whose data starts with a zero byte', async () => {
+      // group data starts with a random nonce, so 1 in 256 begins with the newer-format prefix
+      const row = groupRow(new Uint8Array([0x00, 0x5a, 0x5a, 0x5a]));
+      const plaintext = contentBytes({ dataMessage: { body: 'now supported' } });
+
+      Sinon.stub(ProBackendAPI, 'getServer').returns({ server: { edPkHex: 'aa' } } as any);
+      Sinon.stub(MetaGroupWrapperActions, 'keyGetAll').resolves([new Uint8Array(32)]);
+      const decrypt = Sinon.stub(MultiEncryptWrapperActions, 'decryptForGroup').resolves([
+        {
+          messageHash: row.hash,
+          decodedEnvelope: {
+            sessionId: senderPk,
+            contentPlaintextUnpadded: plaintext,
+            envelope: { timestampMs: sentAtMs },
+            decodedPro: null,
+          },
+        },
+      ] as any);
+      const attempted = Sinon.stub(UnsupportedMessageData, 'setUnsupportedMessageAttemptVersion');
+      const removed = Sinon.stub(UnsupportedMessageData, 'removeUnsupportedMessageById').resolves();
+      const reinserted = Sinon.stub(UnsupportedMessageData, 'insertUnsupportedMessage');
+      const handle = Sinon.stub(ContentMessage, 'innerHandleSwarmContentMessage').resolves();
+      Sinon.stub(ConvoHub.use(), 'get').returns(undefined as any);
+      TestUtils.stubData('getMessagesBySenderAndSentAt').resolves([{}]);
+
+      expect(await reprocessRow(row, version)).to.eq('replaced');
+
+      expect(decrypt.calledOnce).to.eq(true);
+      expect(decrypt.firstCall.args[0]).to.deep.eq([
+        { envelopePayload: row.data, messageHash: row.hash },
+      ]);
+      expect(handle.calledOnce).to.eq(true);
+      const { decodedEnvelope } = handle.firstCall.args[0];
+      expect(decodedEnvelope.source).to.eq(groupPk);
+      expect(decodedEnvelope.senderIdentity).to.eq(senderPk);
+      expect((decodedEnvelope as SwarmDecodedEnvelope).replayedPlaceholder).to.deep.eq({
+        wasRead: false,
+      });
+      expect(removed.calledOnceWith(row.id)).to.eq(true);
+      expect(attempted.called).to.eq(false);
+      expect(reinserted.called).to.eq(false);
     });
   });
 });

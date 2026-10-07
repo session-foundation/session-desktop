@@ -141,8 +141,7 @@ async function handleNewerFormatMessage({
         serverExpiryMs: expirationMs,
       }),
       nowMs,
-    }),
-    nowMs
+    })
   );
   window.log.info(
     `UnsupportedMessages: newer format message ${hash} (${origin.rawData.length} bytes), retained: ${inserted}`
@@ -267,8 +266,7 @@ async function handleUnknownTypeMessage(
       serverExpiryMs: decodedEnvelope.messageExpirationFromRetrieve,
       expiresAtMs: convo ? null : expiresAtMsWithoutPlaceholder,
       nowMs,
-    }),
-    nowMs
+    })
   );
   window.log.info(
     `UnsupportedMessages: unknown type message ${decodedEnvelope.messageHash} (${origin.rawData.length} bytes) placement: ${placement}, convo: ${convo ? ed25519Str(convo.id) : 'none'}, retained: ${inserted}`

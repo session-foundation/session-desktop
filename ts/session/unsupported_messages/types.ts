@@ -5,9 +5,38 @@
 export const UNSUPPORTED_MESSAGE_TABLE = 'unsupported_message';
 
 /**
- * Upper bound on the total size of retained `data` across all rows.
+ * Single-row running totals over `unsupported_message`, kept exact by triggers so enforcing the limits
+ * after an insert never has to scan the table.
+ */
+export const UNSUPPORTED_MESSAGE_STATS_TABLE = 'unsupported_message_stats';
+
+/**
+ * What a row counts for against the byte budget on top of its `data`, so that many tiny rows (which
+ * anyone can deposit as `newerFormat`) still use up the budget.
+ */
+export const UNSUPPORTED_MESSAGE_ROW_OVERHEAD_BYTES = 256;
+
+/**
+ * Upper bound on the total cost of all rows, each counting `length(data)` plus
+ * `UNSUPPORTED_MESSAGE_ROW_OVERHEAD_BYTES`.
  */
 export const UNSUPPORTED_MESSAGE_MAX_RETAINED_BYTES = 256 * 1024 * 1024;
+
+/**
+ * Upper bound on the number of `newerFormat` rows, which have no authenticated sender.
+ */
+export const UNSUPPORTED_MESSAGE_MAX_NEWER_FORMAT_ROWS = 10_000;
+
+/**
+ * Rows evicted per statement when over the byte budget. The total is only re-read between batches, so
+ * eviction can stop up to a batch's worth of rows below the budget.
+ */
+export const UNSUPPORTED_MESSAGE_EVICTION_BATCH_SIZE = 100;
+
+/**
+ * `unknownType` rows fetched per IPC call when replaying.
+ */
+export const UNSUPPORTED_MESSAGE_REPLAY_PAGE_SIZE = 50;
 
 // FIXME: move this to Crowdin once the design is settled
 export const UNSUPPORTED_MESSAGE_PLACEHOLDER_TEXT =
@@ -50,13 +79,30 @@ export type UnsupportedMessageInsert = Omit<UnsupportedMessageRow, 'id'>;
 
 export type UnsupportedMessageDataNode = {
   /**
-   * Insert a record (ignored if its hash is already retained), then enforce the expiry and byte budget.
+   * Insert a record (ignored if its hash is already retained), then enforce the `newerFormat` row cap
+   * and the byte budget. Expired rows are left to `enforceUnsupportedMessageLimits`.
    * Returns true if the record was inserted.
    */
-  insertUnsupportedMessage: (record: UnsupportedMessageInsert, nowMs: number) => boolean;
+  insertUnsupportedMessage: (record: UnsupportedMessageInsert) => boolean;
   setUnsupportedMessagePlaceholder: (hash: string, placeholderMessageId: string) => void;
+  /**
+   * Remove expired rows, then enforce the `newerFormat` row cap and the byte budget.
+   */
   enforceUnsupportedMessageLimits: (nowMs: number) => void;
-  getUnsupportedMessagesToReprocess: (currentVersion: string) => Array<UnsupportedMessageRow>;
+  /**
+   * Stamp every `newerFormat` row not yet attempted by `currentVersion` as attempted, without loading
+   * it: no legacy version can decrypt them. Returns the number of rows stamped.
+   */
+  markNewerFormatUnsupportedMessagesAttempted: (currentVersion: string) => number;
+  /**
+   * The next `limit` `unknownType` rows with an id above `afterId` not yet attempted by
+   * `currentVersion`, in id order.
+   */
+  getUnknownTypeUnsupportedMessagesToReprocess: (
+    currentVersion: string,
+    afterId: number,
+    limit: number
+  ) => Array<UnsupportedMessageRow>;
   setUnsupportedMessageAttemptVersion: (id: number, version: string) => void;
   removeUnsupportedMessageById: (id: number) => void;
   removeUnsupportedMessagesByPlaceholderIds: (placeholderMessageIds: Array<string>) => void;

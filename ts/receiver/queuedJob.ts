@@ -474,6 +474,7 @@ export async function handleMessageJob(
     void queueAttachmentDownloads(messageModel, conversation);
 
     await markConvoAsReadIfOutgoingMessage(conversation, messageModel);
+    // a replayed message is old, so it never notifies
     if (messageModel.get('unread') && !decodedEnvelope.replayedPlaceholder) {
       conversation.throttledNotify(messageModel);
     }

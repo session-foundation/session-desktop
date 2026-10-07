@@ -157,8 +157,8 @@ export class SwarmDecodedEnvelope extends BaseDecodedEnvelope {
   public readonly swarmOrigin?: SwarmOrigin;
 
   /**
-   * Set when replaying a retained message whose placeholder was just removed: the user has already been
-   * notified about it, and may already have read it.
+   * Set on every replay of a retained message. A replayed message is old, so it never notifies.
+   * `wasRead` carries over the read state of the placeholder it replaces, false if there was none.
    */
   public readonly replayedPlaceholder?: { wasRead: boolean };
 

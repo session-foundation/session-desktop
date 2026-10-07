@@ -41,7 +41,11 @@ import {
 import { CONVERSATION_PRIORITIES } from '../../models/types';
 import { MessageDeletedType } from '../../models/messageType';
 import { CTAVariant } from '../../components/dialog/cta/types';
-import { UNSUPPORTED_MESSAGE_TABLE } from '../../session/unsupported_messages/types';
+import {
+  UNSUPPORTED_MESSAGE_ROW_OVERHEAD_BYTES,
+  UNSUPPORTED_MESSAGE_STATS_TABLE,
+  UNSUPPORTED_MESSAGE_TABLE,
+} from '../../session/unsupported_messages/types';
 
 // eslint:disable: quotemark one-variable-per-declaration no-unused-expression
 
@@ -2487,10 +2491,17 @@ async function updateToSessionSchemaVersion57(currentVersion: number, db: Databa
  *
  * There is no foreign key to the messages table, so every path deleting messages has to remove the
  * matching rows explicitly (see `removeUnsupportedMessagesForMessagesWhere`).
+ *
+ * `unsupported_message_stats` holds exactly one row, maintained by the triggers below. Anything that
+ * changes `data` or `kind` without going through those triggers (eg. dropping and recreating the
+ * table) leaves the totals wrong, and the limits then evict too much or too little.
  */
 export function createUnsupportedMessageTableV58(db: Database) {
+  const t = UNSUPPORTED_MESSAGE_TABLE;
+  const stats = UNSUPPORTED_MESSAGE_STATS_TABLE;
+  const overhead = UNSUPPORTED_MESSAGE_ROW_OVERHEAD_BYTES;
   db.exec(`
-    CREATE TABLE ${UNSUPPORTED_MESSAGE_TABLE}(
+    CREATE TABLE ${t}(
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       kind TEXT NOT NULL,
       swarm_public_key TEXT NOT NULL,
@@ -2506,8 +2517,40 @@ export function createUnsupportedMessageTableV58(db: Database) {
       received_at_ms INTEGER NOT NULL,
       last_attempt_version TEXT NOT NULL
     );
-    CREATE INDEX index_${UNSUPPORTED_MESSAGE_TABLE}_on_placeholder_message_id ON ${UNSUPPORTED_MESSAGE_TABLE}(placeholder_message_id);
-    CREATE INDEX index_${UNSUPPORTED_MESSAGE_TABLE}_on_expires_at_ms ON ${UNSUPPORTED_MESSAGE_TABLE}(expires_at_ms);
+    CREATE INDEX index_${t}_on_placeholder_message_id ON ${t}(placeholder_message_id);
+    CREATE INDEX index_${t}_on_expires_at_ms ON ${t}(expires_at_ms);
+    CREATE INDEX unsupported_message_kind_id ON ${t}(kind, id);
+
+    CREATE TABLE ${stats}(
+      id INTEGER PRIMARY KEY CHECK (id = 1),
+      total_bytes INTEGER NOT NULL DEFAULT 0,
+      newer_format_count INTEGER NOT NULL DEFAULT 0
+    );
+    INSERT INTO ${stats} (id, total_bytes, newer_format_count) VALUES (1, 0, 0);
+
+    CREATE TRIGGER ${t}_stats_after_insert AFTER INSERT ON ${t}
+    BEGIN
+      UPDATE ${stats} SET
+        total_bytes = total_bytes + length(NEW.data) + ${overhead},
+        newer_format_count = newer_format_count + (NEW.kind = 'newerFormat')
+      WHERE id = 1;
+    END;
+
+    CREATE TRIGGER ${t}_stats_after_delete AFTER DELETE ON ${t}
+    BEGIN
+      UPDATE ${stats} SET
+        total_bytes = total_bytes - length(OLD.data) - ${overhead},
+        newer_format_count = newer_format_count - (OLD.kind = 'newerFormat')
+      WHERE id = 1;
+    END;
+
+    CREATE TRIGGER ${t}_stats_after_update AFTER UPDATE OF data, kind ON ${t}
+    BEGIN
+      UPDATE ${stats} SET
+        total_bytes = total_bytes - length(OLD.data) + length(NEW.data),
+        newer_format_count = newer_format_count - (OLD.kind = 'newerFormat') + (NEW.kind = 'newerFormat')
+      WHERE id = 1;
+    END;
   `);
 }
 

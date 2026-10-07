@@ -15,6 +15,15 @@ export const HIGHEST_KNOWN_CONTENT_FIELD_NUMBER = 18;
 const MAX_FIELD_NUMBER = 2 ** 31 - 1;
 const MAX_VARINT_BYTES = 10;
 
+// Protobuf wire types: the low 3 bits of a field key, saying how the value is encoded.
+const WIRE_TYPE_VARINT = 0;
+const WIRE_TYPE_FIXED64 = 1;
+const WIRE_TYPE_LENGTH_DELIMITED = 2;
+// deprecated groups, never used by Session
+const WIRE_TYPE_START_GROUP = 3;
+const WIRE_TYPE_END_GROUP = 4;
+const WIRE_TYPE_FIXED32 = 5;
+
 /**
  * Field numbers of the top-level fields of a serialized protobuf message, or null if it is not
  * well-formed.
@@ -46,21 +55,24 @@ export function topLevelFieldNumbers(bytes: Uint8Array): Array<number> | null {
     if (key === null) {
       return null;
     }
+    // A key is `fieldNumber << 3 | wireType`. The switch below is on the WIRE TYPE (key % 8), not the
+    // field number (floor(key / 8)): eg. its START_GROUP case is not Content field 3.
     const fieldNumber = Math.floor(key / 8);
     if (fieldNumber < 1 || fieldNumber > MAX_FIELD_NUMBER) {
       return null;
     }
 
-    switch (key % 8) {
-      case 0:
+    const wireType = key % 8;
+    switch (wireType) {
+      case WIRE_TYPE_VARINT:
         if (readVarint() === null) {
           return null;
         }
         break;
-      case 1:
+      case WIRE_TYPE_FIXED64:
         index += 8;
         break;
-      case 2: {
+      case WIRE_TYPE_LENGTH_DELIMITED: {
         const length = readVarint();
         if (length === null || length > bytes.length - index) {
           return null;
@@ -68,11 +80,14 @@ export function topLevelFieldNumbers(bytes: Uint8Array): Array<number> | null {
         index += length;
         break;
       }
-      case 5:
+      case WIRE_TYPE_FIXED32:
         index += 4;
         break;
+      case WIRE_TYPE_START_GROUP:
+      case WIRE_TYPE_END_GROUP:
+        // Session has never used groups, so treated as malformed like the unassigned wire types 6 and 7
+        return null;
       default:
-        // groups are deprecated and Session has never used them, anything else is malformed
         return null;
     }
 
