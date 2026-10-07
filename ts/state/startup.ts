@@ -37,7 +37,10 @@ import { setProUserConfigChangedHandler } from '../webworker/workers/browser/lib
 import { initialProAccessState, refreshProAccess } from './ducks/proAccess';
 import { MessageQueue } from '../session/sending';
 import { AvatarMigrate } from '../session/utils/job_runners/jobs/AvatarMigrateJob';
-import { runUnsupportedMessageMaintenanceOnStartup } from '../session/unsupported_messages/reprocess';
+import {
+  runUnsupportedMessageMaintenanceOnAppActive,
+  runUnsupportedMessageMaintenanceOnStartup,
+} from '../session/unsupported_messages/reprocess';
 import { handleTriggeredCTAs } from '../components/dialog/SessionCTA';
 import { UserSync } from '../session/utils/job_runners/jobs/UserSyncJob';
 import { forceSyncConfigurationNowIfNeeded } from '../session/utils/sync/syncUtils';
@@ -281,6 +284,9 @@ export const doAppStartUp = async () => {
   global.setTimeout(() => {
     // the group dumps are loaded above, so group messages have their keys by now
     void runUnsupportedMessageMaintenanceOnStartup();
+
+    // Desktop can stay open, and even focused, for days, so retained messages still need to expire
+    global.setInterval(() => void runUnsupportedMessageMaintenanceOnAppActive(), DURATION.HOURS);
   }, 10000);
 
   global.setTimeout(() => {
