@@ -12,5 +12,13 @@ import type { UserGroupsGet } from 'libsession_util_nodejs';
  * The other clients apply the same rule; keep them in step.
  */
 export function isErasedGroupStub(group: UserGroupsGet) {
-  return (group.kicked || group.destroyed) && !group.name && !group.secretKey && !group.authData;
+  // the wrapper returns an empty array, not null, for a key the entry doesn't have
+  const hasBytes = (bytes: Uint8Array | null) => !!bytes && bytes.length > 0;
+
+  return (
+    (group.kicked || group.destroyed) &&
+    !group.name &&
+    !hasBytes(group.secretKey) &&
+    !hasBytes(group.authData)
+  );
 }

@@ -23,6 +23,16 @@ describe('isErasedGroupStub', () => {
     expect(isErasedGroupStub({ ...stub, name: '' })).to.eq(true);
   });
 
+  it('treats empty key arrays, as the wrapper returns them, as no key', () => {
+    expect(
+      isErasedGroupStub({
+        ...stub,
+        secretKey: new Uint8Array(0) as any,
+        authData: new Uint8Array(0) as any,
+      })
+    ).to.eq(true);
+  });
+
   it('is false for a destroyed group we were in, which keeps its name', () => {
     expect(isErasedGroupStub({ ...stub, name: 'Book club' })).to.eq(false);
   });
