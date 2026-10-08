@@ -38,6 +38,7 @@ import { ed25519Str } from '../utils/String';
 import { PreConditionFailed } from '../utils/errors';
 import { RunJobResult } from '../utils/job_runners/PersistedJob';
 import { GroupSync } from '../utils/job_runners/jobs/GroupSyncJob';
+import { UserSync } from '../utils/job_runners/jobs/UserSyncJob';
 import { LibSessionUtil } from '../utils/libsession/libsession_utils';
 import { SessionUtilContact } from '../utils/libsession/libsession_utils_contacts';
 import { SessionUtilConvoInfoVolatile } from '../utils/libsession/libsession_utils_convo_info_volatile';
@@ -445,6 +446,8 @@ class ConvoController {
     await LibSessionUtil.saveDumpsToDb(UserUtils.getOurPubKeyStrFromCache());
 
     await SessionUtilConvoInfoVolatile.removeGroupFromWrapper(groupPk);
+    // Our other devices only drop the group once this erase reaches our swarm
+    await UserSync.queueNewJobIfNeeded();
     // release the memory (and the current meta-dumps in memory for that group)
     window.log.info(`freeing meta group wrapper: ${ed25519Str(groupPk)}`);
     await MetaGroupWrapperActions.free(groupPk);

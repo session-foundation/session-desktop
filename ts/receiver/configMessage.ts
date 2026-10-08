@@ -1,6 +1,6 @@
 /* eslint-disable no-await-in-loop */
 import { ContactInfoGet, GroupPubkeyType, UserGroupsGet } from 'libsession_util_nodejs';
-import { compact, difference, isEmpty, isNil, isNumber } from 'lodash';
+import { compact, difference, isEmpty, isNil, isNumber, partition } from 'lodash';
 import { ConfigDumpData } from '../data/configDump/configDump';
 import { SettingsKey } from '../data/settings-key';
 import { deleteAllMessagesByConvoIdNoConfirmation } from '../interactions/conversationInteractions';
@@ -62,6 +62,8 @@ import {
   UserConfigWrapperActions,
 } from '../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 import { reconcileProProof } from '../state/ducks/proBackendData';
+import { ed25519Str } from '../session/utils/String';
+import { isErasedGroupStub } from './erasedGroupStub';
 
 type IncomingUserResult = {
   needsPush: boolean;
@@ -714,8 +716,21 @@ async function handleSingleGroupUpdateToLeave(toLeave: GroupPubkeyType) {
  * Called when we just got a userGroups merge from the network. We need to apply the changes to our local state. (i.e. DB and redux slice of 03 groups)
  */
 async function handleGroupUpdate(_latestEnvelopeTimestamp: number) {
+  // Finish the erase the merge undid: a stub must never become a conversation, and leaving it out
+  // of the wrapper's list below removes any conversation we still have for it
+  const [erasedGroupStubs, allGroupsInWrapper] = partition(
+    await UserGroupsWrapperActions.getAllGroups(),
+    isErasedGroupStub
+  );
+  for (let index = 0; index < erasedGroupStubs.length; index++) {
+    const stub = erasedGroupStubs[index];
+    window.log.warn(
+      `Erasing ${ed25519Str(stub.pubkeyHex)}: the merge recreated it after another device erased it`
+    );
+    await UserGroupsWrapperActions.eraseGroup(stub.pubkeyHex);
+  }
+
   // first let's check which groups needs to be joined or left by doing a diff of what is in the wrapper and what is in the DB
-  const allGroupsInWrapper = await UserGroupsWrapperActions.getAllGroups();
   const allGroupsIdsInDb = ConvoHub.use()
     .getConversations()
     .map(m => m.id)
