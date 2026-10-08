@@ -4,8 +4,8 @@ import {
   dismissUnsupportedBanner,
   getUnsupportedBannerState,
   subscribeToUnsupportedBanner,
-  UNSUPPORTED_BANNER_TEXT,
 } from '../session/unsupported_messages/banner';
+import { tr } from '../localization';
 import { NetworkTime } from '../util/NetworkTime';
 
 export const UnsupportedMessageBanner = () => {
@@ -17,7 +17,11 @@ export const UnsupportedMessageBanner = () => {
 
   return (
     <NoticeBanner
-      text={UNSUPPORTED_BANNER_TEXT[state]}
+      text={tr(
+        state === 'otherDevice'
+          ? 'messageUnsupportedBannerLinkedDevice'
+          : 'messageUnsupportedBanner'
+      )}
       dataTestId="unsupported-message-banner"
       dismissDataTestId="unsupported-message-banner-dismiss"
       onDismiss={() => {

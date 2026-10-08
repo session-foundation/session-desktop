@@ -16,13 +16,6 @@ export type UnsupportedBannerTrigger =
 
 export type UnsupportedBannerState = 'hidden' | 'general' | 'otherDevice';
 
-// FIXME: move these to Crowdin once the design is settled
-export const UNSUPPORTED_BANNER_TEXT: Record<Exclude<UnsupportedBannerState, 'hidden'>, string> = {
-  general: "Some messages can't be shown on this device. Update Session to read them.",
-  otherDevice:
-    'One of your other devices is using a newer version of Session. Update this device to keep your messages in sync.',
-};
-
 export function unsupportedBannerState({
   triggeredAtMs,
   otherDeviceTriggeredAtMs,

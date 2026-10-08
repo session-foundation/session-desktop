@@ -35,7 +35,6 @@ import {
 
 import { Data } from '../data/data';
 import { UnsupportedMessageData } from '../data/unsupportedMessage/unsupportedMessage';
-import { UNSUPPORTED_MESSAGE_PLACEHOLDER_TEXT } from '../session/unsupported_messages/types';
 import { OpenGroupData } from '../data/opengroups';
 import { SettingsKey } from '../data/settings-key';
 import { isUsAnySogsFromCache } from '../session/apis/open_group_api/sogsv3/knownBlindedkeys';
@@ -299,7 +298,7 @@ export class MessageModel extends Model<MessageAttributes> {
 
   public getNotificationText(): string {
     if (this.isUnsupportedMessage()) {
-      return UNSUPPORTED_MESSAGE_PLACEHOLDER_TEXT;
+      return tr('messageUnsupported');
     }
     const groupUpdate = this.getGroupUpdateAsArray();
     if (groupUpdate) {

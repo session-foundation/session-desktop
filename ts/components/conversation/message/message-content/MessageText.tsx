@@ -19,7 +19,6 @@ import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 import { MessageBubble } from './MessageBubble';
 import { MessageDeletedType } from '../../../../models/messageType';
 import { tr } from '../../../../localization';
-import { UNSUPPORTED_MESSAGE_PLACEHOLDER_TEXT } from '../../../../session/unsupported_messages/types';
 
 type Props = WithMessageId;
 
@@ -64,7 +63,7 @@ export const MessageText = ({ messageId }: Props) => {
           iconColor={iconColor}
           style={{ padding: '0 var(--margins-xs)' }}
         />
-        {UNSUPPORTED_MESSAGE_PLACEHOLDER_TEXT}
+        {tr('messageUnsupported')}
       </StyledUnsupportedMessage>
     );
   }

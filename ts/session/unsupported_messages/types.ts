@@ -42,10 +42,6 @@ export const UNSUPPORTED_MESSAGE_EVICTION_BATCH_SIZE = 100;
  */
 export const UNSUPPORTED_MESSAGE_REPLAY_PAGE_SIZE = 50;
 
-// FIXME: move this to Crowdin once the design is settled
-export const UNSUPPORTED_MESSAGE_PLACEHOLDER_TEXT =
-  "This message can't be displayed. Update Session to view it.";
-
 export type UnsupportedMessageKind = 'newerFormat' | 'unknownType';
 
 /**
