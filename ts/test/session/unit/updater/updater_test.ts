@@ -6,6 +6,10 @@ import { expect } from 'chai';
 import { enableLogRedirect } from '../../../test-utils/utils';
 import { DURATION } from '../../../../session/constants';
 import { fetchLatestRelease } from '../../../../session/fetch_latest_release';
+import {
+  autoUpdateDisabled,
+  DISABLE_UPDATE_PROMPT_ARG,
+} from '../../../../updater/auto_update_disabled';
 
 describe('Updater', () => {
   it('package.json target is correct', () => {
@@ -30,5 +34,29 @@ describe('Updater', () => {
 
   it('checks the file server on the same cadence as the update throttle', () => {
     expect(fetchLatestRelease.fetchReleaseFromFileServerInterval).to.equal(30 * DURATION.MINUTES);
+  });
+
+  describe('autoUpdateDisabled', () => {
+    it('defaults to enabled when the user setting is absent', () => {
+      expect(autoUpdateDisabled(undefined, [], false)).to.be.false;
+    });
+
+    it('respects the user setting', () => {
+      expect(autoUpdateDisabled(false, [], false)).to.be.true;
+      expect(autoUpdateDisabled(true, [], false)).to.be.false;
+    });
+
+    it('disables updates for Mac App Store builds', () => {
+      expect(autoUpdateDisabled(true, [], true)).to.be.true;
+    });
+
+    it(`disables updates when ${DISABLE_UPDATE_PROMPT_ARG} is present`, () => {
+      expect(autoUpdateDisabled(true, ['session-desktop', DISABLE_UPDATE_PROMPT_ARG], false)).to.be
+        .true;
+    });
+
+    it('ignores unrelated launch arguments', () => {
+      expect(autoUpdateDisabled(true, ['session-desktop', '--start-in-tray'], false)).to.be.false;
+    });
   });
 });
