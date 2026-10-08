@@ -105,6 +105,12 @@ type SharedMessageAttributes = {
    * This is used when a user has performed an interaction (hiding, leaving, etc.) on a conversation. At the moment, this is only used for showing interaction errors.
    */
   interactionNotification?: InteractionNotificationType;
+
+  /**
+   * Set on the placeholder for a message whose type this client doesn't know. The message itself is
+   * retained in the `unsupported_message` table so a newer version can replace this placeholder.
+   */
+  unsupportedMessage?: boolean;
 };
 
 /**

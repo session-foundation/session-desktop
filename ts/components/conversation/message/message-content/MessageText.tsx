@@ -5,6 +5,7 @@ import { MessageBody } from './MessageBody';
 import {
   useMessageDirection,
   useMessageIsDeleted,
+  useMessageIsUnsupported,
   useMessageText,
 } from '../../../../state/selectors';
 import {
@@ -32,10 +33,17 @@ const StyledMessageDeleted = styled.div`
   align-items: center;
 `;
 
+// muted and italic so it doesn't read as an ordinary message
+const StyledUnsupportedMessage = styled(StyledMessageDeleted)`
+  font-style: italic;
+  opacity: 0.7;
+`;
+
 export const MessageText = ({ messageId }: Props) => {
   const multiSelectMode = useIsMessageSelectionMode();
   const direction = useMessageDirection(messageId);
   const isDeleted = useMessageIsDeleted(messageId);
+  const isUnsupported = useMessageIsUnsupported(messageId);
   const text = useMessageText(messageId);
   const isOpenOrClosedGroup = useSelectedIsGroupOrCommunity();
   const isPublic = useSelectedIsPublic();
@@ -45,6 +53,20 @@ export const MessageText = ({ messageId }: Props) => {
     direction === 'incoming'
       ? 'var(--message-bubble-incoming-text-color)'
       : 'var(--message-bubble-outgoing-text-color)';
+
+  if (isUnsupported) {
+    return (
+      <StyledUnsupportedMessage data-testid="unsupported-message">
+        <LucideIcon
+          unicode={LUCIDE_ICONS_UNICODE.CIRCLE_ALERT}
+          iconSize="small"
+          iconColor={iconColor}
+          style={{ padding: '0 var(--margins-xs)' }}
+        />
+        {tr('messageUnsupported')}
+      </StyledUnsupportedMessage>
+    );
+  }
 
   if (isDeleted) {
     return (

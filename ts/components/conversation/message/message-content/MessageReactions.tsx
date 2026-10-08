@@ -12,7 +12,7 @@ import { Localizer } from '../../../basic/Localizer';
 import { LucideIcon } from '../../../icon/LucideIcon';
 import { LUCIDE_ICONS_UNICODE } from '../../../icon/lucide';
 import { createButtonOnKeyDownForClickEventHandler } from '../../../../util/keyboardShortcuts';
-import { useMessageIsDeleted } from '../../../../state/selectors';
+import { useMessageIsDeleted, useMessageIsUnsupported } from '../../../../state/selectors';
 
 export const StyledMessageReactionsContainer = styled(Flex)<{
   $noAvatar: boolean;
@@ -160,8 +160,9 @@ export const MessageReactions = ({
   const msgProps = useMessageReactsPropsById(messageId);
   const [isExpanded, setIsExpanded] = useState(false);
   const msgIsDeleted = useMessageIsDeleted(messageId);
+  const msgIsUnsupported = useMessageIsUnsupported(messageId);
 
-  if (!msgProps || msgIsDeleted) {
+  if (!msgProps || msgIsDeleted || msgIsUnsupported) {
     return null;
   }
 

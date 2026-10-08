@@ -7,6 +7,7 @@ import { MessageModel } from '../models/message';
 import { ConvoHub } from '../session/conversations';
 import { type BaseDecodedEnvelope, type SwarmDecodedEnvelope } from './types';
 import { MessageDirection } from '../models/messageType';
+import { READ_MESSAGE_STATE } from '../models/conversationAttributes';
 import { ConversationTypeEnum } from '../models/types';
 import { SignalService } from '../protobuf';
 import { DisappearingMessages } from '../session/disappearing_messages';
@@ -447,6 +448,10 @@ export async function handleMessageJob(
 
     await processProDetailsForMsg({ sendingDeviceConversation, messageModel, decodedEnvelope });
 
+    if (decodedEnvelope.replayedPlaceholder?.wasRead) {
+      messageModel.set({ unread: READ_MESSAGE_STATE.read });
+    }
+
     // save the message model to the db and then save the messageId generated to our in-memory copy
     const id = await messageModel.commit();
     messageModel.setId(id);
@@ -469,7 +474,8 @@ export async function handleMessageJob(
     void queueAttachmentDownloads(messageModel, conversation);
 
     await markConvoAsReadIfOutgoingMessage(conversation, messageModel);
-    if (messageModel.get('unread')) {
+    // a replayed message is old, so it never notifies
+    if (messageModel.get('unread') && !decodedEnvelope.replayedPlaceholder) {
       conversation.throttledNotify(messageModel);
     }
   } catch (error) {

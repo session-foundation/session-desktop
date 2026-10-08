@@ -8,7 +8,11 @@ import { getTriggerPosition, type PopoverTriggerPosition } from '../SessionToolt
 import { SessionEmojiPanelPopover } from './SessionEmojiPanelPopover';
 import { useMessageReact } from '../../hooks/useMessageInteractions';
 import { closeContextMenus } from '../../util/contextMenu';
-import { useMessageIsControlMessage, useMessageIsDeleted } from '../../state/selectors';
+import {
+  useMessageIsControlMessage,
+  useMessageIsDeleted,
+  useMessageIsUnsupported,
+} from '../../state/selectors';
 import {
   useReactionBarTriggerPosition,
   useInteractableMessageId,
@@ -41,6 +45,7 @@ export function SessionMessageInteractables({
 
   const [messageContextMenuVisible, setMessageContextMenuVisible] = useState(false);
   const isMessageDeleted = useMessageIsDeleted(messageId);
+  const isMessageUnsupported = useMessageIsUnsupported(messageId);
 
   /**
    * The reaction bar can be hidden by the following:
@@ -50,7 +55,11 @@ export function SessionMessageInteractables({
    * - Reaction keyboard shortcut
    * */
   const showReactionBar =
-    convoReactionsEnabled && !isControlMessage && !!reactionBarTriggerPosition && !isMessageDeleted;
+    convoReactionsEnabled &&
+    !isControlMessage &&
+    !!reactionBarTriggerPosition &&
+    !isMessageDeleted &&
+    !isMessageUnsupported;
 
   const activateFocusTrap = showReactionBar || messageContextMenuVisible;
 

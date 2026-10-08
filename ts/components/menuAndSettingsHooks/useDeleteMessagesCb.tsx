@@ -82,6 +82,7 @@ export function useDeleteMessagesCb(conversationId: string | undefined) {
 
     const anyAreMarkAsDeleted = msgModels.some(m => m.isMarkedAsDeleted());
     const anyAreControlMessages = msgModels.some(m => m.isControlMessage());
+    const anyAreUnsupported = msgModels.some(m => m.isUnsupportedMessage());
     // If it's a single message that has attachment and one of those have been clicked, the title and description is slightly different
     const singleDeleteFromAttachment =
       msgModels.length === 1 && msgModels[0].hasAttachments() && dataAttachmentIndex !== null;
@@ -94,11 +95,13 @@ export function useDeleteMessagesCb(conversationId: string | undefined) {
     // We can technically never delete for everyone if one of the message is
     // - a control message
     // - a message marked as deleted
+    // - a placeholder for a message we can't read, as we don't know what deleting it everywhere would mean
     // - a message that is sending or failed to be sent (as we need a hash to delete globally)
     // In this case, the only option is to delete locally.
     // BUT, because we love inconsistencies we still allow to delete globally a sending or failed to be sent message.
     // This does nothing on the backend, but makes a nice UX, apparently.
-    const sharedCannotDeleteForEveryone = anyAreControlMessages || anyAreMarkAsDeleted;
+    const sharedCannotDeleteForEveryone =
+      anyAreControlMessages || anyAreMarkAsDeleted || anyAreUnsupported;
 
     const canDeleteAllForEveryoneAsMe = senders.every(isUsAnySogsFromCache);
     const canDeleteAllForEveryone =

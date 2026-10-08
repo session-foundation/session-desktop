@@ -15,7 +15,7 @@ import { PubKey } from '../../types';
 
 import { ConversationModel } from '../../../models/conversation';
 import { LibsessionMessageHandler } from '../../../receiver/libsession/handleLibSessionMessage';
-import { SwarmDecodedEnvelope } from '../../../receiver/types';
+import { SwarmDecodedEnvelope, type SwarmOrigin } from '../../../receiver/types';
 import { assertUnreachable } from '../../../types/sqlSharedTypes';
 import {
   UserGenericWrapperActions,
@@ -56,6 +56,8 @@ import {
 } from '../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 import { isTestIntegration } from '../../../shared/env_vars';
 import { uuidV4 } from '../../../util/uuid';
+import { isNewerFormatData } from '../../unsupported_messages/detection';
+import { UnsupportedMessages } from '../../unsupported_messages/UnsupportedMessages';
 
 const minMsgCountShouldRetry = 95;
 /**
@@ -570,8 +572,17 @@ export class SwarmPolling {
     }
     const ed25519PrivateKeyHex = (await UserUtils.getUserED25519KeyPair()).privKey.slice(0, 64);
 
+    // Only a positively identified newer format is retained and surfaced. A message which merely fails
+    // to decrypt below still gets nothing: it can't be attributed to anyone, so it could be spam,
+    // corruption or an attacker, and showing anything for it would claim someone really sent us something.
+    const newerFormatMessages = newMessages.filter(
+      m => m.namespace === SnodeNamespaces.Default && isNewerFormatData(fromBase64ToArray(m.data))
+    );
+    const v1Messages = newMessages.filter(m => !newerFormatMessages.includes(m));
+    await handleNewerFormatMessages(newerFormatMessages, pubkey);
+
     const decryptedMessages = await MultiEncryptWrapperActions.decryptFor1o1(
-      newMessages.map(m => ({
+      v1Messages.map(m => ({
         envelopePayload: fromBase64ToArray(m.data),
         messageHash: m.hash,
       })),
@@ -581,7 +592,7 @@ export class SwarmPolling {
       }
     );
 
-    await handleDecryptedMessagesForSwarm(newMessages, decryptedMessages, null);
+    await handleDecryptedMessagesForSwarm(v1Messages, decryptedMessages, null);
   }
 
   private async shouldLeaveNotPolledGroup({
@@ -1187,8 +1198,66 @@ function filterMessagesPerTypeOfConvo<T extends ConversationTypeEnum>(
   }
 }
 
+async function handleNewerFormatMessages(
+  messages: Array<RetrieveMessageItemWithNamespace>,
+  swarmPublicKey: string
+) {
+  for (let index = 0; index < messages.length; index++) {
+    const msg = messages[index];
+    try {
+      await UnsupportedMessages.handleNewerFormatMessage({
+        swarmPublicKey,
+        namespace: msg.namespace,
+        hash: msg.hash,
+        rawData: fromBase64ToArray(msg.data),
+        storedAtMs: msg.storedAt,
+        expirationMs: msg.expiration,
+      });
+    } catch (e) {
+      window.log.warn('SwarmPolling: failed to retain a newer format message: ', e.message);
+    } finally {
+      try {
+        await Data.saveSeenMessageHashes([
+          { hash: msg.hash, expiresAt: msg.expiration, conversationId: swarmPublicKey },
+        ]);
+      } catch (e) {
+        window.log.warn('SwarmPolling: failed saveSeenMessageHashes: ', e.message);
+      }
+    }
+  }
+}
+
+export function buildSwarmDecodedEnvelope({
+  decrypted,
+  groupPk,
+  swarmOrigin,
+  messageExpirationFromRetrieve,
+  replayedPlaceholder,
+}: {
+  decrypted: WithDecodedEnvelope & WithMessageHash;
+  // only set the groupPk if this is an incoming group message
+  groupPk: GroupPubkeyType | null;
+  swarmOrigin: SwarmOrigin;
+  messageExpirationFromRetrieve: number | null;
+  replayedPlaceholder?: { wasRead: boolean };
+}) {
+  return new SwarmDecodedEnvelope({
+    id: uuidV4(),
+    source: groupPk ?? decrypted.decodedEnvelope.sessionId,
+    senderIdentity: groupPk ? decrypted.decodedEnvelope.sessionId : '', // none for 1o1 messages
+    contentDecrypted: decrypted.decodedEnvelope.contentPlaintextUnpadded,
+    receivedAtMs: NetworkTime.now(),
+    messageHash: decrypted.messageHash,
+    sentAtMs: decrypted.decodedEnvelope.envelope.timestampMs,
+    messageExpirationFromRetrieve,
+    decodedPro: decrypted.decodedEnvelope.decodedPro,
+    swarmOrigin,
+    replayedPlaceholder,
+  });
+}
+
 async function handleDecryptedMessagesForSwarm(
-  newMessages: Array<Pick<RetrieveMessageItem, 'hash' | 'expiration'>>,
+  newMessages: Array<RetrieveMessageItemWithNamespace>,
   decryptedMessages: Array<WithDecodedEnvelope & WithMessageHash>,
   // only set the  groupPk if this is an incoming group message
   groupPk: GroupPubkeyType | null
@@ -1205,16 +1274,16 @@ async function handleDecryptedMessagesForSwarm(
         continue;
       }
 
-      const decodedEnvelope = new SwarmDecodedEnvelope({
-        id: uuidV4(),
-        source: groupPk ?? foundDecrypted.decodedEnvelope.sessionId,
-        senderIdentity: groupPk ? foundDecrypted.decodedEnvelope.sessionId : '', // none for 1o1 messages
-        contentDecrypted: foundDecrypted.decodedEnvelope.contentPlaintextUnpadded,
-        receivedAtMs: NetworkTime.now(),
-        messageHash: msg.hash,
-        sentAtMs: foundDecrypted.decodedEnvelope.envelope.timestampMs,
+      const decodedEnvelope = buildSwarmDecodedEnvelope({
+        decrypted: foundDecrypted,
+        groupPk,
+        swarmOrigin: {
+          swarmPublicKey: groupPk ?? us,
+          namespace: msg.namespace,
+          rawData: fromBase64ToArray(msg.data),
+          storedAtMs: msg.storedAt,
+        },
         messageExpirationFromRetrieve: msg.expiration,
-        decodedPro: foundDecrypted.decodedEnvelope.decodedPro,
       });
 
       // this is the processing of the message itself, which can be long.

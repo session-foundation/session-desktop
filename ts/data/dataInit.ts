@@ -1,6 +1,7 @@
 import { ipcRenderer } from 'electron';
 import { channels } from './channels';
 import { ConfigDumpData } from './configDump/configDump';
+import { UnsupportedMessageData } from './unsupportedMessage/unsupportedMessage';
 
 const channelsToMakeForOpengroupV2 = [
   'getAllV2OpenGroupRooms',
@@ -10,6 +11,8 @@ const channelsToMakeForOpengroupV2 = [
 ];
 
 const channelsToMakeForConfigDumps = [...Object.keys(ConfigDumpData)];
+
+const channelsToMakeForUnsupportedMessages = [...Object.keys(UnsupportedMessageData)];
 
 const channelsToMake = new Set([
   'shutdown',
@@ -91,6 +94,7 @@ const channelsToMake = new Set([
   'getMessagesWithFileAttachments',
   ...channelsToMakeForOpengroupV2,
   ...channelsToMakeForConfigDumps,
+  ...channelsToMakeForUnsupportedMessages,
 ]);
 
 const SQL_CHANNEL_KEY = 'sql-channel';

@@ -1,7 +1,9 @@
 import { SessionDataTestId } from 'react';
 import styled from 'styled-components';
 import { Flex } from './basic/Flex';
-import type { LUCIDE_ICONS_UNICODE } from './icon/lucide';
+import { LUCIDE_ICONS_UNICODE } from './icon/lucide';
+import { SessionLucideIconButton } from './icon/SessionIconButton';
+import { tr } from '../localization';
 
 const StyledNoticeBanner = styled(Flex)<{ isClickable: boolean }>`
   background-color: var(--primary-color);
@@ -10,6 +12,7 @@ const StyledNoticeBanner = styled(Flex)<{ isClickable: boolean }>`
   padding: var(--margins-xs) var(--margins-sm);
   text-align: center;
   flex-shrink: 0;
+  position: relative;
   cursor: ${props => (props.isClickable ? 'pointer' : 'default')};
 
   .session-icon-button {
@@ -28,7 +31,16 @@ type NoticeBannerProps = {
   onBannerClick?: () => void;
   dataTestId: SessionDataTestId;
   unicode?: LUCIDE_ICONS_UNICODE;
+  onDismiss?: () => void;
+  dismissDataTestId?: SessionDataTestId;
 };
+
+const StyledDismissContainer = styled.div`
+  position: absolute;
+  inset-inline-end: var(--margins-sm);
+  top: 50%;
+  transform: translateY(-50%);
+`;
 
 const StyledIconContainer = styled.span`
   font-family: var(--font-icon);
@@ -37,7 +49,7 @@ const StyledIconContainer = styled.span`
 `;
 
 export const NoticeBanner = (props: NoticeBannerProps) => {
-  const { text, onBannerClick, dataTestId } = props;
+  const { text, onBannerClick, dataTestId, onDismiss, dismissDataTestId } = props;
 
   return (
     <StyledNoticeBanner
@@ -55,10 +67,22 @@ export const NoticeBanner = (props: NoticeBannerProps) => {
         onBannerClick();
       }}
     >
-      <StyledBannerText>
+      <StyledBannerText style={onDismiss ? { paddingInline: 'var(--margins-lg)' } : undefined}>
         {text}
         {props.unicode ? <StyledIconContainer>{props.unicode}</StyledIconContainer> : null}
       </StyledBannerText>
+      {onDismiss ? (
+        <StyledDismissContainer>
+          <SessionLucideIconButton
+            unicode={LUCIDE_ICONS_UNICODE.X}
+            iconSize="small"
+            iconColor="var(--black-color)"
+            ariaLabel={tr('close')}
+            dataTestId={dismissDataTestId}
+            onClick={onDismiss}
+          />
+        </StyledDismissContainer>
+      ) : null}
     </StyledNoticeBanner>
   );
 };

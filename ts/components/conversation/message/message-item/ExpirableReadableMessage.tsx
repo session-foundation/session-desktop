@@ -330,7 +330,9 @@ export const ExpirableReadableMessage = ({
   const canExpire =
     messageType !== 'interaction-notification' && messageType !== 'message-request-response';
   const isControlMessage =
-    messageType !== 'regular-message' && messageType !== 'community-invitation';
+    messageType !== 'regular-message' &&
+    messageType !== 'community-invitation' &&
+    messageType !== 'unsupported-message';
 
   const alignItems = isControlMessage ? 'center' : isIncoming ? 'flex-start' : 'flex-end';
 

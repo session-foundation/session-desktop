@@ -142,7 +142,37 @@ export abstract class BaseDecodedEnvelope {
   }
 }
 
-export class SwarmDecodedEnvelope extends BaseDecodedEnvelope {}
+/**
+ * Where a 1o1 or group swarm message came from, exactly as retrieved, so one this client can't handle
+ * can be retained and replayed later through the same path.
+ */
+export type SwarmOrigin = {
+  swarmPublicKey: string;
+  namespace: number;
+  rawData: Uint8Array;
+  storedAtMs: number;
+};
+
+export class SwarmDecodedEnvelope extends BaseDecodedEnvelope {
+  public readonly swarmOrigin?: SwarmOrigin;
+
+  /**
+   * Set on every replay of a retained message. A replayed message is old, so it never notifies.
+   * `wasRead` carries over the read state of the placeholder it replaces, false if there was none.
+   */
+  public readonly replayedPlaceholder?: { wasRead: boolean };
+
+  constructor(
+    args: DecodedProConstructorArgs & {
+      swarmOrigin?: SwarmOrigin;
+      replayedPlaceholder?: { wasRead: boolean };
+    }
+  ) {
+    super(args);
+    this.swarmOrigin = args.swarmOrigin;
+    this.replayedPlaceholder = args.replayedPlaceholder;
+  }
+}
 
 export class SogsDecodedEnvelope extends BaseDecodedEnvelope {
   /**
