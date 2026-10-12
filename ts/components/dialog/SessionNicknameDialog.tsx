@@ -66,7 +66,7 @@ export const SessionNicknameDialog = (props: Props) => {
   const displayName = useConversationRealName(conversationId);
   const dispatch = getAppDispatch();
   const currentNickname = useNickname(conversationId);
-  const [nickname, setStateNickname] = useState(currentNickname || '');
+  const [nickname, setStateNickname] = useState(currentNickname || displayName || '');
 
   const onClickClose = () => {
     dispatch(changeNickNameModal(null));
