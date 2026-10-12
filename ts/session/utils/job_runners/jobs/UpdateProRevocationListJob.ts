@@ -142,6 +142,8 @@ class UpdateProRevocationListJob extends PersistedJob<UpdateProRevocationListPer
       const ourProConfig = getCachedUserConfig().proConfig;
 
       if (
+        // With Pro off this device leaves our own Pro config to the devices that have it on
+        getFeatureFlag('proAvailable') &&
         ourProConfig &&
         ourProConfig.proProof.revocationTagB64 &&
         // `ProRevocationCache.setListItems` above updated the cache, so we can use it here

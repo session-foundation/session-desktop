@@ -63,6 +63,7 @@ export const SettingsKey = {
   proLongerMessagesSent,
   proBadgesSent,
   audioAutoplay: 'audioAutoplay',
+  lightboxVideoVolume: 'lightboxVideoVolume',
   showRecoveryPhrasePrompt: 'showRecoveryPhrasePrompt',
   dismissedRecoveryPhrasePrompt: 'dismissedRecoveryPhrasePrompt',
   hideMessageRequests: 'hideMessageRequests',
@@ -113,6 +114,14 @@ export const SettingsKey = {
   // NOTE: for these CTAs undefined means it has never been shown in this cycle of pro access, true means it needs to be shown and false means it has been shown and dont show it again.
   proExpiringSoonCTA: 'proExpiringSoonCTA',
   proExpiredCTA: 'proExpiredCTA',
+  /**
+   * The three values behind the unsupported-message banner, number | undefined (ms since epoch, network
+   * time). See `unsupportedBannerState` for how they combine.
+   */
+  unsupportedMessageBannerTriggeredAtMs: 'unsupportedMessageBannerTriggeredAtMs',
+  unsupportedMessageBannerOtherDeviceTriggeredAtMs:
+    'unsupportedMessageBannerOtherDeviceTriggeredAtMs',
+  unsupportedMessageBannerDismissedAtMs: 'unsupportedMessageBannerDismissedAtMs',
 } as const;
 
 export const KNOWN_BLINDED_KEYS_ITEM = 'KNOWN_BLINDED_KEYS_ITEM';

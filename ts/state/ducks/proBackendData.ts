@@ -513,7 +513,7 @@ async function handleExpiryCTAs(
 export async function applyMockedProStatusAtStartup(
   dispatch: Parameters<typeof handleTriggeredCTAs>[0]
 ): Promise<boolean> {
-  if (!getFeatureFlag('mockProBackendSuccess')) {
+  if (!getFeatureFlag('proAvailable') || !getFeatureFlag('mockProBackendSuccess')) {
     return false;
   }
 
@@ -794,6 +794,11 @@ async function writeProAutoRenewingToConfig(autoRenewing: boolean): Promise<void
  * allows the fetch.
  */
 export async function refreshProStatusOnStartupIfNeeded(): Promise<void> {
+  // Before the gate below, which stamps its attempt: a stamp written while Pro is off would hold back the
+  // first real fetch once it is turned on
+  if (!getFeatureFlag('proAvailable')) {
+    return;
+  }
   void scheduleUserExpiryStatusWake();
 
   if (!(await coldStartShouldFetchProStatus())) {
@@ -850,6 +855,9 @@ async function requestAndApplyProof(): Promise<void> {
  * accepted — the §4 monotonic merge no-ops the late reply). Holds no durable state.
  */
 export async function reconcileProProof(): Promise<void> {
+  if (!getFeatureFlag('proAvailable')) {
+    return;
+  }
   if (reconcileWakeId) {
     clearTimeout(reconcileWakeId);
     reconcileWakeId = null;
@@ -1025,6 +1033,10 @@ const fetchGetProStatusFromProBackend = createAsyncThunk(
 const refreshGetProStatusFromProBackend = createAsyncThunk(
   'proBackendData/refreshGetProStatus',
   async ({ immediate, ...opts }: WithCallerContext & WithImmediate = {}, payloadCreator) => {
+    if (!getFeatureFlag('proAvailable')) {
+      return;
+    }
+
     if (getFeatureFlag('debugServerRequests')) {
       window.log.info(
         `[proBackend/refreshGetProStatusFromProBackend] starting ${new Date().toISOString()}`

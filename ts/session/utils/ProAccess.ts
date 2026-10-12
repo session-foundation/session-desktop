@@ -1,5 +1,6 @@
 import { NetworkTime } from '../../util/NetworkTime';
 import { proAccessWithMock } from '../../state/ducks/types/proMocks';
+import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 import { ProRevocationCache } from '../revocation_list/pro_revocation_list';
 import { getCachedUserConfig } from '../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 
@@ -24,6 +25,10 @@ import { getCachedUserConfig } from '../../webworker/workers/browser/libsession/
  * ACCESS at all. Unmocked — which is every real client — this is the proof and nothing else.
  */
 export function currentUserProofIsValid(): boolean {
+  // Before any mock: a proof synced from another device, or a mocked one, is still no entitlement while Pro is off
+  if (!getFeatureFlag('proAvailable')) {
+    return false;
+  }
   return proAccessWithMock(realProofIsValid());
 }
 

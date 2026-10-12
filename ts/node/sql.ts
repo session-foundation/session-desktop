@@ -89,6 +89,11 @@ import {
 } from './migration/signalMigrations';
 import { configDumpData } from './sql_calls/config_dump';
 import {
+  removeUnsupportedMessagesForMessagesWhere,
+  unsupportedMessageData,
+} from './sql_calls/unsupported_message';
+import { UNSUPPORTED_MESSAGE_TABLE } from '../session/unsupported_messages/types';
+import {
   assertGlobalInstance,
   assertGlobalInstanceOrInstance,
   closeDbInstance,
@@ -1138,9 +1143,9 @@ function removeMessage(id: string, instance?: Database) {
     throw new Error('removeMessage: only takes single message to delete!');
   }
 
-  assertGlobalInstanceOrInstance(instance)
-    .prepare(`DELETE FROM ${MESSAGES_TABLE} WHERE id = $id;`)
-    .run({ id });
+  const db = assertGlobalInstanceOrInstance(instance);
+  removeUnsupportedMessagesForMessagesWhere(db, 'id = $id', { id });
+  db.prepare(`DELETE FROM ${MESSAGES_TABLE} WHERE id = $id;`).run({ id });
 }
 
 function removeMessagesByIds(ids: Array<string>, instance?: Database) {
@@ -1153,9 +1158,10 @@ function removeMessagesByIds(ids: Array<string>, instance?: Database) {
   }
   const start = Date.now();
 
-  assertGlobalInstanceOrInstance(instance)
-    .prepare(`DELETE FROM ${MESSAGES_TABLE} WHERE id IN ( ${ids.map(() => '?').join(', ')} );`)
-    .run(ids);
+  const db = assertGlobalInstanceOrInstance(instance);
+  const idsPlaceholders = ids.map(() => '?').join(', ');
+  removeUnsupportedMessagesForMessagesWhere(db, `id IN ( ${idsPlaceholders} )`, ids);
+  db.prepare(`DELETE FROM ${MESSAGES_TABLE} WHERE id IN ( ${idsPlaceholders} );`).run(ids);
   console.log(`removeMessagesByIds of length ${ids.length} took ${Date.now() - start}ms`);
 }
 
@@ -1172,6 +1178,11 @@ function removeAllMessagesInConversationSentBefore(
     id: string;
   }>();
 
+  removeUnsupportedMessagesForMessagesWhere(
+    assertGlobalInstanceOrInstance(instance),
+    'conversationId = $conversationId AND sent_at <= $beforeMs',
+    params
+  );
   const sqlDelete = `DELETE FROM ${MESSAGES_TABLE} WHERE conversationId = $conversationId AND sent_at <= $beforeMs;`;
   analyzeQuery(assertGlobalInstanceOrInstance(instance), sqlDelete, params).run();
 
@@ -1204,6 +1215,9 @@ function removeAllMessagesInConversation(conversationId: string, instance?: Data
   }
   const inst = assertGlobalInstanceOrInstance(instance);
 
+  removeUnsupportedMessagesForMessagesWhere(inst, 'conversationId = $conversationId', {
+    conversationId,
+  });
   inst
     .prepare(`DELETE FROM ${MESSAGES_TABLE} WHERE conversationId = $conversationId`)
     .run({ conversationId });
@@ -1983,14 +1997,15 @@ function cleanUpUnreadExpiredDaRMessages() {
   const t14daysEarlier = Date.now() - 14 * DURATION.DAYS;
   const start = Date.now();
 
-  const sql = `DELETE FROM ${MESSAGES_TABLE} WHERE
-      expirationType = 'deleteAfterRead' AND
+  const where = `expirationType = 'deleteAfterRead' AND
       unread = $unread AND
-      sent_at <= $t14daysEarlier;`;
+      sent_at <= $t14daysEarlier`;
+  const sql = `DELETE FROM ${MESSAGES_TABLE} WHERE ${where};`;
   const params = {
     unread: toSqliteBoolean(true),
     t14daysEarlier,
   };
+  removeUnsupportedMessagesForMessagesWhere(assertGlobalInstance(), where, params);
   const deleted = analyzeQuery(assertGlobalInstance(), sql, params).run();
 
   console.info(
@@ -2119,6 +2134,7 @@ function removeAll() {
     DELETE FROM ${SEEN_MESSAGE_TABLE};
     DELETE FROM ${CONVERSATIONS_TABLE};
     DELETE FROM ${MESSAGES_TABLE};
+    DELETE FROM ${UNSUPPORTED_MESSAGE_TABLE};
     DELETE FROM ${ATTACHMENT_DOWNLOADS_TABLE};
     DELETE FROM ${MESSAGES_FTS_TABLE};
     DELETE FROM ${CONFIG_DUMP_TABLE};
@@ -2765,4 +2781,6 @@ export const sqlNode = {
 
   // config dumps
   ...configDumpData,
+
+  ...unsupportedMessageData,
 };

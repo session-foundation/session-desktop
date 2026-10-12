@@ -38,6 +38,7 @@ import { ed25519Str } from '../../session/utils/String';
 import { UserUtils } from '../../session/utils';
 import type { ProMessageFeature } from '../../models/proMessageFeature';
 import { handleTriggeredCTAs } from '../../components/dialog/SessionCTA';
+import { getFeatureFlag } from './types/releasedFeaturesReduxTypes';
 import type { Quote } from '../../session/messages/outgoing/visibleMessage/VisibleMessage';
 import { PopoverTriggerPosition } from '../../components/SessionTooltip';
 
@@ -49,7 +50,8 @@ export type UIMessageType =
   | 'call-notification'
   | 'interaction-notification'
   | 'message-request-response'
-  | 'regular-message';
+  | 'regular-message'
+  | 'unsupported-message';
 
 type MessageTypeIsControlMessage<T extends UIMessageType> = Extract<
   T,
@@ -96,6 +98,8 @@ type WithMessageRequestResponse = WithMessageTypeDetails<'message-request-respon
 
 type WithRegularMessage = WithMessageTypeDetails<'regular-message'>;
 
+type WithUnsupportedMessage = WithMessageTypeDetails<'unsupported-message'>;
+
 export type MessageModelPropsWithoutConvoProps = {
   propsForMessage: PropsForMessageWithoutConvoProps;
 } & (
@@ -106,6 +110,7 @@ export type MessageModelPropsWithoutConvoProps = {
   | WithMessageRequestResponse
   | WithInteractionNotification
   | WithRegularMessage
+  | WithUnsupportedMessage
   | WithGroupUpdateNotification
 );
 
@@ -1288,7 +1293,9 @@ export async function openConversationWithMessages(args: {
   window.inboxStore?.dispatch(sectionActions.resetRightOverlayMode());
 
   if (window.inboxStore) {
-    await handleTriggeredCTAs(window.inboxStore.dispatch, false);
+    if (getFeatureFlag('proAvailable')) {
+      await handleTriggeredCTAs(window.inboxStore.dispatch, false);
+    }
   }
 }
 

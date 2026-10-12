@@ -13,6 +13,7 @@ import {
   useHideAvatarInMsgList,
   useMessageDirection,
   useMessageIsDeleted,
+  useMessageIsUnsupported,
   useMessageLinkPreview,
   useMessageQuote,
   useMessageSelected,
@@ -81,6 +82,7 @@ export const MessageContent = (props: Props) => {
   const quote = useMessageQuote(props.messageId);
   const text = useMessageText(props.messageId);
   const isDeleted = useMessageIsDeleted(props.messageId);
+  const isUnsupported = useMessageIsUnsupported(props.messageId);
   const serverTimestamp = useMessageServerTimestamp(props.messageId);
   const timestamp = useMessageTimestamp(props.messageId);
   const [isMessageVisible, setMessageIsVisible] = useState(false);
@@ -144,7 +146,7 @@ export const MessageContent = (props: Props) => {
   }
 
   const hasContentBeforeAttachment =
-    !isEmpty(previews) || !isEmpty(quote) || !isEmpty(text) || !!isDeleted;
+    !isEmpty(previews) || !isEmpty(quote) || !isEmpty(text) || !!isDeleted || isUnsupported;
 
   return (
     <StyledMessageContent

@@ -5,6 +5,7 @@ import { LeftPane } from './leftpane/LeftPane';
 import { SessionMainPanel } from './SessionMainPanel';
 import { SessionTheme } from '../themes/SessionTheme';
 import { Flex } from './basic/Flex';
+import { UnsupportedMessageBanner } from './UnsupportedMessageBanner';
 
 const StyledGutter = styled.div`
   width: var(--left-panel-width) !important;
@@ -20,6 +21,7 @@ export const SessionInboxView = () => {
     <div className="inbox index">
       <Provider store={window.inboxStore}>
         <SessionTheme>
+          <UnsupportedMessageBanner />
           <AnimatePresence>
             <Flex $container={true} height="0" $flexShrink={100} $flexGrow={1}>
               <StyledGutter>

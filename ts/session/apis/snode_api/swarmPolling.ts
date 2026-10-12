@@ -15,7 +15,7 @@ import { PubKey } from '../../types';
 
 import { ConversationModel } from '../../../models/conversation';
 import { LibsessionMessageHandler } from '../../../receiver/libsession/handleLibSessionMessage';
-import { SwarmDecodedEnvelope } from '../../../receiver/types';
+import { SwarmDecodedEnvelope, type SwarmOrigin } from '../../../receiver/types';
 import { assertUnreachable } from '../../../types/sqlSharedTypes';
 import {
   UserGenericWrapperActions,
@@ -56,6 +56,8 @@ import {
 } from '../../../webworker/workers/browser/libsession/libsession_worker_userconfig_interface';
 import { isTestIntegration } from '../../../shared/env_vars';
 import { uuidV4 } from '../../../util/uuid';
+import { isNewerFormatData } from '../../unsupported_messages/detection';
+import { UnsupportedMessages } from '../../unsupported_messages/UnsupportedMessages';
 
 const minMsgCountShouldRetry = 95;
 /**
@@ -126,11 +128,20 @@ export class SwarmPolling {
    * lastHashes[snode_edkey][pubkey_polled][namespace_polled] = last_hash
    */
   private readonly lastHashes: Record<string, Record<string, Record<number, string>>>;
+  /**
+   * conversationId -> how many times its cursor has been reset.
+   *
+   * A poll compares this before and after its fetch rather than the cursor values themselves,
+   * because a value comparison cannot see a reset of a cursor that was already empty, and a poll
+   * that misses the reset writes its newest hash back and undoes it.
+   */
+  private readonly cursorResets: Map<string, number>;
   private hasStarted = false;
 
   constructor() {
     this.groupPolling = [];
     this.lastHashes = {};
+    this.cursorResets = new Map();
   }
 
   public async start(waitForFirstPoll = false): Promise<void> {
@@ -561,8 +572,17 @@ export class SwarmPolling {
     }
     const ed25519PrivateKeyHex = (await UserUtils.getUserED25519KeyPair()).privKey.slice(0, 64);
 
+    // Only a positively identified newer format is retained and surfaced. A message which merely fails
+    // to decrypt below still gets nothing: it can't be attributed to anyone, so it could be spam,
+    // corruption or an attacker, and showing anything for it would claim someone really sent us something.
+    const newerFormatMessages = newMessages.filter(
+      m => m.namespace === SnodeNamespaces.Default && isNewerFormatData(fromBase64ToArray(m.data))
+    );
+    const v1Messages = newMessages.filter(m => !newerFormatMessages.includes(m));
+    await handleNewerFormatMessages(newerFormatMessages, pubkey);
+
     const decryptedMessages = await MultiEncryptWrapperActions.decryptFor1o1(
-      newMessages.map(m => ({
+      v1Messages.map(m => ({
         envelopePayload: fromBase64ToArray(m.data),
         messageHash: m.hash,
       })),
@@ -572,7 +592,7 @@ export class SwarmPolling {
       }
     );
 
-    await handleDecryptedMessagesForSwarm(newMessages, decryptedMessages, null);
+    await handleDecryptedMessagesForSwarm(v1Messages, decryptedMessages, null);
   }
 
   private async shouldLeaveNotPolledGroup({
@@ -658,6 +678,8 @@ export class SwarmPolling {
     const snodeEdkey = node.pubkey_ed25519;
 
     try {
+      // taken before anything is read, so a reset at any point from here on is seen
+      const resetsAtStart = this.cursorResetCount(pubkey);
       const configHashesToBump = await this.getHashesToBump(type, pubkey);
       const namespacesAndLastHashes = await Promise.all(
         namespaces.map(async namespace => {
@@ -680,17 +702,11 @@ export class SwarmPolling {
         allow401s
       );
 
-      const namespacesAndLastHashesAfterFetch = await Promise.all(
-        namespaces.map(async namespace => {
-          const lastHash = await this.getLastHash(snodeEdkey, pubkey, namespace);
-          return { namespace, lastHash };
-        })
-      );
-
-      if (
-        namespacesAndLastHashes.some(m => m) &&
-        namespacesAndLastHashesAfterFetch.every(m => !m)
-      ) {
+      // The cursor was reset while this fetch was in flight, so it was made against a cursor that
+      // no longer exists. Writing its newest hash back would undo the reset and the history it
+      // asked for would never be fetched. Its messages are dropped with it: the next poll fetches
+      // them again from the start, and seen-message dedupe absorbs the overlap.
+      if (this.cursorResetCount(pubkey) !== resetsAtStart) {
         swarmLog(
           `SwarmPolling: hashes for ${ed25519Str(pubkey)} have been reset while we were fetching new messages. discarding them....`
         );
@@ -786,6 +802,7 @@ export class SwarmPolling {
             namespace: namespaces[index],
             hash: lastMessage.hash,
             expiration: lastMessage.expiration,
+            resetsAtStart,
           });
         })
       );
@@ -887,15 +904,23 @@ export class SwarmPolling {
     hash,
     namespace,
     pubkey,
+    resetsAtStart,
   }: {
     edkey: string;
     pubkey: string;
     namespace: number;
     hash: string;
     expiration: number;
+    /** the reset count when the poll writing this started; see cursorResets */
+    resetsAtStart: number;
   }): Promise<void> {
     const cached = await this.getLastHash(edkey, pubkey, namespace);
 
+    // Checked again before each write, not only once before the loop: a reset can land during the
+    // awaits in here, and either write landing after it undoes it.
+    if (this.cursorResetCount(pubkey) !== resetsAtStart) {
+      return;
+    }
     if (!cached || cached !== hash) {
       await Data.updateLastHash({
         convoId: pubkey,
@@ -906,6 +931,9 @@ export class SwarmPolling {
       });
     }
 
+    if (this.cursorResetCount(pubkey) !== resetsAtStart) {
+      return;
+    }
     if (!this.lastHashes[edkey]) {
       this.lastHashes[edkey] = {};
     }
@@ -913,6 +941,10 @@ export class SwarmPolling {
       this.lastHashes[edkey][pubkey] = {};
     }
     this.lastHashes[edkey][pubkey][namespace] = hash;
+  }
+
+  private cursorResetCount(pubkey: string) {
+    return this.cursorResets.get(pubkey) ?? 0;
   }
 
   private async getLastHash(nodeEdKey: string, pubkey: string, namespace: number): Promise<string> {
@@ -933,6 +965,9 @@ export class SwarmPolling {
   }
 
   public async resetLastHashesForConversation(conversationId: string) {
+    // Counted before the first await, so a poll checking at any point after this call starts sees
+    // it, including one whose cursor write would otherwise land between the clears below.
+    this.cursorResets.set(conversationId, this.cursorResetCount(conversationId) + 1);
     await Data.clearLastHashesForConvoId(conversationId);
     const snodeKeys = Object.keys(this.lastHashes);
     for (let index = 0; index < snodeKeys.length; index++) {
@@ -1163,8 +1198,66 @@ function filterMessagesPerTypeOfConvo<T extends ConversationTypeEnum>(
   }
 }
 
+async function handleNewerFormatMessages(
+  messages: Array<RetrieveMessageItemWithNamespace>,
+  swarmPublicKey: string
+) {
+  for (let index = 0; index < messages.length; index++) {
+    const msg = messages[index];
+    try {
+      await UnsupportedMessages.handleNewerFormatMessage({
+        swarmPublicKey,
+        namespace: msg.namespace,
+        hash: msg.hash,
+        rawData: fromBase64ToArray(msg.data),
+        storedAtMs: msg.storedAt,
+        expirationMs: msg.expiration,
+      });
+    } catch (e) {
+      window.log.warn('SwarmPolling: failed to retain a newer format message: ', e.message);
+    } finally {
+      try {
+        await Data.saveSeenMessageHashes([
+          { hash: msg.hash, expiresAt: msg.expiration, conversationId: swarmPublicKey },
+        ]);
+      } catch (e) {
+        window.log.warn('SwarmPolling: failed saveSeenMessageHashes: ', e.message);
+      }
+    }
+  }
+}
+
+export function buildSwarmDecodedEnvelope({
+  decrypted,
+  groupPk,
+  swarmOrigin,
+  messageExpirationFromRetrieve,
+  replayedPlaceholder,
+}: {
+  decrypted: WithDecodedEnvelope & WithMessageHash;
+  // only set the groupPk if this is an incoming group message
+  groupPk: GroupPubkeyType | null;
+  swarmOrigin: SwarmOrigin;
+  messageExpirationFromRetrieve: number | null;
+  replayedPlaceholder?: { wasRead: boolean };
+}) {
+  return new SwarmDecodedEnvelope({
+    id: uuidV4(),
+    source: groupPk ?? decrypted.decodedEnvelope.sessionId,
+    senderIdentity: groupPk ? decrypted.decodedEnvelope.sessionId : '', // none for 1o1 messages
+    contentDecrypted: decrypted.decodedEnvelope.contentPlaintextUnpadded,
+    receivedAtMs: NetworkTime.now(),
+    messageHash: decrypted.messageHash,
+    sentAtMs: decrypted.decodedEnvelope.envelope.timestampMs,
+    messageExpirationFromRetrieve,
+    decodedPro: decrypted.decodedEnvelope.decodedPro,
+    swarmOrigin,
+    replayedPlaceholder,
+  });
+}
+
 async function handleDecryptedMessagesForSwarm(
-  newMessages: Array<Pick<RetrieveMessageItem, 'hash' | 'expiration'>>,
+  newMessages: Array<RetrieveMessageItemWithNamespace>,
   decryptedMessages: Array<WithDecodedEnvelope & WithMessageHash>,
   // only set the  groupPk if this is an incoming group message
   groupPk: GroupPubkeyType | null
@@ -1181,16 +1274,16 @@ async function handleDecryptedMessagesForSwarm(
         continue;
       }
 
-      const decodedEnvelope = new SwarmDecodedEnvelope({
-        id: uuidV4(),
-        source: groupPk ?? foundDecrypted.decodedEnvelope.sessionId,
-        senderIdentity: groupPk ? foundDecrypted.decodedEnvelope.sessionId : '', // none for 1o1 messages
-        contentDecrypted: foundDecrypted.decodedEnvelope.contentPlaintextUnpadded,
-        receivedAtMs: NetworkTime.now(),
-        messageHash: msg.hash,
-        sentAtMs: foundDecrypted.decodedEnvelope.envelope.timestampMs,
+      const decodedEnvelope = buildSwarmDecodedEnvelope({
+        decrypted: foundDecrypted,
+        groupPk,
+        swarmOrigin: {
+          swarmPublicKey: groupPk ?? us,
+          namespace: msg.namespace,
+          rawData: fromBase64ToArray(msg.data),
+          storedAtMs: msg.storedAt,
+        },
         messageExpirationFromRetrieve: msg.expiration,
-        decodedPro: foundDecrypted.decodedEnvelope.decodedPro,
       });
 
       // this is the processing of the message itself, which can be long.

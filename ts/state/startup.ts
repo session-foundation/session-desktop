@@ -37,6 +37,7 @@ import { setProUserConfigChangedHandler } from '../webworker/workers/browser/lib
 import { initialProAccessState, refreshProAccess } from './ducks/proAccess';
 import { MessageQueue } from '../session/sending';
 import { AvatarMigrate } from '../session/utils/job_runners/jobs/AvatarMigrateJob';
+import { runUnsupportedMessageMaintenance } from '../session/unsupported_messages/reprocess';
 import { handleTriggeredCTAs } from '../components/dialog/SessionCTA';
 import { UserSync } from '../session/utils/job_runners/jobs/UserSyncJob';
 import { forceSyncConfigurationNowIfNeeded } from '../session/utils/sync/syncUtils';
@@ -276,6 +277,14 @@ export const doAppStartUp = async () => {
     // Note: this also starts periodic jobs, so we don't need to keep doing it
     await UserSync.queueNewJobIfNeeded();
   }, 20000);
+
+  global.setTimeout(() => {
+    // the group dumps are loaded above, so group messages have their keys by now
+    void runUnsupportedMessageMaintenance();
+
+    // Desktop can stay open, and even focused, for days, so retained messages still need to expire
+    global.setInterval(() => void runUnsupportedMessageMaintenance(), DURATION.HOURS);
+  }, 10000);
 
   global.setTimeout(() => {
     // Schedule all avatarMigrateJobs in some time to let anything incoming from the network be handled first

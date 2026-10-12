@@ -59,6 +59,7 @@ import {
 } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 import { useDebugKey } from '../../hooks/useDebugKey';
 import { UpdateProRevocationList } from '../../session/utils/job_runners/jobs/UpdateProRevocationListJob';
+import { getIsProAvailableMemo } from '../../hooks/useIsProAvailable';
 import { getIsAppFocused } from '../../state/selectors/section';
 import { refreshProStatusOnStartupIfNeeded } from '../../state/ducks/proBackendData';
 import { SettingsKey } from '../../data/settings-key';
@@ -147,6 +148,7 @@ function useProStatusGateOnAppFocus() {
   // path there is no such caller, so the check belongs here. Without it a focus event lets a real
   // response land on top of a mocked CTA decision, which is the case the startup suppression exists for.
   const proStatusMocked = getFeatureFlagMemo('mockProBackendSuccess');
+  const proAvailable = getIsProAvailableMemo();
   const isAppFocused = useSelector(getIsAppFocused);
   const wasAppFocused = useRef(isAppFocused);
 
@@ -154,11 +156,11 @@ function useProStatusGateOnAppFocus() {
     const regainedFocus = isAppFocused && !wasAppFocused.current;
     wasAppFocused.current = isAppFocused;
 
-    if (proStatusMocked || !regainedFocus) {
+    if (!proAvailable || proStatusMocked || !regainedFocus) {
       return;
     }
     void refreshProStatusOnStartupIfNeeded();
-  }, [isAppFocused, proStatusMocked]);
+  }, [isAppFocused, proAvailable, proStatusMocked]);
 }
 
 function useKeyboardShortcutsModalKeyboardShortcut() {

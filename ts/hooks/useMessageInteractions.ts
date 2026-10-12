@@ -17,6 +17,7 @@ import {
   useMessageIsCommunityInvitation,
   useMessageIsControlMessage,
   useMessageIsDeleted,
+  useMessageIsUnsupported,
   useMessageIsOnline,
   useMessageSender,
   useMessageServerTimestamp,
@@ -99,8 +100,10 @@ export function useMessageReply(messageId?: string) {
   const msgIsOnline = useMessageIsOnline(messageId);
   // ios and android do not support replying to a community invitation
   const isCommunityInvitation = useMessageIsCommunityInvitation(messageId);
+  const isUnsupported = useMessageIsUnsupported(messageId);
 
-  const cannotReply = !messageId || !msgIsOnline || isControlMessage || isCommunityInvitation;
+  const cannotReply =
+    !messageId || !msgIsOnline || isControlMessage || isCommunityInvitation || isUnsupported;
 
   return cannotReply
     ? null
@@ -116,7 +119,8 @@ export function useMessageReply(messageId?: string) {
 export function useMessageReact(messageId?: string) {
   const isControlMessage = useMessageIsControlMessage(messageId);
   const isDeleted = useMessageIsDeleted(messageId);
-  const cannotReact = !messageId || isControlMessage || isDeleted;
+  const isUnsupported = useMessageIsUnsupported(messageId);
+  const cannotReact = !messageId || isControlMessage || isDeleted || isUnsupported;
 
   return cannotReact
     ? null

@@ -103,6 +103,7 @@ function getMessageComponent(messageType: UIMessageType) {
     case 'message-request-response':
       return MessageRequestResponse;
     case 'regular-message':
+    case 'unsupported-message':
       return MessageContentWithStatuses;
     default:
       return null;

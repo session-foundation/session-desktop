@@ -24,6 +24,7 @@ import {
 import { SpacerSM, SpacerXL } from '../basic/Text';
 import type { MergedLocalizerTokens } from '../../localization/localeTools';
 import { SessionButtonShiny } from '../basic/SessionButtonShiny';
+import { getIsProAvailableMemo } from '../../hooks/useIsProAvailable';
 import { useCurrentUserHasPro } from '../../hooks/useHasPro';
 import { assertUnreachable } from '../../types/sqlSharedTypes';
 import { Storage } from '../../util/storage';
@@ -37,6 +38,7 @@ import {
   type ProCTAVariant,
   isProCTAFeatureVariant,
 } from './cta/types';
+import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
 import { openUrlNoDialog, showLinkVisitWarningDialog } from './OpenUrlModal';
 import { APP_URL, DURATION } from '../../session/constants';
 import { Data } from '../../data/data';
@@ -473,14 +475,23 @@ export const showSessionCTA = (variant: CTAVariant, dispatch: Dispatch<any>) => 
 
 export const useShowSessionCTACb = (variant: CTAVariant) => {
   const dispatch = getAppDispatch();
+  const isProAvailable = getIsProAvailableMemo();
+  const isProCTA = useIsProCTAVariant(variant);
+  if (isProCTA && !isProAvailable) {
+    return () => null;
+  }
 
   return () => showSessionCTA(variant, dispatch);
 };
 
 export const useShowSessionCTACbWithVariant = () => {
   const dispatch = getAppDispatch();
+  const isProAvailable = getIsProAvailableMemo();
 
   return (variant: CTAVariant) => {
+    if (isProCTAVariant(variant) && !isProAvailable) {
+      return;
+    }
     showSessionCTA(variant, dispatch);
   };
 };
@@ -527,6 +538,7 @@ export async function handleTriggeredCTAs(dispatch: Dispatch<any>, fromAppStart:
   //
   // `fromAppStart` is still needed below, where it *enables* the donate CTA rather than suppressing a
   // Pro one. Those are different questions and must not be collapsed into one flag.
+  const proAvailable = getFeatureFlag('proAvailable');
 
   if (Storage.get(SettingsKey.proExpiringSoonCTA)) {
     // An expiry CTA states something about the account, and showing it clears the mark, so it cannot be
@@ -534,7 +546,7 @@ export async function handleTriggeredCTAs(dispatch: Dispatch<any>, fromAppStart:
     // merely past startup: a launch that skips or fails the status fetch knows nothing newer than the
     // stored mark, and any later trigger — a conversation change, opening settings — would otherwise
     // display it off that.
-    if (!proStatusConfirmedThisRun || aProSettingsScreenIsOpen()) {
+    if (!proAvailable || !proStatusConfirmedThisRun || aProSettingsScreenIsOpen()) {
       return;
     }
     dispatch(
@@ -544,7 +556,7 @@ export async function handleTriggeredCTAs(dispatch: Dispatch<any>, fromAppStart:
     );
     await Storage.put(SettingsKey.proExpiringSoonCTA, false);
   } else if (Storage.get(SettingsKey.proExpiredCTA)) {
-    if (!proStatusConfirmedThisRun || aProSettingsScreenIsOpen()) {
+    if (!proAvailable || !proStatusConfirmedThisRun || aProSettingsScreenIsOpen()) {
       return;
     }
     dispatch(

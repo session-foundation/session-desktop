@@ -61,6 +61,7 @@ import {
 } from '../../../util/ctaHistory';
 import { CTAVariant } from '../cta/types';
 import { isDevProd } from '../../../shared/env_vars';
+import { getIsProAvailableMemo } from '../../../hooks/useIsProAvailable';
 
 type DebugButtonProps = SessionButtonProps & { shiny?: boolean; hide?: boolean };
 
@@ -318,6 +319,12 @@ export const LoggingDebugSection = ({ forceUpdate }: { forceUpdate: () => void }
 };
 
 export const Playgrounds = ({ setPage }: DebugMenuPageProps) => {
+  const proAvailable = getIsProAvailableMemo();
+
+  if (!proAvailable) {
+    return null;
+  }
+
   return (
     <DebugMenuSection title="Playgrounds" rowWrap={true}>
       <DebugButton onClick={() => setPage(DEBUG_MENU_PAGE.POPOVER)}>Popover Playground</DebugButton>

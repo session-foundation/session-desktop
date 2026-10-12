@@ -1,7 +1,7 @@
 import { compact, flatten, isEmpty, isFinite } from 'lodash';
 
 import { handleSwarmDataMessage } from './dataMessage';
-import { type BaseDecodedEnvelope, type SwarmDecodedEnvelope } from './types';
+import { type BaseDecodedEnvelope, SwarmDecodedEnvelope } from './types';
 
 import { SignalService } from '../protobuf';
 import { PubKey } from '../session/types';
@@ -32,6 +32,9 @@ import { shouldProcessContentMessage } from './common';
 import { longOrNumberToNumber } from '../types/long/longOrNumberToNumber';
 import { buildPrivateProfileChangeFromMsgRequestResponse } from '../models/profile';
 import { deleteOrMarkAsDeletedMessages } from '../interactions/conversations/deleteOrMarkAsDeletedMessages';
+import { isUnknownTypeContent } from '../session/unsupported_messages/detection';
+import { UnsupportedMessages } from '../session/unsupported_messages/UnsupportedMessages';
+import { UnsupportedMessageData } from '../data/unsupportedMessage/unsupportedMessage';
 
 async function shouldDropIncomingPrivateMessage(
   envelope: BaseDecodedEnvelope,
@@ -246,6 +249,18 @@ export async function innerHandleSwarmContentMessage({
       if (await shouldDropIncomingPrivateMessage(decodedEnvelope, content)) {
         return;
       }
+    }
+
+    // Only 1o1 and group swarm messages carry a swarm origin: communities and the community inbox are
+    // open to anyone, so a placeholder there would invite spam more than it informs.
+    if (
+      decodedEnvelope instanceof SwarmDecodedEnvelope &&
+      decodedEnvelope.swarmOrigin &&
+      isUnknownTypeContent(content, decodedEnvelope.contentDecrypted)
+    ) {
+      // checked before the conversations below are fetched, as those calls create them
+      await UnsupportedMessages.handleUnknownTypeMessage(decodedEnvelope, content);
+      return;
     }
 
     /**
@@ -468,6 +483,19 @@ async function handleUnsendMessage(
     window?.log?.error('handleUnsendMessage: Invalid timestamp -- dropping message');
 
     return;
+  }
+  // A retained message without a placeholder has nothing below to find it by, and would otherwise be
+  // replayed after an update, restoring a message its sender deleted.
+  try {
+    await UnsupportedMessageData.removeUnsupportedMessagesBySenderAndSentTimestamp(
+      messageAuthor,
+      longOrNumberToNumber(timestamp)
+    );
+  } catch (e) {
+    window.log.warn(
+      'handleUnsendMessage: failed to remove retained unsupported messages',
+      e.message
+    );
   }
   const messageToDelete = (
     await Data.getMessagesBySenderAndSentAt([

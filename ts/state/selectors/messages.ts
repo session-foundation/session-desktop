@@ -208,6 +208,10 @@ export function useMessageType(messageId: string | undefined) {
   return useMessagePropsByMessageId(messageId)?.messageType;
 }
 
+export function useMessageIsUnsupported(messageId: string | undefined) {
+  return useMessageType(messageId) === 'unsupported-message';
+}
+
 export const useMessageText = (messageId: string | undefined): string | undefined => {
   return useMessagePropsByMessageId(messageId)?.propsForMessage.text;
 };

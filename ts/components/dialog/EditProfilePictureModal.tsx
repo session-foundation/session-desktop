@@ -44,6 +44,7 @@ import {
 } from '../../state/selectors/modal';
 import { CTAVariant } from './cta/types';
 import { useCurrentUserHasPro, useCurrentUserHasProAccess } from '../../hooks/useHasPro';
+import { getIsProAvailableMemo } from '../../hooks/useIsProAvailable';
 
 const StyledAvatarContainer = styled.div`
   cursor: pointer;
@@ -141,6 +142,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
   // says. DISPLAY decides only what we tell the user about it — see both uses below.
   const weHavePro = useCurrentUserHasProAccess() && isMe;
   const planReadsActive = useCurrentUserHasPro() && isMe;
+  const isProAvailable = getIsProAvailableMemo();
 
   const avatarPath = useAvatarPath(conversationId) || '';
 
@@ -232,7 +234,7 @@ export const EditProfilePictureModal = ({ conversationId }: EditProfilePictureMo
      * C. Community admin uploading a community profile picture
      * All of those are taken care of as part of the `isProUser` check in the conversation model
      */
-    if (!weHavePro && isNewAvatarAnimated && !isCommunity) {
+    if (isProAvailable && !weHavePro && isNewAvatarAnimated && !isCommunity) {
       // The refusal is ACCESS and unconditional. Whether we explain it by offering Pro is DISPLAY.
       //
       // With an active plan and no usable proof, the refusal is silent: every string available here

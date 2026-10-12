@@ -7,6 +7,7 @@ import { MessageModel } from '../models/message';
 import { ConvoHub } from '../session/conversations';
 import { type BaseDecodedEnvelope, type SwarmDecodedEnvelope } from './types';
 import { MessageDirection } from '../models/messageType';
+import { READ_MESSAGE_STATE } from '../models/conversationAttributes';
 import { ConversationTypeEnum } from '../models/types';
 import { SignalService } from '../protobuf';
 import { DisappearingMessages } from '../session/disappearing_messages';
@@ -20,6 +21,7 @@ import LIBSESSION_CONSTANTS from '../session/utils/libsession/libsession_constan
 import { longOrNumberToNumber } from '../types/long/longOrNumberToNumber';
 import { getHideMessageRequestBannerOutsideRedux } from '../state/selectors/settings';
 import { showMessageRequestBannerOutsideRedux } from '../state/ducks/settings';
+import { getFeatureFlag } from '../state/ducks/types/releasedFeaturesReduxTypes';
 import type { StateType } from '../state/reducer';
 import { isUsFromCache } from '../session/utils/User';
 import { isUsAnySogsFromCache } from '../session/apis/open_group_api/sogsv3/knownBlindedkeys';
@@ -242,9 +244,11 @@ async function handleRegularMessage(
     ? sendingDeviceConversation.hasValidCurrentProProof()
     : decodedEnvelope.proProofEntitlesFeaturesNow();
 
-  const maxChars = senderIsProForThisMessage
-    ? LIBSESSION_CONSTANTS.MESSAGE_CHARACTER_LIMIT_PRO
-    : LIBSESSION_CONSTANTS.MESSAGE_CHARACTER_LIMIT_STANDARD;
+  // NOTE: The truncation value must be the Pro count so when Pro is released older clients wont truncate pro messages.
+  const maxChars =
+    !getFeatureFlag('proAvailable') || senderIsProForThisMessage
+      ? LIBSESSION_CONSTANTS.MESSAGE_CHARACTER_LIMIT_PRO
+      : LIBSESSION_CONSTANTS.MESSAGE_CHARACTER_LIMIT_STANDARD;
 
   const body = [...rawDataMessage.body].slice(0, maxChars).join('');
 
@@ -444,6 +448,10 @@ export async function handleMessageJob(
 
     await processProDetailsForMsg({ sendingDeviceConversation, messageModel, decodedEnvelope });
 
+    if (decodedEnvelope.replayedPlaceholder?.wasRead) {
+      messageModel.set({ unread: READ_MESSAGE_STATE.read });
+    }
+
     // save the message model to the db and then save the messageId generated to our in-memory copy
     const id = await messageModel.commit();
     messageModel.setId(id);
@@ -466,7 +474,8 @@ export async function handleMessageJob(
     void queueAttachmentDownloads(messageModel, conversation);
 
     await markConvoAsReadIfOutgoingMessage(conversation, messageModel);
-    if (messageModel.get('unread')) {
+    // a replayed message is old, so it never notifies
+    if (messageModel.get('unread') && !decodedEnvelope.replayedPlaceholder) {
       conversation.throttledNotify(messageModel);
     }
   } catch (error) {
