@@ -62,7 +62,7 @@
     "build-release": "pnpm build-release-base --publish=never",
     "build-release-publish": "pnpm build-release-base --publish=always",
     "ready": "pnpm dedupe --check && pnpm build && pnpm lint && pnpm test",
-    "postinstall": "pnpm patch-package && pnpm electron-builder install-app-deps && pnpm build:protobuf",
+    "postinstall": "pnpm patch-package && tsx ./build/installAppDeps.ts && pnpm build:protobuf",
     "worker:utils": "webpack --config=./utils.worker.config.js",
     "worker:libsession": "webpack --config=./libsession.worker.config.js",
     "worker:image_processor": "webpack --config=./image_processor.worker.config.js",
