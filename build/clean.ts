@@ -6,7 +6,7 @@ import BUILD_CONFIG from './buildConfig';
 const { APP_DIR, DIST_DIR, CACHE_FILE, filesToCopy, directoriesToCopy } = BUILD_CONFIG;
 
 function isCopiedPath(relativePath: string): boolean {
-  if (filesToCopy.includes(relativePath) || relativePath === 'package.json') {
+  if (filesToCopy.includes(relativePath)) {
     return true;
   }
 
