@@ -4,7 +4,7 @@
   "name": "session-desktop",
   "productName": "Session",
   "description": "Private messaging from your desktop",
-  "version": "1.18.2",
+  "version": "1.18.3",
   "license": "GPL-3.0",
   "author": {
     "name": "Session Foundation",
@@ -62,7 +62,7 @@
     "build-release": "pnpm build-release-base --publish=never",
     "build-release-publish": "pnpm build-release-base --publish=always",
     "ready": "pnpm dedupe --check && pnpm build && pnpm lint && pnpm test",
-    "postinstall": "pnpm patch-package && pnpm electron-builder install-app-deps && pnpm build:protobuf",
+    "postinstall": "pnpm patch-package && tsx ./build/installAppDeps.ts && pnpm build:protobuf",
     "worker:utils": "webpack --config=./utils.worker.config.js",
     "worker:libsession": "webpack --config=./libsession.worker.config.js",
     "worker:image_processor": "webpack --config=./image_processor.worker.config.js",
@@ -97,7 +97,7 @@
     "framer-motion": "^12.5.0",
     "fs-extra": "11.3.0",
     "image-type": "^4.1.0",
-    "libsession_util_nodejs": "https://github.com/session-foundation/libsession-util-nodejs/releases/download/v0.7.4/libsession_util_nodejs-v0.7.4.tar.gz",
+    "libsession_util_nodejs": "https://github.com/session-foundation/libsession-util-nodejs/releases/download/v0.7.5/libsession_util_nodejs-v0.7.5.tar.gz",
     "libsodium-wrappers-sumo": "0.7.15",
     "linkify-it": "^5.0.0",
     "lodash": "^4.17.21",
@@ -222,7 +222,7 @@
     "webpack-cli": "6.0.1"
   },
   "engines": {
-    "node": "24.12.0"
+    "node": "24.22.1"
   },
   "build": {
     "appId": "com.loki-project.messenger-desktop",

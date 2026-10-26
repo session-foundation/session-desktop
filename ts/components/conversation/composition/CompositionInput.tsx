@@ -510,7 +510,23 @@ const UnstyledCompositionInput = forwardRef<CompositionInputRef, ContentEditable
         }
 
         if (isElementNode(node) && node?.tagName === 'BR') {
-          markNodeForDeletion(nodesToDelete, 'BR tag is forbidden', node);
+          /**
+           * Chromium adds a trailing BR as a placeholder when the last line is empty (eg. after deleting the
+           * only character of the last line). Without a placeholder a trailing "\n" is not rendered as an
+           * empty line and the caret jumps to the previous line, so swap the BR for a "\n" text node.
+           * This is the same placeholder Chromium inserts when pressing enter at the end of the input.
+           */
+          const prev = node.previousSibling;
+          if (
+            !node.nextSibling &&
+            prev &&
+            prev.nodeType === Node.TEXT_NODE &&
+            prev.nodeValue?.endsWith('\n')
+          ) {
+            node.replaceWith(document.createTextNode('\n'));
+          } else {
+            markNodeForDeletion(nodesToDelete, 'BR tag is forbidden', node);
+          }
           continue;
         }
 
