@@ -1,6 +1,6 @@
 import { isEmpty } from 'lodash';
 import useMount from 'react-use/lib/useMount';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { getAppDispatch } from '../../../state/dispatch';
 import { SettingsKey } from '../../../data/settings-key';
 import { mnDecode } from '../../../session/crypto/mnemonic';
@@ -64,6 +64,7 @@ export const CreateAccount = () => {
   const dispatch = getAppDispatch();
 
   const [cannotContinue, setCannotContinue] = useState(true);
+  const signUpInFlight = useRef(false);
 
   const generateMnemonicAndKeyPair = async () => {
     if (recoveryPassword === '') {
@@ -90,6 +91,13 @@ export const CreateAccount = () => {
   });
 
   const signUpWithDetails = async () => {
+    // A second call racing the first breaks both: `updateOurProfileDisplayNameOnboarding` init/frees
+    // the single UserConfig wrapper, so the loser throws "already init" and frees the wrapper the
+    // winner is still using. Guarding here rather than on the button: enter-to-submit bypasses it.
+    if (signUpInFlight.current) {
+      return;
+    }
+    signUpInFlight.current = true;
     try {
       const sanitizedName = sanitizeDisplayNameOrToast(displayName);
 
@@ -122,6 +130,8 @@ export const CreateAccount = () => {
         // The error reported by libsession is not localized
         dispatch(setDisplayNameError(tr('displayNameErrorDescriptionShorter')));
       }
+    } finally {
+      signUpInFlight.current = false;
     }
   };
 

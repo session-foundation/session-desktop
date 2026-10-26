@@ -48,7 +48,11 @@ import {
   useCurrentUserHasExpiredPro,
   useCurrentNeverHadPro,
 } from '../../../../../hooks/useHasPro';
-import { SessionButton, SessionButtonColor } from '../../../../basic/SessionButton';
+import {
+  SessionButton,
+  SessionButtonColor,
+  SessionButtonType,
+} from '../../../../basic/SessionButton';
 import { proButtonProps } from '../../../SessionCTA';
 import { getIsProGroupsAvailableMemo } from '../../../../../hooks/useIsProAvailable';
 import { SpacerMD } from '../../../../basic/Text';
@@ -341,7 +345,8 @@ function ProNonProContinueButton({ state }: SectionProps) {
   return (
     <SessionButton
       {...proButtonProps}
-      buttonColor={isLoading || isError ? SessionButtonColor.Disabled : SessionButtonColor.Primary}
+      buttonColor={SessionButtonColor.Primary}
+      buttonType={isLoading || isError ? SessionButtonType.Outline : SessionButtonType.Solid}
       onClick={handleClick}
       dataTestId="pro-open-platform-website-button"
     >
