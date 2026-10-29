@@ -35,6 +35,10 @@ async function verifyMAC(data: any, key: any, mac: any, length: any) {
 
 async function verifyDigest(data: ArrayBuffer, theirDigest: ArrayBuffer) {
   return crypto.subtle.digest({ name: 'SHA-256' }, data).then(ourDigest => {
+    if (theirDigest.byteLength !== ourDigest.byteLength) {
+      throw new Error('Bad digest length');
+    }
+
     const a = new Uint8Array(ourDigest);
     const b = new Uint8Array(theirDigest);
     let result = 0;
