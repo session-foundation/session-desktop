@@ -294,8 +294,7 @@ const handleMessagesResponseV4 = async (
     }
 
     // we use the unverified newMessages seqno and id as last polled because we actually did poll up to those ids.
-
-    const incomingMessageSeqNo = compact(messages.map(n => n.seqno));
+    const incomingMessageSeqNo = messages.map(n => n.seqno).filter(n => isNumber(n));
     const maxNewMessageSeqNo = Math.max(...incomingMessageSeqNo);
 
     let decryptedItems: AwaitedReturn<(typeof MultiEncryptWrapperActions)['decryptForCommunity']>;
