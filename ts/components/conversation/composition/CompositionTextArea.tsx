@@ -50,7 +50,7 @@ import { Mention } from '../AddMentions';
 import { useDebugInputCommands } from '../../dialog/debug/hooks/useDebugInputCommands';
 import { useKeyboardShortcut } from '../../../hooks/useKeyboardShortcut';
 import { isEnterKey, isEscapeKey, KbdShortcut } from '../../../util/keyboardShortcuts';
-import { isEditableTarget } from '../../../util/isEditableTarget';
+import { isEditableEventTarget } from '../../../util/isEditableTarget';
 import {
   getTriggerPositionFromBoundingClientRect,
   PopoverTriggerPosition,
@@ -608,7 +608,7 @@ export function CompositionTextArea(props: Props) {
     }
 
     const handleTypingFocus = (event: globalThis.KeyboardEvent) => {
-      if (!isPrintableTypingEvent(event) || isEditableTarget(event.target)) {
+      if (!isPrintableTypingEvent(event) || isEditableEventTarget(event)) {
         return;
       }
 

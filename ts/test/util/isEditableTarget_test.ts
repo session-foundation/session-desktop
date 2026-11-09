@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-import { isEditableTarget } from '../../util/isEditableTarget';
+import { isEditableEventTarget, isEditableTarget } from '../../util/isEditableTarget';
 
 describe('isEditableTarget', () => {
   it('rejects missing targets', () => {
@@ -59,5 +59,47 @@ describe('isEditableTarget', () => {
     editor.setAttribute('contenteditable', 'inherit');
 
     expect(isEditableTarget(editor)).to.equal(false);
+  });
+});
+
+describe('isEditableEventTarget', () => {
+  afterEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  // composedPath() is empty once dispatch ends, so it is inspected from inside the listener.
+  function keydownSeenByDocument(origin: HTMLElement) {
+    let seen: { target: EventTarget | null; editable: boolean } | undefined;
+    const listener = (e: KeyboardEvent) => {
+      seen = { target: e.target, editable: isEditableEventTarget(e) };
+    };
+    document.addEventListener('keydown', listener, true);
+    origin.dispatchEvent(new KeyboardEvent('keydown', { key: 'a', bubbles: true, composed: true }));
+    document.removeEventListener('keydown', listener, true);
+    if (!seen) {
+      throw new Error('keydown never reached the document');
+    }
+    return seen;
+  }
+
+  it('recognizes an input inside a shadow root', () => {
+    const host = document.createElement('div');
+    const input = document.createElement('input');
+    host.attachShadow({ mode: 'open' }).appendChild(input);
+    document.body.appendChild(host);
+
+    const seen = keydownSeenByDocument(input);
+
+    expect(seen.target).to.equal(host);
+    expect(seen.editable).to.equal(true);
+  });
+
+  it('rejects a non-editable element inside a shadow root', () => {
+    const host = document.createElement('div');
+    const button = document.createElement('button');
+    host.attachShadow({ mode: 'open' }).appendChild(button);
+    document.body.appendChild(host);
+
+    expect(keydownSeenByDocument(button).editable).to.equal(false);
   });
 });
