@@ -302,20 +302,18 @@ const handleOpenGroupMessageReactions = async (
       let reactors = reactions[key].reactors ?? [];
 
       if (you) {
-        if (reactors.length > 0) {
-          const reactorsWithoutMe = reactors.filter(reactor => !isUsAnySogsFromCache(reactor));
+        const reactorsWithoutMe = reactors.filter(reactor => !isUsAnySogsFromCache(reactor));
 
-          // If we aren't included in the reactors then remove the extra reactor to match with the SOGSReactorsFetchCount.
-          if (reactorsWithoutMe.length === SOGSReactorsFetchCount) {
-            reactorsWithoutMe.pop();
-          }
+        // If we aren't included in the reactors then remove the extra reactor to match with the SOGSReactorsFetchCount.
+        if (reactorsWithoutMe.length === SOGSReactorsFetchCount) {
+          reactorsWithoutMe.pop();
+        }
 
-          const conversationModel = originalMessage?.getConversation();
-          if (conversationModel) {
-            const me =
-              conversationModel.getUsInThatConversation() || UserUtils.getOurPubKeyStrFromCache();
-            reactors = [me, ...reactorsWithoutMe];
-          }
+        const conversationModel = originalMessage?.getConversation();
+        if (conversationModel) {
+          const me =
+            conversationModel.getUsInThatConversation() || UserUtils.getOurPubKeyStrFromCache();
+          reactors = [me, ...reactorsWithoutMe];
         }
       }
 
