@@ -299,38 +299,29 @@ const handleOpenGroupMessageReactions = async (
     Object.keys(reactions).forEach(key => {
       const emoji = decodeURI(key);
       const you = reactions[key].you || false;
+      let reactors = reactions[key].reactors ?? [];
 
       if (you) {
-        if (reactions[key]?.reactors.length > 0) {
-          const reactorsWithoutMe = reactions[key].reactors.filter(
-            reactor => !isUsAnySogsFromCache(reactor)
-          );
+        const reactorsWithoutMe = reactors.filter(reactor => !isUsAnySogsFromCache(reactor));
 
-          // If we aren't included in the reactors then remove the extra reactor to match with the SOGSReactorsFetchCount.
-          if (reactorsWithoutMe.length === SOGSReactorsFetchCount) {
-            reactorsWithoutMe.pop();
-          }
+        // If we aren't included in the reactors then remove the extra reactor to match with the SOGSReactorsFetchCount.
+        if (reactorsWithoutMe.length === SOGSReactorsFetchCount) {
+          reactorsWithoutMe.pop();
+        }
 
-          const conversationModel = originalMessage?.getConversation();
-          if (conversationModel) {
-            const me =
-              conversationModel.getUsInThatConversation() || UserUtils.getOurPubKeyStrFromCache();
-            // eslint-disable-next-line no-param-reassign
-            reactions[key].reactors = [me, ...reactorsWithoutMe];
-          }
+        const conversationModel = originalMessage?.getConversation();
+        if (conversationModel) {
+          const me =
+            conversationModel.getUsInThatConversation() || UserUtils.getOurPubKeyStrFromCache();
+          reactors = [me, ...reactorsWithoutMe];
         }
       }
-
-      const senders: Array<string> = [];
-      reactions[key].reactors.forEach(reactor => {
-        senders.push(reactor);
-      });
 
       if (reactions[key].count > 0) {
         reacts[emoji] = {
           count: reactions[key].count,
           index: reactions[key].index,
-          senders,
+          senders: [...reactors],
           you,
         };
       } else {
