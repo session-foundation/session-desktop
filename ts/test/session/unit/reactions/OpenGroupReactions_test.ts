@@ -3,6 +3,7 @@ import Sinon from 'sinon';
 
 import { Data } from '../../../../data/data';
 import { ConvoHub } from '../../../../session/conversations';
+import { UserUtils } from '../../../../session/utils';
 import { OpenGroupReactionList } from '../../../../types/Reaction';
 import { Reactions } from '../../../../util/reactions';
 import { TestUtils } from '../../../test-utils';
@@ -20,6 +21,7 @@ describe('handleOpenGroupMessageReactions', () => {
     const convo = { isOpenGroupV2: () => true, getUsInThatConversation: () => me } as any;
     Sinon.stub(ConvoHub.use(), 'get').returns(convo);
     Sinon.stub(originalMessage, 'getConversation').returns(convo);
+    Sinon.stub(UserUtils, 'getOurPubKeyStrFromCache').returns(me);
     Sinon.stub(Data, 'getMessageByServerId').resolves(originalMessage);
     Sinon.stub(originalMessage, 'commit').resolves();
   });
@@ -63,5 +65,28 @@ describe('handleOpenGroupMessageReactions', () => {
       '😄': { index: 0, count: 2, you: true, senders: [me, reactor] },
     });
     expect(reactions['😄'].reactors).to.be.deep.equal([reactor]);
+  });
+
+  it('does not list us twice when the server already lists us', async () => {
+    const reactions: OpenGroupReactionList = {
+      '😄': { index: 0, count: 2, you: true, reactors: [reactor, me] },
+    };
+
+    const updated = await Reactions.handleOpenGroupMessageReactions(conversationId, 111, reactions);
+
+    expect(updated?.get('reacts')?.['😄'].senders).to.be.deep.equal([me, reactor]);
+  });
+
+  it('keeps senders at the fetch count when we are not in the reactors', async () => {
+    const others = Array.from({ length: Reactions.SOGSReactorsFetchCount }, () =>
+      TestUtils.generateFakePubKeyStr()
+    );
+    const reactions: OpenGroupReactionList = {
+      '😄': { index: 0, count: 8, you: true, reactors: others },
+    };
+
+    const updated = await Reactions.handleOpenGroupMessageReactions(conversationId, 111, reactions);
+
+    expect(updated?.get('reacts')?.['😄'].senders).to.be.deep.equal([me, ...others.slice(0, -1)]);
   });
 });
