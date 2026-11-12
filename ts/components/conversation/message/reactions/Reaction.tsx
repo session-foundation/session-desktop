@@ -9,7 +9,7 @@ import {
 import { SortedReactionList } from '../../../../types/Reaction';
 import { abbreviateNumber } from '../../../../util/numbers';
 import { nativeEmojiData } from '../../../../util/emoji';
-import { ReactionPopup } from './ReactionPopup';
+import { ReactionPopup, reactionPopupNamesNeeded } from './ReactionPopup';
 import { SessionTooltip } from '../../../SessionTooltip';
 import { THEME_GLOBALS } from '../../../../themes/globals';
 import { createButtonOnKeyDownForClickEventHandler } from '../../../../util/keyboardShortcuts';
@@ -117,7 +117,13 @@ export const Reaction = (props: ReactionProps) => {
 
   const handleReactionOnKeyDown = createButtonOnKeyDownForClickEventHandler(handleReactionClick);
 
-  const renderTooltip = inGroup && !inModal;
+  // A community server can send a count without the reactors: the hover text has no name to show then.
+  const sendersOtherThanUs = senders.filter(
+    sender => sender !== me && !isUsAnySogsFromCache(sender)
+  ).length;
+  const weReacted = sendersOtherThanUs < senders.length;
+  const renderTooltip =
+    inGroup && !inModal && sendersOtherThanUs >= reactionPopupNamesNeeded(weReacted, count ?? 0);
 
   const content = useMemo(
     () =>

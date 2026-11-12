@@ -315,7 +315,7 @@ jobs:
         include:
           - architecture: arm64
             cache_suffix: mac-arm64
-            runner: macos-14
+            runner: macos-15
 
           - architecture: x64
             cache_suffix: mac-x64

@@ -166,11 +166,7 @@ const StyledCountText = styled.p`
 const CountText = ({ count, emoji }: { count: number; emoji: string }) => {
   return (
     <StyledCountText>
-      <Localizer
-        token="emojiReactsCountOthers"
-        count={count - Reactions.SOGSReactorsFetchCount}
-        emoji={emoji}
-      />
+      <Localizer token="emojiReactsCountOthers" count={count} emoji={emoji} />
     </StyledCountText>
   );
 };
@@ -368,8 +364,8 @@ export const ReactListModal = (props: Props) => {
                 conversationId={selectedConvoKey}
               />
             )}
-            {isPublic && currentReact && count && count > Reactions.SOGSReactorsFetchCount && (
-              <CountText count={count} emoji={currentReact} />
+            {isPublic && currentReact && count && count > senders.length && (
+              <CountText count={count - senders.length} emoji={currentReact} />
             )}
           </StyledSendersContainer>
         ) : (

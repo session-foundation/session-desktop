@@ -77,7 +77,8 @@ export interface OpenGroupReaction {
   index: number;
   count: number;
   you: boolean;
-  reactors: Array<string>;
+  /** Some community servers omit this field. */
+  reactors?: Array<string>;
 }
 
 export type OpenGroupReactionList = Record<string, OpenGroupReaction>;
