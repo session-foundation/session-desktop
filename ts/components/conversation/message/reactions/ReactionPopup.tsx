@@ -82,6 +82,21 @@ const getI18nComponentProps = (
   }
 };
 
+/**
+ * How many senders other than us the hover text names for that many reactors.
+ * Keep in sync with getI18nComponentProps.
+ */
+export const reactionPopupNamesNeeded = (isYou: boolean, numberOfReactors: number): number => {
+  switch (numberOfReactors) {
+    case 1:
+      return isYou ? 0 : 1;
+    case 2:
+      return isYou ? 1 : 2;
+    default:
+      return isYou ? 0 : 1;
+  }
+};
+
 type Props = {
   messageId: string;
   emoji: string;
