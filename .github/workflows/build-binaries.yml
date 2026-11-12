@@ -332,6 +332,10 @@ jobs:
       SIGNING_APP_PASSWORD: ${{ secrets.SIGNING_APP_PASSWORD }}
       SIGNING_TEAM_ID: ${{ secrets.SIGNING_TEAM_ID }}
       SESSION_GIPHY_API_KEY: ${{ secrets.SESSION_GIPHY_API_KEY }}
+      # Native modules compiled here target the runner's macOS unless told otherwise.
+      # Keep in sync with mac.minimumSystemVersion in package.json. pnpm reuses the module it built
+      # from the cached store: a change here needs the macOS `node-cache-*` caches deleted.
+      MACOSX_DEPLOYMENT_TARGET: "13.0"
     steps:
       - run: git config --global core.autocrlf false
 
