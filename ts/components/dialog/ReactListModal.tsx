@@ -21,6 +21,7 @@ import { MessageReactions } from '../conversation/message/message-content/Messag
 import { Localizer } from '../basic/Localizer';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
+import { StyledSessionIconButton } from '../icon/SessionIconButtonStyled';
 import { SessionWrapperModal } from '../SessionWrapperModal';
 import { tr } from '../../localization/localeTools';
 import { useWeAreCommunityAdminOrModerator } from '../../state/selectors/conversations';
@@ -34,7 +35,8 @@ const StyledReactionsContainer = styled.div`
   border-bottom: var(--default-borders);
   width: 100%;
   overflow-x: auto;
-  padding: 12px 8px 0;
+  // the reactions row adds its own 4px, so the first pill lines up with the senders below
+  padding: 12px 12px 0;
 `;
 
 const StyledSendersContainer = styled(Flex)`
@@ -54,7 +56,7 @@ const StyledContactContainer = styled.span`
 
 const StyledReactionBar = styled(Flex)`
   width: 100%;
-  margin: 12px 0 20px 4px;
+  margin: 12px 0 20px;
   font-family: var(--font-default);
 
   p {
@@ -62,13 +64,13 @@ const StyledReactionBar = styled(Flex)`
     margin: 0;
 
     span:nth-child(1) {
-      margin: 0 8px;
+      margin-inline-end: 8px;
       color: var(--text-primary-color);
       white-space: nowrap;
     }
 
     span:nth-child(2) {
-      margin-right: 8px;
+      margin-inline-end: 8px;
     }
   }
 
@@ -85,6 +87,11 @@ const StyledReactionSender = styled(Flex)`
   .module-conversation__user__profile-name {
     color: var(--text-primary-color);
     font-weight: normal;
+  }
+
+  ${StyledSessionIconButton} {
+    // Lucide's X glyph is inset in its box; this puts the glyph on the list's edge
+    margin-inline-end: calc(-1 * var(--margins-xs));
   }
 `;
 
@@ -308,7 +315,13 @@ export const ReactListModal = (props: Props) => {
     );
   };
   return (
-    <SessionWrapperModal onClose={handleClose} headerChildren={null} modalId="reactListModal">
+    <SessionWrapperModal
+      onClose={handleClose}
+      headerChildren={null}
+      modalId="reactListModal"
+      // the senders list scrolls itself, the body gutter would only widen the right side
+      removeScrollbarGutter={true}
+    >
       <StyledReactListContainer
         $container={true}
         $flexDirection={'column'}
