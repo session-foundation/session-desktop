@@ -100,14 +100,16 @@ export function installScreenSharePicker(
     }
   });
 
-  session.setDisplayMediaRequestHandler((request, respond) => {
+  session.setDisplayMediaRequestHandler((request, callback) => {
+    // Electron 40 accepts null to decline a request. Its declaration only lists Streams.
+    const respond = callback as (streams: Electron.Streams | null) => void;
     if (
       !allowed(request.frame) ||
       !request.userGesture ||
       !request.videoRequested ||
       request.audioRequested
     ) {
-      respond({});
+      respond(null);
       return;
     }
     const picked = selection;
@@ -115,7 +117,7 @@ export function installScreenSharePicker(
     respond(
       picked && picked.expires >= Date.now() && screenAccess() === 'granted'
         ? { video: picked.source }
-        : {}
+        : null
     );
   });
 
