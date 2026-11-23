@@ -23,11 +23,12 @@ export const DraggableCallWindow = styled.div`
   border-radius: var(--border-radius);
 `;
 
-export const StyledVideoElement = styled.video<{ $isVideoMuted: boolean }>`
+export const StyledVideoElement = styled.video<{ $isVideoMuted: boolean; $screenShare?: boolean }>`
   padding: 0 1rem;
   height: 100%;
   width: 100%;
   opacity: ${props => (props.$isVideoMuted ? 0 : 1)};
+  ${props => props.$screenShare && 'object-fit: contain;'}
 `;
 
 const StyledDraggableVideoElement = styled(StyledVideoElement)`
@@ -66,10 +67,8 @@ export const DraggableCallContainer = () => {
   const [lastPositionY, setLastPositionY] = useState(0);
 
   const ongoingCallPubkey = ongoingCallProps?.id;
-  const { remoteStreamVideoIsMuted, remoteStream } = useVideoCallEventsListener(
-    'DraggableCallContainer',
-    false
-  );
+  const { remoteStreamVideoIsMuted, remoteStream, isRemoteScreenSharing } =
+    useVideoCallEventsListener('DraggableCallContainer', false);
   const draggableRef = useRef<HTMLDivElement>(null);
   const videoRefRemote = useRef<HTMLVideoElement>(null);
 
@@ -129,6 +128,7 @@ export const DraggableCallContainer = () => {
             ref={videoRefRemote}
             autoPlay={true}
             $isVideoMuted={remoteStreamVideoIsMuted}
+            $screenShare={isRemoteScreenSharing}
           />
           {remoteStreamVideoIsMuted && ongoingCallPubkey && (
             <CenteredAvatarInDraggable>

@@ -153,6 +153,8 @@ export const InConversationCallContainer = () => {
     remoteStreamVideoIsMuted,
     isAudioMuted,
     isAudioOutputMuted,
+    isScreenSharing,
+    isRemoteScreenSharing,
   } = useVideoCallEventsListener('InConversationCallContainer', true);
 
   if (videoRefRemote?.current && videoRefLocal?.current) {
@@ -195,6 +197,7 @@ export const InConversationCallContainer = () => {
             ref={videoRefRemote}
             autoPlay={true}
             $isVideoMuted={remoteStreamVideoIsMuted}
+            $screenShare={isRemoteScreenSharing}
           />
           {remoteStreamVideoIsMuted && (
             <CenteredAvatarInConversation>
@@ -223,8 +226,8 @@ export const InConversationCallContainer = () => {
           currentConnectedAudioOutputs={currentConnectedAudioOutputs}
           isAudioOutputMuted={isAudioOutputMuted}
           localStreamVideoIsMuted={localStreamVideoIsMuted}
-          remoteStreamVideoIsMuted={remoteStreamVideoIsMuted}
           isFullScreen={false}
+          isScreenSharing={isScreenSharing}
         />
       </RelativeCallWindow>
     </InConvoCallWindow>

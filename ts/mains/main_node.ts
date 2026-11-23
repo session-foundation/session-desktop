@@ -89,6 +89,7 @@ import * as updater from '../updater/index';
 
 import { ephemeralConfig } from '../node/config/ephemeral_config';
 import { createTemplate } from '../node/menu';
+import { installScreenSharePicker } from '../node/screenShare';
 import { installPermissionsHandler } from '../node/permissions';
 import { installFileHandler, installWebHandler } from '../node/protocol_filter';
 import { sqlNode } from '../node/sql';
@@ -377,6 +378,13 @@ async function createWindow() {
   mainWindow = new BrowserWindow(windowOptions);
 
   setupSpellChecker(mainWindow);
+  let callFullscreen = false;
+  mainWindow.webContents.on('enter-html-full-screen', () => {
+    callFullscreen = true;
+  });
+  mainWindow.webContents.on('leave-html-full-screen', () => {
+    callFullscreen = false;
+  });
 
   const setWindowFocus = () => {
     if (!mainWindow) {
@@ -413,7 +421,7 @@ async function createWindow() {
   );
 
   function captureAndSaveWindowStats() {
-    if (!mainWindow) {
+    if (!mainWindow || callFullscreen) {
       return;
     }
 
@@ -460,6 +468,7 @@ async function createWindow() {
 
   const urlToLoad = prepareURL([getAppRootPath(), 'background.html']);
 
+  installScreenSharePicker(mainWindow, urlToLoad, userConfig);
   await mainWindow?.loadURL(urlToLoad).catch(err => {
     console.error('Failed to load background.html:', err);
     mainWindow = null;

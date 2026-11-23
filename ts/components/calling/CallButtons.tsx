@@ -13,6 +13,8 @@ import { SessionContextMenuContainer } from '../SessionContextMenuContainer';
 import { Menu, MenuItem } from '../menu/items/MenuItem';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
+import { tr } from '../../localization/localeTools';
+import { ScreenSharePicker } from './ScreenSharePicker';
 
 const VideoInputMenu = ({
   triggerId,
@@ -239,7 +241,7 @@ const StyledCallActionButton = styled.div<{ $isFullScreen: boolean }>`
     background-color: var(--call-buttons-action-background-color);
     border-radius: 50%;
     transition-duration: var(--default-duration);
-    ${props => props.$isFullScreen && 'opacity: 0.4;'}
+    ${props => props.$isFullScreen && 'opacity: 0.9;'}
     &:hover {
       background-color: var(--call-buttons-action-background-hover-color);
       ${props => props.$isFullScreen && 'opacity: 1;'}
@@ -247,27 +249,114 @@ const StyledCallActionButton = styled.div<{ $isFullScreen: boolean }>`
   }
 `;
 
-const ShowInFullScreenButton = ({ isFullScreen }: { isFullScreen: boolean }) => {
+/**
+ * A labelled call control. The icon alone was not discoverable: the caption is what makes
+ * "how do I go full screen" answerable without guessing.
+ */
+const StyledLabelledButton = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+`;
+
+const StyledButtonCaption = styled.span<{ $isFullScreen: boolean }>`
+  font-size: var(--font-size-xs);
+  color: var(--white-color);
+  text-shadow: 0 1px 2px var(--black-color);
+  margin-top: 2px;
+  white-space: nowrap;
+  user-select: none;
+  opacity: ${props => (props.$isFullScreen ? 0.95 : 0.8)};
+`;
+
+export const ShowInFullScreenButton = ({ isFullScreen }: { isFullScreen: boolean }) => {
   const dispatch = getAppDispatch();
 
-  const showInFullScreen = () => {
-    if (isFullScreen) {
-      dispatch(setFullScreenCall(false));
-    } else {
-      dispatch(setFullScreenCall(true));
-    }
+  const showInFullScreen = (e?: MouseEvent<HTMLButtonElement>) => {
+    // the control bar sits inside the call overlay: without this, the click also reaches the
+    // overlay and any of its handlers
+    e?.stopPropagation();
+    dispatch(setFullScreenCall(!isFullScreen));
   };
 
+  const label = tr('fullScreenToggle');
+
   return (
-    <StyledCallActionButton $isFullScreen={isFullScreen}>
-      <SessionLucideIconButton
-        iconSize={'max'}
-        unicode={LUCIDE_ICONS_UNICODE.MAXIMIZE}
-        onClick={showInFullScreen}
-        iconColor="var(--black-color)"
-        margin="10px"
-      />
-    </StyledCallActionButton>
+    <StyledLabelledButton>
+      <StyledCallActionButton $isFullScreen={isFullScreen}>
+        <SessionLucideIconButton
+          iconSize={'max'}
+          unicode={isFullScreen ? LUCIDE_ICONS_UNICODE.MINIMIZE : LUCIDE_ICONS_UNICODE.MAXIMIZE}
+          onClick={showInFullScreen}
+          iconColor="var(--black-color)"
+          margin="10px"
+          title={label}
+          ariaLabel={label}
+          dataTestId="toggle-full-screen"
+        />
+      </StyledCallActionButton>
+      <StyledButtonCaption $isFullScreen={isFullScreen}>{label}</StyledButtonCaption>
+    </StyledLabelledButton>
+  );
+};
+
+/**
+ * Screen sharing reuses the call's single video sender, so starting a share turns the camera off
+ * and stopping it puts the camera back. See CallManager.startScreenShare.
+ */
+export const ScreenShareButton = ({
+  isFullScreen,
+  isScreenSharing,
+}: {
+  isFullScreen: boolean;
+  isScreenSharing: boolean;
+}) => {
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  const toggleScreenShare = (e?: MouseEvent<HTMLButtonElement>) => {
+    // the control bar lives inside the call overlay; the click must not reach anything behind it
+    e?.stopPropagation();
+    if (isScreenSharing) {
+      void CallManager.stopScreenShare();
+      return;
+    }
+    setPickerOpen(true);
+  };
+
+  const label = isScreenSharing ? `${tr('share')} · ${tr('cancel')}` : tr('share');
+
+  return (
+    <StyledLabelledButton>
+      {pickerOpen ? (
+        <ScreenSharePicker
+          onPicked={sourceId => {
+            setPickerOpen(false);
+            void CallManager.startScreenShare(sourceId);
+          }}
+          onCancel={() => {
+            setPickerOpen(false);
+          }}
+        />
+      ) : null}
+      <StyledCallActionButton $isFullScreen={isFullScreen}>
+        <SessionLucideIconButton
+          iconSize={'max'}
+          unicode={
+            isScreenSharing
+              ? LUCIDE_ICONS_UNICODE.SCREEN_SHARE_OFF
+              : LUCIDE_ICONS_UNICODE.SCREEN_SHARE
+          }
+          onClick={toggleScreenShare}
+          iconColor={isScreenSharing ? 'var(--danger-color)' : 'var(--black-color)'}
+          margin="10px"
+          title={label}
+          ariaLabel={label}
+          dataTestId="toggle-screen-share"
+        />
+      </StyledCallActionButton>
+      <StyledButtonCaption $isFullScreen={isFullScreen}>{label}</StyledButtonCaption>
+    </StyledLabelledButton>
   );
 };
 
@@ -357,6 +446,7 @@ const handleSpeakerToggle = async (
 
 const StyledCallWindowControls = styled.div<{ $isFullScreen: boolean; $makeVisible: boolean }>`
   position: absolute;
+  z-index: 10;
 
   bottom: 0px;
   width: 100%;
@@ -377,7 +467,7 @@ const StyledCallWindowControls = styled.div<{ $isFullScreen: boolean; $makeVisib
   ${props =>
     props.$isFullScreen &&
     `
-    opacity: 0.4;
+    opacity: 0.9;
     &:hover {
       opacity: 1;
     }
@@ -390,18 +480,18 @@ export const CallWindowControls = ({
   currentConnectedAudioOutputs,
   isAudioMuted,
   isAudioOutputMuted,
-  remoteStreamVideoIsMuted,
   localStreamVideoIsMuted,
   isFullScreen,
+  isScreenSharing,
 }: {
   isAudioMuted: boolean;
   isAudioOutputMuted: boolean;
   localStreamVideoIsMuted: boolean;
-  remoteStreamVideoIsMuted: boolean;
   currentConnectedAudioInputs: Array<InputItem>;
   currentConnectedAudioOutputs: Array<InputItem>;
   currentConnectedCameras: Array<InputItem>;
   isFullScreen: boolean;
+  isScreenSharing: boolean;
 }) => {
   const [makeVisible, setMakeVisible] = useState(true);
 
@@ -424,7 +514,13 @@ export const CallWindowControls = ({
   }, [isFullScreen]);
   return (
     <StyledCallWindowControls $isFullScreen={isFullScreen} $makeVisible={makeVisible}>
-      {!remoteStreamVideoIsMuted && <ShowInFullScreenButton isFullScreen={isFullScreen} />}
+      {/*
+        Always rendered. It used to be hidden unless the *remote* peer was sending video, which
+        meant the only way into full screen disappeared exactly when you wanted to present your
+        own screen to someone whose camera is off.
+      */}
+      <ShowInFullScreenButton isFullScreen={isFullScreen} />
+      <ScreenShareButton isFullScreen={isFullScreen} isScreenSharing={isScreenSharing} />
 
       <VideoInputButton
         currentConnectedCameras={currentConnectedCameras}

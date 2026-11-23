@@ -30,13 +30,14 @@ import { DisappearingMessages } from '../../disappearing_messages';
 import { ReadyToDisappearMsgUpdate } from '../../disappearing_messages/types';
 import { MessageQueue, MessageSender } from '../../sending';
 import { getIsRinging } from '../RingingManager';
-import { getBlackSilenceMediaStream } from './Silence';
+import { getBlackSilenceMediaStream, getBlackVideoTrack } from './Silence';
 import { ed25519Str } from '../String';
 import { WithMessageHash } from '../../types/with';
 import { NetworkTime } from '../../../util/NetworkTime';
 import { sleepFor } from '../Promise';
 import { tr } from '../../../localization/localeTools';
 import { uuidV4 } from '../../../util/uuid';
+import { setScreenShareSource } from '../../../util/screenShare';
 
 export type InputItem = { deviceId: string; label: string };
 
@@ -65,6 +66,17 @@ export type CallManagerOptionsType = {
   isRemoteVideoStreamMuted: boolean;
   isAudioMuted: boolean;
   currentSelectedAudioOutput: string;
+  /**
+   * True while we are sending our screen (or a window) instead of our camera.
+   * Tracked separately from `selectedCameraId` because a screen share is *video being sent*
+   * even though no camera is selected.
+   */
+  isScreenSharing: boolean;
+  /**
+   * True while the remote peer told us (over the data channel) that they are sharing their screen.
+   * Always false when talking to a client which does not send the `screenShare` field.
+   */
+  isRemoteScreenSharing: boolean;
 };
 
 export type CallManagerListener = ((options: CallManagerOptionsType) => void) | null;
@@ -80,9 +92,12 @@ function callVideoListeners() {
         audioInputsList,
         audioOutputsList,
         isRemoteVideoStreamMuted: remoteVideoStreamIsMuted,
-        isLocalVideoStreamMuted: selectedCameraId === DEVICE_DISABLED_DEVICE_ID,
+        // while sharing our screen we *are* sending video, even though no camera is selected
+        isLocalVideoStreamMuted: !isScreenSharing && selectedCameraId === DEVICE_DISABLED_DEVICE_ID,
         isAudioMuted: selectedAudioInputId === DEVICE_DISABLED_DEVICE_ID,
         currentSelectedAudioOutput: selectedAudioOutputId,
+        isScreenSharing,
+        isRemoteScreenSharing: remoteIsScreenSharing,
       });
     });
   }
@@ -101,7 +116,9 @@ export function addVideoEventsListener(uniqueId: string, listener: CallManagerLi
 export function removeVideoEventsListener(uniqueId: string) {
   const indexFound = videoEventsListeners.findIndex(m => m.id === uniqueId);
   if (indexFound !== -1) {
-    videoEventsListeners.splice(indexFound);
+    // note: `splice(indexFound)` (one argument) removes *every* listener from that index onwards,
+    // which silently killed the listeners of components unmounted after this one.
+    videoEventsListeners.splice(indexFound, 1);
   }
   callVideoListeners();
 }
@@ -188,6 +205,24 @@ const configuration: RTCConfiguration = {
 let selectedCameraId: string = DEVICE_DISABLED_DEVICE_ID;
 let selectedAudioInputId: string = DEVICE_DISABLED_DEVICE_ID;
 let selectedAudioOutputId: string = DEVICE_DISABLED_DEVICE_ID;
+
+/**
+ * Screen sharing state.
+ *
+ * Session builds a single video transceiver per call and swaps tracks under it with
+ * `replaceTrack()`. We deliberately reuse that single sender for the screen share rather than
+ * adding a second video m-line: Session's call signalling has no mid-call renegotiation, so an
+ * extra m-line would break calls with unmodified Session clients.
+ *
+ * The consequence, which is by design: while sharing, the camera is off. The camera which was
+ * selected before the share started is restored when the share stops.
+ */
+let isScreenSharing = false;
+let videoChange = 0;
+let pendingShare: number | null = null;
+let screenShareTrack: MediaStreamTrack | null = null;
+let cameraIdBeforeScreenShare: string = DEVICE_DISABLED_DEVICE_ID;
+let remoteIsScreenSharing = false;
 let camerasList: Array<InputItem> = [];
 let audioInputsList: Array<InputItem> = [];
 let audioOutputsList: Array<InputItem> = [];
@@ -232,9 +267,12 @@ async function updateConnectedDevices() {
 }
 
 function sendVideoStatusViaDataChannel() {
-  const videoEnabledLocally = selectedCameraId !== DEVICE_DISABLED_DEVICE_ID;
+  // a screen share is video from the remote peer's point of view, even with no camera selected
+  const videoEnabledLocally = isScreenSharing || selectedCameraId !== DEVICE_DISABLED_DEVICE_ID;
   const stringToSend = JSON.stringify({
     video: videoEnabledLocally,
+    // additive field: clients which don't know about it just ignore it when parsing
+    screenShare: isScreenSharing,
   });
   if (dataChannel && dataChannel.readyState === 'open') {
     dataChannel?.send(stringToSend);
@@ -250,71 +288,145 @@ function sendHangupViaDataChannel() {
   }
 }
 
-export async function selectCameraByDeviceId(cameraDeviceId: string) {
-  if (cameraDeviceId === DEVICE_DISABLED_DEVICE_ID) {
-    selectedCameraId = DEVICE_DISABLED_DEVICE_ID;
+function cleanupScreenShareTrack() {
+  if (screenShareTrack) {
+    screenShareTrack.onended = null;
+    screenShareTrack.stop();
+    screenShareTrack = null;
+  }
+  isScreenSharing = false;
+}
 
-    const sender = peerConnection?.getSenders().find(s => {
-      return s.track?.kind === 'video';
-    });
-    if (sender?.track) {
-      sender.track.enabled = false;
+// Capture the sender and preview together. A delayed OS picker or camera request
+// must never install a track in the next call.
+function beginVideoChange() {
+  const connection = peerConnection;
+  const stream = localStream;
+  const sender = connection?.getSenders().find(item => item.track?.kind === 'video');
+  if (!sender || !stream) {
+    return null;
+  }
+  const id = ++videoChange;
+  const current = () =>
+    id === videoChange && connection === peerConnection && stream === localStream;
+  const target = { sender, stream };
+  async function install(track: MediaStreamTrack) {
+    try {
+      if (!current()) {
+        return false;
+      }
+      await target.sender.replaceTrack(track);
+      if (!current()) {
+        return false;
+      }
+      for (const old of target.stream.getVideoTracks()) {
+        target.stream.removeTrack(old);
+        old.stop();
+      }
+      target.stream.addTrack(track);
+      return true;
+    } finally {
+      if (!target.stream.getTracks().includes(track)) {
+        track.stop();
+      }
     }
+  }
+  return { id, current, install };
+}
 
-    // do the same changes locally
-    localStream?.getVideoTracks().forEach(t => {
-      t.stop();
-      localStream?.removeTrack(t);
-    });
-    localStream?.addTrack(getBlackSilenceMediaStream().getVideoTracks()[0]);
-
-    sendVideoStatusViaDataChannel();
-    callVideoListeners();
+export async function startScreenShare(sourceId: string) {
+  if (isScreenSharing || pendingShare !== null) {
     return;
   }
-  if (camerasList.some(m => m.deviceId === cameraDeviceId)) {
-    selectedCameraId = cameraDeviceId;
-
-    const devicesConfig = {
-      video: {
-        deviceId: selectedCameraId ? { exact: selectedCameraId } : undefined,
-      },
+  const change = beginVideoChange();
+  if (!change) {
+    return;
+  }
+  pendingShare = change.id;
+  try {
+    if (!(await setScreenShareSource(sourceId)) || !change.current()) {
+      return;
+    }
+    const capture = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+    const track = capture.getVideoTracks()[0];
+    if (!track || !(await change.install(track))) {
+      return;
+    }
+    cameraIdBeforeScreenShare = selectedCameraId;
+    selectedCameraId = DEVICE_DISABLED_DEVICE_ID;
+    screenShareTrack = track;
+    isScreenSharing = true;
+    track.onended = () => {
+      if (screenShareTrack === track) {
+        void stopScreenShare();
+      }
     };
+    if (track.readyState === 'ended') {
+      await stopScreenShare();
+      return;
+    }
+    sendVideoStatusViaDataChannel();
+    callVideoListeners();
+  } catch (error) {
+    if (change.current() && error.name !== 'NotAllowedError' && error.name !== 'AbortError') {
+      window.log.warn('Could not start screen sharing', error.message);
+      ToastUtils.pushToastError('startScreenShare', error.message);
+    }
+  } finally {
+    if (pendingShare === change.id) {
+      pendingShare = null;
+    }
+  }
+}
 
-    try {
-      const newVideoStream = await navigator.mediaDevices.getUserMedia(devicesConfig);
-      const videoTrack = newVideoStream.getVideoTracks()[0];
+export async function stopScreenShare() {
+  if (!isScreenSharing) {
+    return;
+  }
+  const restore = cameraIdBeforeScreenShare;
+  await selectCameraByDeviceId(restore);
+}
 
-      if (!peerConnection) {
-        throw new Error('cannot selectCameraByDeviceId without a peer connection');
+export async function selectCameraByDeviceId(cameraDeviceId: string) {
+  const change = beginVideoChange();
+  if (!change) {
+    return;
+  }
+  const wasSharing = isScreenSharing;
+  if (wasSharing) {
+    cleanupScreenShareTrack();
+    cameraIdBeforeScreenShare = DEVICE_DISABLED_DEVICE_ID;
+  }
+  try {
+    // Clear the peer's last desktop frame before asking the OS to reopen a camera.
+    if (wasSharing || cameraDeviceId === DEVICE_DISABLED_DEVICE_ID) {
+      if (!(await change.install(getBlackVideoTrack()))) {
+        return;
       }
-
-      window.log.info('replacing video track');
-      const videoSender = peerConnection
-        .getTransceivers()
-        .find(t => t.sender.track?.kind === 'video')?.sender;
-
-      videoTrack.enabled = true;
-      if (videoSender) {
-        await videoSender.replaceTrack(videoTrack);
-      } else {
-        throw new Error(
-          'We should always have a videoSender as we are using a black video when no camera are in use'
-        );
-      }
-
-      // do the same changes locally
-      localStream?.getVideoTracks().forEach(t => {
-        t.stop();
-        localStream?.removeTrack(t);
-      });
-      localStream?.addTrack(videoTrack);
-
+      selectedCameraId = DEVICE_DISABLED_DEVICE_ID;
       sendVideoStatusViaDataChannel();
       callVideoListeners();
-    } catch (e) {
-      window.log.warn('selectCameraByDeviceId failed with', e.message);
-      ToastUtils.pushToastError('selectCamera', e.message);
+    }
+    if (
+      cameraDeviceId === DEVICE_DISABLED_DEVICE_ID ||
+      !camerasList.some(m => m.deviceId === cameraDeviceId)
+    ) {
+      return;
+    }
+    const camera = await navigator.mediaDevices.getUserMedia({
+      video: { deviceId: { exact: cameraDeviceId } },
+    });
+    if (!(await change.install(camera.getVideoTracks()[0]))) {
+      return;
+    }
+    selectedCameraId = cameraDeviceId;
+    sendVideoStatusViaDataChannel();
+    callVideoListeners();
+  } catch (error) {
+    if (change.current()) {
+      window.log.warn('Could not select camera', error.message);
+      ToastUtils.pushToastError('selectCamera', error.message);
+      sendVideoStatusViaDataChannel();
       callVideoListeners();
     }
   }
@@ -689,6 +801,8 @@ function handleConnectionStateChanged(pubkey: string) {
 }
 
 function closeVideoCall() {
+  videoChange += 1;
+  pendingShare = null;
   window.log.info('closingVideoCall ');
   currentCallStartTimestamp = undefined;
   weAreCallerOnCurrentCall = undefined;
@@ -722,6 +836,10 @@ function closeVideoCall() {
     peerConnection.close();
     peerConnection = null;
   }
+
+  cleanupScreenShareTrack();
+  cameraIdBeforeScreenShare = DEVICE_DISABLED_DEVICE_ID;
+  remoteIsScreenSharing = false;
 
   localStream = null;
   remoteStream = null;
@@ -768,6 +886,9 @@ function onDataChannelReceivedMessage(ev: MessageEvent<string>) {
     if (parsed.video !== undefined) {
       remoteVideoStreamIsMuted = !parsed.video;
     }
+
+    // additive field, only sent by clients which support screen sharing
+    remoteIsScreenSharing = parsed.screenShare === true;
   } catch (e) {
     window.log.warn('onDataChannelReceivedMessage Could not parse data in event', ev);
   }
