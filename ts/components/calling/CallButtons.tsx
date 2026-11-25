@@ -320,7 +320,7 @@ export const ScreenShareButton = ({
     setPickerOpen(true);
   };
 
-  const label = isScreenSharing ? `${tr('share')} · ${tr('cancel')}` : tr('share');
+  const label = isScreenSharing ? tr('callsStopSharing') : tr('callsShareScreen');
 
   return (
     <StyledLabelledButton>

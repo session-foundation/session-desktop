@@ -166,11 +166,15 @@ export const ScreenSharePicker = ({
         }
       }}
     >
-      <StyledTitle id="call-share-title">{tr('share')}</StyledTitle>
+      <StyledTitle id="call-share-title">{tr('callsShareScreen')}</StyledTitle>
       {loading && <SessionSpinner $loading={true} />}
       {permissionDenied && (
         <>
-          <StyledMessage>{tr('permissionsRequired')}</StyledMessage>
+          <StyledMessage>
+            {isMacOS()
+              ? tr('callsScreenRecordingPermissionDescription')
+              : tr('permissionsRequired')}
+          </StyledMessage>
           {isMacOS() && (
             <StyledTextButton
               type="button"
@@ -183,7 +187,7 @@ export const ScreenSharePicker = ({
         </>
       )}
       {!loading && !permissionDenied && !sources.length && (
-        <StyledMessage>{tr('searchMatchesNone')}</StyledMessage>
+        <StyledMessage>{tr('callsShareScreenNoSources')}</StyledMessage>
       )}
       <StyledGrid>
         {sources.map(source => (

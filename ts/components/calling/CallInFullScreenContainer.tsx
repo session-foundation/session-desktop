@@ -154,7 +154,7 @@ const CallInFullScreenContainerInner = () => {
         data-testid="exit-full-screen-call"
         onClick={toggleFullScreenOFF}
       >
-        {tr('fullScreenToggle')} <kbd>Esc</kbd>
+        {tr('callsFullScreenExit')} <kbd>Esc</kbd>
       </StyledExitHint>
       <StyledVideoElement
         ref={videoRefRemote}
