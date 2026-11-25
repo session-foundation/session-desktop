@@ -441,6 +441,8 @@ const StyledCallWindowControls = styled.div<{ $isFullScreen: boolean; $makeVisib
   transition: all var(--default-duration) ease-in-out;
 
   display: flex;
+  flex-wrap: wrap;
+  align-content: flex-end;
   justify-content: center;
   opacity: ${props => (props.$makeVisible ? 1 : 0)};
 
