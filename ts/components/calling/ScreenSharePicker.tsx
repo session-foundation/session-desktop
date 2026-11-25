@@ -12,7 +12,9 @@ import { SessionSpinner } from '../loading';
 import { isMacOS } from '../../OS';
 
 const StyledPanel = styled.dialog`
-  width: min(820px, 90vw);
+  width: fit-content;
+  min-width: min(360px, 90vw);
+  max-width: min(820px, 90vw);
   max-height: 80vh;
   padding: 20px;
   border-radius: var(--border-radius);
@@ -30,9 +32,9 @@ const StyledTitle = styled.h2`
   font-size: var(--font-size-lg);
 `;
 
-const StyledGrid = styled.div`
+const StyledGrid = styled.div<{ $columns: number }>`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(${props => props.$columns}, 180px);
   gap: 12px;
 `;
 
@@ -189,7 +191,7 @@ export const ScreenSharePicker = ({
       {!loading && !permissionDenied && !sources.length && (
         <StyledMessage>{tr('callsShareScreenNoSources')}</StyledMessage>
       )}
-      <StyledGrid>
+      <StyledGrid $columns={Math.min(Math.max(sources.length, 1), 4)}>
         {sources.map(source => (
           <StyledSource
             key={source.id}

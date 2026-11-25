@@ -249,51 +249,33 @@ const StyledCallActionButton = styled.div<{ $isFullScreen: boolean }>`
   }
 `;
 
-const StyledLabelledButton = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-`;
-
-const StyledButtonCaption = styled.span<{ $isFullScreen: boolean }>`
-  font-size: var(--font-size-xs);
-  color: var(--white-color);
-  text-shadow: 0 1px 2px var(--black-color);
-  margin-top: 2px;
-  white-space: nowrap;
-  user-select: none;
-  opacity: ${props => (props.$isFullScreen ? 0.95 : 0.8)};
-`;
+const callButtonStyle = {
+  width: '60px',
+  height: '60px',
+  alignItems: 'center',
+  justifyContent: 'center',
+};
 
 export const ShowInFullScreenButton = ({ isFullScreen }: { isFullScreen: boolean }) => {
   const dispatch = getAppDispatch();
 
-  const showInFullScreen = (e?: MouseEvent<HTMLButtonElement>) => {
-    // the control bar sits inside the call overlay: without this, the click also reaches the
-    // overlay and any of its handlers
-    e?.stopPropagation();
-    dispatch(setFullScreenCall(!isFullScreen));
-  };
-
-  const label = tr('fullScreenToggle');
-
   return (
-    <StyledLabelledButton>
-      <StyledCallActionButton $isFullScreen={isFullScreen}>
-        <SessionLucideIconButton
-          iconSize={'max'}
-          unicode={isFullScreen ? LUCIDE_ICONS_UNICODE.MINIMIZE : LUCIDE_ICONS_UNICODE.MAXIMIZE}
-          onClick={showInFullScreen}
-          iconColor="var(--black-color)"
-          margin="10px"
-          title={label}
-          ariaLabel={label}
-          dataTestId="toggle-full-screen"
-        />
-      </StyledCallActionButton>
-      <StyledButtonCaption $isFullScreen={isFullScreen}>{label}</StyledButtonCaption>
-    </StyledLabelledButton>
+    <StyledCallActionButton $isFullScreen={isFullScreen}>
+      <SessionLucideIconButton
+        iconSize="medium"
+        unicode={isFullScreen ? LUCIDE_ICONS_UNICODE.MINIMIZE : LUCIDE_ICONS_UNICODE.MAXIMIZE}
+        onClick={() => {
+          dispatch(setFullScreenCall(!isFullScreen));
+        }}
+        iconColor={isFullScreen ? 'var(--black-color)' : 'var(--call-buttons-icon-color)'}
+        backgroundColor={isFullScreen ? undefined : 'var(--call-buttons-background-color)'}
+        margin="10px"
+        title={tr('fullScreenToggle')}
+        ariaLabel={tr('fullScreenToggle')}
+        dataTestId="toggle-full-screen"
+        style={callButtonStyle}
+      />
+    </StyledCallActionButton>
   );
 };
 
@@ -309,21 +291,10 @@ export const ScreenShareButton = ({
   isScreenSharing: boolean;
 }) => {
   const [pickerOpen, setPickerOpen] = useState(false);
-
-  const toggleScreenShare = (e?: MouseEvent<HTMLButtonElement>) => {
-    // the control bar lives inside the call overlay; the click must not reach anything behind it
-    e?.stopPropagation();
-    if (isScreenSharing) {
-      void CallManager.stopScreenShare();
-      return;
-    }
-    setPickerOpen(true);
-  };
-
   const label = isScreenSharing ? tr('callsStopSharing') : tr('callsShareScreen');
 
   return (
-    <StyledLabelledButton>
+    <>
       {pickerOpen ? (
         <ScreenSharePicker
           onPicked={sourceId => {
@@ -337,22 +308,35 @@ export const ScreenShareButton = ({
       ) : null}
       <StyledCallActionButton $isFullScreen={isFullScreen}>
         <SessionLucideIconButton
-          iconSize={'max'}
+          iconSize="medium"
           unicode={
             isScreenSharing
               ? LUCIDE_ICONS_UNICODE.SCREEN_SHARE_OFF
               : LUCIDE_ICONS_UNICODE.SCREEN_SHARE
           }
-          onClick={toggleScreenShare}
-          iconColor={isScreenSharing ? 'var(--danger-color)' : 'var(--black-color)'}
+          onClick={() => {
+            if (isScreenSharing) {
+              void CallManager.stopScreenShare();
+              return;
+            }
+            setPickerOpen(true);
+          }}
+          iconColor={
+            isScreenSharing
+              ? 'var(--danger-color)'
+              : isFullScreen
+                ? 'var(--black-color)'
+                : 'var(--call-buttons-icon-color)'
+          }
+          backgroundColor={isFullScreen ? undefined : 'var(--call-buttons-background-color)'}
           margin="10px"
           title={label}
           ariaLabel={label}
           dataTestId="toggle-screen-share"
+          style={callButtonStyle}
         />
       </StyledCallActionButton>
-      <StyledButtonCaption $isFullScreen={isFullScreen}>{label}</StyledButtonCaption>
-    </StyledLabelledButton>
+    </>
   );
 };
 
