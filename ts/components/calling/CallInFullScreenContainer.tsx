@@ -46,10 +46,6 @@ const StyledLocalVideoElement = styled.video<{ $isVideoMuted: boolean }>`
   opacity: ${props => (props.$isVideoMuted ? 0 : 1)};
 `;
 
-/**
- * A permanently visible hint in the corner of the full screen call. Full screen used to be a mode
- * you could fall into with no indication of how to leave it.
- */
 const StyledExitHint = styled.button`
   position: absolute;
   top: 12px;
@@ -107,11 +103,7 @@ const CallInFullScreenContainerInner = () => {
     toggleFullScreenOFF();
   });
 
-  /**
-   * Ask the OS/window for real full screen — the overlay on its own only ever filled the app
-   * window. The element has to be mounted before requestFullscreen() can be called on it, which
-   * is why this lives here and not in the button that dispatches setFullScreenCall(true).
-   */
+  // requestFullscreen() needs the element mounted, so it cannot be called from the button.
   useEffect(() => {
     const element = containerRef.current;
     if (!element) {
@@ -125,11 +117,7 @@ const CallInFullScreenContainerInner = () => {
       });
     }
 
-    /**
-     * The browser exits DOM full screen on its own (Escape, the OS green button, another app
-     * taking over the display) without telling React. Without this the app would keep believing
-     * it is in full screen and the overlay would stay up in a windowed app.
-     */
+    // Electron leaves DOM full screen by itself on Escape or the OS controls; follow it.
     const onFullScreenChange = () => {
       if (!document.fullscreenElement) {
         dispatch(setFullScreenCall(false));
@@ -161,7 +149,11 @@ const CallInFullScreenContainerInner = () => {
 
   return (
     <CallInFullScreenVisible ref={containerRef}>
-      <StyledExitHint type="button" onClick={toggleFullScreenOFF}>
+      <StyledExitHint
+        type="button"
+        data-testid="exit-full-screen-call"
+        onClick={toggleFullScreenOFF}
+      >
         {tr('fullScreenToggle')} <kbd>Esc</kbd>
       </StyledExitHint>
       <StyledVideoElement

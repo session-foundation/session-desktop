@@ -249,10 +249,6 @@ const StyledCallActionButton = styled.div<{ $isFullScreen: boolean }>`
   }
 `;
 
-/**
- * A labelled call control. The icon alone was not discoverable: the caption is what makes
- * "how do I go full screen" answerable without guessing.
- */
 const StyledLabelledButton = styled.div`
   display: flex;
   flex-direction: column;
@@ -464,6 +460,12 @@ const StyledCallWindowControls = styled.div<{ $isFullScreen: boolean; $makeVisib
   justify-content: center;
   opacity: ${props => (props.$makeVisible ? 1 : 0)};
 
+  /* This box covers the whole call view: only the buttons themselves may take clicks. */
+  pointer-events: none;
+  & > * {
+    pointer-events: auto;
+  }
+
   ${props =>
     props.$isFullScreen &&
     `
@@ -514,11 +516,6 @@ export const CallWindowControls = ({
   }, [isFullScreen]);
   return (
     <StyledCallWindowControls $isFullScreen={isFullScreen} $makeVisible={makeVisible}>
-      {/*
-        Always rendered. It used to be hidden unless the *remote* peer was sending video, which
-        meant the only way into full screen disappeared exactly when you wanted to present your
-        own screen to someone whose camera is off.
-      */}
       <ShowInFullScreenButton isFullScreen={isFullScreen} />
       <ScreenShareButton isFullScreen={isFullScreen} isScreenSharing={isScreenSharing} />
 

@@ -9,6 +9,7 @@ import {
   ScreenShareSource,
 } from '../../util/screenShare';
 import { SessionSpinner } from '../loading';
+import { isMacOS } from '../../OS';
 
 const StyledPanel = styled.dialog`
   width: min(820px, 90vw);
@@ -152,11 +153,13 @@ export const ScreenSharePicker = ({
   return (
     <StyledPanel
       ref={dialog}
+      data-testid="screen-share-picker"
       aria-labelledby="call-share-title"
       onCancel={event => {
         event.preventDefault();
         onCancel();
       }}
+      // Only reached when the overlay is not in DOM full screen: Electron handles Escape there.
       onKeyDown={event => {
         if (event.key === 'Escape') {
           event.stopPropagation();
@@ -168,9 +171,15 @@ export const ScreenSharePicker = ({
       {permissionDenied && (
         <>
           <StyledMessage>{tr('permissionsRequired')}</StyledMessage>
-          <StyledTextButton type="button" onClick={() => void openScreenRecordingSettings()}>
-            {tr('openSettings')}
-          </StyledTextButton>
+          {isMacOS() && (
+            <StyledTextButton
+              type="button"
+              data-testid="screen-share-open-settings"
+              onClick={() => void openScreenRecordingSettings()}
+            >
+              {tr('openSettings')}
+            </StyledTextButton>
+          )}
         </>
       )}
       {!loading && !permissionDenied && !sources.length && (
@@ -181,6 +190,7 @@ export const ScreenSharePicker = ({
           <StyledSource
             key={source.id}
             type="button"
+            data-testid="screen-share-source"
             title={source.name}
             onClick={() => {
               picked.current = true;
@@ -193,7 +203,7 @@ export const ScreenSharePicker = ({
         ))}
       </StyledGrid>
       <StyledFooter>
-        <StyledTextButton type="button" onClick={onCancel}>
+        <StyledTextButton type="button" data-testid="screen-share-cancel" onClick={onCancel}>
           {tr('cancel')}
         </StyledTextButton>
       </StyledFooter>

@@ -10,10 +10,22 @@ import {
 import { UserConfig } from './config/user_config';
 import type { ScreenShareSourcesResult } from '../util/screenShare';
 
+type ScreenShareSystem = {
+  getSources: (options: Electron.SourcesOptions) => Promise<Array<DesktopCapturerSource>>;
+  screenAccess: () => ScreenShareSourcesResult['screenAccess'];
+};
+
+const electronScreenShareSystem: ScreenShareSystem = {
+  getSources: options => desktopCapturer.getSources(options),
+  screenAccess: () =>
+    process.platform === 'darwin' ? systemPreferences.getMediaAccessStatus('screen') : 'granted',
+};
+
 export function installScreenSharePicker(
   window: BrowserWindow,
   pageURL: string,
-  config: UserConfig
+  config: UserConfig,
+  system: ScreenShareSystem = electronScreenShareSystem
 ) {
   const contents = window.webContents;
   const page = new URL(pageURL);
@@ -45,8 +57,7 @@ export function installScreenSharePicker(
     );
   }
 
-  const screenAccess = () =>
-    process.platform === 'darwin' ? systemPreferences.getMediaAccessStatus('screen') : 'granted';
+  const { screenAccess } = system;
 
   contents.ipc.handle(
     'get-screen-share-sources',
@@ -58,7 +69,7 @@ export function installScreenSharePicker(
       const request = generation;
       let status = screenAccess();
       if (status === 'granted' || status === 'not-determined') {
-        const sources = await desktopCapturer.getSources({
+        const sources = await system.getSources({
           types: ['screen', 'window'],
           thumbnailSize: { width: 320, height: 180 },
         });

@@ -116,8 +116,6 @@ export function addVideoEventsListener(uniqueId: string, listener: CallManagerLi
 export function removeVideoEventsListener(uniqueId: string) {
   const indexFound = videoEventsListeners.findIndex(m => m.id === uniqueId);
   if (indexFound !== -1) {
-    // note: `splice(indexFound)` (one argument) removes *every* listener from that index onwards,
-    // which silently killed the listeners of components unmounted after this one.
     videoEventsListeners.splice(indexFound, 1);
   }
   callVideoListeners();

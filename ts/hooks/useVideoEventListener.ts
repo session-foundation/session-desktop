@@ -26,14 +26,7 @@ export function useVideoCallEventsListener(uniqueId: string, onSame: boolean) {
   const [remoteStreamVideoIsMuted, setRemoteStreamVideoIsMuted] = useState(true);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [isRemoteScreenSharing, setIsRemoteScreenSharing] = useState(false);
-  /**
-   * Note: this is the getter, deliberately called inside the listener rather than during render.
-   * `useMountedState()()` evaluated at render time is `false` on the very first render, so a
-   * listener registered with that value captured would ignore every update it was ever given.
-   * The full screen call overlay mounts once and is not re-rendered by anything else, so it was
-   * stuck showing the state the call had when it opened: no remote video, and no idea that a
-   * screen share was running.
-   */
+  // A getter, read inside the listener: its value during the first render is always false.
   const isMounted = useMountedState();
 
   const [currentConnectedCameras, setCurrentConnectedCameras] = useState<Array<InputItem>>([]);
