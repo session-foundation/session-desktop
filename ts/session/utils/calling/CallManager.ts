@@ -782,12 +782,12 @@ function handleConnectionStateChanged(pubkey: string) {
   if (peerConnection?.signalingState === 'closed' || peerConnection?.connectionState === 'failed') {
     window.inboxStore?.dispatch(callReconnecting({ pubkey }));
   } else if (peerConnection?.connectionState === 'connected') {
-    const firstAudioInput = audioInputsList?.[0].deviceId || undefined;
+    const firstAudioInput = audioInputsList[0]?.deviceId;
     if (firstAudioInput) {
       void selectAudioInputByDeviceId(firstAudioInput);
     }
 
-    const firstAudioOutput = audioOutputsList?.[0].deviceId || undefined;
+    const firstAudioOutput = audioOutputsList[0]?.deviceId;
     if (firstAudioOutput) {
       void selectAudioOutputByDeviceId(firstAudioOutput);
     }
