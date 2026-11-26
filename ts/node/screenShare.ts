@@ -68,7 +68,9 @@ export function installScreenSharePicker(
       clear();
       const request = generation;
       let status = screenAccess();
-      if (status === 'granted' || status === 'not-determined') {
+      // Electron reports an app macOS has never asked as 'denied', and only a capture
+      // attempt makes macOS prompt and list it under Screen Recording.
+      if (status !== 'restricted') {
         const sources = await system.getSources({
           types: ['screen', 'window'],
           thumbnailSize: { width: 320, height: 180 },

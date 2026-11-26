@@ -21,7 +21,8 @@ function fakeSource(id: string): DesktopCapturerSource {
 }
 
 function setup(
-  getSources = Sinon.stub().resolves([fakeSource('screen:1'), fakeSource('window:2')])
+  getSources = Sinon.stub().resolves([fakeSource('screen:1'), fakeSource('window:2')]),
+  screenAccess: () => 'granted' | 'denied' | 'restricted' = () => 'granted'
 ) {
   const mainFrame = { url: pageURL } as WebFrameMain;
   const handlers = new Map<string, IpcHandler>();
@@ -38,7 +39,7 @@ function setup(
   } as unknown as BrowserWindow;
   installScreenSharePicker(window, pageURL, { get: () => true } as unknown as UserConfig, {
     getSources,
-    screenAccess: () => 'granted',
+    screenAccess,
   });
 
   const displayHandler: DisplayHandler = register.firstCall.args[0];
@@ -124,5 +125,25 @@ describe('screen share picker', () => {
 
     assert.isEmpty((await listing).sources);
     assert.isFalse(await picker.pick('screen:1'));
+  });
+
+  it('asks macOS for sources while access is not granted yet, without offering them', async () => {
+    const getSources = Sinon.stub().resolves([fakeSource('screen:1')]);
+    const picker = setup(getSources, () => 'denied');
+
+    const listed = await picker.listSources();
+
+    assert.isTrue(getSources.calledOnce, 'the capture attempt is what makes macOS prompt');
+    assert.strictEqual(listed.screenAccess, 'denied');
+    assert.isEmpty(listed.sources);
+    assert.isFalse(await picker.pick('screen:1'));
+  });
+
+  it('does not ask for sources when screen capture is restricted', async () => {
+    const getSources = Sinon.stub().resolves([fakeSource('screen:1')]);
+    const picker = setup(getSources, () => 'restricted');
+
+    assert.isEmpty((await picker.listSources()).sources);
+    assert.isTrue(getSources.notCalled);
   });
 });
