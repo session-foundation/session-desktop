@@ -347,7 +347,12 @@ export async function startScreenShare(sourceId: string) {
     }
     const capture = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
     const track = capture.getVideoTracks()[0];
-    if (!track || !(await change.install(track))) {
+    if (!track) {
+      return;
+    }
+    // Keeps text legible on a weak link: WebRTC then drops frame rate before resolution.
+    track.contentHint = 'detail';
+    if (!(await change.install(track))) {
       return;
     }
     cameraIdBeforeScreenShare = selectedCameraId;
