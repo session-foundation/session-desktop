@@ -139,6 +139,15 @@ describe('screen share picker', () => {
     assert.isFalse(await picker.pick('screen:1'));
   });
 
+  it('reports missing access when listing sources fails before it is granted', async () => {
+    const picker = setup(Sinon.stub().rejects(new Error('Failed to get sources.')), () => 'denied');
+
+    const listed = await picker.listSources();
+
+    assert.strictEqual(listed.screenAccess, 'denied');
+    assert.isEmpty(listed.sources);
+  });
+
   it('does not ask for sources when screen capture is restricted', async () => {
     const getSources = Sinon.stub().resolves([fakeSource('screen:1')]);
     const picker = setup(getSources, () => 'restricted');
