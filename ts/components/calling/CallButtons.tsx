@@ -13,6 +13,8 @@ import { SessionContextMenuContainer } from '../SessionContextMenuContainer';
 import { Menu, MenuItem } from '../menu/items/MenuItem';
 import { SessionLucideIconButton } from '../icon/SessionIconButton';
 import { LUCIDE_ICONS_UNICODE } from '../icon/lucide';
+import { tr } from '../../localization/localeTools';
+import { ScreenSharePicker } from './ScreenSharePicker';
 
 const VideoInputMenu = ({
   triggerId,
@@ -239,7 +241,7 @@ const StyledCallActionButton = styled.div<{ $isFullScreen: boolean }>`
     background-color: var(--call-buttons-action-background-color);
     border-radius: 50%;
     transition-duration: var(--default-duration);
-    ${props => props.$isFullScreen && 'opacity: 0.4;'}
+    ${props => props.$isFullScreen && 'opacity: 0.9;'}
     &:hover {
       background-color: var(--call-buttons-action-background-hover-color);
       ${props => props.$isFullScreen && 'opacity: 1;'}
@@ -247,27 +249,94 @@ const StyledCallActionButton = styled.div<{ $isFullScreen: boolean }>`
   }
 `;
 
-const ShowInFullScreenButton = ({ isFullScreen }: { isFullScreen: boolean }) => {
-  const dispatch = getAppDispatch();
+const callButtonStyle = {
+  width: '60px',
+  height: '60px',
+  alignItems: 'center',
+  justifyContent: 'center',
+};
 
-  const showInFullScreen = () => {
-    if (isFullScreen) {
-      dispatch(setFullScreenCall(false));
-    } else {
-      dispatch(setFullScreenCall(true));
-    }
-  };
+export const ShowInFullScreenButton = ({ isFullScreen }: { isFullScreen: boolean }) => {
+  const dispatch = getAppDispatch();
 
   return (
     <StyledCallActionButton $isFullScreen={isFullScreen}>
       <SessionLucideIconButton
-        iconSize={'max'}
-        unicode={LUCIDE_ICONS_UNICODE.MAXIMIZE}
-        onClick={showInFullScreen}
-        iconColor="var(--black-color)"
+        iconSize="medium"
+        unicode={isFullScreen ? LUCIDE_ICONS_UNICODE.MINIMIZE : LUCIDE_ICONS_UNICODE.MAXIMIZE}
+        onClick={() => {
+          dispatch(setFullScreenCall(!isFullScreen));
+        }}
+        iconColor={isFullScreen ? 'var(--black-color)' : 'var(--call-buttons-icon-color)'}
+        backgroundColor={isFullScreen ? undefined : 'var(--call-buttons-background-color)'}
         margin="10px"
+        title={tr('fullScreenToggle')}
+        ariaLabel={tr('fullScreenToggle')}
+        dataTestId="toggle-full-screen"
+        style={callButtonStyle}
       />
     </StyledCallActionButton>
+  );
+};
+
+/**
+ * Screen sharing reuses the call's single video sender, so starting a share turns the camera off
+ * and stopping it puts the camera back. See CallManager.startScreenShare.
+ */
+export const ScreenShareButton = ({
+  isFullScreen,
+  isScreenSharing,
+}: {
+  isFullScreen: boolean;
+  isScreenSharing: boolean;
+}) => {
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const label = isScreenSharing ? tr('callsStopSharing') : tr('callsShareScreen');
+
+  return (
+    <>
+      {pickerOpen ? (
+        <ScreenSharePicker
+          onPicked={sourceId => {
+            setPickerOpen(false);
+            void CallManager.startScreenShare(sourceId);
+          }}
+          onCancel={() => {
+            setPickerOpen(false);
+          }}
+        />
+      ) : null}
+      <StyledCallActionButton $isFullScreen={isFullScreen}>
+        <SessionLucideIconButton
+          iconSize="medium"
+          unicode={
+            isScreenSharing
+              ? LUCIDE_ICONS_UNICODE.SCREEN_SHARE_OFF
+              : LUCIDE_ICONS_UNICODE.SCREEN_SHARE
+          }
+          onClick={() => {
+            if (isScreenSharing) {
+              void CallManager.stopScreenShare();
+              return;
+            }
+            setPickerOpen(true);
+          }}
+          iconColor={
+            isScreenSharing
+              ? 'var(--danger-color)'
+              : isFullScreen
+                ? 'var(--black-color)'
+                : 'var(--call-buttons-icon-color)'
+          }
+          backgroundColor={isFullScreen ? undefined : 'var(--call-buttons-background-color)'}
+          margin="10px"
+          title={label}
+          ariaLabel={label}
+          dataTestId="toggle-screen-share"
+          style={callButtonStyle}
+        />
+      </StyledCallActionButton>
+    </>
   );
 };
 
@@ -357,6 +426,7 @@ const handleSpeakerToggle = async (
 
 const StyledCallWindowControls = styled.div<{ $isFullScreen: boolean; $makeVisible: boolean }>`
   position: absolute;
+  z-index: 10;
 
   bottom: 0px;
   width: 100%;
@@ -371,13 +441,21 @@ const StyledCallWindowControls = styled.div<{ $isFullScreen: boolean; $makeVisib
   transition: all var(--default-duration) ease-in-out;
 
   display: flex;
+  flex-wrap: wrap;
+  align-content: flex-end;
   justify-content: center;
   opacity: ${props => (props.$makeVisible ? 1 : 0)};
+
+  /* This box covers the whole call view: only the buttons themselves may take clicks. */
+  pointer-events: none;
+  & > * {
+    pointer-events: auto;
+  }
 
   ${props =>
     props.$isFullScreen &&
     `
-    opacity: 0.4;
+    opacity: 0.9;
     &:hover {
       opacity: 1;
     }
@@ -390,18 +468,18 @@ export const CallWindowControls = ({
   currentConnectedAudioOutputs,
   isAudioMuted,
   isAudioOutputMuted,
-  remoteStreamVideoIsMuted,
   localStreamVideoIsMuted,
   isFullScreen,
+  isScreenSharing,
 }: {
   isAudioMuted: boolean;
   isAudioOutputMuted: boolean;
   localStreamVideoIsMuted: boolean;
-  remoteStreamVideoIsMuted: boolean;
   currentConnectedAudioInputs: Array<InputItem>;
   currentConnectedAudioOutputs: Array<InputItem>;
   currentConnectedCameras: Array<InputItem>;
   isFullScreen: boolean;
+  isScreenSharing: boolean;
 }) => {
   const [makeVisible, setMakeVisible] = useState(true);
 
@@ -424,7 +502,8 @@ export const CallWindowControls = ({
   }, [isFullScreen]);
   return (
     <StyledCallWindowControls $isFullScreen={isFullScreen} $makeVisible={makeVisible}>
-      {!remoteStreamVideoIsMuted && <ShowInFullScreenButton isFullScreen={isFullScreen} />}
+      <ShowInFullScreenButton isFullScreen={isFullScreen} />
+      <ScreenShareButton isFullScreen={isFullScreen} isScreenSharing={isScreenSharing} />
 
       <VideoInputButton
         currentConnectedCameras={currentConnectedCameras}

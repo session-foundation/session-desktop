@@ -43,6 +43,7 @@ const StyledContainer = styled(StyledRoundedButton)`
   width: 60px;
   height: 60px;
   margin: 10px;
+  flex-shrink: 0;
 `;
 
 const StyledMainIcon = styled.div`

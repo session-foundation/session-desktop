@@ -11,6 +11,7 @@ const PERMISSIONS: Record<string, boolean> = {
 
   // Off by default, can be enabled by user
   media: false, // required for access to microphone, used for voice notes
+  'display-capture': false, // required to share a screen or a window during a call
 
   // Not allowed
   geolocation: false,
@@ -21,8 +22,13 @@ const PERMISSIONS: Record<string, boolean> = {
 
 function createPermissionHandler(userConfig: UserConfig) {
   return (_webContents: any, permission: any, callback: any) => {
-    // We default 'media' permission to false, but the user can override that
-    if (permission === 'media' && userConfig.get('mediaPermissions')) {
+    // We default 'media' permission to false, but the user can override that.
+    // Screen sharing only happens inside a call, which already needs this permission, so it is
+    // gated on the same setting rather than on one of its own.
+    if (
+      (permission === 'media' || permission === 'display-capture') &&
+      userConfig.get('mediaPermissions')
+    ) {
       return callback(true);
     }
 

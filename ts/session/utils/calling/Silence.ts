@@ -9,7 +9,7 @@ const silence = () => {
   return Object.assign((dst as any).stream.getAudioTracks()[0], { enabled: false });
 };
 
-const black = () => {
+export const getBlackVideoTrack = (): MediaStreamTrack => {
   const canvas = Object.assign(document.createElement('canvas'), {
     width: maxWidth,
     height: maxHeight,
@@ -20,5 +20,5 @@ const black = () => {
 };
 
 export const getBlackSilenceMediaStream = () => {
-  return new MediaStream([black(), silence()]);
+  return new MediaStream([getBlackVideoTrack(), silence()]);
 };
